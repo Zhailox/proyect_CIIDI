@@ -1,0 +1,167 @@
+/sistema_pnfi
+│
+├── public/                             # ZONA PÚBLICA EXPUESTA AL NAVEGADOR
+│   ├── index.php                       
+│   ├── .htaccess                       
+│   ├── robots.txt                      
+│   └── /assets
+│       ├── /css
+│       │   ├── variables.css           
+│       │   ├── master.css              
+│       │   └── animations.css          
+│       ├── /js
+│       │   ├── core.js                 
+│       │   └── api_client.js           
+│       ├── /img                        
+│       └── /fonts                      
+│
+├── core/                               # MOTOR DEL SISTEMA (Microkernel)
+│   ├── /System
+│   │   ├── Kernel.php                  
+│   │   ├── ModuleManager.php           
+│   │   └── ErrorHandler.php            
+│   ├── /Http
+│   │   ├── Router.php                  
+│   │   ├── Request.php                 
+│   │   └── Response.php                
+│   ├── /Security
+│   │   ├── Auth.php                    
+│   │   ├── RBAC.php                    
+│   │   ├── CSRFGuard.php               
+│   │   └── RateLimiter.php             
+│   ├── /Database
+│   │   ├── Connection.php              
+│   │   └── QueryBuilder.php            
+│   ├── /Interfaces
+│   │   └── ModuleContract.php          
+│   └── /Views                          # LAYOUTS MAESTROS
+│       ├── master.html                 
+│       ├── sidebar_dinamico.html       
+│       ├── header.html                 
+│       └── footer.html                 
+│
+├── modules/                            # LOS PARQUETES INTEROPERABLES
+│   │
+│   ├── /Autenticacion                  # MÓDULO 1: ACCESO Y SEGURIDAD
+│   │   ├── index.php                   
+│   │   ├── /controllers
+│   │   │   ├── LoginController.php     
+│   │   │   ├── PerfilController.php    
+│   │   │   └── RecuperacionController.php # NUEVO: Lógica de token para olvido de clave
+│   │   ├── /models
+│   │   │   └── UsuarioModel.php        
+│   │   └── /views
+│   │       ├── login.html              
+│   │       ├── mi_dashboard.html       
+│   │       └── recuperar_cuenta.html   # NUEVO: Formulario "¿Olvidó sus credenciales?"
+│   │
+│   ├── /RepositorioPST                 # MÓDULO 2: BÚSQUEDA Y ANALÍTICA (IA)
+│   │   ├── index.php
+│   │   ├── /assets
+│   │   │   ├── search_engine.js        
+│   │   │   └── charts_predictivos.js   # NUEVO: Script para pintar gráficas de predicción
+│   │   ├── /controllers
+│   │   │   ├── BusquedaGlobalController.php 
+│   │   │   ├── PstCrudController.php        
+│   │   │   ├── VisorController.php          
+│   │   │   └── AnaliticaController.php      # NUEVO: Lógica para calcular la curva predictiva
+│   │   ├── /services
+│   │   │   └── NeuralSearchClient.php       
+│   │   ├── /models
+│   │   │   ├── DocumentoModel.php           
+│   │   │   └── HistoricoModel.php           # NUEVO: Modelo de datos pasados para la IA predictiva
+│   │   └── /views
+│   │       ├── home_bienvenida.html         
+│   │       ├── buscador_unificado.html      
+│   │       ├── detalle_pst.html             
+│   │       ├── admin_subida_pst.html        
+│   │       └── dashboard_prediccion.html    # NUEVO: Vista con gráficos de estimación a meses/años
+│   │
+│   ├── /Investigaciones                # MÓDULO 3: I+D UNIVERSITARIO
+│   │   ├── index.php
+│   │   ├── /controllers
+│   │   │   ├── ProyectoController.php       
+│   │   │   └── PostulacionController.php    
+│   │   ├── /models
+│   │   │   ├── InvestigacionModel.php
+│   │   │   └── PostulanteModel.php          
+│   │   └── /views
+│   │       ├── showcase_investigaciones.html # NUEVO: Vista "Top 10" e info general del módulo
+│   │       ├── cartelera.html               
+│   │       ├── ficha_investigador.html      
+│   │       ├── panel_postulaciones.html     
+│   │       └── modal_aplicar.html           
+│   │
+│   ├── /Articulos                      # MÓDULO 4: REVISTA DIGITAL
+│   │   ├── index.php
+│   │   ├── /controllers
+│   │   │   └── RevistaController.php   
+│   │   ├── /models
+│   │   │   └── ArticuloModel.php
+│   │   └── /views
+│   │       ├── showcase_articulos.html # NUEVO: Ediciones destacadas y más leídos
+│   │       ├── grid_revista.html       
+│   │       └── leer_articulo.html      
+│   │
+│   ├── /VinculacionEmpresarial         # MÓDULO 5: NUEVO - PUENTE SECTOR PRODUCTIVO
+│   │   ├── index.php                   # Contrato: Registra rutas /empresas/*
+│   │   ├── /controllers
+│   │   │   ├── LandingEmpresaController.php # Muestra quiénes somos y casos de éxito
+│   │   │   ├── SolicitudExternaController.php # Recibe el formulario de las empresas
+│   │   │   └── BancoPropuestasController.php  # Para que Estudiantes/Profesores vean los problemas
+│   │   ├── /models
+│   │   │   ├── EmpresaModel.php             # Datos comerciales (Rif, Nombre, Contacto)
+│   │   │   └── ProblematicaModel.php        # Descripción del problema a resolver (PST potencial)
+│   │   └── /views
+│   │       ├── landing_informativa.html     # NUEVO: "Qué somos", "Cómo funciona", "Casos de éxito"
+│   │       ├── form_aplicar_problema.html   # NUEVO: Formulario para empresas (Lácteos Los Andes, etc.)
+│   │       └── banco_propuestas.html        # NUEVO: Vista interna de solicitudes "En Espera / Aprobado"
+│   │
+│   ├── /Cursos                         # MÓDULO 6: CARTELERA DE FORMACIÓN
+│   │   ├── index.php
+│   │   ├── /controllers
+│   │   │   └── PromoController.php
+│   │   ├── /models
+│   │   │   └── CursoModel.php
+│   │   └── /views
+│   │       ├── showcase_cursos.html         # NUEVO: Vista de presentación ("Aprende con nosotros")
+│   │       └── grid_cursos.html             
+│   │
+│   ├── /ForoChatbot                    # MÓDULO 7: IA CONVERSACIONAL (LLM LOCAL)
+│   │   ├── index.php
+│   │   ├── /assets
+│   │   │   └── chat_socket.js               
+│   │   ├── /controllers
+│   │   │   ├── SalaController.php           
+│   │   │   └── LLMController.php            
+│   │   ├── /services
+│   │   │   └── LocalAIClient.php            
+│   │   ├── /models
+│   │   │   ├── HiloModel.php
+│   │   │   └── MensajeModel.php             
+│   │   └── /views
+│   │       ├── showcase_foros.html          # NUEVO: Explicación de la herramienta y top discusiones
+│   │       ├── lista_foros.html             
+│   │       ├── sala_chat.html               
+│   │       └── ui_bot_typing.html           
+│   │
+│   └── /SuperAdmin                     # MÓDULO 8: EL DIOS DEL SISTEMA
+│       ├── index.php
+│       ├── /controllers
+│       │   ├── ModulosController.php        
+│       │   └── LogsController.php           
+│       └── /views
+│           ├── dashboard_admin.html         
+│           ├── gestor_modulos.html          
+│           └── visor_logs.html              
+│
+└── storage/                            # BÓVEDA INACCESIBLE DESDE LA WEB
+    ├── /documentos
+    │   ├── /pst                        
+    │   ├── /articulos                  
+    │   └── /respaldos_empresas         # NUEVO: Documentación técnica enviada por empresas
+    ├── /backups                        
+    ├── /logs
+    │   ├── system_errors.log           
+    │   └── access_security.log         
+    └── modules.json
