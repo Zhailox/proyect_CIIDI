@@ -1,0 +1,293 @@
+/* ==============================================================
+   MÓDULO DE CURSOS (CATÁLOGO DE FORMACIÓN CONTINUA)
+   ============================================================== */
+
+.cur-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+    width: 100%;
+}
+
+/* --- HERO INFORMATIVO (MODO FLAT ABSOLUTO) --- */
+.cur-hero {
+    background: transparent; /* Fuera degradados y bloques de color pesados */
+    border-radius: 0;        /* 100% ángulos rectos y cuadrados */
+    padding: 0;              /* Cero padding, el bloque no abomba la interfaz */
+    box-shadow: none;
+    
+    /* Una línea estructural sólida con el color de la universidad */
+    border-bottom: 3px solid var(--color-principal); 
+    
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 3.5rem;
+    width: 100%;
+}
+
+.cur-hero-content {
+    max-width: 650px;
+    padding-bottom: 1.5rem; /* Separación sutil y limpia antes de la línea base */
+}
+
+.cur-hero-content h1 {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--texto-titulos);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.6rem;
+}
+
+.cur-hero-content p {
+    font-size: 1.05rem;
+    line-height: 1.5;
+    color: var(--texto-silenciado);
+    margin-bottom: 0;
+}
+
+/* Contenedor de Métricas Alineado a la Derecha */
+.cur-hero-stats {
+    display: flex;
+    gap: 1.5rem;
+    padding-bottom: 1.5rem; /* Alineación perfecta con el texto de la izquierda */
+}
+
+.cur-stat {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 0; /* Cuadrado estricto */
+    padding: 0.8rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 100px;
+}
+
+.cur-stat-num {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--texto-comun);
+    line-height: 1;
+    margin-bottom: 0.2rem;
+}
+
+.cur-stat-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-secundario);
+    font-weight: 700;
+}
+/* --- LAYOUT PRINCIPAL (Filtros + Grid) --- */
+.cur-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 2.5rem;
+    align-items: start;
+}
+
+/* --- SIDEBAR DE FILTROS --- */
+.cur-sidebar {
+    background-color: var(--blanco);
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: var(--radius-md);
+    padding: 2rem;
+    position: sticky;
+    top: 2rem;
+}
+
+.cur-sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--color-terciario);
+}
+
+.cur-sidebar-header h3 {
+    color: var(--texto-subtitulos);
+    font-size: 1.2rem;
+}
+
+.cur-clear-filters {
+    font-size: 0.8rem;
+    color: var(--texto-silenciado);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.cur-clear-filters:hover {
+    color: var(--color-secundario);
+    text-decoration: underline;
+}
+
+.cur-filter-group {
+    margin-bottom: 1.8rem;
+}
+
+.cur-filter-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--texto-titulos);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+}
+
+.cur-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.8rem;
+    font-size: 0.95rem;
+    color: var(--texto-comun);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.cur-checkbox-label:hover {
+    color: var(--color-principal);
+}
+
+.cur-checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-secundario);
+    cursor: pointer;
+}
+
+/* --- GRID DE CURSOS --- */
+.cur-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+/* Tarjeta Estilo Google Actívate */
+.cur-card {
+    background-color: var(--blanco);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    position: relative;
+}
+
+.cur-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(18, 26, 62, 0.08);
+    border-color: var(--color-terciario);
+}
+
+/* Etiqueta superior (Gratis / De Pago) */
+.cur-badge {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 2;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.cur-badge.free { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+.cur-badge.paid { background-color: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
+
+/* Imagen o Ilustración */
+.cur-card-img {
+    height: 160px;
+    background-color: #f8f9fa;
+    background-size: cover;
+    background-position: center;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.cur-card-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.cur-card-title {
+    font-size: 1.15rem;
+    color: var(--texto-titulos);
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 1rem;
+    min-height: 48px; /* Mantiene la alineación aunque el título sea corto */
+}
+
+/* Metadatos de la tarjeta */
+.cur-meta-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+}
+
+.cur-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--texto-silenciado);
+}
+
+.cur-meta-item i {
+    color: var(--color-secundario);
+    font-size: 1.1rem;
+}
+
+/* Botón Externo (CTA) */
+.cur-btn-external {
+    margin-top: auto;
+    width: 100%;
+    background-color: transparent;
+    color: var(--color-terciario);
+    border: 2px solid var(--color-terciario);
+    padding: 0.8rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-align: center;
+    text-decoration: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all var(--transition-fast);
+}
+
+.cur-btn-external:hover {
+    background-color: var(--color-terciario);
+    color: var(--texto-blanco);
+}
+
+/* Responsividad */
+@media (max-width: 1000px) {
+    .cur-hero {
+        flex-direction: column;
+        text-align: center;
+        padding: 3rem 2rem;
+        gap: 2rem;
+    }
+    .cur-layout {
+        grid-template-columns: 1fr;
+    }
+    .cur-sidebar {
+        position: relative;
+        top: 0;
+    }
+}
