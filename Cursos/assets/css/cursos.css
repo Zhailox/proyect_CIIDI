@@ -1,0 +1,988 @@
+/* ==============================================================
+   MÓDULO DE CURSOS (CATÁLOGO DE FORMACIÓN CONTINUA)
+   ============================================================== */
+
+.cur-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+    width: 100%;
+}
+
+/* --- HERO INFORMATIVO (MODO FLAT ABSOLUTO) --- */
+.cur-hero {
+    background: transparent; /* Fuera degradados y bloques de color pesados */
+    border-radius: 0;        /* 100% ángulos rectos y cuadrados */
+    padding: 0;              /* Cero padding, el bloque no abomba la interfaz */
+    box-shadow: none;
+    
+    /* Una línea estructural sólida con el color de la universidad */
+    border-bottom: 3px solid var(--color-principal); 
+    
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 3.5rem;
+    width: 100%;
+}
+
+.cur-hero-content {
+    max-width: 650px;
+    padding-bottom: 1.5rem; /* Separación sutil y limpia antes de la línea base */
+}
+
+.cur-hero-content h1 {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--texto-titulos);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.6rem;
+}
+
+.cur-hero-content p {
+    font-size: 1.05rem;
+    line-height: 1.5;
+    color: var(--texto-silenciado);
+    margin-bottom: 0;
+}
+
+/* Contenedor de Métricas Alineado a la Derecha */
+.cur-hero-stats {
+    display: flex;
+    gap: 1.5rem;
+    padding-bottom: 1.5rem; /* Alineación perfecta con el texto de la izquierda */
+}
+
+.cur-stat {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 0; /* Cuadrado estricto */
+    padding: 0.8rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 100px;
+}
+
+.cur-stat-num {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--texto-comun);
+    line-height: 1;
+    margin-bottom: 0.2rem;
+}
+
+.cur-stat-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-secundario);
+    font-weight: 700;
+}
+/* --- LAYOUT PRINCIPAL (Filtros + Grid) --- */
+.cur-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 2.5rem;
+    align-items: start;
+}
+
+/* --- SIDEBAR DE FILTROS --- */
+.cur-sidebar {
+    background-color: var(--blanco);
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: var(--radius-md);
+    padding: 2rem;
+    position: sticky;
+    top: 2rem;
+}
+
+.cur-sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--color-terciario);
+}
+
+.cur-sidebar-header h3 {
+    color: var(--texto-subtitulos);
+    font-size: 1.2rem;
+}
+
+.cur-clear-filters {
+    font-size: 0.8rem;
+    color: var(--texto-silenciado);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.cur-clear-filters:hover {
+    color: var(--color-secundario);
+    text-decoration: underline;
+}
+
+.cur-filter-group {
+    margin-bottom: 1.8rem;
+}
+
+.cur-filter-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--texto-titulos);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+}
+
+.cur-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.8rem;
+    font-size: 0.95rem;
+    color: var(--texto-comun);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.cur-checkbox-label:hover {
+    color: var(--color-principal);
+}
+
+.cur-checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-secundario);
+    cursor: pointer;
+}
+
+/* --- GRID DE CURSOS --- */
+.cur-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+/* Tarjeta Estilo Google Actívate */
+.cur-card {
+    background-color: var(--blanco);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    position: relative;
+}
+
+.cur-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(18, 26, 62, 0.08);
+    border-color: var(--color-terciario);
+}
+
+/* Etiqueta superior (Gratis / De Pago) */
+.cur-badge {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 2;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.cur-badge.free { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+.cur-badge.paid { background-color: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
+
+/* Imagen o Ilustración */
+.cur-card-img {
+    height: 160px;
+    background-color: #f8f9fa;
+    background-size: cover;
+    background-position: center;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.cur-card-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.cur-card-title {
+    font-size: 1.15rem;
+    color: var(--texto-titulos);
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 1rem;
+    min-height: 48px; /* Mantiene la alineación aunque el título sea corto */
+}
+
+/* Metadatos de la tarjeta */
+.cur-meta-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+}
+
+.cur-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--texto-silenciado);
+}
+
+.cur-meta-item i {
+    color: var(--color-secundario);
+    font-size: 1.1rem;
+}
+
+/* Botón Externo (CTA) */
+.cur-btn-external {
+    margin-top: auto;
+    width: 100%;
+    background-color: transparent;
+    color: var(--color-terciario);
+    border: 2px solid var(--color-terciario);
+    padding: 0.8rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-align: center;
+    text-decoration: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all var(--transition-fast);
+}
+
+.cur-btn-external:hover {
+    background-color: var(--color-terciario);
+    color: var(--texto-blanco);
+}
+
+/* Responsividad */
+@media (max-width: 1000px) {
+    .cur-hero {
+        flex-direction: column;
+        text-align: center;
+        padding: 3rem 2rem;
+        gap: 2rem;
+    }
+    .cur-layout {
+        grid-template-columns: 1fr;
+    }
+    .cur-sidebar {
+        position: relative;
+        top: 0;
+    }
+}
+
+/* ── MEJORAS SHOWCASE ─────────────────────────────────────────────────────── */
+
+.cur-search-input {
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    border: 1.5px solid rgba(0,0,0,0.1);
+    font-family: var(--font-family);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color var(--transition-fast);
+    box-sizing: border-box;
+}
+
+.cur-search-input:focus {
+    border-color: var(--color-principal);
+}
+
+.cur-card-desc {
+    font-size: 0.88rem;
+    color: var(--texto-silenciado);
+    line-height: 1.55;
+    margin-bottom: 1rem;
+    flex-grow: 1;
+}
+
+/* ── VISTA DETALLE CURSO (.det-*) ─────────────────────────────────────────── */
+
+.det-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+/* Hero con imagen de portada */
+.det-hero {
+    min-height: 320px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+}
+
+.det-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(18,26,62,0.4) 0%, rgba(18,26,62,0.88) 100%);
+    display: flex;
+    align-items: flex-end;
+    padding: 2.5rem 3rem;
+}
+
+.det-hero-content {
+    color: #ffffff;
+    max-width: 760px;
+}
+
+.det-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: rgba(255,255,255,0.7);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    transition: color var(--transition-fast);
+}
+
+.det-back-link:hover { color: #ffffff; }
+
+.det-hero-content h1 {
+    font-size: 2.2rem;
+    font-weight: 900;
+    line-height: 1.2;
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.5px;
+}
+
+.det-hero-docente {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 1rem;
+}
+
+.det-hero-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.det-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #ffffff;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 100px;
+}
+
+/* Alertas flash */
+.det-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1rem 1.5rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    transition: opacity 0.5s ease;
+    margin: 0.5rem 0;
+}
+
+.det-alert--success { background: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
+.det-alert--info    { background: #dbeafe; color: #1e40af; border-left: 4px solid #3b82f6; }
+.det-alert--error   { background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
+
+.det-alert i { font-size: 1.3rem; flex-shrink: 0; }
+
+/* Layout de 2 columnas */
+.det-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 2.5rem;
+    padding: 2.5rem 3rem;
+    background: #f0f2f7;
+    align-items: start;
+}
+
+/* Secciones principales */
+.det-section {
+    background: #ffffff;
+    border: 1px solid rgba(18,26,62,0.07);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.det-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--texto-titulos);
+    margin-bottom: 1.2rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 2px solid rgba(18,26,62,0.07);
+}
+
+.det-section-title i { color: var(--color-secundario); }
+
+.det-count {
+    margin-left: auto;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--texto-silenciado);
+    background: rgba(18,26,62,0.06);
+    padding: 0.2rem 0.7rem;
+    border-radius: 100px;
+}
+
+.det-descripcion {
+    font-size: 0.95rem;
+    color: var(--texto-comun);
+    line-height: 1.7;
+}
+
+/* Accordion de lecciones */
+.det-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.det-acc-item {
+    border: 1px solid rgba(18,26,62,0.08);
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.det-acc-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.2rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-family);
+    transition: background var(--transition-fast);
+    text-align: left;
+    gap: 1rem;
+}
+
+.det-acc-header:hover { background: rgba(18,26,62,0.03); }
+.det-acc-item.active .det-acc-header { background: rgba(18,26,62,0.04); }
+
+.det-acc-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.det-acc-num {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-principal);
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 800;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.det-acc-titulo {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--texto-titulos);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.det-acc-right {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+}
+
+.det-acc-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--color-secundario);
+    background: rgba(80,89,132,0.08);
+    padding: 0.2rem 0.6rem;
+    border-radius: 100px;
+}
+
+.det-acc-arrow {
+    color: var(--texto-silenciado);
+    font-size: 1rem;
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+/* Cuerpo del accordion */
+.det-acc-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+    border-top: 1px solid rgba(18,26,62,0.06);
+}
+
+/* Video embebido 16:9 */
+.det-video-wrap {
+    position: relative;
+    padding-top: 56.25%;
+    background: #000;
+}
+
+.det-video-wrap iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.det-leccion-contenido {
+    padding: 1.5rem;
+    font-size: 0.92rem;
+    color: var(--texto-comun);
+    line-height: 1.7;
+}
+
+.det-leccion-vacia {
+    padding: 1.5rem;
+    color: var(--texto-silenciado);
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+/* Sidebar de inscripción */
+.det-sidebar {
+    position: sticky;
+    top: 2rem;
+}
+
+.det-enroll-card {
+    background: #ffffff;
+    border: 1px solid rgba(18,26,62,0.07);
+    padding: 2rem;
+    border-top: 4px solid var(--color-principal);
+}
+
+.det-enroll-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    color: #ffffff;
+    margin: 0 auto 1.2rem;
+}
+
+.det-enroll-card h3 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--texto-titulos);
+    text-align: center;
+    margin-bottom: 0.4rem;
+}
+
+.det-enroll-sub {
+    text-align: center;
+    font-size: 0.88rem;
+    color: var(--texto-silenciado);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+/* Barra de progreso */
+.det-progress-wrap {
+    margin-bottom: 1.5rem;
+}
+
+.det-progress-bar {
+    height: 10px;
+    background: rgba(18,26,62,0.08);
+    border-radius: 100px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.det-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-principal), var(--color-secundario));
+    border-radius: 100px;
+    transition: width 0.6s ease;
+    min-width: 4px;
+}
+
+.det-progress-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-secundario);
+}
+
+/* Botón de inscripción */
+.det-btn-inscribir {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.95rem;
+    background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
+    color: #ffffff;
+    border: none;
+    font-family: var(--font-family);
+    font-size: 0.88rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: opacity var(--transition-fast);
+    margin-bottom: 1.5rem;
+}
+
+.det-btn-inscribir:hover { opacity: 0.88; }
+
+/* Meta del sidebar */
+.det-enroll-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid rgba(18,26,62,0.07);
+}
+
+.det-enroll-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.88rem;
+    color: var(--texto-silenciado);
+}
+
+.det-enroll-item i {
+    color: var(--color-secundario);
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 960px) {
+    .det-layout {
+        grid-template-columns: 1fr;
+        padding: 1.5rem;
+    }
+    .det-sidebar { position: relative; top: 0; }
+    .det-hero-overlay { padding: 1.5rem; }
+    .det-hero-content h1 { font-size: 1.6rem; }
+}
+
+/* ── BOTONES DE GESTIÓN EN CATÁLOGO ──────────────────────────────────────── */
+
+.cur-btn-nuevo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--color-secundario);
+    color: #ffffff;
+    padding: 0.7rem 1.2rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: none;
+    margin-top: 1.5rem;
+    transition: background-color var(--transition-fast);
+}
+
+.cur-btn-nuevo:hover {
+    background-color: var(--color-terciario);
+}
+
+.cur-card-mgmt {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.8rem;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    padding-top: 0.8rem;
+}
+
+.cur-mgmt-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.5rem;
+    border: none;
+    background: #f8f9fa;
+    color: var(--texto-silenciado);
+    font-size: 0.8rem;
+    font-weight: 700;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all var(--transition-fast);
+}
+
+.cur-mgmt-edit:hover {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.cur-mgmt-delete:hover {
+    background: #ffebee;
+    color: #d32f2f;
+}
+
+/* ── FORMULARIO DE GESTIÓN (.frm-*) ──────────────────────────────────────── */
+
+.frm-wrapper {
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.frm-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 3px solid var(--color-principal);
+}
+
+.frm-header-left h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--texto-titulos);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0;
+}
+
+.frm-header-left h1 i {
+    color: var(--color-secundario);
+}
+
+.frm-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--texto-silenciado);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.frm-back-link:hover {
+    color: var(--color-principal);
+}
+
+.frm-btn-delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #fff;
+    color: #ef4444;
+    border: 1px solid #fca5a5;
+    padding: 0.6rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.frm-btn-delete:hover {
+    background: #fef2f2;
+    border-color: #ef4444;
+}
+
+.frm-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 2rem;
+    align-items: start;
+}
+
+.frm-section {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: var(--radius-sm);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.frm-section-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--texto-titulos);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 2px solid rgba(0,0,0,0.05);
+    padding-bottom: 0.8rem;
+}
+
+.frm-section-title i {
+    color: var(--color-secundario);
+}
+
+.frm-group {
+    margin-bottom: 1.5rem;
+}
+
+.frm-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--texto-subtitulos);
+    margin-bottom: 0.5rem;
+}
+
+.frm-input, .frm-select, .frm-textarea {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-family);
+    font-size: 0.95rem;
+    color: var(--texto-comun);
+    background: #fff;
+    transition: border-color var(--transition-fast);
+}
+
+.frm-input:focus, .frm-select:focus, .frm-textarea:focus {
+    outline: none;
+    border-color: var(--color-principal);
+}
+
+.frm-hint {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--texto-silenciado);
+    margin-top: 0.4rem;
+}
+
+.frm-img-preview {
+    margin-top: 1rem;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.1);
+    background: #f8f9fa;
+    max-height: 200px;
+}
+
+.frm-img-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.frm-info-box {
+    background: #f8f9fa;
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.frm-info-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.frm-info-item:last-child { margin-bottom: 0; }
+
+.frm-info-label { color: var(--texto-silenciado); font-weight: 600; }
+.frm-info-value { color: var(--texto-comun); font-weight: 700; }
+
+.frm-btn-submit {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    background: var(--color-secundario);
+    color: #fff;
+    border: none;
+    padding: 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    font-weight: 800;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    transition: background var(--transition-fast);
+}
+
+.frm-btn-submit:hover {
+    background: var(--color-terciario);
+}
+
+.frm-btn-cancel {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 0.8rem;
+    color: var(--texto-silenciado);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 700;
+    transition: color var(--transition-fast);
+}
+
+.frm-btn-cancel:hover {
+    color: var(--color-principal);
+}
+
+@media (max-width: 900px) {
+    .frm-grid { grid-template-columns: 1fr; }
+    .frm-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+}
