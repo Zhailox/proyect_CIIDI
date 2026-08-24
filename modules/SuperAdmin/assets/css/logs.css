@@ -1,0 +1,187 @@
+/* ==========================================================================
+   ESTILOS EXCLUSIVOS DEL VISOR DE LOGS (Auditoría)
+   ========================================================================== */
+
+/* --- BOTONERA DE PESTAÑAS (Pills) --- */
+.inbox-filters {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+
+.filter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 1.4rem;
+    background-color: transparent;
+    color: var(--gris);
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 50px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast, 0.3s) ease;
+    font-family: inherit;
+    outline: none;
+}
+
+.svg-icon-log {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+    transition: transform 0.3s ease;
+}
+
+.filter-pill:hover {
+    background-color: rgba(0,0,0,0.02);
+    color: var(--color-secundario);
+    transform: translateY(-2px);
+}
+
+/* EL ESTADO ACTIVO (Reemplaza al antiguo :checked) */
+.filter-pill.tab-active {
+    background-color: var(--color-principal); /* Se iluminan con el fondo principal */
+    color: var(--color-secundario);
+    border-color: var(--color-secundario);
+    box-shadow: 0 4px 10px rgba(80, 89, 132, 0.15); /* Sombra elegante azulada */
+}
+
+.filter-pill.tab-active .svg-icon-log {
+    transform: scale(1.1);
+}
+
+/* --- MOTOR VISUAL DE PANELES --- */
+.pantalla-log {
+    display: none; /* Ocultos por defecto */
+}
+
+/* Esta clase la pone el JS para mostrar la tabla con una animación suave */
+.pantalla-log.log-active-panel {
+    display: block;
+    animation: fadeInTab 0.4s ease-out forwards;
+}
+
+@keyframes fadeInTab {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- DISEÑO DE TARJETAS Y CONTENEDORES --- */
+.log-card-panel {
+    background: var(--bg-card);
+    border-radius: 8px;
+    overflow: hidden;
+    padding: 1.5rem;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+
+.log-monitor-reposo {
+    text-align: center;
+    padding: 5rem 1rem;
+    background: var(--bg-card);
+    border-radius: 8px;
+    border: 1px dashed rgba(0,0,0,0.1);
+}
+
+.log-panel-title {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: var(--color-secundario);
+    font-size: 1.25rem;
+}
+
+/* --- TABLAS --- */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.log-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.log-table th {
+    padding: 1rem;
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+    color: var(--texto-titulos);
+    font-weight: 700;
+}
+
+.log-table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    vertical-align: top;
+}
+
+.log-table tbody tr:hover {
+    background-color: rgba(0,0,0,0.02);
+}
+
+/* --- ESTILOS DE AUDITORÍA Y TRAZABILIDAD --- */
+.log-empty-msg {
+    text-align: center;
+    padding: 3rem !important;
+    color: var(--gris);
+    font-style: italic;
+}
+
+.log-bold-text { font-weight: 700; color: var(--texto-titulos); }
+.log-muted-text { color: var(--gris); }
+.log-highlight-text { font-weight: bold; color: var(--color-terciario); }
+
+.log-badge-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.log-action-badge {
+    display: inline-block;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.badge-success { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.badge-danger  { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+.badge-warning { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+
+.log-date-col { width: 150px; }
+.log-date-primary { font-weight: 700; display: block; color: var(--color-secundario); }
+.log-time-secondary { font-size: 0.8rem; color: var(--gris); }
+.log-responsable { font-size: 0.8rem; margin-top: 0.5rem; color: var(--gris); }
+
+.log-table-name {
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    color: var(--color-terciario);
+}
+
+.log-trace-viewer {
+    font-size: 0.8rem;
+    max-height: 120px;
+    overflow-y: auto;
+    background: var(--bg-main); /* Usa el fondo claro principal */
+    padding: 0.8rem;
+    border-radius: 6px;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.trace-old { color: #ef4444; margin-bottom: 6px; word-break: break-all; }
+.trace-new { color: #10b981; word-break: break-all; }
+.text-danger { color: #ef4444 !important; }
+
+/* Iconos Gigantes */
+.icon-reposo { font-size: 4rem; color: var(--color-secundario); opacity: 0.2; margin-bottom: 1rem; }
+.title-reposo { color: var(--texto-titulos); margin-bottom: 0.5rem; }
+.text-reposo { color: var(--gris); }

@@ -21,7 +21,7 @@
 │   │   ├── ModuleManager.php           
 │   │   └── ErrorHandler.php            
 │   ├── /Http
-│   │   ├── Router.php                  
+│   │   ├── Router.php                 
 │   │   ├── Request.php                 
 │   │   └── Response.php                
 │   ├── /Security

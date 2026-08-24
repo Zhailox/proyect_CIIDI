@@ -1,0 +1,222 @@
+/* ==========================================================================
+   GESTOR DE USUARIOS - UI
+   ========================================================================== */
+
+.gestor-mt-title {
+    margin-top: 2rem;
+}
+
+.admin-card-panel {
+    background: var(--bg-card);
+    border-radius: 8px;
+    padding: 1.5rem;
+    border: 1px solid rgba(0,0,0,0.05);
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+
+/* Formulario de búsqueda */
+.gestor-search-form {
+    display: flex;
+    gap: 1rem;
+    max-width: 600px;
+}
+
+.gestor-search-input {
+    width: 100%;
+    border: none;
+    /* Estilo limpio: solo barra inferior */
+    border-bottom: 1px solid var(--gris);
+    background: transparent;
+    border-radius: 0;
+    padding: 0.4rem 0;
+    font-size: 1.1rem;
+    color: var(--texto-comun);
+    font-family: var(--font-family);
+    transition: border-color var(--transition-fast);
+}
+
+.gestor-search-input:focus {
+    outline: none;
+    border-bottom: 2px solid var(--color-secundario);
+}
+.btn-search-cedula {
+    background-color: var(--color-secundario);
+    color: var(--texto-blanco);
+}
+
+.btn-search-cedula:hover {
+    background-color: var(--color-secundario);
+    filter: brightness(1.1);
+}
+
+.gestor-error-msg {
+    margin-top: 1rem;
+    color: #ef4444;
+    font-weight: 600;
+}
+
+/* Tarjeta del usuario buscado */
+.gestor-result-box {
+    margin-top: 1.5rem;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    padding-top: 1.5rem;
+}
+
+.gestor-result-title {
+    color: var(--color-terciario);
+    margin-bottom: 1rem;
+}
+
+.gestor-user-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-main);
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.gestor-user-name {
+    margin: 0;
+    font-size: 1.4rem;
+    color: var(--texto-titulos);
+}
+
+.gestor-user-meta {
+    margin: 0.2rem 0;
+    color: var(--gris);
+}
+
+/* Badges (Etiquetas de estado) */
+.gestor-badge-role,
+.gestor-badge-status {
+    display: inline-block;
+    padding: 0.2rem 0.8rem;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    margin-right: 0.5rem;
+}
+
+.gestor-badge-role {
+    background: rgba(80, 89, 132, 0.1);
+    color: var(--color-secundario);
+}
+
+.status-active {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.status-suspended {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+/* Botones de acción del usuario */
+.gestor-user-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.btn-promote {
+    border-color: var(--color-secundario);
+    color: var(--color-secundario);
+}
+
+.btn-promote:hover {
+    background-color: var(--color-secundario);
+    color: #fff;
+}
+
+.btn-status-toggle {
+    color: white;
+    border: none;
+}
+
+.toggle-suspend {
+    background-color: #ef4444;
+}
+
+.toggle-suspend:hover {
+    background-color: #dc2626;
+}
+
+.toggle-restore {
+    background-color: #10b981;
+}
+
+.toggle-restore:hover {
+    background-color: #059669;
+}
+
+/* Grid del Plantel Docente */
+.gestor-teachers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.gestor-empty-msg {
+    color: var(--gris);
+}
+
+.gestor-teacher-card {
+    background: var(--bg-card);
+    border-radius: 8px;
+    padding: 1.2rem;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform var(--transition-fast, 0.3s);
+}
+
+.gestor-teacher-card:hover {
+    transform: translateY(-2px);
+}
+
+.gestor-teacher-avatar {
+    width: 45px;
+    height: 45px;
+    background: var(--color-terciario);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.gestor-teacher-info {
+    flex: 1;
+}
+
+.gestor-teacher-name {
+    margin: 0;
+    color: var(--texto-titulos);
+}
+
+.gestor-teacher-cedula {
+    font-size: 0.8rem;
+    color: var(--gris);
+}
+
+.gestor-teacher-remove {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: transform 0.2s;
+    padding: 0.5rem;
+}
+
+.gestor-teacher-remove:hover {
+    transform: scale(1.15);
+}
