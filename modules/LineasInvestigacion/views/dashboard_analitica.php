@@ -1,15 +1,12 @@
 <!-- modules/LineasInvestigacion/views/dashboard_analitica.php -->
 <div class="li-gestor-wrapper animate-fade-in">
 
-    <!-- ╔══ BANNER ══════════════════════════════════════════════════════════╗ -->
     <div class="li-gestor-banner">
         <div>
             <h1><i class="ph-bold ph-brain" style="margin-right:0.5rem;"></i>Dashboard Analítico Predictivo (IA)</h1>
-            <p>Proyección de volumen y clasificación automatizada de documentos de investigación mediante Machine Learning.</p>
+            <p>Proyección trimestral de volumen mediante Machine Learning.</p>
         </div>
-        <button id="btn-proyectar" class="li-btn-ver" style="width:auto;padding:0.6rem 1.25rem;flex-shrink:0; cursor:pointer; border:none; outline:none; font-family:inherit;">
-            <i class="ph-bold ph-trend-up"></i> Ejecutar Regresión de Tendencias
-        </button>
+        <!-- Controles movidos a la barra de configuración abajo -->
     </div>
 
     <!-- ╔══ SECCIÓN 1: TENDENCIAS (SERIES TEMPORALES) ══════════════════════╗ -->
@@ -20,19 +17,56 @@
         </div>
 
         <div class="li-form-body">
+            
+            <!-- BARRA DE CONTROLES (NUEVA) -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px; margin-bottom: 20px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; box-shadow: 0 2px 4px -1px rgba(0,0,0,0.03);">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div style="background: #f1f5f9; color: #505984; padding: 10px; border-radius: 8px;">
+                        <i class="ph-bold ph-calendar-plus" style="font-size: 1.4rem;"></i>
+                    </div>
+                    <div>
+                        <strong style="color: #121a3e; font-size: 1rem; display: block;">Horizonte de Proyección</strong>
+                        <span style="color: #64748b; font-size: 0.85rem;">Define hasta qué fecha la IA calculará la demanda esperada.</span>
+                    </div>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <select id="select-trimestres" style="padding: 10px 15px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; color: #121a3e; font-weight: 600; font-size: 0.9rem; outline: none; cursor: pointer; min-width: 260px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);">
+                        <option value="1">1 Trimestre (Inmediato)</option>
+                        <option value="2">2 Trimestres</option>
+                        <option value="3">3 Trimestres (1 Año Académico)</option>
+                        <option value="4" selected>4 Trimestres</option>
+                        <option value="6">6 Trimestres (2 Años Académicos)</option>
+                        <option value="8">8 Trimestres</option>
+                        <option value="9">9 Trimestres (3 Años Académicos)</option>
+                        <option value="12">12 Trimestres (4 Años Académicos)</option>
+                    </select>
+                    <button id="btn-proyectar" style="background: #121a3e; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-weight: 700; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(18, 26, 62, 0.3); transition: all 0.2s ease;">
+                        <i class="ph-bold ph-magic-wand" style="font-size: 1.1rem;"></i> Actualizar Modelo
+                    </button>
+                </div>
+            </div>
+
             <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;">
-                Se inyectarán registros históricos simulados de inscripciones por área. El modelo realizará una regresión lineal imputando los datos faltantes para calcular la adopción futura.
+                El motor de Inteligencia Artificial analiza el historial real de proyectos registrados en la plataforma. Mediante algoritmos de Regresión Lineal, proyecta el volumen de demanda para próximos trimestres académicos, facilitando la toma de decisiones estratégicas.
             </p>
             
-            <div id="loading-tendencias" style="display: none; color: var(--li-emerald, #10b981); font-style: italic; margin-bottom: 1rem;">
+            <div id="loading-tendencias" style="display: none; color: #505984; font-style: italic; margin-bottom: 1rem;">
                 <i class="ph-bold ph-spinner ph-spin"></i> Calculando proyecciones con IA...
             </div>
             
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: start;">
+            <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 2rem; align-items: start;">
                 
-                <!-- Gráfico de Adopción -->
-                <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                    <canvas id="tendenciasChart" height="280"></canvas>
+                <!-- Columna Izquierda: Gráfico + Insights -->
+                <div>
+                    <!-- Gráfico de Adopción -->
+                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <canvas id="tendenciasChart" height="280"></canvas>
+                    </div>
+
+                    <!-- Insights Automáticos (Se llenará con JS) -->
+                    <div id="insights-tendencias" style="margin-top: 1.5rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                    </div>
                 </div>
                 
                 <!-- Panel de KPIs y Saturación -->
@@ -52,68 +86,7 @@
         </div>
     </div>
 
-    <!-- ╔══ SECCIÓN 2: CLASIFICADOR DOCUMENTAL (NLP) ═══════════════════════╗ -->
-    <div class="li-form-card">
-        <div class="li-form-header">
-            <i class="ph-bold ph-text-aa" style="color:var(--li-indigo, #6366f1);"></i>
-            <span style="color: #2c3e50; font-weight: 600;">Motor de Clasificación Documental (NLP)</span>
-        </div>
-        
-        <div class="li-form-body">
-            <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;">
-                Prueba el modelo Multiclase (Naive Bayes) extrayendo características de texto libre mediante TF-IDF. Clasifica de forma automática la temática de la tesis.
-            </p>
-            
-            <div style="display: grid; grid-template-columns: 2fr 1.5fr; gap: 2rem; align-items: start;">
-                
-                <!-- Formulario NLP -->
-                <div>
-                    <div class="li-form-group">
-                        <label for="nlp-titulo">Título del Documento *</label>
-                        <input type="text" id="nlp-titulo" placeholder="Ej: Desarrollo de API Restful con PHP...">
-                    </div>
-                    
-                    <div class="li-form-group li-form-full">
-                        <label for="nlp-resumen">Resumen Abstracto *</label>
-                        <textarea id="nlp-resumen" rows="3" placeholder="Ingresa el resumen de la investigación..."></textarea>
-                    </div>
-                    
-                    <div class="li-form-group li-form-full">
-                        <label for="nlp-objetivos">Objetivos Principales</label>
-                        <textarea id="nlp-objetivos" rows="2" placeholder="1. Desarrollar un modelo de predicción..."></textarea>
-                    </div>
-                    
-                    <div class="li-form-actions" style="margin-top: 1rem; justify-content: flex-start;">
-                        <button id="btn-cargar-nlp" class="btn btn-secondary" style="cursor:pointer;">
-                            <i class="ph-bold ph-magic-wand"></i> Inyectar Prueba
-                        </button>
-                        <button id="btn-clasificar" class="btn" style="background:var(--li-indigo, #6366f1);color:#fff; cursor:pointer;">
-                            <i class="ph-bold ph-cpu"></i> Ejecutar Inferencia NLP
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Resultados NLP -->
-                <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.5rem; height: 100%; display: flex; flex-direction: column; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                    <h4 style="margin-bottom: 1rem; color: #1e293b; font-size: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">
-                        <i class="ph-bold ph-terminal-window"></i> Salida del Tensor
-                    </h4>
-                    
-                    <div id="loading-nlp" style="display: none; color: var(--li-indigo, #6366f1); font-style: italic; margin-bottom: 1rem;">
-                        <i class="ph-bold ph-spinner ph-spin"></i> Analizando vectores del texto...
-                    </div>
-                    
-                    <div id="resultado-nlp-box" style="flex-grow: 1;">
-                        <div class="li-empty-state" style="padding: 1rem; margin-top: 1rem;">
-                            <i class="ph-bold ph-cube" style="font-size: 2rem; color: #cbd5e1;"></i>
-                            <p style="font-size: 0.8rem; margin-top: 0.5rem; color: #94a3b8;">Esperando ejecución para mostrar métricas (F1-Score, Confusión) y categoría predicha.</p>
-                        </div>
-                    </div>
-                </div>
-                
-            </div>
-        </div>
-    </div>
+
 
 </div>
 

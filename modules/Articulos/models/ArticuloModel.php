@@ -18,16 +18,8 @@ class ArticuloModel {
             $condiciones[] = "(
                 LOWER(r.titulo) LIKE LOWER(:q) OR
                 LOWER(d.resumen) LIKE LOWER(:q) OR
-                EXISTS (
-                    SELECT 1 FROM recurso_autores ra 
-                    JOIN autores a ON ra.id_autor = a.id 
-                    WHERE ra.id_recurso = r.id AND LOWER(a.nombre_completo) LIKE LOWER(:q)
-                ) OR
-                EXISTS (
-                    SELECT 1 FROM recurso_categorias rc 
-                    JOIN categorias c ON rc.id_categoria = c.id 
-                    WHERE rc.id_recurso = r.id AND LOWER(c.nombre) LIKE LOWER(:q)
-                )
+                LOWER(a.nombre_completo) LIKE LOWER(:q) OR
+                LOWER(c.nombre) LIKE LOWER(:q)
             )";
             $parametros[':q'] = '%' . $texto . '%';
         }
@@ -47,12 +39,7 @@ class ArticuloModel {
                 $parametros[$key] = $id;
             }
 
-            $condiciones[] = "EXISTS (
-                SELECT 1
-                FROM recurso_categorias rc
-                WHERE rc.id_recurso = r.id
-                AND rc.id_categoria IN (" . implode(', ', $placeholders) . ")
-            )";
+            $condiciones[] = 'd.id_categoria IN (' . implode(', ', $placeholders) . ')';
         }
 
         if (!empty($filtros['etiquetas'])) {
@@ -85,14 +72,10 @@ class ArticuloModel {
                 d.numero,
                 d.imagen_portada,
                 d.resumen,
-                COALESCE((
-                    SELECT STRING_AGG(DISTINCT c2.nombre, ', ' ORDER BY c2.nombre)
-                    FROM recurso_categorias rc2
-                    LEFT JOIN categorias c2 ON c2.id = rc2.id_categoria
-                    WHERE rc2.id_recurso = r.id
-                ), 'Sin categoría') AS categoria
+                c.nombre AS categoria
             FROM recursos r
             INNER JOIN detalles_articulos d ON d.id_recurso = r.id
+            LEFT JOIN categorias c ON c.id = d.id_categoria
             LEFT JOIN recurso_autores ra ON ra.id_recurso = r.id
             LEFT JOIN autores a ON a.id = ra.id_autor
             WHERE " . implode(' AND ', $condiciones) . "
@@ -130,23 +113,15 @@ public function contarArticulos(array $filtros = []) {
     $parametros = [':tipo' => 3];
 
     if (!empty($filtros['q'])) {
-            $texto = trim($filtros['q']);
-            $condiciones[] = "(
-                LOWER(r.titulo) LIKE LOWER(:q) OR
-                LOWER(d.resumen) LIKE LOWER(:q) OR
-                EXISTS (
-                    SELECT 1 FROM recurso_autores ra 
-                    JOIN autores a ON ra.id_autor = a.id 
-                    WHERE ra.id_recurso = r.id AND LOWER(a.nombre_completo) LIKE LOWER(:q)
-                ) OR
-                EXISTS (
-                    SELECT 1 FROM recurso_categorias rc 
-                    JOIN categorias c ON rc.id_categoria = c.id 
-                    WHERE rc.id_recurso = r.id AND LOWER(c.nombre) LIKE LOWER(:q)
-                )
-            )";
-            $parametros[':q'] = '%' . $texto . '%';
-        }
+        $texto = trim($filtros['q']);
+        $condiciones[] = "(
+            LOWER(r.titulo) LIKE LOWER(:q) OR
+            LOWER(d.resumen) LIKE LOWER(:q) OR
+            LOWER(a.nombre_completo) LIKE LOWER(:q) OR
+            LOWER(c.nombre) LIKE LOWER(:q)
+        )";
+        $parametros[':q'] = '%' . $texto . '%';
+    }
 
     if (!empty($filtros['year'])) {
         $condiciones[] = 'r.anio_publicacion = :year';
@@ -163,12 +138,7 @@ public function contarArticulos(array $filtros = []) {
             $parametros[$key] = $id;
         }
 
-        $condiciones[] = "EXISTS (
-            SELECT 1
-            FROM recurso_categorias rc
-            WHERE rc.id_recurso = r.id
-            AND rc.id_categoria IN (" . implode(', ', $placeholders) . ")
-        )";
+        $condiciones[] = 'd.id_categoria IN (' . implode(', ', $placeholders) . ')';
     }
 
     if (!empty($filtros['etiquetas'])) {
@@ -195,6 +165,7 @@ public function contarArticulos(array $filtros = []) {
             SELECT DISTINCT r.id
             FROM recursos r
             INNER JOIN detalles_articulos d ON d.id_recurso = r.id
+            LEFT JOIN categorias c ON c.id = d.id_categoria
             LEFT JOIN recurso_autores ra ON ra.id_recurso = r.id
             LEFT JOIN autores a ON a.id = ra.id_autor
             WHERE " . implode(' AND ', $condiciones) . "
@@ -235,7 +206,7 @@ public function obtenerEtiquetas() {
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
-    public function registrarArticulo($titulo, $resumen, $categorias, $id_editorial, $archivo_pdf, $anio_publicacion, $volumen, $numero, $issn, $nombreImagen, $autores, $autores_nuevos, $etiquetas) {
+    public function registrarArticulo($titulo, $resumen, $id_categoria, $id_editorial, $archivo_pdf, $anio_publicacion, $volumen, $numero, $issn, $nombreImagen, $autores, $autores_nuevos, $etiquetas) {
         $db = Connection::getInstance();
         
         try {
@@ -255,15 +226,14 @@ public function obtenerEtiquetas() {
             // Usamos PDO directo aquí porque la tabla detalles_articulos no tiene una columna serial llamada "id", 
             // su llave primaria es id_recurso. Si usamos el QueryBuilder, intentará devolver un "id" y PostgreSQL dará error.
 
-            $stmtDetalle = $db->prepare("INSERT INTO detalles_articulos (
-        id_recurso, id_editorial, volumen, numero, issn, imagen_portada, resumen
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmtDetalle = $db->prepare("INSERT INTO detalles_articulos (id_recurso, id_editorial, volumen, numero, issn, id_categoria, imagen_portada, resumen) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             $stmtDetalle->execute([
                 $id_recurso, 
                 $id_editorial ?: null, 
                 $volumen ?: null, 
                 $numero ?: null, 
                 $issn ?: null, 
+                $id_categoria ?: null, 
                 $nombreImagen,
                 $resumen
             ]);
@@ -278,7 +248,6 @@ public function obtenerEtiquetas() {
                     }
                 }
             }
-            
             
             // Creamos los autores nuevos ingresados al vuelo (Corrección PostgreSQL)
             if (!empty($autores_nuevos)) {
@@ -316,12 +285,6 @@ public function obtenerEtiquetas() {
                     $stmtTag->execute([$id_recurso, (int)$id_tag]);
                 }
             }
-            if (!empty($categorias)) {
-                $stmtCat = $db->prepare("INSERT INTO recurso_categorias (id_recurso, id_categoria) VALUES (?, ?)");
-                foreach (array_unique(array_map('intval', $categorias)) as $catId) {
-                    $stmtCat->execute([$id_recurso, $catId]);
-                }
-            }
 
             // Si todo salió bien, guardamos los cambios físicamente
             $db->commit();
@@ -356,10 +319,10 @@ public function obtenerEtiquetas() {
         return $qb->tabla('recursos')->where('id', '=', $id_recurso)->delete();
     }
 public function obtenerArticuloPorId($id) {
-    $db = Connection::getInstance();
+    $qb = new QueryBuilder();
 
-    $stmt = $db->prepare("
-        SELECT
+    $articulos = $qb->tabla('recursos r')
+        ->select('
             r.id,
             r.titulo,
             r.anio_publicacion,
@@ -367,54 +330,43 @@ public function obtenerArticuloPorId($id) {
             d.volumen,
             d.numero,
             d.issn,
+            d.id_categoria,
             d.id_editorial,
             d.imagen_portada,
             d.resumen,
-            COALESCE((
-                SELECT STRING_AGG(DISTINCT c2.nombre, ', ' ORDER BY c2.nombre)
-                FROM recurso_categorias rc2
-                JOIN categorias c2 ON c2.id = rc2.id_categoria
-                WHERE rc2.id_recurso = r.id
-            ), 'Sin categoría') AS categoria
-        FROM recursos r
-        JOIN detalles_articulos d ON d.id_recurso = r.id
-        WHERE r.id = ?
-          AND r.id_tipo_recurso = 3
-        LIMIT 1
-    ");
+            c.nombre as categoria
+        ')
+        ->join('detalles_articulos d', 'r.id = d.id_recurso')
+        ->join('categorias c', 'd.id_categoria = c.id', 'LEFT')
+        ->where('r.id', '=', (int) $id)
+        ->where('r.id_tipo_recurso', '=', 3)
+        ->limit(1)
+        ->get();
 
-    $stmt->execute([(int) $id]);
-    $articulo = $stmt->fetch(PDO::FETCH_ASSOC);
+    $articulo = $articulos[0] ?? null;
 
     if (!$articulo) {
         return null;
     }
 
-    $stmtAutores = $db->prepare("
+    $db = Connection::getInstance();
+
+    $stmt = $db->prepare("
         SELECT a.nombre_completo
         FROM recurso_autores ra
         JOIN autores a ON a.id = ra.id_autor
         WHERE ra.id_recurso = ?
         ORDER BY a.nombre_completo ASC
     ");
-    $stmtAutores->execute([(int) $id]);
-    $autores = $stmtAutores->fetchAll(PDO::FETCH_COLUMN);
 
-    $stmtCategorias = $db->prepare("
-        SELECT rc.id_categoria
-        FROM recurso_categorias rc
-        WHERE rc.id_recurso = ?
-        ORDER BY rc.id_categoria ASC
-    ");
-    $stmtCategorias->execute([(int) $id]);
-    $categorias = array_map('intval', $stmtCategorias->fetchAll(PDO::FETCH_COLUMN));
+    $stmt->execute([(int)$id]);
+    $autores = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
     $articulo['autores'] = $autores;
     $articulo['autores_text'] = !empty($autores) ? implode(', ', $autores) : 'Autor no registrado';
-    $articulo['categorias'] = $categorias;
 
     return $articulo;
-}
+    }
 public function obtenerAutoresDelArticulo($id_recurso) {
     $db = Connection::getInstance();
     $stmt = $db->prepare("
@@ -443,7 +395,7 @@ public function actualizarArticulo(
     $id,
     $titulo,
     $resumen,
-    $categorias,
+    $id_categoria,
     $id_editorial,
     $archivo_pdf,
     $anio_publicacion,
@@ -454,8 +406,7 @@ public function actualizarArticulo(
     $autores,
     $autores_nuevos,
     $etiquetas
-) {
-    $db = Connection::getInstance();
+){    $db = Connection::getInstance();
 
     try {
         $db->beginTransaction();
@@ -469,33 +420,13 @@ public function actualizarArticulo(
 
         $stmtDet = $db->prepare("
             UPDATE detalles_articulos
-            SET id_editorial = ?, volumen = ?, numero = ?, issn = ?, imagen_portada = ?, resumen = ?
+            SET id_editorial = ?, volumen = ?, numero = ?, issn = ?, id_categoria = ?, imagen_portada = ?, resumen = ?
             WHERE id_recurso = ?
         ");
-        $stmtDet->execute([
-            $id_editorial ?: null,
-            $volumen ?: null,
-            $numero ?: null,
-            $issn ?: null,
-            $nombreImagen,
-            $resumen,
-            $id
-        ]);
+        $stmtDet->execute([$id_editorial ?: null, $volumen ?: null, $numero ?: null, $issn ?: null, $id_categoria ?: null, $nombreImagen, $resumen, $id]);
 
-        // Limpiar relaciones viejas antes de volver a insertar
         $db->prepare("DELETE FROM recurso_autores WHERE id_recurso = ?")->execute([$id]);
-        $db->prepare("DELETE FROM recurso_etiquetas WHERE id_recurso = ?")->execute([$id]);
-        $db->prepare("DELETE FROM recurso_categorias WHERE id_recurso = ?")->execute([$id]);
 
-        // Insertar categorías nuevas
-        if (!empty($categorias)) {
-            $stmtCat = $db->prepare("INSERT INTO recurso_categorias (id_recurso, id_categoria) VALUES (?, ?)");
-            foreach (array_unique(array_map('intval', $categorias)) as $catId) {
-                $stmtCat->execute([$id, $catId]);
-            }
-        }
-
-        // Insertar autores nuevos
         $autores_finales = [];
 
         if (!empty($autores)) {
@@ -531,8 +462,7 @@ public function actualizarArticulo(
                 $stmtAutor->execute([$id, $id_a]);
             }
         }
-
-        // Insertar etiquetas nuevas
+        $db->prepare("DELETE FROM recurso_etiquetas WHERE id_recurso = ?")->execute([$id]);
         if (!empty($etiquetas)) {
             $stmtTag = $db->prepare("INSERT INTO recurso_etiquetas (id_recurso, id_etiqueta) VALUES (?, ?)");
             foreach ($etiquetas as $id_tag) {
@@ -547,134 +477,4 @@ public function actualizarArticulo(
         throw $e;
     }
 }
-public function obtenerCatalogoPaginado($tabla, $buscar = '', $pagina = 1, $porPagina = 5) {
-        $db = Connection::getInstance();
-        $offset = ($pagina - 1) * $porPagina;
-        
-        $where = "";
-        if ($buscar !== '') {
-            // Usamos LOWER para que la búsqueda ignore mayúsculas y minúsculas
-            $where = "WHERE LOWER(nombre) LIKE LOWER(:buscar)";
-        }
-
-        // 1. Contar el total para la paginación
-        $stmtTotal = $db->prepare("SELECT COUNT(*) FROM $tabla $where");
-        if ($buscar !== '') {
-            $stmtTotal->bindValue(':buscar', "%" . trim($buscar) . "%", PDO::PARAM_STR);
-        }
-        $stmtTotal->execute();
-        $total = (int)$stmtTotal->fetchColumn();
-
-        // 2. Extraer los datos limitados
-        $sql = "SELECT id, nombre FROM $tabla $where ORDER BY nombre ASC LIMIT :limit OFFSET :offset";
-        $stmt = $db->prepare($sql);
-        
-        if ($buscar !== '') {
-            $stmt->bindValue(':buscar', "%" . trim($buscar) . "%", PDO::PARAM_STR);
-        }
-        $stmt->bindValue(':limit', $porPagina, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-        $stmt->execute();
-        
-        return [
-            'data' => $stmt->fetchAll(PDO::FETCH_ASSOC),
-            'total' => $total,
-            'paginas' => max(1, (int)ceil($total / $porPagina)),
-            'pagina_actual' => $pagina
-        ];
-    }
-
-    public function buscarAutoresGestor($buscar) {
-        if (trim($buscar) === '') return []; // Si no hay búsqueda, devolvemos vacío
-        
-        $db = Connection::getInstance();
-        $termino = "%" . trim($buscar) . "%";
-        // Buscamos por nombre o por cédula limitando a 20 resultados para no saturar
-        $stmt = $db->prepare("SELECT id, nombre_completo, cedula FROM autores WHERE LOWER(nombre_completo) LIKE LOWER(:b) OR LOWER(cedula) LIKE LOWER(:b) ORDER BY nombre_completo ASC LIMIT 20");
-        $stmt->bindValue(':b', $termino, PDO::PARAM_STR);
-        $stmt->execute();
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-public function crearCategoria($nombre) {
-    $db = Connection::getInstance();
-    $stmt = $db->prepare("INSERT INTO categorias (nombre) VALUES (?)");
-    $stmt->execute([trim($nombre)]);
-    return true;
-}
-
-public function crearEtiqueta($nombre) {
-    $db = Connection::getInstance();
-    $stmt = $db->prepare("INSERT INTO etiquetas (nombre) VALUES (?)");
-    $stmt->execute([trim($nombre)]);
-    return true;
-}
-
-public function crearEditorial($nombre) {
-    $db = Connection::getInstance();
-    $stmt = $db->prepare("INSERT INTO editoriales (nombre) VALUES (?)");
-    $stmt->execute([trim($nombre)]);
-    return true;
-}
-
-public function eliminarCategoria($id) {
-    $db = Connection::getInstance();
-    $db->prepare("DELETE FROM recurso_categorias WHERE id_categoria = ?")->execute([$id]);
-    $db->prepare("DELETE FROM categorias WHERE id = ?")->execute([$id]);
-    return true;
-}
-public function obtenerCategoriasDelArticulo($id_recurso) {
-    $db = Connection::getInstance();
-    $stmt = $db->prepare("
-        SELECT rc.id_categoria
-        FROM recurso_categorias rc
-        WHERE rc.id_recurso = ?
-        ORDER BY rc.id_categoria ASC
-    ");
-    $stmt->execute([(int)$id_recurso]);
-    return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
-}
-// --- MÉTODOS FALTANTES DE ELIMINACIÓN ---
-    public function eliminarEtiqueta($id) {
-        $db = Connection::getInstance();
-        $db->prepare("DELETE FROM recurso_etiquetas WHERE id_etiqueta = ?")->execute([$id]);
-        $db->prepare("DELETE FROM etiquetas WHERE id = ?")->execute([$id]);
-        return true;
-    }
-
-    public function eliminarEditorial($id) {
-        $db = Connection::getInstance();
-        // Ponemos el ID en NULL en los artículos para que no se queden sin datos o exploten
-        $db->prepare("UPDATE detalles_articulos SET id_editorial = NULL WHERE id_editorial = ?")->execute([$id]);
-        $db->prepare("DELETE FROM editoriales WHERE id = ?")->execute([$id]);
-        return true;
-    }
-
-    // --- MÉTODOS NUEVOS DE ACTUALIZACIÓN (EDICIÓN) ---
-    public function actualizarCategoria($id, $nombre) {
-        $db = Connection::getInstance();
-        $db->prepare("UPDATE categorias SET nombre = ? WHERE id = ?")->execute([trim($nombre), $id]);
-        return true;
-    }
-
-    public function actualizarEtiqueta($id, $nombre) {
-        $db = Connection::getInstance();
-        $db->prepare("UPDATE etiquetas SET nombre = ? WHERE id = ?")->execute([trim($nombre), $id]);
-        return true;
-    }
-
-    public function actualizarEditorial($id, $nombre) {
-        $db = Connection::getInstance();
-        $db->prepare("UPDATE editoriales SET nombre = ? WHERE id = ?")->execute([trim($nombre), $id]);
-        return true;
-    }
-
-    public function actualizarAutor($id, $nombre, $cedula) {
-        $db = Connection::getInstance();
-        // Actualizamos nombre y cédula (si la cédula está vacía la guardamos como NULL)
-        $db->prepare("UPDATE autores SET nombre_completo = ?, cedula = ? WHERE id = ?")
-           ->execute([trim($nombre), trim($cedula) ?: null, $id]);
-        return true;
-    }
 }

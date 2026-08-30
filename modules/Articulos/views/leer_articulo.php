@@ -16,10 +16,9 @@
                             <?= htmlspecialchars($articulo['categoria'] ?? 'Artículo') ?>
                         </span>
 
-                        <?php if (!empty($articulo['volumen']) || !empty($articulo['numero'])): ?>
+                        <?php if (!empty($articulo['volumen'])): ?>
                             <span class="art-detail-hero__volume">
-                                Vol. <?= htmlspecialchars($articulo['volumen'] ?? 'N/A') ?>
-                                <?= !empty($articulo['numero']) ? ' - Núm. ' . htmlspecialchars($articulo['numero']) : '' ?>
+                                Vol. <?= htmlspecialchars($articulo['volumen']) ?>
                             </span>
                         <?php endif; ?>
                     </div>
@@ -29,7 +28,6 @@
                     <p class="art-detail-hero__authors">
                         Por: <?= htmlspecialchars($articulo['autores_text'] ?? 'Autor no registrado') ?>
                         | Publicado: <?= htmlspecialchars($articulo['anio_publicacion'] ?? 'Sin año') ?>
-                        <?= !empty($articulo['issn']) ? ' | ISSN: ' . htmlspecialchars($articulo['issn']) : '' ?>
                     </p>
                 </div>
             </header>

@@ -12,130 +12,178 @@ if ($esProfesor) {
 ?>
     <style>
         .ve-btn-filtro {
-            background-color: var(--ve-blanco-puro, #ffffff);
-            color: var(--ve-secundario, #505984);
-            border: 1px solid #dcdde1;
-            padding: 0.6rem 1.4rem;
+            background-color: #ffffff;
+            color: #505984;
+            border: 1px solid #cbd5e1;
+            padding: 0.6rem 1.2rem;
             border-radius: 6px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
             font-size: 0.9rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
         .ve-btn-filtro:hover {
-            border-color: var(--ve-terciario, #7090CB);
-            background-color: #f8f9fa;
+            border-color: #7090cb;
+            color: #121a3e;
+            background-color: #f8fafc;
         }
         .ve-btn-filtro.active {
-            background-color: var(--ve-principal, #121A3E);
+            background-color: #121a3e;
             color: #ffffff;
-            border-color: var(--ve-principal, #121A3E);
-            box-shadow: 0 4px 10px rgba(18, 26, 62, 0.25);
+            border-color: #121a3e;
+            box-shadow: 0 4px 6px -1px rgba(18, 26, 62, 0.2);
         }
         
-        /* Badges usando estrictamente la paleta del sistema */
-        .badge-pendiente { background-color: #eef2f9; color: var(--ve-secundario, #505984); border: 1px solid var(--ve-terciario, #7090CB); }
-        .badge-aceptada { background-color: var(--ve-principal, #121A3E); color: #ffffff; border: 1px solid var(--ve-principal, #121A3E); }
-        .badge-rechazada { background-color: var(--ve-gris, #A9A8A6); color: #ffffff; border: 1px solid var(--ve-gris, #A9A8A6); }
+        /* Badges de Estado */
+        .badge-estado {
+            padding: 4px 10px; 
+            border-radius: 12px; 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            letter-spacing: 0.5px;
+        }
+        .badge-pendiente { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+        .badge-aceptada { background-color: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
+        .badge-rechazada { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
         
-        .ve-btn-aceptar { background-color: var(--ve-principal); color: var(--ve-blanco-puro); border: none; padding: 0.7rem 1.5rem; border-radius: 6px; cursor: pointer; transition: 0.3s; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .ve-btn-aceptar:hover { background-color: var(--ve-secundario); transform: translateY(-2px); }
+        .propuesta-card {
+            transition: all 0.2s ease;
+        }
+        .propuesta-card:hover {
+            background-color: #f8fafc;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .ve-btn-aceptar { background-color: #10b981; color: white; border: none; padding: 0.7rem 1.5rem; border-radius: 6px; cursor: pointer; transition: 0.3s; font-weight: bold; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2); display: inline-flex; align-items: center; gap: 5px; }
+        .ve-btn-aceptar:hover { background-color: #059669; }
         
-        .ve-btn-rechazar { background-color: transparent; color: var(--ve-secundario); border: 2px solid var(--ve-secundario); padding: 0.6rem 1.4rem; border-radius: 6px; cursor: pointer; transition: 0.3s; font-weight: bold; }
-        .ve-btn-rechazar:hover { background-color: var(--ve-secundario); color: var(--ve-blanco-puro); }
+        .ve-btn-rechazar { background-color: white; color: #ef4444; border: 1px solid #ef4444; padding: 0.7rem 1.5rem; border-radius: 6px; cursor: pointer; transition: 0.3s; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;}
+        .ve-btn-rechazar:hover { background-color: #fef2f2; }
     </style>
     
-    <div class="ve-kanban-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-        <div>
-            <h1>Banco de Proyectos Socio Tecnológicos (PST)</h1>
-            <p><?php echo $esProfesor ? "Administración de propuestas recibidas" : "Filtrado por nivel de complejidad arquitectónica para asignación académica."; ?></p>
-        </div>
-        
-        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-            
-            <div style="position: relative; width: 100%; max-width: 350px;">
-                <input type="text" id="searchInput" placeholder="Buscar por empresa o área..." style="padding: 0.6rem 1rem 0.6rem 2.5rem; border-radius: 50px; border: 1px solid #dcdde1; width: 100%; min-width: 250px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); outline: none; transition: 0.2s;" onkeyup="aplicarFiltros()" onfocus="this.style.borderColor='var(--ve-terciario, #7090CB)'; this.style.boxShadow='0 0 0 3px rgba(112, 144, 203, 0.1)';" onblur="this.style.borderColor='#dcdde1'; this.style.boxShadow='0 2px 5px rgba(0,0,0,0.02)';">
-                <svg style="position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); color: #999;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
+    <!-- HEADER CORPORATIVO -->
+    <div style="background: #ffffff; border-radius: 10px; padding: 20px 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); margin-bottom: 25px; border-left: 5px solid #121a3e;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+            <div>
+                <h1 style="margin: 0; color: #121a3e; font-size: 1.4rem; display: flex; align-items: center; gap: 10px; font-weight: 800;">
+                    <i class="ph-fill ph-briefcase" style="color: #505984;"></i> Banco de Proyectos (PST)
+                </h1>
+                <p style="margin: 6px 0 0 0; color: #64748b; font-size: 0.95rem;">
+                    <?php echo $esProfesor ? "Administración centralizada de propuestas corporativas para asignación académica." : "Explora oportunidades y postula tu equipo a los proyectos disponibles."; ?>
+                </p>
             </div>
             
-            <div style="position: relative;">
-                <select id="trayectoFilter" onchange="aplicarFiltros()" style="appearance: none; background: #f8f9fa; border: 1px solid #dcdde1; border-radius: 6px; padding: 0.6rem 2rem 0.6rem 0.8rem; font-size: 0.85rem; color: var(--ve-secundario, #505984); outline: none; cursor: pointer; transition: 0.2s; font-weight: 500;" onfocus="this.style.borderColor='var(--ve-terciario, #7090CB)'; this.style.boxShadow='0 0 0 3px rgba(112, 144, 203, 0.1)';" onblur="this.style.borderColor='#dcdde1'; this.style.boxShadow='none';">
-                    <option value="">Todos los Trayectos</option>
-                    <option value="Trayecto I">Trayecto I</option>
-                    <option value="Trayecto II">Trayecto II</option>
-                    <option value="Trayecto III">Trayecto III</option>
-                    <option value="Trayecto IV">Trayecto IV</option>
-                    <option value="Postgrado / Maestría">Postgrado / Maestría</option>
-                    <option value="Sin Asignar">Sin Asignar</option>
-                </select>
-                <span style="position: absolute; right: 0.8rem; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--ve-secundario, #505984); font-size: 0.7rem;">▼</span>
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <!-- Buscador -->
+                <div style="position: relative; width: 100%; max-width: 300px;">
+                    <input type="text" id="searchInput" placeholder="Buscar empresa o área..." style="padding: 0.6rem 1rem 0.6rem 2.5rem; border-radius: 6px; border: 1px solid #cbd5e1; width: 100%; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02); outline: none; transition: 0.2s; font-size: 0.9rem;" onkeyup="aplicarFiltros()" onfocus="this.style.borderColor='#7090cb'; this.style.boxShadow='0 0 0 3px rgba(112, 144, 203, 0.15)';">
+                    <i class="ph-bold ph-magnifying-glass" style="position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 1.1rem;"></i>
+                </div>
+                
+                <!-- Filtro Trayecto -->
+                <div style="position: relative;">
+                    <select id="trayectoFilter" onchange="aplicarFiltros()" style="appearance: none; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.6rem 2.2rem 0.6rem 1rem; font-size: 0.9rem; color: #121a3e; outline: none; cursor: pointer; transition: 0.2s; font-weight: 600;" onfocus="this.style.borderColor='#7090cb';">
+                        <option value="">Todos los Trayectos</option>
+                        <option value="Trayecto I">Trayecto I</option>
+                        <option value="Trayecto II">Trayecto II</option>
+                        <option value="Trayecto III">Trayecto III</option>
+                        <option value="Trayecto IV">Trayecto IV</option>
+                        <option value="Postgrado / Maestría">Postgrado / Maestría</option>
+                        <option value="Sin Asignar">Sin Asignar</option>
+                    </select>
+                    <i class="ph-bold ph-caret-down" style="position: absolute; right: 0.8rem; top: 50%; transform: translateY(-50%); pointer-events: none; color: #64748b;"></i>
+                </div>
+                
+                <?php if($esProfesor): ?>
+                <!-- Filtros de Estado -->
+                <div style="display: flex; gap: 8px; background: #f1f5f9; padding: 4px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <button class="ve-btn-filtro active" style="padding: 0.4rem 1rem; border:none; box-shadow:none;" data-filter="todas" onclick="setFiltroEstado('todas', this)">Todas</button>
+                    <button class="ve-btn-filtro" style="padding: 0.4rem 1rem; border:none; box-shadow:none;" data-filter="pendiente" onclick="setFiltroEstado('pendiente', this)"><i class="ph-fill ph-clock"></i> Pendientes</button>
+                    <button class="ve-btn-filtro" style="padding: 0.4rem 1rem; border:none; box-shadow:none;" data-filter="aceptada" onclick="setFiltroEstado('aceptada', this)"><i class="ph-fill ph-check-circle"></i> Aceptadas</button>
+                </div>
+                <?php endif; ?>
             </div>
-            
-            <?php if($esProfesor): ?>
-            <div class="ve-filtros" style="display: flex; gap: 10px;">
-                <button class="ve-btn-filtro active" data-filter="todas" onclick="setFiltroEstado('todas', this)">Todas</button>
-                <button class="ve-btn-filtro" data-filter="pendiente" onclick="setFiltroEstado('pendiente', this)">Pendientes</button>
-                <button class="ve-btn-filtro" data-filter="aceptada" onclick="setFiltroEstado('aceptada', this)">Aceptadas</button>
-                <button class="ve-btn-filtro" data-filter="rechazada" onclick="setFiltroEstado('rechazada', this)">Rechazadas</button>
-            </div>
-            <?php endif; ?>
         </div>
     </div>
 
-    <div class="ve-table-responsive" style="overflow-x: auto; width: 100%; margin-top: 5px;">
-        <?php if(empty($propuestas)): ?>
-            <p style="text-align:center; padding: 20px;">No hay propuestas disponibles en este momento.</p>
-        <?php else: ?>
-            <table class="ve-table" style="width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden;">
-                <thead style="background: var(--ve-principal, #121A3E); color: #fff;">
-                    <tr>
-                        <?php if($esProfesor): ?>
-                        <th style="padding: 14px; text-align: left;">Estado</th>
-                        <?php endif; ?>
-                        <th style="padding: 14px; text-align: left;">Empresa</th>
-                        <th style="padding: 14px; text-align: left;">Área Afectada</th>
-                        <th style="padding: 14px; text-align: left;">Nivel / Trayecto</th>
-                        <th style="padding: 14px; text-align: left;">Fecha</th>
-                        <th style="padding: 14px; text-align: center;">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tablaPropuestas">
-                    <?php foreach ($propuestas as $p): ?>
-                        <tr class="propuesta-card" data-estado="<?php echo htmlspecialchars($p['estado']); ?>" data-trayecto="<?php echo htmlspecialchars($p['nivel_trayecto'] ?? 'Sin Asignar'); ?>" style="border-bottom: 1px solid #eee;">
+    <!-- TABLA DE DATOS -->
+    <div style="background: #ffffff; border-radius: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; overflow: hidden;">
+        <div style="overflow-x: auto; width: 100%;">
+            <?php if(empty($propuestas)): ?>
+                <div style="text-align:center; padding: 40px 20px; color: #64748b;">
+                    <i class="ph-thin ph-folder-open" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 10px; display: block;"></i>
+                    <p style="font-size: 1.1rem;">No hay propuestas disponibles en este momento.</p>
+                </div>
+            <?php else: ?>
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                        <tr>
                             <?php if($esProfesor): ?>
-                            <td style="padding: 12px;">
-                                <span class="badge-<?php echo htmlspecialchars($p['estado']); ?>" style="padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; display: inline-block;">
-                                    <?php echo strtoupper(htmlspecialchars($p['estado'])); ?>
-                                </span>
-                            </td>
+                            <th style="padding: 15px 20px; color: #505984; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;"><i class="ph-bold ph-activity" style="margin-right: 5px;"></i> Estado</th>
                             <?php endif; ?>
-                            <td style="padding: 12px; font-weight: bold; color: var(--ve-principal);" class="texto-busqueda"><?php echo htmlspecialchars($p['nombre_empresa']); ?></td>
-                            <td style="padding: 12px; color: var(--ve-secundario);" class="texto-busqueda"><?php echo htmlspecialchars($p['area_afectada']); ?></td>
-                            <td style="padding: 12px; color: #555;"><?php echo htmlspecialchars($p['nivel_trayecto'] ?? 'Sin Asignar'); ?></td>
-                            <td style="padding: 12px; color: #777; font-size: 0.9rem;"><?php echo date('d/m/Y', strtotime($p['fecha_creacion'])); ?></td>
-                            <td style="padding: 12px; text-align: center;">
-                                <button class="ve-btn-filtro" style="padding: 5px 12px; font-size: 0.85rem;" onclick="abrirModal(
-                                    '<?php echo addslashes(htmlspecialchars($p['nombre_empresa'])); ?>', 
-                                    '<?php echo addslashes(htmlspecialchars($p['area_afectada'])); ?>', 
-                                    '<?php echo addslashes(htmlspecialchars($p['descripcion_problema'])); ?>', 
-                                    '<?php echo addslashes(htmlspecialchars($p['nivel_trayecto'] ?? 'Pendiente')); ?>',
-                                    '<?php echo addslashes(htmlspecialchars($p['correo_contacto'])); ?>',
-                                    '<?php echo addslashes(htmlspecialchars($p['telefono_contacto'])); ?>',
-                                    <?php echo $p['id']; ?>,
-                                    '<?php echo $p['estado']; ?>'
-                                )">
-                                    <?php echo $esProfesor ? 'Ver Detalle' : 'Ver Detalles para Postulación'; ?>
-                                </button>
-                            </td>
+                            <th style="padding: 15px 20px; color: #505984; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;"><i class="ph-bold ph-buildings" style="margin-right: 5px;"></i> Empresa</th>
+                            <th style="padding: 15px 20px; color: #505984; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;"><i class="ph-bold ph-target" style="margin-right: 5px;"></i> Área Requerida</th>
+                            <th style="padding: 15px 20px; color: #505984; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;"><i class="ph-bold ph-graduation-cap" style="margin-right: 5px;"></i> Trayecto Acad.</th>
+                            <th style="padding: 15px 20px; color: #505984; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;"><i class="ph-bold ph-calendar-blank" style="margin-right: 5px;"></i> Recepción</th>
+                            <th style="padding: 15px 20px; text-align: right;"></th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php endif; ?>
+                    </thead>
+                    <tbody id="tablaPropuestas">
+                        <?php foreach ($propuestas as $p): ?>
+                            <tr class="propuesta-card" data-estado="<?php echo htmlspecialchars($p['estado']); ?>" data-trayecto="<?php echo htmlspecialchars($p['nivel_trayecto'] ?? 'Sin Asignar'); ?>" style="border-bottom: 1px solid #f1f5f9;">
+                                <?php if($esProfesor): ?>
+                                <td style="padding: 15px 20px;">
+                                    <?php 
+                                        $icon = 'ph-clock';
+                                        if($p['estado'] == 'aceptada') $icon = 'ph-check-circle';
+                                        if($p['estado'] == 'rechazada') $icon = 'ph-x-circle';
+                                    ?>
+                                    <span class="badge-estado badge-<?php echo htmlspecialchars($p['estado']); ?>">
+                                        <i class="ph-fill <?php echo $icon; ?>"></i> <?php echo htmlspecialchars($p['estado']); ?>
+                                    </span>
+                                </td>
+                                <?php endif; ?>
+                                <td style="padding: 15px 20px; color: #121a3e; font-weight: 700; font-size: 0.95rem;" class="texto-busqueda">
+                                    <?php echo htmlspecialchars($p['nombre_empresa']); ?>
+                                </td>
+                                <td style="padding: 15px 20px; color: #475569;" class="texto-busqueda">
+                                    <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #e2e8f0;"><?php echo htmlspecialchars($p['area_afectada']); ?></span>
+                                </td>
+                                <td style="padding: 15px 20px; color: #64748b; font-weight: 500; font-size: 0.9rem;">
+                                    <?php echo htmlspecialchars($p['nivel_trayecto'] ?? 'Sin Asignar'); ?>
+                                </td>
+                                <td style="padding: 15px 20px; color: #94a3b8; font-size: 0.85rem; font-weight: 500;">
+                                    <?php echo date('d M, Y', strtotime($p['fecha_creacion'])); ?>
+                                </td>
+                                <td style="padding: 15px 20px; text-align: right;">
+                                    <button class="ve-btn-filtro" style="padding: 6px 12px; font-size: 0.85rem; display: inline-flex; justify-content: center;" onclick="abrirModal(
+                                        '<?php echo addslashes(htmlspecialchars($p['nombre_empresa'])); ?>', 
+                                        '<?php echo addslashes(htmlspecialchars($p['area_afectada'])); ?>', 
+                                        '<?php echo addslashes(htmlspecialchars($p['descripcion_problema'])); ?>', 
+                                        '<?php echo addslashes(htmlspecialchars($p['nivel_trayecto'] ?? 'Pendiente')); ?>',
+                                        '<?php echo addslashes(htmlspecialchars($p['correo_contacto'])); ?>',
+                                        '<?php echo addslashes(htmlspecialchars($p['telefono_contacto'])); ?>',
+                                        <?php echo $p['id']; ?>,
+                                        '<?php echo $p['estado']; ?>'
+                                    )">
+                                        <i class="ph-bold ph-eye" style="font-size: 1.1rem; color: #7090cb;"></i> <?php echo $esProfesor ? 'Revisar' : 'Postular'; ?>
+                                    </button>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
     </div>
 </div>
 

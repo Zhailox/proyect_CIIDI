@@ -54,7 +54,7 @@ class DocumentoModel {
         $db = Connection::getInstance();
         
         $sql = "SELECT r.id, r.titulo, r.anio_publicacion, r.archivo_pdf,
-                       dp.resumen, dp.palabras_clave, dp.comunidad_beneficiada, dp.nivel_academico,
+                       dp.resumen, dp.palabras_clave, dp.comunidad_beneficiada, dp.nivel_academico, dp.trayecto, dp.url_repositorio,
                        li.nombre AS linea_nombre, 
                        li.id AS linea_id,
                        dims.nombre AS dimension_nombre,
@@ -74,32 +74,132 @@ class DocumentoModel {
                 WHERE r.id_tipo_recurso = 1
                   AND COALESCE(dp.id_carrera, li.id_carrera) = 1"; 
                 
-        $params = [];
+        $execParams = [];
         
         if (!empty($filtros['linea_id'])) {
             $sql .= " AND rc.id_linea_investigacion = ?";
-            $params[] = (int)$filtros['linea_id'];
+            $execParams[] = (int)$filtros['linea_id'];
         }
         
         if (!empty($filtros['dimension_id'])) {
             $sql .= " AND rc.id_dimension_operativa = ?";
-            $params[] = (int)$filtros['dimension_id'];
+            $execParams[] = (int)$filtros['dimension_id'];
+        }
+
+        if (!empty($filtros['nivel_academico'])) {
+            $sql .= " AND dp.nivel_academico = ?";
+            $execParams[] = trim($filtros['nivel_academico']);
+        }
+
+        if (!empty($filtros['trayecto'])) {
+            $sql .= " AND dp.trayecto = ?";
+            $execParams[] = trim($filtros['trayecto']);
+        }
+
+        if (!empty($filtros['comunidad'])) {
+            $sql .= " AND dp.comunidad_beneficiada ILIKE ?";
+            $execParams[] = '%' . trim($filtros['comunidad']) . '%';
+        }
+        
+        if (!empty($filtros['anio'])) {
+            $sql .= " AND r.anio_publicacion = ?";
+            $execParams[] = (int)$filtros['anio'];
         }
         
         $sql .= " ORDER BY r.id DESC LIMIT ? OFFSET ?";
         
-        $execParams = [];
-        if (!empty($filtros['linea_id'])) {
-            $execParams[] = (int)$filtros['linea_id'];
-        }
-        if (!empty($filtros['dimension_id'])) {
-            $execParams[] = (int)$filtros['dimension_id'];
-        }
         $execParams[] = $limit;
         $execParams[] = $offset;
         
         $stmt = $db->prepare($sql);
         $stmt->execute($execParams);
+        return $this->cleanArray($stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    /**
+     * Retorna la lista única de comunidades beneficiadas que existen en la BD.
+     */
+    public function getComunidadesBeneficiadas(): array {
+        $db = Connection::getInstance();
+        $sql = "SELECT DISTINCT comunidad_beneficiada 
+                FROM public.detalles_proyectos 
+                WHERE comunidad_beneficiada IS NOT NULL AND TRIM(comunidad_beneficiada) != '' 
+                ORDER BY comunidad_beneficiada ASC";
+        $stmt = $db->query($sql);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $comunidades = [];
+        foreach ($rows as $row) {
+            $clean = $this->cleanCP850($row['comunidad_beneficiada']);
+            if (!empty($clean) && !in_array($clean, $comunidades)) {
+                $comunidades[] = $clean;
+            }
+        }
+        return $comunidades;
+    }
+
+    /**
+     * Obtiene proyectos dinámicamente relacionados o similares en base a la línea de investigación o palabras clave.
+     */
+    public function getProyectosSimilares(int $idRecursoActual, ?int $lineaId = null, int $limit = 3): array {
+        $db = Connection::getInstance();
+        $sql = "SELECT r.id, r.titulo, r.anio_publicacion, dp.resumen, li.nombre AS linea_nombre
+                FROM public.recursos r
+                LEFT JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
+                LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
+                LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
+                WHERE r.id_tipo_recurso = 1 AND r.id != ?";
+        $params = [$idRecursoActual];
+        if ($lineaId) {
+            $sql .= " AND rc.id_linea_investigacion = ?";
+            $params[] = $lineaId;
+        }
+        $sql .= " ORDER BY r.id DESC LIMIT ?";
+        $params[] = $limit;
+        
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        return $this->cleanArray($stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    /**
+     * Cuenta cuántos proyectos existen para una comunidad beneficiada específica (excluyendo opcionalmente el actual).
+     */
+    public function getConteoProyectosComunidad(string $comunidad, ?int $idExcluir = null): int {
+        $db = Connection::getInstance();
+        $sql = "SELECT COUNT(DISTINCT r.id) as total 
+                FROM public.recursos r
+                JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
+                WHERE r.id_tipo_recurso = 1 
+                  AND dp.comunidad_beneficiada IS NOT NULL 
+                  AND TRIM(LOWER(dp.comunidad_beneficiada)) = TRIM(LOWER(?))";
+        $params = [$comunidad];
+        if ($idExcluir) {
+            $sql .= " AND r.id != ?";
+            $params[] = $idExcluir;
+        }
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        $res = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $res ? (int)$res['total'] : 0;
+    }
+
+    /**
+     * Obtiene otros proyectos realizados en la misma comunidad beneficiada.
+     */
+    public function getProyectosMismaComunidad(string $comunidad, int $idExcluir, int $limit = 4): array {
+        $db = Connection::getInstance();
+        $sql = "SELECT r.id, r.titulo, r.anio_publicacion, dp.resumen, dp.comunidad_beneficiada, li.nombre AS linea_nombre
+                FROM public.recursos r
+                JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
+                LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
+                LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
+                WHERE r.id_tipo_recurso = 1 
+                  AND r.id != ? 
+                  AND dp.comunidad_beneficiada IS NOT NULL 
+                  AND TRIM(LOWER(dp.comunidad_beneficiada)) = TRIM(LOWER(?))
+                ORDER BY r.id DESC LIMIT ?";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$idExcluir, $comunidad, $limit]);
         return $this->cleanArray($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
@@ -124,6 +224,22 @@ class DocumentoModel {
         if (!empty($filtros['dimension_id'])) {
             $sql .= " AND rc.id_dimension_operativa = ?";
             $params[] = (int)$filtros['dimension_id'];
+        }
+        if (!empty($filtros['nivel_academico'])) {
+            $sql .= " AND dp.nivel_academico = ?";
+            $params[] = trim($filtros['nivel_academico']);
+        }
+        if (!empty($filtros['trayecto'])) {
+            $sql .= " AND dp.trayecto = ?";
+            $params[] = trim($filtros['trayecto']);
+        }
+        if (!empty($filtros['comunidad'])) {
+            $sql .= " AND dp.comunidad_beneficiada ILIKE ?";
+            $params[] = '%' . trim($filtros['comunidad']) . '%';
+        }
+        if (!empty($filtros['anio'])) {
+            $sql .= " AND r.anio_publicacion = ?";
+            $params[] = (int)$filtros['anio'];
         }
         
         $stmt = $db->prepare($sql);
@@ -250,7 +366,7 @@ class DocumentoModel {
         $db = Connection::getInstance();
         
         $sql = "SELECT r.id, r.titulo, r.anio_publicacion, r.archivo_pdf,
-                       dp.resumen, dp.palabras_clave, dp.comunidad_beneficiada, dp.nivel_academico, dp.fecha_defensa,
+                       dp.resumen, dp.palabras_clave, dp.comunidad_beneficiada, dp.nivel_academico, dp.trayecto, dp.url_repositorio, dp.fecha_defensa,
                        li.nombre AS linea_nombre, 
                        li.id AS linea_id,
                        dims.nombre AS dimension_nombre,
@@ -261,10 +377,16 @@ class DocumentoModel {
                         FROM public.recurso_autores ra 
                         JOIN public.autores a ON ra.id_autor = a.id 
                         WHERE ra.id_recurso = r.id) AS autores_nombres,
-                       (SELECT STRING_AGG(t.nombre_completo || ' (' || tt.nombre || ')', ', ') 
+                       (SELECT STRING_AGG(t.nombre_completo || ' (' || 
+                            CASE pt.tipo_tutor_id 
+                                WHEN 3 THEN 'Tutor Académico'
+                                WHEN 2 THEN 'Tutor Institucional'
+                                WHEN 4 THEN 'Tutor Comunitario'
+                                ELSE COALESCE(tt.nombre, 'Tutor')
+                            END || ')', ' • ') 
                         FROM public.proyecto_tutores pt 
                         JOIN public.tutores t ON pt.id_tutor = t.id 
-                        JOIN public.tipo_tutor tt ON pt.tipo_tutor_id = tt.id
+                        LEFT JOIN public.tipo_tutor tt ON pt.tipo_tutor_id = tt.id
                         WHERE pt.id_recurso = r.id) AS tutores_nombres
                 FROM public.recursos r
                 LEFT JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
@@ -277,21 +399,46 @@ class DocumentoModel {
         $stmt = $db->prepare($sql);
         $stmt->execute([$id]);
         $res = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $res ? $this->cleanRow($res) : null;
+        if ($res) {
+            $row = $this->cleanRow($res);
+            $row['tutores_lista'] = $this->getTutoresByRecurso($id);
+            return $row;
+        }
+        return null;
+    }
+
+    /**
+     * Verifica si ya existe un proyecto con el mismo título en el repositorio.
+     */
+    public function existePSTPorTitulo(string $titulo, ?int $idExcluir = null): bool {
+        $db = Connection::getInstance();
+        $cleanTitulo = mb_strtolower(trim($titulo), 'UTF-8');
+        
+        if ($idExcluir) {
+            $stmt = $db->prepare("SELECT COUNT(*) FROM public.recursos WHERE LOWER(TRIM(titulo)) = ? AND id != ?");
+            $stmt->execute([$cleanTitulo, $idExcluir]);
+        } else {
+            $stmt = $db->prepare("SELECT COUNT(*) FROM public.recursos WHERE LOWER(TRIM(titulo)) = ?");
+            $stmt->execute([$cleanTitulo]);
+        }
+        return ($stmt->fetchColumn() > 0);
     }
 
     /**
      * Inserta un nuevo registro de PST en la base de datos de manera manual y transaccional.
      */
-    public function crearPST(array $datos): bool {
+    public function crearPST(array $datos): int {
+        if ($this->existePSTPorTitulo($datos['titulo'])) {
+            throw new Exception("Ya existe una investigación registrada en el repositorio con el título: '" . $datos['titulo'] . "'.");
+        }
+
         $db = Connection::getInstance();
         
         try {
             $db->beginTransaction();
             
-            // Generar ruta de PDF de manera automática
-            $cleanTitle = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($datos['titulo'], 0, 30)));
-            $autoPdfPath = 'documentos/pst/pst_' . $cleanTitle . '_' . time() . '.pdf';
+            // Ruta de archivo de almacenamiento real
+            $pdfPath = !empty($datos['archivo_pdf']) ? trim($datos['archivo_pdf']) : null;
             
             // 1. Insertar el recurso base (id_tipo_recurso = 1 indica PST)
             $stmt = $db->prepare("INSERT INTO public.recursos (titulo, id_tipo_recurso, anio_publicacion, ejemplares_totales, ejemplares_disponibles, archivo_pdf) 
@@ -299,7 +446,7 @@ class DocumentoModel {
             $stmt->execute([
                 $datos['titulo'],
                 (int)$datos['anio_publicacion'],
-                $autoPdfPath
+                $pdfPath
             ]);
             $recursoId = $stmt->fetchColumn();
             
@@ -308,42 +455,53 @@ class DocumentoModel {
             }
             
             // 2. Insertar los detalles específicos del proyecto (INSERTAR PRIMERO para satisfacer Fkey de tutores!)
-            $stmt = $db->prepare("INSERT INTO public.detalles_proyectos (id_recurso, fecha_defensa, nivel_academico, resumen, id_carrera, comunidad_beneficiada, palabras_clave) 
-                                  VALUES (?, ?, ?, ?, 1, ?, ?)");
+            $nivelAcademico = !empty($datos['nivel_academico']) ? trim($datos['nivel_academico']) : 'Pregrado';
+            $trayectoVal = ($nivelAcademico === 'Pregrado') ? (!empty($datos['trayecto']) ? trim($datos['trayecto']) : 'Trayecto I') : null;
+
+            $stmt = $db->prepare("INSERT INTO public.detalles_proyectos (id_recurso, fecha_defensa, nivel_academico, trayecto, url_repositorio, resumen, id_carrera, comunidad_beneficiada, palabras_clave) 
+                                  VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)");
             $stmt->execute([
                 $recursoId,
                 !empty($datos['fecha_defensa']) ? $datos['fecha_defensa'] : date('Y-m-d'),
-                !empty($datos['nivel_academico']) ? $datos['nivel_academico'] : 'Pregrado',
+                $nivelAcademico,
+                $trayectoVal,
+                !empty($datos['url_repositorio']) ? trim($datos['url_repositorio']) : null,
                 $datos['resumen'],
                 $datos['comunidad_beneficiada'],
                 $datos['palabras_clave']
             ]);
             
-            // 3. Insertar autores múltiples (array de autores)
+            // 3. Insertar autores múltiples (no requiere obligatoriamente cédula si viene el nombre)
             if (!empty($datos['autores']) && is_array($datos['autores'])) {
                 foreach ($datos['autores'] as $autor) {
-                    if (!empty($autor['cedula']) && !empty($autor['nombre'])) {
-                        $stmt = $db->prepare("SELECT id FROM public.autores WHERE cedula = ?");
-                        $stmt->execute([$autor['cedula']]);
-                        $autorId = $stmt->fetchColumn();
-                        
-                        if (!$autorId) {
-                            $stmt = $db->prepare("INSERT INTO public.autores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
-                            $stmt->execute([
-                                $autor['nombre'],
-                                $autor['cedula']
-                            ]);
+                    $nom = !empty($autor['nombre']) ? trim($autor['nombre']) : (!empty($autor['nombre_completo']) ? trim($autor['nombre_completo']) : '');
+                    $ced = !empty($autor['cedula']) ? trim($autor['cedula']) : null;
+                    if ($nom !== '') {
+                        $autorId = null;
+                        if ($ced) {
+                            $stmt = $db->prepare("SELECT id FROM public.autores WHERE cedula = ?");
+                            $stmt->execute([$ced]);
                             $autorId = $stmt->fetchColumn();
                         }
-                        
-                        // Vincular recurso y autor
-                        $stmt = $db->prepare("INSERT INTO public.recurso_autores (id_recurso, id_autor) VALUES (?, ?)");
-                        $stmt->execute([$recursoId, $autorId]);
+                        if (!$autorId) {
+                            $stmt = $db->prepare("SELECT id FROM public.autores WHERE LOWER(TRIM(nombre_completo)) = LOWER(?)");
+                            $stmt->execute([$nom]);
+                            $autorId = $stmt->fetchColumn();
+                        }
+                        if (!$autorId) {
+                            $stmt = $db->prepare("INSERT INTO public.autores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
+                            $stmt->execute([$nom, $ced]);
+                            $autorId = $stmt->fetchColumn();
+                        }
+                        if ($autorId) {
+                            $stmt = $db->prepare("INSERT INTO public.recurso_autores (id_recurso, id_autor) VALUES (?, ?) ON CONFLICT (id_recurso, id_autor) DO NOTHING");
+                            $stmt->execute([$recursoId, $autorId]);
+                        }
                     }
                 }
             }
             
-            // 4. Insertar tutores múltiples (Académico = type 3, Institucional = type 2, Comunitario = type 4)
+            // 4. Insertar tutores múltiples (no requiere obligatoriamente cédula si viene el nombre)
             $tutoresTipos = [
                 'academico'     => 3,
                 'institucional' => 2,
@@ -354,33 +512,37 @@ class DocumentoModel {
                 $cedField = "tutor_{$key}_cedula";
                 $nomField = "tutor_{$key}_nombre";
                 
-                if (!empty($datos[$cedField]) && !empty($datos[$nomField])) {
-                    $cedula = $datos[$cedField];
-                    $nombre = $datos[$nomField];
+                if (!empty($datos[$nomField])) {
+                    $nombre = trim($datos[$nomField]);
+                    $cedula = !empty($datos[$cedField]) ? trim($datos[$cedField]) : null;
+                    $tutorId = null;
                     
-                    $stmt = $db->prepare("SELECT id FROM public.tutores WHERE cedula = ?");
-                    $stmt->execute([$cedula]);
-                    $tutorId = $stmt->fetchColumn();
-                    
-                    if (!$tutorId) {
-                        $stmt = $db->prepare("INSERT INTO public.tutores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
-                        $stmt->execute([
-                            $nombre,
-                            $cedula
-                        ]);
+                    if ($cedula) {
+                        $stmt = $db->prepare("SELECT id FROM public.tutores WHERE cedula = ?");
+                        $stmt->execute([$cedula]);
                         $tutorId = $stmt->fetchColumn();
                     }
-                    
-                    // Vincular recurso y tutor
-                    $stmt = $db->prepare("INSERT INTO public.proyecto_tutores (id_recurso, id_tutor, tipo_tutor_id) VALUES (?, ?, ?)");
-                    $stmt->execute([$recursoId, $tutorId, $tipoId]);
+                    if (!$tutorId) {
+                        $stmt = $db->prepare("SELECT id FROM public.tutores WHERE LOWER(TRIM(nombre_completo)) = LOWER(?)");
+                        $stmt->execute([$nombre]);
+                        $tutorId = $stmt->fetchColumn();
+                    }
+                    if (!$tutorId) {
+                        $stmt = $db->prepare("INSERT INTO public.tutores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
+                        $stmt->execute([$nombre, $cedula]);
+                        $tutorId = $stmt->fetchColumn();
+                    }
+                    if ($tutorId) {
+                        $stmt = $db->prepare("INSERT INTO public.proyecto_tutores (id_recurso, id_tutor, tipo_tutor_id) VALUES (?, ?, ?) ON CONFLICT (id_recurso, id_tutor) DO UPDATE SET tipo_tutor_id = EXCLUDED.tipo_tutor_id");
+                        $stmt->execute([$recursoId, $tutorId, $tipoId]);
+                    }
                 }
             }
             
             // 5. Insertar clasificación modular
             if (!empty($datos['linea_id'])) {
                 $stmt = $db->prepare("INSERT INTO public.recurso_clasificaciones (id_recurso, id_linea_investigacion, id_dimension_operativa) 
-                                      VALUES (?, ?, ?)");
+                                      VALUES (?, ?, ?) ON CONFLICT (id_recurso, id_linea_investigacion) DO UPDATE SET id_dimension_operativa = EXCLUDED.id_dimension_operativa");
                 $stmt->execute([
                     $recursoId,
                     (int)$datos['linea_id'],
@@ -389,7 +551,7 @@ class DocumentoModel {
             }
             
             $db->commit();
-            return true;
+            return (int)$recursoId;
             
         } catch (Exception $e) {
             $db->rollBack();
@@ -402,25 +564,44 @@ class DocumentoModel {
      * Actualiza un PST en la base de datos de forma transaccional.
      */
     public function editarPST(int $id, array $datos): bool {
+        if ($this->existePSTPorTitulo($datos['titulo'], $id)) {
+            throw new Exception("Ya existe otro proyecto registrado en el repositorio con el título: '" . $datos['titulo'] . "'.");
+        }
+
         $db = Connection::getInstance();
         try {
             $db->beginTransaction();
             
             // 1. Actualizar el recurso base
-            $stmt = $db->prepare("UPDATE public.recursos SET titulo = ?, anio_publicacion = ? WHERE id = ?");
-            $stmt->execute([
-                $datos['titulo'],
-                (int)$datos['anio_publicacion'],
-                $id
-            ]);
+            if (!empty($datos['archivo_pdf'])) {
+                $stmt = $db->prepare("UPDATE public.recursos SET titulo = ?, anio_publicacion = ?, archivo_pdf = ? WHERE id = ?");
+                $stmt->execute([
+                    $datos['titulo'],
+                    (int)$datos['anio_publicacion'],
+                    $datos['archivo_pdf'],
+                    $id
+                ]);
+            } else {
+                $stmt = $db->prepare("UPDATE public.recursos SET titulo = ?, anio_publicacion = ? WHERE id = ?");
+                $stmt->execute([
+                    $datos['titulo'],
+                    (int)$datos['anio_publicacion'],
+                    $id
+                ]);
+            }
             
             // 2. Actualizar detalles_proyectos
+            $nivelAcademico = !empty($datos['nivel_academico']) ? trim($datos['nivel_academico']) : 'Pregrado';
+            $trayectoVal = ($nivelAcademico === 'Pregrado') ? (!empty($datos['trayecto']) ? trim($datos['trayecto']) : 'Trayecto I') : null;
+
             $stmt = $db->prepare("UPDATE public.detalles_proyectos 
-                                  SET fecha_defensa = ?, nivel_academico = ?, resumen = ?, comunidad_beneficiada = ?, palabras_clave = ? 
+                                  SET fecha_defensa = ?, nivel_academico = ?, trayecto = ?, url_repositorio = ?, resumen = ?, comunidad_beneficiada = ?, palabras_clave = ? 
                                   WHERE id_recurso = ?");
             $stmt->execute([
                 !empty($datos['fecha_defensa']) ? $datos['fecha_defensa'] : date('Y-m-d'),
-                !empty($datos['nivel_academico']) ? $datos['nivel_academico'] : 'Pregrado',
+                $nivelAcademico,
+                $trayectoVal,
+                !empty($datos['url_repositorio']) ? trim($datos['url_repositorio']) : null,
                 $datos['resumen'],
                 $datos['comunidad_beneficiada'],
                 $datos['palabras_clave'],
@@ -433,22 +614,29 @@ class DocumentoModel {
             
             if (!empty($datos['autores']) && is_array($datos['autores'])) {
                 foreach ($datos['autores'] as $autor) {
-                    if (!empty($autor['cedula']) && !empty($autor['nombre'])) {
-                        $stmt = $db->prepare("SELECT id FROM public.autores WHERE cedula = ?");
-                        $stmt->execute([$autor['cedula']]);
-                        $autorId = $stmt->fetchColumn();
-                        
-                        if (!$autorId) {
-                            $stmt = $db->prepare("INSERT INTO public.autores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
-                            $stmt->execute([
-                                $autor['nombre'],
-                                $autor['cedula']
-                            ]);
+                    $nom = !empty($autor['nombre']) ? trim($autor['nombre']) : (!empty($autor['nombre_completo']) ? trim($autor['nombre_completo']) : '');
+                    $ced = !empty($autor['cedula']) ? trim($autor['cedula']) : null;
+                    if ($nom !== '') {
+                        $autorId = null;
+                        if ($ced) {
+                            $stmt = $db->prepare("SELECT id FROM public.autores WHERE cedula = ?");
+                            $stmt->execute([$ced]);
                             $autorId = $stmt->fetchColumn();
                         }
-                        
-                        $stmt = $db->prepare("INSERT INTO public.recurso_autores (id_recurso, id_autor) VALUES (?, ?)");
-                        $stmt->execute([$id, $autorId]);
+                        if (!$autorId) {
+                            $stmt = $db->prepare("SELECT id FROM public.autores WHERE LOWER(TRIM(nombre_completo)) = LOWER(?)");
+                            $stmt->execute([$nom]);
+                            $autorId = $stmt->fetchColumn();
+                        }
+                        if (!$autorId) {
+                            $stmt = $db->prepare("INSERT INTO public.autores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
+                            $stmt->execute([$nom, $ced]);
+                            $autorId = $stmt->fetchColumn();
+                        }
+                        if ($autorId) {
+                            $stmt = $db->prepare("INSERT INTO public.recurso_autores (id_recurso, id_autor) VALUES (?, ?) ON CONFLICT (id_recurso, id_autor) DO NOTHING");
+                            $stmt->execute([$id, $autorId]);
+                        }
                     }
                 }
             }
@@ -467,25 +655,30 @@ class DocumentoModel {
                 $cedField = "tutor_{$key}_cedula";
                 $nomField = "tutor_{$key}_nombre";
                 
-                if (!empty($datos[$cedField]) && !empty($datos[$nomField])) {
-                    $cedula = $datos[$cedField];
-                    $nombre = $datos[$nomField];
+                if (!empty($datos[$nomField])) {
+                    $nombre = trim($datos[$nomField]);
+                    $cedula = !empty($datos[$cedField]) ? trim($datos[$cedField]) : null;
+                    $tutorId = null;
                     
-                    $stmt = $db->prepare("SELECT id FROM public.tutores WHERE cedula = ?");
-                    $stmt->execute([$cedula]);
-                    $tutorId = $stmt->fetchColumn();
-                    
-                    if (!$tutorId) {
-                        $stmt = $db->prepare("INSERT INTO public.tutores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
-                        $stmt->execute([
-                            $nombre,
-                            $cedula
-                        ]);
+                    if ($cedula) {
+                        $stmt = $db->prepare("SELECT id FROM public.tutores WHERE cedula = ?");
+                        $stmt->execute([$cedula]);
                         $tutorId = $stmt->fetchColumn();
                     }
-                    
-                    $stmt = $db->prepare("INSERT INTO public.proyecto_tutores (id_recurso, id_tutor, tipo_tutor_id) VALUES (?, ?, ?)");
-                    $stmt->execute([$id, $tutorId, $tipoId]);
+                    if (!$tutorId) {
+                        $stmt = $db->prepare("SELECT id FROM public.tutores WHERE LOWER(TRIM(nombre_completo)) = LOWER(?)");
+                        $stmt->execute([$nombre]);
+                        $tutorId = $stmt->fetchColumn();
+                    }
+                    if (!$tutorId) {
+                        $stmt = $db->prepare("INSERT INTO public.tutores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
+                        $stmt->execute([$nombre, $cedula]);
+                        $tutorId = $stmt->fetchColumn();
+                    }
+                    if ($tutorId) {
+                        $stmt = $db->prepare("INSERT INTO public.proyecto_tutores (id_recurso, id_tutor, tipo_tutor_id) VALUES (?, ?, ?) ON CONFLICT (id_recurso, id_tutor) DO UPDATE SET tipo_tutor_id = EXCLUDED.tipo_tutor_id");
+                        $stmt->execute([$id, $tutorId, $tipoId]);
+                    }
                 }
             }
             
@@ -495,7 +688,7 @@ class DocumentoModel {
             
             if (!empty($datos['linea_id'])) {
                 $stmt = $db->prepare("INSERT INTO public.recurso_clasificaciones (id_recurso, id_linea_investigacion, id_dimension_operativa) 
-                                      VALUES (?, ?, ?)");
+                                      VALUES (?, ?, ?) ON CONFLICT (id_recurso, id_linea_investigacion) DO UPDATE SET id_dimension_operativa = EXCLUDED.id_dimension_operativa");
                 $stmt->execute([
                     $id,
                     (int)$datos['linea_id'],
@@ -556,10 +749,18 @@ class DocumentoModel {
     
     public function getTutoresByRecurso(int $recursoId): array {
         $db = Connection::getInstance();
-        $stmt = $db->prepare("SELECT t.nombre_completo, t.cedula, pt.tipo_tutor_id 
+        $stmt = $db->prepare("SELECT t.nombre_completo, t.cedula, pt.tipo_tutor_id,
+                                     CASE pt.tipo_tutor_id 
+                                         WHEN 3 THEN 'Tutor Académico'
+                                         WHEN 2 THEN 'Tutor Institucional'
+                                         WHEN 4 THEN 'Tutor Comunitario'
+                                         ELSE COALESCE(tt.nombre, 'Tutor')
+                                     END AS tipo_nombre
                               FROM public.proyecto_tutores pt 
                               JOIN public.tutores t ON pt.id_tutor = t.id 
-                              WHERE pt.id_recurso = ?");
+                              LEFT JOIN public.tipo_tutor tt ON pt.tipo_tutor_id = tt.id
+                              WHERE pt.id_recurso = ?
+                              ORDER BY pt.tipo_tutor_id ASC");
         $stmt->execute([$recursoId]);
         return $this->cleanArray($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
@@ -590,7 +791,7 @@ class DocumentoModel {
         $qb = new QueryBuilder();
         $qb->tabla('public.recursos r')
            ->select("r.id, r.titulo, r.anio_publicacion, r.archivo_pdf,
-                     dp.resumen AS proyecto_resumen, dp.palabras_clave AS proyecto_palabras,
+                     dp.resumen AS proyecto_resumen, dp.palabras_clave AS proyecto_palabras, dp.nivel_academico, dp.trayecto, dp.url_repositorio,
                      li.nombre AS linea_nombre,
                      dims.nombre AS dimension_nombre,
                      (SELECT STRING_AGG(a.nombre_completo, ', ') 

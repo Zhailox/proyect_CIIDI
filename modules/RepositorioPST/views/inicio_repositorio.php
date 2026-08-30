@@ -1,3 +1,7 @@
+<?php
+require_once CORE_PATH . 'Security/Auth.php';
+$nivelUsuario = Auth::check() ? (int)Auth::usuario()['nivel'] : -1;
+?>
 <div class="main-content">
     
     <div class="repo-internal-header">
@@ -30,15 +34,17 @@
         </div>
     </div>
 
-    <!-- Tarjetas de Acceso Rápido -->
+    <!-- Tarjetas de Acceso Rápido según Privilegio -->
     <div class="repo-menu-cards">
         
+        <?php if ($nivelUsuario >= 1): ?>
         <div class="repo-action-card">
             <i class="ph-fill ph-file-plus"></i>
             <h3>Cargar Documento</h3>
             <p>Registrar un nuevo PST aprobado por el comité evaluador. Asegura la carga del PDF de la bitácora y la matriz epistémica.</p>
             <a href="?ruta=agregar-documento" class="card-link-action">Acceder al formulario <i class="ph-bold ph-arrow-right"></i></a>
         </div>
+        <?php endif; ?>
 
         <div class="repo-action-card">
             <i class="ph-fill ph-magnifying-glass"></i>
@@ -47,12 +53,14 @@
             <a href="?ruta=buscador" class="card-link-action">Abrir motor de búsqueda <i class="ph-bold ph-arrow-right"></i></a>
         </div>
 
+        <?php if ($nivelUsuario >= 1): ?>
         <div class="repo-action-card">
-            <i class="ph-fill ph-chart-pie-slice"></i>
-            <h3>Modelo de Predicción</h3>
-            <p>Visualización estadística e inteligencia científica sobre las tendencias de desarrollo tecnológico en los próximos trayectos académicos.</p>
-            <a href="?ruta=dashboard-prediccion" class="card-link-action">Ver analítica de datos <i class="ph-bold ph-arrow-right"></i></a>
+            <i class="ph-fill ph-gear-six"></i>
+            <h3>Configuración Repositorio</h3>
+            <p>Gestiona parámetros dinámicos como formatos de citas académicas, límites de paginación y metadatos visibles.</p>
+            <a href="?ruta=configuracion-pst" class="card-link-action">Ajustar parámetros <i class="ph-bold ph-arrow-right"></i></a>
         </div>
+        <?php endif; ?>
 
     </div>
 
@@ -60,15 +68,15 @@
     <div class="recent-docs-panel">
         <div class="panel-title-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
             <h3>Últimos Proyectos Socio-Tecnológicos Cargados</h3>
-            <a href="?ruta=detalles-pst" style="color: var(--color-terciario); font-weight: 600; text-decoration: none; font-size: 0.9rem;">Ver Catálogo Completo →</a>
+            <a href="?ruta=repositorio" style="color: var(--color-terciario); font-weight: 700; text-decoration: none; font-size: 0.85rem;">Ver Catálogo Completo &rarr;</a>
         </div>
         <table class="data-table-repo">
             <thead>
                 <tr>
                     <th>Proyecto / Título</th>
                     <th>Comunidad Objeto</th>
-                    <th>Línea de Investigación</th>
-                    <th>Año Publicación</th>
+                    <th>Línea / Trayecto</th>
+                    <th>Año</th>
                 </tr>
             </thead>
             <tbody>
@@ -82,15 +90,18 @@
                     <?php foreach ($recientes as $doc): ?>
                         <tr>
                             <td>
-                                <span class="doc-title-cell" style="font-weight: 700; color: var(--texto-titulos); display: block;">
+                                <a href="?ruta=detalles-pst&id=<?= $doc['id'] ?>" class="doc-title-cell" style="font-weight: 700; color: var(--texto-titulos); text-decoration: none; display: block;">
                                     <?= htmlspecialchars($doc['titulo']) ?>
-                                </span>
-                                <span class="doc-meta-sub" style="font-size: 0.8rem; color: var(--texto-silenciado);">
+                                </a>
+                                <span class="doc-meta-sub" style="font-size: 0.78rem; color: var(--texto-silenciado);">
                                     Autores: <?= htmlspecialchars($doc['autores_nombres'] ?? 'No registrados') ?>
                                 </span>
                             </td>
                             <td><?= htmlspecialchars($doc['comunidad_beneficiada'] ?? 'No registrada') ?></td>
-                            <td><span class="badge-linea" style="background-color: rgba(112, 144, 203, 0.1); color: var(--color-secundario); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700;"><?= htmlspecialchars($doc['linea_nombre'] ?? 'General') ?></span></td>
+                            <td>
+                                <span class="badge-linea" style="background-color: rgba(112, 144, 203, 0.1); color: var(--color-secundario); padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; display: block; margin-bottom: 0.1rem; text-align: center;"><?= htmlspecialchars($doc['linea_nombre'] ?? 'General') ?></span>
+                                <small style="color: var(--color-terciario); font-weight: 700; display: block; font-size: 0.7rem; text-align: center;"><?= htmlspecialchars($doc['trayecto'] ?? 'Trayecto I') ?></small>
+                            </td>
                             <td><strong><?= $doc['anio_publicacion'] ?></strong></td>
                         </tr>
                     <?php endforeach; ?>

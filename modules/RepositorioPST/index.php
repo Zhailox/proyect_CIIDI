@@ -42,46 +42,43 @@ class RepositorioPSTModule implements ModuleContract {
                 'titulo' => 'Ficha PST',
                 'css'    => ['RepositorioPST.css']
             ],
-            'dashboard-prediccion' => [
-                'vista'  => __DIR__ . '/views/dashboard_prediccion.php',
-                'titulo' => 'Modelo de Predicción',
-                'css'    => ['RepositorioPST.css']
+            'ver-pdf-pst' => [
+                'controlador' => 'DetallePSTController',
+                'controlador_path' => __DIR__ . '/controllers/DetallePSTController.php',
+                'metodo' => 'verPdf'
             ],
-            'gestion-red-neuronal' => [
-                'vista'  => __DIR__ . '/views/gestion_red_neuronal.php',
-                'controlador' => 'BusquedaGlobalController',
-                'controlador_path' => __DIR__ . '/controllers/BusquedaGlobalController.php',
-                'metodo' => 'gestionRed',
-                'titulo' => 'Gestión de Red Neuronal',
+            'configuracion-pst' => [
+                'vista'  => __DIR__ . '/views/configuracion_pst.php',
+                'controlador' => 'ConfiguracionController',
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'metodo' => 'index',
+                'titulo' => 'Configuración de Repositorio',
                 'css'    => ['RepositorioPST.css']
             ]
-            
         ];
     }
 
     // NUEVO: El plano visual del menú para este módulo
     public function getMenuConfig(): array {
         return [
-            // Podemos enviar múltiples botones, pero aquí enviamos un grupo desplegable
             [
-                'tipo'        => 'parent', // 'parent' si tiene submenú, 'link' si es directo
+                'tipo'        => 'parent',
                 'titulo'      => 'Repositorio',
                 'icono'       => 'ph-fill ph-book-open-text',
                 'privilegio_minimo' => -1,
-                'enlace'      => 'repositorio', // A dónde lleva el clic principal
-                'activadores' => ['repositorio', 'detalles-pst', 'agregar-documento', 'buscador', 'dashboard-prediccion', 'gestion-red-neuronal'], // Rutas que iluminan el padre
+                'enlace'      => 'repositorio',
+                'activadores' => ['repositorio', 'detalles-pst', 'agregar-documento', 'buscador', 'configuracion-pst'],
                 'subitems'    => [
-                    ['ruta' => 'repositorio', 'titulo' => 'Explorar Proyectos'],
-                    ['ruta' => 'agregar-documento', 'titulo' => 'Gestión Documental'],
-                    ['ruta' => 'buscador', 'titulo' => 'Buscador Unificado'],
-                    ['ruta' => 'dashboard-prediccion', 'titulo' => 'Modelo de Predicción'],
-                    ['ruta' => 'gestion-red-neuronal', 'titulo' => 'Gestión de Red Neuronal']
+                    ['ruta' => 'repositorio', 'titulo' => 'Explorar Proyectos', 'privilegio_minimo' => -1],
+                    ['ruta' => 'buscador', 'titulo' => 'Buscador Unificado', 'privilegio_minimo' => -1],
+                    ['ruta' => 'agregar-documento', 'titulo' => 'Gestión Documental', 'privilegio_minimo' => 1],
+                    ['ruta' => 'configuracion-pst', 'titulo' => 'Configuración Repositorio', 'privilegio_minimo' => 1]
                 ]
             ]
         ];
     }
     public function getDescripcion(): string {
-        return 'Motor de búsqueda neuronal, gestión documental y analítica predictiva de los Proyectos Socio-Tecnológicos.';
+        return 'Motor de búsqueda y gestión documental de los Proyectos Socio-Tecnológicos.';
     }
     public function getDependencias(): array {
         return ['Autenticacion', 'Investigaciones']; // Requiere que el usuario exista para saber quién sube el PST

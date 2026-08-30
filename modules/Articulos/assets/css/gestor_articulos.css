@@ -11,7 +11,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(135deg, var(--color-secundario), var(--color-terciario));
+    background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
     padding: 2rem;
     border-radius: var(--radius-md);
     color: var(--blanco);
@@ -39,7 +39,7 @@
 }
 
 .gestor-art-btn-new:hover {
-    background-color: var(--blanco);
+    background-color: var(--bg-body);
     transform: translateY(-2px);
 }
 
@@ -332,37 +332,4 @@
     align-items: center; 
     gap: 0.5rem; 
     margin-top: 1rem;
-}
-/* Utilidades para el Modal de Edición */
-.box-title-border {
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-    padding-bottom: 1rem;
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    padding-top: 1rem;
-}
-
-.btn-icon-sm {
-    padding: 0.2rem 0.5rem;
-}
-
-.flex-between-center {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.6rem 0;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-}
-
-.flex-gap-sm {
-    display: flex;
-    gap: 0.3rem;
-}
-
-.m-0 {
-    margin: 0;
 }

@@ -67,14 +67,6 @@ public function getRutas(): array {
                 'controlador_path' => __DIR__ . '/controllers/ArticulosController.php',
                 'controlador'      => 'ArticulosController',
                 'metodo'           => 'eliminar'
-            ],
-            'gestor-catalogos' => [
-                'controlador_path' => __DIR__ . '/controllers/ArticulosController.php',
-                'controlador' => 'ArticulosController',
-                'metodo' => 'gestorCatalogos',
-                'vista' => __DIR__ . '/views/gestor_catalogos.php',
-                'titulo' => 'Gestor de Catálogos - Administración',
-                'css' => ['gestor_articulos.css']
             ]
             
         ];

@@ -1,0 +1,22 @@
+[
+    {
+        "area": "Ingeniería de Software",
+        "history": [8, 12, 10, 15, 14, 18, 15, 20],
+        "capacity": 150
+    },
+    {
+        "area": "Redes y Telecomunicaciones",
+        "history": [15, 13, 10, 8, 10, 7, 5, 4],
+        "capacity": 150
+    },
+    {
+        "area": "Inteligencia Artificial",
+        "history": [5, 5, 8, 12, 18, 22, 28, 30],
+        "capacity": 150
+    },
+    {
+        "area": "Seguridad Informática",
+        "history": [8, 10, 9, 11, 10, 14, 12, 15],
+        "capacity": 150
+    }
+]

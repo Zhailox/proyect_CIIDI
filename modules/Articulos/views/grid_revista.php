@@ -35,7 +35,7 @@ $buildUrl = function($page) use ($filtros) {
         </div>
 
         <div class="art-filter-group">
-    <details class="art-filter-accordion">
+    <details class="art-filter-accordion" open>
         <summary>Categorías</summary>
         <?php if (!empty($categorias)): ?>
             <?php foreach ($categorias as $categoria): ?>
@@ -70,19 +70,16 @@ $buildUrl = function($page) use ($filtros) {
 
 
         <div class="art-filter-group">
-                <label for="year_filter">Año de Publicación</label>
-                <select id="year_filter" name="year" class="art-select-input">
-                    <option value="">Todos los años (Sin límite)</option>
-                    <?php 
-                    $anioActual = (int)date('Y');
-                    for ($y = $anioActual; $y >= $anioActual - 10; $y--): 
-                    ?>
-                        <option value="<?= $y ?>" <?= (isset($filtros['year']) && $filtros['year'] == $y) ? 'selected' : '' ?>>
-                            <?= $y ?>
-                        </option>
-                    <?php endfor; ?>
-                </select>
-            </div>
+            <label for="year_filter">Año de Publicación</label>
+            <select id="year_filter" name="year" class="art-select-input">
+                <option value="">Todos los años</option>
+                <?php for ($anio = date('Y'); $anio >= 2020; $anio--): ?>
+                    <option value="<?= $anio ?>" <?= (!empty($filtros['year']) && (int)$filtros['year'] === $anio) ? 'selected' : '' ?>>
+                        <?= $anio ?>
+                    </option>
+                <?php endfor; ?>
+            </select>
+        </div>
 
         <button type="submit" class="btn" style="width: 100%; margin-top: 1rem;">Aplicar Filtros</button>
         <a href="articulos" class="art-link-reset">Limpiar filtros</a>
@@ -110,10 +107,7 @@ $buildUrl = function($page) use ($filtros) {
                         <span class="art-tag" style="background: var(--color-secundario); color: white;">ÚLTIMA PUBLICACIÓN</span>
                         <span class="art-tag"><?= htmlspecialchars($ultimo['categoria'] ?? 'Investigación') ?></span>
                     </div>
-                    <span class="art-metric">
-                        Vol. <?= htmlspecialchars($ultimo['volumen'] ?? 'N/A') ?>
-                        <?= !empty($ultimo['numero']) ? ' - Núm. ' . htmlspecialchars($ultimo['numero']) : '' ?>
-                    </span>
+                    <span class="art-metric">Vol. <?= htmlspecialchars($ultimo['volumen'] ?? 'N/A') ?></span>
                 </div>
 
                 <a href="leer-articulo?id=<?= $ultimo['id'] ?>" class="art-post-title" style="font-size: 1.8rem;">
@@ -157,10 +151,7 @@ $buildUrl = function($page) use ($filtros) {
                     <div class="art-post-body">
                         <div class="art-post-meta">
                             <span class="art-tag"><?= htmlspecialchars($art['categoria'] ?? 'Artículo') ?></span>
-                            <span class="art-metric">
-                                Vol. <?= htmlspecialchars($art['volumen'] ?? 'N/A') ?>
-                                <?= !empty($art['numero']) ? ' - Núm. ' . htmlspecialchars($art['numero']) : '' ?>
-                            </span>
+                            <span class="art-metric">Vol. <?= htmlspecialchars($art['volumen'] ?? 'N/A') ?></span>
                         </div>
                         <a href="leer-articulo?id=<?= $art['id'] ?>" class="art-post-title"><?= htmlspecialchars($art['titulo']) ?></a>
                         <?php
@@ -187,19 +178,19 @@ $buildUrl = function($page) use ($filtros) {
             <?php endif; ?>
         </div>
         <?php if ($paginasTotales > 1): ?>
-<div class="pagination">
+<div class="art-pagination">
     <?php if ($paginaActual > 1): ?>
-        <a class="page-link" href="<?= $buildUrl($paginaActual - 1) ?>">← Anterior</a>
+        <a class="art-page-link" href="<?= $buildUrl($paginaActual - 1) ?>">← Anterior</a>
     <?php endif; ?>
 
     <?php for ($i = 1; $i <= $paginasTotales; $i++): ?>
-        <a class="page-link <?= $i === $paginaActual ? 'active' : '' ?>" href="<?= $buildUrl($i) ?>">
+        <a class="art-page-link <?= $i === $paginaActual ? 'active' : '' ?>" href="<?= $buildUrl($i) ?>">
             <?= $i ?>
         </a>
     <?php endfor; ?>
 
     <?php if ($paginaActual < $paginasTotales): ?>
-        <a class="page-link" href="<?= $buildUrl($paginaActual + 1) ?>">Siguiente →</a>
+        <a class="art-page-link" href="<?= $buildUrl($paginaActual + 1) ?>">Siguiente →</a>
     <?php endif; ?>
 </div>
 <?php endif; ?>

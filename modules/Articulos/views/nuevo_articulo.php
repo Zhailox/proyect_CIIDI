@@ -18,7 +18,7 @@
     <?php endif; ?>
 
     <!-- Modificamos el action a procesar-articulo y aseguramos el onsubmit para JS -->
-    <form action="procesar-articulo" method="POST" enctype="multipart/form-data" class="art-form-layout" id="form-articulo" onsubmit="return validarFormulario()">
+    <form action="procesar-articulo" method="POST" enctype="multipart/form-data" class="art-form-layout" id="form-nuevo-articulo" onsubmit="return validarAutores()">
         
         <!-- COLUMNA PRINCIPAL -->
         <div class="art-form-main">
@@ -35,22 +35,15 @@
                 </div>
 
                 <div class="grid-2-cols mt-1">
-                    <div class="form-group mt-1">
-                        <label class="font-bold">Categorías del Artículo *</label>
-                        <div class="checkbox-grid-box p-1" id="box-categorias">
+                    <div class="form-group">
+                        <label class="font-bold">Categoría</label>
+                        <select name="id_categoria" class="login-flat-input w-100 p-input">
+                            <option value="">Seleccione una categoría...</option>
                             <?php foreach ($categorias as $cat): ?>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" name="categorias[]" value="<?= $cat['id'] ?>"
-                                        <?= (isset($categorias_seleccionadas) && in_array($cat['id'], $categorias_seleccionadas)) ? 'checked' : '' ?>> 
-                                    <?= htmlspecialchars($cat['nombre']) ?>
-                                </label>
+                                <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['nombre']) ?></option>
                             <?php endforeach; ?>
-                        </div>
-                        <div id="error-categorias" class="text-danger mt-sm" style="display:none; font-size:0.85rem;">
-                            Debe seleccionar al menos una categoría.
-                        </div>
-                    
-                </div>
+                        </select>
+                    </div>
                     <div class="form-group">
                         <label class="font-bold">Editorial / Repositorio</label>
                         <select name="id_editorial" class="login-flat-input w-100 p-input">

@@ -1,7 +1,7 @@
 {
     "Articulos": "online",
     "Investigaciones": "online",
-    "ForoChatbot": "offline",
+    "ForoChatbot": "online",
     "Cursos": "online",
     "VinculacionEmpresarial": "online"
 }

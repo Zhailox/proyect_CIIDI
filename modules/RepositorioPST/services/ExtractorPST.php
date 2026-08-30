@@ -4,16 +4,26 @@
 class ExtractorPST {
 
     /**
-     * Extrae texto de un archivo PDF usando la librería Smalot\PdfParser.
+     * Extrae texto de un archivo PDF usando la librería Smalot\PdfParser con configuración de descompresión de memoria.
+     * Incluye fallback de seguridad contra archivos encriptados o truncos.
      */
     public static function extraerTextoPDF(string $filePath): string {
         if (!file_exists($filePath)) {
             throw new Exception("El archivo PDF especificado no existe.");
         }
         
-        $parser = new \Smalot\PdfParser\Parser();
-        $pdf = $parser->parseFile($filePath);
-        return $pdf->getText();
+        try {
+            ini_set('memory_limit', '512M');
+            $config = new \Smalot\PdfParser\Config();
+            $config->setDecodeMemoryLimit(100 * 1024 * 1024);
+            
+            $parser = new \Smalot\PdfParser\Parser([], $config);
+            $pdf = $parser->parseFile($filePath);
+            return $pdf->getText() ?? '';
+        } catch (\Throwable $e) {
+            error_log("Error al extraer texto PDF: " . $e->getMessage());
+            return ''; // Retornar vacío en lugar de romper la ejecución
+        }
     }
 
     /**
@@ -31,18 +41,36 @@ class ExtractorPST {
                 $data = $zip->getFromIndex($index);
                 $zip->close();
                 
-                // Cargar XML y desarmar etiquetas de Word
-                $xml = new \SimpleXMLElement($data);
-                $namespaces = $xml->getNamespaces(true);
-                $wNamespace = $namespaces['w'] ?? 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
-                $xml->registerXPathNamespace('w', $wNamespace);
-                
-                $textElements = $xml->xpath('//w:t');
-                $text = '';
-                foreach ($textElements as $element) {
-                    $text .= (string)$element . "\n";
+                $dom = new \DOMDocument();
+                libxml_use_internal_errors(true);
+                $dom->loadXML($data);
+                libxml_clear_errors();
+
+                $xpath = new \DOMXPath($dom);
+                $xpath->registerNamespace('w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
+
+                $nodes = $xpath->query('//w:p');
+                $lines = [];
+                foreach ($nodes as $node) {
+                    // Capturar tanto texto <w:t> como saltos de línea suaves <w:br>
+                    $childElements = $xpath->query('.//w:t | .//w:br', $node);
+                    $pText = '';
+                    foreach ($childElements as $elem) {
+                        if ($elem->nodeName === 'w:br') {
+                            $pText .= "\n";
+                        } else {
+                            $pText .= $elem->nodeValue;
+                        }
+                    }
+                    $subLines = explode("\n", $pText);
+                    foreach ($subLines as $sl) {
+                        $trimmed = trim($sl);
+                        if ($trimmed !== '') {
+                            $lines[] = $trimmed;
+                        }
+                    }
                 }
-                return $text;
+                return implode("\n", $lines);
             }
             $zip->close();
         }
@@ -69,15 +97,26 @@ class ExtractorPST {
         $anio = self::extraerAnio($text);
 
         // 3. Extraer Resumen
-        $resumen = self::extraerResumen($text);
+        $resumen = self::extraerResumen($text, $cleanLines);
 
         // 4. Extraer Palabras Clave
         $palabrasClave = self::extraerPalabrasClave($text);
 
-        // 5. Extraer Cedulas, Autores y Tutores
+        // 5. Extraer Comunidad u Objeto Beneficiario
+        $comunidad = self::extraerComunidad($text, $cleanLines);
+
+        // 6. Extraer Cédulas, Autores y Tutores
         $personas = self::extraerPersonas($cleanLines);
 
-        // 6. Clasificación de Línea de Investigación y Dimensión
+        // Filter out empty author slots
+        $autoresFiltrados = [];
+        foreach ($personas['autores'] as $aut) {
+            if (!empty(trim($aut['nombre'])) || !empty(trim($aut['cedula']))) {
+                $autoresFiltrados[] = $aut;
+            }
+        }
+
+        // 7. Clasificación de Línea de Investigación y Dimensión
         $clasificacion = self::clasificarLineaYDimension($text);
 
         return [
@@ -85,7 +124,8 @@ class ExtractorPST {
             'anio_publicacion' => $anio,
             'resumen' => $resumen,
             'palabras_clave' => $palabrasClave,
-            'autores' => $personas['autores'],
+            'comunidad_beneficiada' => $comunidad,
+            'autores' => $autoresFiltrados,
             'tutor_academico_nombre' => $personas['tutores']['academico']['nombre'] ?? '',
             'tutor_academico_cedula' => $personas['tutores']['academico']['cedula'] ?? '',
             'tutor_institucional_nombre' => $personas['tutores']['institucional']['nombre'] ?? '',
@@ -98,180 +138,205 @@ class ExtractorPST {
     }
 
     /**
+     * Extrae dinámicamente el nombre de la comunidad, organización o institución beneficiada.
+     */
+    private static function extraerComunidad(string $text, array $lines): string {
+        $count = count($lines);
+
+        // 1. Búsqueda por encabezados formales de sección (ej: 1.1.1, Nombre de la Comunidad, Razón Social, Empresa / Organización)
+        for ($i = 0; $i < $count; $i++) {
+            $line = trim($lines[$i]);
+
+            if (preg_match('/(1\.1\.1|nombre\s+de\s+la\s+comunidad|comunidad\s+u\s+organización|razón\s+social|empresa\s*\/\s*organización|organización\s+beneficiada|comunidad\s+beneficiada)/ui', $line)) {
+
+                // Ignorar si pertenece a la Tabla de Contenidos del Índice
+                if (preg_match('/[a-záéíóúñ\s]*\d+\s*$/ui', $line) && !preg_match('/1\.1\.1\./', $line)) {
+                    continue;
+                }
+                if ($i + 1 < $count && preg_match('/1\.1\.2|naturaleza\s+de\s+la\s+organización/ui', trim($lines[$i + 1]))) {
+                    continue;
+                }
+
+                // Si el nombre está en la misma línea después de los dos puntos
+                if (preg_match('/:\s*(.+)/u', $line, $m) && mb_strlen(trim($m[1])) > 6) {
+                    return self::limpiarComunidad($m[1]);
+                }
+
+                // Si está en las líneas siguientes
+                for ($k = 1; $k <= 4; $k++) {
+                    if (!isset($lines[$i + $k])) break;
+                    $candidate = trim($lines[$i + $k]);
+
+                    if (preg_match('/^(1\.1\.2|naturaleza|encargo|objetivos|localización|reseña|cuadro|figura|geográfica)/ui', $candidate)) break;
+                    if (preg_match('/^(1\.1\.1|nombre\s+de\s+la\s+comunidad)/ui', $candidate)) continue;
+
+                    if (mb_strlen($candidate) > 8) {
+                        return self::limpiarComunidad($candidate);
+                    }
+                }
+            }
+        }
+
+        // 2. Reconocimiento Dinámico de Entidades Nombradas por Patrón Gramatical (NLP Heurístico)
+        $fullText = implode("\n", array_slice($lines, 0, 200));
+        $pattern = '/\b((?:Escuela|Unidad Educativa|Liceo|Colegio|Instituto|Centro|Departamento|Coordinación|Consejo Comunal|Comité|Corporación|Compañía|Empresa|Clínica|Fundación|Asociación|Servicio|Sociedad|S\.A\.|C\.A\.)\s+(?:[A-ZÁÉÍÓÚÑ0-9\x{201c}\x{201d}“"\'\.\-–\(\)]+\s*){2,12})/u';
+
+        if (preg_match_all($pattern, $fullText, $matches)) {
+            foreach ($matches[1] as $match) {
+                $cleaned = self::limpiarComunidad($match);
+                if (mb_strlen($cleaned) > 10 && !preg_match('/(república|ministerio|universidad politécnica|programa nacional)/ui', $cleaned)) {
+                    return $cleaned;
+                }
+            }
+        }
+
+        return 'Comunidad / Organización No Específicamente Nombrada';
+    }
+
+    private static function limpiarComunidad(string $text): string {
+        $text = preg_replace('/^(1\.1\.1\.?|nombre\s+de\s+la\s+comunidad\s+u\s+organización\.?|localización-geográfica:?\s*-?\s*|razón\s+social:?)\s*/ui', '', $text);
+        $text = preg_replace('/^(la\s+comunidad\s+institucional\s+seleccionada\s+para\s+el\s+desarrollo\s+del\s+presente\s+proyecto\s+es\s+el|la\s+comunidad\s+seleccionada\s+es\s+la|la\s+institución\s+educativa,\s+conocida\s+como\s*|se\s+desarrolla\s+en\s+el|ubicado\s+en)\s*/ui', '', $text);
+
+        if (preg_match('/^([^,\.\n]+(?:,\s*[^,\.\n]+){0,2})/u', $text, $m)) {
+            $text = $m[1];
+        }
+
+        if (mb_strlen($text) > 160) {
+            $text = mb_substr($text, 0, 160);
+        }
+
+        return trim($text, " \t\r\n\:-.,");
+    }
+
+    /**
      * Busca las primeras líneas con formato de título (mayúsculas largas, obviando cabeceras universitarias).
      */
     private static function extraerTitulo(array $lines): string {
         $autoresIdx = -1;
         foreach ($lines as $idx => $line) {
-            if (preg_match('/\b(autores|estudiantes|bachilleres|autor|estudiante|bachiller)\b/ui', $line)) {
+            if (preg_match('/^\s*(autores|estudiantes|bachilleres|autor|estudiante|bachiller|presentado por|creado por)\b/ui', $line)) {
                 $autoresIdx = $idx;
                 break;
             }
         }
 
         if ($autoresIdx !== -1) {
-            // Buscar hacia atrás la última línea que contenga la ubicación (Valera, Trujillo, Edo, etc.)
-            $lastHeaderIdx = -1;
+            $tituloLines = [];
             for ($i = $autoresIdx - 1; $i >= 0; $i--) {
-                if (preg_match('/\b(valera|trujillo|edo|estado trujillo|pablo viloria|beatriz)\b/ui', $lines[$i])) {
-                    $lastHeaderIdx = $i;
+                $line = trim($lines[$i]);
+                if ($line === '') continue;
+
+                if (preg_match('/^(república|republica|ministerio|universidad|programa nacional|núcleo universitario|nucleo universitario|valera\s*–)/ui', $line)) {
                     break;
                 }
+                array_unshift($tituloLines, $line);
             }
 
-            if ($lastHeaderIdx !== -1 && $lastHeaderIdx < $autoresIdx - 1) {
-                // Las líneas entre el encabezado y "Autores" son el título
-                $tituloLines = [];
-                for ($j = $lastHeaderIdx + 1; $j < $autoresIdx; $j++) {
-                    $tituloLines[] = $lines[$j];
-                }
-                return trim(implode(' ', $tituloLines));
-            } else {
-                // Si no se encuentra el separador geográfico, tomar las líneas no vacías inmediatamente anteriores a Autores (máximo 4 líneas)
-                $tituloLines = [];
-                $count = 0;
-                for ($j = $autoresIdx - 1; $j >= 0; $j--) {
-                    $line = trim($lines[$j]);
-                    if ($line !== '') {
-                        if (preg_match('/\b(república|ministerio|universidad|pnf|programa|nucleo|núcleo)\b/ui', $line)) {
-                            break; // Llegó al encabezado
-                        }
-                        array_unshift($tituloLines, $line);
-                        $count++;
-                        if ($count >= 4) break;
-                    }
-                }
+            if (!empty($tituloLines)) {
                 return trim(implode(' ', $tituloLines));
             }
         }
 
-        // Fallback al método anterior si no hay "Autores"
-        $headersToSkip = [
-            'república', 'republica', 'bolivariana', 'venezuela', 'ministerio', 'educación', 'educacion',
-            'universitaria', 'universidad', 'politécnica', 'politecnica', 'territorial', 'uptt', 'mbi',
-            'informática', 'informatica', 'programa nacional', 'pnf', 'trayecto', 'sección', 'seccion',
-            'proyecto socio-tecnológico', 'proyecto socio tecnologico', 'pst', 'autores', 'tutor', 'asesor',
-            'creado por', 'presentado por', 'bachiller', 'ingeniería', 'ingenieria', 'tsu'
-        ];
-
-        $candidatos = [];
-        $lineCount = count($lines);
-        
-        for ($i = 0; $i < min($lineCount, 60); $i++) {
+        $candidates = [];
+        for ($i = 0; $i < min(count($lines), 40); $i++) {
             $line = $lines[$i];
-            
-            // Verificar si contiene palabras clave de cabecera a omitir
-            $skip = false;
-            foreach ($headersToSkip as $word) {
-                if (mb_stripos($line, $word) !== false) {
-                    $skip = true;
-                    break;
-                }
-            }
-            if ($skip) {
+            if (preg_match('/^(república|republica|ministerio|universidad|programa nacional|núcleo|nucleo|valera|autores|tutor|docente)/ui', $line)) {
                 continue;
             }
-
-            // Un título de proyecto suele ser largo, mayormente en mayúsculas
-            $len = mb_strlen($line);
-            if ($len > 15 && $len < 150) {
-                // Verificar si tiene un alto porcentaje de letras mayúsculas
-                $letters = preg_replace('/[^a-zA-ZÁÉÍÓÚÑ]/u', '', $line);
-                $uppercase = preg_replace('/[^A-ZÁÉÍÓÚÑ]/u', '', $line);
-                if (strlen($letters) > 0 && (strlen($uppercase) / strlen($letters)) > 0.8) {
-                    $candidatos[] = $line;
-                    // Si la siguiente línea también es mayúscula y es larga, las unimos
-                    if ($i + 1 < $lineCount) {
-                        $nextLine = $lines[$i + 1];
-                        $nextLen = mb_strlen($nextLine);
-                        $nextLetters = preg_replace('/[^a-zA-ZÁÉÍÓÚÑ]/u', '', $nextLine);
-                        $nextUppercase = preg_replace('/[^A-ZÁÉÍÓÚÑ]/u', '', $nextLine);
-                        if ($nextLen > 15 && strlen($nextLetters) > 0 && (strlen($nextUppercase) / strlen($nextLetters)) > 0.8) {
-                            $candidatos[] = $nextLine;
-                            $i++; // Saltar la siguiente
-                        }
-                    }
-                    break; // Tomar el primer grupo de título
-                }
+            if (mb_strlen($line) > 20) {
+                $candidates[] = $line;
             }
         }
 
-        if (!empty($candidatos)) {
-            return implode(' ', $candidatos);
-        }
-
-        return '';
+        return !empty($candidates) ? implode(' ', $candidates) : '';
     }
 
     /**
      * Extrae un año coherente (2018-2026) en la portada.
      */
     private static function extraerAnio(string $text): int {
-        // Analizar los primeros 2500 caracteres (portada)
-        $coverText = mb_substr($text, 0, 2500);
+        $coverText = mb_substr($text, 0, 3000);
         if (preg_match_all('/\b(201[8-9]|202[0-7])\b/', $coverText, $matches)) {
-            // El año de defensa suele estar al final de la portada, así que tomamos el último de las coincidencias de portada
             return (int) end($matches[1]);
         }
-        return (int) date('Y'); // Por defecto el año actual
+        return (int) date('Y');
     }
 
     /**
-     * Extrae el resumen buscando la sección "RESUMEN" y recortando antes de la siguiente sección.
+     * Extrae el resumen buscando la sección "RESUMEN" / "RESÚMEN" real (descartando tablas de contenido e índices) o mediante fallback narrativo.
      */
-    private static function extraerResumen(string $text): string {
-        // Quitar acentos para simplificar búsqueda
-        $normalizedText = self::normalizarTextoBajo($text);
-        
-        $keywords = ['resumen', 'sintesis', 'síntesis'];
-        $pos = false;
-        
-        foreach ($keywords as $kw) {
-            $pos = mb_strpos($normalizedText, $kw);
-            if ($pos !== false) {
-                // Verificar que no sea parte de otra palabra (ej: resumido)
-                $charBefore = $pos > 0 ? mb_substr($normalizedText, $pos - 1, 1) : ' ';
-                $charAfter = mb_substr($normalizedText, $pos + mb_strlen($kw), 1);
-                if (preg_match('/[\s\r\n\:]/u', $charBefore) && preg_match('/[\s\r\n\:]/u', $charAfter)) {
-                    $pos += mb_strlen($kw);
-                    break;
+    private static function extraerResumen(string $text, array $lines = []): string {
+        $count = count($lines);
+
+        // 1. Buscar encabezado formal RESÚMEN / RESUMEN por línea en las primeras 300 líneas
+        for ($i = 0; $i < min($count, 300); $i++) {
+            $line = trim($lines[$i]);
+
+            if (preg_match('/^\s*(resúmen|resumen|síntesis|sintesis)\s*:?\s*$/ui', $line)) {
+                if ($i + 1 < $count && preg_match('/\.\.\.\.\./', $lines[$i + 1])) continue; // Índice de puntos
+                if ($i + 1 < $count && preg_match('/^\s*(introducción|parte i|capítulo)/ui', trim($lines[$i + 1]))) continue;
+
+                $bodyLines = [];
+                for ($j = $i + 1; $j < min($count, $i + 35); $j++) {
+                    $l = trim($lines[$j]);
+                    if ($l === '') continue;
+
+                    if (preg_match('/^(palabras\s+claves?|keywords?|introducción|introduccion|parte\s+i|capítulo)/ui', $l)) {
+                        break;
+                    }
+
+                    $bodyLines[] = $l;
                 }
-                $pos = false;
+
+                if (!empty($bodyLines)) {
+                    $resumen = implode(" ", $bodyLines);
+                    $resumen = preg_replace('/\s+/u', ' ', $resumen);
+                    $resumen = preg_replace('/\b(palabras\s+claves?|keywords?|descriptores?)\s*:?.*$/ui', '', $resumen);
+                    return trim($resumen, " \t\r\n\:-.,");
+                }
             }
         }
 
-        if ($pos !== false) {
-            // Extraer a partir de la posición
-            $resumenText = mb_substr($text, $pos);
-            
-            // Eliminar dos puntos o espacios iniciales si los hay
-            $resumenText = ltrim($resumenText, " \t\r\n\:-");
+        // 2. Fallback Inteligente: Reconstruir bloque narrativo de propósito / objetivo / diagnóstico si no existe encabezado RESUMEN
+        if (!empty($lines)) {
+            $inBlock = false;
+            $narrativeLines = [];
 
-            // Buscar dónde termina el resumen (normalmente palabras clave o introducción)
-            $stopPatterns = [
-                '/palabras\s+claves?/ui',
-                '/keywords?/ui',
-                '/introducción/ui',
-                '/introduccion/ui',
-                '/capítulo\s+i/ui',
-                '/capitulo\s+i/ui'
-            ];
+            for ($i = 0; $i < min($count, 350); $i++) {
+                $l = trim($lines[$i]);
+                if (preg_match('/\.\.\.\.\./', $l)) continue; // Omitir líneas de índice general
 
-            $minStopPos = mb_strlen($resumenText);
-            foreach ($stopPatterns as $pattern) {
-                if (preg_match($pattern, $resumenText, $matches, PREG_OFFSET_CAPTURE)) {
-                    $offset = $matches[0][1];
-                    if ($offset < $minStopPos) {
-                        $minStopPos = $offset;
+                if (preg_match('/(el\s+propósito\s+principal\s+de\s+este\s+proyecto|el\s+proyecto\s+socio\s+tecnológico\s+realizado\s+en|el\s+presente\s+proyecto\s+tiene\s+como\s+propósito|el\s+presente\s+proyecto\s+se\s+desarrolla|una\s+descripción\s+de\s+proyectos\s+es|dicha\s+investigación\s+se\s+enfoca|esta\s+investigación\s+se\s+centra)/ui', $l)) {
+                    $inBlock = true;
+                }
+
+                if ($inBlock) {
+                    if ($l === '' || preg_match('/^(palabras\s+claves?|parte\s+i|introducción|diagnóstico|1\.1)/ui', $l)) {
+                        break;
                     }
+                    $narrativeLines[] = $l;
+                    if (count($narrativeLines) >= 8) break;
                 }
             }
 
-            $resumen = mb_substr($resumenText, 0, $minStopPos);
-            // Limpiar saltos de línea excesivos y normalizar espacios
-            $resumen = preg_replace('/\s+/u', ' ', $resumen);
-            
-            return trim($resumen);
+            if (!empty($narrativeLines)) {
+                $res = implode(" ", $narrativeLines);
+                $res = preg_replace('/\s+/u', ' ', $res);
+                $res = preg_replace('/\b(palabras\s+claves?|keywords?|descriptores?)\s*:?.*$/ui', '', $res);
+                return trim($res, " \t\r\n\:-.,");
+            }
+
+            // 3. Fallback Genérico para párrafos descriptivos en las primeras 120 líneas
+            for ($i = 20; $i < min($count, 120); $i++) {
+                $l = trim($lines[$i]);
+                if (mb_strlen($l) >= 110 && mb_strlen($l) <= 900) {
+                    if (preg_match('/(investigación|proyecto|sistema|propuesta|desarrollo|matrícula|atención|diagnóstico)/ui', $l)) {
+                        if (!preg_match('/(cuadro|tabla|figura|índice|matriz|página|hoja|república|ministerio|universidad|\.\.\.\.)/ui', $l)) {
+                            return $l;
+                        }
+                    }
+                }
+            }
         }
 
         return '';
@@ -291,7 +356,7 @@ class ExtractorPST {
     }
 
     /**
-     * Extrae personas del documento (autores y tutores) mapeando cédulas y nombres.
+     * Extrae personas del documento (autores y tutores) mapeando cédulas y nombres en la portada.
      */
     private static function extraerPersonas(array $lines): array {
         $autores = [];
@@ -301,129 +366,138 @@ class ExtractorPST {
             'comunitario' => ['nombre' => '', 'cedula' => '']
         ];
 
-        // Regex para cédulas de identidad venezolanas (con formato)
-        $cedulaRegex = '/\b(?:V|E|C\.?I\.?)?[-.]?\s*(\d{1,2}\.?\d{3}\.?\d{3})\b/i';
+        // Acotar la búsqueda a la portada y páginas preliminares (primeras 120 líneas)
+        $linesCover = array_slice($lines, 0, 120);
 
-        // 1. Primer paso: Extraer personas asociadas a una cédula en el texto (Autores y Tutores con Cédula)
-        foreach ($lines as $index => $line) {
-            if (preg_match($cedulaRegex, $line, $matches)) {
-                $cedulaLimpia = preg_replace('/\D/', '', $matches[1]);
-                if (strlen($cedulaLimpia) < 7 || strlen($cedulaLimpia) > 9) {
-                    continue; // Cédula inválida
-                }
+        $processedLines = [];
+        $count = count($linesCover);
+        for ($i = 0; $i < $count; $i++) {
+            $line = $linesCover[$i];
+            if (preg_match('/^(docente\s+asesor|tutor|representante)\b.*:$/ui', $line) && $i + 1 < $count) {
+                $line .= ' ' . $linesCover[$i + 1];
+                $i++;
+            }
+            $processedLines[] = $line;
+        }
 
-                // Heurística de nombre: limpiar la línea de la cédula y palabras clave
-                $nombreCandidato = self::limpiarNombreLinea($line, $matches[0]);
-                
-                // Si la línea quedó muy corta, probar la línea inmediatamente superior
-                if (mb_strlen($nombreCandidato) < 5 && $index > 0) {
-                    $nombreCandidato = self::limpiarNombreLinea($lines[$index - 1], '');
-                }
+        // Regex mejorado para soportar cédulas de Word y PDF (ej: V-30.601.065, C.I. 30.671.594, V.I: 30.601.065, C.I: 30671594, 30.601.065)
+        $cedulaRegex = '/\b(?:V|E|C\.?I\.?|V\.?I\.?)?[-.:]?\s*(\d{1,2}\.?\d{3}\.?\d{3})\b/i';
 
-                // Si aún así no, probar la línea inferior
-                if (mb_strlen($nombreCandidato) < 5 && $index + 1 < count($lines)) {
-                    $nombreCandidato = self::limpiarNombreLinea($lines[$index + 1], '');
-                }
+        // 1. Extraer por coincidencia de cédula en la portada
+        foreach ($processedLines as $index => $line) {
+            if (preg_match_all($cedulaRegex, $line, $allMatches, PREG_SET_ORDER)) {
+                foreach ($allMatches as $matches) {
+                    $cedulaLimpia = preg_replace('/\D/', '', $matches[1]);
+                    if (strlen($cedulaLimpia) < 7 || strlen($cedulaLimpia) > 9) continue;
 
-                if (mb_strlen($nombreCandidato) >= 5) {
-                    // Determinar si es Tutor o Estudiante (Autor)
-                    // Buscar si la palabra "tutor", "asesor" o "representante" está en la misma línea o en las 3 líneas previas
-                    $esTutor = false;
-                    $tipoTutor = 'academico'; // Por defecto
-                    
-                    for ($k = max(0, $index - 3); $k <= $index; $k++) {
-                        if (isset($lines[$k])) {
-                            $contextLine = mb_strtolower($lines[$k]);
-                            if (mb_strpos($contextLine, 'tutor') !== false || mb_strpos($contextLine, 'asesor') !== false || mb_strpos($contextLine, 'representante') !== false) {
-                                $esTutor = true;
-                                if (mb_strpos($contextLine, 'inst') !== false) {
-                                    $tipoTutor = 'institucional';
-                                } elseif (mb_strpos($contextLine, 'comun') !== false || mb_strpos($contextLine, 'líder') !== false || mb_strpos($contextLine, 'lider') !== false) {
-                                    $tipoTutor = 'comunitario';
-                                }
-                                break;
-                            }
-                        }
+                    $nombreCandidato = self::limpiarNombreLinea($line, $matches[0]);
+                    if (mb_strlen($nombreCandidato) < 4 && $index > 0) {
+                        $nombreCandidato = self::limpiarNombreLinea($processedLines[$index - 1], '');
                     }
 
-                    if ($esTutor) {
-                        // Evitar sobreescribir si ya está lleno
-                        if (empty($tutores[$tipoTutor]['cedula'])) {
-                            $tutores[$tipoTutor] = [
-                                'nombre' => $nombreCandidato,
-                                'cedula' => 'V-' . $cedulaLimpia
-                            ];
-                        }
-                    } else {
-                        // Agregar como autor si no supera el límite de 4 y no está repetido
-                        $yaExiste = false;
-                        foreach ($autores as $aut) {
-                            if ($aut['cedula'] === 'V-' . $cedulaLimpia) {
-                                $yaExiste = true;
-                                break;
+                    if (mb_strlen($nombreCandidato) >= 4) {
+                        $esTutor = false;
+                        $tipoTutor = 'academico';
+
+                        for ($k = max(0, $index - 3); $k <= $index; $k++) {
+                            if (isset($processedLines[$k])) {
+                                $ctx = mb_strtolower($processedLines[$k]);
+                                if (mb_strpos($ctx, 'tutor') !== false || mb_strpos($ctx, 'asesor') !== false || mb_strpos($ctx, 'representante') !== false) {
+                                    $esTutor = true;
+                                    if (mb_strpos($ctx, 'inst') !== false) {
+                                        $tipoTutor = 'institucional';
+                                    } elseif (mb_strpos($ctx, 'comun') !== false || mb_strpos($ctx, 'líder') !== false || mb_strpos($ctx, 'lider') !== false || mb_strpos($ctx, 'org') !== false) {
+                                        $tipoTutor = 'comunitario';
+                                    }
+                                    break;
+                                }
                             }
                         }
-                        if (!$yaExiste && count($autores) < 4) {
-                            $autores[] = [
-                                'nombre' => $nombreCandidato,
-                                'cedula' => 'V-' . $cedulaLimpia
-                            ];
+
+                        if ($esTutor) {
+                            if (empty($tutores[$tipoTutor]['cedula'])) {
+                                $tutores[$tipoTutor] = ['nombre' => $nombreCandidato, 'cedula' => 'V-' . $cedulaLimpia];
+                            }
+                        } else {
+                            $yaExiste = false;
+                            foreach ($autores as $aut) {
+                                if ($aut['cedula'] === 'V-' . $cedulaLimpia || mb_strtolower($aut['nombre']) === mb_strtolower($nombreCandidato)) {
+                                    $yaExiste = true;
+                                    break;
+                                }
+                            }
+                            if (!$yaExiste && count($autores) < 4) {
+                                $autores[] = ['nombre' => $nombreCandidato, 'cedula' => 'V-' . $cedulaLimpia];
+                            }
                         }
                     }
                 }
             }
         }
 
-        // 2. Segundo paso: Extraer tutores por palabra clave estructurada (si no tienen cédula en el documento)
+        // 2. Extraer tutores por etiquetas estructuradas
         $tutorPatterns = [
-            'academico'     => '/(?:docente\s+asesor|tutor\s+acad[eé]mico|tutor\s+asesor|tutor\(a\)\s+acad[eé]mico)\s*:\s*(.+)/ui',
+            'academico'     => '/(?:docente\s+asesor|tutor\s+acad[eé]mico|tutor\s+asesor|tutor\(a\)\s+acad[eé]mico|profesor\s+asesor)\s*:\s*(.+)/ui',
             'institucional' => '/(?:representante\s+institucional|tutor\s+institucional|tutor\(a\)\s+institucional)\s*:\s*(.+)/ui',
-            'comunitario'   => '/(?:representante\s+comunitario|tutor\s+comunitario|tutor\(a\)\s+comunitario)\s*:\s*(.+)/ui'
+            'comunitario'   => '/(?:representante\s+comunitario|tutor\s+comunitario|tutor\(a\)\s+comunitario|representante\s+organizacional)\s*:\s*(.+)/ui'
         ];
 
-        foreach ($lines as $line) {
+        foreach ($processedLines as $line) {
             foreach ($tutorPatterns as $tipo => $pattern) {
-                // Solo si no fue extraído previamente en la primera fase
                 if (empty($tutores[$tipo]['nombre'])) {
                     if (preg_match($pattern, $line, $matches)) {
-                        $nombreCompleto = trim($matches[1]);
-                        if ($nombreCompleto !== '') {
-                            $nombreCompleto = self::limpiarNombreLinea($nombreCompleto, '');
-                            if (mb_strlen($nombreCompleto) >= 5) {
-                                $tutores[$tipo] = [
-                                    'nombre' => $nombreCompleto,
-                                    'cedula' => '' // Cédula no especificada en portada
-                                ];
-                            }
+                        $nombre = self::limpiarNombreLinea($matches[1], '');
+                        if (mb_strlen($nombre) >= 4) {
+                            $tutores[$tipo] = ['nombre' => $nombre, 'cedula' => ''];
                         }
                     }
                 }
             }
         }
 
-        // Si no se encontraron autores, llenar slots vacíos
+        // 3. Extraer autores sin cédula (si aún faltan)
+        if (count($autores) < 4) {
+            $inAutoresSection = false;
+            foreach ($processedLines as $line) {
+                if (preg_match('/^\s*(autores|estudiantes|bachilleres|autor|estudiante|bachiller)\b/ui', $line)) {
+                    $inAutoresSection = true;
+                    continue;
+                }
+                if ($inAutoresSection) {
+                    if (preg_match('/^(docente|tutor|representante|profesor|resúmen|resumen|introducción|índice|valera|febrero|julio|mayo|202[0-9])/ui', $line)) {
+                        $inAutoresSection = false;
+                        break;
+                    }
+                    $nombreCandidate = self::limpiarNombreLinea($line, '');
+                    if (mb_strlen($nombreCandidate) >= 5 && count($autores) < 4) {
+                        $yaExiste = false;
+                        foreach ($autores as $aut) {
+                            if (mb_strtolower($aut['nombre']) === mb_strtolower($nombreCandidate)) {
+                                $yaExiste = true; break;
+                            }
+                        }
+                        if (!$yaExiste) {
+                            $autores[] = ['nombre' => $nombreCandidate, 'cedula' => ''];
+                        }
+                    }
+                }
+            }
+        }
+
         while (count($autores) < 4) {
             $autores[] = ['nombre' => '', 'cedula' => ''];
         }
 
-        return [
-            'autores' => $autores,
-            'tutores' => $tutores
-        ];
+        return ['autores' => $autores, 'tutores' => $tutores];
     }
 
     private static function limpiarNombreLinea(string $line, string $cedulaMatch): string {
-        // 1. Quitar la coincidencia de la cédula si existe
         if ($cedulaMatch !== '') {
             $line = str_ireplace($cedulaMatch, '', $line);
         }
-
-        // 2. Remover títulos y cargos específicos usando límites de palabra (regex)
-        // Esto evita que "Alejandro" se convierta en "Alejano" por culpa de "dr"
         $prefixesRegex = '/\b(ing|lic|dr|dra|prof|profa|tsu|t\.s\.u\.)\.?\b/ui';
         $line = preg_replace($prefixesRegex, '', $line);
 
-        // 3. Remover palabras descriptivas comunes
         $wordsToRemove = [
             'estudiante', 'estudiantes', 'bachiller', 'bachilleres',
             'autor', 'autores', 'tutor', 'tutores', 'asesor', 'asesora',
@@ -436,13 +510,9 @@ class ExtractorPST {
             $cleaned = preg_replace('/\b' . preg_quote($word, '/') . '\b/ui', '', $cleaned);
         }
 
-        // Remover caracteres especiales sobrantes
         $cleaned = str_replace([':', '-', '=', '/'], ' ', $cleaned);
-
-        // Mantener solo letras y espacios de nombres (eliminamos puntos)
         $cleaned = preg_replace('/[^a-záéíóúñ\s]/u', '', $cleaned);
         $cleaned = preg_replace('/\s+/u', ' ', $cleaned);
-        
         return ucwords(trim($cleaned));
     }
 

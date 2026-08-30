@@ -168,38 +168,11 @@ document.addEventListener('DOMContentLoaded', function() {
     renderChips();
 });
 
-// --- VALIDACIÓN MAESTRA DEL FORMULARIO ---
-window.validarFormulario = function() {
-    let esValido = true;
-
-    // 1. Validar Autores
+window.validarAutores = function() {
     const hiddenInputsBox = document.getElementById('autores-hidden-inputs');
-    const errorAutores = document.getElementById('error-autores');
-    
     if (hiddenInputsBox.children.length === 0) {
-        errorAutores.style.display = 'block';
-        esValido = false; 
-    } else {
-        errorAutores.style.display = 'none';
+        document.getElementById('error-autores').style.display = 'block';
+        return false; 
     }
-
-    // 2. Validar Categorías
-    const checkboxesCat = document.querySelectorAll('input[name="categorias[]"]:checked');
-    const errorCategorias = document.getElementById('error-categorias');
-    const boxCategorias = document.getElementById('box-categorias');
-    
-    // Verificamos si los elementos existen (para que el script no falle si en un futuro los quitas)
-    if (boxCategorias && errorCategorias) {
-        if (checkboxesCat.length === 0) {
-            errorCategorias.style.display = 'block';
-            boxCategorias.style.borderColor = '#dc2626'; // Borde rojo de alerta
-            esValido = false;
-        } else {
-            errorCategorias.style.display = 'none';
-            boxCategorias.style.borderColor = 'rgba(0,0,0,0.1)'; // Borde normal
-        }
-    }
-
-    // El formulario solo se envía si todo está correcto
-    return esValido; 
+    return true; 
 };
