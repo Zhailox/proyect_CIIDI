@@ -47,28 +47,6 @@ class LineasInvestigacionModule implements ModuleContract {
                 'controlador_path' => __DIR__ . '/controllers/GestorController.php',
                 'metodo'           => 'dimensiones'
             ],
-            // Panel Analítico UI
-            'dashboard-analitica' => [
-                'vista'            => __DIR__ . '/views/dashboard_analitica.php',
-                'titulo'           => 'Dashboard Analítico I+D',
-                'css'              => ['LineasInvestigacion.css'],
-                'controlador'      => 'AnaliticaController',
-                'controlador_path' => __DIR__ . '/controllers/AnaliticaController.php',
-                'metodo'           => 'index'
-            ],
-            // Endpoints de IA y Analítica
-            'api-prediccion-tendencias' => [
-                'controlador'      => 'AnaliticaController',
-                'controlador_path' => __DIR__ . '/controllers/AnaliticaController.php',
-                'metodo'           => 'proyectarTendencias',
-                'es_api'           => true // Asumo convención para no requerir vista y devolver JSON
-            ],
-            'api-clasificacion-automatica' => [
-                'controlador'      => 'AnaliticaController',
-                'controlador_path' => __DIR__ . '/controllers/AnaliticaController.php',
-                'metodo'           => 'clasificarDocumento',
-                'es_api'           => true
-            ],
         ];
     }
 
@@ -79,12 +57,11 @@ class LineasInvestigacionModule implements ModuleContract {
                 'titulo'      => 'Líneas I+D',
                 'icono'       => 'ph-fill ph-graph',
                 'enlace'      => 'lineas-investigacion',
-                'activadores' => ['lineas-investigacion', 'detalle-linea', 'gestionar-lineas', 'gestionar-dimensiones', 'dashboard-analitica'],
+                'activadores' => ['lineas-investigacion', 'detalle-linea', 'gestionar-lineas', 'gestionar-dimensiones'],
                 'subitems'    => [
                     ['ruta' => 'lineas-investigacion',  'titulo' => 'Explorar Líneas'],
                     ['ruta' => 'gestionar-lineas',      'titulo' => 'Gestionar Líneas'],
                     ['ruta' => 'gestionar-dimensiones', 'titulo' => 'Gestionar Dimensiones'],
-                    ['ruta' => 'dashboard-analitica',   'titulo' => 'Analítica e IA'],
                 ]
             ]
         ];

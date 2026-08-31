@@ -1,19 +1,23 @@
 /* ==========================================================================
    MÓDULO LÍNEAS DE INVESTIGACIÓN - CIIDI
-   Paleta: Indigo / Violet / Cyan
+   Paleta: variables del core (--color-principal / secundario / terciario)
    ========================================================================== */
 
-/* ─── Variables locales del módulo ──────────────────────────────────────── */
+/* ─── Re-alias locales → core ────────────────────────────────────────────── */
 :root {
-    --li-indigo:      #4f46e5;
-    --li-indigo-dark: #3730a3;
-    --li-violet:      #7c3aed;
-    --li-cyan:        #0891b2;
+    /* Colores de marca → paleta institucional del core */
+    --li-indigo:      var(--color-principal);   /* #121A3E */
+    --li-violet:      var(--color-secundario);  /* #505984 */
+    --li-cyan:        var(--color-terciario);   /* #7090CB */
+
+    /* Colores de estado (no existen en el core, se mantienen) */
     --li-amber:       #d97706;
     --li-emerald:     #059669;
     --li-rose:        #e11d48;
-    --li-card-radius: 10px;
-    --li-transition:  0.25s cubic-bezier(0.25, 1, 0.5, 1);
+
+    /* Layout → reutiliza radios y transición del core */
+    --li-card-radius: var(--radius-sm);         /* 8px */
+    --li-transition:  var(--transition-fast);
 }
 
 /* ─── WRAPPER GENERAL ────────────────────────────────────────────────────── */
@@ -25,17 +29,17 @@
 
 /* ─── HERO BANNER ────────────────────────────────────────────────────────── */
 .li-hero {
-    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 45%, #4c1d95 100%);
+    background: var(--bg-banner);
     border-radius: var(--li-card-radius);
     padding: 2.8rem 2.5rem;
-    color: #fff;
+    color: var(--text-white);
     position: relative;
     overflow: hidden;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 2rem;
-    box-shadow: 0 10px 40px rgba(79, 70, 229, 0.35);
+    box-shadow: var(--shadow-md);
 }
 
 /* Partículas decorativas */
@@ -48,12 +52,12 @@
 }
 .li-hero::before {
     width: 340px; height: 340px;
-    background: #818cf8;
+    background: rgba(255,255,255,0.15);
     top: -120px; right: -80px;
 }
 .li-hero::after {
     width: 200px; height: 200px;
-    background: #c4b5fd;
+    background: rgba(255,255,255,0.08);
     bottom: -60px; left: 30%;
 }
 
@@ -76,7 +80,7 @@
     font-weight: 700;
     letter-spacing: 0.5px;
     text-transform: uppercase;
-    color: #c4b5fd;
+    color: rgba(255,255,255,0.9);
     margin-bottom: 1rem;
 }
 
@@ -124,7 +128,7 @@
     display: block;
     font-size: 2rem;
     font-weight: 800;
-    color: #a5b4fc;
+    color: #ffffff;
     line-height: 1;
     margin-bottom: 0.3rem;
 }
@@ -157,7 +161,7 @@
 
 .li-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 35px rgba(79, 70, 229, 0.12);
+    box-shadow: var(--shadow-md);
 }
 
 /* Barra de color superior por índice */
@@ -165,12 +169,13 @@
     height: 4px;
     border-radius: var(--li-card-radius) var(--li-card-radius) 0 0;
 }
-.li-accent-0 { background: linear-gradient(90deg, var(--li-indigo), var(--li-violet)); }
-.li-accent-1 { background: linear-gradient(90deg, var(--li-cyan), #06d6a0); }
-.li-accent-2 { background: linear-gradient(90deg, var(--li-amber), #f59e0b); }
+/* Barras de color: las 3 primeras usan la paleta del core; el resto, colores de estado */
+.li-accent-0 { background: linear-gradient(90deg, var(--color-principal), var(--color-secundario)); }
+.li-accent-1 { background: linear-gradient(90deg, var(--color-secundario), var(--color-terciario)); }
+.li-accent-2 { background: linear-gradient(90deg, var(--color-terciario), var(--color-principal)); }
 .li-accent-3 { background: linear-gradient(90deg, var(--li-rose), #fb7185); }
 .li-accent-4 { background: linear-gradient(90deg, var(--li-emerald), #34d399); }
-.li-accent-5 { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+.li-accent-5 { background: linear-gradient(90deg, var(--li-amber), #f59e0b); }
 
 .li-card-body {
     padding: 1.5rem;
@@ -195,17 +200,17 @@
     font-size: 1.5rem;
     flex-shrink: 0;
 }
-.li-icon-0 { background: rgba(79,70,229,0.1); color: var(--li-indigo); }
-.li-icon-1 { background: rgba(8,145,178,0.1); color: var(--li-cyan); }
-.li-icon-2 { background: rgba(217,119,6,0.1);  color: var(--li-amber); }
-.li-icon-3 { background: rgba(225,29,72,0.1);  color: var(--li-rose); }
-.li-icon-4 { background: rgba(5,150,105,0.1);  color: var(--li-emerald); }
-.li-icon-5 { background: rgba(124,58,237,0.1); color: var(--li-violet); }
+.li-icon-0 { background: rgba(18,26,62,0.08);  color: var(--color-principal); }
+.li-icon-1 { background: rgba(80,89,132,0.10);  color: var(--color-secundario); }
+.li-icon-2 { background: rgba(112,144,203,0.12);color: var(--color-terciario); }
+.li-icon-3 { background: rgba(225,29,72,0.1);   color: var(--li-rose); }
+.li-icon-4 { background: rgba(5,150,105,0.1);   color: var(--li-emerald); }
+.li-icon-5 { background: rgba(217,119,6,0.1);   color: var(--li-amber); }
 
 .li-card-title {
     font-size: 1rem;
     font-weight: 700;
-    color: var(--color-principal);
+    color: var(--color-principal, #1e293b);
     margin: 0;
     line-height: 1.3;
     text-transform: capitalize;
@@ -227,15 +232,15 @@
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    background: rgba(79,70,229,0.08);
-    color: var(--li-indigo);
+    background: rgba(18,26,62,0.07);
+    color: var(--color-principal);
     border-radius: 50px;
     padding: 0.25rem 0.75rem;
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.3px;
-    border: 1px solid rgba(79,70,229,0.15);
+    border: 1px solid rgba(18,26,62,0.12);
     width: fit-content;
 }
 
@@ -258,12 +263,12 @@
 
 .li-stat-item i {
     font-size: 0.95rem;
-    color: var(--li-indigo);
+    color: var(--color-terciario);
 }
 
 .li-stat-num {
     font-weight: 700;
-    color: var(--color-principal);
+    color: var(--color-principal, #1e293b);
 }
 
 /* Botón de la card */
@@ -278,22 +283,22 @@
     gap: 0.5rem;
     width: 100%;
     padding: 0.65rem 1.25rem;
-    background: linear-gradient(135deg, var(--li-indigo), var(--li-violet));
-    color: #fff;
+    background: var(--color-principal);
+    color: var(--text-white);
     border: none;
-    border-radius: 8px;
+    border-radius: var(--li-card-radius);
     font-size: 0.85rem;
     font-weight: 700;
     text-decoration: none;
     cursor: pointer;
-    transition: opacity var(--li-transition), transform var(--li-transition);
+    transition: background var(--li-transition), transform var(--li-transition);
     letter-spacing: 0.3px;
 }
 
 .li-btn-ver:hover {
-    opacity: 0.88;
+    background: var(--color-secundario);
     transform: translateY(-1px);
-    color: #fff;
+    color: var(--text-white);
     text-decoration: none;
 }
 
@@ -305,7 +310,7 @@
 }
 
 .li-detail-hero {
-    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4c1d95 100%);
+    background: linear-gradient(135deg, var(--color-principal, #1e1b4b) 0%, var(--color-secundario, #312e81) 100%);
     border-radius: var(--li-card-radius);
     padding: 2.5rem;
     color: #fff;
@@ -334,7 +339,7 @@
 }
 
 .li-back-link:hover {
-    color: #a5b4fc;
+    color: rgba(255,255,255,0.9);
     text-decoration: none;
 }
 
@@ -395,10 +400,10 @@
 .li-section-title {
     font-size: 1.05rem;
     font-weight: 700;
-    color: var(--color-secundario);
+    color: var(--color-principal);
     margin: 0 0 1rem 0;
     padding-bottom: 0.5rem;
-    border-bottom: 2px solid rgba(79,70,229,0.15);
+    border-bottom: 2px solid var(--color-terciario);
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -414,7 +419,7 @@
 }
 
 .li-dimension-accordion:hover {
-    box-shadow: 0 4px 15px rgba(79,70,229,0.08);
+    box-shadow: var(--shadow-sm);
 }
 
 .li-dim-summary {
@@ -434,7 +439,7 @@
 .li-dim-summary::after {
     content: '+';
     font-size: 1.2rem;
-    color: var(--li-indigo);
+    color: var(--color-terciario);
     transition: transform 0.2s;
     font-weight: 400;
 }
@@ -460,15 +465,15 @@
 .li-proj-card {
     background: #fff;
     border: 1px solid rgba(0,0,0,0.07);
-    border-radius: 8px;
+    border-radius: var(--li-card-radius);
     padding: 1.1rem 1.25rem;
-    border-left: 3px solid var(--li-indigo);
+    border-left: 3px solid var(--color-terciario);
     transition: border-left-color var(--li-transition), box-shadow var(--li-transition);
 }
 
 .li-proj-card:hover {
-    border-left-color: var(--li-violet);
-    box-shadow: 0 4px 12px rgba(79,70,229,0.08);
+    border-left-color: var(--color-principal);
+    box-shadow: var(--shadow-sm);
 }
 
 .li-proj-title {
@@ -490,7 +495,7 @@
 
 .li-proj-authors {
     font-size: 0.78rem;
-    color: var(--li-indigo);
+    color: var(--color-secundario);
     font-weight: 600;
 }
 
@@ -504,9 +509,9 @@
 }
 
 .li-sidebar-header {
-    background: linear-gradient(135deg, var(--li-indigo), var(--li-violet));
+    background: var(--bg-banner);
     padding: 1rem 1.25rem;
-    color: #fff;
+    color: var(--text-white);
 }
 
 .li-sidebar-header h3 {
@@ -564,7 +569,8 @@
 
 .li-empty-state i {
     font-size: 3rem;
-    color: rgba(79,70,229,0.2);
+    color: var(--color-terciario);
+    opacity: 0.35;
     margin-bottom: 1rem;
 }
 
@@ -583,7 +589,7 @@
 
 /* Banner del gestor */
 .li-gestor-banner {
-    background: linear-gradient(135deg, #1e1b4b, #312e81);
+    background: linear-gradient(135deg, var(--color-principal, #1e1b4b), var(--color-secundario, #312e81));
     border-radius: var(--li-card-radius);
     padding: 2rem 2.5rem;
     color: #fff;
@@ -675,9 +681,9 @@
 .li-form-group input:focus,
 .li-form-group select:focus,
 .li-form-group textarea:focus {
-    border-color: var(--li-indigo);
+    border-color: var(--color-terciario);
     background: #fff;
-    box-shadow: 0 0 0 3px rgba(79,70,229,0.08);
+    box-shadow: 0 0 0 3px rgba(112,144,203,0.15);
 }
 
 .li-form-group textarea {
@@ -752,12 +758,12 @@
 }
 
 .li-table tr:hover td {
-    background: rgba(79,70,229,0.02);
+    background: rgba(18,26,62,0.02);
 }
 
 .li-table-nombre {
     font-weight: 600;
-    color: var(--color-principal);
+    color: var(--color-principal, #1e293b);
     max-width: 280px;
     line-height: 1.3;
 }
@@ -769,8 +775,8 @@
     border-radius: 12px;
     font-size: 0.72rem;
     font-weight: 700;
-    background: rgba(79,70,229,0.08);
-    color: var(--li-indigo);
+    background: rgba(112,144,203,0.12);
+    color: var(--color-principal);
 }
 
 /* Botones de acción en tabla */
@@ -796,13 +802,13 @@
 }
 
 .li-btn-edit {
-    background: rgba(79,70,229,0.1);
-    color: var(--li-indigo);
+    background: rgba(18,26,62,0.07);
+    color: var(--color-principal);
 }
 
 .li-btn-edit:hover {
-    background: var(--li-indigo);
-    color: #fff;
+    background: var(--color-principal);
+    color: var(--text-white);
     text-decoration: none;
 }
 
@@ -847,7 +853,7 @@
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background: rgba(30, 27, 75, 0.65);
+    background: rgba(18, 26, 62, 0.65);
     z-index: 9000;
     display: flex;
     align-items: center;

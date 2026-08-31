@@ -637,11 +637,40 @@ function copiarCitaText(elementId, btn) {
     const el = document.getElementById(elementId);
     if (!el) return;
     const text = el.textContent;
-    navigator.clipboard.writeText(text).then(() => {
+
+    const mostrarExito = () => {
         const origText = btn.innerHTML;
         btn.innerHTML = '<i class="ph ph-check"></i> ¡Copiado!';
         setTimeout(() => { btn.innerHTML = origText; }, 2000);
-    });
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(mostrarExito).catch(() => {
+            fallbackCopiarTexto(text, mostrarExito);
+        });
+    } else {
+        fallbackCopiarTexto(text, mostrarExito);
+    }
+}
+
+function fallbackCopiarTexto(text, onSuccess) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    textArea.style.top = "-999999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+        const successful = document.execCommand('copy');
+        if (successful && typeof onSuccess === 'function') {
+            onSuccess();
+        }
+    } catch (err) {
+        console.error('Error al copiar texto via fallback: ', err);
+    }
+    document.body.removeChild(textArea);
 }
 </script>
 

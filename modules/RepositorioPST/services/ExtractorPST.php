@@ -80,7 +80,7 @@ class ExtractorPST {
     /**
      * Parsea el texto extraído del documento para obtener los metadatos relevantes.
      */
-    public static function analizarTexto(string $text): array {
+    public static function analizarTexto(string $text, string $fileName = ''): array {
         $lines = explode("\n", $text);
         $cleanLines = [];
         foreach ($lines as $l) {
@@ -90,8 +90,8 @@ class ExtractorPST {
             }
         }
 
-        // 1. Extraer Título (Heurística)
-        $titulo = self::extraerTitulo($cleanLines);
+        // 1. Extraer Título (Heurística refinada con saltos de línea y fallback de nombre de archivo)
+        $titulo = self::extraerTitulo($cleanLines, $text, $fileName);
 
         // 2. Extraer Año (Heurística)
         $anio = self::extraerAnio($text);
@@ -211,10 +211,14 @@ class ExtractorPST {
     /**
      * Busca las primeras líneas con formato de título (mayúsculas largas, obviando cabeceras universitarias).
      */
-    private static function extraerTitulo(array $lines): string {
+    private static function extraerTitulo(array $lines, string $rawText = '', string $fileName = ''): string {
+        $maxWords = 40;       // Límite razonable de palabras para un título de proyecto
+        $maxChars = 260;      // Límite de caracteres
+
+        // Heurística A: Si encontramos el encabezado "AUTORES", "PRESENTADO POR", etc.
         $autoresIdx = -1;
         foreach ($lines as $idx => $line) {
-            if (preg_match('/^\s*(autores|estudiantes|bachilleres|autor|estudiante|bachiller|presentado por|creado por)\b/ui', $line)) {
+            if (preg_match('/^\s*(autores|estudiantes|bachilleres|autor|estudiante|bachiller|presentado por|creado por|tutor)\b/ui', $line)) {
                 $autoresIdx = $idx;
                 break;
             }
@@ -226,29 +230,105 @@ class ExtractorPST {
                 $line = trim($lines[$i]);
                 if ($line === '') continue;
 
-                if (preg_match('/^(república|republica|ministerio|universidad|programa nacional|núcleo universitario|nucleo universitario|valera\s*–)/ui', $line)) {
+                // Si encontramos cabecera institucional o universitaria, detemos la subida hacia arriba
+                if (preg_match('/^(república|republica|ministerio|universidad|programa nacional|pnf|núcleo|nucleo|valera\s*–|coordinación|trayecto)/ui', $line)) {
                     break;
                 }
                 array_unshift($tituloLines, $line);
             }
 
             if (!empty($tituloLines)) {
-                return trim(implode(' ', $tituloLines));
+                $cand = trim(implode(' ', $tituloLines));
+                if (mb_strlen($cand) >= 15 && count(explode(' ', $cand)) <= $maxWords) {
+                    return self::limpiarTitulo($cand, $maxChars);
+                }
             }
         }
 
+        // Heurística B: Analizar saltos de línea originales del texto base (preservando párrafos reales)
+        if (!empty($rawText)) {
+            // Dividir por saltos de línea dobles o múltiples (que marcan cambio de bloque / párrafo)
+            $blocks = preg_split('/\n\s*\n/', $rawText);
+            foreach ($blocks as $block) {
+                $cleanBlockLines = array_filter(array_map('trim', explode("\n", $block)));
+                if (empty($cleanBlockLines)) continue;
+
+                $blockText = implode(' ', $cleanBlockLines);
+
+                // Omitir bloques institucional/universitarios o datos de autor/fecha
+                if (preg_match('/(república|republica|ministerio|universidad politécnica|programa nacional|núcleo|autores|tutor|valera,\s*\d{4})/ui', $blockText)) {
+                    continue;
+                }
+
+                $words = explode(' ', $blockText);
+                // Si el bloque tiene una longitud coherente para un título
+                if (mb_strlen($blockText) >= 15 && count($words) <= $maxWords) {
+                    return self::limpiarTitulo($blockText, $maxChars);
+                }
+            }
+        }
+
+        // Heurística C: Recorrer líneas limpias aisladas (máximo las primeras 30 líneas)
         $candidates = [];
-        for ($i = 0; $i < min(count($lines), 40); $i++) {
+        $wordsCount = 0;
+
+        for ($i = 0; $i < min(count($lines), 30); $i++) {
             $line = $lines[$i];
-            if (preg_match('/^(república|republica|ministerio|universidad|programa nacional|núcleo|nucleo|valera|autores|tutor|docente)/ui', $line)) {
+
+            if (preg_match('/^(república|republica|ministerio|universidad|programa nacional|pnf|núcleo|nucleo|valera|autores|tutor|docente|cedula|c\.i)/ui', $line)) {
+                if (!empty($candidates)) {
+                    // Si ya veníamos acumulando líneas y nos topamos con autores/universidad, paramos aquí
+                    break;
+                }
                 continue;
             }
-            if (mb_strlen($line) > 20) {
+
+            if (mb_strlen($line) >= 12) {
+                $lineWords = count(explode(' ', $line));
+                if ($wordsCount + $lineWords > $maxWords) {
+                    break; // Evitar que siga absorbiendo texto excesivo
+                }
                 $candidates[] = $line;
+                $wordsCount += $lineWords;
             }
         }
 
-        return !empty($candidates) ? implode(' ', $candidates) : '';
+        if (!empty($candidates)) {
+            $tituloCand = implode(' ', $candidates);
+            if (mb_strlen($tituloCand) >= 15) {
+                return self::limpiarTitulo($tituloCand, $maxChars);
+            }
+        }
+
+        // Heurística Fallback: Si todo lo demás falla o extrajo basura, usar el nombre del archivo sin extensión
+        if (!empty($fileName)) {
+            $cleanFileName = pathinfo($fileName, PATHINFO_FILENAME);
+            // Reemplazar guiones o guiones bajos por espacios y capitalizar
+            $cleanFileName = preg_replace('/[_\-]+/', ' ', $cleanFileName);
+            return trim(mb_ucfirst($cleanFileName));
+        }
+
+        return 'Proyecto Socio-Tecnológico Sin Título Detectado';
+    }
+
+    /**
+     * Limpia el texto del título y trunca si excede el límite seguro.
+     */
+    private static function limpiarTitulo(string $titulo, int $maxChars = 260): string {
+        $titulo = preg_replace('/\s+/u', ' ', $titulo);
+        $titulo = trim($titulo, " \t\r\n\:-.,");
+
+        if (mb_strlen($titulo) > $maxChars) {
+            $titulo = mb_substr($titulo, 0, $maxChars);
+            // Cortar en la última palabra completa
+            $lastSpace = mb_strrpos($titulo, ' ');
+            if ($lastSpace !== false) {
+                $titulo = mb_substr($titulo, 0, $lastSpace);
+            }
+            $titulo .= '...';
+        }
+
+        return $titulo;
     }
 
     /**

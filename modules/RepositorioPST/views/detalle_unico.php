@@ -31,6 +31,9 @@
     border: 1px solid rgba(169, 168, 166, 0.18);
     border-radius: 4px;
     padding: 0.5rem 0.65rem;
+    overflow: hidden;
+    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 .pst-meta-item strong {
     display: block;
@@ -45,6 +48,13 @@
     color: var(--texto-normal);
     font-weight: 600;
     line-height: 1.3;
+    display: block;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+}
+.pst-meta-item a {
+    word-break: break-all;
+    overflow-wrap: anywhere;
 }
 .pst-detail-tabs {
     display: flex;
@@ -152,7 +162,7 @@
                     <span class="pst-badge-soft" style="background-color: #f1f5f9; color: var(--texto-silenciado);">AÑO <?= $documento['anio_publicacion'] ?></span>
                     <span class="pst-badge-soft" style="background-color: #f1f5f9; color: var(--texto-silenciado);">PNF Informática</span>
                     <?php if (!empty($documento['url_repositorio']) && ConfigService::get('recursos.mostrar_url_git', true)): ?>
-                        <a href="<?= htmlspecialchars($documento['url_repositorio']) ?>" target="_blank" class="pst-badge-soft" style="background-color: #002244; color: #ffffff; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem;">
+                        <a href="<?= htmlspecialchars($documento['url_repositorio']) ?>" target="_blank" class="pst-badge-soft" style="background-color: #002244; color: #ffffff; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                             <i class="ph ph-git-branch"></i> Repositorio Git
                         </a>
                     <?php endif; ?>
@@ -404,11 +414,40 @@ function copiarCitaText(elementId, btn) {
     const el = document.getElementById(elementId);
     if (!el) return;
     const text = el.textContent;
-    navigator.clipboard.writeText(text).then(() => {
+
+    const mostrarExito = () => {
         const origText = btn.innerHTML;
         btn.innerHTML = '<i class="ph ph-check"></i> ¡Copiado!';
         setTimeout(() => { btn.innerHTML = origText; }, 2000);
-    });
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(mostrarExito).catch(() => {
+            fallbackCopiarTexto(text, mostrarExito);
+        });
+    } else {
+        fallbackCopiarTexto(text, mostrarExito);
+    }
+}
+
+function fallbackCopiarTexto(text, onSuccess) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    textArea.style.top = "-999999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+        const successful = document.execCommand('copy');
+        if (successful && typeof onSuccess === 'function') {
+            onSuccess();
+        }
+    } catch (err) {
+        console.error('Error al copiar texto via fallback: ', err);
+    }
+    document.body.removeChild(textArea);
 }
 function abrirModalComunidad() {
     const modal = document.getElementById('modalComunidadContainer');

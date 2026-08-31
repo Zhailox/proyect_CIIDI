@@ -47,6 +47,9 @@
                 <button type="button" class="config-tab-btn" onclick="switchConfigTab('tabArchivos', this)">
                     <i class="ph ph-cloud-arrow-up"></i> Carga y Equipo PST
                 </button>
+                <button type="button" class="config-tab-btn" onclick="switchConfigTab('tabFidelidad', this)">
+                    <i class="ph ph-shield-check"></i> Verificador de Fidelidad
+                </button>
             </div>
 
             <!-- TAB 1: FORMATOS DE CITA ACADÉMICA -->
@@ -368,6 +371,66 @@
                 </div>
             </div>
 
+            <!-- TAB 6: VERIFICADOR DE FIDELIDAD DE EXTRACCIÓN -->
+            <div id="tabFidelidad" class="config-tab-pane">
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <h3 class="config-card-title">
+                            Verificador de Fidelidad de Extracción de Metadatos
+                        </h3>
+                    </div>
+
+                    <div style="background-color: var(--bg-card, #ffffff); border: 2px dashed rgba(169, 168, 166, 0.4); border-radius: var(--radius-md, 6px); padding: 1.5rem; text-align: center; cursor: pointer; transition: border-color 0.2s;" id="dropzoneFidelidad">
+                        <h4 style="margin: 0 0 0.25rem 0; font-size: 0.95rem; font-weight: 700; color: var(--texto-titulos);">Prueba de Fidelidad de Documento</h4>
+                        <input type="file" id="fileFidelidadInput" accept=".pdf,.docx" style="display: none;">
+                        <button type="button" class="btn-save-sm" id="btnBrowseFidelidad" style="margin-top: 0.5rem;">
+                            Seleccionar Documento
+                        </button>
+                        <span id="selectedFileNameFidelidad" style="display: block; margin-top: 0.5rem; font-size: 0.8rem; font-weight: 700; color: var(--color-secundario);"></span>
+                    </div>
+
+                    <div style="margin-top: 1rem; text-align: center;">
+                        <button type="button" class="btn-save-sm" style="padding: 0.55rem 1.5rem;" onclick="ejecutarPruebaFidelidad()">
+                            Ejecutar Verificación
+                        </button>
+                    </div>
+
+                    <!-- Panel de Resultados de la Prueba -->
+                    <div id="resultadoFidelidadBox" style="display: none; margin-top: 1.25rem; background-color: var(--bg-card, #ffffff); border: 1px solid rgba(169, 168, 166, 0.3); border-radius: var(--radius-md, 6px); padding: 1rem;">
+                        <h4 style="font-size: 0.88rem; font-weight: 800; color: var(--color-secundario); margin: 0 0 0.75rem 0; border-bottom: 1px solid rgba(169, 168, 166, 0.2); padding-bottom: 0.4rem;">
+                            Reporte de Diagnóstico de Fidelidad
+                        </h4>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.75rem; margin-bottom: 1rem;">
+                            <div style="background: var(--bg-body, #f8fafc); padding: 0.6rem; border-radius: 4px; border: 1px solid rgba(169, 168, 166, 0.2);">
+                                <strong style="font-size: 0.7rem; color: var(--texto-silenciado); text-transform: uppercase; display: block;">Título Detectado:</strong>
+                                <span id="fidResTitulo" style="font-size: 0.82rem; font-weight: 700; color: var(--texto-titulos);"></span>
+                            </div>
+                            <div style="background: var(--bg-body, #f8fafc); padding: 0.6rem; border-radius: 4px; border: 1px solid rgba(169, 168, 166, 0.2);">
+                                <strong style="font-size: 0.7rem; color: var(--texto-silenciado); text-transform: uppercase; display: block;">Año / Nivel Académico:</strong>
+                                <span id="fidResMeta" style="font-size: 0.82rem; font-weight: 700; color: var(--texto-titulos);"></span>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.75rem; margin-bottom: 1rem;">
+                            <div style="background: var(--bg-body, #f8fafc); padding: 0.6rem; border-radius: 4px; border: 1px solid rgba(169, 168, 166, 0.2);">
+                                <strong style="font-size: 0.7rem; color: var(--texto-silenciado); text-transform: uppercase; display: block;">Autores / Integrantes:</strong>
+                                <span id="fidResAutores" style="font-size: 0.8rem; color: var(--texto-normal);"></span>
+                            </div>
+                            <div style="background: var(--bg-body, #f8fafc); padding: 0.6rem; border-radius: 4px; border: 1px solid rgba(169, 168, 166, 0.2);">
+                                <strong style="font-size: 0.7rem; color: var(--texto-silenciado); text-transform: uppercase; display: block;">Tutor / Comunidad:</strong>
+                                <span id="fidResTutorComunidad" style="font-size: 0.8rem; color: var(--texto-normal);"></span>
+                            </div>
+                        </div>
+
+                        <div style="background: var(--bg-body, #fafbfe); padding: 0.75rem; border-radius: 4px; border: 1px solid rgba(169, 168, 166, 0.2);">
+                            <strong style="font-size: 0.7rem; color: var(--texto-silenciado); text-transform: uppercase; display: block; margin-bottom: 0.25rem;">Texto Extraído:</strong>
+                            <div id="fidResPreview" style="font-size: 0.78rem; font-family: monospace; color: var(--texto-normal); max-height: 140px; overflow-y: auto; white-space: pre-wrap; background: var(--bg-card, #ffffff); padding: 0.5rem; border-radius: 3px; border: 1px solid rgba(169, 168, 166, 0.2);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- BOTONES DE ACCIÓN PERMANENTES -->
             <div class="pst-config-footer">
                 <a href="?ruta=repositorio" class="btn-cancel-sm">Cancelar</a>
@@ -450,6 +513,112 @@ function actualizarPrevisualizacionCita(slug, plantilla) {
     }
     
     previewEl.textContent = res;
+}
+
+// LÓGICA DEL VERIFICADOR DE FIDELIDAD DE EXTRACCIÓN CON DRAG & DROP NATIVO
+document.addEventListener('DOMContentLoaded', () => {
+    const fileInput = document.getElementById('fileFidelidadInput');
+    const labelFileName = document.getElementById('selectedFileNameFidelidad');
+    const dropzone = document.getElementById('dropzoneFidelidad');
+    const btnBrowse = document.getElementById('btnBrowseFidelidad');
+
+    if (dropzone && fileInput) {
+        dropzone.addEventListener('click', (e) => {
+            if (e.target !== fileInput) {
+                fileInput.click();
+            }
+        });
+
+        if (btnBrowse) {
+            btnBrowse.addEventListener('click', (e) => {
+                e.stopPropagation();
+                fileInput.click();
+            });
+        }
+
+        ['dragenter', 'dragover'].forEach(evt => {
+            dropzone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.style.borderColor = 'var(--color-terciario, #007bff)';
+                dropzone.style.backgroundColor = 'var(--bg-body, #f4f8ff)';
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(evt => {
+            dropzone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.style.borderColor = 'rgba(169, 168, 166, 0.4)';
+                dropzone.style.backgroundColor = 'var(--bg-card, #ffffff)';
+            });
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            if (dt && dt.files && dt.files.length > 0) {
+                fileInput.files = dt.files;
+                if (labelFileName) {
+                    labelFileName.textContent = 'Archivo Seleccionado: ' + dt.files[0].name;
+                }
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                if (labelFileName) {
+                    labelFileName.textContent = 'Archivo Seleccionado: ' + e.target.files[0].name;
+                }
+            } else {
+                if (labelFileName) labelFileName.textContent = '';
+            }
+        });
+    }
+});
+
+function ejecutarPruebaFidelidad() {
+    const fileInput = document.getElementById('fileFidelidadInput');
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        alert('Por favor seleccione un archivo PDF o Word (.docx) para ejecutar la prueba de fidelidad.');
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append('archivo_pst', file);
+
+    const resultBox = document.getElementById('resultadoFidelidadBox');
+    if (resultBox) resultBox.style.display = 'block';
+
+    document.getElementById('fidResTitulo').textContent = 'Procesando lectura de documento...';
+    document.getElementById('fidResMeta').textContent = 'Analizando estructura...';
+    document.getElementById('fidResAutores').textContent = 'Extrayendo...';
+    document.getElementById('fidResTutorComunidad').textContent = 'Extrayendo...';
+    document.getElementById('fidResPreview').textContent = 'Extrayendo binarios y texto...';
+
+    fetch('?ruta=agregar-documento&accion=simular_extraccion', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            const d = data.data;
+            document.getElementById('fidResTitulo').textContent = d.titulo || 'No detectado';
+            document.getElementById('fidResMeta').textContent = (d.anio_publicacion || 's.f.') + ' | ' + (d.nivel_academico || 'Pregrado');
+            
+            const autoresList = d.autores ? d.autores.map(a => a.nombre || a.nombre_completo).filter(Boolean).join(', ') : 'Ninguno';
+            document.getElementById('fidResAutores').textContent = autoresList || 'No detectados';
+            
+            document.getElementById('fidResTutorComunidad').textContent = 'Tutor: ' + (d.tutor_academico_nombre || 'N/A') + ' | Comunidad: ' + (d.comunidad_beneficiada || 'N/A');
+            document.getElementById('fidResPreview').textContent = data.preview_texto || 'Sin vista previa';
+        } else {
+            alert('Error en la prueba de fidelidad: ' + (data.message || 'Error desconocido'));
+        }
+    })
+    .catch(err => {
+        alert('Ocurrió un error al comunicarse con el servidor para la simulación.');
+    });
 }
 
 // Inicializar previsualizaciones al cargar la página

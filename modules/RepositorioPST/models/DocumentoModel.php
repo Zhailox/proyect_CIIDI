@@ -87,8 +87,14 @@ class DocumentoModel {
         }
 
         if (!empty($filtros['nivel_academico'])) {
-            $sql .= " AND dp.nivel_academico = ?";
-            $execParams[] = trim($filtros['nivel_academico']);
+            $nivelMap = [
+                'Especialización' => 'Especializacion',
+                'Maestría'        => 'Maestria'
+            ];
+            $valNivel = trim($filtros['nivel_academico']);
+            $valNivel = $nivelMap[$valNivel] ?? $valNivel;
+            $sql .= " AND dp.nivel_academico = ?::public.nivel_academico_enum";
+            $execParams[] = $valNivel;
         }
 
         if (!empty($filtros['trayecto'])) {
@@ -226,8 +232,14 @@ class DocumentoModel {
             $params[] = (int)$filtros['dimension_id'];
         }
         if (!empty($filtros['nivel_academico'])) {
-            $sql .= " AND dp.nivel_academico = ?";
-            $params[] = trim($filtros['nivel_academico']);
+            $nivelMap = [
+                'Especialización' => 'Especializacion',
+                'Maestría'        => 'Maestria'
+            ];
+            $valNivel = trim($filtros['nivel_academico']);
+            $valNivel = $nivelMap[$valNivel] ?? $valNivel;
+            $sql .= " AND dp.nivel_academico = ?::public.nivel_academico_enum";
+            $params[] = $valNivel;
         }
         if (!empty($filtros['trayecto'])) {
             $sql .= " AND dp.trayecto = ?";
@@ -339,19 +351,60 @@ class DocumentoModel {
         return $res ? (int)$res['total'] : 0;
     }
 
+    private static array $cacheLineas = [];
+    private static array $cacheDimensiones = [];
+
+    /**
+     * Normaliza cadenas eliminando tildes, caracteres especiales y espacios sobrantes para comparación lógica de similitud.
+     */
+    public function normalizarString(string $str): string {
+        $str = $this->cleanCP850($str);
+        $str = mb_strtolower(trim($str));
+        $unwanted = [
+            'á'=>'a', 'é'=>'e', 'í'=>'i', 'ó'=>'o', 'ú'=>'u', 'ü'=>'u', 'ñ'=>'n',
+            'Á'=>'a', 'É'=>'e', 'Í'=>'i', 'Ó'=>'o', 'Ú'=>'u', 'Ü'=>'u', 'Ñ'=>'n'
+        ];
+        $str = strtr($str, $unwanted);
+        return preg_replace('/[^a-z0-9\s]/', '', $str);
+    }
+
     public function getCarreras(): array {
         $qb = new QueryBuilder();
         return $this->cleanArray($qb->tabla('carreras')->orderBy('nombre', 'ASC')->get());
     }
 
     public function getLineasInvestigacion(): array {
+        if (!empty(self::$cacheLineas)) {
+            return self::$cacheLineas;
+        }
+        if (isset($_SESSION['pst_cache_lineas']) && is_array($_SESSION['pst_cache_lineas'])) {
+            self::$cacheLineas = $_SESSION['pst_cache_lineas'];
+            return self::$cacheLineas;
+        }
         $qb = new QueryBuilder();
-        return $this->cleanArray($qb->tabla('lineas_investigacion')->orderBy('nombre', 'ASC')->get());
+        $res = $this->cleanArray($qb->tabla('lineas_investigacion')->orderBy('nombre', 'ASC')->get());
+        self::$cacheLineas = $res;
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            $_SESSION['pst_cache_lineas'] = $res;
+        }
+        return $res;
     }
 
     public function getDimensionesOperativas(): array {
+        if (!empty(self::$cacheDimensiones)) {
+            return self::$cacheDimensiones;
+        }
+        if (isset($_SESSION['pst_cache_dimensiones']) && is_array($_SESSION['pst_cache_dimensiones'])) {
+            self::$cacheDimensiones = $_SESSION['pst_cache_dimensiones'];
+            return self::$cacheDimensiones;
+        }
         $qb = new QueryBuilder();
-        return $this->cleanArray($qb->tabla('dimensiones_operativas')->orderBy('nombre', 'ASC')->get());
+        $res = $this->cleanArray($qb->tabla('dimensiones_operativas')->orderBy('nombre', 'ASC')->get());
+        self::$cacheDimensiones = $res;
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            $_SESSION['pst_cache_dimensiones'] = $res;
+        }
+        return $res;
     }
 
     public function getTiposRecurso(): array {
@@ -455,11 +508,16 @@ class DocumentoModel {
             }
             
             // 2. Insertar los detalles específicos del proyecto (INSERTAR PRIMERO para satisfacer Fkey de tutores!)
-            $nivelAcademico = !empty($datos['nivel_academico']) ? trim($datos['nivel_academico']) : 'Pregrado';
-            $trayectoVal = ($nivelAcademico === 'Pregrado') ? (!empty($datos['trayecto']) ? trim($datos['trayecto']) : 'Trayecto I') : null;
+            $nivelAcademicoRaw = !empty($datos['nivel_academico']) ? trim($datos['nivel_academico']) : 'Pregrado';
+            $nivelMap = [
+                'Especialización' => 'Especializacion',
+                'Maestría'        => 'Maestria'
+            ];
+            $nivelAcademico = $nivelMap[$nivelAcademicoRaw] ?? $nivelAcademicoRaw;
+            $trayectoVal = ($nivelAcademicoRaw === 'Pregrado') ? (!empty($datos['trayecto']) ? trim($datos['trayecto']) : 'Trayecto I') : null;
 
             $stmt = $db->prepare("INSERT INTO public.detalles_proyectos (id_recurso, fecha_defensa, nivel_academico, trayecto, url_repositorio, resumen, id_carrera, comunidad_beneficiada, palabras_clave) 
-                                  VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)");
+                                  VALUES (?, ?, ?::public.nivel_academico_enum, ?, ?, ?, 1, ?, ?)");
             $stmt->execute([
                 $recursoId,
                 !empty($datos['fecha_defensa']) ? $datos['fecha_defensa'] : date('Y-m-d'),
@@ -471,7 +529,7 @@ class DocumentoModel {
                 $datos['palabras_clave']
             ]);
             
-            // 3. Insertar autores múltiples (no requiere obligatoriamente cédula si viene el nombre)
+            // 3. Insertar autores múltiples con deduplicación avanzada (Cédula -> Nombre exacto -> Soundex / Levenshtein)
             if (!empty($datos['autores']) && is_array($datos['autores'])) {
                 foreach ($datos['autores'] as $autor) {
                     $nom = !empty($autor['nombre']) ? trim($autor['nombre']) : (!empty($autor['nombre_completo']) ? trim($autor['nombre_completo']) : '');
@@ -487,6 +545,19 @@ class DocumentoModel {
                             $stmt = $db->prepare("SELECT id FROM public.autores WHERE LOWER(TRIM(nombre_completo)) = LOWER(?)");
                             $stmt->execute([$nom]);
                             $autorId = $stmt->fetchColumn();
+                        }
+                        // Búsqueda difusa por normalización y similitud de cadenas si no hubo coincidencia exacta
+                        if (!$autorId) {
+                            $normNom = $this->normalizarString($nom);
+                            $stmt = $db->query("SELECT id, nombre_completo FROM public.autores");
+                            $todosAutores = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                            foreach ($todosAutores as $candAut) {
+                                $normCand = $this->normalizarString($candAut['nombre_completo']);
+                                if ($normNom === $normCand || (levenshtein($normNom, $normCand) <= 2 && soundex($normNom) === soundex($normCand))) {
+                                    $autorId = (int)$candAut['id'];
+                                    break;
+                                }
+                            }
                         }
                         if (!$autorId) {
                             $stmt = $db->prepare("INSERT INTO public.autores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
@@ -526,6 +597,18 @@ class DocumentoModel {
                         $stmt = $db->prepare("SELECT id FROM public.tutores WHERE LOWER(TRIM(nombre_completo)) = LOWER(?)");
                         $stmt->execute([$nombre]);
                         $tutorId = $stmt->fetchColumn();
+                    }
+                    if (!$tutorId) {
+                        $normNom = $this->normalizarString($nombre);
+                        $stmt = $db->query("SELECT id, nombre_completo FROM public.tutores");
+                        $todosTutores = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        foreach ($todosTutores as $candTut) {
+                            $normCand = $this->normalizarString($candTut['nombre_completo']);
+                            if ($normNom === $normCand || (levenshtein($normNom, $normCand) <= 2 && soundex($normNom) === soundex($normCand))) {
+                                $tutorId = (int)$candTut['id'];
+                                break;
+                            }
+                        }
                     }
                     if (!$tutorId) {
                         $stmt = $db->prepare("INSERT INTO public.tutores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
@@ -571,7 +654,7 @@ class DocumentoModel {
         $db = Connection::getInstance();
         try {
             $db->beginTransaction();
-            
+
             // 1. Actualizar el recurso base
             if (!empty($datos['archivo_pdf'])) {
                 $stmt = $db->prepare("UPDATE public.recursos SET titulo = ?, anio_publicacion = ?, archivo_pdf = ? WHERE id = ?");
@@ -591,11 +674,16 @@ class DocumentoModel {
             }
             
             // 2. Actualizar detalles_proyectos
-            $nivelAcademico = !empty($datos['nivel_academico']) ? trim($datos['nivel_academico']) : 'Pregrado';
-            $trayectoVal = ($nivelAcademico === 'Pregrado') ? (!empty($datos['trayecto']) ? trim($datos['trayecto']) : 'Trayecto I') : null;
+            $nivelAcademicoRaw = !empty($datos['nivel_academico']) ? trim($datos['nivel_academico']) : 'Pregrado';
+            $nivelMap = [
+                'Especialización' => 'Especializacion',
+                'Maestría'        => 'Maestria'
+            ];
+            $nivelAcademico = $nivelMap[$nivelAcademicoRaw] ?? $nivelAcademicoRaw;
+            $trayectoVal = ($nivelAcademicoRaw === 'Pregrado') ? (!empty($datos['trayecto']) ? trim($datos['trayecto']) : 'Trayecto I') : null;
 
             $stmt = $db->prepare("UPDATE public.detalles_proyectos 
-                                  SET fecha_defensa = ?, nivel_academico = ?, trayecto = ?, url_repositorio = ?, resumen = ?, comunidad_beneficiada = ?, palabras_clave = ? 
+                                  SET fecha_defensa = ?, nivel_academico = ?::public.nivel_academico_enum, trayecto = ?, url_repositorio = ?, resumen = ?, comunidad_beneficiada = ?, palabras_clave = ? 
                                   WHERE id_recurso = ?");
             $stmt->execute([
                 !empty($datos['fecha_defensa']) ? $datos['fecha_defensa'] : date('Y-m-d'),
@@ -918,5 +1006,21 @@ class DocumentoModel {
                       ->whereRaw('rc.id_linea_investigacion IS NOT NULL')
                       ->get();
         return $this->cleanArray($results);
+    }
+
+    /**
+     * Busca el nombre completo de un autor o tutor a partir de su cédula.
+     */
+    public function getPersonaByCedula(string $cedula, string $tipo = 'autor'): ?string {
+        $db = Connection::getInstance();
+        $cleanCed = trim($cedula);
+        if (empty($cleanCed)) return null;
+
+        $tabla = ($tipo === 'tutor') ? 'public.tutores' : 'public.autores';
+        $stmt = $db->prepare("SELECT nombre_completo FROM {$tabla} WHERE LOWER(TRIM(cedula)) = LOWER(?) LIMIT 1");
+        $stmt->execute([$cleanCed]);
+        $nombre = $stmt->fetchColumn();
+        
+        return $nombre ? $this->cleanCP850($nombre) : null;
     }
 }

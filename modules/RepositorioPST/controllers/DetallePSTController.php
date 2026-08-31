@@ -100,9 +100,11 @@ class DetallePSTController {
         $fullPath = '';
         $safeFilename = 'documento';
 
+        $doc = null;
+
         if (!empty($requestedFile)) {
             $relPath = ltrim(str_replace(['\\', '/'], '/', $requestedFile), '/');
-            if (strpos($relPath, '..') === false && strpos($relPath, 'storage/documentos/pst/') === 0) {
+            if (strpos($relPath, '..') === false && (strpos($relPath, 'storage/documentos/pst/') === 0 || strpos($relPath, 'storage/') === 0)) {
                 $candidate = BASE_PATH . '/' . $relPath;
                 if (is_file($candidate)) {
                     $fullPath = $candidate;
@@ -136,17 +138,6 @@ class DetallePSTController {
             $fullPath = BASE_PATH . '/' . $relPath;
             $safeFilename = pathinfo($fullPath, PATHINFO_BASENAME);
         }
-        
-        $dbPath = !empty($doc['archivo_pdf']) ? $doc['archivo_pdf'] : '';
-        $relPath = ltrim(str_replace(['\\', '/'], '/', $dbPath), '/');
-        
-        // Prevención de Path Traversal
-        if (strpos($relPath, '..') !== false) {
-            http_response_code(403);
-            die("Acceso denegado: Ruta de archivo no permitida.");
-        }
-
-        $fullPath = BASE_PATH . '/' . $relPath;
         
         // Fallback: Si no existe exactamente en la ruta de BD, buscar en storage por coincidencia limpia
         if (empty($dbPath) || !is_file($fullPath)) {
@@ -269,6 +260,22 @@ class DetallePSTController {
                     throw new Exception("Formato de archivo no soportado. Debe ser un archivo PDF o Word (.docx).");
                 }
 
+                // 1. Validar MIME-Type binario / Magic Bytes para prevenir archivos falsos o maliciosos
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $mimeType = finfo_file($finfo, $fileTmpPath);
+                finfo_close($finfo);
+
+                $allowedMimeTypes = [
+                    'application/pdf',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/zip', // Algunos sistemas detectan docx como zip
+                    'application/x-zip-compressed'
+                ];
+
+                if (!in_array($mimeType, $allowedMimeTypes)) {
+                    throw new Exception("El contenido binario del archivo no corresponde a un documento PDF o Word válido.");
+                }
+
                 require_once __DIR__ . '/../services/ExtractorPST.php';
 
                 $text = '';
@@ -282,7 +289,7 @@ class DetallePSTController {
                     throw new Exception("No se pudo extraer texto del documento. Asegúrese de que el archivo no esté protegido o vacío.");
                 }
 
-                $datosExtraidos = ExtractorPST::analizarTexto($text);
+                $datosExtraidos = ExtractorPST::analizarTexto($text, $fileName);
 
                 // Guardar permanentemente en storage/documentos/pst/
                 $slugTitle = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($datosExtraidos['titulo'] ?? $fileName, 0, 30)));
@@ -305,6 +312,58 @@ class DetallePSTController {
                     'message' => $e->getMessage()
                 ], JSON_UNESCAPED_UNICODE);
             }
+            exit;
+        }
+
+        // 0.1 Procesar Acción: SIMULAR EXTRACCIÓN (Prueba de Extracción sin Guardar en Servidor/BD)
+        if ($accion === 'simular_extraccion' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json; charset=utf-8');
+            try {
+                if (!isset($_FILES['archivo_pst']) || $_FILES['archivo_pst']['error'] !== UPLOAD_ERR_OK) {
+                    throw new Exception("Seleccione un archivo válido para simular la extracción.");
+                }
+
+                $fileTmpPath = $_FILES['archivo_pst']['tmp_name'];
+                $fileName = $_FILES['archivo_pst']['name'];
+                $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+                if (!in_array($fileExtension, ['pdf', 'docx'])) {
+                    throw new Exception("Formato no soportado. Debe ser PDF o Word (.docx).");
+                }
+
+                require_once __DIR__ . '/../services/ExtractorPST.php';
+                $text = ($fileExtension === 'pdf') ? ExtractorPST::extraerTextoPDF($fileTmpPath) : ExtractorPST::extraerTextoDOCX($fileTmpPath);
+
+                if (empty(trim($text))) {
+                    throw new Exception("No se pudo extraer texto del archivo.");
+                }
+
+                $datosExtraidos = ExtractorPST::analizarTexto($text, $fileName);
+
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => 'Simulación ejecutada con éxito.',
+                    'data' => $datosExtraidos,
+                    'preview_texto' => mb_substr($text, 0, 800) . '...'
+                ], JSON_UNESCAPED_UNICODE);
+
+            } catch (Exception $e) {
+                echo json_encode(['status' => 'error', 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+            }
+            exit;
+        }
+
+        // 0.2 Procesar Acción: BUSCAR PERSONA POR CÉDULA (Autocompletado)
+        if ($accion === 'buscar_cedula') {
+            header('Content-Type: application/json; charset=utf-8');
+            $ced = !empty($_GET['cedula']) ? trim($_GET['cedula']) : '';
+            $tipo = !empty($_GET['tipo']) ? trim($_GET['tipo']) : 'autor';
+            
+            $nombre = $model->getPersonaByCedula($ced, $tipo);
+            echo json_encode([
+                'status' => $nombre ? 'success' : 'not_found',
+                'nombre' => $nombre ?? ''
+            ], JSON_UNESCAPED_UNICODE);
             exit;
         }
 
@@ -332,6 +391,15 @@ class DetallePSTController {
                 $nivelPost = !empty($postData['nivel_academico']) ? trim($postData['nivel_academico']) : 'Pregrado';
                 $trayectoPost = ($nivelPost === 'Pregrado') ? (!empty($postData['trayecto']) ? trim($postData['trayecto']) : 'Trayecto I') : null;
 
+                $rawUrlGit = !empty($postData['url_repositorio']) ? trim($postData['url_repositorio']) : null;
+                $urlGitSanitizada = null;
+                if (!empty($rawUrlGit) && filter_var($rawUrlGit, FILTER_VALIDATE_URL)) {
+                    $scheme = strtolower(parse_url($rawUrlGit, PHP_URL_SCHEME) ?? '');
+                    if (in_array($scheme, ['http', 'https'])) {
+                        $urlGitSanitizada = $rawUrlGit;
+                    }
+                }
+
                 $datos = [
                     'titulo'                     => !empty($postData['titulo']) ? trim($postData['titulo']) : '',
                     'anio_publicacion'           => !empty($postData['anio_publicacion']) ? (int)$postData['anio_publicacion'] : (int)date('Y'),
@@ -345,7 +413,7 @@ class DetallePSTController {
                     'fecha_defensa'              => !empty($postData['fecha_defensa']) ? trim($postData['fecha_defensa']) : date('Y-m-d'),
                     'nivel_academico'            => $nivelPost,
                     'trayecto'                   => $trayectoPost,
-                    'url_repositorio'            => !empty($postData['url_repositorio']) ? trim($postData['url_repositorio']) : null,
+                    'url_repositorio'            => $urlGitSanitizada,
                     'archivo_pdf'                => !empty($postData['archivo_pdf']) ? trim($postData['archivo_pdf']) : null,
                     'resumen'                    => !empty($postData['resumen']) ? trim($postData['resumen']) : '',
                     'comunidad_beneficiada'      => !empty($postData['comunidad_beneficiada']) ? trim($postData['comunidad_beneficiada']) : '',
@@ -514,10 +582,20 @@ class DetallePSTController {
                     if (isset($_FILES['archivo_pst']) && $_FILES['archivo_pst']['error'] === UPLOAD_ERR_OK) {
                         $ext = strtolower(pathinfo($_FILES['archivo_pst']['name'], PATHINFO_EXTENSION));
                         if (in_array($ext, ['pdf', 'docx'])) {
-                            $slug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($_POST['titulo'] ?? 'pst', 0, 30)));
-                            $destName = 'pst_' . $slug . '_' . time() . '.' . $ext;
-                            if (move_uploaded_file($_FILES['archivo_pst']['tmp_name'], $storageDir . $destName)) {
-                                $archivoPath = 'storage/documentos/pst/' . $destName;
+                            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                            $mimeType = finfo_file($finfo, $_FILES['archivo_pst']['tmp_name']);
+                            finfo_close($finfo);
+
+                            $allowedMimeTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip', 'application/x-zip-compressed'];
+
+                            if (in_array($mimeType, $allowedMimeTypes)) {
+                                $slug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($_POST['titulo'] ?? 'pst', 0, 30)));
+                                $destName = 'pst_' . $slug . '_' . time() . '.' . $ext;
+                                if (move_uploaded_file($_FILES['archivo_pst']['tmp_name'], $storageDir . $destName)) {
+                                    $archivoPath = 'storage/documentos/pst/' . $destName;
+                                }
+                            } else {
+                                $error = "El contenido binario del archivo no corresponde a un documento PDF o Word válido.";
                             }
                         }
                     }
@@ -525,6 +603,15 @@ class DetallePSTController {
                     $nivelEdit = !empty($_POST['nivel_academico']) ? trim($_POST['nivel_academico']) : ($documento['nivel_academico'] ?? 'Pregrado');
                     $trayectoEdit = ($nivelEdit === 'Pregrado') ? (!empty($_POST['trayecto']) ? trim($_POST['trayecto']) : 'Trayecto I') : null;
                     $finalEditPdf = $archivoPath ? $archivoPath : (!empty($_POST['archivo_pdf']) ? trim($_POST['archivo_pdf']) : ($documento['archivo_pdf'] ?? null));
+
+                    $rawUrlGitEdit = !empty($_POST['url_repositorio']) ? trim($_POST['url_repositorio']) : null;
+                    $urlGitEditSanitizada = null;
+                    if (!empty($rawUrlGitEdit) && filter_var($rawUrlGitEdit, FILTER_VALIDATE_URL)) {
+                        $scheme = strtolower(parse_url($rawUrlGitEdit, PHP_URL_SCHEME) ?? '');
+                        if (in_array($scheme, ['http', 'https'])) {
+                            $urlGitEditSanitizada = $rawUrlGitEdit;
+                        }
+                    }
 
                     $datos = [
                         'titulo'                     => !empty($_POST['titulo']) ? trim($_POST['titulo']) : '',
@@ -539,7 +626,7 @@ class DetallePSTController {
                         'fecha_defensa'              => !empty($_POST['fecha_defensa']) ? trim($_POST['fecha_defensa']) : date('Y-m-d'),
                         'nivel_academico'            => $nivelEdit,
                         'trayecto'                   => $trayectoEdit,
-                        'url_repositorio'            => !empty($_POST['url_repositorio']) ? trim($_POST['url_repositorio']) : null,
+                        'url_repositorio'            => $urlGitEditSanitizada,
                         'archivo_pdf'                => $finalEditPdf,
                         'resumen'                    => !empty($_POST['resumen']) ? trim($_POST['resumen']) : '',
                         'comunidad_beneficiada'      => !empty($_POST['comunidad_beneficiada']) ? trim($_POST['comunidad_beneficiada']) : '',
@@ -565,8 +652,6 @@ class DetallePSTController {
                                 header("Location: ?ruta=agregar-documento&msg=updated");
                                 echo "<script>window.location.href='?ruta=agregar-documento&msg=updated';</script>";
                                 exit;
-                            } else {
-                                $error = "Ocurrió un error al intentar actualizar el recurso.";
                             }
                         } catch (Exception $e) {
                             $error = "Error de Base de Datos al actualizar: " . $e->getMessage();

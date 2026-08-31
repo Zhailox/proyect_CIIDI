@@ -583,6 +583,11 @@ if (typeof window.mammoth === 'undefined') {
                                     <h3 class="drag-title">Sustitución de Documento Digital</h3>
                                     <p class="drag-desc">Arrastra o selecciona un nuevo archivo PDF o Word (.docx) (Máx. <?= $maxMb ?> MB) para reemplazar el documento actual.</p>
                                     <button type="button" class="btn-browse" id="btnBrowseFile">Sustituir Archivo Adjunto</button>
+                                    
+                                    <div id="badgeArchivoSustituido" style="display: none; margin-top: 0.75rem; background: #e0f2fe; border: 1px solid #7dd3fc; border-radius: 4px; padding: 0.5rem 0.75rem; text-align: left; font-size: 0.78rem; color: #0369a1;">
+                                        <i class="ph ph-file-check" style="font-size: 1rem; vertical-align: middle; margin-right: 0.25rem;"></i>
+                                        <strong>Nuevo archivo listo para sustituir:</strong> <span id="nombreArchivoSustituidoText" style="font-weight: 700;"></span>
+                                    </div>
                                 <?php else: ?>
                                     <h3 class="drag-title">Carga Automática e Indexación por Lotes</h3>
                                     <p class="drag-desc">Arrastra tus archivos PDF o Word (.docx) aquí (Máx. <?= $maxMb ?> MB por archivo) para auto-completar y gestionar la investigación.</p>
@@ -592,10 +597,10 @@ if (typeof window.mammoth === 'undefined') {
 
                             <!-- COLA DE DOCUMENTOS POR LOTES UI (Exclusivo en modo Creación Masiva) -->
                             <?php if ($accion === 'crear'): ?>
-                            <div id="contenedorColaDocumentos" style="display: none; background: var(--bg-card, #ffffff); border: 1px solid rgba(169, 168, 166, 0.2); border-radius: 6px; padding: 0.75rem;">
+                            <div id="contenedorColaDocumentos" style="display: none; background: var(--bg-card, #ffffff); border: 1px solid rgba(169, 168, 166, 0.2); border-radius: 6px; padding: 0.75rem; margin-top: 0.5rem;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; border-bottom: 1px solid rgba(169, 168, 166, 0.15); padding-bottom: 0.4rem;">
                                     <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--texto-titulos); margin: 0; display: flex; align-items: center; gap: 0.35rem;">
-                                        <i class="ph ph-stack"></i> Cola de Documentos (<span id="countCola">0</span>)
+                                        <i class="ph ph-stack"></i> Documentos Cargados en Lote (<span id="countCola">0</span>)
                                     </h4>
                                     <button type="button" class="btn-clear" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="limpiarColaDocumentos()">
                                         <i class="ph ph-trash"></i> Vaciar Cola
@@ -965,13 +970,28 @@ function procesarArchivosSeleccionados(fileList) {
     }
 
     if (esEditar) {
-        // En modo edición, el archivo seleccionado reemplaza directamente el documento actual
+        // En modo edición, transferir el objeto de archivo real al elemento input file para que sea enviado por el formulario
         const file = validFiles[0];
+        const fileInput = document.getElementById('input_archivo_extractor');
+        if (fileInput && window.DataTransfer) {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            fileInput.files = dt.files;
+        }
+
         const fileInputHidden = document.getElementById('archivo_pdf_hidden');
         if (fileInputHidden) {
             fileInputHidden.value = file.name;
         }
-        mostrarModalAlerta('success', 'Archivo Seleccionado', `El documento "${file.name}" sustituirá al archivo actual al guardar los cambios.`);
+
+        const badge = document.getElementById('badgeArchivoSustituido');
+        const badgeText = document.getElementById('nombreArchivoSustituidoText');
+        if (badge && badgeText) {
+            badgeText.textContent = file.name;
+            badge.style.display = 'block';
+        }
+
+        mostrarModalAlerta('success', 'Archivo Listo para Sustituir', `El archivo "${file.name}" reemplazará al documento actual al presionar el botón "Guardar Cambios".`);
         return;
     }
 
@@ -1014,19 +1034,21 @@ function procesarArchivosSeleccionados(fileList) {
 
     renderizarColaUI();
 
+    // Seleccionar automáticamente el primer documento cargado en el formulario si es el primer lote
+    if (documentoSeleccionadoIndex === -1 && documentosEnCola.length > 0) {
+        seleccionarDocumentoDeCola(0);
+    }
+
     // Iniciar extracción para cada nuevo documento agregado
     nuevosIndices.forEach(idx => {
         subirYExtraerDatos(documentosEnCola[idx], idx);
     });
-
-    // Si no hay documento seleccionado previamente, seleccionar el primero recién agregado
-    if (documentoSeleccionadoIndex === -1 && documentosEnCola.length > 0) {
-        seleccionarDocumentoDeCola(0);
-    }
 }
 
 function subirYExtraerDatos(docItem, index) {
     docItem.estado = 'extrayendo';
+    docItem.progresoPct = 0;
+    docItem.faseMsg = 'Subiendo al servidor...';
     renderizarColaUI();
 
     const formData = new FormData();
@@ -1035,6 +1057,19 @@ function subirYExtraerDatos(docItem, index) {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '?ruta=agregar-documento&accion=extraer', true);
 
+    xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 100);
+            docItem.progresoPct = pct;
+            if (pct < 100) {
+                docItem.faseMsg = 'Subiendo (' + pct + '%)...';
+            } else {
+                docItem.faseMsg = 'Analizando texto...';
+            }
+            renderizarColaUI();
+        }
+    };
+
     xhr.onload = function() {
         if (xhr.status === 200) {
             try {
@@ -1042,6 +1077,8 @@ function subirYExtraerDatos(docItem, index) {
                 if (response.status === 'success') {
                     docItem.estado = 'listo';
                     docItem.errorMsg = '';
+                    docItem.progresoPct = 100;
+                    docItem.faseMsg = 'Listo';
                     if (response.data) {
                         Object.assign(docItem.data, response.data);
                     }
@@ -1107,7 +1144,16 @@ function renderizarColaUI() {
         if (item.estado === 'pendiente') {
             statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: #f1f5f9; color: var(--texto-silenciado); font-weight: 700;"><i class="ph ph-clock"></i> Pendiente</span>`;
         } else if (item.estado === 'extrayendo') {
-            statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: #eff6ff; color: var(--color-terciario); font-weight: 700;"><i class="ph ph-arrows-clockwise spin"></i> Extrayendo...</span>`;
+            const faseText = item.faseMsg || 'Extrayendo...';
+            const pct = item.progresoPct || 0;
+            statusBadge = `
+                <div style="text-align: right;">
+                    <span style="font-size: 0.68rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: #eff6ff; color: var(--color-terciario); font-weight: 700; display: inline-block;"><i class="ph ph-arrows-clockwise spin"></i> ${escapeHtml(faseText)}</span>
+                    <div style="width: 100%; min-width: 90px; background-color: #e2e8f0; border-radius: 4px; height: 4px; margin-top: 3px; overflow: hidden;">
+                        <div style="width: ${pct}%; background-color: var(--color-terciario); height: 100%; transition: width 0.2s ease;"></div>
+                    </div>
+                </div>
+            `;
         } else if (item.estado === 'listo') {
             statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: #def7ec; color: #03543f; font-weight: 700;"><i class="ph ph-check-circle"></i> Listo</span>`;
         } else if (item.estado === 'subiendo') {
@@ -1822,8 +1868,89 @@ function cerrarModalPrevisualizacion() {
     if (modal) modal.style.display = 'none';
 }
 
+// AUTOCOMPLETADO DE NOMBRES DE AUTORES Y TUTORES AL INGRESAR LA CÉDULA
+function inicializarAutocompletadoCedulas() {
+    const bindCedulaBlur = (inputElem, nomElem, tipoPersona) => {
+        if (!inputElem || !nomElem) return;
+        inputElem.addEventListener('blur', function() {
+            const ced = this.value.trim();
+            if (ced.length >= 5 && (!nomElem.value || nomElem.value.trim() === '')) {
+                fetch(`?ruta=agregar-documento&accion=buscar_cedula&cedula=${encodeURIComponent(ced)}&tipo=${tipoPersona}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'success' && data.nombre) {
+                            nomElem.value = data.nombre;
+                            nomElem.style.transition = 'background-color 0.3s';
+                            nomElem.style.backgroundColor = '#f0fdf4';
+                            setTimeout(() => { nomElem.style.backgroundColor = ''; }, 1200);
+                        }
+                    })
+                    .catch(err => console.error('Error al autocompletar persona:', err));
+            }
+        });
+    };
+
+    // Autores principales
+    const cedulaInputs = document.getElementsByName('autor_cedula[]');
+    const nombreInputs = document.getElementsByName('autor_nombre[]');
+    for (let i = 0; i < cedulaInputs.length; i++) {
+        bindCedulaBlur(cedulaInputs[i], nombreInputs[i], 'autor');
+    }
+
+    // Tutores
+    const bindTutor = (cedName, nomName) => {
+        const c = document.getElementsByName(cedName)[0];
+        const n = document.getElementsByName(nomName)[0];
+        if (c && n) bindCedulaBlur(c, n, 'tutor');
+    };
+    bindTutor('tutor_academico_cedula', 'tutor_academico_nombre');
+    bindTutor('tutor_institucional_cedula', 'tutor_institucional_nombre');
+    bindTutor('tutor_comunitario_cedula', 'tutor_comunitario_nombre');
+}
+
+// PRUEBAS DE EXTRACCIÓN DE TEXTO (SIMULACIÓN DE EXTRACCIÓN DE METADATOS)
+function simularExtraccionModal() {
+    const fileInput = document.getElementById('input_archivo_extractor');
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        mostrarModalAlerta('warning', 'Archivo Requerido', 'Seleccione o arrastre un documento PDF o Word (.docx) en la casilla de la derecha para simular su extracción.');
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append('archivo_pst', file);
+
+    mostrarModalAlerta('info', 'Ejecutando Simulación', `Analizando estructura binaria y texto de "${file.name}"... Por favor espere.`);
+
+    fetch('?ruta=agregar-documento&accion=simular_extraccion', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            const d = data.data;
+            const resMsj = `🔍 METADATOS DETECTADOS POR EL EXTRACTOR:\n\n` +
+                `• Título: ${d.titulo || 'No detectado'}\n` +
+                `• Año: ${d.anio_publicacion || 's.f.'}\n` +
+                `• Nivel Académico: ${d.nivel_academico || 'Pregrado'}\n` +
+                `• Autores Extraídos: ${d.autores ? d.autores.map(a => a.nombre || a.nombre_completo).filter(Boolean).join(', ') : 'Ninguno'}\n` +
+                `• Tutor Académico: ${d.tutor_academico_nombre || 'No detectado'}\n` +
+                `• Comunidad Beneficiada: ${d.comunidad_beneficiada || 'No detectada'}\n\n` +
+                `📝 FRAGMENTO DE TEXTO EXTRAÍDO:\n"${data.preview_texto}"`;
+            mostrarModalAlerta('success', 'Resultado de Simulación', resMsj);
+        } else {
+            mostrarModalAlerta('error', 'Falla en Simulación', data.message || 'No se pudo procesar la simulación.');
+        }
+    })
+    .catch(err => {
+        mostrarModalAlerta('error', 'Error en Servidor', 'Ocurrió un error al procesar la simulación de extracción.');
+    });
+}
+
 // Disparador de mensajes del servidor al cargar la página
 document.addEventListener('DOMContentLoaded', () => {
+    inicializarAutocompletadoCedulas();
     <?php if (!empty($error)): ?>
         mostrarModalAlerta('error', 'Atención / Error', <?= json_encode($error) ?>);
     <?php endif; ?>

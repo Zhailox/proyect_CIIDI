@@ -77,10 +77,11 @@
 
                     <!-- Descripción -->
                     <div class="li-form-group li-form-full">
-                        <label for="descripcion">Descripción</label>
+                        <label for="descripcion">Descripción *</label>
                         <textarea
                             id="descripcion"
                             name="descripcion"
+                            required
                             placeholder="Describe el alcance y objetivos de esta línea de investigación..."><?= htmlspecialchars($linea_editar['descripcion'] ?? '') ?></textarea>
                     </div>
                 </div>
