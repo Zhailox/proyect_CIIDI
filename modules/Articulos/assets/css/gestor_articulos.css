@@ -1,0 +1,335 @@
+/* Contenedor Principal */
+.gestor-art-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Cabecera del Gestor */
+.gestor-art-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
+    padding: 2rem;
+    border-radius: var(--radius-md);
+    color: var(--blanco);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.gestor-art-title-box h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.8rem;
+    color: var(--texto-activo);
+}
+
+.gestor-art-title-box p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.95rem;
+}
+
+.gestor-art-btn-new {
+    background-color: var(--blanco);
+    color: var(--color-secundario);
+    font-weight: bold;
+    border: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.gestor-art-btn-new:hover {
+    background-color: var(--bg-body);
+    transform: translateY(-2px);
+}
+
+/* Tarjeta y Tabla */
+.gestor-art-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.gestor-art-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.gestor-art-table th {
+    padding: 1rem;
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+    color: var(--texto-titulos);
+    font-weight: 700;
+}
+
+.gestor-art-table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    vertical-align: middle;
+}
+
+.gestor-art-table tbody tr:hover {
+    background-color: rgba(0,0,0,0.01);
+}
+
+/* Elementos de la Tabla */
+.art-id-col {
+    color: var(--gris);
+    font-weight: bold;
+    font-family: monospace;
+}
+
+.art-title-col {
+    max-width: 300px;
+}
+
+.art-mini-thumbnail {
+    width: 45px;
+    height: 60px;
+    background-color: var(--color-terciario);
+    background-size: cover;
+    background-position: center;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.art-year-badge {
+    display: inline-block;
+    background-color: var(--bg-body);
+    color: var(--gris);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin-top: 0.3rem;
+}
+
+.art-category-badge {
+    background: rgba(112, 144, 203, 0.15);
+    color: var(--color-secundario);
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+/* Botones de Acción */
+.art-actions-col {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.form-inline-delete {
+    margin: 0;
+    padding: 0;
+}
+
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: all var(--transition-fast);
+    text-decoration: none;
+}
+
+.btn-edit {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: #d97706;
+}
+
+.btn-edit:hover {
+    background-color: #d97706;
+    color: white;
+}
+
+.btn-delete {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+.btn-delete:hover {
+    background-color: #dc2626;
+    color: white;
+}
+
+.gestor-art-empty {
+    text-align: center;
+    padding: 3rem !important;
+    color: var(--gris);
+    font-style: italic;
+}
+
+/* Alertas */
+.alert-success {
+    background: rgba(16, 185, 129, 0.1);
+    border-left: 4px solid #10b981;
+    color: #047857;
+    padding: 1rem;
+    border-radius: 4px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.art-form-layout { 
+    display: grid; 
+    grid-template-columns: 2fr 1fr; 
+    gap: 2rem; 
+    align-items: start; }
+@media (max-width: 900px) { 
+    .art-form-layout { 
+        grid-template-columns: 1fr; 
+    } 
+}
+/* Utilidades de Presentación (Limpieza del HTML) */
+.box-outlined { border: 1px solid rgba(0,0,0,0.05); }
+.text-secondary { color: var(--color-secundario); }
+.text-tertiary { color: var(--color-terciario); }
+.text-muted { color: var(--gris); }
+.text-danger { color: #dc2626; }
+.font-bold { font-weight: bold; margin-bottom: 0.5rem; display: block;}
+.w-100 { width: 100%; }
+.p-input { padding: 0.8rem; }
+.p-1 { padding: 1rem; }
+.mt-1 { margin-top: 1rem; }
+.mt-1-5 { margin-top: 1.5rem; }
+.mb-2 { margin-bottom: 2rem; }
+.mt-sm { margin-top: 0.5rem; }
+.d-block { display: block; }
+.justify-center { justify-content: center; }
+.btn-large { padding: 1rem; font-size: 1.1rem; }
+
+.card-subtitle {
+    margin-top: 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    padding-bottom: 1rem;
+}
+
+.grid-2-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.checkbox-grid-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 4px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+}
+
+.file-input-dashed {
+    border: 1px dashed rgba(0,0,0,0.2);
+    border-radius: 4px;
+}
+
+.pos-relative { position: relative; }
+
+/* Buscador de Autores */
+.autocomplete-dropdown {
+    display: none;
+    position: absolute;
+    width: 100%;
+    background: white;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 4px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    z-index: 10;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.autocomplete-item {
+    padding: 0.8rem;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.autocomplete-item:hover {
+    background-color: rgba(14, 165, 233, 0.1); /* Hover azul suave */
+}
+
+.chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.chip-autor {
+    background: var(--color-secundario);
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.chip-close {
+    cursor: pointer;
+    font-weight: bold;
+}
+.chip-close:hover {
+    color: #fca5a5;
+}
+/* Modal de Autor */
+.art-modal-overlay {
+    position: fixed; 
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.6); 
+    backdrop-filter: blur(3px);
+    z-index: 1000;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+}
+
+.art-modal-box {
+    background: white; 
+    padding: 2.5rem; 
+    border-radius: 8px;
+    width: 100%; 
+    max-width: 450px; 
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    animation: modalPop 0.3s ease-out forwards;
+}
+
+@keyframes modalPop {
+    0% { transform: scale(0.9); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+.alert-error {
+    background: rgba(239, 68, 68, 0.1); 
+    border-left: 4px solid #ef4444; 
+    color: #b91c1c; 
+    padding: 1rem; 
+    border-radius: 4px; 
+    font-weight: 600; 
+    display: flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    margin-top: 1rem;
+}

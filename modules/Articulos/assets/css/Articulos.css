@@ -1,0 +1,695 @@
+/* modules/Articulos/assets/Articulos.css */
+
+.art-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    /* Evitamos márgenes negativos extremos aquí para que encaje natural en tu main-content */
+    width: 100%;
+}
+
+/* --- HERO EDITORIAL --- */
+.art-hero {
+    display: flex;
+    background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(18, 26, 62, 0.15);
+    min-height: 380px;
+}
+
+.art-hero-content {
+    flex: 1.2;
+    padding: 3.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: var(--texto-comun);
+}
+
+.art-hero-tag {
+    align-self: flex-start;
+    background-color: rgba(244, 244, 244, 0.15);
+    color: var(--texto-subtitulos);
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.art-hero-content h1 {
+    font-size: 2.5rem;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+    color: var(--texto-activo);
+}
+
+.art-hero-content p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--texto-comun);
+    margin-bottom: 2rem;
+}
+
+.art-hero-image {
+    flex: 1;
+    /* Imagen de muestra para la portada del Hero */
+    background: url('https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&q=80') center/cover no-repeat;
+    position: relative;
+}
+
+.art-hero-image::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to right, var(--color-secundario) 0%, transparent 100%);
+    opacity: 0.5;
+}
+
+/* --- LAYOUT PRINCIPAL: 2 COLUMNAS --- */
+.art-layout {
+    display: grid;
+    grid-template-columns: 2.2fr 1fr; /* 70% contenido, 30% sidebar */
+    gap: 3rem;
+    align-items: start;
+}
+
+/* --- SECCIONES RICAS (ARTÍCULOS) --- */
+.art-main-header {
+    border-bottom: 2px solid var(--color-secundario);
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.art-main-header h2 {
+    color: var(--texto-subtitulos);
+    font-size: 1.8rem;
+}
+.art-main-header span {
+    color: var(--texto-silenciado); 
+    font-size: 0.9rem;
+}
+
+.art-rich-section {
+    display: flex;
+    gap: 2rem;
+    padding-bottom: 2.5rem;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    transition: transform var(--transition-fast);
+}
+
+.art-rich-section:hover {
+    transform: translateX(5px);
+}
+
+.art-rich-cover {
+    width: 200px;
+    height: 260px;
+    background-color: var(--color-terciario);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    flex-shrink: 0;
+    background-size: cover;
+    background-position: center;
+}
+
+.art-rich-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.art-meta {
+    font-size: 0.85rem;
+    color: var(--color-secundario);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.art-rich-info h3 {
+    font-size: 1.5rem;
+    color: var(--texto-comun);
+    margin-bottom: 1rem;
+    line-height: 1.3;
+    transition: color var(--transition-fast);
+}
+
+.art-rich-section:hover h3 {
+    color: var(--color-terciario);
+}
+
+.art-authors {
+    font-size: 0.95rem;
+    color: var(--texto-subtitulos);
+    font-style: italic;
+    margin-bottom: 1rem;
+}
+
+.art-abstract {
+    color: var(--texto-silenciado);
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    /* Truncar a 3 líneas */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.art-tags {
+    display: flex;
+    gap: 0.8rem;
+    margin-bottom: 1.5rem;
+}
+
+.art-tag {
+    background-color: rgba(112, 144, 203, 0.1);
+    color: var(--color-secundario);
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.art-read-link {
+    margin-top: auto;
+    align-self: flex-start;
+    color: var(--texto-titulos);
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 0.95rem;
+    border-bottom: 2px solid var(--color-terciario);
+    padding-bottom: 2px;
+    transition: color var(--transition-fast);
+}
+
+.art-read-link:hover {
+    color: var(--color-terciario);
+}
+
+/* --- SIDEBAR (MEJORES REVISTAS) --- */
+.art-sidebar {
+    background-color: var(--blanco); /* Fondo sutil para destacar el sidebar */
+    padding: 2rem;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(0,0,0,0.05);
+    position: sticky;
+    top: 2rem; /* Se queda fijo al hacer scroll */
+}
+
+.art-sidebar h3 {
+    color: var(--texto-titulos);
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 2px solid var(--color-terciario);
+}
+
+.art-mini-magazine {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+    cursor: pointer;
+    transition: transform var(--transition-fast);
+}
+
+.art-mini-magazine:hover {
+    transform: translateX(5px);
+}
+
+.art-mini-magazine:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.art-mini-cover {
+    width: 60px;
+    height: 85px;
+    background-color: var(--color-secundario);
+    border-radius: 4px;
+    flex-shrink: 0;
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+
+.art-mini-info h4 {
+    color: var(--texto-subtitulos);
+    font-size: 0.95rem;
+    margin-bottom: 0.3rem;
+    line-height: 1.3;
+}
+
+.art-mini-info p {
+    color: var(--texto-silenciado);
+    font-size: 0.8rem;
+}
+
+.art-mini-info .art-downloads {
+    margin-top: 0.5rem;
+    display: inline-block;
+    font-size: 0.75rem;
+    color: var(--color-terciario);
+    font-weight: bold;
+}
+
+/* =========================================
+   VISTA 2: ARCHIVO / GRID DE REVISTAS (CATÁLOGO)
+   ========================================= */
+
+.art-catalog-wrapper {
+    display: flex;
+    gap: 2.5rem;
+    align-items: flex-start;
+    width: 100%;
+}
+
+/* --- SIDEBAR DE FILTROS --- */
+.art-filters-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    background-color: var(--blanco);
+    padding: 2rem;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(0,0,0,0.05);
+    position: sticky;
+    top: 2rem; /* Se mantiene fijo al hacer scroll */
+}
+
+.art-filters-sidebar h3 {
+    color: var(--texto-titulos);
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 2px solid var(--color-terciario);
+}
+
+.art-filter-group {
+    margin-bottom: 1.5rem;
+}
+
+.art-filter-group label {
+    display: block;
+    color: var(--color-secundario);
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.8rem;
+}
+
+.art-search-input, .art-select-input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: var(--radius-sm);
+    background-color: #fafafa;
+    color: var(--texto-negro);
+    font-family: var(--font-family);
+    transition: border-color var(--transition-fast);
+}
+
+.art-search-input:focus, .art-select-input:focus {
+    outline: none;
+    border-color: var(--color-terciario);
+    background-color: var(--blanco);
+}
+
+.art-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.8rem;
+    font-size: 0.9rem;
+    color: var(--texto-silenciado);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.art-checkbox-label:hover {
+    color: var(--color-dark);
+}
+
+/* --- ÁREA DE CONTENIDO (GRID ASIMÉTRICO) --- */
+.art-catalog-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+}
+
+/* 1. ARTÍCULO DESTACADO (Full Width Header) */
+.art-featured-post {
+    display: flex;
+    background-color: var(--blanco);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    transition: transform var(--transition-fast);
+}
+
+.art-featured-post:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(18, 26, 62, 0.08);
+}
+
+.art-featured-img {
+    flex: 1.2;
+    min-height: 320px;
+    background-size: cover;
+    background-position: center;
+}
+
+.art-featured-body {
+    flex: 1;
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* METADATOS (Tags y Métricas unificados) */
+.art-post-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.2rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+
+.art-metric {
+    font-size: 0.85rem;
+    color: var(--color-terciario);
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background-color: rgba(112, 144, 203, 0.1);
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+}
+
+/* 2. GRID DE TARJETAS INFERIORES (2 o 3 columnas) */
+.art-masonry-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.8rem;
+}
+
+.art-post-card {
+    background-color: var(--blanco);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.art-post-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(18, 26, 62, 0.08);
+}
+
+.art-post-img {
+    height: 190px;
+    background-size: cover;
+    background-position: center;
+    border-bottom: 3px solid var(--color-terciario);
+}
+
+.art-post-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.art-post-title {
+    color: var(--texto-titulos);
+    font-size: 1.2rem;
+    line-height: 1.4;
+    margin-bottom: 1rem;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color var(--transition-fast);
+}
+
+.art-post-title:hover {
+    color: var(--color-terciario);
+}
+
+/* BOTÓN CARGAR MÁS */
+.art-load-more-container {
+    text-align: center;
+    margin-top: 1rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(0,0,0,0.08);
+}
+
+.art-btn-load {
+    background-color: transparent;
+    color: var(--color-secundario);
+    border: 2px solid var(--color-secundario);
+    padding: 0.8rem 2.5rem;
+    border-radius: 30px; /* Estilo píldora */
+    font-weight: bold;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.art-btn-load:hover {
+    background-color: var(--color-secundario);
+    color: var(--blanco);
+    transform: translateY(-2px);
+}
+.art-btn-show {
+    width: 100%; 
+    text-align: center; 
+    margin-top: 1rem; 
+    background-color: var(--color-secundario);
+}
+/* =========================================
+   VISTA DE DETALLE DEL ARTÍCULO
+   ========================================= */
+
+.art-detail-page {
+    padding: 1rem 0 3rem;
+}
+
+.art-detail-card {
+    max-width: 960px;
+    margin: 0 auto;
+    background-color: var(--blanco);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(18, 26, 62, 0.08);
+}
+
+.art-detail-hero {
+    min-height: 360px;
+    padding: 2.5rem;
+    display: flex;
+    align-items: flex-end;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.art-detail-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(7, 22, 48, 0.18) 0%, rgba(7, 22, 48, 0.8) 100%);
+}
+
+.art-detail-hero__overlay {
+    position: relative;
+    z-index: 1;
+    color: var(--blanco);
+    max-width: 760px;
+}
+
+.art-detail-hero__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.art-detail-hero__meta .badge {
+    background-color: rgba(255, 255, 255, 0.16);
+    color: var(--blanco);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.art-detail-hero__volume {
+    display: inline-block;
+    background-color: rgba(255, 255, 255, 0.16);
+    color: var(--blanco);
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.art-detail-hero h1 {
+    font-size: 2.2rem;
+    line-height: 1.25;
+    margin-bottom: 1rem;
+    color: var(--blanco);
+}
+
+.art-detail-hero__authors {
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.art-detail-body {
+    padding: 2rem 2.5rem 2.5rem;
+}
+
+.art-detail-link {
+    display: inline-flex;
+    margin-bottom: 1.5rem;
+}
+
+.art-detail-content h3 {
+    color: var(--texto-titulos);
+    font-size: 1.35rem;
+    margin-bottom: 1rem;
+}
+
+.art-detail-content p {
+    color: var(--texto-silenciado);
+    line-height: 1.8;
+    margin: 0;
+    text-align: justify;
+}
+
+.art-detail-empty {
+    max-width: 960px;
+    margin: 0 auto;
+    background-color: var(--blanco);
+    border-radius: var(--radius-md);
+    padding: 2rem 2.5rem;
+    box-shadow: 0 10px 30px rgba(18, 26, 62, 0.08);
+}
+
+@media (max-width: 768px) {
+    .art-detail-hero {
+        min-height: 300px;
+        padding: 1.5rem;
+    }
+
+    .art-detail-body {
+        padding: 1.5rem;
+    }
+
+    .art-detail-hero h1 {
+        font-size: 1.7rem;
+    }
+}
+.art-link-reset {
+    display: inline-block;
+    margin-top: 0.9rem;
+    color: var(--color-secundario);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.art-link-reset:hover {
+    text-decoration: underline;
+}
+
+.art-empty-text {
+    color: var(--texto-silenciado);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.art-empty-state {
+    background-color: var(--blanco);
+    border: 1px dashed rgba(0,0,0,0.1);
+    border-radius: var(--radius-sm);
+    padding: 1.2rem;
+    color: var(--texto-silenciado);
+    text-align: center;
+}
+.art-filter-accordion {
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 8px;
+    padding: 0.7rem 0.8rem;
+    background: rgba(255,255,255,0.6);
+}
+
+.art-filter-accordion summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--color-secundario);
+    list-style: none;
+}
+
+.art-filter-accordion summary::-webkit-details-marker {
+    display: none;
+}
+
+.art-filter-accordion .art-checkbox-label {
+    margin-top: 0.45rem;
+}
+.art-card-summary {
+    color: var(--texto-silenciado);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-top: 0.75rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    background-color: rgba(0,0,0,0.03);
+    padding: 0.2rem;
+    border-radius: 4px;
+}
+.art-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 2rem;
+}
+
+.art-page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    padding: 0.6rem 0.85rem;
+    border-radius: 999px;
+    background: #f4f7fb;
+    color: var(--color-secundario);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.art-page-link.active,
+.art-page-link:hover {
+    background: var(--color-secundario);
+    color: white;
+}

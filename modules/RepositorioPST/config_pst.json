@@ -1,0 +1,59 @@
+{
+    "citas": {
+        "estilos": {
+            "apa7": {
+                "nombre": "Estilo APA (7ma edición)",
+                "activo": true,
+                "plantilla": "{autores} ({anio}). {titulo}. Proyecto Socio-Tecnológico, PNF en Informática, UPTTMBI."
+            },
+            "ieee": {
+                "nombre": "Estilo IEEE",
+                "activo": true,
+                "plantilla": "{autores}, \"{titulo},\" Proyecto Socio-Tecnológico, PNF en Informática, UPTTMBI, {anio}."
+            },
+            "vancouver": {
+                "nombre": "Estilo Vancouver",
+                "activo": false,
+                "plantilla": "{autores}. {titulo}. Trujillo: UPTTMBI; {anio}."
+            }
+        }
+    },
+    "paginacion": {
+        "limite_catalogo": 10,
+        "limite_buscador": 5,
+        "opciones_selector": [
+            5,
+            10,
+            15,
+            20,
+            50
+        ],
+        "max_proyectos_similares": 3
+    },
+    "recursos": {
+        "sufijo_tipo_recurso": "PST \/ Proyecto Socio-Tecnológico",
+        "mostrar_url_git": true,
+        "mostrar_comunidad": true,
+        "mostrar_nivel_academico": true
+    },
+    "buscador": {
+        "anio_minimo_histograma": 2018,
+        "orden_predeterminado": "anio_desc",
+        "resaltar_coincidencias": true
+    },
+    "visor_pdf": {
+        "mostrar_toolbar": false,
+        "permitir_descarga": false
+    },
+    "archivos": {
+        "max_size_mb": 20,
+        "extensiones_permitidas": [
+            ".pdf",
+            ".docx"
+        ]
+    },
+    "limites_equipo": {
+        "max_autores": 4,
+        "max_tutores": 3
+    }
+}

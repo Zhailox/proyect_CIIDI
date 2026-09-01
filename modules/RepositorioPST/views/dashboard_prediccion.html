@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analítica Predictiva - Módulo PST</title>
+    <link rel="stylesheet" href="../../../public/assets/css/style.css">
+     <link rel="stylesheet" href="../assets/css/estilos_predictivos.css">
+</head>
+<body>
+    <div class="app-container">
+        
+        <main class="main-content">
+            
+            <header class="dashboard-header">
+                <div>
+                    <h1 class="dashboard-title">Analítica Predictiva</h1>
+                    <p class="dashboard-subtitle">Proyección de volumen y carga operativa del repositorio</p>
+                </div>
+                
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <div class="form-group" style="margin-bottom: 0; min-width: 250px;">
+                        <select class="form-control" id="filtro-linea-investigacion" name="linea_investigacion">
+                            <option value="todas">Todas las Líneas de Investigación</option>
+                            <option value="redes">Redes y Telecomunicaciones</option>
+                            <option value="web">Desarrollo Web y Aplicaciones</option>
+                            <option value="sistemas">Sistemas de Información</option>
+                            <option value="hardware">Arquitectura de Hardware</option>
+                        </select>
+                    </div>
+                    <button class="btn-action" type="button">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z"/>
+                        </svg>
+                        Filtrar
+                    </button>
+                </div>
+            </header>
+
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/></svg>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-value">5 Días</span>
+                        <span class="metric-label">Reentreno IA</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M1 11a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-3zm5-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7zm5-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V2z"/></svg>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-value" id="val-proyectos">450</span>
+                        <span class="metric-label">Proyectos Esperados</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/></svg>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-value">Noviembre</span>
+                        <span class="metric-label">Mes de Carga Máxima</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M0 0h1v15h15v1H0V0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07z"/></svg>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-value">37.5</span>
+                        <span class="metric-label">Promedio Mensual</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-layout">
+                
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M11 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12h.5a.5.5 0 0 1 0 1H.5a.5.5 0 0 1 0-1H1v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3h1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7h1V2zm1 12h2V2h-2v12zm-3 0V7H7v7h2zm-5 0v-3H2v3h2z"/></svg>
+                            Curva Operativa Estimada (12 meses)
+                        </h2>
+                    </div>
+                    
+                    <div class="chart-wrapper" id="grafica-backend-container">
+                        <svg class="chart-svg" viewBox="0 0 500 200" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="chart-gradient" x1="0" x2="0" y1="0" y2="1">
+                                    <stop offset="0%" stop-color="rgba(112, 144, 203, 0.4)"></stop>
+                                    <stop offset="100%" stop-color="rgba(112, 144, 203, 0.0)"></stop>
+                                </linearGradient>
+                            </defs>
+                            
+                            <line x1="0" y1="180" x2="500" y2="180" class="chart-grid-line"/>
+                            
+                            <g class="chart-axis-text" text-anchor="middle">
+                                <text x="10" y="195">Ene</text>
+                                <text x="50" y="195">Feb</text>
+                                <text x="90" y="195">Mar</text>
+                                <text x="130" y="195">Abr</text>
+                                <text x="170" y="195">May</text>
+                                <text x="210" y="195">Jun</text>
+                                <text x="250" y="195">Jul</text>
+                                <text x="290" y="195">Ago</text>
+                                <text x="330" y="195">Sep</text>
+                                <text x="370" y="195">Oct</text>
+                                <text x="410" y="195">Nov</text>
+                                <text x="450" y="195">Dic</text>
+                            </g>
+
+                            <path class="chart-area" d="M10,180 L10,150 L50,140 L90,135 L130,120 L170,110 L210,130 L250,90 L290,75 L330,55 L370,45 L410,20 L450,40 L450,180 Z" />
+                            
+                            <path class="chart-line" d="M10,150 L50,140 L90,135 L130,120 L170,110 L210,130 L250,90 L290,75 L330,55 L370,45 L410,20 L450,40" />
+                            
+                            <circle class="chart-point" cx="90" cy="135" r="4" title="Marzo: 85" />
+                            <circle class="chart-point" cx="210" cy="130" r="4" title="Junio: 110" />
+                            <circle class="chart-point" cx="330" cy="55" r="4" title="Septiembre: 125" />
+                            <circle class="chart-point" cx="450" cy="40" r="4" title="Diciembre: 130" />
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M2 15.5V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.74.439L8 13.069l-5.26 2.87A.5.5 0 0 1 2 15.5zm6.5-11a.5.5 0 0 0-1 0V6H6a.5.5 0 0 0 0 1h1.5v1.5a.5.5 0 0 0 1 0V7H10a.5.5 0 0 0 0-1H8.5V4.5z"/></svg>
+                            Volumen por Trimestre
+                        </h2>
+                    </div>
+                    
+                    <ul class="breakdown-list">
+                        <li class="breakdown-item">
+                            <div class="bk-info">
+                                <span class="bk-title">Trimestre 1</span>
+                                <span class="bk-subtitle">Ene - Mar</span>
+                            </div>
+                            <div class="bk-value">
+                                85 <small>Proy.</small>
+                            </div>
+                        </li>
+                        <li class="breakdown-item">
+                            <div class="bk-info">
+                                <span class="bk-title">Trimestre 2</span>
+                                <span class="bk-subtitle">Abr - Jun</span>
+                            </div>
+                            <div class="bk-value">
+                                110 <small>Proy.</small>
+                            </div>
+                        </li>
+                        <li class="breakdown-item">
+                            <div class="bk-info">
+                                <span class="bk-title">Trimestre 3</span>
+                                <span class="bk-subtitle">Jul - Sep</span>
+                            </div>
+                            <div class="bk-value">
+                                125 <small>Proy.</small>
+                            </div>
+                        </li>
+                        <li class="breakdown-item">
+                            <div class="bk-info">
+                                <span class="bk-title">Trimestre 4</span>
+                                <span class="bk-subtitle">Oct - Dic</span>
+                            </div>
+                            <div class="bk-value">
+                                130 <small>Proy.</small>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div class="panel-footer">
+                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
+                        Modelo de regresión lineal procesado mediante IA (Módulo 2). Data base: Histórico 2024-2025.
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</body>
+</html>
