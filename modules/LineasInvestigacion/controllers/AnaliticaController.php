@@ -9,10 +9,19 @@ class AnaliticaController {
     private $trainingDataPath;
 
     public function __construct() {
-        // Ruta absoluta al script de python para analítica
+        // Ruta dinámica al script de python para analítica (funciona en cualquier PC)
         $this->pythonScriptPath = realpath(__DIR__ . '/../../../storage/modelos_ia/ml_pipeline.py');
-        // Ruta absoluta al ejecutable de Python de tu sistema (WindowsApps)
-        $this->pythonExe = 'C:\Users\josex\AppData\Local\Microsoft\WindowsApps\python.exe';
+        
+        // Detección automática del sistema operativo para el ejecutable de Python
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            // En Windows, usualmente es 'python' si está en las variables de entorno (PATH)
+            // Si el servidor Windows no lo tiene en PATH, se puede cambiar a la ruta absoluta del servidor.
+            $this->pythonExe = 'python'; 
+        } else {
+            // En servidores Linux / Mac, el estándar es 'python3'
+            $this->pythonExe = 'python3';
+        }
+
         // Ruta al JSON de entrenamiento
         $this->trainingDataPath = realpath(__DIR__ . '/../../../storage/modelos_ia/training_data.json');
     }
