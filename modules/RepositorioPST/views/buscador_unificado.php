@@ -2,10 +2,6 @@
 // modules/RepositorioPST/views/buscador_unificado.php
 require_once __DIR__ . '/../services/ConfigService.php';
 ?>
-<style>
-<?php include __DIR__ . '/../assets/css/RepositorioPST.css'; ?>
-</style>
-
 <div class="main-content">
     <div class="search-view-wrapper">
         
@@ -264,9 +260,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-<style>
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-</style>
+
