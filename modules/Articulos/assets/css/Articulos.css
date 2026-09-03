@@ -281,23 +281,27 @@
     width: 280px;
     flex-shrink: 0;
     background-color: var(--blanco);
-    padding: 2rem;
+    padding: 1rem;
     border-radius: var(--radius-md);
     border: 1px solid rgba(0,0,0,0.05);
     position: sticky;
-    top: 2rem; /* Se mantiene fijo al hacer scroll */
+    top: 5rem; /* Se mantiene fijo al hacer scroll */
 }
 
 .art-filters-sidebar h3 {
     color: var(--texto-titulos);
     font-size: 1.2rem;
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.8rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.3rem;
     border-bottom: 2px solid var(--color-terciario);
 }
+.art-filters-sidebar button { 
+    text-align: center;
+}
+
 
 .art-filter-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.3rem;
 }
 
 .art-filter-group label {
@@ -366,14 +370,15 @@
 
 .art-featured-img {
     flex: 1.2;
-    min-height: 320px;
+    min-height: 10rem;
+    height: 20rem;
     background-size: cover;
     background-position: center;
 }
 
 .art-featured-body {
     flex: 1;
-    padding: 2.5rem;
+    padding: 1rem;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -426,7 +431,7 @@
 }
 
 .art-post-img {
-    height: 190px;
+    height: 15rem;
     background-size: cover;
     background-position: center;
     border-bottom: 3px solid var(--color-terciario);
@@ -635,6 +640,7 @@
     text-align: center;
 }
 .art-filter-accordion {
+    position: relative; /* Clave para el posicionamiento absoluto del hijo */
     border: 1px solid rgba(0,0,0,0.08);
     border-radius: 8px;
     padding: 0.7rem 0.8rem;
@@ -647,9 +653,23 @@
     color: var(--color-secundario);
     list-style: none;
 }
-
 .art-filter-accordion summary::-webkit-details-marker {
     display: none;
+}
+
+.art-filter-dropdown {
+    position: absolute;
+    top: -1px; /* Se alinea con el borde superior del acordeón */
+    left: calc(100% + 15px); /* Salta fuera del sidebar hacia la derecha */
+    width: 250px;
+    background-color: var(--blanco);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 10px 30px rgba(18, 26, 62, 0.1);
+    z-index: 100; /* Asegura que flote por encima de los artículos */
+    max-height: 300px;
+    overflow-y: auto;
 }
 
 .art-filter-accordion .art-checkbox-label {
@@ -667,29 +687,4 @@
     background-color: rgba(0,0,0,0.03);
     padding: 0.2rem;
     border-radius: 4px;
-}
-.art-pagination {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-    margin-top: 2rem;
-}
-
-.art-page-link {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 40px;
-    padding: 0.6rem 0.85rem;
-    border-radius: 999px;
-    background: #f4f7fb;
-    color: var(--color-secundario);
-    text-decoration: none;
-    font-weight: 600;
-}
-
-.art-page-link.active,
-.art-page-link:hover {
-    background: var(--color-secundario);
-    color: white;
 }

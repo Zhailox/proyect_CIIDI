@@ -20,6 +20,23 @@ class LineasInvestigacionModule implements ModuleContract {
                 'controlador_path' => __DIR__ . '/controllers/ShowcaseController.php',
                 'metodo'           => 'index'
             ],
+            // Analítica Predictiva IA
+            'analitica' => [
+                'vista'            => __DIR__ . '/views/dashboard_analitica.php',
+                'titulo'           => 'Analítica Predictiva IA',
+                'css'              => ['LineasInvestigacion.css'],
+                'js'               => ['analitica_ui.js'],
+                'controlador'      => 'AnaliticaController',
+                'controlador_path' => __DIR__ . '/controllers/AnaliticaController.php',
+                'metodo'           => 'index'
+            ],
+            // Endpoints de IA y Analítica
+            'api-prediccion-tendencias' => [
+                'controlador'      => 'AnaliticaController',
+                'controlador_path' => __DIR__ . '/controllers/AnaliticaController.php',
+                'metodo'           => 'proyectarTendencias',
+                'es_api'           => true 
+            ],
             // Vista pública: Detalle de una línea específica
             'detalle-linea' => [
                 'vista'            => __DIR__ . '/views/detalle_linea.php',
@@ -57,9 +74,10 @@ class LineasInvestigacionModule implements ModuleContract {
                 'titulo'      => 'Líneas I+D',
                 'icono'       => 'ph-fill ph-graph',
                 'enlace'      => 'lineas-investigacion',
-                'activadores' => ['lineas-investigacion', 'detalle-linea', 'gestionar-lineas', 'gestionar-dimensiones'],
+                'activadores' => ['lineas-investigacion', 'detalle-linea', 'gestionar-lineas', 'gestionar-dimensiones', 'analitica'],
                 'subitems'    => [
                     ['ruta' => 'lineas-investigacion',  'titulo' => 'Explorar Líneas'],
+                    ['ruta' => 'analitica',             'titulo' => 'Analítica IA'],
                     ['ruta' => 'gestionar-lineas',      'titulo' => 'Gestionar Líneas'],
                     ['ruta' => 'gestionar-dimensiones', 'titulo' => 'Gestionar Dimensiones'],
                 ]

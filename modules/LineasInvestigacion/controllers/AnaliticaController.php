@@ -9,10 +9,16 @@ class AnaliticaController {
     private $trainingDataPath;
 
     public function __construct() {
-        // Ruta absoluta al script de python para analítica
+        // Ruta dinámica al script de python para analítica (funciona en cualquier PC)
         $this->pythonScriptPath = realpath(__DIR__ . '/../../../storage/modelos_ia/ml_pipeline.py');
-        // Ruta absoluta al ejecutable de Python de tu sistema (WindowsApps)
-        $this->pythonExe = 'C:\Users\josex\AppData\Local\Microsoft\WindowsApps\python.exe';
+        
+        // Detección automática del sistema operativo para el ejecutable de Python
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            
+            // En servidores Linux / Mac (como cPanel, Ubuntu, VPS), el estándar es 'python3' o 'python'
+            $this->pythonExe = 'python3';
+        }
+
         // Ruta al JSON de entrenamiento
         $this->trainingDataPath = realpath(__DIR__ . '/../../../storage/modelos_ia/training_data.json');
     }
@@ -48,12 +54,14 @@ class AnaliticaController {
                 // Leer datos reales desde la Base de Datos PostgreSQL
                 $pdo = Connection::getInstance();
                 
-                // Obtenemos todas las investigaciones ofertadas con sus fechas
-                $sql = "SELECT li.nombre AS area, io.fecha_creacion 
+                // Obtenemos todos los proyectos culminados (repositorio real) con sus fechas de defensa
+                $sql = "SELECT li.nombre AS area, COALESCE(dp.fecha_defensa, dp.created_at) AS fecha_creacion 
                         FROM lineas_investigacion li
-                        JOIN investigaciones_ofertadas io ON li.id = io.id_linea
-                        WHERE io.fecha_creacion IS NOT NULL
-                        ORDER BY io.fecha_creacion ASC";
+                        JOIN recurso_clasificaciones rc ON li.id = rc.id_linea_investigacion
+                        JOIN recursos r ON rc.id_recurso = r.id
+                        JOIN detalles_proyectos dp ON r.id = dp.id_recurso
+                        WHERE COALESCE(dp.fecha_defensa, dp.created_at) IS NOT NULL
+                        ORDER BY fecha_creacion ASC";
                         
                 $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
                 

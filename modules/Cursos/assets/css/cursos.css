@@ -3,6 +3,17 @@
    Versión 2.0 — Con backend funcional y gestión CRUD
    ============================================================== */
 
+/* ── Re-alias de variables: compatibilidad con core actual ──── */
+/*    --color-principal = rgb(255,255,255) en el core (paleta blanca).
+      Definimos aliases locales para que el texto siempre sea legible.    */
+:root {
+    --text-dark:  var(--texto-comun);       /* #1a1a1a  → texto de cuerpo */
+    --text-muted: var(--texto-silenciado);  /* #64748B  → texto silenciado */
+    --cur-titulo: var(--texto-titulos);     /* #1E293B  → reemplaza --color-principal en texto */
+    --cur-acento: var(--color-secundario);  /* #505984  → botones/bordes coloreados */
+    --cur-claro:  var(--color-terciario);   /* #7090CB  → iconos y acentos */
+}
+
 /* ── WRAPPER GENERAL ───────────────────────────────────────── */
 .cur-wrapper {
     display: flex;
@@ -36,7 +47,7 @@
     border-radius: 0;
     padding: 0;
     box-shadow: none;
-    border-bottom: 3px solid var(--color-principal);
+    border-bottom: 3px solid var(--cur-acento);
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
@@ -50,7 +61,7 @@
 .cur-hero-content h1 {
     font-size: 2.2rem;
     font-weight: 800;
-    color: var(--color-principal);
+    color: var(--cur-titulo);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 0.6rem;
@@ -76,7 +87,7 @@
     align-items: center;
     min-width: 90px;
 }
-.cur-stat-num   { font-size: 1.5rem; font-weight: 800; color: var(--color-principal); line-height: 1; }
+.cur-stat-num   { font-size: 1.5rem; font-weight: 800; color: var(--cur-titulo); line-height: 1; }
 .cur-stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-secundario); font-weight: 700; margin-top: 0.2rem; }
 
 /* ── BARRA ADMIN ───────────────────────────────────────────── */
@@ -85,7 +96,7 @@
     align-items: center;
     justify-content: space-between;
     background: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 100%);
-    border: 1px solid rgba(var(--color-principal-rgb, 18,26,62), 0.15);
+    border: 1px solid rgba(var(--color-secundario-rgb), 0.25);
     border-radius: var(--radius-sm);
     padding: 0.85rem 1.4rem;
 }
@@ -95,7 +106,7 @@
     gap: 0.5rem;
     font-size: 0.9rem;
     font-weight: 700;
-    color: var(--color-principal);
+    color: var(--cur-titulo);
 }
 .cur-admin-label i { font-size: 1.1rem; }
 
@@ -112,7 +123,7 @@
     transition: all 0.2s ease;
 }
 .cur-btn-admin--new {
-    background: var(--color-principal);
+    background: var(--cur-acento);
     color: #fff;
 }
 .cur-btn-admin--new:hover {
@@ -146,7 +157,7 @@
     padding-bottom: 0.8rem;
     border-bottom: 2px solid var(--color-terciario);
 }
-.cur-sidebar-header h3 { color: var(--color-principal); font-size: 1.1rem; }
+.cur-sidebar-header h3 { color: var(--cur-titulo); font-size: 1.1rem; }
 .cur-clear-filters { font-size: 0.8rem; color: var(--text-muted); text-decoration: none; cursor: pointer; }
 .cur-clear-filters:hover { color: var(--color-secundario); text-decoration: underline; }
 
@@ -154,7 +165,7 @@
 .cur-filter-title {
     font-size: 0.85rem;
     font-weight: 700;
-    color: var(--color-principal);
+    color: var(--cur-titulo);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 0.8rem;
@@ -169,7 +180,7 @@
     cursor: pointer;
     transition: color 0.2s;
 }
-.cur-checkbox-label:hover { color: var(--color-principal); }
+.cur-checkbox-label:hover { color: var(--cur-titulo); }
 .cur-checkbox-label input[type="radio"],
 .cur-checkbox-label input[type="checkbox"] {
     width: 16px;
@@ -208,7 +219,7 @@
     border-radius: var(--radius-sm);
     padding: 0.5rem 0.3rem;
 }
-.cur-mini-stat span { display: block; font-size: 1.1rem; font-weight: 800; color: var(--color-principal); }
+.cur-mini-stat span { display: block; font-size: 1.1rem; font-weight: 800; color: var(--cur-titulo); }
 .cur-mini-stat label { font-size: 0.65rem; text-transform: uppercase; color: var(--text-muted); }
 
 /* ── GRID CARDS ─────────────────────────────────────────────── */
@@ -226,7 +237,7 @@
     color: var(--text-muted);
 }
 .cur-empty i { font-size: 4rem; color: var(--color-terciario); display: block; margin-bottom: 1rem; }
-.cur-empty h3 { font-size: 1.3rem; color: var(--color-principal); margin-bottom: 0.5rem; }
+.cur-empty h3 { font-size: 1.3rem; color: var(--cur-titulo); margin-bottom: 0.5rem; }
 .cur-empty a { color: var(--color-secundario); text-decoration: underline; }
 
 /* ── TARJETA CURSO ──────────────────────────────────────────── */
@@ -303,7 +314,7 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 .cur-action-btn:hover { transform: scale(1.12); box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
-.cur-action-btn--edit   { background: #fff; color: var(--color-principal); }
+.cur-action-btn--edit   { background: #fff; color: var(--cur-titulo); }
 .cur-action-btn--delete { background: #e53935; color: #fff; }
 
 /* Cuerpo de la tarjeta */
@@ -315,7 +326,7 @@
 }
 .cur-card-title {
     font-size: 1.05rem;
-    color: var(--color-principal);
+    color: var(--cur-titulo);
     font-weight: 700;
     line-height: 1.4;
     margin-bottom: 0.6rem;
@@ -363,11 +374,11 @@
 }
 .cur-btn-external {
     background: transparent;
-    color: var(--color-principal);
-    border: 2px solid var(--color-principal);
+    color: var(--cur-titulo);
+    border: 2px solid var(--cur-acento);
 }
 .cur-btn-external:hover {
-    background: var(--color-principal);
+    background: var(--cur-acento);
     color: #fff;
 }
 .cur-btn-draft {
@@ -418,7 +429,7 @@
     margin: 0 auto 1.2rem;
 }
 .cur-modal-icon i { font-size: 2.2rem; color: #e53935; }
-.cur-modal h3 { font-size: 1.2rem; color: var(--color-principal); margin-bottom: 0.6rem; }
+.cur-modal h3 { font-size: 1.2rem; color: var(--cur-titulo); margin-bottom: 0.6rem; }
 .cur-modal p  { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem; }
 
 .cur-modal-actions {
@@ -461,7 +472,7 @@
     display: flex;
     align-items: center;
     gap: 0.35rem;
-    color: var(--color-principal);
+    color: var(--cur-titulo);
     text-decoration: none;
     font-weight: 600;
     transition: color 0.2s;
@@ -484,7 +495,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 1.6rem 2rem;
-    background: linear-gradient(135deg, var(--color-principal) 0%, #2a3b7d 100%);
+    background: linear-gradient(135deg, var(--cur-acento) 0%, #1e2d5a 100%);
     border-bottom: none;
     gap: 1.2rem;
 }
@@ -586,7 +597,7 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: var(--color-principal);
+    background: var(--cur-acento);
     color: #fff;
     font-size: 0.75rem;
     font-weight: 800;
@@ -599,7 +610,7 @@
 .cur-form-section-title h3 {
     font-size: 0.95rem;
     font-weight: 700;
-    color: var(--color-principal);
+    color: var(--cur-titulo);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -622,7 +633,7 @@
 .cur-field-label {
     font-size: 0.855rem;
     font-weight: 700;
-    color: var(--color-principal);
+    color: var(--cur-titulo);
     display: flex;
     align-items: center;
     gap: 0.4rem;
@@ -785,7 +796,7 @@
 .cur-nota-val {
     font-size: 0.8rem;
     font-weight: 700;
-    color: var(--color-principal);
+    color: var(--cur-titulo);
     min-width: 3rem;
     text-align: right;
 }
@@ -812,15 +823,15 @@
     font-weight: 600;
     text-decoration: none;
     background: transparent;
-    color: var(--color-principal);
+    color: var(--cur-titulo);
     border: 1.5px solid #d0d7e8;
     transition: all 0.2s;
     cursor: pointer;
 }
 .cur-form-btn--cancel:hover {
     background: #f1f3f9;
-    border-color: var(--color-principal);
-    color: var(--color-principal);
+    border-color: var(--cur-titulo);
+    color: var(--cur-titulo);
 }
 
 /* Botón enviar */
@@ -832,7 +843,7 @@
     border-radius: var(--radius-sm);
     font-size: 0.92rem;
     font-weight: 700;
-    background: var(--color-principal);
+    background: var(--cur-acento);
     color: #fff;
     border: none;
     cursor: pointer;
@@ -986,7 +997,7 @@
 
 .cur-detalle-section h2 {
     font-size: 1.25rem;
-    color: var(--color-principal);
+    color: var(--cur-titulo);
     margin-bottom: 1.5rem;
     display: flex;
     align-items: center;
@@ -1059,7 +1070,7 @@
 
 .cur-detalle-card-body h3 {
     font-size: 1.35rem;
-    color: var(--color-principal);
+    color: var(--cur-titulo);
     margin-bottom: 0.8rem;
 }
 
@@ -1075,7 +1086,7 @@
     padding: 1rem;
     font-size: 1rem;
     justify-content: center;
-    background: linear-gradient(135deg, var(--color-principal) 0%, var(--color-secundario) 100%);
+    background: linear-gradient(135deg, var(--cur-acento) 0%, var(--cur-claro) 100%);
     box-shadow: 0 4px 15px rgba(18, 26, 62, 0.2);
     margin-bottom: 1.8rem;
 }

@@ -1,6 +1,7 @@
 <?php
 require_once CORE_PATH . 'Security/Auth.php';
 require_once __DIR__ . '/../models/ArticuloModel.php';
+require_once __DIR__ . '/../services/ConfigService.php';
 
 class ArticulosController {
     
@@ -19,7 +20,7 @@ class ArticulosController {
         ];
 
         $pagina = max(1, (int) ($_GET['page'] ?? 1));
-        $porPagina = 16;
+        $porPagina = ConfigService::get('paginacion.limite_catalogo', 16); // Límite dinámico
 
         $paginacion = $this->articuloModel->obtenerArticulosPaginados($filtros, $pagina, $porPagina);
         $categorias = $this->articuloModel->obtenerCategorias();
@@ -35,21 +36,27 @@ class ArticulosController {
     }
 
     public function leer() {
-    $id = (int)($_GET['id'] ?? 0);
-
-    return [
-        'articulo' => $this->articuloModel->obtenerArticuloPorId($id)
-    ];
-}
-    public function gestor() {
-        // Candado: Solo Bibliotecario (2) o SuperAdmin (3) pueden entrar aquí
-        Auth::requierePrivilegioMinimo(2);
-
-        // Reutilizamos el modelo para traer la lista de artículos
-        $articulos = $this->articuloModel->obtenerUltimosArticulos();
+        $id = (int)($_GET['id'] ?? 0);
+        $maxRecomendados = ConfigService::get('paginacion.max_recomendados', 3);
 
         return [
-            'articulos' => $articulos
+            'articulo' => $this->articuloModel->obtenerArticuloPorId($id),
+            'similares' => $this->articuloModel->getArticulosSimilares($id, $maxRecomendados)
+        ];
+    }
+
+    public function gestor() {
+        Auth::requierePrivilegioMinimo(2);
+        $filtros = ['q' => trim($_GET['q'] ?? '')];
+        $pagina = max(1, (int) ($_GET['page'] ?? 1));
+        $porPagina = ConfigService::get('paginacion.limite_gestor', 15); // Límite dinámico
+
+        $paginacion = $this->articuloModel->obtenerArticulosPaginados($filtros, $pagina, $porPagina);
+
+        return [
+            'articulos' => $paginacion['articulos'],
+            'paginacion' => $paginacion,
+            'filtros' => $filtros
         ];
     }
     public function nuevo() {
@@ -83,7 +90,7 @@ class ArticulosController {
         // 1. Recibir datos básicos
         $titulo = trim($_POST['titulo'] ?? '');
         $resumen = trim($_POST['resumen'] ?? '');
-        $id_categoria = !empty($_POST['id_categoria']) ? (int)$_POST['id_categoria'] : null;
+        $categorias = array_values(array_filter(array_map('intval', $_POST['categorias'] ?? [])));
         $id_editorial = !empty($_POST['id_editorial']) ? (int)$_POST['id_editorial'] : null;
         $archivo_pdf = trim($_POST['archivo_pdf'] ?? '');
         $anio_publicacion = !empty($_POST['anio_publicacion']) ? (int)$_POST['anio_publicacion'] : (int)date('Y');
@@ -127,9 +134,20 @@ class ArticulosController {
         // 3. Mandar al modelo para insertar
         try {
             $this->articuloModel->registrarArticulo(
-                $titulo, $resumen, $id_categoria, $id_editorial, $archivo_pdf, $anio_publicacion,
-                $volumen, $numero, $issn, $nombreImagen, $autores, $autores_nuevos, $etiquetas
-            );
+                $titulo,
+                $resumen,
+                $categorias,
+                $id_editorial,
+                $archivo_pdf,
+                $anio_publicacion,
+                $volumen,
+                $numero,
+                $issn,
+                $nombreImagen,
+                $autores,
+                $autores_nuevos,
+                $etiquetas
+                        );
 
             $_SESSION['mensaje_exito'] = "El artículo fue publicado correctamente en la vitrina.";
             header('Location: gestor-articulos');
@@ -188,7 +206,8 @@ class ArticulosController {
         'etiquetas' => $etiquetas,
         'autores' => $autores,
         'autoresSeleccionados' => $this->articuloModel->obtenerAutoresDelArticulo($id),
-        'etiquetasSeleccionadas' => $this->articuloModel->obtenerEtiquetasDelArticulo($id)
+        'etiquetasSeleccionadas' => $this->articuloModel->obtenerEtiquetasDelArticulo($id),
+        'categoriasSeleccionadas' => $this->articuloModel->obtenerCategoriasDelArticulo($id)
     ];
 }
 
@@ -203,7 +222,7 @@ public function actualizar() {
     $id = (int)($_POST['id_articulo'] ?? 0);
     $titulo = trim($_POST['titulo'] ?? '');
     $resumen = trim($_POST['resumen'] ?? '');
-    $id_categoria = !empty($_POST['id_categoria']) ? (int)$_POST['id_categoria'] : null;
+    $categorias = array_values(array_filter(array_map('intval', $_POST['categorias'] ?? [])));
     $id_editorial = !empty($_POST['id_editorial']) ? (int)$_POST['id_editorial'] : null;
     $archivo_pdf = trim($_POST['archivo_pdf'] ?? '');
     $anio_publicacion = !empty($_POST['anio_publicacion']) ? (int)$_POST['anio_publicacion'] : (int)date('Y');
@@ -234,9 +253,20 @@ public function actualizar() {
 
     try {
         $this->articuloModel->actualizarArticulo(
-            $id, $titulo, $resumen, $id_categoria, $id_editorial, $archivo_pdf,
-            $anio_publicacion, $volumen, $numero, $issn, $nombreImagen,
-            $autores, $autores_nuevos, $etiquetas
+            $id,
+            $titulo,
+            $resumen,
+            $categorias,
+            $id_editorial,
+            $archivo_pdf,
+            $anio_publicacion,
+            $volumen,
+            $numero,
+            $issn,
+            $nombreImagen,
+            $autores,
+            $autores_nuevos,
+            $etiquetas
         );
 
         if (session_status() === PHP_SESSION_NONE) session_start();
@@ -250,4 +280,86 @@ public function actualizar() {
         exit;
     }
 }
+public function gestorCatalogos() {
+    Auth::requierePrivilegioMinimo(2);
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        $accion = $_POST['accion'] ?? '';
+        $nombre = trim($_POST['nombre'] ?? '');
+
+        try {
+            if ($accion === 'crear_categoria' && $nombre !== '') {
+                $this->articuloModel->crearCategoria($nombre);
+                $_SESSION['mensaje_exito'] = 'Categoría creada correctamente.';
+            } elseif ($accion === 'crear_etiqueta' && $nombre !== '') {
+                $this->articuloModel->crearEtiqueta($nombre);
+                $_SESSION['mensaje_exito'] = 'Etiqueta creada correctamente.';
+            } elseif ($accion === 'crear_editorial' && $nombre !== '') {
+                $this->articuloModel->crearEditorial($nombre);
+                $_SESSION['mensaje_exito'] = 'Editorial/Repositorio creado correctamente.';
+            } elseif ($accion === 'eliminar_categoria') {
+                $this->articuloModel->eliminarCategoria((int)($_POST['id'] ?? 0));
+                $_SESSION['mensaje_exito'] = 'Categoría eliminada.';
+            } elseif ($accion === 'eliminar_etiqueta') {
+                $this->articuloModel->eliminarEtiqueta((int)($_POST['id'] ?? 0));
+                $_SESSION['mensaje_exito'] = 'Etiqueta eliminada.';
+            } elseif ($accion === 'eliminar_editorial') {
+                $this->articuloModel->eliminarEditorial((int)($_POST['id'] ?? 0));
+                $_SESSION['mensaje_exito'] = 'Editorial/Repositorio eliminado.';
+                
+            // --- NUEVAS ACCIONES DE EDICIÓN ---
+            } elseif ($accion === 'actualizar_categoria' && $nombre !== '') {
+                $this->articuloModel->actualizarCategoria((int)($_POST['id'] ?? 0), $nombre);
+                $_SESSION['mensaje_exito'] = 'Categoría actualizada correctamente.';
+            } elseif ($accion === 'actualizar_etiqueta' && $nombre !== '') {
+                $this->articuloModel->actualizarEtiqueta((int)($_POST['id'] ?? 0), $nombre);
+                $_SESSION['mensaje_exito'] = 'Etiqueta actualizada correctamente.';
+            } elseif ($accion === 'actualizar_editorial' && $nombre !== '') {
+                $this->articuloModel->actualizarEditorial((int)($_POST['id'] ?? 0), $nombre);
+                $_SESSION['mensaje_exito'] = 'Editorial/Repositorio actualizado.';
+            } elseif ($accion === 'actualizar_autor') {
+                $nombre_autor = trim($_POST['nombre_completo'] ?? '');
+                $cedula_autor = trim($_POST['cedula'] ?? '');
+                if ($nombre_autor !== '') {
+                    $this->articuloModel->actualizarAutor((int)($_POST['id'] ?? 0), $nombre_autor, $cedula_autor);
+                    $_SESSION['mensaje_exito'] = 'Datos del autor actualizados correctamente.';
+                }
+            }
+        } catch (Exception $e) {
+            $_SESSION['mensaje_error'] = 'Error: ' . $e->getMessage();
+        }
+
+        header('Location: gestor-catalogos');
+        exit;
+    }
+
+    $q_cat = trim($_GET['q_cat'] ?? '');
+        $p_cat = max(1, (int)($_GET['p_cat'] ?? 1));
+
+        $q_tag = trim($_GET['q_tag'] ?? '');
+        $p_tag = max(1, (int)($_GET['p_tag'] ?? 1));
+
+        $q_edit = trim($_GET['q_edit'] ?? '');
+        $p_edit = max(1, (int)($_GET['p_edit'] ?? 1));
+
+        $q_aut = trim($_GET['q_aut'] ?? ''); // Búsqueda de autores
+
+        // 2. Ejecutamos las consultas paginadas
+        $categorias = $this->articuloModel->obtenerCatalogoPaginado('categorias', $q_cat, $p_cat, 5);
+        $etiquetas = $this->articuloModel->obtenerCatalogoPaginado('etiquetas', $q_tag, $p_tag, 5);
+        $editoriales = $this->articuloModel->obtenerCatalogoPaginado('editoriales', $q_edit, $p_edit, 5);
+        $autores = $this->articuloModel->buscarAutoresGestor($q_aut);
+
+        return [
+            'categorias' => $categorias,
+            'etiquetas' => $etiquetas,
+            'editoriales' => $editoriales,
+            'autores' => $autores,
+            'busquedas' => [
+                'q_cat' => $q_cat, 'q_tag' => $q_tag, 'q_edit' => $q_edit, 'q_aut' => $q_aut
+            ]
+        ];
+    }
 }
