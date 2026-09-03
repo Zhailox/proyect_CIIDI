@@ -29,10 +29,10 @@
 
 /* ─── HERO BANNER ────────────────────────────────────────────────────────── */
 .li-hero {
-    background: var(--bg-banner);
+    background: linear-gradient(135deg, #121a3e, #505984);
     border-radius: var(--li-card-radius);
     padding: 2.8rem 2.5rem;
-    color: var(--text-white);
+    color: #ffffff;
     position: relative;
     overflow: hidden;
     display: flex;
@@ -233,7 +233,7 @@
     align-items: center;
     gap: 0.3rem;
     background: rgba(18,26,62,0.07);
-    color: var(--color-principal);
+    color: #121a3e; /* Letras oscuras independientes de la paleta global */
     border-radius: 50px;
     padding: 0.25rem 0.75rem;
     font-size: 0.72rem;
@@ -589,10 +589,10 @@
 
 /* Banner del gestor */
 .li-gestor-banner {
-    background: linear-gradient(135deg, var(--color-principal, #1e1b4b), var(--color-secundario, #312e81));
+    background: linear-gradient(135deg, #121a3e, #505984);
     border-radius: var(--li-card-radius);
     padding: 2rem 2.5rem;
-    color: #fff;
+    color: #ffffff;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -603,6 +603,7 @@
     font-size: 1.4rem;
     font-weight: 800;
     margin: 0 0 0.35rem 0;
+    color: #ffffff;
 }
 
 .li-gestor-banner p {

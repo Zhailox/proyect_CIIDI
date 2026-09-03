@@ -13,7 +13,7 @@ class Connection {
     private $port = '5432'; // Puerto por defecto de PostgreSQL
     private $db   = 'ciidi'; // Reemplaza esto
     private $user = 'postgres';
-    private $pass = '1234'; // Reemplaza esto
+    private $pass = '1234'; // Unificado con la rama main
 
     // El constructor es privado para evitar que alguien use "new Connection()" desde afuera
     private function __construct() {
@@ -30,6 +30,9 @@ class Connection {
 
             $this->pdo = new PDO($dsn, $this->user, $this->pass, $options);
             
+            // Forzar codificación UTF-8 para evitar caracteres extraños en la vista
+            $this->pdo->exec("SET NAMES 'UTF8'");
+
         } catch (PDOException $e) {
             // Si la base de datos está caída, detenemos la ejecución del núcleo
             die("Fallo Crítico del Kernel - Imposible conectar a la base de datos: " . $e->getMessage());

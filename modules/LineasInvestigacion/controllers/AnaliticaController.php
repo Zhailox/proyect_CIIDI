@@ -14,9 +14,10 @@ class AnaliticaController {
         
         // Detección automática del sistema operativo para el ejecutable de Python
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            // En Windows, usualmente es 'python' si está en las variables de entorno (PATH)
-            // Si el servidor Windows no lo tiene en PATH, se puede cambiar a la ruta absoluta del servidor.
-            $this->pythonExe = 'python'; 
+            // NOTA: PHP (WAMP) no reconoce los App Execution Aliases de Windows con file_exists()
+            // Por ello se deja la ruta absoluta local para entorno de desarrollo.
+            // Si el servidor final usa Windows, cambia esto a 'python' o a la ruta absoluta de ese servidor.
+            $this->pythonExe = 'C:\Users\josex\AppData\Local\Microsoft\WindowsApps\python.exe';
         } else {
             // En servidores Linux / Mac, el estándar es 'python3'
             $this->pythonExe = 'python3';
