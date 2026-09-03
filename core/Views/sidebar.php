@@ -51,6 +51,10 @@ $nivelUsuario = Auth::check() ? Auth::usuario()['nivel'] : -1;
                 <?php if ($is_active_parent && !empty($item['subitems'])): ?>
                 <div class="sub-menu">
                     <?php foreach ($item['subitems'] as $sub): ?>
+                        <?php 
+                            $subPriv = $sub['privilegio_minimo'] ?? 0;
+                            if ($nivelUsuario < $subPriv) continue;
+                        ?>
                         <a href="<?php echo $sub['ruta']; ?>" class="sub-nav-item <?php echo ($ruta == $sub['ruta']) ? 'active' : ''; ?>">
                             <span class="nav-text"><?php echo $sub['titulo']; ?></span>
                         </a>
