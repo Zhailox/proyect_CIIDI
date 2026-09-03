@@ -1,205 +1,262 @@
 <?php
 // modules/Cursos/views/showcase_cursos.php
-// Variables inyectadas por PromoController::catalogo():
-// $cursos       — array de cursos publicados
-// $total_cursos — int
+// Variables disponibles: $cursos, $estadisticas, $filtros, $mensaje_exito, $mensaje_error, $usuario_actual
 
-$imgs_defecto = [
-    'https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=600&q=80',
-];
-
-// Datos del usuario en sesión para control de permisos
-$usuario_id       = $_SESSION['usuario_id']       ?? null;
-$nivel_privilegio = (int) ($_SESSION['nivel_privilegio'] ?? -1);
-$puede_crear      = $usuario_id && $nivel_privilegio >= 1; // Profesor o Admin
-$es_admin         = $nivel_privilegio >= 3;
-
-// Mensajes flash
-$msg_eliminado = isset($_GET['eliminado']) && $_GET['eliminado'] === '1';
+$nivel = $usuario_actual['nivel'] ?? -1;
+$puede_gestionar = ($nivel >= 1);   // Profesor, Admin, SuperAdmin
+$puede_eliminar  = ($nivel >= 2);   // Bibliotecario, Admin, SuperAdmin
 ?>
+
 <div class="cur-wrapper">
 
+    <?php if ($mensaje_exito): ?>
+        <div class="cur-flash cur-flash--ok">
+            <i class="ph-bold ph-check-circle"></i>
+            <?= htmlspecialchars($mensaje_exito) ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($mensaje_error): ?>
+        <div class="cur-flash cur-flash--err">
+            <i class="ph-bold ph-warning-circle"></i>
+            <?= htmlspecialchars($mensaje_error) ?>
+        </div>
+    <?php endif; ?>
+
+    <!-- ===== HERO ===== -->
     <section class="cur-hero">
         <div class="cur-hero-content">
             <h1>Catálogo de Formación Continua</h1>
             <p>
-                Potencia tus habilidades tecnológicas con cursos especializados impartidos por nuestros docentes. Aprende a tu ritmo con contenido actualizado y práctico.
+                Potencia tus habilidades con cursos especializados impartidos por nuestros docentes.
+                Aprende a tu ritmo y certifica tu conocimiento.
             </p>
-            <?php if ($puede_crear): ?>
-            <a href="?ruta=form-curso" class="cur-btn-nuevo">
-                <i class="ph-bold ph-plus"></i> Nuevo Curso
-            </a>
-            <?php endif; ?>
         </div>
 
         <div class="cur-hero-stats">
             <div class="cur-stat">
-                <span class="cur-stat-num"><?= $total_cursos ?></span>
-                <span class="cur-stat-label">Cursos Activos</span>
+                <span class="cur-stat-num"><?= (int)$estadisticas['total'] ?></span>
+                <span class="cur-stat-label">Total Cursos</span>
             </div>
             <div class="cur-stat">
-                <?php
-                    $total_lecciones = array_sum(array_column($cursos, 'total_lecciones'));
-                ?>
-                <span class="cur-stat-num"><?= $total_lecciones ?></span>
-                <span class="cur-stat-label">Lecciones</span>
+                <span class="cur-stat-num"><?= (int)$estadisticas['publicados'] ?></span>
+                <span class="cur-stat-label">Publicados</span>
             </div>
             <div class="cur-stat">
-                <?php
-                    $total_inscritos = array_sum(array_column($cursos, 'total_inscritos'));
-                ?>
-                <span class="cur-stat-num"><?= $total_inscritos ?></span>
-                <span class="cur-stat-label">Inscritos</span>
+                <span class="cur-stat-num"><?= (int)$estadisticas['borradores'] ?></span>
+                <span class="cur-stat-label">Borradores</span>
             </div>
         </div>
     </section>
 
-    <?php if ($msg_eliminado): ?>
-    <div class="det-alert det-alert--success" id="alert-flash">
-        <i class="ph-fill ph-check-circle"></i>
-        Curso eliminado correctamente.
+    <!-- ===== BARRA DE ACCIONES ADMIN ===== -->
+    <?php if ($puede_gestionar): ?>
+    <div class="cur-admin-bar">
+        <span class="cur-admin-label">
+            <i class="ph-fill ph-shield-check"></i> Panel de Gestión
+        </span>
+        <a href="?ruta=cursos-crear" class="cur-btn-admin cur-btn-admin--new">
+            <i class="ph-bold ph-plus"></i> Nuevo Curso
+        </a>
     </div>
     <?php endif; ?>
 
     <div class="cur-layout">
 
+        <!-- ===== SIDEBAR FILTROS ===== -->
         <aside class="cur-sidebar">
             <div class="cur-sidebar-header">
                 <h3>Filtrar Cursos</h3>
-                <span class="cur-clear-filters" onclick="limpiarFiltros()">Limpiar</span>
+                <a href="?ruta=cursos" class="cur-clear-filters">Limpiar</a>
             </div>
 
-            <div class="cur-filter-group">
-                <div class="cur-filter-title">Buscar</div>
-                <input
-                    type="text"
-                    id="buscador-cursos"
-                    class="cur-search-input"
-                    placeholder="Título o docente..."
-                    oninput="filtrarCursos()"
-                >
-            </div>
+            <form method="GET" action="" id="form-filtros">
+                <input type="hidden" name="ruta" value="cursos">
 
-            <div class="cur-filter-group">
-                <div class="cur-filter-title">Duración</div>
-                <label class="cur-checkbox-label">
-                    <input type="checkbox" class="filtro-dur" value="corto" onchange="filtrarCursos()"> 1–5 lecciones
-                </label>
-                <label class="cur-checkbox-label">
-                    <input type="checkbox" class="filtro-dur" value="medio" onchange="filtrarCursos()"> 6–15 lecciones
-                </label>
-                <label class="cur-checkbox-label">
-                    <input type="checkbox" class="filtro-dur" value="largo" onchange="filtrarCursos()"> 16+ lecciones
-                </label>
-            </div>
+                <div class="cur-filter-group">
+                    <div class="cur-filter-title">Estado</div>
+                    <?php
+                    $estados_filtro = ['publicado' => 'Publicado', 'borrador' => 'Borrador', 'archivado' => 'Archivado'];
+                    foreach ($estados_filtro as $val => $label):
+                        $checked = (($filtros['estado'] ?? '') === $val) ? 'checked' : '';
+                    ?>
+                    <label class="cur-checkbox-label">
+                        <input type="radio" name="estado" value="<?= $val ?>" <?= $checked ?> onchange="this.form.submit()">
+                        <?= $label ?>
+                    </label>
+                    <?php endforeach; ?>
+                </div>
 
-            <a href="?ruta=cursos" class="btn" style="width:100%; margin-top:1rem; padding:0.8rem; text-align:center; text-decoration:none; display:block;">
-                Ver todos
-            </a>
+                <?php if ($puede_gestionar): ?>
+                <div class="cur-filter-group">
+                    <div class="cur-filter-title">Vista rápida</div>
+                    <a href="?ruta=cursos&estado=borrador" class="cur-filter-link <?= ($filtros['estado'] ?? '') === 'borrador' ? 'active' : '' ?>">
+                        <i class="ph-fill ph-pencil-simple"></i> Solo Borradores
+                    </a>
+                    <a href="?ruta=cursos&estado=archivado" class="cur-filter-link <?= ($filtros['estado'] ?? '') === 'archivado' ? 'active' : '' ?>">
+                        <i class="ph-fill ph-archive"></i> Solo Archivados
+                    </a>
+                </div>
+                <?php endif; ?>
+
+            </form>
+
+            <?php if ($puede_gestionar): ?>
+            <div class="cur-sidebar-stats">
+                <div class="cur-mini-stat">
+                    <span><?= (int)$estadisticas['publicados'] ?></span>
+                    <label>Publicados</label>
+                </div>
+                <div class="cur-mini-stat">
+                    <span><?= (int)$estadisticas['borradores'] ?></span>
+                    <label>Borradores</label>
+                </div>
+                <div class="cur-mini-stat">
+                    <span><?= (int)$estadisticas['archivados'] ?></span>
+                    <label>Archivados</label>
+                </div>
+            </div>
+            <?php endif; ?>
         </aside>
 
-        <main class="cur-grid" id="grid-cursos">
+        <!-- ===== GRID DE CURSOS ===== -->
+        <main class="cur-grid">
 
             <?php if (empty($cursos)): ?>
-            <div style="grid-column:1/-1; text-align:center; padding:4rem; color:var(--texto-silenciado);">
-                <i class="ph-fill ph-graduation-cap" style="font-size:3rem; opacity:0.3; display:block; margin-bottom:1rem;"></i>
-                <p>No hay cursos publicados en este momento.</p>
-            </div>
-            <?php else: ?>
-
-            <?php foreach ($cursos as $idx => $c):
-                $img = !empty($c['imagen_portada'])
-                    ? htmlspecialchars($c['imagen_portada'])
-                    : $imgs_defecto[$idx % count($imgs_defecto)];
-                $dur_clase = $c['total_lecciones'] <= 5 ? 'corto' : ($c['total_lecciones'] <= 15 ? 'medio' : 'largo');
-            ?>
-            <article class="cur-card"
-                     data-titulo="<?= strtolower(htmlspecialchars($c['titulo'])) ?>"
-                     data-docente="<?= strtolower(htmlspecialchars($c['docente_nombre'])) ?>"
-                     data-dur="<?= $dur_clase ?>">
-
-                <div class="cur-card-img" style="background-image: url('<?= $img ?>');"></div>
-
-                <div class="cur-card-body">
-                    <h3 class="cur-card-title"><?= htmlspecialchars($c['titulo']) ?></h3>
-
-                    <div class="cur-meta-list">
-                        <div class="cur-meta-item">
-                            <i class="ph-fill ph-chalkboard-teacher"></i>
-                            <span><?= htmlspecialchars($c['docente_nombre']) ?></span>
-                        </div>
-                        <div class="cur-meta-item">
-                            <i class="ph-fill ph-books"></i>
-                            <span><?= $c['total_lecciones'] ?> Lección<?= $c['total_lecciones'] !== 1 ? 'es' : '' ?></span>
-                        </div>
-                        <div class="cur-meta-item">
-                            <i class="ph-fill ph-users"></i>
-                            <span><?= $c['total_inscritos'] ?> Inscrito<?= $c['total_inscritos'] !== 1 ? 's' : '' ?></span>
-                        </div>
-                    </div>
-
-                    <?php if (!empty($c['descripcion'])): ?>
-                    <p class="cur-card-desc"><?= htmlspecialchars(mb_substr($c['descripcion'], 0, 110)) ?>...</p>
+            <div class="cur-empty">
+                <i class="ph-fill ph-books"></i>
+                <h3>No hay cursos disponibles</h3>
+                <p>
+                    <?php if (!empty($filtros['estado'])): ?>
+                        No se encontraron cursos con el estado «<?= htmlspecialchars($filtros['estado']) ?>».
+                        <a href="?ruta=cursos">Ver todos</a>
+                    <?php else: ?>
+                        Aún no se han registrado cursos en el sistema.
+                        <?php if ($puede_gestionar): ?>
+                            <a href="?ruta=cursos-crear">Crear el primero</a>
+                        <?php endif; ?>
                     <?php endif; ?>
+                </p>
+            </div>
 
-                    <a href="?ruta=detalle-curso&id=<?= $c['id'] ?>" class="cur-btn-external">
-                        Ver Curso <i class="ph-bold ph-arrow-right"></i>
-                    </a>
+            <?php else: ?>
+            <?php foreach ($cursos as $curso): ?>
+            <?php
+                $estado = $curso['estado'];
+                $clase_badge_estado = match($estado) {
+                    'publicado' => 'estado-publicado',
+                    'borrador'  => 'estado-borrador',
+                    'archivado' => 'estado-archivado',
+                    default     => ''
+                };
+                $label_estado = match($estado) {
+                    'publicado' => 'Publicado',
+                    'borrador'  => 'Borrador',
+                    'archivado' => 'Archivado',
+                    default     => ucfirst($estado)
+                };
+                $img = !empty($curso['imagen_portada'])
+                    ? htmlspecialchars($curso['imagen_portada'])
+                    : 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&q=80&w=400';
+            ?>
+            <article class="cur-card <?= $estado !== 'publicado' ? 'cur-card--inactivo' : '' ?>">
 
-                    <?php
-                        // Mostrar controles si es admin o es el docente de este curso
-                        $puede_gestionar = $es_admin
-                            || ($usuario_id && isset($c['id_docente']) && (int)$c['id_docente'] === (int)$usuario_id);
-                    ?>
+                <!-- Badge de estado -->
+                <span class="cur-badge <?= $clase_badge_estado ?>"><?= $label_estado ?></span>
+
+                <div class="cur-card-img" style="background-image: url('<?= $img ?>');">
                     <?php if ($puede_gestionar): ?>
-                    <div class="cur-card-mgmt">
-                        <a href="?ruta=form-curso&id=<?= $c['id'] ?>" class="cur-mgmt-btn cur-mgmt-edit" title="Editar">
-                            <i class="ph-fill ph-pencil-simple"></i> Editar
+                    <div class="cur-card-actions">
+                        <a href="?ruta=cursos-editar&id=<?= $curso['id'] ?>"
+                           class="cur-action-btn cur-action-btn--edit"
+                           title="Editar curso">
+                            <i class="ph-bold ph-pencil-simple"></i>
                         </a>
-                        <?php if ($es_admin): ?>
-                        <form method="POST" action="?ruta=eliminar-curso" style="margin:0;"
-                              onsubmit="return confirm('¿Eliminar este curso?')">
-                            <input type="hidden" name="id_curso" value="<?= $c['id'] ?>">
-                            <button type="submit" class="cur-mgmt-btn cur-mgmt-delete" title="Eliminar">
-                                <i class="ph-fill ph-trash"></i> Eliminar
-                            </button>
-                        </form>
+                        <?php if ($puede_eliminar): ?>
+                        <button type="button"
+                                class="cur-action-btn cur-action-btn--delete"
+                                title="Eliminar curso"
+                                onclick="confirmarEliminar(<?= $curso['id'] ?>, '<?= addslashes(htmlspecialchars($curso['titulo'])) ?>')">
+                            <i class="ph-bold ph-trash"></i>
+                        </button>
                         <?php endif; ?>
                     </div>
                     <?php endif; ?>
                 </div>
+
+                <div class="cur-card-body">
+                    <h3 class="cur-card-title"><?= htmlspecialchars($curso['titulo']) ?></h3>
+
+                    <?php if (!empty($curso['descripcion'])): ?>
+                    <p class="cur-card-desc"><?= htmlspecialchars(mb_strimwidth($curso['descripcion'], 0, 100, '…')) ?></p>
+                    <?php endif; ?>
+
+                    <div class="cur-meta-list">
+                        <div class="cur-meta-item">
+                            <i class="ph-fill ph-chalkboard-teacher"></i>
+                            <span><?= htmlspecialchars($curso['nombre_docente'] ?? 'Sin asignar') ?></span>
+                        </div>
+                        <div class="cur-meta-item">
+                            <i class="ph-fill ph-medal"></i>
+                            <span>Nota mínima: <?= number_format((float)$curso['nota_minima_aprobacion'], 1) ?></span>
+                        </div>
+                        <div class="cur-meta-item">
+                            <i class="ph-fill ph-calendar-blank"></i>
+                            <span><?= date('d/m/Y', strtotime($curso['fecha_creacion'])) ?></span>
+                        </div>
+                    </div>
+
+                    <?php if ($estado === 'publicado'): ?>
+                    <a href="?ruta=cursos-detalle&id=<?= $curso['id'] ?>" class="cur-btn-external">
+                        Ver Curso <i class="ph-bold ph-arrow-up-right"></i>
+                    </a>
+                    <?php elseif ($puede_gestionar): ?>
+                    <a href="?ruta=cursos-editar&id=<?= $curso['id'] ?>" class="cur-btn-draft">
+                        <i class="ph-bold ph-pencil-simple"></i> Editar / Publicar
+                    </a>
+                    <?php endif; ?>
+                </div>
+
             </article>
             <?php endforeach; ?>
-
             <?php endif; ?>
-        </main>
 
+        </main>
+    </div>
+</div>
+
+<!-- ===== MODAL CONFIRMACIÓN ELIMINAR ===== -->
+<?php if ($puede_eliminar): ?>
+<div id="modal-eliminar" class="cur-modal-overlay" style="display:none;">
+    <div class="cur-modal">
+        <div class="cur-modal-icon">
+            <i class="ph-fill ph-warning"></i>
+        </div>
+        <h3 id="modal-titulo-curso">¿Eliminar este curso?</h3>
+        <p>Esta acción es <strong>irreversible</strong>. El curso y toda su información serán eliminados permanentemente del sistema.</p>
+        <div class="cur-modal-actions">
+            <button type="button" onclick="cerrarModal()" class="btn btn-outline">Cancelar</button>
+            <form id="form-eliminar" method="POST" action="?ruta=cursos-eliminar">
+                <input type="hidden" name="id" id="modal-id-curso">
+                <button type="submit" class="btn cur-btn-danger">
+                    <i class="ph-bold ph-trash"></i> Sí, eliminar
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 
 <script>
-function filtrarCursos() {
-    const texto   = document.getElementById('buscador-cursos').value.toLowerCase();
-    const durs    = [...document.querySelectorAll('.filtro-dur:checked')].map(cb => cb.value);
-    const tarjetas = document.querySelectorAll('#grid-cursos .cur-card');
-
-    tarjetas.forEach(card => {
-        const matchTexto = !texto
-            || card.dataset.titulo.includes(texto)
-            || card.dataset.docente.includes(texto);
-        const matchDur = durs.length === 0 || durs.includes(card.dataset.dur);
-        card.style.display = (matchTexto && matchDur) ? '' : 'none';
-    });
+function confirmarEliminar(id, titulo) {
+    document.getElementById('modal-id-curso').value = id;
+    document.getElementById('modal-titulo-curso').textContent = '¿Eliminar "' + titulo + '"?';
+    document.getElementById('modal-eliminar').style.display = 'flex';
 }
-
-function limpiarFiltros() {
-    document.getElementById('buscador-cursos').value = '';
-    document.querySelectorAll('.filtro-dur').forEach(cb => cb.checked = false);
-    document.querySelectorAll('#grid-cursos .cur-card').forEach(c => c.style.display = '');
+function cerrarModal() {
+    document.getElementById('modal-eliminar').style.display = 'none';
 }
+document.getElementById('modal-eliminar').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModal();
+});
 </script>
+<?php endif; ?>

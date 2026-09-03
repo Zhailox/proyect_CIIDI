@@ -1,166 +1,164 @@
 <?php
 // modules/Cursos/models/CursoModel.php
-
 require_once CORE_PATH . 'Database/QueryBuilder.php';
 
-class CursoModel extends QueryBuilder {
+class CursoModel {
 
-    // -------------------------------------------------------------------------
-    // CATÁLOGO
-    // -------------------------------------------------------------------------
+    private $qb;
+    private $db;
+
+    public function __construct() {
+        $this->qb = new QueryBuilder();
+        $this->db = Connection::getInstance();
+    }
 
     /**
-     * Devuelve todos los cursos publicados con nombre del docente
-     * y conteo de lecciones e inscritos.
+     * Lista todos los cursos con el nombre completo del docente.
+     * Acepta filtros opcionales: estado, id_docente.
      */
-    public function getCursosPublicados(): array {
-        $cursos = $this->tabla('cursos c')
-            ->select('c.id, c.titulo, c.descripcion, c.imagen_portada,
-                      c.id_docente, c.nota_minima_aprobacion, c.fecha_creacion,
-                      u.nombre_completo AS docente_nombre')
-            ->join('usuarios u', 'c.id_docente = u.id')
-            ->where('c.estado', '=', 'publicado')
-            ->orderBy('c.fecha_creacion', 'DESC')
-            ->get();
+    public function listarCursos(array $filtros = []): array {
+        $sql = "
+            SELECT 
+                c.id,
+                c.titulo,
+                c.descripcion,
+                c.imagen_portada,
+                c.estado,
+                c.nota_minima_aprobacion,
+                c.fecha_creacion,
+                c.fecha_actualizacion,
+                c.id_docente,
+                u.nombre_completo AS nombre_docente
+            FROM public.cursos c
+            LEFT JOIN public.usuarios u ON c.id_docente = u.id
+        ";
 
-        // Enriquecer cada curso con conteos
-        foreach ($cursos as &$curso) {
-            $curso['total_lecciones'] = $this->contarLecciones($curso['id']);
-            $curso['total_inscritos']  = $this->contarInscritos($curso['id']);
+        $condiciones = [];
+        $parametros  = [];
+
+        if (!empty($filtros['estado'])) {
+            $condiciones[] = "c.estado = ?";
+            $parametros[]  = $filtros['estado'];
         }
-        unset($curso);
 
-        return $cursos;
+        if (!empty($filtros['id_docente'])) {
+            $condiciones[] = "c.id_docente = ?";
+            $parametros[]  = (int) $filtros['id_docente'];
+        }
+
+        if (!empty($condiciones)) {
+            $sql .= " WHERE " . implode(" AND ", $condiciones);
+        }
+
+        $sql .= " ORDER BY c.fecha_creacion DESC";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($parametros);
+        return $stmt->fetchAll();
     }
 
     /**
-     * Devuelve un único curso con todos sus datos.
+     * Obtiene un único curso por su ID.
      */
-    public function getCurso(int $id): ?array {
-        $curso = $this->tabla('cursos c')
-            ->select('c.id, c.titulo, c.descripcion, c.imagen_portada,
-                      c.nota_minima_aprobacion, c.estado,
-                      u.nombre_completo AS docente_nombre,
-                      u.email AS docente_email')
-            ->join('usuarios u', 'c.id_docente = u.id')
-            ->where('c.id', '=', $id)
-            ->first();
-
-        return $curso ?: null;
-    }
-
-    // -------------------------------------------------------------------------
-    // LECCIONES
-    // -------------------------------------------------------------------------
-
-    /**
-     * Devuelve las lecciones de un curso, ordenadas por número de orden.
-     */
-    public function getLeccionesCurso(int $id_curso): array {
-        return $this->tabla('lecciones_curso')
-            ->where('id_curso', '=', $id_curso)
-            ->orderBy('orden', 'ASC')
-            ->get();
-    }
-
-    /**
-     * Cuenta cuántas lecciones tiene un curso.
-     */
-    public function contarLecciones(int $id_curso): int {
-        $result = $this->tabla('lecciones_curso')
-            ->select('COUNT(*) AS total')
-            ->where('id_curso', '=', $id_curso)
-            ->first();
-        return (int) ($result['total'] ?? 0);
-    }
-
-    // -------------------------------------------------------------------------
-    // INSCRIPCIONES
-    // -------------------------------------------------------------------------
-
-    /**
-     * Devuelve la inscripción activa de un usuario en un curso (o null).
-     */
-    public function getInscripcion(int $id_usuario, int $id_curso): ?array {
-        $resultado = $this->tabla('inscripciones_curso')
-            ->where('id_usuario', '=', $id_usuario)
-            ->where('id_curso',   '=', $id_curso)
-            ->first();
+    public function obtenerPorId(int $id): ?array {
+        $sql = "
+            SELECT 
+                c.*,
+                u.nombre_completo AS nombre_docente
+            FROM public.cursos c
+            LEFT JOIN public.usuarios u ON c.id_docente = u.id
+            WHERE c.id = ?
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id]);
+        $resultado = $stmt->fetch();
         return $resultado ?: null;
     }
 
     /**
-     * Registra una nueva inscripción. Devuelve el ID insertado o false.
+     * Crea un nuevo curso. Devuelve el ID generado o false si falla.
      */
-    public function registrarInscripcion(int $id_usuario, int $id_curso): int|false {
-        return $this->tabla('inscripciones_curso')->insert([
-            'id_usuario' => $id_usuario,
-            'id_curso'   => $id_curso,
-            'progreso'   => 0,
+    public function crearCurso(array $datos) {
+        $sql = "
+            INSERT INTO public.cursos 
+                (id_docente, titulo, descripcion, imagen_portada, estado, nota_minima_aprobacion)
+            VALUES 
+                (?, ?, ?, ?, ?::public.estado_curso_enum, ?)
+            RETURNING id
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            (int) $datos['id_docente'],
+            trim($datos['titulo']),
+            trim($datos['descripcion'] ?? ''),
+            trim($datos['imagen_portada'] ?? '') ?: null,
+            $datos['estado'] ?? 'borrador',
+            (float) ($datos['nota_minima_aprobacion'] ?? 70.00)
+        ]);
+        $resultado = $stmt->fetch();
+        return $resultado ? (int) $resultado['id'] : false;
+    }
+
+    /**
+     * Actualiza un curso existente. Devuelve true si se modificó al menos una fila.
+     */
+    public function editarCurso(int $id, array $datos): bool {
+        $sql = "
+            UPDATE public.cursos SET
+                id_docente             = ?,
+                titulo                 = ?,
+                descripcion            = ?,
+                imagen_portada         = ?,
+                estado                 = ?::public.estado_curso_enum,
+                nota_minima_aprobacion = ?,
+                fecha_actualizacion    = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            (int) $datos['id_docente'],
+            trim($datos['titulo']),
+            trim($datos['descripcion'] ?? ''),
+            trim($datos['imagen_portada'] ?? '') ?: null,
+            $datos['estado'] ?? 'borrador',
+            (float) ($datos['nota_minima_aprobacion'] ?? 70.00),
+            $id
         ]);
     }
 
-    // -------------------------------------------------------------------------
-    // CRUD DE CURSOS (admin / docente propietario)
-    // -------------------------------------------------------------------------
-
     /**
-     * Inserta un nuevo curso. Devuelve el ID generado.
-     */
-    public function crearCurso(array $datos): int|false {
-        return $this->tabla('cursos')->insert([
-            'titulo'                 => trim($datos['titulo']),
-            'descripcion'            => trim($datos['descripcion'] ?? ''),
-            'imagen_portada'         => trim($datos['imagen_portada'] ?? ''),
-            'nota_minima_aprobacion' => (float) ($datos['nota_minima_aprobacion'] ?? 70),
-            'id_docente'             => (int)   $datos['id_docente'],
-            'estado'                 => 'publicado',
-        ]);
-    }
-
-    /**
-     * Actualiza un curso existente.
-     */
-    public function actualizarCurso(int $id, array $datos): bool {
-        return $this->tabla('cursos')
-            ->where('id', '=', $id)
-            ->update([
-                'titulo'                 => trim($datos['titulo']),
-                'descripcion'            => trim($datos['descripcion'] ?? ''),
-                'imagen_portada'         => trim($datos['imagen_portada'] ?? ''),
-                'nota_minima_aprobacion' => (float) ($datos['nota_minima_aprobacion'] ?? 70),
-                'estado'                 => $datos['estado'] ?? 'publicado',
-            ]);
-    }
-
-    /**
-     * Elimina un curso (solo admin o propietario verificado antes de llamar).
+     * Elimina un curso por su ID.
      */
     public function eliminarCurso(int $id): bool {
-        return $this->tabla('cursos')
-            ->where('id', '=', $id)
-            ->delete();
+        $sql  = "DELETE FROM public.cursos WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$id]);
     }
 
     /**
-     * Verifica si el usuario puede editar/eliminar el curso
-     * (es el docente propietario o es admin nivel >= 3).
+     * Devuelve estadísticas rápidas para el hero de la vista.
      */
-    public function puedeGestionar(int $id_curso, int $usuario_id, int $nivel_privilegio): bool {
-        if ($nivel_privilegio >= 3) return true; // Admin: acceso total
-
-        $curso = $this->getCurso($id_curso);
-        return $curso && (int) $curso['id_docente'] === $usuario_id;
+    public function obtenerEstadisticas(): array {
+        $sql = "
+            SELECT
+                COUNT(*) FILTER (WHERE estado = 'publicado')  AS publicados,
+                COUNT(*) FILTER (WHERE estado = 'borrador')   AS borradores,
+                COUNT(*) FILTER (WHERE estado = 'archivado')  AS archivados,
+                COUNT(*)                                       AS total
+            FROM public.cursos
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetch() ?: ['publicados' => 0, 'borradores' => 0, 'archivados' => 0, 'total' => 0];
     }
 
     /**
-     * Cuenta el total de inscritos en un curso.
+     * Lista los usuarios disponibles para asignar como docente.
      */
-    public function contarInscritos(int $id_curso): int {
-        $result = $this->tabla('inscripciones_curso')
-            ->select('COUNT(*) AS total')
-            ->where('id_curso', '=', $id_curso)
-            ->first();
-        return (int) ($result['total'] ?? 0);
+    public function listarDocentes(): array {
+        $sql  = "SELECT id, nombre_completo FROM public.usuarios WHERE activo = true ORDER BY nombre_completo ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
     }
 }

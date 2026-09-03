@@ -1,174 +1,315 @@
 <?php
 // modules/Cursos/views/form_curso.php
-// Variables inyectadas por PromoController::formCurso():
-// $curso     — array|null (null = crear nuevo)
-// $es_admin  — bool
-// $usuario_id — int
+// Variables disponibles: $curso (array|null), $docentes, $modo, $titulo_form, $error
+//   $modo = 'crear' | 'editar'
 
-$modo_edicion = $curso !== null;
-$titulo_pagina = $modo_edicion ? 'Editar Curso' : 'Nuevo Curso';
-$error_titulo  = isset($_GET['error']) && $_GET['error'] === 'titulo_vacio';
+$es_editar   = ($modo === 'editar');
+$accion_url  = $es_editar ? '?ruta=cursos-procesar-editar' : '?ruta=cursos-procesar-crear';
+
+// Pre-rellenar campos en modo edición
+$f_titulo   = htmlspecialchars($curso['titulo']   ?? '');
+$f_desc     = htmlspecialchars($curso['descripcion'] ?? '');
+$f_img      = htmlspecialchars($curso['imagen_portada'] ?? '');
+$f_estado   = $curso['estado'] ?? 'borrador';
+$f_nota     = $curso['nota_minima_aprobacion'] ?? '70.00';
+$f_docente  = $curso['id_docente'] ?? '';
+$f_id       = $curso['id'] ?? '';
 ?>
 
-<div class="frm-wrapper">
+<div class="cur-form-page">
 
-    <!-- HEADER -->
-    <div class="frm-header">
-        <div class="frm-header-left">
-            <a href="<?= $modo_edicion ? '?ruta=detalle-curso&id=' . $curso['id'] : '?ruta=cursos' ?>" class="frm-back-link">
-                <i class="ph-bold ph-arrow-left"></i> Volver
+    <!-- ── BREADCRUMB ──────────────────────────────────────── -->
+    <nav class="cur-breadcrumb">
+        <a href="?ruta=cursos">
+            <i class="ph-fill ph-graduation-cap"></i>
+            Catálogo de Cursos
+        </a>
+        <i class="ph-bold ph-caret-right"></i>
+        <span><?= htmlspecialchars($titulo_form) ?></span>
+    </nav>
+
+    <!-- ── CARD PRINCIPAL ─────────────────────────────────── -->
+    <div class="cur-form-card">
+
+        <!-- Header de la card -->
+        <div class="cur-form-header">
+            <div class="cur-form-header-left">
+                <div class="cur-form-header-icon <?= $es_editar ? 'icon--edit' : 'icon--create' ?>">
+                    <i class="ph-fill <?= $es_editar ? 'ph-pencil-simple' : 'ph-plus-circle' ?>"></i>
+                </div>
+                <div class="cur-form-header-text">
+                    <h2><?= htmlspecialchars($titulo_form) ?></h2>
+                    <p><?= $es_editar
+                            ? 'Modifica los datos del curso y guarda los cambios.'
+                            : 'Completa todos los campos para añadir un curso al catálogo.'
+                        ?></p>
+                </div>
+            </div>
+            <a href="?ruta=cursos" class="cur-form-back-btn" title="Volver al catálogo">
+                <i class="ph-bold ph-arrow-left"></i>
+                <span>Volver</span>
             </a>
-            <h1>
-                <i class="ph-fill ph-<?= $modo_edicion ? 'pencil-simple' : 'plus-circle' ?>"></i>
-                <?= $titulo_pagina ?>
-            </h1>
         </div>
-        <?php if ($modo_edicion && $es_admin): ?>
-        <form method="POST" action="?ruta=eliminar-curso" id="form-eliminar"
-              onsubmit="return confirm('¿Eliminar permanentemente «<?= htmlspecialchars(addslashes($curso['titulo'])) ?>»? Esta acción no se puede deshacer.')">
-            <input type="hidden" name="id_curso" value="<?= $curso['id'] ?>">
-            <button type="submit" class="frm-btn-delete">
-                <i class="ph-fill ph-trash"></i> Eliminar Curso
-            </button>
-        </form>
-        <?php endif; ?>
-    </div>
 
-    <?php if ($error_titulo): ?>
-    <div class="det-alert det-alert--error">
-        <i class="ph-fill ph-warning-circle"></i>
-        El título del curso es obligatorio.
-    </div>
-    <?php endif; ?>
-
-    <!-- FORMULARIO -->
-    <form method="POST" action="?ruta=guardar-curso" class="frm-form">
-        <?php if ($modo_edicion): ?>
-        <input type="hidden" name="id" value="<?= $curso['id'] ?>">
+        <!-- Alerta de error de validación -->
+        <?php if (!empty($error)): ?>
+        <div class="cur-form-alert cur-form-alert--error">
+            <i class="ph-fill ph-warning-circle"></i>
+            <span><?= htmlspecialchars($error) ?></span>
+        </div>
         <?php endif; ?>
 
-        <div class="frm-grid">
+        <!-- ── FORMULARIO ──────────────────────────────────── -->
+        <form method="POST" action="<?= $accion_url ?>" class="cur-form" id="form-curso" novalidate>
 
-            <!-- COLUMNA PRINCIPAL -->
-            <div class="frm-main">
+            <?php if ($es_editar): ?>
+                <input type="hidden" name="id" value="<?= (int)$f_id ?>">
+            <?php endif; ?>
 
-                <div class="frm-section">
-                    <h2 class="frm-section-title">
-                        <i class="ph-fill ph-info"></i> Información Básica
-                    </h2>
+            <!-- ════ SECCIÓN 1: Información Principal ════ -->
+            <div class="cur-form-section">
+                <div class="cur-form-section-title">
+                    <span class="cur-form-section-num">01</span>
+                    <h3>Información Principal</h3>
+                </div>
 
-                    <div class="frm-group">
-                        <label class="frm-label" for="titulo">Título del Curso *</label>
+                <!-- Título -->
+                <div class="cur-field-group cur-field-group--full">
+                    <label for="titulo" class="cur-field-label">
+                        Título del Curso
+                        <span class="cur-field-required">*</span>
+                    </label>
+                    <div class="cur-field-input-wrap">
+                        <i class="ph-fill ph-text-aa cur-field-icon"></i>
                         <input
                             type="text"
                             id="titulo"
                             name="titulo"
-                            class="frm-input"
-                            placeholder="Ej: Fundamentos de Programación en Python"
-                            value="<?= htmlspecialchars($curso['titulo'] ?? '') ?>"
+                            class="cur-field-input"
+                            value="<?= $f_titulo ?>"
+                            placeholder="Ej: Fundamentos de Inteligencia Artificial"
+                            maxlength="255"
                             required
+                            autocomplete="off"
                         >
-                    </div>
-
-                    <div class="frm-group">
-                        <label class="frm-label" for="descripcion">Descripción</label>
-                        <textarea
-                            id="descripcion"
-                            name="descripcion"
-                            class="frm-input frm-textarea"
-                            rows="6"
-                            placeholder="Describe el contenido, objetivos y público objetivo del curso..."
-                        ><?= htmlspecialchars($curso['descripcion'] ?? '') ?></textarea>
-                    </div>
-
-                    <div class="frm-group">
-                        <label class="frm-label" for="imagen_portada">URL de Imagen de Portada</label>
-                        <input
-                            type="url"
-                            id="imagen_portada"
-                            name="imagen_portada"
-                            class="frm-input"
-                            placeholder="https://images.unsplash.com/photo-..."
-                            value="<?= htmlspecialchars($curso['imagen_portada'] ?? '') ?>"
-                        >
-                        <span class="frm-hint">Si se deja vacío, se asignará una imagen automática.</span>
-
-                        <!-- Preview de la imagen -->
-                        <div class="frm-img-preview" id="img-preview" style="<?= empty($curso['imagen_portada'] ?? '') ? 'display:none' : '' ?>">
-                            <img src="<?= htmlspecialchars($curso['imagen_portada'] ?? '') ?>" alt="Preview" id="img-preview-src">
-                        </div>
                     </div>
                 </div>
 
+                <!-- Docente + Estado (grid 2 col) -->
+                <div class="cur-field-row">
+                    <div class="cur-field-group">
+                        <label for="id_docente" class="cur-field-label">
+                            Docente Responsable
+                            <span class="cur-field-required">*</span>
+                        </label>
+                        <div class="cur-field-input-wrap">
+                            <i class="ph-fill ph-chalkboard-teacher cur-field-icon"></i>
+                            <select id="id_docente" name="id_docente" class="cur-field-select" required>
+                                <option value="">— Seleccionar docente —</option>
+                                <?php foreach ($docentes as $doc): ?>
+                                <option value="<?= (int)$doc['id'] ?>" <?= ($f_docente == $doc['id']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($doc['nombre_completo']) ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="cur-field-group">
+                        <label for="estado" class="cur-field-label">Estado de Publicación</label>
+                        <div class="cur-field-input-wrap">
+                            <i class="ph-fill ph-toggle-right cur-field-icon"></i>
+                            <select id="estado" name="estado" class="cur-field-select">
+                                <option value="borrador"  <?= $f_estado === 'borrador'  ? 'selected' : '' ?>>Borrador</option>
+                                <option value="publicado" <?= $f_estado === 'publicado' ? 'selected' : '' ?>>Publicado</option>
+                                <option value="archivado" <?= $f_estado === 'archivado' ? 'selected' : '' ?>>Archivado</option>
+                            </select>
+                        </div>
+                        <div class="cur-estado-pills" id="estado-pills">
+                            <span class="cur-estado-pill cur-estado-pill--borrador  <?= $f_estado === 'borrador'  ? 'active' : '' ?>">✏️ Borrador</span>
+                            <span class="cur-estado-pill cur-estado-pill--publicado <?= $f_estado === 'publicado' ? 'active' : '' ?>">✅ Publicado</span>
+                            <span class="cur-estado-pill cur-estado-pill--archivado <?= $f_estado === 'archivado' ? 'active' : '' ?>">📦 Archivado</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- COLUMNA LATERAL -->
-            <aside class="frm-sidebar">
-
-                <div class="frm-section">
-                    <h2 class="frm-section-title">
-                        <i class="ph-fill ph-sliders"></i> Configuración
-                    </h2>
-
-                    <div class="frm-group">
-                        <label class="frm-label" for="estado">Estado de publicación</label>
-                        <select id="estado" name="estado" class="frm-select">
-                            <option value="publicado"  <?= ($curso['estado'] ?? 'publicado') === 'publicado'  ? 'selected' : '' ?>>✅ Publicado</option>
-                            <option value="borrador"   <?= ($curso['estado'] ?? '') === 'borrador'   ? 'selected' : '' ?>>📝 Borrador</option>
-                            <option value="archivado"  <?= ($curso['estado'] ?? '') === 'archivado'  ? 'selected' : '' ?>>📦 Archivado</option>
-                        </select>
-                    </div>
-
-                    <div class="frm-group">
-                        <label class="frm-label" for="nota_minima">Nota Mínima de Aprobación (%)</label>
-                        <input
-                            type="number"
-                            id="nota_minima"
-                            name="nota_minima_aprobacion"
-                            class="frm-input"
-                            min="0" max="100" step="0.5"
-                            value="<?= htmlspecialchars($curso['nota_minima_aprobacion'] ?? '70') ?>"
-                        >
-                    </div>
-
-                    <?php if ($modo_edicion): ?>
-                    <div class="frm-info-box">
-                        <div class="frm-info-item">
-                            <span class="frm-info-label">Docente</span>
-                            <span class="frm-info-value"><?= htmlspecialchars($curso['docente_nombre']) ?></span>
-                        </div>
-                        <div class="frm-info-item">
-                            <span class="frm-info-label">ID del curso</span>
-                            <span class="frm-info-value">#<?= $curso['id'] ?></span>
-                        </div>
-                    </div>
-                    <?php endif; ?>
-
-                    <button type="submit" class="frm-btn-submit">
-                        <i class="ph-fill ph-floppy-disk"></i>
-                        <?= $modo_edicion ? 'GUARDAR CAMBIOS' : 'CREAR CURSO' ?>
-                    </button>
-
-                    <a href="<?= $modo_edicion ? '?ruta=detalle-curso&id=' . $curso['id'] : '?ruta=cursos' ?>" class="frm-btn-cancel">
-                        Cancelar
-                    </a>
+            <!-- ════ SECCIÓN 2: Descripción ════ -->
+            <div class="cur-form-section">
+                <div class="cur-form-section-title">
+                    <span class="cur-form-section-num">02</span>
+                    <h3>Descripción</h3>
                 </div>
 
-            </aside>
-        </div>
-    </form>
-</div>
+                <div class="cur-field-group cur-field-group--full">
+                    <label for="descripcion" class="cur-field-label">Descripción del Curso</label>
+                    <textarea
+                        id="descripcion"
+                        name="descripcion"
+                        class="cur-field-textarea"
+                        rows="5"
+                        placeholder="Describe los objetivos, contenidos, duración y el público objetivo del curso…"
+                    ><?= $f_desc ?></textarea>
+                    <div class="cur-field-counter">
+                        <span id="desc-count">0</span> caracteres
+                    </div>
+                </div>
+            </div>
+
+            <!-- ════ SECCIÓN 3: Configuración Adicional ════ -->
+            <div class="cur-form-section">
+                <div class="cur-form-section-title">
+                    <span class="cur-form-section-num">03</span>
+                    <h3>Configuración Adicional</h3>
+                </div>
+
+                <div class="cur-field-row">
+                    <!-- Imagen portada + preview -->
+                    <div class="cur-field-group cur-field-group--img">
+                        <label for="imagen_portada" class="cur-field-label">
+                            URL de Imagen de Portada
+                            <span class="cur-field-hint">(Opcional)</span>
+                        </label>
+                        <div class="cur-field-input-wrap">
+                            <i class="ph-fill ph-image cur-field-icon"></i>
+                            <input
+                                type="url"
+                                id="imagen_portada"
+                                name="imagen_portada"
+                                class="cur-field-input"
+                                value="<?= $f_img ?>"
+                                placeholder="https://…"
+                            >
+                        </div>
+
+                        <!-- Preview de imagen -->
+                        <div class="cur-img-preview-box" id="img-preview-box">
+                            <div class="cur-img-preview-inner" id="img-preview"
+                                 style="background-image: url('<?= $f_img ?>')">
+                                <?php if (empty($f_img)): ?>
+                                <div class="cur-img-placeholder">
+                                    <i class="ph-fill ph-image"></i>
+                                    <span>Vista previa</span>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nota mínima -->
+                    <div class="cur-field-group">
+                        <label for="nota_minima" class="cur-field-label">
+                            Nota Mínima de Aprobación
+                        </label>
+                        <div class="cur-field-input-wrap">
+                            <i class="ph-fill ph-medal cur-field-icon"></i>
+                            <input
+                                type="number"
+                                id="nota_minima"
+                                name="nota_minima_aprobacion"
+                                class="cur-field-input"
+                                value="<?= htmlspecialchars((string)$f_nota) ?>"
+                                min="0"
+                                max="100"
+                                step="0.01"
+                                placeholder="70.00"
+                            >
+                        </div>
+                        <span class="cur-field-info">Escala de 0 a 100 puntos</span>
+
+                        <!-- Indicador visual de nota -->
+                        <div class="cur-nota-indicator" id="nota-indicator">
+                            <div class="cur-nota-bar">
+                                <div class="cur-nota-fill" id="nota-fill" style="width: <?= min(100, (float)$f_nota) ?>%"></div>
+                            </div>
+                            <span class="cur-nota-val" id="nota-val"><?= number_format((float)$f_nota, 1) ?>%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── ACCIONES ───────────────────────────────── -->
+            <div class="cur-form-footer">
+                <a href="?ruta=cursos" class="cur-form-btn cur-form-btn--cancel">
+                    <i class="ph-bold ph-x-circle"></i>
+                    Cancelar
+                </a>
+                <button type="submit" class="cur-form-btn cur-form-btn--submit" id="btn-submit">
+                    <i class="ph-bold <?= $es_editar ? 'ph-floppy-disk' : 'ph-paper-plane-tilt' ?>"></i>
+                    <span><?= $es_editar ? 'Guardar Cambios' : 'Registrar Curso' ?></span>
+                    <span class="cur-form-btn-loader" style="display:none;">
+                        <i class="ph-bold ph-spinner"></i>
+                    </span>
+                </button>
+            </div>
+
+        </form>
+    </div><!-- /.cur-form-card -->
+</div><!-- /.cur-form-page -->
 
 <script>
-// Preview de imagen al escribir la URL
-document.getElementById('imagen_portada').addEventListener('input', function() {
-    const preview = document.getElementById('img-preview');
-    const img     = document.getElementById('img-preview-src');
-    if (this.value.trim()) {
-        img.src = this.value;
-        preview.style.display = 'block';
-    } else {
-        preview.style.display = 'none';
+(function () {
+    // ── Contador de caracteres descripción ──
+    const textarea  = document.getElementById('descripcion');
+    const counter   = document.getElementById('desc-count');
+    if (textarea && counter) {
+        const update = () => { counter.textContent = textarea.value.length; };
+        textarea.addEventListener('input', update);
+        update();
     }
-});
+
+    // ── Vista previa de imagen en tiempo real ──
+    const imgInput   = document.getElementById('imagen_portada');
+    const imgPreview = document.getElementById('img-preview');
+    if (imgInput && imgPreview) {
+        imgInput.addEventListener('input', function () {
+            const url = this.value.trim();
+            const placeholder = imgPreview.querySelector('.cur-img-placeholder');
+            if (url) {
+                imgPreview.style.backgroundImage = `url('${url}')`;
+                if (placeholder) placeholder.style.display = 'none';
+            } else {
+                imgPreview.style.backgroundImage = 'none';
+                if (placeholder) placeholder.style.display = 'flex';
+            }
+        });
+    }
+
+    // ── Indicador visual de nota mínima ──
+    const notaInput = document.getElementById('nota_minima');
+    const notaFill  = document.getElementById('nota-fill');
+    const notaVal   = document.getElementById('nota-val');
+    if (notaInput && notaFill && notaVal) {
+        notaInput.addEventListener('input', function () {
+            const val = Math.min(100, Math.max(0, parseFloat(this.value) || 0));
+            notaFill.style.width = val + '%';
+            notaVal.textContent  = val.toFixed(1) + '%';
+            notaFill.className   = 'cur-nota-fill' + (val >= 70 ? ' ok' : val >= 50 ? ' warn' : ' low');
+        });
+    }
+
+    // ── Pills de estado sincronizadas con el select ──
+    const estadoSelect = document.getElementById('estado');
+    const pills        = document.querySelectorAll('.cur-estado-pill');
+    if (estadoSelect && pills.length) {
+        estadoSelect.addEventListener('change', function () {
+            pills.forEach(p => p.classList.remove('active'));
+            const active = document.querySelector(`.cur-estado-pill--${this.value}`);
+            if (active) active.classList.add('active');
+        });
+    }
+
+    // ── Efecto de carga al enviar ──
+    const form      = document.getElementById('form-curso');
+    const btnSubmit = document.getElementById('btn-submit');
+    if (form && btnSubmit) {
+        form.addEventListener('submit', function () {
+            btnSubmit.disabled = true;
+            const label  = btnSubmit.querySelector('span:first-of-type');
+            const loader = btnSubmit.querySelector('.cur-form-btn-loader');
+            if (label)  label.style.display  = 'none';
+            if (loader) loader.style.display  = 'inline-flex';
+        });
+    }
+})();
 </script>
