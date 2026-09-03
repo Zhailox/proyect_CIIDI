@@ -58,12 +58,14 @@ class AnaliticaController {
                 // Leer datos reales desde la Base de Datos PostgreSQL
                 $pdo = Connection::getInstance();
                 
-                // Obtenemos todas las investigaciones ofertadas con sus fechas
-                $sql = "SELECT li.nombre AS area, io.fecha_creacion 
+                // Obtenemos todos los proyectos culminados (repositorio real) con sus fechas de defensa
+                $sql = "SELECT li.nombre AS area, COALESCE(dp.fecha_defensa, dp.created_at) AS fecha_creacion 
                         FROM lineas_investigacion li
-                        JOIN investigaciones_ofertadas io ON li.id = io.id_linea
-                        WHERE io.fecha_creacion IS NOT NULL
-                        ORDER BY io.fecha_creacion ASC";
+                        JOIN recurso_clasificaciones rc ON li.id = rc.id_linea_investigacion
+                        JOIN recursos r ON rc.id_recurso = r.id
+                        JOIN detalles_proyectos dp ON r.id = dp.id_recurso
+                        WHERE COALESCE(dp.fecha_defensa, dp.created_at) IS NOT NULL
+                        ORDER BY fecha_creacion ASC";
                         
                 $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
                 
