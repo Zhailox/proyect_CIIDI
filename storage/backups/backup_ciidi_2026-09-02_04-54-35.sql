@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict OfggeMugoU1BqcMSe8a3KbVyAUMvULe1gxG5I0PXVEd7YqelWxRcOqY1EpJRChY
+\restrict WX2FVDNY5XJVjdgIIq13J0FUrfIgUNWQvUbbdfeS9XztMftOE7EzxVnydMpP9aG
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -85,7 +85,6 @@ ALTER TABLE ONLY public.recurso_clasificaciones DROP CONSTRAINT recurso_clasific
 ALTER TABLE ONLY public.recurso_categorias DROP CONSTRAINT recurso_categorias_pkey;
 ALTER TABLE ONLY public.recurso_autores DROP CONSTRAINT recurso_autores_pkey;
 ALTER TABLE ONLY public.proyecto_tutores DROP CONSTRAINT proyecto_tutores_pkey;
-ALTER TABLE ONLY public.propuestas_empresa DROP CONSTRAINT propuestas_empresa_pkey;
 ALTER TABLE ONLY public.privilegios DROP CONSTRAINT privilegios_pkey;
 ALTER TABLE ONLY public.preferencias_usuario DROP CONSTRAINT preferencias_usuario_pkey;
 ALTER TABLE ONLY public.postulaciones_estudiantes DROP CONSTRAINT postulaciones_estudiantes_pkey;
@@ -118,7 +117,6 @@ ALTER TABLE public.tipo_recurso ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.roles ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.registro_actividad ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.recursos ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.propuestas_empresa ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.privilegios ALTER COLUMN privilegio_id DROP DEFAULT;
 ALTER TABLE public.postulaciones_estudiantes ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.notificaciones ALTER COLUMN id DROP DEFAULT;
@@ -155,8 +153,6 @@ DROP TABLE public.recurso_clasificaciones;
 DROP TABLE public.recurso_categorias;
 DROP TABLE public.recurso_autores;
 DROP TABLE public.proyecto_tutores;
-DROP SEQUENCE public.propuestas_empresa_id_seq;
-DROP TABLE public.propuestas_empresa;
 DROP SEQUENCE public.privilegios_privilegio_id_seq;
 DROP TABLE public.privilegios;
 DROP TABLE public.preferencias_usuario;
@@ -198,7 +194,6 @@ DROP TYPE public.tipo_pregunta_enum;
 DROP TYPE public.tipo_interaccion_usuario_enum;
 DROP TYPE public.tipo_interaccion_enum;
 DROP TYPE public.nivel_academico_enum;
-DROP TYPE public.estado_propuesta_enum;
 DROP TYPE public.estado_curso_enum;
 DROP TYPE public.accion_auditoria_enum;
 DROP TYPE public.accion_acceso_enum;
@@ -239,19 +234,6 @@ CREATE TYPE public.estado_curso_enum AS ENUM (
 
 
 ALTER TYPE public.estado_curso_enum OWNER TO postgres;
-
---
--- Name: estado_propuesta_enum; Type: TYPE; Schema: public; Owner: postgres
---
-
-CREATE TYPE public.estado_propuesta_enum AS ENUM (
-    'pendiente',
-    'aceptada',
-    'rechazada'
-);
-
-
-ALTER TYPE public.estado_propuesta_enum OWNER TO postgres;
 
 --
 -- Name: nivel_academico_enum; Type: TYPE; Schema: public; Owner: postgres
@@ -1079,49 +1061,6 @@ ALTER SEQUENCE public.privilegios_privilegio_id_seq OWNED BY public.privilegios.
 
 
 --
--- Name: propuestas_empresa; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.propuestas_empresa (
-    id integer NOT NULL,
-    nombre_empresa character varying(255) NOT NULL,
-    rif_empresa character varying(50),
-    persona_contacto character varying(150) NOT NULL,
-    telefono_contacto character varying(50) NOT NULL,
-    correo_contacto character varying(150) NOT NULL,
-    area_afectada character varying(100) NOT NULL,
-    descripcion_problema text NOT NULL,
-    estado public.estado_propuesta_enum DEFAULT 'pendiente'::public.estado_propuesta_enum,
-    fecha_creacion timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    nivel_trayecto character varying(50)
-);
-
-
-ALTER TABLE public.propuestas_empresa OWNER TO postgres;
-
---
--- Name: propuestas_empresa_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.propuestas_empresa_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.propuestas_empresa_id_seq OWNER TO postgres;
-
---
--- Name: propuestas_empresa_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.propuestas_empresa_id_seq OWNED BY public.propuestas_empresa.id;
-
-
---
 -- Name: proyecto_tutores; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1581,13 +1520,6 @@ ALTER TABLE ONLY public.privilegios ALTER COLUMN privilegio_id SET DEFAULT nextv
 
 
 --
--- Name: propuestas_empresa id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.propuestas_empresa ALTER COLUMN id SET DEFAULT nextval('public.propuestas_empresa_id_seq'::regclass);
-
-
---
 -- Name: recursos id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -1694,7 +1626,6 @@ INSERT INTO public.auditoria VALUES (38, 'usuarios', 6, 'UPDATE', NULL, NULL, '{
 INSERT INTO public.auditoria VALUES (39, 'usuarios', 10, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 3, "nombre": "Wazaaaa"}', '{"activo": true, "id_rol": 1, "nombre": "Wazaaaa"}', '2026-06-25 00:58:32.420893');
 INSERT INTO public.auditoria VALUES (40, 'usuarios', 7, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 1, "nombre": "Migel González"}', '{"activo": true, "id_rol": 1, "nombre": "Miguel González"}', '2026-06-25 01:22:04.451131');
 INSERT INTO public.auditoria VALUES (41, 'usuarios', 6, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 4, "nombre": "Piñin Piña"}', '{"activo": false, "id_rol": 4, "nombre": "Piñin Piña"}', '2026-06-29 11:45:47.198869');
-INSERT INTO public.auditoria VALUES (238, 'recursos', 131, 'DELETE', NULL, NULL, '{"titulo": "e", "id_tipo_recurso": 3}', NULL, '2026-09-02 19:58:49.193407');
 INSERT INTO public.auditoria VALUES (42, 'usuarios', 10, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 1, "nombre": "Wazaaaa"}', '{"activo": true, "id_rol": 3, "nombre": "Wazaaaa"}', '2026-06-29 12:10:37.626132');
 INSERT INTO public.auditoria VALUES (43, 'usuarios', 10, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 3, "nombre": "Wazaaaa"}', '{"activo": true, "id_rol": 1, "nombre": "Wazaaaa"}', '2026-06-29 14:18:17.58523');
 INSERT INTO public.auditoria VALUES (44, 'usuarios', 10, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 1, "nombre": "Wazaaaa"}', '{"activo": true, "id_rol": 4, "nombre": "Wazaaaa"}', '2026-06-29 14:18:34.834966');
@@ -1738,7 +1669,6 @@ INSERT INTO public.auditoria VALUES (86, 'recursos', 57, 'INSERT', NULL, NULL, N
 INSERT INTO public.auditoria VALUES (87, 'recursos', 56, 'DELETE', NULL, NULL, '{"titulo": "hola", "id_tipo_recurso": 1}', NULL, '2026-07-05 18:29:50.693972');
 INSERT INTO public.auditoria VALUES (185, 'recursos', 105, 'INSERT', NULL, NULL, NULL, '{"titulo": "PST TEST CREAR AUTO 1786378657", "id_tipo_recurso": 1, "ejemplares_totales": 1}', '2026-08-10 12:17:37.294398');
 INSERT INTO public.auditoria VALUES (120, 'recursos', 58, 'INSERT', NULL, NULL, NULL, '{"titulo": "Sistema Integral de Gestión de Documasdasdasdasentos Académicos para el Comité Científico Investigaasdasdasdasdor del PNF en Informática apoyado en Redes Neuronales", "id_tipo_recurso": 1, "ejemplares_totales": 1}', '2026-07-07 00:01:54.74783');
-INSERT INTO public.auditoria VALUES (234, 'recursos', 128, 'INSERT', NULL, NULL, NULL, '{"titulo": "Materia: Seguridad Informática", "id_tipo_recurso": 1, "ejemplares_totales": 1}', '2026-09-02 17:22:38.760639');
 INSERT INTO public.auditoria VALUES (121, 'recursos', 59, 'INSERT', NULL, NULL, NULL, '{"titulo": "SISTEMA DE OPTIMIZACIÓN BASADO EN ALGORITMOS GENÉTICOS PARA LA GESTIÓN DE HORARIOS DEL PNFI DE LA UPTTMBI, NÚCLEO LA BEATRIZ", "id_tipo_recurso": 1, "ejemplares_totales": 1}', '2026-08-04 09:22:58.539505');
 INSERT INTO public.auditoria VALUES (122, 'recursos', 60, 'INSERT', NULL, NULL, NULL, '{"titulo": "SISTEMA WEB DE GESTIÓN DOCUMENTAL MASIVA PARA EL PNF EN INFORMÁTICA - PRUEBA FIFO 1", "id_tipo_recurso": 1, "ejemplares_totales": 1}', '2026-08-04 09:40:12.838831');
 INSERT INTO public.auditoria VALUES (123, 'recursos', 61, 'INSERT', NULL, NULL, NULL, '{"titulo": "DESARROLLO DE PLATAFORMA EDUCATIVA EDUMÁTICA INTELIGENTE - PRUEBA FIFO 2", "id_tipo_recurso": 1, "ejemplares_totales": 1}', '2026-08-04 09:40:12.876413');
@@ -1806,7 +1736,6 @@ INSERT INTO public.auditoria VALUES (187, 'recursos', 107, 'INSERT', NULL, NULL,
 INSERT INTO public.auditoria VALUES (188, 'recursos', 102, 'DELETE', NULL, NULL, '{"titulo": "TEST PDO RETURNING TITLE 1786378596", "id_tipo_recurso": 1}', NULL, '2026-08-10 12:18:40.558792');
 INSERT INTO public.auditoria VALUES (189, 'recursos', 106, 'DELETE', NULL, NULL, '{"titulo": "DEBUG PST RETURN ID 1786378674", "id_tipo_recurso": 1}', NULL, '2026-08-10 12:18:40.558792');
 INSERT INTO public.auditoria VALUES (190, 'recursos', 107, 'DELETE', NULL, NULL, '{"titulo": "DEBUG PST RETURN ID 1786378695", "id_tipo_recurso": 1}', NULL, '2026-08-10 12:18:40.558792');
-INSERT INTO public.auditoria VALUES (239, 'recursos', 130, 'DELETE', NULL, NULL, '{"titulo": "e", "id_tipo_recurso": 3}', NULL, '2026-09-02 19:58:51.059906');
 INSERT INTO public.auditoria VALUES (191, 'recursos', 108, 'INSERT', NULL, NULL, NULL, '{"titulo": "Sistema Integral de Gestión de Documentos Académicos para el C222222222omité Científico Investigador del PNF en Informática apoyado en Redes Neuronales", "id_tipo_recurso": 1, "ejemplares_totales": 1}', '2026-08-10 12:20:17.959675');
 INSERT INTO public.auditoria VALUES (192, 'recursos', 101, 'DELETE', NULL, NULL, '{"titulo": "PST TEST CREAR AUTO 1786378571", "id_tipo_recurso": 1}', NULL, '2026-08-10 12:32:05.654115');
 INSERT INTO public.auditoria VALUES (193, 'recursos', 103, 'DELETE', NULL, NULL, '{"titulo": "PST TEST CREAR AUTO 1786378621", "id_tipo_recurso": 1}', NULL, '2026-08-10 12:32:05.654115');
@@ -1846,10 +1775,6 @@ INSERT INTO public.auditoria VALUES (226, 'recursos', 121, 'INSERT', NULL, NULL,
 INSERT INTO public.auditoria VALUES (227, 'recursos', 122, 'INSERT', NULL, NULL, NULL, '{"titulo": "Revisión sistemática del impacto de las fibras de polipropileno en las propiedades físico-mecánicas, microestructurales y de durabilidad del concreto", "id_tipo_recurso": 3, "ejemplares_totales": 1}', '2026-09-02 00:23:21.823509');
 INSERT INTO public.auditoria VALUES (228, 'recursos', 123, 'INSERT', NULL, NULL, NULL, '{"titulo": "e", "id_tipo_recurso": 3, "ejemplares_totales": 1}', '2026-09-02 00:30:00.179124');
 INSERT INTO public.auditoria VALUES (229, 'recursos', 123, 'DELETE', NULL, NULL, '{"titulo": "e", "id_tipo_recurso": 3}', NULL, '2026-09-02 00:38:17.131525');
-INSERT INTO public.auditoria VALUES (233, 'recursos', 127, 'INSERT', NULL, NULL, NULL, '{"titulo": "ACTIVIDADES ACREDITABLES IV INFORME DE MERCADEO: TIPPEN TAG", "id_tipo_recurso": 1, "ejemplares_totales": 1}', '2026-09-02 15:10:22.258855');
-INSERT INTO public.auditoria VALUES (235, 'recursos', 129, 'INSERT', NULL, NULL, NULL, '{"titulo": "Verde   Gestion de BD", "id_tipo_recurso": 1, "ejemplares_totales": 1}', '2026-09-02 17:24:52.328736');
-INSERT INTO public.auditoria VALUES (236, 'recursos', 130, 'INSERT', NULL, NULL, NULL, '{"titulo": "e", "id_tipo_recurso": 3, "ejemplares_totales": 1}', '2026-09-02 18:00:56.314983');
-INSERT INTO public.auditoria VALUES (237, 'recursos', 131, 'INSERT', NULL, NULL, NULL, '{"titulo": "e", "id_tipo_recurso": 3, "ejemplares_totales": 1}', '2026-09-02 18:02:41.164769');
 
 
 --
@@ -1934,10 +1859,6 @@ INSERT INTO public.autores VALUES (81, 'Analy De Los Angeles Hernández Cortéz'
 INSERT INTO public.autores VALUES (82, 'Anyela Alejandra Briceño Guerra', 'V-31413272');
 INSERT INTO public.autores VALUES (83, 'Abraham David Graterol Villamizar', 'V-31167863');
 INSERT INTO public.autores VALUES (84, 'Isaac José Figuera García', 'V-31239364');
-INSERT INTO public.autores VALUES (88, 'Jesus Francisco Montilla Olmos', 'V-30886991');
-INSERT INTO public.autores VALUES (89, 'Miguel Alejandro Gonzalez Gonzalez', 'V-32621283');
-INSERT INTO public.autores VALUES (90, 'Juan Piña', 'V-8398');
-INSERT INTO public.autores VALUES (91, '@''''¿1''23¿12''3¿ñ{ñ{--__´ñ´ñ´!"!"#!"$"%#$%%&%&/&()&/', 'E-14');
 
 
 --
@@ -1976,9 +1897,8 @@ INSERT INTO public.categorias VALUES (18, 'Ingeniería Civil');
 
 INSERT INTO public.cursos VALUES (1, 4, 'Introducción a la Metodología de la Investigación', 'Curso fundamental para comprender los métodos y técnicas de investigación científica aplicados al PNF en Informática. Incluye diseño experimental, recolección de datos y análisis estadístico básico.', NULL, 'publicado', 70.00, '2026-04-03 03:28:04', '2026-04-03 03:28:04');
 INSERT INTO public.cursos VALUES (2, 4, 'Fundamentos de Inteligencia Artificial', 'Curso introductorio sobre los conceptos básicos de la IA, redes neuronales, aprendizaje automático y sus aplicaciones en el contexto venezolano.', NULL, 'publicado', 70.00, '2026-04-03 03:28:04', '2026-04-03 03:28:04');
-INSERT INTO public.cursos VALUES (4, 1, 'tamaños de jose', 'los pn que jose ha tenido segun tamaño', NULL, 'borrador', 69.96, '2026-04-03 04:40:03', '2026-09-02 21:38:28.289267');
-INSERT INTO public.cursos VALUES (3, 10, 'Normas APA y Redacción Científica', 'Aprende a redactar documentos académicos siguiendo las normas APA 7ma edición. Ideal para la elaboración de tu Proyecto Socio-Tecnológico.', NULL, 'archivado', 67.00, '2026-04-03 03:28:04', '2026-09-02 21:39:04.419332');
-INSERT INTO public.cursos VALUES (6, 9, 'e', 'e', NULL, 'publicado', 70.00, '2026-09-02 21:40:20.207518', '2026-09-02 21:40:27.256632');
+INSERT INTO public.cursos VALUES (3, 1, 'Normas APA y Redacción Científica', 'Aprende a redactar documentos académicos siguiendo las normas APA 7ma edición. Ideal para la elaboración de tu Proyecto Socio-Tecnológico.', NULL, 'publicado', 60.00, '2026-04-03 03:28:04', '2026-04-03 03:53:35');
+INSERT INTO public.cursos VALUES (4, 1, 'tamaños de jose', 'los pn que jose ha tenido segun tamaño', NULL, 'publicado', 70.00, '2026-04-03 04:40:03', '2026-04-03 04:40:03');
 
 
 --
@@ -2016,7 +1936,6 @@ INSERT INTO public.detalles_proyectos VALUES (72, '2026-08-04', 'Pregrado', 'Ofr
 INSERT INTO public.detalles_proyectos VALUES (78, '2026-08-05', 'Pregrado', 'Este es un resumen de prueba automatizada para verificar la carga por lotes via AJAX.', 1, 'Comunidad de Pruebas', 'Prueba, AJAX, Lotes, PHP', '2026-08-05 09:43:26.945146', NULL, 'Trayecto III', NULL);
 INSERT INTO public.detalles_proyectos VALUES (45, '2026-06-15', 'Pregrado', 'Dise¤o e implementaci¢n de un motor de renderizado ligero y de alto rendimiento. Se evit¢ el uso de frameworks pesados para garantizar una ejecuci¢n "metal pure", optimizando el consumo de RAM y CPU en equipos de bajos recursos.', 1, 'Comunidad de Desarrolladores Independientes', 'Rust, Tauri, Novela Visual, Nativo, Optimizaci¢n', '2026-07-05 17:21:44.350197', NULL, 'Trayecto II', NULL);
 INSERT INTO public.detalles_proyectos VALUES (80, '2026-08-05', 'Pregrado', 'El Proyecto Socio Tecnológico realizado en el Departamento de Sistemas del Centro Clínico "María Edelmira Araujo", S.A. tiene como objetivo general ofrecer soporte técnico a usuarios y equipos de computación, utilizando mantenimiento correctivo y preventivo tanto a nivel de software como de hardware. Para la implementación del proyecto, se utilizarán técnicas de entrevista y observación como estrategias de recolección de datos, además de la realización de un inventario. Se espera mejorar la eficiencia y productividad del departamento a través de estas acciones', 1, 'Centro Clínico “María Edelmira Araujo”, S', 'Soporte técnico, correctivo, preventivo, software, hardware', '2026-08-05 09:48:05.633265', NULL, 'Trayecto I', NULL);
-INSERT INTO public.detalles_proyectos VALUES (88, '2026-08-10', 'Pregrado', 'Según Arboleda (2014), un proyecto representa un esfuerzo temporal diseñado para producir un resultado o entregable único de forma gradual. Para enriquecer la fundamentación, Project Management Institute (2021), lo define como un esfuerzo temporal emprendido para crear un producto, servicio o resultado único.', 1, 'Corporación Eléctrica Nacional (CORPOELEC) de Venezuela', '', '2026-08-10 10:26:58.264555', NULL, 'Trayecto I', NULL);
 INSERT INTO public.detalles_proyectos VALUES (81, '2026-08-05', 'Pregrado', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry". Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP', '2026-08-05 09:48:05.72936', NULL, 'Trayecto II', NULL);
 INSERT INTO public.detalles_proyectos VALUES (82, '2026-08-05', 'Pregrado', 'Una descripción de proyectos es una visión general de alto nivel de por qué está haciendo el mismo. De igual manera el documento explica los objetivos y sus cualidades esenciales, donde la descripción es fundamental debido a que va ayudar en la realización del estudio ya que se requiere de la aplicación de varias metodologías que abordan aspectos desde la identificación del problema, hasta la selección de la alternativa más adecuada, haciendo uso de herramientas y técnicas que permiten la recolección y análisis de información de manera concreta y adecuada, aumentando así el nivel de objetividad del problema a resolver', 1, 'CAIPA Trujillo  ------------------------------------------------Naturaleza de la Comunidad: El CAIPA-Trujillo, Valera Estado Trujillo', '', '2026-08-05 09:48:05.817964', NULL, 'Trayecto III', NULL);
 INSERT INTO public.detalles_proyectos VALUES (83, '2026-08-05', 'Pregrado', 'La descripción del proyecto ofrece una visión general de la iniciativa que se va a desarrollar, la cual, debe incluir información clave que permita entender el contexto, los objetivos y la relevancia de la propuesta. Así que, este apartado actúa como un marco de referencia para todos los aspectos esenciales del proyecto, facilitando así, una comprensión clara de lo que se pretende lograr.', 1, 'Escuela Nacional “Antonio Pérez Carmona”, se encuentra registrada con el Registro de Información Fiscal (RIF) J-403419957', '', '2026-08-05 09:48:05.91852', NULL, 'Trayecto IV', NULL);
@@ -2027,6 +1946,7 @@ INSERT INTO public.detalles_proyectos VALUES (87, '2026-08-05', 'Pregrado', 'Res
 INSERT INTO public.detalles_proyectos VALUES (116, '2026-08-31', 'Doctorado', 'La descripción del proyecto ofrece una visión general de la iniciativa que se va a desarrollar, la cual, debe incluir información clave que permita entender el contexto, los objetivos y la relevancia de la propuesta. Así que, este apartado actúa como un marco de referencia para todos los aspectos esenciales del proyecto, facilitando así, una comprensión clara de lo que se pretende lograr.', 1, 'Escuela Nacional “Antonio Pérez Carmona”, se encuentra registrada con el Registro de Información Fiscal (RIF) J-403419957', '', '2026-08-31 09:47:06.862144', NULL, NULL, NULL);
 INSERT INTO public.detalles_proyectos VALUES (58, '2026-07-07', 'Pregrado', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry". Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio. Palabras clave: Gestión doc', 1, 'asdasdasdasd', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP', '2026-07-07 00:01:54.74783', NULL, 'Trayecto III', NULL);
 INSERT INTO public.detalles_proyectos VALUES (79, '2026-08-05', 'Pregrado', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry". Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP', '2026-08-05 09:45:15.201621', NULL, 'Trayecto IV', NULL);
+INSERT INTO public.detalles_proyectos VALUES (88, '2026-08-10', 'Pregrado', 'Según Arboleda (2014), un proyecto representa un esfuerzo temporal diseñado para producir un resultado o entregable único de forma gradual. Para enriquecer la fundamentación, Project Management Institute (2021), lo define como un esfuerzo temporal emprendido para crear un producto, servicio o resultado único.', 1, 'Corporación Eléctrica Nacional (CORPOELEC) de Venezuela', '', '2026-08-10 10:26:58.264555', NULL, 'Trayecto I', NULL);
 INSERT INTO public.detalles_proyectos VALUES (89, '2018-01-10', 'Pregrado', 'El presente proyecto sociotecnológico se centra en el desarrollo de un módulo avanzado para la administración y proyección de las líneas de investigación del PNFI, en el cual la innovación principal radica en la integración de modelos de Inteligencia Artificial (Machine Learning) orientados al análisis predictivo, esta herramienta procesa el volumen y la tipología de las investigaciones registradas para identificar tendencias emergentes, predecir el crecimiento de áreas temáticas y asistir al Comité Científico Investigador en la toma de decisiones estratégicas, todo ello operando sobre la arquitectura base del Sistema Integral de Gestión.', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr', 'Líneas de investigación, PNFI, Machine Learning, Análisis predictivo, Toma de decisiones, Comité científico, Gestión del conocimiento, Sistema integral de gestión', '2026-08-10 10:35:39.007693', NULL, 'Trayecto IV', NULL);
 INSERT INTO public.detalles_proyectos VALUES (90, '2026-08-10', 'Pregrado', 'Una descripción de proyectos es una visión general de alto nivel de por qué está haciendo el mismo. De igual manera el documento explica los objetivos y sus cualidades esenciales, donde la descripción es fundamental debido a que va ayudar en la realización del estudio ya que se requiere de la aplicación de varias metodologías que abordan aspectos desde la identificación del problema, hasta la selección de la alternativa más adecuada, haciendo uso de herramientas y técnicas que permiten la recolección y análisis de información de manera concreta y adecuada, aumentando así el nivel de objetividad del problema a resolver', 1, 'CAIPA Trujillo', '', '2026-08-10 10:45:42.226083', NULL, 'Trayecto I', NULL);
 INSERT INTO public.detalles_proyectos VALUES (91, '2026-08-10', 'Pregrado', 'En este sentido, el presente proyecto se desarrolla dentro de la Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry”, específicamente en el núcleo universitario “Dr. Pablo Viloria”, ubicado en la ciudad de Valera, estado Trujillo. Dentro de esta institución se encuentra el Programa Nacional de Formación en Contaduría Pública, donde se identificó la necesidad de optimizar los procesos relacionados con la gestión de los Proyectos de Investigación Comunitaria Integradora (PCI), así como el manejo de la información académica de los estudiantes vinculados a dichos proyectos. El análisis del contexto institucional permite comprender cómo se gestionan actualmente estos procesos, cuáles son las herramientas utilizadas para el registro y control de la información académica y cuáles son las limitaciones presentes en dichos procedimientos. En este sentido, la descripción del contexto se convierte en un elemento fundamental para sustentar la pertinencia del desarrollo de una solución informática orientada a mejorar la organización y gestión de la información dentro del programa académico', 1, 'Departamento del Programa Nacional de Formación (PNF) en Contaduría Pública de la Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorr', 'sistema informático, gestión académica, proyectos PCI, información académica, automatización', '2026-08-10 10:52:47.26864', NULL, 'Trayecto I', NULL);
@@ -2044,9 +1964,6 @@ INSERT INTO public.detalles_proyectos VALUES (112, '2026-08-25', 'Pregrado', 'Of
 INSERT INTO public.detalles_proyectos VALUES (113, '2026-08-27', 'Pregrado', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry". Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP', '2026-08-27 09:08:37.073105', NULL, 'Trayecto I', NULL);
 INSERT INTO public.detalles_proyectos VALUES (114, '2026-08-27', 'Pregrado', 'El objetivo general del proyecto Socio Tecnológico fue realizar Soporte Técnico a Equipos de Computación y Usuarios en la Escuela Técnica Comercial “Madre Rafols”. Se utilizó la metodología del marco lógico para determinar los problemas, causas y consecuencias, se complementó con la metodología cuantitativa. Proyecto factible, de carácter descriptiva, se realizó en tres fases. Como técnica de recolección de datos se utilizó la encuesta y como instrumento el cuestionario, La fase de la elaboración de la propuesta, consistió en un Plan de mantenimiento preventivo y correctivo a los equipos de computación, y taller al usuario. Los resultados obtenidos evidencian colocar parte de los problemas da hardware y software. Este proyecto permitió aplicar los conocimientos adquiridos en arquitectura del computador', 1, 'Escuela Técnica Comercial “Madre Rafols”', 'computadoras, mantenimiento, instalación, hardware, software', '2026-08-27 10:17:48.017574', NULL, 'Trayecto I', NULL);
 INSERT INTO public.detalles_proyectos VALUES (117, '2026-08-31', 'Doctorado', 'El presente proyecto de investigación, desarrollado bajo el enfoque de la Investigación Acción Participativa (IAP), tiene como propósito fundamental desarrollar un sistema inteligente basado en algoritmos genéticos para la optimización automática de horarios en la Coordinación del Programa Nacional de Formación en Informática (PNFI) de la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry" Núcleo La Beatriz. A través de un diagnóstico participativo que incluyó entrevistas, observación directa y la aplicación de matrices FODA y CAME, se identificó que el proceso actual de elaboración de horarios se realiza de manera completamente manual, consumiendo entre tres y cuatro semanas por trimestre y generando frecuentes conflictos de asignación. La solución propuesta, seleccionada mediante matriz de decisión multicriterio, consiste en el desarrollo de un sistema con arquitectura web que emplea algoritmos genéticos multiobjetivo para procesar restricciones complejas, minimizando errores en un 95% y reduciendo el tiempo de planificación en un 90%. El proyecto beneficiará directamente a coordinadores, docentes y estudiantes del PNFI, contribuyendo a una gestión académica más eficiente y tecnológicamente confiable', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” NUES Dr', 'Algoritmos genéticos, horarios universitarios, optimización, sistema inteligente, Investigación Acción Participativa', '2026-08-31 10:08:06.559751', NULL, NULL, 'https://github.com/Zhailox/proyect_CIIDI');
-INSERT INTO public.detalles_proyectos VALUES (127, '2026-09-02', 'Pregrado', 'Aunado a esto, el proyecto responde a una necesidad real: la baja fluidez en teclado y la falta de incentivos lúdicos para aprender mecanografía, problema especialmente urgente en entornos con brecha digital; por su diseño ligero y opciones offline, Tippen Tag es viable en mercados con acceso limitado a internet (Venezuela) y adaptable/competitivo en mercados con alta adopción tecnológica (Alemania).', 1, 'Comunidad / Organización No Específicamente Nombrada', '', '2026-09-02 15:10:22.258855', NULL, 'Trayecto I', 'https://github.com/Zhailox/proyect_CIIDI/tree/Zhailox');
-INSERT INTO public.detalles_proyectos VALUES (128, '2026-09-02', 'Pregrado', 'En el ámbito de la seguridad informática, la autenticación basada en contraseñas sigue siendo uno de los eslabones más vulnerables en la protección de sistemas y datos, el presente informe documenta un ejercicio práctico de auditoría de credenciales, cuyo objetivo principal es demostrar la susceptibilidad de las contraseñas débiles ante técnicas de criptoanálisis, específicamente mediante ataques de diccionario.', 1, 'Comunidad / Organización No Específicamente Nombrada', 'Waos', '2026-09-02 17:22:38.760639', NULL, 'Trayecto I', NULL);
-INSERT INTO public.detalles_proyectos VALUES (129, '2026-09-04', 'Pregrado', 'e', 1, 'Comunidad / Organización No Específicamente Nombrada', '', '2026-09-02 17:24:52.328736', NULL, 'Trayecto I', NULL);
 
 
 --
@@ -2068,11 +1985,6 @@ INSERT INTO public.dimensiones_operativas VALUES (16, 9, 'Aplicaciones cliente -
 INSERT INTO public.dimensiones_operativas VALUES (17, 9, 'Servicios de integraci¢n para aplicaciones web', 'Medio para exponer y hacer disponible la funcionalidad de los sistemas de informaci¢n mediante las tecnolog¡as est ndar Web, permitiendo reducci¢n de la heterogeneidad por uso de tecnolog¡as est ndar.');
 INSERT INTO public.dimensiones_operativas VALUES (18, 10, 'Simulaci¢n y herramientas de simulaci¢n', 'Antes de iniciar el desarrollo de cualquier sistema complejo, los ingenieros suelen utilizar alguna herramienta de simulaci¢n o test donde sea posible modelizar y probar el sistema que est  desarrollando. Reduce tiempo y chequea decisiones a priori.');
 INSERT INTO public.dimensiones_operativas VALUES (19, 10, 'Modelos de transmisi¢n de datos', 'Se discute la conceptualizaci¢n integral de un sistema de transmisi¢n desde un marco com£n a diferentes tecnolog¡as, tales como: sistemas de comunicaci¢n por cable, radio enlaces fijos, m¢viles y satelitales.');
-INSERT INTO public.dimensiones_operativas VALUES (20, 9, 'Aplicaciones multiplataforma', 'diseño y desarrollo de soluciones que pueden ejecutarse en distintos entornos (web, móvil, escritorio, híbrido), utilizando frameworks como Flutter, React Native o Electron. Esta dimensión favorece la portabilidad, la eficiencia en el mantenimiento y la cobertura de usuarios diversos.');
-INSERT INTO public.dimensiones_operativas VALUES (21, 9, 'Aplicaciones web interactivas', 'diseño y desarrollo de soluciones que pueden ejecutarse en distintos entornos (web, móvil, escritorio, híbrido), utilizando frameworks como Flutter, React Native o Electron. Esta dimensión favorece la portabilidad, la eficiencia en el mantenimiento y la cobertura de usuarios diversos.');
-INSERT INTO public.dimensiones_operativas VALUES (22, 9, 'Aplicaciones móviles y ubicuas', 'desarrollo de soluciones adaptadas a dispositivos móviles y contextos de movilidad, integrando sensores, geolocalización, notificaciones y conectividad. Se promueve la experiencia de usuario y el acceso remoto a servicios en tiempo real.');
-INSERT INTO public.dimensiones_operativas VALUES (23, 9, 'Modelado y gestión de datos', 'diseño conceptual, lógico y físico de estructuras de datos que sustentan el funcionamiento de las aplicaciones, Incluye el uso de modelos entidad-relación, normalización, diseño de esquemas relacionales y no relacionales, así como la implementación en sistemas gestores de bases de datos. Esta dimensión garantiza la integridad, consistencia y eficiencia en el almacenamiento, recuperación y procesamiento de la información.');
-INSERT INTO public.dimensiones_operativas VALUES (24, 9, 'Seguridad y auditoría de aplicaciones', 'incorporación de prácticas de desarrollo seguro, autenticación, autorización, cifrado y trazabilidad. Se abordan normativas como ISO/IEC 27001 y principios de privacidad por diseño, garantizando la integridad y confidencialidad de los sistemas.');
 
 
 --
@@ -2121,8 +2033,8 @@ INSERT INTO public.etiquetas VALUES (10, 'Construcción', '#0ea5e9');
 
 INSERT INTO public.lineas_investigacion VALUES (7, 'SISTEMAS DE INFORMACION Y MODELADO DE DATOS', 1, 'Desarrollar y gestionar sistemas de informaci¢n dentro del  mbito social. Aplicando soluciones efectivas para el uso adecuado y ¢ptimo de los sistemas de informaci¢n.');
 INSERT INTO public.lineas_investigacion VALUES (8, 'EDUMATICA', 1, 'Aplicar las Tecnolog¡as de la Informaci¢n y Comunicaci¢n (TIC) para apoyar el proceso de aprendizaje, y as¡ contribuir al mejoramiento de la educaci¢n en todos sus niveles.');
+INSERT INTO public.lineas_investigacion VALUES (9, 'APLICACIONES WEB', 1, 'Desarrollar aplicaciones Web para cubrir las necesidades de gesti¢n, control e intercambio de informaci¢n de la empresa y el entorno que la rodea a trav‚s de la Internet o Intranet.');
 INSERT INTO public.lineas_investigacion VALUES (10, 'REDES Y TELECOMUNICACIONES', 1, 'Desarrollar aplicaciones que permitan analizar, verificar y simular la transmisi¢n de datos, como tambi‚n la detecci¢n de fallas dentro de una red.');
-INSERT INTO public.lineas_investigacion VALUES (9, 'DESARROLLO DE APLICACIONES', 1, 'Desarrollar aplicaciones informáticas que respondan a las necesidades de gestión, control e intercambio de información en diversos entornos organizacionales, educativos y sociales, mediante el uso de tecnologías multiplataforma y arquitecturas orientadas a servicios, tanto en entornos locales como distribuidos.');
 
 
 --
@@ -2163,14 +2075,6 @@ INSERT INTO public.privilegios VALUES (3, 2);
 INSERT INTO public.privilegios VALUES (4, 3);
 INSERT INTO public.privilegios VALUES (5, 4);
 INSERT INTO public.privilegios VALUES (6, 5);
-
-
---
--- Data for Name: propuestas_empresa; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-INSERT INTO public.propuestas_empresa VALUES (1, 'Punto Yali', '213123123', 'Yohan Estrada', '0416-6777467', 'yohan@gmail.com', 'facturacion', 'Hace falta que venga un mardito chavista pa matarlo', 'aceptada', '2026-09-02 21:41:41.17287', 'Trayecto II (T2)');
-INSERT INTO public.propuestas_empresa VALUES (2, '123', '123', '123', '123', '123@gmail.com', 'inventario', '123', 'aceptada', '2026-09-02 21:42:33.312089', 'Trayecto IV (T4)');
 
 
 --
@@ -2222,9 +2126,6 @@ INSERT INTO public.proyecto_tutores VALUES (116, 20, 2);
 INSERT INTO public.proyecto_tutores VALUES (116, 21, 4);
 INSERT INTO public.proyecto_tutores VALUES (117, 10, 2);
 INSERT INTO public.proyecto_tutores VALUES (117, 39, 4);
-INSERT INTO public.proyecto_tutores VALUES (127, 40, 3);
-INSERT INTO public.proyecto_tutores VALUES (128, 40, 3);
-INSERT INTO public.proyecto_tutores VALUES (129, 40, 3);
 
 
 --
@@ -2347,12 +2248,6 @@ INSERT INTO public.recurso_autores VALUES (122, 57);
 INSERT INTO public.recurso_autores VALUES (122, 58);
 INSERT INTO public.recurso_autores VALUES (122, 59);
 INSERT INTO public.recurso_autores VALUES (122, 60);
-INSERT INTO public.recurso_autores VALUES (127, 42);
-INSERT INTO public.recurso_autores VALUES (127, 88);
-INSERT INTO public.recurso_autores VALUES (127, 73);
-INSERT INTO public.recurso_autores VALUES (128, 34);
-INSERT INTO public.recurso_autores VALUES (128, 42);
-INSERT INTO public.recurso_autores VALUES (129, 89);
 
 
 --
@@ -2412,9 +2307,6 @@ INSERT INTO public.recurso_clasificaciones VALUES (113, 10, 18);
 INSERT INTO public.recurso_clasificaciones VALUES (114, 8, 13);
 INSERT INTO public.recurso_clasificaciones VALUES (116, 8, 12);
 INSERT INTO public.recurso_clasificaciones VALUES (117, 7, 7);
-INSERT INTO public.recurso_clasificaciones VALUES (127, 8, 13);
-INSERT INTO public.recurso_clasificaciones VALUES (128, 7, 9);
-INSERT INTO public.recurso_clasificaciones VALUES (129, 7, 9);
 
 
 --
@@ -2502,9 +2394,6 @@ INSERT INTO public.recursos VALUES (119, 'Entorno virtual de capacitación con E
 INSERT INTO public.recursos VALUES (121, 'Modelo matemático para el balance de calor de un techo verde en condiciones de trópico húmedo', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/123977/97473');
 INSERT INTO public.recursos VALUES (120, 'Determinantes de la aceptación del uso de la banca móvil por parte de ganaderos', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/121522/97457');
 INSERT INTO public.recursos VALUES (122, 'Revisión sistemática del impacto de las fibras de polipropileno en las propiedades físico-mecánicas, microestructurales y de durabilidad del Concreto', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/121649/97474');
-INSERT INTO public.recursos VALUES (127, 'ACTIVIDADES ACREDITABLES IV INFORME DE MERCADEO: TIPPEN TAG', 1, 2026, 1, 1, 'storage/documentos/pst/pst_actividades_acreditables_iv_in_1788376198_636.docx');
-INSERT INTO public.recursos VALUES (128, 'Materia: Seguridad Informática', 1, 2026, 1, 1, 'storage/documentos/pst/pst_materia__seguridad_inform__tic_1788384113_508.docx');
-INSERT INTO public.recursos VALUES (129, 'Verde   Gestion de BD', 1, 2021, 1, 1, 'storage/documentos/pst/pst_verde___gestion_de_bd_1788384263_817.docx');
 
 
 --
@@ -2581,7 +2470,6 @@ INSERT INTO public.tutores VALUES (36, 'Carmen Muchacho', NULL);
 INSERT INTO public.tutores VALUES (37, 'Yajaira Franco', NULL);
 INSERT INTO public.tutores VALUES (38, 'Mary Moreno', NULL);
 INSERT INTO public.tutores VALUES (39, 'Estella Berríos', NULL);
-INSERT INTO public.tutores VALUES (40, 'KarinAI', 'Karina');
 
 
 --
@@ -2618,14 +2506,14 @@ SELECT pg_catalog.setval('public.accesos_recursos_id_seq', 1, false);
 -- Name: auditoria_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.auditoria_id_seq', 239, true);
+SELECT pg_catalog.setval('public.auditoria_id_seq', 229, true);
 
 
 --
 -- Name: autores_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.autores_id_seq', 91, true);
+SELECT pg_catalog.setval('public.autores_id_seq', 84, true);
 
 
 --
@@ -2646,14 +2534,14 @@ SELECT pg_catalog.setval('public.categorias_id_seq', 8, true);
 -- Name: cursos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.cursos_id_seq', 6, true);
+SELECT pg_catalog.setval('public.cursos_id_seq', 4, true);
 
 
 --
 -- Name: dimensiones_operativas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.dimensiones_operativas_id_seq', 24, true);
+SELECT pg_catalog.setval('public.dimensiones_operativas_id_seq', 19, true);
 
 
 --
@@ -2688,7 +2576,7 @@ SELECT pg_catalog.setval('public.investigaciones_ofertadas_id_seq', 1, false);
 -- Name: lineas_investigacion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.lineas_investigacion_id_seq', 15, true);
+SELECT pg_catalog.setval('public.lineas_investigacion_id_seq', 10, true);
 
 
 --
@@ -2713,17 +2601,10 @@ SELECT pg_catalog.setval('public.privilegios_privilegio_id_seq', 6, true);
 
 
 --
--- Name: propuestas_empresa_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.propuestas_empresa_id_seq', 2, true);
-
-
---
 -- Name: recursos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.recursos_id_seq', 131, true);
+SELECT pg_catalog.setval('public.recursos_id_seq', 123, true);
 
 
 --
@@ -2758,7 +2639,7 @@ SELECT pg_catalog.setval('public.tipo_tutor_id_seq', 4, true);
 -- Name: tutores_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.tutores_id_seq', 40, true);
+SELECT pg_catalog.setval('public.tutores_id_seq', 39, true);
 
 
 --
@@ -2965,14 +2846,6 @@ ALTER TABLE ONLY public.preferencias_usuario
 
 ALTER TABLE ONLY public.privilegios
     ADD CONSTRAINT privilegios_pkey PRIMARY KEY (privilegio_id);
-
-
---
--- Name: propuestas_empresa propuestas_empresa_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.propuestas_empresa
-    ADD CONSTRAINT propuestas_empresa_pkey PRIMARY KEY (id);
 
 
 --
@@ -3499,5 +3372,5 @@ ALTER TABLE ONLY public.usuarios
 -- PostgreSQL database dump complete
 --
 
-\unrestrict OfggeMugoU1BqcMSe8a3KbVyAUMvULe1gxG5I0PXVEd7YqelWxRcOqY1EpJRChY
+\unrestrict WX2FVDNY5XJVjdgIIq13J0FUrfIgUNWQvUbbdfeS9XztMftOE7EzxVnydMpP9aG
 

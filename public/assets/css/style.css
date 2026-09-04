@@ -237,7 +237,7 @@ body {
 /* --- Main Content --- */
 .main-content {
   flex-grow: 1;
-  padding: 2.5rem;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 2.5rem;

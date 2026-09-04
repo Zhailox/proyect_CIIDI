@@ -9,7 +9,7 @@
         </a>
     </div>
 
-    <form action="actualizar-articulo" method="POST" enctype="multipart/form-data" class="art-form-layout" onsubmit="return validarAutores()">
+    <form action="actualizar-articulo" method="POST" enctype="multipart/form-data" class="art-form-layout" id="form-articulo" onsubmit="return validarFormulario()">
         <input type="hidden" name="id_articulo" value="<?= (int)($articulo['id'] ?? 0) ?>">
         <input type="hidden" name="imagen_actual" value="<?= htmlspecialchars($articulo['imagen_portada'] ?? 'default_article.jpg') ?>">
 
@@ -28,17 +28,22 @@
                 </div>
 
                 <div class="grid-2-cols mt-1">
-                    <div class="form-group">
-                        <label class="font-bold">Categoría</label>
-                        <select name="id_categoria" class="login-flat-input w-100 p-input">
-                            <option value="">Sin categoría</option>
+                   <div class="form-group mt-1">
+                        <label class="font-bold">Categorías del Artículo *</label>
+                        <div class="checkbox-grid-box p-1" id="box-categorias">
                             <?php foreach ($categorias as $cat): ?>
-                                <option value="<?= (int)$cat['id'] ?>" <?= (!empty($articulo['id_categoria']) && (int)$articulo['id_categoria'] === (int)$cat['id']) ? 'selected' : '' ?>>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="categorias[]" value="<?= $cat['id'] ?>"
+                                        <?= (isset($categoriasSeleccionadas) && in_array($cat['id'], $categoriasSeleccionadas)) ? 'checked' : '' ?>> 
                                     <?= htmlspecialchars($cat['nombre']) ?>
-                                </option>
+                                </label>
                             <?php endforeach; ?>
-                        </select>
-                    </div>
+                        </div>
+                        <div id="error-categorias" class="text-danger mt-sm" style="display:none; font-size:0.85rem;">
+                            Debe seleccionar al menos una categoría.
+                        </div>
+                    
+                </div>
 
                     <div class="form-group">
                         <label class="font-bold">Editorial</label>
@@ -125,17 +130,9 @@
                 </div>
                 <div class="form-group mt-1">
                     <label class="font-bold">O pegar URL de imagen</label>
-                    <input
-                        type="text"
-                        name="url_imagen"
-                        class="login-flat-input w-100 p-input"
-                        value="<?= htmlspecialchars($articulo['imagen_portada'] ?? '') ?>"
-                        placeholder="https://ejemplo.com/imagen.jpg"
-                    >
+                    <input type="text" name="url_imagen" class="login-flat-input w-100 p-input" value="<?= htmlspecialchars($articulo['imagen_portada'] ?? '') ?>" placeholder="https://ejemplo.com/imagen.jpg">
                 </div>
-                
-
-            <button type="submit" class="btn btn-primary w-100 btn-large justify-center">
+            </div> <button type="submit" class="btn btn-primary w-100 btn-large justify-center">
                 <i class="ph-bold ph-floppy-disk"></i> Guardar Cambios
             </button>
         </div>

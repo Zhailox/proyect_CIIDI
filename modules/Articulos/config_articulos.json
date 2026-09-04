@@ -1,0 +1,34 @@
+{
+    "citas": {
+        "estilos": {
+            "apa7": {
+                "nombre": "Estilo APA",
+                "activo": true,
+                "plantilla": "{autores} ({anio}). {titulo}. {editorial}. Vol {volumen}({numero}). ISSN: {issn}"
+            },
+            "yisu": {
+                "nombre": "Yisu",
+                "activo": true,
+                "plantilla": "{autores} Yo Yisus declaro a esta gente, indigente {anio}. WAZAAAA"
+            }
+        }
+    },
+    "paginacion": {
+        "limite_catalogo": 16,
+        "limite_gestor": 15,
+        "max_recomendados": 3
+    },
+    "recursos": {
+        "mostrar_editorial": true,
+        "mostrar_volumen": true,
+        "mostrar_issn": true
+    },
+    "buscador": {
+        "anio_minimo": 2020,
+        "resaltar_coincidencias": false
+    },
+    "archivos": {
+        "max_size_mb": 5,
+        "max_autores": 6
+    }
+}

@@ -18,7 +18,7 @@
     <?php endif; ?>
 
     <!-- Modificamos el action a procesar-articulo y aseguramos el onsubmit para JS -->
-    <form action="procesar-articulo" method="POST" enctype="multipart/form-data" class="art-form-layout" id="form-nuevo-articulo" onsubmit="return validarAutores()">
+    <form action="procesar-articulo" method="POST" enctype="multipart/form-data" class="art-form-layout" id="form-articulo" onsubmit="return validarFormulario()">
         
         <!-- COLUMNA PRINCIPAL -->
         <div class="art-form-main">
@@ -35,15 +35,22 @@
                 </div>
 
                 <div class="grid-2-cols mt-1">
-                    <div class="form-group">
-                        <label class="font-bold">Categoría</label>
-                        <select name="id_categoria" class="login-flat-input w-100 p-input">
-                            <option value="">Seleccione una categoría...</option>
+                    <div class="form-group mt-1">
+                        <label class="font-bold">Categorías del Artículo *</label>
+                        <div class="checkbox-grid-box p-1" id="box-categorias">
                             <?php foreach ($categorias as $cat): ?>
-                                <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['nombre']) ?></option>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="categorias[]" value="<?= $cat['id'] ?>"
+                                        <?= (isset($categorias_seleccionadas) && in_array($cat['id'], $categorias_seleccionadas)) ? 'checked' : '' ?>> 
+                                    <?= htmlspecialchars($cat['nombre']) ?>
+                                </label>
                             <?php endforeach; ?>
-                        </select>
-                    </div>
+                        </div>
+                        <div id="error-categorias" class="text-danger mt-sm" style="display:none; font-size:0.85rem;">
+                            Debe seleccionar al menos una categoría.
+                        </div>
+                    
+                </div>
                     <div class="form-group">
                         <label class="font-bold">Editorial / Repositorio</label>
                         <select name="id_editorial" class="login-flat-input w-100 p-input">
@@ -166,7 +173,7 @@
                     <option value="E-">E-</option>
                 </select>
                 <!-- Input numérico puro -->
-                <input type="number" id="modal-autor-cedula" class="login-flat-input w-100 p-input" placeholder="Ej: 12345678" required min="1000000">
+                <input type="number" id="modal-autor-cedula" class="login-flat-input w-100 p-input" placeholder="Ej: 12345678" min="1000000">
             </div>
             <small class="text-muted d-block mt-sm">Solo ingrese los números. La nacionalidad se añade automáticamente.</small>
         </div>
