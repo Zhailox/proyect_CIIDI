@@ -36,7 +36,7 @@ class AdminController {
         $port = '5432';
         $db   = 'ciidi';
         $user = 'postgres';
-        $pass = 'Wazaaa'; 
+        $pass = '1234'; 
 
         // 2. Preparamos el destino (storage/backups/)
         $directorioRespaldos = __DIR__ . '/../../../storage/backups/';

@@ -132,6 +132,17 @@
 
             <!-- TAB 1: RESUMEN Y PALABRAS CLAVE -->
             <div id="tabResumen" class="tab-content active">
+                <?php if (!empty($documento['obj_general'])): ?>
+                    <div style="margin-bottom: 1.2rem; background-color: #f8fafc; border-left: 4px solid var(--color-terciario, #007bff); padding: 0.85rem 1rem; border-radius: 0 6px 6px 0;">
+                        <h4 style="font-size: 0.88rem; font-weight: 800; color: var(--texto-titulos, #002244); margin: 0 0 0.35rem 0; display: flex; align-items: center; gap: 0.4rem;">
+                            <i class="ph ph-target" style="color: var(--color-terciario, #007bff);"></i> Objetivo General de la Investigación
+                        </h4>
+                        <p style="margin: 0; font-size: 0.9rem; line-height: 1.5; color: var(--texto-normal, #333333); font-weight: 500;">
+                            <?= htmlspecialchars($documento['obj_general']) ?>
+                        </p>
+                    </div>
+                <?php endif; ?>
+
                 <div class="pst-detail-abstract">
                     <p>
                         <?= nl2br(htmlspecialchars($documento['resumen'] ?? 'No se ha cargado un resumen o matriz epistémica para esta investigación en el sistema.')) ?>

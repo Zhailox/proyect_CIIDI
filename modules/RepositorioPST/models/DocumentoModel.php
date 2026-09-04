@@ -54,7 +54,7 @@ class DocumentoModel {
         $db = Connection::getInstance();
         
         $sql = "SELECT r.id, r.titulo, r.anio_publicacion, r.archivo_pdf,
-                       dp.resumen, dp.palabras_clave, dp.comunidad_beneficiada, dp.nivel_academico, dp.trayecto, dp.url_repositorio,
+                       dp.resumen, dp.obj_general, dp.palabras_clave, dp.comunidad_beneficiada, dp.nivel_academico, dp.trayecto, dp.url_repositorio, dp.fecha_defensa, COALESCE(dp.activo, true) AS activo,
                        li.nombre AS linea_nombre, 
                        li.id AS linea_id,
                        dims.nombre AS dimension_nombre,
@@ -64,7 +64,18 @@ class DocumentoModel {
                        (SELECT STRING_AGG(a.nombre_completo, ', ') 
                         FROM public.recurso_autores ra 
                         JOIN public.autores a ON ra.id_autor = a.id 
-                        WHERE ra.id_recurso = r.id) AS autores_nombres
+                        WHERE ra.id_recurso = r.id) AS autores_nombres,
+                       (SELECT STRING_AGG(t.nombre_completo || ' (' || 
+                            CASE pt.tipo_tutor_id 
+                                WHEN 3 THEN 'Tutor Académico'
+                                WHEN 2 THEN 'Tutor Institucional'
+                                WHEN 4 THEN 'Tutor Comunitario'
+                                ELSE COALESCE(tt.nombre, 'Tutor')
+                            END || ')', ' • ') 
+                        FROM public.proyecto_tutores pt 
+                        JOIN public.tutores t ON pt.id_tutor = t.id 
+                        LEFT JOIN public.tipo_tutor tt ON pt.tipo_tutor_id = tt.id
+                        WHERE pt.id_recurso = r.id) AS tutores_nombres
                 FROM public.recursos r
                 LEFT JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
                 LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
@@ -75,6 +86,16 @@ class DocumentoModel {
                   AND COALESCE(dp.id_carrera, li.id_carrera) = 1"; 
                 
         $execParams = [];
+
+        if (isset($filtros['activo'])) {
+            if ($filtros['activo'] !== 'todos') {
+                $sql .= " AND COALESCE(dp.activo, true) = ?";
+                $execParams[] = ($filtros['activo'] === true || $filtros['activo'] === '1' || $filtros['activo'] === 1) ? true : false;
+            }
+        } else {
+            // Por defecto en vistas públicas solo retornar los proyectos activos
+            $sql .= " AND COALESCE(dp.activo, true) = true";
+        }
         
         if (!empty($filtros['linea_id'])) {
             $sql .= " AND rc.id_linea_investigacion = ?";
@@ -419,7 +440,7 @@ class DocumentoModel {
         $db = Connection::getInstance();
         
         $sql = "SELECT r.id, r.titulo, r.anio_publicacion, r.archivo_pdf,
-                       dp.resumen, dp.palabras_clave, dp.comunidad_beneficiada, dp.nivel_academico, dp.trayecto, dp.url_repositorio, dp.fecha_defensa,
+                       dp.resumen, dp.obj_general, dp.palabras_clave, dp.comunidad_beneficiada, dp.nivel_academico, dp.trayecto, dp.url_repositorio, dp.fecha_defensa, COALESCE(dp.activo, true) AS activo,
                        li.nombre AS linea_nombre, 
                        li.id AS linea_id,
                        dims.nombre AS dimension_nombre,
@@ -516,17 +537,18 @@ class DocumentoModel {
             $nivelAcademico = $nivelMap[$nivelAcademicoRaw] ?? $nivelAcademicoRaw;
             $trayectoVal = ($nivelAcademicoRaw === 'Pregrado') ? (!empty($datos['trayecto']) ? trim($datos['trayecto']) : 'Trayecto I') : null;
 
-            $stmt = $db->prepare("INSERT INTO public.detalles_proyectos (id_recurso, fecha_defensa, nivel_academico, trayecto, url_repositorio, resumen, id_carrera, comunidad_beneficiada, palabras_clave) 
-                                  VALUES (?, ?, ?::public.nivel_academico_enum, ?, ?, ?, 1, ?, ?)");
+            $stmt = $db->prepare("INSERT INTO public.detalles_proyectos (id_recurso, fecha_defensa, nivel_academico, trayecto, url_repositorio, resumen, obj_general, id_carrera, comunidad_beneficiada, palabras_clave) 
+                                  VALUES (?, ?, ?::public.nivel_academico_enum, ?, ?, ?, ?, 1, ?, ?)");
             $stmt->execute([
                 $recursoId,
                 !empty($datos['fecha_defensa']) ? $datos['fecha_defensa'] : date('Y-m-d'),
                 $nivelAcademico,
                 $trayectoVal,
                 !empty($datos['url_repositorio']) ? trim($datos['url_repositorio']) : null,
-                $datos['resumen'],
-                $datos['comunidad_beneficiada'],
-                $datos['palabras_clave']
+                $datos['resumen'] ?? null,
+                $datos['obj_general'] ?? null,
+                $datos['comunidad_beneficiada'] ?? null,
+                $datos['palabras_clave'] ?? null
             ]);
             
             // 3. Insertar autores múltiples con deduplicación avanzada (Cédula -> Nombre exacto -> Soundex / Levenshtein)
@@ -683,16 +705,17 @@ class DocumentoModel {
             $trayectoVal = ($nivelAcademicoRaw === 'Pregrado') ? (!empty($datos['trayecto']) ? trim($datos['trayecto']) : 'Trayecto I') : null;
 
             $stmt = $db->prepare("UPDATE public.detalles_proyectos 
-                                  SET fecha_defensa = ?, nivel_academico = ?::public.nivel_academico_enum, trayecto = ?, url_repositorio = ?, resumen = ?, comunidad_beneficiada = ?, palabras_clave = ? 
+                                  SET fecha_defensa = ?, nivel_academico = ?::public.nivel_academico_enum, trayecto = ?, url_repositorio = ?, resumen = ?, obj_general = ?, comunidad_beneficiada = ?, palabras_clave = ? 
                                   WHERE id_recurso = ?");
             $stmt->execute([
                 !empty($datos['fecha_defensa']) ? $datos['fecha_defensa'] : date('Y-m-d'),
                 $nivelAcademico,
                 $trayectoVal,
                 !empty($datos['url_repositorio']) ? trim($datos['url_repositorio']) : null,
-                $datos['resumen'],
-                $datos['comunidad_beneficiada'],
-                $datos['palabras_clave'],
+                $datos['resumen'] ?? null,
+                $datos['obj_general'] ?? null,
+                $datos['comunidad_beneficiada'] ?? null,
+                $datos['palabras_clave'] ?? null,
                 $id
             ]);
             
@@ -823,6 +846,15 @@ class DocumentoModel {
             error_log("Error al eliminar PST: " . $e->getMessage());
             throw $e;
         }
+    }
+
+    /**
+     * Alterna o establece el estado activo/desactivado (soft delete / ocultar) de un proyecto.
+     */
+    public function cambiarEstadoPST(int $id, bool $nuevoEstado): bool {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("UPDATE public.detalles_proyectos SET activo = ? WHERE id_recurso = ?");
+        return $stmt->execute([$nuevoEstado ? 1 : 0, $id]);
     }
 
     public function getAutoresByRecurso(int $recursoId): array {

@@ -416,6 +416,7 @@ class DetallePSTController {
                     'url_repositorio'            => $urlGitSanitizada,
                     'archivo_pdf'                => !empty($postData['archivo_pdf']) ? trim($postData['archivo_pdf']) : null,
                     'resumen'                    => !empty($postData['resumen']) ? trim($postData['resumen']) : '',
+                    'obj_general'                => !empty($postData['obj_general']) ? trim($postData['obj_general']) : null,
                     'comunidad_beneficiada'      => !empty($postData['comunidad_beneficiada']) ? trim($postData['comunidad_beneficiada']) : '',
                     'palabras_clave'             => !empty($postData['palabras_clave']) ? trim($postData['palabras_clave']) : '',
                     'linea_id'                   => !empty($postData['linea_id']) ? (int)$postData['linea_id'] : 7,
@@ -457,6 +458,26 @@ class DetallePSTController {
                 $success = "El Proyecto Socio-Tecnológico ha sido registrado con éxito en el catálogo.";
             } elseif ($_GET['msg'] === 'updated') {
                 $success = "El recurso ha sido modificado y actualizado exitosamente.";
+            } elseif ($_GET['msg'] === 'status_changed') {
+                $success = "El estado de visibilidad del recurso se ha actualizado correctamente.";
+            }
+        }
+
+        // 0.3 Procesar Acción: ALTERNAR ESTADO (Activar / Ocultar - Soft Delete)
+        if ($accion === 'toggle_estado' && $id) {
+            Auth::requierePrivilegioMinimo(1);
+            try {
+                $docActual = $model->getPSTDocumentoById($id);
+                if ($docActual) {
+                    $nuevoEstado = !($docActual['activo'] ?? true);
+                    $model->cambiarEstadoPST($id, $nuevoEstado);
+                    header("Location: ?ruta=agregar-documento&msg=status_changed");
+                    echo "<script>window.location.href='?ruta=agregar-documento&msg=status_changed';</script>";
+                    exit;
+                }
+            } catch (Exception $e) {
+                $error = "Error al cambiar el estado del recurso: " . $e->getMessage();
+                $accion = 'listar';
             }
         }
         
@@ -520,6 +541,7 @@ class DetallePSTController {
                 'url_repositorio'            => !empty($_POST['url_repositorio']) ? trim($_POST['url_repositorio']) : null,
                 'archivo_pdf'                => $finalPdfPath,
                 'resumen'                    => !empty($_POST['resumen']) ? trim($_POST['resumen']) : '',
+                'obj_general'                => !empty($_POST['obj_general']) ? trim($_POST['obj_general']) : null,
                 'comunidad_beneficiada'      => !empty($_POST['comunidad_beneficiada']) ? trim($_POST['comunidad_beneficiada']) : '',
                 'palabras_clave'             => !empty($_POST['palabras_clave']) ? trim($_POST['palabras_clave']) : '',
                 'linea_id'                   => !empty($_POST['linea_id']) ? (int)$_POST['linea_id'] : null,
@@ -629,6 +651,7 @@ class DetallePSTController {
                         'url_repositorio'            => $urlGitEditSanitizada,
                         'archivo_pdf'                => $finalEditPdf,
                         'resumen'                    => !empty($_POST['resumen']) ? trim($_POST['resumen']) : '',
+                        'obj_general'                => !empty($_POST['obj_general']) ? trim($_POST['obj_general']) : null,
                         'comunidad_beneficiada'      => !empty($_POST['comunidad_beneficiada']) ? trim($_POST['comunidad_beneficiada']) : '',
                         'palabras_clave'             => !empty($_POST['palabras_clave']) ? trim($_POST['palabras_clave']) : '',
                         'linea_id'                   => !empty($_POST['linea_id']) ? (int)$_POST['linea_id'] : null,
@@ -688,11 +711,11 @@ class DetallePSTController {
             $offset = ($page - 1) * $limit;
             
             if (!empty($q)) {
-                $documentos = $model->buscarStandard($q, [], $limit, $offset);
-                $totalDocs = $model->buscarStandardCount($q, []);
+                $documentos = $model->buscarStandard($q, ['activo' => 'todos'], $limit, $offset);
+                $totalDocs = $model->buscarStandardCount($q, ['activo' => 'todos']);
             } else {
-                $documentos = $model->getPSTDocumentos([], $limit, $offset);
-                $totalDocs = $model->getPSTDocumentosCount([]);
+                $documentos = $model->getPSTDocumentos(['activo' => 'todos'], $limit, $offset);
+                $totalDocs = $model->getPSTDocumentosCount(['activo' => 'todos']);
             }
             
             $totalPages = ceil($totalDocs / $limit);

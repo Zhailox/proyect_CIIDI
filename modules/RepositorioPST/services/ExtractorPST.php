@@ -119,10 +119,14 @@ class ExtractorPST {
         // 7. Clasificación de Línea de Investigación y Dimensión
         $clasificacion = self::clasificarLineaYDimension($text);
 
+        // 8. Extraer Objetivo General del documento
+        $objGeneral = self::extraerObjetivoGeneral($text, $cleanLines);
+
         return [
             'titulo' => $titulo,
             'anio_publicacion' => $anio,
             'resumen' => $resumen,
+            'obj_general' => $objGeneral,
             'palabras_clave' => $palabrasClave,
             'comunidad_beneficiada' => $comunidad,
             'autores' => $autoresFiltrados,
@@ -135,6 +139,92 @@ class ExtractorPST {
             'linea_id' => $clasificacion['linea_id'],
             'dimension_id' => $clasificacion['dimension_id']
         ];
+    }
+
+    /**
+     * Extrae de forma precisa el Objetivo General del documento descartando objetivos específicos y guías.
+     */
+    private static function extraerObjetivoGeneral(string $text, array $lines): string {
+        $count = count($lines);
+
+        // 1. Búsqueda por encabezados formales: "Objetivo General", "1.3.1. Objetivo General", "3.1. Objetivo General", etc.
+        for ($i = 0; $i < min($count, 700); $i++) {
+            $line = trim($lines[$i]);
+
+            // Omitir líneas de tabla de contenido con puntos suspensivos continuos (ej: Objetivos.....30)
+            if (preg_match('/\.\.\.\.\./', $line)) continue;
+
+            if (preg_match('/^\s*(?:\d+(?:\.\d+)*\.?\s*)?(?:objetivo\s+general|propósito\s+general|objetivo\s+del\s+proyecto)\s*:?\s*\.?\s*$/ui', $line) ||
+                preg_match('/^\s*(?:\d+(?:\.\d+)*\.?\s*)?(?:objetivo\s+general|propósito\s+general|objetivo\s+del\s+proyecto)\b/ui', $line)) {
+
+                // Caso A: El texto del objetivo general está en la misma línea después de los dos puntos
+                if (preg_match('/:\s*(.+)/u', $line, $m)) {
+                    $cand = trim($m[1]);
+                    if (mb_strlen($cand) > 15 && preg_match('/^[a-záéíóúñ\s]*\b(desarrollar|implementar|diseñar|crear|proporcionar|fortalecer|construir|evaluar|optimizar|analizar|elaborar|instalar|automatizar|proponer|realizar|brindar)\b/ui', $cand)) {
+                        return self::limpiarObjetivoGeneral($cand);
+                    }
+                }
+
+                // Caso B: El texto del objetivo está en la línea o líneas inmediatas siguientes
+                $objLines = [];
+                for ($k = 1; $k <= 10; $k++) {
+                    if (!isset($lines[$i + $k])) break;
+                    $candLine = trim($lines[$i + $k]);
+
+                    if ($candLine === '') continue;
+                    if (preg_match('/\.\.\.\.\./', $candLine)) break;
+
+                    // Si se encuentra con Objetivos Intermedios / Específicos o siguiente sub-sección, detener
+                    if (preg_match('/^\s*(?:\d+(?:\.\d+)*\.?\s*)?(?:objetivos?\s+(?:espec[íi]ficos?|intermedios?)|1\.\d+\.\d+\.\d+|3\.2|2\.2|cuadro\s+\d+|fundamentación|justificación|marco)/ui', $candLine)) {
+                        break;
+                    }
+
+                    // Omitir definiciones teóricas de la guía de proyectos si las hay
+                    if (preg_match('/^(es\s+el\s+fin\s+último|según|debe\s+ser\s+redactado|representan\s+los\s+pasos|son\s+las\s+metas)/ui', $candLine)) {
+                        continue;
+                    }
+
+                    $objLines[] = $candLine;
+                    $fullTemp = implode(' ', $objLines);
+                    // Si ya acumuló una oración completa terminada en punto
+                    if (mb_strlen($fullTemp) > 30 && preg_match('/\.\s*$/u', $candLine)) {
+                        break;
+                    }
+                }
+
+                if (!empty($objLines)) {
+                    $res = implode(' ', $objLines);
+                    if (mb_strlen($res) > 15) {
+                        return self::limpiarObjetivoGeneral($res);
+                    }
+                }
+            }
+        }
+
+        // 2. Fallback Heurístico (Analizar primeras 500 líneas buscando oración con verbo en infinitivo de logro)
+        for ($i = 0; $i < min($count, 500); $i++) {
+            $line = trim($lines[$i]);
+            if (preg_match('/\.\.\.\.\./', $line)) continue;
+            if (preg_match('/^(índice|tabla\s+de\s+contenido|república|ministerio|universidad|autor|tutor|fortalecer\s+nuestra\s+sociedad)/ui', $line)) continue;
+
+            if (preg_match('/^\s*(?:\d+\.\s*)?\b(desarrollar|implementar|diseñar|crear|proporcionar|fortalecer|construir|evaluar|optimizar|analizar|elaborar|instalar|automatizar|proponer|realizar|brindar)\b/ui', $line)) {
+                // Evitar viñetas de objetivos específicos
+                if (preg_match('/^\s*(?:[\•\-\*\¬]|1\.|2\.|3\.|4\.|5\.|a\)|b\)|c\))\s+/ui', $line)) {
+                    continue;
+                }
+                if (mb_strlen($line) >= 40 && mb_strlen($line) <= 600) {
+                    return self::limpiarObjetivoGeneral($line);
+                }
+            }
+        }
+
+        return '';
+    }
+
+    private static function limpiarObjetivoGeneral(string $str): string {
+        $str = preg_replace('/^\s*(?:\d+(?:\.\d+)*\.?\s*)?(?:objetivo\s+general|propósito\s+general|objetivo\s+del\s+proyecto)\s*:?\s*/ui', '', $str);
+        $str = preg_replace('/\s+/u', ' ', $str);
+        return trim($str, " \t\r\n\:-");
     }
 
     /**
