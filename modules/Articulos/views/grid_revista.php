@@ -81,7 +81,9 @@ $buildUrl = function($page) use ($filtros) {
                     <option value="">Todos los años (Sin límite)</option>
                     <?php 
                     $anioActual = (int)date('Y');
-                    for ($y = $anioActual; $y >= $anioActual - 10; $y--): 
+                    $anioMinimo = (int)ConfigService::get('buscador.anio_minimo', 2020);
+                    
+                    for ($y = $anioActual; $y >= $anioMinimo; $y--): 
                     ?>
                         <option value="<?= $y ?>" <?= (isset($filtros['year']) && $filtros['year'] == $y) ? 'selected' : '' ?>>
                             <?= $y ?>
@@ -105,7 +107,7 @@ $buildUrl = function($page) use ($filtros) {
                 $imgPortada = $ultimo['imagen_portada'] ?? 'default_article.jpg';
                 $rutaImg = (strpos($imgPortada, 'http') === 0) ? htmlspecialchars($imgPortada) : '../public/uploads/articulos/' . htmlspecialchars($imgPortada);
             ?>
-            <div class="art-featured-img" style="background-image: url('<?= $rutaImg ?>');"></div>
+            <img src="<?= $rutaImg ?>" loading="lazy" alt="<?= htmlspecialchars($ultimo['titulo'] ?? 'Portada') ?>" class="art-featured-img" style="object-fit: cover; width: 100%;">
             <div class="art-featured-body">
                 <div class="art-post-meta">
                     <div class="art-tags">
@@ -132,11 +134,11 @@ $buildUrl = function($page) use ($filtros) {
 
                 <!-- BOTONES NUEVOS -->
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                    <a href="leer-articulo?id=<?= $ultimo['id'] ?>" class="btn" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Leer Completamente</a>
-                    <button type="button" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($ultimo['titulo'])) ?>, <?= htmlspecialchars(json_encode($ultimo['autores_text'])) ?>, <?= $ultimo['anio_publicacion'] ?>, <?= htmlspecialchars(json_encode($ultimo['editorial'] ?? 'N/A')) ?>, <?= htmlspecialchars(json_encode($ultimo['volumen'] ?? '')) ?>, <?= htmlspecialchars(json_encode($ultimo['numero'] ?? '')) ?>, <?= htmlspecialchars(json_encode($ultimo['issn'] ?? '')) ?>)">
+                    <a href="<?= htmlspecialchars($ultimo['archivo_pdf']) ?>" target="_blank" rel="noopener" class="art-btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Ir al artículo</a>
+                    <button type="button" class="art-btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($ultimo['titulo'])) ?>, <?= htmlspecialchars(json_encode($ultimo['autores_text'])) ?>, <?= $ultimo['anio_publicacion'] ?>, <?= htmlspecialchars(json_encode($ultimo['editorial'] ?? 'N/A')) ?>, <?= htmlspecialchars(json_encode($ultimo['volumen'] ?? '')) ?>, <?= htmlspecialchars(json_encode($ultimo['numero'] ?? '')) ?>, <?= htmlspecialchars(json_encode($ultimo['issn'] ?? '')) ?>)">
                         <i class="ph ph-quotes"></i> Citar
                     </button>
-                    <button type="button" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="compartirEnlace(<?= $ultimo['id'] ?>, this)">
+                    <button type="button" class="art-btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="compartirEnlace('<?= htmlspecialchars($ultimo['archivo_pdf'] ?? '') ?>', this)">
                         <i class="ph ph-share-network"></i> Compartir
                     </button>
                 </div>
@@ -158,7 +160,7 @@ $buildUrl = function($page) use ($filtros) {
                         $imgPortada = $art['imagen_portada'] ?? 'default_article.jpg';
                         $rutaImg = (strpos($imgPortada, 'http') === 0) ? htmlspecialchars($imgPortada) : '../public/uploads/articulos/' . htmlspecialchars($imgPortada);
                     ?>
-                    <div class="art-post-img" style="background-image: url('<?= $rutaImg ?>');"></div>
+                    <img src="<?= $rutaImg ?>" loading="lazy" alt="<?= htmlspecialchars($art['titulo'] ?? 'Portada') ?>" class="art-post-img" style="object-fit: cover; width: 100%;">
                     <div class="art-post-body">
                         <div class="art-post-meta">
                             <span class="art-tag"><?= htmlspecialchars($art['categoria'] ?? 'Artículo') ?></span>
@@ -183,10 +185,11 @@ $buildUrl = function($page) use ($filtros) {
 
                         <!-- BOTONES NUEVOS -->
                         <div style="display: flex; gap: 0.3rem; margin-top: auto;">
-                            <button type="button" class="btn btn-secondary" style="flex:1; padding: 0.3rem; font-size: 0.8rem;" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($art['titulo'])) ?>, <?= htmlspecialchars(json_encode($art['autores_text'])) ?>, <?= $art['anio_publicacion'] ?>, <?= htmlspecialchars(json_encode($art['editorial'] ?? 'N/A')) ?>, <?= htmlspecialchars(json_encode($art['volumen'] ?? '')) ?>, <?= htmlspecialchars(json_encode($art['numero'] ?? '')) ?>, <?= htmlspecialchars(json_encode($art['issn'] ?? '')) ?>)">
+                            <a href="<?= htmlspecialchars($art['archivo_pdf']) ?>" target="_blank" rel="noopener" class="art-btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Ir</a>
+                            <button type="button" class="art-btn-outline" style="flex:1; padding: 0.3rem; font-size: 0.8rem;" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($art['titulo'])) ?>, <?= htmlspecialchars(json_encode($art['autores_text'])) ?>, <?= $art['anio_publicacion'] ?>, <?= htmlspecialchars(json_encode($art['editorial'] ?? 'N/A')) ?>, <?= htmlspecialchars(json_encode($art['volumen'] ?? '')) ?>, <?= htmlspecialchars(json_encode($art['numero'] ?? '')) ?>, <?= htmlspecialchars(json_encode($art['issn'] ?? '')) ?>)">
                                 <i class="ph ph-quotes"></i> Citar
                             </button>
-                            <button type="button" class="btn btn-secondary" style="flex:1; padding: 0.3rem; font-size: 0.8rem;" onclick="compartirEnlace(<?= $art['id'] ?>, this)">
+                            <button type="button" class="art-btn-outline" style="flex:1; padding: 0.3rem; font-size: 0.8rem;" onclick="compartirEnlace('<?= htmlspecialchars($art['archivo_pdf'] ?? '') ?>', this)">
                                 <i class="ph ph-share-network"></i> Compartir
                             </button>
                         </div>
@@ -249,10 +252,19 @@ function abrirModalCita(titulo, autores, anio, editorial, volumen, numero, issn)
 
 function cerrarModalCitas() { document.getElementById('modalCitasContainer').style.display = 'none'; }
 
-function compartirEnlace(id, btn) {
-    const url = window.location.origin + window.location.pathname.replace('/articulos', '') + '/leer-articulo?id=' + id;
+function compartirEnlace(rutaArchivo, btn) {
+    if (!rutaArchivo) {
+        alert('Este artículo no tiene un archivo enlazado.');
+        return;
+    }
+    
+    // Convertir ruta relativa a URL absoluta
+    const linkAbsoluto = document.createElement('a');
+    linkAbsoluto.href = rutaArchivo;
+    const urlFinal = linkAbsoluto.href;
+
     const origHtml = btn.innerHTML;
-    navigator.clipboard.writeText(url).then(() => {
+    navigator.clipboard.writeText(urlFinal).then(() => {
         btn.innerHTML = '<i class="ph ph-check"></i> Copiado';
         setTimeout(() => { btn.innerHTML = origHtml; }, 2000);
     });

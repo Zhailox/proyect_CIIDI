@@ -35,12 +35,7 @@ $buildUrl = function($page) use ($busquedaActual) {
         </div>
     </div>
 
-    <?php if (isset($_SESSION['mensaje_exito'])): ?>
-        <div class="alert-success">
-            <i class="ph-bold ph-check-circle"></i> <?= htmlspecialchars($_SESSION['mensaje_exito']) ?>
-        </div>
-        <?php unset($_SESSION['mensaje_exito']); ?>
-    <?php endif; ?>
+    
 
     <div class="gestor-art-card">
         <div class="table-responsive">
@@ -72,9 +67,16 @@ $buildUrl = function($page) use ($busquedaActual) {
                                             ? htmlspecialchars($imgPortada) 
                                             : '../public/uploads/articulos/' . htmlspecialchars($imgPortada);
                                     ?>
-                                    <div class="art-mini-thumbnail" style="background-image: url('<?= $rutaImg ?>');"></div>
+                                    <img src="<?= $rutaImg ?>" loading="lazy" alt="Miniatura" class="art-mini-thumbnail" style="object-fit: cover; width: 45px; height: 60px; border-radius: 4px;">
                                 </td>
                                 <td class="art-title-col">
+                                    <div style="margin-bottom: 0.3rem;">
+                                        <?php if ($art['activo'] ?? true): ?>
+                                            <span style="background: #def7ec; color: #03543f; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.68rem; font-weight: 700;">Visible</span>
+                                        <?php else: ?>
+                                            <span style="background: #fde8e8; color: #9b1c1c; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.68rem; font-weight: 700;">Oculto</span>
+                                        <?php endif; ?>
+                                    </div>
                                     <strong><?= htmlspecialchars($art['titulo']) ?></strong>
                                 </td>
                                 <td>
@@ -85,12 +87,18 @@ $buildUrl = function($page) use ($busquedaActual) {
                                     <span class="art-category-badge"><?= htmlspecialchars($art['categoria'] ?? 'Sin categoría') ?></span>
                                 </td>
                                 <td class="art-actions-col">
+                                    <a href="toggle-estado-articulo?id=<?= $art['id'] ?>" class="btn-icon" style="background: <?= ($art['activo'] ?? true) ? '#fef3c7; color: #92400e;' : '#dcfce7; color: #15803d;' ?>" title="<?= ($art['activo'] ?? true) ? 'Ocultar' : 'Activar' ?>">
+                                        <i class="ph-bold <?= ($art['activo'] ?? true) ? 'ph-eye-slash' : 'ph-eye' ?>"></i>
+                                    </a>
+
                                     <a href="editar-articulo?id=<?= $art['id'] ?>" class="btn-icon btn-edit" title="Editar">
                                         <i class="ph-bold ph-pencil-simple"></i>
                                     </a>
-                                    <form action="eliminar-articulo" method="POST" class="form-inline-delete">
+                                    
+                                    <form action="eliminar-articulo" method="POST" class="form-inline-delete" id="form-delete-<?= $art['id'] ?>">
+                                        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                                         <input type="hidden" name="id_articulo" value="<?= $art['id'] ?>">
-                                        <button type="submit" class="btn-icon btn-delete" title="Eliminar" onclick="return confirm('¿Está seguro de eliminar este artículo de la revista?');">
+                                        <button type="button" class="btn-icon btn-delete" title="Eliminar" onclick="confirmarEliminacion(<?= $art['id'] ?>)">
                                             <i class="ph-bold ph-trash"></i>
                                         </button>
                                     </form>
@@ -120,3 +128,54 @@ $buildUrl = function($page) use ($busquedaActual) {
         </div>
     </div>
 </div>
+<script>
+function mostrarModalSistema(tipo, titulo, mensaje, isConfirm = false, onConfirm = null) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,34,68,0.8); z-index:99999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);';
+    
+    let icon = tipo === 'success' ? '<i class="ph-bold ph-check-circle" style="color: #16a34a;"></i>' : '<i class="ph-bold ph-warning-circle" style="color: #dc2626;"></i>';
+    let btnHtml = isConfirm 
+        ? `<button type="button" class="btn btn-secondary" onclick="this.closest('div').parentElement.parentElement.remove()" style="margin-right:0.5rem;">Cancelar</button>
+           <button type="button" class="btn btn-primary" id="btn-confirm-modal">Sí, proceder</button>`
+        : `<button type="button" class="btn btn-primary w-100 justify-center" onclick="this.closest('div').parentElement.parentElement.remove()">Entendido</button>`;
+
+    overlay.innerHTML = `
+        <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+            <div style="font-size: 3.5rem; margin-bottom: 1rem;">${icon}</div>
+            <h3 style="margin: 0 0 0.5rem 0; color: #0f172a; font-size:1.2rem;">${titulo}</h3>
+            <p style="color: #475569; font-size: 0.9rem; margin-bottom: 1.5rem; line-height:1.5;">${mensaje}</p>
+            <div style="display:flex; justify-content:center;">${btnHtml}</div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+
+    if (isConfirm && onConfirm) {
+        document.getElementById('btn-confirm-modal').addEventListener('click', () => {
+            overlay.remove();
+            onConfirm();
+        });
+    }
+}
+
+function confirmarEliminacion(idArticulo) {
+    mostrarModalSistema(
+        'warning', 
+        'Eliminar Artículo', 
+        '¿Está seguro de eliminar este artículo del catálogo? Los archivos adjuntos serán borrados permanentemente.', 
+        true, 
+        () => document.getElementById('form-delete-' + idArticulo).submit()
+    );
+}
+
+// Inyección de alertas desde PHP
+<?php if (isset($_SESSION['mensaje_exito'])): ?>
+    mostrarModalSistema('success', 'Operación Exitosa', '<?= htmlspecialchars($_SESSION['mensaje_exito']) ?>');
+    <?php unset($_SESSION['mensaje_exito']); ?>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['mensaje_error'])): ?>
+    mostrarModalSistema('error', 'Ocurrió un Problema', '<?= htmlspecialchars($_SESSION['mensaje_error']) ?>');
+    <?php unset($_SESSION['mensaje_error']); ?>
+<?php endif; ?>
+</script>

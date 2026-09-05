@@ -83,6 +83,16 @@ public function getRutas(): array {
                 'vista'            => __DIR__ . '/views/configuracion_articulos.php',
                 'titulo'           => 'Ajustes de Revista Digital',
                 'css'              => ['gestor_articulos.css']
+            ],
+            'api-catalogos-art' => [
+                'controlador_path' => __DIR__ . '/controllers/ArticulosController.php',
+                'controlador'      => 'ArticulosController',
+                'metodo'           => 'apiCatalogos',
+            ],
+            'toggle-estado-articulo' => [
+                'controlador_path' => __DIR__ . '/controllers/ArticulosController.php',
+                'controlador'      => 'ArticulosController',
+                'metodo'           => 'toggleEstado',
             ]
             
         ];
@@ -95,7 +105,7 @@ public function getRutas(): array {
                 'titulo'      => 'Artículos',
                 'icono'       => 'ph-fill ph-newspaper',
                 'enlace'      => 'articulos',
-                'activadores' => ['articulos', 'leer-articulo', 'gestor-articulos', 'nuevo-articulo', 'procesar-articulo', 'editar-articulo', 'actualizar-articulo', 'eliminar-articulo', 'gestor-catalogos'],
+                'activadores' => ['articulos', 'leer-articulo', 'gestor-articulos', 'nuevo-articulo', 'procesar-articulo', 'editar-articulo', 'actualizar-articulo', 'eliminar-articulo', 'gestor-catalogos', 'configuracion-articulos'],
                 'privilegio_minimo' => 0, // El menú padre lo ven todos
                 'subitems'    => [
                     ['ruta' => 'articulos', 'titulo' => 'Revista Digital', 'privilegio_minimo' => 0],

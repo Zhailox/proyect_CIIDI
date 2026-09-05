@@ -11,7 +11,17 @@ class ArticuloModel {
         $offset = ($pagina - 1) * $porPagina;
 
         $condiciones = ['r.id_tipo_recurso = :tipo'];
-        $parametros = [':tipo' => 3];
+        $parametros = [':tipo' => 3]; // <-- LO MOVIMOS AQUÍ ARRIBA
+
+        if (isset($filtros['activo'])) {
+            if ($filtros['activo'] !== 'todos') {
+                $condiciones[] = "COALESCE(d.activo, true) = :activo";
+                $parametros[':activo'] = $filtros['activo'] ? 1 : 0;
+            }
+        } else {
+            // Por defecto, si no se especifica, solo trae los activos
+            $condiciones[] = "COALESCE(d.activo, true) = true";
+        }
 
         if (!empty($filtros['q'])) {
             $texto = trim($filtros['q']);
@@ -81,10 +91,12 @@ class ArticuloModel {
                 r.id,
                 r.titulo,
                 r.anio_publicacion,
+                r.archivo_pdf,
                 d.volumen,
                 d.numero,
                 d.imagen_portada,
                 d.resumen,
+                COALESCE(d.activo, true) AS activo,
                 COALESCE((
                     SELECT STRING_AGG(DISTINCT c2.nombre, ', ' ORDER BY c2.nombre)
                     FROM recurso_categorias rc2
@@ -127,7 +139,17 @@ public function contarArticulos(array $filtros = []) {
     $db = Connection::getInstance();
 
     $condiciones = ['r.id_tipo_recurso = :tipo'];
-    $parametros = [':tipo' => 3];
+        $parametros = [':tipo' => 3]; // <-- LO MOVIMOS AQUÍ ARRIBA
+
+        if (isset($filtros['activo'])) {
+            if ($filtros['activo'] !== 'todos') {
+                $condiciones[] = "COALESCE(d.activo, true) = :activo";
+                $parametros[':activo'] = $filtros['activo'] ? 1 : 0;
+            }
+        } else {
+            // Por defecto, si no se especifica, solo trae los activos
+            $condiciones[] = "COALESCE(d.activo, true) = true";
+        }
 
     if (!empty($filtros['q'])) {
             $texto = trim($filtros['q']);
@@ -735,5 +757,10 @@ public function obtenerCategoriasDelArticulo($id_recurso) {
         ];
         $str = strtr($str, $unwanted);
         return preg_replace('/[^a-z0-9\s]/', '', $str);
+    }
+    public function cambiarEstado(int $id_recurso) {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("UPDATE detalles_articulos SET activo = NOT COALESCE(activo, true) WHERE id_recurso = ?");
+        return $stmt->execute([$id_recurso]);
     }
 }

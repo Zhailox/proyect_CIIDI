@@ -92,8 +92,8 @@ class AdminController {
         $host = 'localhost';
         $port = '5432';
         $db   = 'ciidi';
-        $user = 'postgres';
-        $pass = 'Wazaaa'; 
+        $user = 'miki';
+        $pass = '1234'; 
 
         $directorioRespaldos = __DIR__ . '/../../../storage/backups/';
         if (!is_dir($directorioRespaldos)) {
@@ -150,8 +150,8 @@ class AdminController {
         $host = 'localhost';
         $port = '5432';
         $db   = 'ciidi';
-        $user = 'postgres';
-        $pass = 'Wazaaa'; 
+        $user = 'miki';
+        $pass = '1234'; 
 
         $directorioRespaldos = __DIR__ . '/../../../storage/backups/';
         if (!is_dir($directorioRespaldos)) {
@@ -260,8 +260,8 @@ public function restaurarBackup() {
                 $host = 'localhost';
                 $port = '5432';
                 $db   = 'ciidi';
-                $user = 'postgres';
-                $pass = 'Wazaaa'; 
+                $user = 'miki';
+                $pass = '1234'; 
 
                 // 2. Ruta al ejecutable de psql (el hermano de pg_dump que sirve para importar)
                 $psqlPath = '"C:\\Program Files\\PostgreSQL\\18\\bin\\psql.exe"';

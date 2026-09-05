@@ -85,6 +85,11 @@
                             <input type="number" name="max_recomendados" value="<?= (int)($config['paginacion']['max_recomendados'] ?? 3) ?>" min="0" class="login-flat-input w-100 p-input">
                             <small class="text-muted">A mostrar en la lectura del artículo.</small>
                         </div>
+                        <div class="form-group mt-1">
+                            <label class="font-bold">Año Mínimo en Filtro del Catálogo</label>
+                            <input type="number" name="anio_minimo" value="<?= (int)($config['buscador']['anio_minimo'] ?? 2020) ?>" class="login-flat-input w-100 p-input">
+                            <small class="text-muted">Límite inferior para el selector de fechas.</small>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -116,13 +121,16 @@
                             <small class="text-muted">Evita saturar el servidor con fotos gigantes.</small>
                         </div>
                         <div class="form-group">
-                            <label class="font-bold">Límite de Autores por Artículo</label>
-                            <input type="number" name="max_autores" value="<?= (int)($config['archivos']['max_autores'] ?? 6) ?>" min="1" class="login-flat-input w-100 p-input">
+                            <label class="font-bold">Extensiones Permitidas (separadas por coma)</label>
+                            <?php 
+                            $extRaw = implode(', ', $config['archivos']['extensiones_permitidas'] ?? ['.jpg', '.jpeg', '.png', '.webp']);
+                            ?>
+                            <input type="text" name="extensiones_permitidas_raw" value="<?= htmlspecialchars($extRaw) ?>" class="login-flat-input w-100 p-input">
+                            <small class="text-muted">Ejemplo: .jpg, .png, .webp</small>
                         </div>
                     </div>
                 </div>
             </div>
-
             <button type="submit" class="btn btn-primary w-100 mt-2 btn-large justify-center">
                 <i class="ph-bold ph-floppy-disk"></i> Guardar Configuración de la Revista
             </button>
