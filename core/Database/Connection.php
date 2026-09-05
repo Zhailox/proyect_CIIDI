@@ -12,7 +12,7 @@ class Connection {
     private $host = 'localhost';
     private $port = '5432'; // Puerto por defecto de PostgreSQL
     private $db   = 'ciidi'; // Reemplaza esto
-    private $user = 'miki';
+    private $user = 'postgres';
     private $pass = '1234'; // Reemplaza esto
 
     // El constructor es privado para evitar que alguien use "new Connection()" desde afuera
