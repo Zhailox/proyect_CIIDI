@@ -791,33 +791,9 @@
    FONDO DE GIF DE REDES NEURONALES (MODIFICADO)
    ========================================= */
 
-/* Contenedor principal del fondo */
-.gif-background-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 0; /* Detrás de todo el contenido */
-    pointer-events: none; /* No interfiere con los clics */
-    overflow: hidden;
-    background-color: var(--bg-main); /* Color base de fallback */
-}
-
-/* Pseudo-elemento para aplicar opacidad solo a la imagen, no al contenedor */
+.gif-background-container,
 .gif-background-container::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    /* Asumiendo que el GIF se guardó en public/assets/img/ */
-    background-image: url('../img/Rredes+neuronales+grafos.gif');
-    background-size: cover; /* Cubre toda la pantalla */
-    background-position: center;
-    background-repeat: no-repeat;
-    opacity: 0.12; /* Opacidad baja para elegancia y legibilidad. Ajustar entre 0.05 y 0.15 según gusto */
+    display: none !important;
 }
 
 /* Asegurar que el contenido del buscador esté por encima */

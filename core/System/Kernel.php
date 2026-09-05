@@ -64,6 +64,7 @@ public function run() {
                     // Extraemos el mensaje para que la vista lo consuma
                     $mensajeCustom = !empty($dataMantenimiento['mensaje']) ? $dataMantenimiento['mensaje'] : "Estamos realizando labores de optimización. Vuelve en un momento.";
                     
+                    http_response_code(503);
                     // Cargamos la vista oficial de forma limpia y detenemos el Kernel
                     require_once CORE_VIEWS . 'mantenimiento.php';
                     exit;
@@ -122,6 +123,7 @@ public function run() {
         }
         // 3. ERROR 404
         else {
+            http_response_code(404);
             $vista_modulo_path = CORE_VIEWS . '404.php';
             $titulo_pagina     = '404 - Página No Encontrada';
             $layout_config     = ['header' => true, 'sidebar' => true, 'footer' => true];

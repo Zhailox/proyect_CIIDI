@@ -3,6 +3,7 @@
 
 class ConfigService {
     private static ?string $configPath = null;
+    private static ?array $cachedData = null;
 
     private static function getPath(): string {
         if (self::$configPath === null) {
@@ -15,17 +16,20 @@ class ConfigService {
      * Obtiene la estructura completa de configuración o una clave específica.
      */
     public static function get(?string $key = null, $default = null) {
-        $path = self::getPath();
-        if (!file_exists($path)) {
-            return $default;
+        if (self::$cachedData === null) {
+            $path = self::getPath();
+            if (!file_exists($path)) {
+                return $default;
+            }
+            $jsonContent = file_get_contents($path);
+            $data = json_decode($jsonContent, true);
+            if (!is_array($data)) {
+                return $default;
+            }
+            self::$cachedData = $data;
         }
 
-        $jsonContent = file_get_contents($path);
-        $data = json_decode($jsonContent, true);
-
-        if (!is_array($data)) {
-            return $default;
-        }
+        $data = self::$cachedData;
 
         if ($key === null) {
             return $data;
@@ -50,6 +54,10 @@ class ConfigService {
     public static function save(array $data): bool {
         $path = self::getPath();
         $jsonContent = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        return file_put_contents($path, $jsonContent) !== false;
+        $success = file_put_contents($path, $jsonContent, LOCK_EX) !== false;
+        if ($success) {
+            self::$cachedData = $data;
+        }
+        return $success;
     }
 }

@@ -14,14 +14,7 @@ class AnaliticaController {
         
         // Detección automática del sistema operativo para el ejecutable de Python
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            // Si estamos en la PC original (josex) usamos la ruta específica del WindowsApps
-            if (is_dir('C:\Users\josex')) {
-                $this->pythonExe = 'C:\Users\josex\AppData\Local\Microsoft\WindowsApps\python.exe';
-            } else {
-                // Si es cualquier otra PC Windows o Servidor Windows, usamos el comando global
-                $this->pythonExe = 'python';
-            }
-        } else {
+            
             // En servidores Linux / Mac (como cPanel, Ubuntu, VPS), el estándar es 'python3' o 'python'
             $this->pythonExe = 'python3';
         }

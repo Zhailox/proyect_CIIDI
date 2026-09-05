@@ -29,6 +29,7 @@
         <?php endif; ?>
 
         <form action="" method="POST" id="configPstForm">
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
             
             <!-- PESTAÑAS DE NAVEGACIÓN -->
             <div class="pst-config-nav-tabs">

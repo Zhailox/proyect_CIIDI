@@ -6,13 +6,25 @@ class ConfiguracionController {
 
     public function index(): array {
         require_once CORE_PATH . 'Security/Auth.php';
-        Auth::requierePrivilegioMinimo(1);
+        Auth::requierePrivilegioMinimo(3);
+
+        if (session_status() === PHP_SESSION_NONE) {
+            @session_start();
+        }
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
 
         $mensaje = null;
         $error = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
+                $submittedCsrf = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+                if (empty($submittedCsrf) || !hash_equals($_SESSION['csrf_token'], $submittedCsrf)) {
+                    throw new Exception("Petición rechazada por seguridad: Token CSRF no válido o expirado.");
+                }
+
                 $actual = ConfigService::get() ?? [];
 
                 // 1. Citas (Eliminar y Actualizar)

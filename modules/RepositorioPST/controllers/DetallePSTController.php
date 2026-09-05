@@ -125,6 +125,11 @@ class DetallePSTController {
                 http_response_code(404);
                 die("Proyecto no encontrado en el sistema.");
             }
+
+            if (isset($doc['activo']) && !$doc['activo'] && (int)($_SESSION['nivel_privilegio'] ?? -1) < 1) {
+                http_response_code(403);
+                die("Acceso denegado: Este proyecto se encuentra desactivado o no disponible.");
+            }
             
             $dbPath = !empty($doc['archivo_pdf']) ? $doc['archivo_pdf'] : '';
             $relPath = ltrim(str_replace(['\\', '/'], '/', $dbPath), '/');
@@ -172,9 +177,16 @@ class DetallePSTController {
         while (ob_get_level()) ob_end_clean();
 
         if ($ext === 'pdf') {
+            $etag = '"' . md5(filesize($fullPath) . '_' . filemtime($fullPath)) . '"';
             header('Content-Type: application/pdf');
             header('Content-Disposition: inline; filename="' . $safeFilename . '"');
             header('Content-Length: ' . filesize($fullPath));
+            header('Cache-Control: public, max-age=86400');
+            header('ETag: ' . $etag);
+            if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) {
+                http_response_code(304);
+                exit;
+            }
             readfile($fullPath);
             exit;
         } elseif ($ext === 'docx') {
@@ -218,11 +230,18 @@ class DetallePSTController {
 
     public function crear(): array {
         require_once CORE_PATH . 'Security/Auth.php';
+        if (session_status() === PHP_SESSION_NONE) {
+            @session_start();
+        }
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+
         $accion = !empty($_GET['accion']) ? trim($_GET['accion']) : 'listar';
         $id = !empty($_GET['id']) ? (int)$_GET['id'] : null;
 
         // Si es petición AJAX, responder con JSON si no se tienen permisos en lugar de 302 redirect
-        if (in_array($accion, ['extraer', 'crear_ajax'])) {
+        if (in_array($accion, ['extraer', 'crear_ajax', 'simular_extraccion'])) {
             if (!Auth::check() || (int)($_SESSION['nivel_privilegio'] ?? -1) < 1) {
                 header('Content-Type: application/json; charset=utf-8');
                 echo json_encode([
@@ -230,6 +249,18 @@ class DetallePSTController {
                     'message' => 'Sesión expirada o permisos insuficientes para realizar esta acción.'
                 ], JSON_UNESCAPED_UNICODE);
                 exit;
+            }
+
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $submittedCsrf = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+                if (empty($submittedCsrf) || !hash_equals($_SESSION['csrf_token'], $submittedCsrf)) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Petición rechazada por seguridad: Token CSRF no válido o expirado.'
+                    ], JSON_UNESCAPED_UNICODE);
+                    exit;
+                }
             }
         } else {
             Auth::requierePrivilegioMinimo(1);
@@ -416,6 +447,7 @@ class DetallePSTController {
                     'url_repositorio'            => $urlGitSanitizada,
                     'archivo_pdf'                => !empty($postData['archivo_pdf']) ? trim($postData['archivo_pdf']) : null,
                     'resumen'                    => !empty($postData['resumen']) ? trim($postData['resumen']) : '',
+                    'obj_general'                => !empty($postData['obj_general']) ? trim($postData['obj_general']) : null,
                     'comunidad_beneficiada'      => !empty($postData['comunidad_beneficiada']) ? trim($postData['comunidad_beneficiada']) : '',
                     'palabras_clave'             => !empty($postData['palabras_clave']) ? trim($postData['palabras_clave']) : '',
                     'linea_id'                   => !empty($postData['linea_id']) ? (int)$postData['linea_id'] : 7,
@@ -457,6 +489,26 @@ class DetallePSTController {
                 $success = "El Proyecto Socio-Tecnológico ha sido registrado con éxito en el catálogo.";
             } elseif ($_GET['msg'] === 'updated') {
                 $success = "El recurso ha sido modificado y actualizado exitosamente.";
+            } elseif ($_GET['msg'] === 'status_changed') {
+                $success = "El estado de visibilidad del recurso se ha actualizado correctamente.";
+            }
+        }
+
+        // 0.3 Procesar Acción: ALTERNAR ESTADO (Activar / Ocultar - Soft Delete)
+        if ($accion === 'toggle_estado' && $id) {
+            Auth::requierePrivilegioMinimo(1);
+            try {
+                $docActual = $model->getPSTDocumentoById($id);
+                if ($docActual) {
+                    $nuevoEstado = !($docActual['activo'] ?? true);
+                    $model->cambiarEstadoPST($id, $nuevoEstado);
+                    header("Location: ?ruta=agregar-documento&msg=status_changed");
+                    echo "<script>window.location.href='?ruta=agregar-documento&msg=status_changed';</script>";
+                    exit;
+                }
+            } catch (Exception $e) {
+                $error = "Error al cambiar el estado del recurso: " . $e->getMessage();
+                $accion = 'listar';
             }
         }
         
@@ -520,6 +572,7 @@ class DetallePSTController {
                 'url_repositorio'            => !empty($_POST['url_repositorio']) ? trim($_POST['url_repositorio']) : null,
                 'archivo_pdf'                => $finalPdfPath,
                 'resumen'                    => !empty($_POST['resumen']) ? trim($_POST['resumen']) : '',
+                'obj_general'                => !empty($_POST['obj_general']) ? trim($_POST['obj_general']) : null,
                 'comunidad_beneficiada'      => !empty($_POST['comunidad_beneficiada']) ? trim($_POST['comunidad_beneficiada']) : '',
                 'palabras_clave'             => !empty($_POST['palabras_clave']) ? trim($_POST['palabras_clave']) : '',
                 'linea_id'                   => !empty($_POST['linea_id']) ? (int)$_POST['linea_id'] : null,
@@ -629,6 +682,7 @@ class DetallePSTController {
                         'url_repositorio'            => $urlGitEditSanitizada,
                         'archivo_pdf'                => $finalEditPdf,
                         'resumen'                    => !empty($_POST['resumen']) ? trim($_POST['resumen']) : '',
+                        'obj_general'                => !empty($_POST['obj_general']) ? trim($_POST['obj_general']) : null,
                         'comunidad_beneficiada'      => !empty($_POST['comunidad_beneficiada']) ? trim($_POST['comunidad_beneficiada']) : '',
                         'palabras_clave'             => !empty($_POST['palabras_clave']) ? trim($_POST['palabras_clave']) : '',
                         'linea_id'                   => !empty($_POST['linea_id']) ? (int)$_POST['linea_id'] : null,
@@ -688,11 +742,11 @@ class DetallePSTController {
             $offset = ($page - 1) * $limit;
             
             if (!empty($q)) {
-                $documentos = $model->buscarStandard($q, [], $limit, $offset);
-                $totalDocs = $model->buscarStandardCount($q, []);
+                $documentos = $model->buscarStandard($q, ['activo' => 'todos'], $limit, $offset);
+                $totalDocs = $model->buscarStandardCount($q, ['activo' => 'todos']);
             } else {
-                $documentos = $model->getPSTDocumentos([], $limit, $offset);
-                $totalDocs = $model->getPSTDocumentosCount([]);
+                $documentos = $model->getPSTDocumentos(['activo' => 'todos'], $limit, $offset);
+                $totalDocs = $model->getPSTDocumentosCount(['activo' => 'todos']);
             }
             
             $totalPages = ceil($totalDocs / $limit);

@@ -281,23 +281,28 @@
     width: 280px;
     flex-shrink: 0;
     background-color: var(--blanco);
-    padding: 2rem;
+    padding: 1rem;
     border-radius: var(--radius-md);
     border: 1px solid rgba(0,0,0,0.05);
     position: sticky;
-    top: 2rem; /* Se mantiene fijo al hacer scroll */
+    top: 9rem; /* Aumentamos este valor para bajar todo el bloque */
+    z-index: 100;
 }
 
 .art-filters-sidebar h3 {
     color: var(--texto-titulos);
     font-size: 1.2rem;
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.8rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.3rem;
     border-bottom: 2px solid var(--color-terciario);
 }
+.art-filters-sidebar button { 
+    text-align: center;
+}
+
 
 .art-filter-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.3rem;
 }
 
 .art-filter-group label {
@@ -357,23 +362,26 @@
     border: 1px solid rgba(0,0,0,0.05);
     box-shadow: 0 4px 15px rgba(0,0,0,0.03);
     transition: transform var(--transition-fast);
+    z-index: 1;
 }
 
 .art-featured-post:hover {
     transform: translateY(-4px);
     box-shadow: 0 10px 25px rgba(18, 26, 62, 0.08);
+    z-index: 1;
 }
 
 .art-featured-img {
     flex: 1.2;
-    min-height: 320px;
+    min-height: 10rem;
+    height: 20rem;
     background-size: cover;
     background-position: center;
 }
 
 .art-featured-body {
     flex: 1;
-    padding: 2.5rem;
+    padding: 1rem;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -418,15 +426,17 @@
     display: flex;
     flex-direction: column;
     transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    z-index: 1;
 }
 
 .art-post-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 20px rgba(18, 26, 62, 0.08);
+    z-index: 1;
 }
 
 .art-post-img {
-    height: 190px;
+    height: 15rem;
     background-size: cover;
     background-position: center;
     border-bottom: 3px solid var(--color-terciario);
@@ -635,6 +645,7 @@
     text-align: center;
 }
 .art-filter-accordion {
+    position: relative; /* Clave para el posicionamiento absoluto del hijo */
     border: 1px solid rgba(0,0,0,0.08);
     border-radius: 8px;
     padding: 0.7rem 0.8rem;
@@ -647,9 +658,38 @@
     color: var(--color-secundario);
     list-style: none;
 }
-
 .art-filter-accordion summary::-webkit-details-marker {
     display: none;
+}
+
+/* Clase base con Z-Index super-prioritario */
+.art-filter-dropdown {
+    position: absolute;
+    width: 250px;
+    background-color: var(--blanco);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 10px 30px rgba(18, 26, 62, 0.15);
+    z-index: 9; /* Flota sobre los artículos y sus hover effects */
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Selector para Categorías (2do grupo): Abre hacia ARRIBA */
+.art-filter-group:nth-of-type(2) .art-filter-dropdown {
+    top: auto;
+    bottom: -5px;
+    left: calc(100% + 15px);
+    z-index: 9; /* Asegura que flote sobre los artículos y sus hover effects */
+}
+
+/* Selector para Etiquetas (3er grupo): Abre hacia ABAJO */
+.art-filter-group:nth-of-type(3) .art-filter-dropdown {
+    top: -5px;
+    bottom: auto;
+    left: calc(100% + 15px);
+    z-index: 9;
 }
 
 .art-filter-accordion .art-checkbox-label {
@@ -668,28 +708,21 @@
     padding: 0.2rem;
     border-radius: 4px;
 }
-.art-pagination {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-    margin-top: 2rem;
-}
-
-.art-page-link {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 40px;
-    padding: 0.6rem 0.85rem;
-    border-radius: 999px;
-    background: #f4f7fb;
-    color: var(--color-secundario);
-    text-decoration: none;
+.art-btn-outline {
+    background: transparent;
+    border: 1px solid var(--color-terciario);
+    color: var(--texto-comun);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
     font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-decoration: none;
 }
 
-.art-page-link.active,
-.art-page-link:hover {
-    background: var(--color-secundario);
-    color: white;
+
+.art-btn-outline:hover {
+    background: var(--color-terciario);
+    color: var(--blanco);
 }

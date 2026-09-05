@@ -1,148 +1,5 @@
-<style>
-.pst-detail-view {
-    background-color: var(--bg-card, #ffffff);
-    border: 1px solid rgba(169, 168, 166, 0.2);
-    border-radius: var(--radius-md, 6px);
-    padding: 1.25rem;
-    width: 100%;
-    max-width: 100% !important;
-    animation: fadeIn 0.4s ease-out;
-}
-.pst-detail-header {
-    border-bottom: 2px solid var(--color-terciario, #007bff);
-    padding-bottom: 0.6rem;
-    margin-bottom: 1rem;
-}
-.pst-detail-header h1 {
-    font-size: 1.45rem;
-    color: var(--texto-titulos);
-    font-weight: 800;
-    line-height: 1.3;
-    margin: 0 0 0.4rem 0;
-}
-.pst-detail-meta-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 0.6rem;
-    margin-bottom: 1rem;
-}
-.pst-meta-item {
-    background-color: #fafbfe;
-    border: 1px solid rgba(169, 168, 166, 0.18);
-    border-radius: 4px;
-    padding: 0.5rem 0.65rem;
-    overflow: hidden;
-    word-break: break-word;
-    overflow-wrap: anywhere;
-}
-.pst-meta-item strong {
-    display: block;
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    color: var(--texto-silenciado);
-    margin-bottom: 0.15rem;
-    letter-spacing: 0.5px;
-}
-.pst-meta-item span {
-    font-size: 0.82rem;
-    color: var(--texto-normal);
-    font-weight: 600;
-    line-height: 1.3;
-    display: block;
-    word-break: break-all;
-    overflow-wrap: anywhere;
-}
-.pst-meta-item a {
-    word-break: break-all;
-    overflow-wrap: anywhere;
-}
-.pst-detail-tabs {
-    display: flex;
-    gap: 0.5rem;
-    border-bottom: 1px solid rgba(169, 168, 166, 0.2);
-    margin-bottom: 1rem;
-}
-.tab-btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--texto-silenciado);
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.tab-btn.active {
-    color: var(--color-terciario, #007bff);
-    border-bottom-color: var(--color-terciario, #007bff);
-}
-.tab-content {
-    display: none;
-}
-.tab-content.active {
-    display: block;
-}
-.pst-detail-abstract p {
-    font-size: 0.88rem;
-    color: var(--texto-normal);
-    line-height: 1.55;
-    margin: 0;
-    text-align: justify;
-}
-.pst-detail-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 1px solid rgba(169, 168, 166, 0.15);
-    padding-top: 0.75rem;
-    margin-top: 1rem;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-.btn-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.45rem 0.9rem;
-    background-color: #e2e8f0;
-    color: #333;
-    text-decoration: none;
-    font-size: 0.8rem;
-    font-weight: 700;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-}
-.btn-back:hover {
-    background-color: #cbd5e0;
-}
-.btn-download-pdf {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.45rem 1rem;
-    background-color: var(--color-terciario, #007bff);
-    color: white;
-    text-decoration: none;
-    font-size: 0.8rem;
-    font-weight: 700;
-    border-radius: 4px;
-    transition: background-color 0.2s;
-}
-.btn-download-pdf:hover {
-    background-color: var(--color-secundario, #002244);
-}
-.pst-badge-soft {
-    border-radius: 4px;
-    padding: 0.15rem 0.4rem;
-    font-size: 0.72rem;
-    font-weight: 700;
-    display: inline-block;
-}
-</style>
-
 <div class="main-content">
+    <div class="pst-detail-container" style="padding: 1.5rem 2rem;">
     <?php if (!$documento): ?>
         <div class="no-results-card" style="max-width: 500px; margin: 2rem auto; text-align: center; border: 1px solid rgba(169,168,166,0.2); padding: 2rem; border-radius: 6px; background-color: var(--bg-card);">
             <i class="ph ph-warning-circle" style="font-size: 2.5rem; color: #e53e3e; margin-bottom: 0.75rem; display: block;"></i>
@@ -276,6 +133,17 @@
 
             <!-- TAB 1: RESUMEN Y PALABRAS CLAVE -->
             <div id="tabResumen" class="tab-content active">
+                <?php if (!empty($documento['obj_general'])): ?>
+                    <div style="margin-bottom: 1.2rem; background-color: #f8fafc; border-left: 4px solid var(--color-terciario, #007bff); padding: 0.85rem 1rem; border-radius: 0 6px 6px 0;">
+                        <h4 style="font-size: 0.88rem; font-weight: 800; color: var(--texto-titulos, #002244); margin: 0 0 0.35rem 0; display: flex; align-items: center; gap: 0.4rem;">
+                            <i class="ph ph-target" style="color: var(--color-terciario, #007bff);"></i> Objetivo General de la Investigación
+                        </h4>
+                        <p style="margin: 0; font-size: 0.9rem; line-height: 1.5; color: var(--texto-normal, #333333); font-weight: 500;">
+                            <?= htmlspecialchars($documento['obj_general']) ?>
+                        </p>
+                    </div>
+                <?php endif; ?>
+
                 <div class="pst-detail-abstract">
                     <p>
                         <?= nl2br(htmlspecialchars($documento['resumen'] ?? 'No se ha cargado un resumen o matriz epistémica para esta investigación en el sistema.')) ?>
@@ -520,6 +388,7 @@ function cerrarModalComunidad() {
 
         <div style="text-align: right; border-top: 1px solid rgba(169, 168, 166, 0.15); padding-top: 0.5rem; margin-top: 0.85rem;">
             <button type="button" onclick="cerrarModalComunidad()" class="btn-back" style="display: inline-block; width: auto; padding: 0.35rem 1rem;">Cerrar</button>
+        </div>
         </div>
     </div>
 </div>

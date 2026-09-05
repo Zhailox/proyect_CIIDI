@@ -2,7 +2,9 @@
 $mensajeExito = $_SESSION['mensaje_exito'] ?? '';
 $mensajeError = $_SESSION['mensaje_error'] ?? '';
 
-if (!empty($mensajeExito)) unset($_SESSION['mensaje_exito']);
+if (!empty($mensajeExito)) { ?>
+    <script>localStorage.removeItem('catalogos_articulos');</script>
+    <?php unset($_SESSION['mensaje_exito']); }
 if (!empty($mensajeError)) unset($_SESSION['mensaje_error']);
 
 // Helper para mantener los parámetros GET al cambiar de página o buscar
