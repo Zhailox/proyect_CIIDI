@@ -43,7 +43,7 @@ class ExtractorPST {
                 
                 $dom = new \DOMDocument();
                 libxml_use_internal_errors(true);
-                $dom->loadXML($data);
+                $dom->loadXML($data, LIBXML_NONET);
                 libxml_clear_errors();
 
                 $xpath = new \DOMXPath($dom);

@@ -2,56 +2,71 @@
 <div class="main-content">
     <div class="pst-container">
 
-        <header class="pst-header">
-            <h1>Proyectos Socio-Tecnológicos (PST)</h1>
-        </header>
+        <!-- HERO SECTION INTERACTIVO CON CANVAS Y BÚSQUEDA RÁPIDA -->
+        <section class="pst-modern-hero">
+            <canvas id="pstHeroCanvas"></canvas>
+            <div class="pst-hero-overlay"></div>
+            <div class="pst-hero-inner">
+                <h1 class="pst-hero-title">Proyectos Socio-Tecnológicos</h1>
+                <p class="pst-hero-desc">Explora el conocimiento académico y las soluciones tecnológicas desarrolladas por nuestra comunidad universitaria.</p>
+                <span class="pst-hero-badge"><i class="ph ph-sparkles"></i> Repositorio Institucional de Investigaciones</span>
+            </div>
+        </section>
+
+        <!-- CARRUSELES POR LÍNEA DE INVESTIGACIÓN CON BOTÓN SOLICITAR CARGAR MÁS -->
+        <section class="pst-carousels-section">
+            <!-- Carrusel: Por Líneas de Investigación -->
+            <div class="pst-carousel-block">
+                <div class="pst-carousel-header">
+                    <h3><i class="ph ph-compass"></i> Proyectos Recientes por Línea</h3>
+                    <div class="pst-carousel-controls">
+                        <button type="button" class="pst-carousel-btn" onclick="scrollCarousel('carouselProyectos', -1)"><i class="ph ph-caret-left"></i></button>
+                        <button type="button" class="pst-carousel-btn" onclick="scrollCarousel('carouselProyectos', 1)"><i class="ph ph-caret-right"></i></button>
+                    </div>
+                </div>
+                <div class="pst-carousel-track-wrapper">
+                    <div class="pst-carousel-track" id="carouselProyectos">
+                        <?php if (!empty($documentos)): ?>
+                            <?php foreach (array_slice($documentos, 0, 8) as $docSlide): ?>
+                                <div class="pst-project-slide">
+                                    <div class="pst-slide-tags">
+                                        <span class="pst-badge-soft" style="background: rgba(0, 123, 255, 0.1); color: var(--color-terciario); font-weight: 700;">
+                                            <?= htmlspecialchars($docSlide['linea_nombre'] ?? 'Línea General') ?>
+                                        </span>
+                                        <span class="pst-badge-soft" style="background: rgba(112, 144, 203, 0.15); color: var(--color-secundario); font-weight: 700;">
+                                            <?= $docSlide['anio_publicacion'] ?>
+                                        </span>
+                                    </div>
+                                    <h4><?= htmlspecialchars($docSlide['titulo'] ?? '') ?></h4>
+                                    <p class="pst-slide-community"><i class="ph ph-buildings"></i> <?= htmlspecialchars($docSlide['comunidad_beneficiada'] ?? 'Comunidad no especificada') ?></p>
+                                    <div class="pst-slide-footer">
+                                        <a href="?ruta=detalles-pst&id=<?= $docSlide['id'] ?>" class="btn-outline-repo" style="font-size: 0.75rem; text-decoration: none;">Ver Ficha</a>
+                                        <button type="button" class="btn-outline-repo" style="font-size: 0.75rem; cursor: pointer;" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($docSlide['titulo'])) ?>, <?= htmlspecialchars(json_encode($docSlide['autores_nombres'] ?? 'Autores Varios')) ?>, <?= $docSlide['anio_publicacion'] ?>)"><i class="ph ph-quotes"></i></button>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <p style="color: var(--texto-silenciado); padding: 1rem;">No hay proyectos para mostrar en el carrusel.</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <!-- Layout de Cuadrícula con Sidebar a la derecha -->
         <div class="pst-layout-grid">
             
-            <!-- Columna Izquierda: Tarjeta Destacada y Tabla de Resultados -->
+            <!-- Columna Izquierda: Tabla de Resultados Espaciada -->
             <div class="pst-main-column">
                 
-                <!-- Sección de Proyecto Destacado (Sin resumen ni autores según directiva de diseño) -->
-                <?php if (!empty($documentos) && $pagination['current_page'] == 1): 
-                    $destacado = $documentos[0];
-                ?>
-                    <article class="pst-hero-card">
-                        <div class="pst-hero-content">
-                            <div style="display: flex; gap: 0.4rem; align-items: center; margin-bottom: 0.35rem; flex-wrap: wrap;">
-                                <span class="pst-badge-soft" style="font-size: 0.75rem; background-color: var(--color-terciario); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700;">ÚLTIMO REGISTRO</span>
-                                <span class="pst-badge-soft" style="background-color: rgba(112, 144, 203, 0.15); color: var(--color-secundario); font-weight: 700;"><?= htmlspecialchars($destacado['nivel_academico'] ?? 'Pregrado') ?></span>
-                                <?php if (($destacado['nivel_academico'] ?? 'Pregrado') === 'Pregrado' && !empty($destacado['trayecto'])): ?>
-                                    <span class="pst-badge-soft" style="background-color: rgba(0, 123, 255, 0.1); color: var(--color-terciario); font-weight: 700;"><?= htmlspecialchars($destacado['trayecto']) ?></span>
-                                <?php endif; ?>
-                                <?php if (!empty($destacado['url_repositorio']) && ConfigService::get('recursos.mostrar_url_git', true)): ?>
-                                    <a href="<?= htmlspecialchars($destacado['url_repositorio']) ?>" target="_blank" class="pst-badge-soft" style="background-color: #f1f5f9; color: var(--color-secundario); text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem;">
-                                        <i class="ph ph-git-branch"></i> Git Repository
-                                    </a>
-                                <?php endif; ?>
-                            </div>
-                            <h3><?= htmlspecialchars($destacado['titulo'] ?? '') ?></h3>
-                            <div style="font-size: 0.8rem; color: var(--texto-silenciado); line-height: 1.3; margin-bottom: 0.5rem; margin-top: 0.25rem;">
-                                <strong>Comunidad:</strong> <?= htmlspecialchars($destacado['comunidad_beneficiada'] ?? 'No registrada') ?>
-                            </div>
-                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                <a href="?ruta=detalles-pst&id=<?= $destacado['id'] ?>" class="btn-outline-repo" style="text-decoration: none; padding: 0.4rem 1rem; border-radius: 4px; font-size: 0.8rem;">
-                                    Ver Ficha Completa
-                                </a>
-                                <button type="button" class="btn-outline-repo" style="padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer;" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($destacado['titulo'])) ?>, <?= htmlspecialchars(json_encode($destacado['autores_nombres'] ?? 'Autores Varios')) ?>, <?= $destacado['anio_publicacion'] ?>)">
-                                    <i class="ph ph-quotes"></i> Citar
-                                </button>
-                            </div>
-                        </div>
-                    </article>
-                <?php endif; ?>
-
-                <!-- Listado de Investigaciones Indexadas (Sin resumen ni columna de autores) -->
+                <!-- Listado de Investigaciones Indexadas (Tabla Espaciada que respira) -->
                 <section class="pst-table-wrapper">
-                    <h3 class="pst-table-title">Banco de Proyectos (Mostrando <?= count($documentos) ?> de <?= $pagination['total_items'] ?>)</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <h3 class="pst-table-title" style="margin-bottom: 0;">Banco de Proyectos</h3>
+                    </div>
                     
                     <div class="table-responsive">
-                        <table class="pst-table">
+                        <table class="pst-table pst-table-spaced">
                             <thead>
                                 <tr>
                                     <th style="width: 65%;">TÍTULO DEL PROYECTO</th>
@@ -60,10 +75,10 @@
                                     <th style="text-align: center; width: 8%;">ACCIONES</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="pstTableBody">
                                 <?php if (empty($documentos)): ?>
                                     <tr>
-                                        <td colspan="4" style="text-align: center; padding: 2rem; color: var(--texto-silenciado);">
+                                        <td colspan="4" style="text-align: center; padding: 2.5rem; color: var(--texto-silenciado);">
                                             No se encontraron proyectos con los filtros de catalogación seleccionados.
                                         </td>
                                     </tr>
@@ -74,7 +89,7 @@
                                                 <strong><?= htmlspecialchars($doc['titulo'] ?? '') ?></strong>
                                             </td>
                                             <td>
-                                                <span class="pst-badge-soft badge-edu" style="display: block; margin-bottom: 0.15rem; text-align: center;">
+                                                <span class="pst-badge-soft badge-edu" style="display: block; margin-bottom: 0.2rem; text-align: center;">
                                                     <?= htmlspecialchars($doc['linea_nombre'] ?? 'General') ?>
                                                 </span>
                                                 <small style="color: var(--color-secundario); font-weight: 700; display: block; font-size: 0.7rem; text-align: center;">
@@ -83,11 +98,11 @@
                                             </td>
                                             <td><strong><?= $doc['anio_publicacion'] ?></strong></td>
                                             <td style="text-align: center;">
-                                                <div style="display: flex; gap: 0.25rem; justify-content: center;">
-                                                    <a href="?ruta=detalles-pst&id=<?= $doc['id'] ?>" class="btn-outline-repo" style="text-decoration: none; padding: 0.3rem 0.5rem; font-size: 0.75rem;" title="Ver Ficha">
+                                                <div style="display: flex; gap: 0.35rem; justify-content: center;">
+                                                    <a href="?ruta=detalles-pst&id=<?= $doc['id'] ?>" class="btn-outline-repo" style="text-decoration: none; padding: 0.35rem 0.6rem; font-size: 0.75rem;" title="Ver Ficha">
                                                         Ver
                                                     </a>
-                                                    <button type="button" class="btn-outline-repo" style="padding: 0.3rem 0.5rem; font-size: 0.75rem; cursor: pointer;" title="Generar Cita" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($doc['titulo'])) ?>, <?= htmlspecialchars(json_encode($doc['autores_nombres'] ?? 'Autores Varios')) ?>, <?= $doc['anio_publicacion'] ?>)">
+                                                    <button type="button" class="btn-outline-repo" style="padding: 0.35rem 0.6rem; font-size: 0.75rem; cursor: pointer;" title="Generar Cita" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($doc['titulo'])) ?>, <?= htmlspecialchars(json_encode($doc['autores_nombres'] ?? 'Autores Varios')) ?>, <?= $doc['anio_publicacion'] ?>)">
                                                         <i class="ph ph-quotes"></i>
                                                     </button>
                                                 </div>
@@ -98,45 +113,6 @@
                             </tbody>
                         </table>
                     </div>
-
-                    <!-- Paginador de la Vista Catálogo -->
-                    <?php if ($pagination['total_pages'] > 1): ?>
-                        <div class="pst-pagination">
-                            <?php 
-                            $query_params = $_GET;
-                            unset($query_params['page']); 
-                            
-                            $build_url = function($p) use ($query_params) {
-                                $query_params['page'] = $p;
-                                return '?' . http_build_query($query_params);
-                            };
-                            
-                            $curr = $pagination['current_page'];
-                            $tot = $pagination['total_pages'];
-                            ?>
-                            
-                            <?php if ($curr > 1): ?>
-                                <a href="<?= $build_url($curr - 1) ?>" class="page-link">&laquo; Anterior</a>
-                            <?php else: ?>
-                                <span class="page-link disabled">&laquo; Anterior</span>
-                            <?php endif; ?>
-                            
-                            <?php for ($i = 1; $i <= $tot; $i++): ?>
-                                <?php if ($i == $curr): ?>
-                                    <span class="page-link active"><?= $i ?></span>
-                                <?php else: ?>
-                                    <a href="<?= $build_url($i) ?>" class="page-link"><?= $i ?></a>
-                                <?php endif; ?>
-                            <?php endfor; ?>
-                            
-                            <?php if ($curr < $tot): ?>
-                                <a href="<?= $build_url($curr + 1) ?>" class="page-link">Siguiente &raquo;</a>
-                            <?php else: ?>
-                                <span class="page-link disabled">Siguiente &raquo;</span>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
-
                 </section>
             </div>
 
@@ -242,6 +218,154 @@
 </div>
 
 <script>
+// ANIMACIÓN DE HERO CANVAS (RED DE NODOS / CONSTELACIÓN DIGITAL DE CONOCIMIENTO)
+(function initPstHeroCanvas() {
+    const canvas = document.getElementById('pstHeroCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let particles = [];
+
+    function resize() {
+        width = canvas.width = canvas.parentElement.offsetWidth;
+        height = canvas.height = canvas.parentElement.offsetHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.vx = (Math.random() - 0.5) * 0.6;
+            this.vy = (Math.random() - 0.5) * 0.6;
+            this.radius = Math.random() * 2 + 1;
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            if (this.x < 0 || this.x > width) this.vx *= -1;
+            if (this.y < 0 || this.y > height) this.vy *= -1;
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(112, 144, 203, 0.7)';
+            ctx.fill();
+        }
+    }
+
+    const numParticles = Math.min(Math.floor(width / 20), 45);
+    for (let i = 0; i < numParticles; i++) {
+        particles.push(new Particle());
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, width, height);
+        for (let i = 0; i < particles.length; i++) {
+            particles[i].update();
+            particles[i].draw();
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 110) {
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = `rgba(112, 144, 203, ${1 - dist / 110})`;
+                    ctx.lineWidth = 0.6;
+                    ctx.stroke();
+                }
+            }
+        }
+        requestAnimationFrame(animate);
+    }
+    animate();
+})();
+
+// CONTROL DE SCROLL HORIZONTAL EN CARRUSELES
+function scrollCarousel(elementId, direction) {
+    const track = document.getElementById(elementId);
+    if (!track) return;
+    const scrollAmount = track.offsetWidth * 0.75;
+    track.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+}
+
+// FILTRAR POR TRAYECTO DESDE CARRUSEL
+function filtrarPorTrayecto(trayectoNombre) {
+    const filterSelect = document.getElementById('trayecto_filter');
+    if (filterSelect) {
+        filterSelect.value = trayectoNombre;
+        filterSelect.form.submit();
+    }
+}
+
+// LAZY LOADING / INFINITE SCROLL AUTOMÁTICO EN EL CARRUSEL Y EN LA TABLA
+let currentPagePst = <?= json_encode((int)($pagination['current_page'] ?? 1)) ?>;
+let totalPagesPst = <?= json_encode((int)($pagination['total_pages'] ?? 1)) ?>;
+let isFetchingPst = false;
+
+function lazyLoadMasProyectos() {
+    if (isFetchingPst || currentPagePst >= totalPagesPst) return;
+    
+    isFetchingPst = true;
+    const nextPage = currentPagePst + 1;
+    const currentUrlParams = new URLSearchParams(window.location.search);
+    currentUrlParams.set('page', nextPage);
+    
+    fetch('?' + currentUrlParams.toString())
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // 1. Agregar filas a la Tabla Principal
+            const newRows = doc.querySelectorAll('#pstTableBody tr');
+            const tableBody = document.getElementById('pstTableBody');
+            if (newRows && newRows.length > 0 && tableBody) {
+                newRows.forEach(row => {
+                    tableBody.appendChild(row.cloneNode(true));
+                });
+            }
+
+            // 2. Agregar tarjetas al Carrusel de Proyectos
+            const newSlides = doc.querySelectorAll('#carouselProyectos .pst-project-slide');
+            const carouselTrack = document.getElementById('carouselProyectos');
+            if (newSlides && newSlides.length > 0 && carouselTrack) {
+                newSlides.forEach(slide => {
+                    carouselTrack.appendChild(slide.cloneNode(true));
+                });
+            }
+
+            currentPagePst = nextPage;
+            isFetchingPst = false;
+        })
+        .catch(err => {
+            console.error('Error al realizar Lazy Loading:', err);
+            isFetchingPst = false;
+        });
+}
+
+// Escuchar Scroll Horizontal en el Carrusel para disparar Lazy Loading al llegar al final
+document.addEventListener('DOMContentLoaded', () => {
+    const carouselTrack = document.getElementById('carouselProyectos');
+    if (carouselTrack) {
+        carouselTrack.addEventListener('scroll', () => {
+            if (carouselTrack.scrollLeft + carouselTrack.clientWidth >= carouselTrack.scrollWidth - 150) {
+                lazyLoadMasProyectos();
+            }
+        });
+    }
+
+    // Escuchar Scroll Vertical de la ventana para la Tabla
+    window.addEventListener('scroll', () => {
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 400) {
+            lazyLoadMasProyectos();
+        }
+    });
+});
+
 // Función para seleccionar/deseleccionar un año en el histograma del sidebar
 function selectYear(year) {
     const input = document.getElementById('filterAnioInput');

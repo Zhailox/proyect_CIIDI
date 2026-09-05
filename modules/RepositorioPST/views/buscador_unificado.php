@@ -3,7 +3,12 @@
 require_once __DIR__ . '/../services/ConfigService.php';
 ?>
 <div class="main-content">
-    <div class="search-view-wrapper">
+    <!-- FONDO DE PÁGINA COMPLETA CON REDES AZULES Y FONDO BLANCO -->
+    <div class="search-page-canvas-bg" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: #ffffff;">
+        <canvas id="pstSearchPageCanvas" style="width: 100%; height: 100%; display: block;"></canvas>
+    </div>
+
+    <div class="search-view-wrapper" style="position: relative; z-index: 1;">
         
         <div class="search-brand">
             <h1>Búsqueda Inteligente</h1>
@@ -252,6 +257,80 @@ require_once __DIR__ . '/../services/ConfigService.php';
 <?php include __DIR__ . '/../assets/js/search_engine.js'; ?>
 </script>
 <script>
+// ANIMACIÓN DE CANVAS PARA EL FONDO DE PÁGINA COMPLETA (FONDO BLANCO Y REDES AZULES)
+(function initPstSearchPageCanvas() {
+    const canvas = document.getElementById('pstSearchPageCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let particles = [];
+
+    function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.vx = (Math.random() - 0.5) * 0.7;
+            this.vy = (Math.random() - 0.5) * 0.7;
+            this.radius = Math.random() * 4 + 3.5; // Nodos más grandes (3.5px a 7.5px)
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            if (this.x < 0 || this.x > width) this.vx *= -1;
+            if (this.y < 0 || this.y > height) this.vy *= -1;
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0, 102, 255, 0.85)'; // Nodos azul brillante e intenso
+            ctx.fill();
+        }
+    }
+
+    const numParticles = Math.min(Math.floor(width / 12), 85); // Mayor densidad de nodos
+    for (let i = 0; i < numParticles; i++) {
+        particles.push(new Particle());
+    }
+
+    let animId = null;
+    function animate() {
+        if (document.hidden) return;
+        ctx.clearRect(0, 0, width, height);
+        for (let i = 0; i < particles.length; i++) {
+            particles[i].update();
+            particles[i].draw();
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 185) {
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = `rgba(0, 102, 255, ${0.55 * (1 - dist / 185)})`;
+                    ctx.lineWidth = 1.8;
+                    ctx.stroke();
+                }
+            }
+        }
+        animId = requestAnimationFrame(animate);
+    }
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            if (animId) cancelAnimationFrame(animId);
+            animate();
+        }
+    });
+    animate();
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
     initDimensionSelector(
         <?= json_encode($dimensiones) ?>,

@@ -25,8 +25,15 @@ class Auth {
         $nivelUsuario = $_SESSION['nivel_privilegio'] ?? -1;
 
         if ($nivelUsuario < $nivelExigido) {
-            // CORRECCIÓN: Sin barra al inicio
-            header("Location: login"); 
+            http_response_code(403);
+            $vista_modulo_path = CORE_VIEWS . '403.php';
+            $titulo_pagina     = '403 - Acceso Denegado';
+            $layout_config     = ['header' => true, 'sidebar' => true, 'footer' => true];
+            if (file_exists(CORE_VIEWS . 'master.php')) {
+                include CORE_VIEWS . 'master.php';
+            } else {
+                echo "<h2>Acceso Denegado (403)</h2>";
+            }
             exit;
         }
 

@@ -5,6 +5,7 @@ $nivelUsuario = Auth::check() ? (int)Auth::usuario()['nivel'] : -1;
 ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script>
+window.CSRF_TOKEN = <?= json_encode($_SESSION['csrf_token'] ?? '') ?>;
 if (typeof window.mammoth === 'undefined') {
     document.write('<script src="modules/RepositorioPST/assets/js/mammoth.browser.min.js"><\/script>');
 }
@@ -38,6 +39,7 @@ if (typeof window.mammoth === 'undefined') {
             
             <article class="upload-card">
                 <form id="formSubidaPst" action="?ruta=agregar-documento&accion=<?= $accion ?><?= $accion === 'editar' ? '&id='.$documento['id'] : '' ?>" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                     <input type="hidden" id="archivo_pdf_hidden" name="archivo_pdf" value="<?= htmlspecialchars($documento['archivo_pdf'] ?? '') ?>">
 
                     <div class="upload-grid">
@@ -707,9 +709,11 @@ function subirYExtraerDatos(docItem, index) {
 
     const formData = new FormData();
     formData.append('archivo_pst', docItem.file);
+    formData.append('csrf_token', window.CSRF_TOKEN || '');
 
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '?ruta=agregar-documento&accion=extraer', true);
+    xhr.setRequestHeader('X-CSRF-Token', window.CSRF_TOKEN || '');
 
     xhr.upload.onprogress = function(e) {
         if (e.lengthComputable) {
@@ -1018,9 +1022,10 @@ async function subirLoteABaseDeDatos() {
             const res = await fetch('?ruta=agregar-documento&accion=crear_ajax', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json; charset=utf-8'
+                    'Content-Type': 'application/json; charset=utf-8',
+                    'X-CSRF-Token': window.CSRF_TOKEN || ''
                 },
-                body: JSON.stringify(item.data)
+                body: JSON.stringify(Object.assign({}, item.data, { csrf_token: window.CSRF_TOKEN || '' }))
             });
 
             const json = await res.json();

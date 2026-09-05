@@ -31,8 +31,17 @@ class Connection {
             $this->pdo = new PDO($dsn, $this->user, $this->pass, $options);
             
         } catch (PDOException $e) {
-            // Si la base de datos está caída, detenemos la ejecución del núcleo
-            die("Fallo Crítico del Kernel - Imposible conectar a la base de datos: " . $e->getMessage());
+            http_response_code(500);
+            $dbErrorMsg = "Imposible conectar a la base de datos: " . $e->getMessage();
+            $isStandalone = true;
+            $vista_modulo_path = defined('CORE_VIEWS') ? CORE_VIEWS . '500.php' : __DIR__ . '/../Views/500.php';
+
+            if (file_exists($vista_modulo_path)) {
+                include $vista_modulo_path;
+            } else {
+                die("Error 500: Fallo Crítico del Kernel - Imposible conectar a la base de datos: " . $e->getMessage());
+            }
+            exit;
         }
     }
 

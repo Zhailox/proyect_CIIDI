@@ -1,4 +1,5 @@
 <div class="main-content">
+    <div class="pst-detail-container" style="padding: 1.5rem 2rem;">
     <?php if (!$documento): ?>
         <div class="no-results-card" style="max-width: 500px; margin: 2rem auto; text-align: center; border: 1px solid rgba(169,168,166,0.2); padding: 2rem; border-radius: 6px; background-color: var(--bg-card);">
             <i class="ph ph-warning-circle" style="font-size: 2.5rem; color: #e53e3e; margin-bottom: 0.75rem; display: block;"></i>
@@ -387,6 +388,7 @@ function cerrarModalComunidad() {
 
         <div style="text-align: right; border-top: 1px solid rgba(169, 168, 166, 0.15); padding-top: 0.5rem; margin-top: 0.85rem;">
             <button type="button" onclick="cerrarModalComunidad()" class="btn-back" style="display: inline-block; width: auto; padding: 0.35rem 1rem;">Cerrar</button>
+        </div>
         </div>
     </div>
 </div>

@@ -125,6 +125,11 @@ class DetallePSTController {
                 http_response_code(404);
                 die("Proyecto no encontrado en el sistema.");
             }
+
+            if (isset($doc['activo']) && !$doc['activo'] && (int)($_SESSION['nivel_privilegio'] ?? -1) < 1) {
+                http_response_code(403);
+                die("Acceso denegado: Este proyecto se encuentra desactivado o no disponible.");
+            }
             
             $dbPath = !empty($doc['archivo_pdf']) ? $doc['archivo_pdf'] : '';
             $relPath = ltrim(str_replace(['\\', '/'], '/', $dbPath), '/');
@@ -172,9 +177,16 @@ class DetallePSTController {
         while (ob_get_level()) ob_end_clean();
 
         if ($ext === 'pdf') {
+            $etag = '"' . md5(filesize($fullPath) . '_' . filemtime($fullPath)) . '"';
             header('Content-Type: application/pdf');
             header('Content-Disposition: inline; filename="' . $safeFilename . '"');
             header('Content-Length: ' . filesize($fullPath));
+            header('Cache-Control: public, max-age=86400');
+            header('ETag: ' . $etag);
+            if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) {
+                http_response_code(304);
+                exit;
+            }
             readfile($fullPath);
             exit;
         } elseif ($ext === 'docx') {
@@ -218,11 +230,18 @@ class DetallePSTController {
 
     public function crear(): array {
         require_once CORE_PATH . 'Security/Auth.php';
+        if (session_status() === PHP_SESSION_NONE) {
+            @session_start();
+        }
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+
         $accion = !empty($_GET['accion']) ? trim($_GET['accion']) : 'listar';
         $id = !empty($_GET['id']) ? (int)$_GET['id'] : null;
 
         // Si es petición AJAX, responder con JSON si no se tienen permisos en lugar de 302 redirect
-        if (in_array($accion, ['extraer', 'crear_ajax'])) {
+        if (in_array($accion, ['extraer', 'crear_ajax', 'simular_extraccion'])) {
             if (!Auth::check() || (int)($_SESSION['nivel_privilegio'] ?? -1) < 1) {
                 header('Content-Type: application/json; charset=utf-8');
                 echo json_encode([
@@ -230,6 +249,18 @@ class DetallePSTController {
                     'message' => 'Sesión expirada o permisos insuficientes para realizar esta acción.'
                 ], JSON_UNESCAPED_UNICODE);
                 exit;
+            }
+
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $submittedCsrf = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+                if (empty($submittedCsrf) || !hash_equals($_SESSION['csrf_token'], $submittedCsrf)) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Petición rechazada por seguridad: Token CSRF no válido o expirado.'
+                    ], JSON_UNESCAPED_UNICODE);
+                    exit;
+                }
             }
         } else {
             Auth::requierePrivilegioMinimo(1);
