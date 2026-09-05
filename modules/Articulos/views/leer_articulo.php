@@ -39,7 +39,7 @@
                             <button type="button" class="btn" style="background:white; color:#0f172a;" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($articulo['titulo'])) ?>, <?= htmlspecialchars(json_encode($articulo['autores_text'])) ?>, <?= $articulo['anio_publicacion'] ?>, <?= htmlspecialchars(json_encode($articulo['editorial'] ?? 'N/A')) ?>, <?= htmlspecialchars(json_encode($articulo['volumen'] ?? '')) ?>, <?= htmlspecialchars(json_encode($articulo['numero'] ?? '')) ?>, <?= htmlspecialchars(json_encode($articulo['issn'] ?? '')) ?>)">
                                 <i class="ph ph-quotes"></i> Citar
                             </button>
-                            <button type="button" class="btn" style="background:white; color:#0f172a;" onclick="compartirEnlace(<?= $articulo['id'] ?>, this)">
+                            <button type="button" class="btn" style="background:white; color:#0f172a;" onclick="compartirEnlace('<?= htmlspecialchars($articulo['archivo_pdf'] ?? '') ?>', this)">
                                 <i class="ph ph-share-network"></i> Copiar Link
                             </button>
                         </div>
@@ -122,10 +122,19 @@ function abrirModalCita(titulo, autores, anio, editorial, volumen, numero, issn)
 
 function cerrarModalCitas() { document.getElementById('modalCitasContainer').style.display = 'none'; }
 
-function compartirEnlace(id, btn) {
-    const url = window.location.origin + window.location.pathname.replace('/articulos', '') + '/leer-articulo?id=' + id;
+function compartirEnlace(rutaArchivo, btn) {
+    if (!rutaArchivo) {
+        alert('Este artículo no tiene un archivo enlazado.');
+        return;
+    }
+    
+    // Convertir ruta relativa a URL absoluta
+    const linkAbsoluto = document.createElement('a');
+    linkAbsoluto.href = rutaArchivo;
+    const urlFinal = linkAbsoluto.href;
+
     const origHtml = btn.innerHTML;
-    navigator.clipboard.writeText(url).then(() => {
+    navigator.clipboard.writeText(urlFinal).then(() => {
         btn.innerHTML = '<i class="ph ph-check"></i> Copiado';
         setTimeout(() => { btn.innerHTML = origHtml; }, 2000);
     });

@@ -15,18 +15,12 @@ if (typeof window.mammoth === 'undefined') {
         <!-- CABECERA DE LA PÁGINA -->
         <header class="pst-header">
             <div class="pst-header-left">
-                <div style="display: inline-flex; align-items: center; gap: 0.35rem; background-color: rgba(0, 34, 68, 0.08); color: var(--color-secundario); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; margin-bottom: 0.3rem;">
-                    <i class="ph ph-shield-check" style="color: var(--color-terciario);"></i> Módulo Exclusivo para Coordinación de PST & Investigación
-                </div>
                 <?php if ($accion === 'crear'): ?>
                     <h1>Registrar Nuevo Proyecto</h1>
-                    <p>Indexa una nueva investigación en el repositorio institucional.</p>
                 <?php elseif ($accion === 'editar'): ?>
                     <h1>Modificar Proyecto Socio-Tecnológico</h1>
-                    <p>Edita los metadatos correspondientes del proyecto indexado #<?= $documento['id'] ?>.</p>
                 <?php else: ?>
                     <h1>Gestión Documental PST</h1>
-                    <p>Catálogo de control y administración para la indexación de investigaciones.</p>
                 <?php endif; ?>
             </div>
         </header>
@@ -227,6 +221,11 @@ if (typeof window.mammoth === 'undefined') {
                             </div>
 
                             <div class="upload-input-group" style="margin-top: 0.5rem;">
+                                <label for="obj_general">Objetivo General de la Investigación</label>
+                                <textarea id="obj_general" name="obj_general" class="upload-input" rows="3" style="resize: vertical; font-family: inherit;" placeholder="Objetivo general extraído del documento (ej: Desarrollar un sistema informático para...)"><?= htmlspecialchars($_POST['obj_general'] ?? $documento['obj_general'] ?? '') ?></textarea>
+                            </div>
+
+                            <div class="upload-input-group" style="margin-top: 0.5rem;">
                                 <label for="resumen">Resumen Epistémico / Resumen de Propuesta *</label>
                                 <textarea id="resumen" name="resumen" class="upload-input" rows="4" style="resize: vertical; font-family: inherit;" placeholder="Redacte la síntesis del proyecto (contexto, problema, objetivo, metodología y resultados obtenidos)..." required><?= htmlspecialchars($_POST['resumen'] ?? $documento['resumen'] ?? '') ?></textarea>
                             </div>
@@ -365,39 +364,62 @@ if (typeof window.mammoth === 'undefined') {
                             <?php else: ?>
                                 <?php foreach ($documentos as $doc): ?>
                                     <tr>
-                                        <td class="pst-td-title">
-                                            <div style="display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.15rem; flex-wrap: wrap;">
-                                                <span class="pst-badge-soft" style="background-color: rgba(112, 144, 203, 0.15); color: var(--color-secundario); padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.7rem; font-weight: 700;"><?= htmlspecialchars($doc['nivel_academico'] ?? 'Pregrado') ?></span>
-                                                <?php if (($doc['nivel_academico'] ?? 'Pregrado') === 'Pregrado' && !empty($doc['trayecto'])): ?>
-                                                    <span class="pst-badge-soft" style="background-color: rgba(0, 123, 255, 0.1); color: var(--color-terciario); padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.7rem; font-weight: 700;"><?= htmlspecialchars($doc['trayecto']) ?></span>
-                                                <?php endif; ?>
-                                                <?php if (!empty($doc['url_repositorio'])): ?>
-                                                    <a href="<?= htmlspecialchars($doc['url_repositorio']) ?>" target="_blank" style="color: var(--color-secundario); font-size: 0.75rem; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.2rem;" title="Ver código fuente">
-                                                        <i class="ph ph-git-branch"></i> Git
-                                                    </a>
-                                                <?php endif; ?>
-                                            </div>
-                                            <strong><?= htmlspecialchars($doc['titulo'] ?? '') ?></strong>
-                                            <?php if (!empty($doc['resumen'])): ?>
-                                                <div style="font-size: 0.75rem; color: var(--texto-silenciado); margin-top: 0.15rem;">
-                                                    <?= htmlspecialchars(substr($doc['resumen'], 0, 120)) ?>...
-                                                </div>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td><?= htmlspecialchars($doc['autores_nombres'] ?? 'No registrados') ?></td>
-                                        <td><strong><?= $doc['anio_publicacion'] ?></strong></td>
-                                        <td style="text-align: center;">
-                                            <div class="action-links">
-                                                <a href="?ruta=agregar-documento&accion=editar&id=<?= $doc['id'] ?>" class="btn-action-edit" title="Modificar Metadatos">
-                                                    <i class="ph ph-pencil-simple"></i> Editar
-                                                </a>
-                                                <?php if ($nivelUsuario >= 2): ?>
-                                                    <a href="javascript:void(0)" class="btn-action-delete" title="Eliminar Registro" onclick="confirmarEliminacionModal('?ruta=agregar-documento&accion=eliminar&id=<?= $doc['id'] ?>')">
-                                                        <i class="ph ph-trash"></i> Eliminar
-                                                    </a>
-                                                <?php endif; ?>
-                                            </div>
-                                        </td>
+                                         <td class="pst-td-title">
+                                             <div style="display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.15rem; flex-wrap: wrap;">
+                                                 <span class="pst-badge-soft" style="background-color: rgba(112, 144, 203, 0.15); color: var(--color-secundario); padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.7rem; font-weight: 700;"><?= htmlspecialchars($doc['nivel_academico'] ?? 'Pregrado') ?></span>
+                                                 <?php if (($doc['nivel_academico'] ?? 'Pregrado') === 'Pregrado' && !empty($doc['trayecto'])): ?>
+                                                     <span class="pst-badge-soft" style="background-color: rgba(0, 123, 255, 0.1); color: var(--color-terciario); padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.7rem; font-weight: 700;"><?= htmlspecialchars($doc['trayecto']) ?></span>
+                                                 <?php endif; ?>
+                                                 <?php if (($doc['activo'] ?? true)): ?>
+                                                     <span style="background: #def7ec; color: #03543f; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.68rem; font-weight: 700;">Visibilidad: Activo</span>
+                                                 <?php else: ?>
+                                                     <span style="background: #fde8e8; color: #9b1c1c; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.68rem; font-weight: 700;">Visibilidad: Oculto</span>
+                                                 <?php endif; ?>
+                                                 <?php if (!empty($doc['url_repositorio'])): ?>
+                                                     <a href="<?= htmlspecialchars($doc['url_repositorio']) ?>" target="_blank" style="color: var(--color-secundario); font-size: 0.75rem; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.2rem;" title="Ver código fuente">
+                                                         <i class="ph ph-git-branch"></i> Git
+                                                     </a>
+                                                 <?php endif; ?>
+                                             </div>
+                                             <strong><?= htmlspecialchars($doc['titulo'] ?? '') ?></strong>
+                                             <?php if (!empty($doc['obj_general'])): ?>
+                                                 <div style="font-size: 0.73rem; color: var(--texto-normal); margin-top: 0.15rem; font-style: italic;">
+                                                     <strong>Objetivo:</strong> <?= htmlspecialchars(substr($doc['obj_general'], 0, 110)) ?>...
+                                                 </div>
+                                             <?php endif; ?>
+                                         </td>
+                                         <td><?= htmlspecialchars($doc['autores_nombres'] ?? 'No registrados') ?></td>
+                                         <td><strong><?= $doc['anio_publicacion'] ?></strong></td>
+                                         <td style="text-align: center;">
+                                             <div class="action-links" style="display: flex; gap: 0.3rem; justify-content: center; flex-wrap: wrap;">
+                                                 <!-- Opción 3: Previsualizar Ficha Completa -->
+                                                 <button type="button" class="btn-action-edit" style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;" title="Previsualizar Ficha Técnica" onclick="abrirModalPrevisualizarFichaAdmin(<?= htmlspecialchars(json_encode($doc)) ?>)">
+                                                     <i class="ph ph-eye"></i> Ficha
+                                                 </button>
+
+                                                 <!-- Opción 5: Descargar Documento Adjunto -->
+                                                 <?php if (!empty($doc['archivo_pdf'])): ?>
+                                                     <a href="?ruta=ver-pdf-pst&id=<?= $doc['id'] ?>" target="_blank" class="btn-action-edit" style="background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd;" title="Descargar / Abrir Documento Digital">
+                                                         <i class="ph ph-download-simple"></i> Adjunto
+                                                     </a>
+                                                 <?php endif; ?>
+
+                                                 <!-- Opción 1: Activar / Desactivar (Soft Delete) -->
+                                                 <a href="?ruta=agregar-documento&accion=toggle_estado&id=<?= $doc['id'] ?>" class="btn-action-edit" style="background: <?= ($doc['activo'] ?? true) ? '#fef3c7; color: #92400e; border: 1px solid #fde68a;' : '#dcfce7; color: #15803d; border: 1px solid #86efac;' ?>" title="<?= ($doc['activo'] ?? true) ? 'Ocultar del catálogo público' : 'Hacer visible en el catálogo público' ?>">
+                                                     <i class="ph ph-eye-slash"></i> <?= ($doc['activo'] ?? true) ? 'Ocultar' : 'Activar' ?>
+                                                 </a>
+
+                                                 <a href="?ruta=agregar-documento&accion=editar&id=<?= $doc['id'] ?>" class="btn-action-edit" title="Modificar Metadatos">
+                                                     <i class="ph ph-pencil-simple"></i> Editar
+                                                 </a>
+
+                                                 <?php if ($nivelUsuario >= 2): ?>
+                                                     <a href="javascript:void(0)" class="btn-action-delete" title="Eliminar Registro Definitivo" onclick="confirmarEliminacionModal('?ruta=agregar-documento&accion=eliminar&id=<?= $doc['id'] ?>')">
+                                                         <i class="ph ph-trash"></i> Eliminar
+                                                     </a>
+                                                 <?php endif; ?>
+                                             </div>
+                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -642,6 +664,7 @@ function procesarArchivosSeleccionados(fileList) {
                 trayecto: 'Trayecto I',
                 url_repositorio: '',
                 resumen: '',
+                obj_general: '',
                 palabras_clave: '',
                 comunidad_beneficiada: '',
                 linea_id: '',
@@ -897,6 +920,7 @@ function obtenerDatosFormularioActual() {
         trayecto: document.getElementById('trayecto') ? document.getElementById('trayecto').value : 'Trayecto I',
         url_repositorio: document.getElementById('url_repositorio') ? document.getElementById('url_repositorio').value.trim() : '',
         resumen: document.getElementById('resumen') ? document.getElementById('resumen').value.trim() : '',
+        obj_general: document.getElementById('obj_general') ? document.getElementById('obj_general').value.trim() : '',
         palabras_clave: document.getElementById('palabras_clave') ? document.getElementById('palabras_clave').value.trim() : '',
         comunidad_beneficiada: document.getElementById('comunidad_beneficiada') ? document.getElementById('comunidad_beneficiada').value.trim() : '',
         linea_id: document.getElementById('linea_id') ? document.getElementById('linea_id').value : '',
@@ -1045,6 +1069,7 @@ function rellenarFormulario(data) {
     if (data.trayecto !== undefined && document.getElementById('trayecto')) document.getElementById('trayecto').value = data.trayecto || 'Trayecto I';
     if (data.url_repositorio !== undefined && document.getElementById('url_repositorio')) document.getElementById('url_repositorio').value = data.url_repositorio || '';
     if (data.resumen !== undefined) document.getElementById('resumen').value = data.resumen || '';
+    if (data.obj_general !== undefined && document.getElementById('obj_general')) document.getElementById('obj_general').value = data.obj_general || '';
     if (data.palabras_clave !== undefined) document.getElementById('palabras_clave').value = data.palabras_clave || '';
     if (data.comunidad_beneficiada !== undefined) document.getElementById('comunidad_beneficiada').value = data.comunidad_beneficiada || '';
 
@@ -1639,3 +1664,147 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
     </div>
 </div>
+
+<!-- MODAL DE PREVISUALIZACIÓN COMPLETA DE FICHA TÉCNICA DE PROYECTO (ADMIN) -->
+<div id="modalFichaAdminPst" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 34, 68, 0.85); backdrop-filter: blur(5px); z-index: 99999; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: var(--bg-card, #ffffff); border: 1px solid rgba(169, 168, 166, 0.25); border-radius: 12px; width: 95%; max-width: 1050px; max-height: 92vh; overflow-y: auto; padding: 2rem; box-shadow: 0 20px 45px rgba(0,0,0,0.4); animation: fadeIn 0.2s ease-out;">
+        
+        <!-- Encabezado de la Ficha -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid rgba(0, 34, 68, 0.1); padding-bottom: 1rem; margin-bottom: 1.25rem;">
+            <div style="flex: 1; padding-right: 1rem;">
+                <div style="display: flex; gap: 0.4rem; align-items: center; margin-bottom: 0.35rem; flex-wrap: wrap;">
+                    <span class="pst-badge-soft" id="modalFichaNivel" style="background: rgba(0, 123, 255, 0.1); color: var(--color-terciario); padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 800;"></span>
+                    <span id="modalFichaEstado" style="padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 800;"></span>
+                </div>
+                <h2 id="modalFichaTitulo" style="font-size: 1.35rem; font-weight: 800; color: var(--texto-titulos); margin: 0; line-height: 1.35;"></h2>
+            </div>
+            <button type="button" onclick="document.getElementById('modalFichaAdminPst').style.display='none'" style="background: rgba(0,0,0,0.05); border: none; font-size: 1.6rem; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; color: var(--texto-silenciado); display: flex; align-items: center; justify-content: center;">&times;</button>
+        </div>
+
+        <!-- Contenido Multicolumna y Secciones -->
+        <div style="display: flex; flex-direction: column; gap: 1.25rem; font-size: 0.9rem; color: var(--texto-normal);">
+            
+            <!-- Equipo y Tutores -->
+            <div class="grid-2-cols" style="gap: 1.25rem;">
+                <div style="background: #fafbfe; padding: 1rem; border-radius: 8px; border: 1px solid rgba(0, 123, 255, 0.12);">
+                    <strong style="color: var(--color-terciario); display: flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.4rem;">
+                        <i class="ph ph-users" style="font-size: 1.1rem;"></i> Autores (Estudiantes del Equipo)
+                    </strong>
+                    <span id="modalFichaAutores" style="font-weight: 600; color: var(--texto-titulos); line-height: 1.45; display: block;"></span>
+                </div>
+
+                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid rgba(169, 168, 166, 0.2);">
+                    <strong style="color: var(--color-secundario); display: flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.4rem;">
+                        <i class="ph ph-chalkboard-teacher" style="font-size: 1.1rem;"></i> Tutores del Proyecto
+                    </strong>
+                    <span id="modalFichaTutores" style="font-weight: 600; color: var(--texto-titulos); line-height: 1.45; display: block;"></span>
+                </div>
+            </div>
+
+            <!-- Objetivo General -->
+            <div id="modalFichaObjWrapper" style="background: #f0f9ff; border-left: 4px solid var(--color-terciario, #007bff); padding: 1rem 1.1rem; border-radius: 0 8px 8px 0;">
+                <strong style="color: var(--color-terciario); display: flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.3rem;">
+                    <i class="ph ph-target" style="font-size: 1.1rem;"></i> Objetivo General de la Investigación
+                </strong>
+                <p id="modalFichaObj" style="margin: 0; font-size: 0.95rem; font-weight: 600; color: var(--texto-titulos); line-height: 1.5;"></p>
+            </div>
+
+            <!-- Resumen Epistémico -->
+            <div>
+                <strong style="color: var(--texto-titulos); display: flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.4rem;">
+                    <i class="ph ph-book-open" style="font-size: 1.1rem;"></i> Resumen Epistémico / Síntesis de Propuesta
+                </strong>
+                <p id="modalFichaResumen" style="margin: 0; line-height: 1.6; text-align: justify; background: #ffffff; padding: 1rem; border-radius: 8px; border: 1px solid rgba(169, 168, 166, 0.2);"></p>
+            </div>
+
+            <!-- Metadatos Clasificación y Entornos -->
+            <div class="grid-2-cols" style="gap: 1rem; background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid rgba(169, 168, 166, 0.2);">
+                <div>
+                    <strong style="color: var(--texto-titulos); font-size: 0.78rem; display: block; text-transform: uppercase; margin-bottom: 0.2rem;">Línea de Investigación:</strong>
+                    <span id="modalFichaLinea" style="font-weight: 700; color: var(--color-terciario);"></span>
+                </div>
+                <div>
+                    <strong style="color: var(--texto-titulos); font-size: 0.78rem; display: block; text-transform: uppercase; margin-bottom: 0.2rem;">Dimensión Operativa:</strong>
+                    <span id="modalFichaDimension" style="font-weight: 600;"></span>
+                </div>
+                <div>
+                    <strong style="color: var(--texto-titulos); font-size: 0.78rem; display: block; text-transform: uppercase; margin-bottom: 0.2rem;">Comunidad u Objeto Beneficiario:</strong>
+                    <span id="modalFichaComunidad" style="font-weight: 600;"></span>
+                </div>
+                <div>
+                    <strong style="color: var(--texto-titulos); font-size: 0.78rem; display: block; text-transform: uppercase; margin-bottom: 0.2rem;">Año y Fecha de Defensa:</strong>
+                    <span id="modalFichaAnio" style="font-weight: 600;"></span>
+                </div>
+                <div style="grid-column: span 2;">
+                    <strong style="color: var(--texto-titulos); font-size: 0.78rem; display: block; text-transform: uppercase; margin-bottom: 0.2rem;">Palabras Clave (Keywords):</strong>
+                    <span id="modalFichaKeywords" style="font-style: italic; color: var(--texto-silenciado);"></span>
+                </div>
+                <div id="modalFichaGitWrapper" style="grid-column: span 2;">
+                    <strong style="color: var(--texto-titulos); font-size: 0.78rem; display: block; text-transform: uppercase; margin-bottom: 0.2rem;">Código Fuente (Git):</strong>
+                    <a id="modalFichaGit" href="#" target="_blank" style="color: var(--color-terciario); text-decoration: underline; font-weight: 600;"></a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Botones Inferiores -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(169, 168, 166, 0.2); padding-top: 1rem; margin-top: 1.5rem;">
+            <div id="modalFichaAdjuntoWrapper">
+                <a id="btnModalFichaVerAdjunto" href="#" target="_blank" class="btn-save" style="background: #0284c7; color: white; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 1rem; text-decoration: none;">
+                    <i class="ph ph-file-pdf" style="font-size: 1.1rem;"></i> Ver / Descargar Documento Adjunto
+                </a>
+            </div>
+            <button type="button" onclick="document.getElementById('modalFichaAdminPst').style.display='none'" class="btn-cancel" style="padding: 0.45rem 1.4rem;">Cerrar Ficha</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function abrirModalPrevisualizarFichaAdmin(doc) {
+    if (!doc) return;
+    document.getElementById('modalFichaNivel').textContent = (doc.nivel_academico || 'Pregrado') + (doc.trayecto ? ' • ' + doc.trayecto : '');
+    
+    const badgeEstado = document.getElementById('modalFichaEstado');
+    if (doc.activo === false || doc.activo === '0' || doc.activo === 0) {
+        badgeEstado.textContent = 'Visibilidad: Oculto';
+        badgeEstado.style.background = '#fde8e8';
+        badgeEstado.style.color = '#9b1c1c';
+    } else {
+        badgeEstado.textContent = 'Visibilidad: Activo';
+        badgeEstado.style.background = '#def7ec';
+        badgeEstado.style.color = '#03543f';
+    }
+
+    document.getElementById('modalFichaTitulo').textContent = doc.titulo || 'Sin título';
+    document.getElementById('modalFichaAutores').textContent = doc.autores_nombres || 'No registrados';
+    document.getElementById('modalFichaTutores').textContent = doc.tutores_nombres || 'No registrados';
+    document.getElementById('modalFichaObj').textContent = doc.obj_general || 'No registrado';
+    document.getElementById('modalFichaResumen').textContent = doc.resumen || 'Sin resumen';
+    document.getElementById('modalFichaLinea').textContent = doc.linea_nombre || 'General';
+    document.getElementById('modalFichaDimension').textContent = doc.dimension_nombre || 'Sin dimensión asociada';
+    document.getElementById('modalFichaComunidad').textContent = doc.comunidad_beneficiada || 'No registrada';
+    document.getElementById('modalFichaAnio').textContent = (doc.anio_publicacion || '') + (doc.fecha_defensa ? ' (Defensa: ' + doc.fecha_defensa + ')' : '');
+    document.getElementById('modalFichaKeywords').textContent = doc.palabras_clave || 'Ninguna';
+
+    const gitWrapper = document.getElementById('modalFichaGitWrapper');
+    const gitLink = document.getElementById('modalFichaGit');
+    if (doc.url_repositorio) {
+        gitLink.href = doc.url_repositorio;
+        gitLink.textContent = doc.url_repositorio;
+        gitWrapper.style.display = 'block';
+    } else {
+        gitWrapper.style.display = 'none';
+    }
+
+    const btnAdjuntoWrapper = document.getElementById('modalFichaAdjuntoWrapper');
+    const btnAdjunto = document.getElementById('btnModalFichaVerAdjunto');
+    if (doc.archivo_pdf) {
+        btnAdjunto.href = '?ruta=ver-pdf-pst&id=' + doc.id;
+        btnAdjuntoWrapper.style.display = 'block';
+    } else {
+        btnAdjuntoWrapper.style.display = 'none';
+    }
+
+    document.getElementById('modalFichaAdminPst').style.display = 'flex';
+}
+</script>

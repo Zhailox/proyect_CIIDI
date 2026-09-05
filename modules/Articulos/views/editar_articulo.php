@@ -10,6 +10,7 @@
     </div>
 
     <form action="actualizar-articulo" method="POST" enctype="multipart/form-data" class="art-form-layout" id="form-articulo" onsubmit="return validarFormulario()">
+        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">    
         <input type="hidden" name="id_articulo" value="<?= (int)($articulo['id'] ?? 0) ?>">
         <input type="hidden" name="imagen_actual" value="<?= htmlspecialchars($articulo['imagen_portada'] ?? 'default_article.jpg') ?>">
 
@@ -31,13 +32,7 @@
                    <div class="form-group mt-1">
                         <label class="font-bold">Categorías del Artículo *</label>
                         <div class="checkbox-grid-box p-1" id="box-categorias">
-                            <?php foreach ($categorias as $cat): ?>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" name="categorias[]" value="<?= $cat['id'] ?>"
-                                        <?= (isset($categoriasSeleccionadas) && in_array($cat['id'], $categoriasSeleccionadas)) ? 'checked' : '' ?>> 
-                                    <?= htmlspecialchars($cat['nombre']) ?>
-                                </label>
-                            <?php endforeach; ?>
+                            
                         </div>
                         <div id="error-categorias" class="text-danger mt-sm" style="display:none; font-size:0.85rem;">
                             Debe seleccionar al menos una categoría.
@@ -84,13 +79,8 @@
 
                 <div class="form-group mt-1-5">
                     <label class="font-bold">Etiquetas del Artículo</label>
-                    <div class="checkbox-grid-box p-1">
-                        <?php foreach ($etiquetas as $tag): ?>
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="etiquetas[]" value="<?= (int)$tag['id'] ?>" <?= in_array((int)$tag['id'], $etiquetasSeleccionadas, true) ? 'checked' : '' ?>>
-                                <?= htmlspecialchars((string) $tag['nombre']) ?>
-                            </label>
-                        <?php endforeach; ?>
+                    <div class="checkbox-grid-box p-1" id="box-etiquetas">
+                    
                     </div>
                 </div>
             </div>
@@ -124,15 +114,51 @@
 
             <div class="gestor-art-card mb-2">
                 <h3 class="card-subtitle text-secondary">Portada</h3>
+                
+                <?php 
+                // MAGIA: Comparamos el JSON con el php.ini del servidor
+                $jsonMaxMb = (int)ConfigService::get('archivos.max_size_mb', 5);
+                $phpMaxStr = ini_get('upload_max_filesize');
+                $phpMaxMb = (int)preg_replace('/[^0-9]/', '', $phpMaxStr);
+                
+                // Determinamos cuál es el límite real y si es culpa del servidor
+                $limiteRealMb = min($jsonMaxMb, $phpMaxMb);
+                $esLimiteServidor = ($phpMaxMb < $jsonMaxMb) ? 'true' : 'false';
+
+                $exts = ConfigService::get('archivos.extensiones_permitidas', ['.jpg', '.jpeg', '.png', '.webp']);
+                $acceptStr = implode(',', $exts);
+                
+                if (isset($articulo)): 
+                    $portadaActual = $articulo['imagen_portada'] ?? 'default_article.jpg';
+                ?>
+                    <div class="form-group mt-1">
+                        <label class="font-bold">Portada Actual:</label>
+                        <div style="font-size:0.85rem; margin-bottom: 0.5rem; color: var(--texto-silenciado);">
+                            <i class="ph-bold ph-image"></i> <?= htmlspecialchars($portadaActual) ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
                 <div class="form-group mt-1">
-                    <label class="font-bold">Cambiar imagen de portada</label>
-                    <input type="file" name="imagen_portada" class="login-flat-input w-100 p-input file-input-dashed">
+                    <label class="font-bold"><?= isset($articulo) ? 'Sustituir archivo físico:' : 'Subir archivo físico:' ?></label>
+                    
+                    <div id="dropzone-portada" data-max-mb="<?= $limiteRealMb ?>" data-server-limit="<?= $esLimiteServidor ?>" data-exts="<?= htmlspecialchars($acceptStr) ?>" style="border: 2px dashed rgba(0,0,0,0.2); padding: 2rem 1rem; text-align: center; border-radius: 8px; cursor: pointer; background: #f8fafc; transition: all 0.2s;">
+                        <input type="file" id="input_imagen_portada" name="imagen_portada" accept="<?= htmlspecialchars($acceptStr) ?>" style="display:none;">
+                        <i class="ph-bold <?= isset($articulo) ? 'ph-upload-simple' : 'ph-image' ?>" style="font-size: 2.5rem; color: var(--color-terciario);"></i>
+                        <h4 style="margin: 0.5rem 0; font-size: 0.95rem; color: var(--texto-titulos);">Arrastra una <?= isset($articulo) ? 'nueva ' : '' ?>portada o haz clic aquí</h4>
+                        <p style="font-size: 0.75rem; color: var(--texto-silenciado); margin: 0;">Formatos permitidos: <?= htmlspecialchars(implode(', ', $exts)) ?> (Máx. <?= $limiteRealMb ?> MB)</p>
+                        <div id="preview-image-name" style="margin-top: 0.75rem; font-size: 0.85rem; font-weight: bold; color: var(--color-secundario); display: none;"></div>
+                    </div>
                 </div>
+
                 <div class="form-group mt-1">
-                    <label class="font-bold">O pegar URL de imagen</label>
-                    <input type="text" name="url_imagen" class="login-flat-input w-100 p-input" value="<?= htmlspecialchars($articulo['imagen_portada'] ?? '') ?>" placeholder="https://ejemplo.com/imagen.jpg">
+                    <label class="font-bold">O ingresar URL externa:</label>
+                    <input type="url" name="url_imagen" class="login-flat-input w-100 p-input" placeholder="https://ejemplo.com/portada.jpg">
+                    <small class="text-muted d-block mt-sm">Si subes un archivo físico, se ignorará esta URL.</small>
                 </div>
-            </div> <button type="submit" class="btn btn-primary w-100 btn-large justify-center">
+            
+            </div> 
+            <button type="submit" class="btn btn-primary w-100 btn-large justify-center">
                 <i class="ph-bold ph-floppy-disk"></i> Guardar Cambios
             </button>
         </div>
@@ -167,8 +193,12 @@
         </div>
     </div>
 <script>
-    window.DATA_AUTORES = <?= json_encode($autores) ?>;
+    window.DATA_AUTORES = <?= json_encode($autores ?? []) ?>;
     window.AUTORES_SELECCIONADOS = <?= json_encode(array_map('intval', $autoresSeleccionados ?? [])) ?>;
+    window.CAT_SELECCIONADAS = <?= json_encode(array_map('intval', $categoriasSeleccionadas ?? [])) ?>;
+    window.TAG_SELECCIONADAS = <?= json_encode(array_map('intval', $etiquetasSeleccionadas ?? [])) ?>;
 </script>
 <script src="../modules/Articulos/assets/js/gestor_autores.js"></script>
+<script src="../modules/Articulos/assets/js/gestor_portadas.js"></script>
+<script src="../modules/Articulos/assets/js/gestor_catalogos_cache.js"></script>
 </div>

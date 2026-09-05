@@ -4,7 +4,6 @@
 
         <header class="pst-header">
             <h1>Proyectos Socio-Tecnológicos (PST)</h1>
-            <p>Repositorio de investigaciones aprobadas del PNF en Informática (UPTTMBI)</p>
         </header>
 
         <!-- Layout de Cuadrícula con Sidebar a la derecha -->

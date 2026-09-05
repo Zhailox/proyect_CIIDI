@@ -6,7 +6,7 @@ class ConfiguracionController {
 
     public function index(): array {
         require_once CORE_PATH . 'Security/Auth.php';
-        Auth::requierePrivilegioMinimo(2); // Bibliotecarios o SuperAdmin
+        Auth::requierePrivilegioMinimo(2); 
 
         $mensaje = null;
         $error = null;
@@ -48,14 +48,27 @@ class ConfiguracionController {
                 $actual['recursos']['mostrar_editorial'] = isset($_POST['mostrar_editorial']) && $_POST['mostrar_editorial'] === '1';
                 $actual['recursos']['mostrar_volumen'] = isset($_POST['mostrar_volumen']) && $_POST['mostrar_volumen'] === '1';
                 $actual['recursos']['mostrar_issn'] = isset($_POST['mostrar_issn']) && $_POST['mostrar_issn'] === '1';
-
-                // 4. Buscador
-                if (isset($_POST['anio_minimo'])) $actual['buscador']['anio_minimo'] = (int)$_POST['anio_minimo'];
-                $actual['buscador']['resaltar_coincidencias'] = isset($_POST['resaltar_coincidencias']) && $_POST['resaltar_coincidencias'] === '1';
-
-                // 5. Archivos (Imágenes)
+                // El buscador que estaba resagado 
+                if (isset($_POST['anio_minimo'])) {
+                    $actual['buscador']['anio_minimo'] = (int)$_POST['anio_minimo'];
+                }
+                // 4. Archivos (Imágenes y Extensiones)
                 if (isset($_POST['max_size_mb'])) $actual['archivos']['max_size_mb'] = max(1, (int)$_POST['max_size_mb']);
-                if (isset($_POST['max_autores'])) $actual['archivos']['max_autores'] = max(1, (int)$_POST['max_autores']);
+                if (!empty($_POST['extensiones_permitidas_raw'])) {
+                    $exts = explode(',', $_POST['extensiones_permitidas_raw']);
+                    $cleanExts = [];
+                    foreach ($exts as $ext) {
+                        $ext = strtolower(trim($ext));
+                        // Asegurar formato ".ext"
+                        if ($ext !== '' && $ext !== '.') {
+                             $cleanExts[] = (strpos($ext, '.') === 0) ? $ext : '.' . $ext;
+                        }
+                    }
+                    if (!empty($cleanExts)) {
+                        $actual['archivos']['extensiones_permitidas'] = array_unique($cleanExts);
+                    }
+                }
+
 
                 if (ConfigService::save($actual)) {
                     $mensaje = "¡Configuración de la Revista guardada exitosamente!";
