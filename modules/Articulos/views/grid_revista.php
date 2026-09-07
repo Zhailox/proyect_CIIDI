@@ -107,7 +107,7 @@ $buildUrl = function($page) use ($filtros) {
                 $imgPortada = $ultimo['imagen_portada'] ?? 'default_article.jpg';
                 $rutaImg = (strpos($imgPortada, 'http') === 0) ? htmlspecialchars($imgPortada) : '../public/uploads/articulos/' . htmlspecialchars($imgPortada);
             ?>
-            <img src="<?= $rutaImg ?>" loading="lazy" alt="<?= htmlspecialchars($ultimo['titulo'] ?? 'Portada') ?>" class="art-featured-img" style="object-fit: cover; width: 100%;">
+            <img data-src="<?= $rutaImg ?>" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f9'/%3E%3C/svg%3E" alt="<?= htmlspecialchars($ultimo['titulo'] ?? 'Portada') ?>" class="art-featured-img" style="object-fit: cover; width: 100%;">
             <div class="art-featured-body">
                 <div class="art-post-meta">
                     <div class="art-tags">
@@ -160,7 +160,7 @@ $buildUrl = function($page) use ($filtros) {
                         $imgPortada = $art['imagen_portada'] ?? 'default_article.jpg';
                         $rutaImg = (strpos($imgPortada, 'http') === 0) ? htmlspecialchars($imgPortada) : '../public/uploads/articulos/' . htmlspecialchars($imgPortada);
                     ?>
-                    <img src="<?= $rutaImg ?>" loading="lazy" alt="<?= htmlspecialchars($art['titulo'] ?? 'Portada') ?>" class="art-post-img" style="object-fit: cover; width: 100%;">
+                    <img data-src="<?= $rutaImg ?>" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 180'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f9'/%3E%3C/svg%3E" alt="<?= htmlspecialchars($art['titulo'] ?? 'Portada') ?>" class="art-post-img" style="object-fit: cover; width: 100%;">
                     <div class="art-post-body">
                         <div class="art-post-meta">
                             <span class="art-tag"><?= htmlspecialchars($art['categoria'] ?? 'Artículo') ?></span>
@@ -290,5 +290,6 @@ function copiarCitaText(id, btn) {
     </div>
 </div>
 
+<script src="../modules/Articulos/assets/js/lazy_loading.js"></script>
     </main>
 </div>

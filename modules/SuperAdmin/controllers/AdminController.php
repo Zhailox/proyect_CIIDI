@@ -35,7 +35,7 @@ class AdminController {
         $host = 'localhost';
         $port = '5432';
         $db   = 'ciidi';
-        $user = 'postgres';
+        $user = 'miki';
         $pass = '1234'; 
 
         // 2. Preparamos el destino (storage/backups/)

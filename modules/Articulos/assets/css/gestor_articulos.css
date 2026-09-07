@@ -99,6 +99,15 @@
     background-position: center;
     border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: opacity 0.3s ease-in-out;
+}
+
+img[data-src] {
+    opacity: 0;
+}
+
+img.loaded {
+    opacity: 1;
 }
 
 .art-year-badge {
@@ -365,4 +374,26 @@
 
 .m-0 {
     margin: 0;
+}
+.art-help-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1.5px solid #ea9008; /* Borde amarillo */
+    color: #eab308;
+    font-size: 0.75rem;
+    font-weight: bold;
+    cursor: help;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+    transition: all 0.2s;
+}
+
+.art-help-icon:hover {
+    background: #fef08a;
+    color: #ca8a04;
+    border-color: #ca8a04;
 }
