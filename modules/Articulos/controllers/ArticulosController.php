@@ -465,6 +465,11 @@ class ArticulosController {
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (session_status() === PHP_SESSION_NONE) session_start();
+            if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+                $_SESSION['mensaje_error'] = "Petición rechazada por seguridad (Token CSRF inválido o expirado).";
+                header('Location: gestor-catalogos');
+                exit;
+            }
 
             $accion = $_POST['accion'] ?? '';
             $nombre = trim($_POST['nombre'] ?? '');
@@ -526,7 +531,10 @@ class ArticulosController {
 
             $q_aut = trim($_GET['q_aut'] ?? ''); // Búsqueda de autores
 
-            // 2. Ejecutamos las consultas paginadas
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+        // 2. Ejecutamos las consultas paginadas
             $categorias = $this->articuloModel->obtenerCatalogoPaginado('categorias', $q_cat, $p_cat, 5);
             $etiquetas = $this->articuloModel->obtenerCatalogoPaginado('etiquetas', $q_tag, $p_tag, 5);
             $editoriales = $this->articuloModel->obtenerCatalogoPaginado('editoriales', $q_edit, $p_edit, 5);

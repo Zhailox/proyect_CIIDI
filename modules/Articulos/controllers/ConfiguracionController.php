@@ -8,11 +8,17 @@ class ConfiguracionController {
         require_once CORE_PATH . 'Security/Auth.php';
         Auth::requierePrivilegioMinimo(2); 
 
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
         $mensaje = null;
         $error = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            try {
+            if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+                $error = "Petición rechazada por seguridad (Token CSRF inválido o expirado).";
+            } else {
+                try {
                 $actual = ConfigService::get() ?? [];
 
                 // 1. Citas
@@ -78,6 +84,7 @@ class ConfiguracionController {
             } catch (Exception $e) {
                 $error = "Error: " . $e->getMessage();
             }
+        }
         }
 
         return [

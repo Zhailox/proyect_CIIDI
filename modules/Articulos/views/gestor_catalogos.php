@@ -47,6 +47,7 @@ function urlParam($nuevosParams) {
             </form>
 
             <form action="gestor-catalogos" method="POST" class="mt-1">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                 <input type="hidden" name="accion" value="crear_categoria">
                 <div class="form-group" style="display:flex; gap:0.5rem;">
                     <input type="text" name="nombre" class="login-flat-input w-100 p-input" placeholder="Nueva categoría..." required style="padding: 0.5rem;">

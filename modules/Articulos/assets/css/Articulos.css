@@ -735,25 +735,3 @@ img.loaded {
     background: var(--color-terciario);
     color: var(--blanco);
 }
-.art-help-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    border: 1.5px solid #eab308; /* Borde amarillo */
-    color: #eab308;
-    font-size: 0.75rem;
-    font-weight: bold;
-    cursor: help;
-    margin-left: 0.5rem;
-    vertical-align: middle;
-    transition: all 0.2s;
-}
-
-.art-help-icon:hover {
-    background: #fef08a;
-    color: #ca8a04;
-    border-color: #ca8a04;
-}

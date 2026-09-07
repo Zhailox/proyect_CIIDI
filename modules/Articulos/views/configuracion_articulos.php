@@ -19,6 +19,7 @@
         <?php endif; ?>
 
         <form action="" method="POST" id="configRevistaForm">
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
             
             <div class="pst-config-nav-tabs" style="display:flex; gap:0.5rem; border-bottom: 2px solid rgba(0,0,0,0.05); padding-bottom:1rem; margin-bottom: 2rem;">
                 <button type="button" class="btn btn-secondary" onclick="switchConfigTab('tabCitas', this)">Citas</button>
