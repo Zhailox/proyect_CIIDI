@@ -27,17 +27,17 @@
                 <h3 class="card-subtitle text-tertiary">Información General</h3>
                 
                 <div class="form-group mt-1">
-                    <label class="font-bold">Título del Artículo *</label>
+                    <label class="font-bold">Título del Artículo * <span class="art-help-icon" title="El título oficial exacto del documento o publicación.">?</span></label>
                     <input type="text" name="titulo" class="login-flat-input w-100 p-input" required>
                 </div>
                 <div class="form-group mt-1">
-                    <label class="font-bold">Resumen / Abstract *</label>
+                    <label class="font-bold">Resumen / Abstract * <span class="art-help-icon" title="Breve síntesis de la investigación. Se recomienda un máximo de 4 a 5 líneas.">?</span></label>
                     <textarea name="resumen" class="login-flat-input w-100 p-input" rows="4" placeholder="Escriba un breve resumen del artículo..." required></textarea>
                 </div>
 
                 <div class="grid-2-cols mt-1">
                     <div class="form-group mt-1">
-                        <label class="font-bold">Categorías del Artículo *</label>
+                        <label class="font-bold">Categorías del Artículo * <span class="art-help-icon" title="Clasificación temática principal. Puedes seleccionar varias opciones.">?</span></label>
                         <div class="checkbox-grid-box p-1" id="box-categorias">
                             
                         </div>
@@ -47,7 +47,7 @@
                     
                 </div>
                     <div class="form-group">
-                        <label class="font-bold">Editorial / Repositorio</label>
+                        <label class="font-bold">Editorial / Repositorio <span class="art-help-icon" title="Institución, universidad o revista científica que avala la publicación original.">?</span></label>
                         <select name="id_editorial" class="login-flat-input w-100 p-input">
                             <option value="">Seleccione la editorial...</option>
                             <?php foreach ($editoriales as $edit): ?>
@@ -58,7 +58,7 @@
                 </div>
 
                 <div class="form-group mt-1">
-                    <label class="font-bold">Enlace Oficial (URL del Repositorio) *</label>
+                    <label class="font-bold">Enlace Oficial (URL) * <span class="art-help-icon" title="Link directo (URL o DOI) hacia el PDF original en internet.">?</span></label>
                     <input type="url" name="archivo_pdf" class="login-flat-input w-100 p-input" placeholder="https://doi.org/..." required>
                 </div>
             </div>
@@ -68,7 +68,7 @@
                 
                 <!-- BUSCADOR DINÁMICO DE AUTORES (Estructura Limpia) -->
                 <div class="form-group mt-1 pos-relative">
-                    <label class="font-bold">Buscar y Seleccionar Autores *</label>
+                    <label class="font-bold">Buscar y Seleccionar Autores * <span class="art-help-icon" title="Escribe el nombre o cédula. Si el autor no existe en el sistema, usa el modal para crearlo.">?</span></label>
                     <input type="text" id="buscador-autores" class="login-flat-input w-100 p-input" placeholder="Escriba un nombre o cédula...">
                     
                     <div id="resultados-autores" class="autocomplete-dropdown">
@@ -87,7 +87,7 @@
                 </div>
 
                 <div class="form-group mt-1-5">
-                    <label class="font-bold">Etiquetas del Artículo</label>
+                    <label class="font-bold">Etiquetas del Artículo <span class="art-help-icon" title="Palabras clave específicas (ej. 'Machine Learning') para facilitar la búsqueda en el catálogo.">?</span></label>
                     <div class="checkbox-grid-box p-1" id="box-etiquetas">
                     
                     </div>
@@ -101,23 +101,23 @@
                 <h3 class="card-subtitle text-secondary">Publicación</h3>
                 
                 <div class="form-group mt-1">
-                    <label class="font-bold">Año</label>
+                    <label class="font-bold">Año <span class="art-help-icon" title="El año en el que se publicó oficialmente el artículo.">?</span></label>
                     <input type="number" name="anio_publicacion" class="login-flat-input w-100 p-input" value="<?= date('Y') ?>" required>
                 </div>
 
                 <div class="grid-2-cols mt-1">
                     <div class="form-group">
-                        <label class="font-bold">Volumen</label>
+                        <label class="font-bold">Volumen <span class="art-help-icon" title="Número de volumen de la revista científica (si aplica).">?</span></label>
                         <input type="text" name="volumen" class="login-flat-input w-100 p-input" placeholder="Ej: 5">
                     </div>
                     <div class="form-group">
-                        <label class="font-bold">Número</label>
+                        <label class="font-bold">Número <span class="art-help-icon" title="Número de edición de la revista científica (si aplica).">?</span></label>
                         <input type="text" name="numero" class="login-flat-input w-100 p-input" placeholder="Ej: 2">
                     </div>
                 </div>
 
                 <div class="form-group mt-1">
-                    <label class="font-bold">ISSN</label>
+                    <label class="font-bold">ISSN <span class="art-help-icon" title="Código Internacional Normalizado de Publicaciones Seriadas (ej. 1234-5678).">?</span></label>
                     <input type="text" name="issn" class="login-flat-input w-100 p-input" placeholder="0000-0000">
                 </div>
             </div>
@@ -150,7 +150,7 @@
                 <?php endif; ?>
 
                 <div class="form-group mt-1">
-                    <label class="font-bold"><?= isset($articulo) ? 'Sustituir archivo físico:' : 'Subir archivo físico:' ?></label>
+                    <label class="font-bold"><?= isset($articulo) ? 'Sustituir archivo físico:' : 'Subir archivo físico:' ?> <span class="art-help-icon" title="Sube una imagen representativa. El sistema la optimizará automáticamente a formato WebP.">?</span></label>
                     
                     <div id="dropzone-portada" data-max-mb="<?= $limiteRealMb ?>" data-server-limit="<?= $esLimiteServidor ?>" data-exts="<?= htmlspecialchars($acceptStr) ?>" style="border: 2px dashed rgba(0,0,0,0.2); padding: 2rem 1rem; text-align: center; border-radius: 8px; cursor: pointer; background: #f8fafc; transition: all 0.2s;">
                         <input type="file" id="input_imagen_portada" name="imagen_portada" accept="<?= htmlspecialchars($acceptStr) ?>" style="display:none;">
@@ -162,7 +162,7 @@
                 </div>
 
                 <div class="form-group mt-1">
-                    <label class="font-bold">O ingresar URL externa:</label>
+                    <label class="font-bold">O ingresar URL externa: <span class="art-help-icon" title="Pega el enlace de una imagen de internet si no deseas subir un archivo desde tu computadora.">?</span></label>
                     <input type="url" name="url_imagen" class="login-flat-input w-100 p-input" placeholder="https://ejemplo.com/portada.jpg">
                     <small class="text-muted d-block mt-sm">Si subes un archivo físico, se ignorará esta URL.</small>
                 </div>
