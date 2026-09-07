@@ -99,6 +99,15 @@
     background-position: center;
     border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: opacity 0.3s ease-in-out;
+}
+
+img[data-src] {
+    opacity: 0;
+}
+
+img.loaded {
+    opacity: 1;
 }
 
 .art-year-badge {

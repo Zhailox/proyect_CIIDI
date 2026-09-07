@@ -67,7 +67,7 @@ $buildUrl = function($page) use ($busquedaActual) {
                                             ? htmlspecialchars($imgPortada) 
                                             : '../public/uploads/articulos/' . htmlspecialchars($imgPortada);
                                     ?>
-                                    <img src="<?= $rutaImg ?>" loading="lazy" alt="Miniatura" class="art-mini-thumbnail" style="object-fit: cover; width: 45px; height: 60px; border-radius: 4px;">
+                                    <img data-src="<?= $rutaImg ?>" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 60'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f9'/%3E%3C/svg%3E" alt="Miniatura" class="art-mini-thumbnail" style="object-fit: cover; width: 45px; height: 60px; border-radius: 4px;">
                                 </td>
                                 <td class="art-title-col">
                                     <div style="margin-bottom: 0.3rem;">
@@ -179,3 +179,4 @@ function confirmarEliminacion(idArticulo) {
     <?php unset($_SESSION['mensaje_error']); ?>
 <?php endif; ?>
 </script>
+<script src="../modules/Articulos/assets/js/lazy_loading.js"></script>
