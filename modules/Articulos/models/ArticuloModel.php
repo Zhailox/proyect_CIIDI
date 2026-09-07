@@ -2,6 +2,23 @@
 require_once CORE_PATH . 'Database/QueryBuilder.php';
 
 class ArticuloModel {
+    private static $cacheCategorias = null;
+    private static $cacheEtiquetas = null;
+    private $cacheFileDir;
+
+    public function __construct() {
+        $this->cacheFileDir = __DIR__ . '/../../../storage/cache/';
+        if (!is_dir($this->cacheFileDir)) {
+            @mkdir($this->cacheFileDir, 0777, true);
+        }
+    }
+
+    public function invalidarCacheCatalogos() {
+        self::$cacheCategorias = null;
+        self::$cacheEtiquetas = null;
+        @unlink($this->cacheFileDir . 'categorias.json');
+        @unlink($this->cacheFileDir . 'etiquetas.json');
+    }
     
     public function obtenerUltimosArticulos(array $filtros = [], $pagina = 1, $porPagina = 20) {
         $db = Connection::getInstance();
@@ -244,19 +261,54 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
         'porPagina' => $porPagina
     ];
 }
-public function obtenerCategorias() {
-    $db = Connection::getInstance();
-    $stmt = $db->prepare("SELECT id, nombre FROM categorias ORDER BY nombre ASC");
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
 
-public function obtenerEtiquetas() {
-    $db = Connection::getInstance();
-    $stmt = $db->prepare("SELECT id, nombre FROM etiquetas ORDER BY nombre ASC");
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
+    public function obtenerCategorias() {
+        if (self::$cacheCategorias !== null) {
+            return self::$cacheCategorias;
+        }
+
+        $cacheFile = $this->cacheFileDir . 'categorias.json';
+        if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < 3600)) {
+            $data = json_decode(file_get_contents($cacheFile), true);
+            if (is_array($data)) {
+                self::$cacheCategorias = $data;
+                return $data;
+            }
+        }
+
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("SELECT id, nombre FROM categorias ORDER BY nombre ASC");
+        $stmt->execute();
+        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        self::$cacheCategorias = $data;
+        @file_put_contents($cacheFile, json_encode($data));
+        return $data;
+    }
+
+    public function obtenerEtiquetas() {
+        if (self::$cacheEtiquetas !== null) {
+            return self::$cacheEtiquetas;
+        }
+
+        $cacheFile = $this->cacheFileDir . 'etiquetas.json';
+        if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < 3600)) {
+            $data = json_decode(file_get_contents($cacheFile), true);
+            if (is_array($data)) {
+                self::$cacheEtiquetas = $data;
+                return $data;
+            }
+        }
+
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("SELECT id, nombre FROM etiquetas ORDER BY nombre ASC");
+        $stmt->execute();
+        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        self::$cacheEtiquetas = $data;
+        @file_put_contents($cacheFile, json_encode($data));
+        return $data;
+    }
     public function registrarArticulo($titulo, $resumen, $categorias, $id_editorial, $archivo_pdf, $anio_publicacion, $volumen, $numero, $issn, $nombreImagen, $autores, $autores_nuevos, $etiquetas) {
         $db = Connection::getInstance();
         
@@ -672,6 +724,7 @@ public function crearCategoria($nombre) {
     $db = Connection::getInstance();
     $stmt = $db->prepare("INSERT INTO categorias (nombre) VALUES (?)");
     $stmt->execute([trim($nombre)]);
+    $this->invalidarCacheCatalogos();
     return true;
 }
 
@@ -679,6 +732,7 @@ public function crearEtiqueta($nombre) {
     $db = Connection::getInstance();
     $stmt = $db->prepare("INSERT INTO etiquetas (nombre) VALUES (?)");
     $stmt->execute([trim($nombre)]);
+    $this->invalidarCacheCatalogos();
     return true;
 }
 
@@ -693,6 +747,7 @@ public function eliminarCategoria($id) {
     $db = Connection::getInstance();
     $db->prepare("DELETE FROM recurso_categorias WHERE id_categoria = ?")->execute([$id]);
     $db->prepare("DELETE FROM categorias WHERE id = ?")->execute([$id]);
+    $this->invalidarCacheCatalogos();
     return true;
 }
 public function obtenerCategoriasDelArticulo($id_recurso) {
@@ -711,6 +766,7 @@ public function obtenerCategoriasDelArticulo($id_recurso) {
         $db = Connection::getInstance();
         $db->prepare("DELETE FROM recurso_etiquetas WHERE id_etiqueta = ?")->execute([$id]);
         $db->prepare("DELETE FROM etiquetas WHERE id = ?")->execute([$id]);
+        $this->invalidarCacheCatalogos();
         return true;
     }
 
@@ -726,12 +782,14 @@ public function obtenerCategoriasDelArticulo($id_recurso) {
     public function actualizarCategoria($id, $nombre) {
         $db = Connection::getInstance();
         $db->prepare("UPDATE categorias SET nombre = ? WHERE id = ?")->execute([trim($nombre), $id]);
+        $this->invalidarCacheCatalogos();
         return true;
     }
 
     public function actualizarEtiqueta($id, $nombre) {
         $db = Connection::getInstance();
         $db->prepare("UPDATE etiquetas SET nombre = ? WHERE id = ?")->execute([trim($nombre), $id]);
+        $this->invalidarCacheCatalogos();
         return true;
     }
 
