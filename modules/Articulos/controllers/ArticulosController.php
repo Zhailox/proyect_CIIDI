@@ -200,7 +200,7 @@ class ArticulosController {
                 }
 
                 $nombreImagen = 'art_' . time() . '_' . uniqid() . '.webp';
-                $destino = __DIR__ . '/../../../public/uploads/articulos/';
+                $destino = __DIR__ . '/../../../storage/uploads/articulos/';
                 if (!is_dir($destino)) mkdir($destino, 0777, true);
                 
                 $rutaDestino = $destino . $nombreImagen;
@@ -422,7 +422,7 @@ class ArticulosController {
                     }
 
                     $nombreImagen = 'art_' . time() . '_' . uniqid() . '.webp';
-                    $destino = __DIR__ . '/../../../public/uploads/articulos/';
+                    $destino = __DIR__ . '/../../../storage/uploads/articulos/';
                     if (!is_dir($destino)) mkdir($destino, 0777, true); 
                     
                     $rutaDestino = $destino . $nombreImagen;

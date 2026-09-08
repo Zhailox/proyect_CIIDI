@@ -93,6 +93,11 @@ public function getRutas(): array {
                 'controlador_path' => __DIR__ . '/controllers/ArticulosController.php',
                 'controlador'      => 'ArticulosController',
                 'metodo'           => 'toggleEstado',
+            ],
+            'api-eliminar-imagen-articulos' => [
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'controlador'      => 'ConfiguracionController',
+                'metodo'           => 'eliminarImagen',
             ]
             
         ];

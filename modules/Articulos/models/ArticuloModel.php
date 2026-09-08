@@ -448,7 +448,7 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
         // Solo borramos si existe, si no es la por defecto, y si NO es una URL externa (http/https)
         if ($portada && $portada !== 'default_article.jpg' && strpos($portada, 'http') !== 0) {
             $nombreLimpio = basename($portada); // Previene Directory Traversal en Linux/Windows
-            $dirUploads = realpath(__DIR__ . '/../../../public/uploads/articulos');
+            $dirUploads = realpath(__DIR__ . '/../../../storage/uploads/articulos');
             
             if ($dirUploads) {
                 $rutaFisica = $dirUploads . DIRECTORY_SEPARATOR . $nombreLimpio;
@@ -525,7 +525,9 @@ public function obtenerArticuloPorId($id) {
                 FROM recursos r
                 JOIN detalles_articulos d ON r.id = d.id_recurso
                 JOIN recurso_categorias rc ON r.id = rc.id_recurso
-                WHERE r.id_tipo_recurso = 3 AND r.id != ?
+                WHERE r.id_tipo_recurso = 3 
+                AND r.id != ?
+                AND COALESCE(d.activo, true) = true
                 AND rc.id_categoria IN (SELECT id_categoria FROM recurso_categorias WHERE id_recurso = ?)
                 ORDER BY r.id DESC LIMIT ?";
         $stmt = $db->prepare($sql);
@@ -590,7 +592,7 @@ public function actualizarArticulo(
         $portadaVieja = $stmtVieja->fetchColumn();
 
         if ($portadaVieja && $portadaVieja !== $nombreImagen && $portadaVieja !== 'default_article.jpg' && strpos($portadaVieja, 'http') !== 0) {
-            $dirUploads = realpath(__DIR__ . '/../../../public/uploads/articulos');
+            $dirUploads = realpath(__DIR__ . '/../../../storage/uploads/articulos');
             if ($dirUploads) {
                 $rutaVieja = $dirUploads . DIRECTORY_SEPARATOR . basename($portadaVieja);
                 if (file_exists($rutaVieja) && is_file($rutaVieja)) {

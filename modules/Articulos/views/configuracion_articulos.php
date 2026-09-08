@@ -163,8 +163,8 @@
 
         <!-- TAB ARCHIVOS -->
         <div id="tabArchivos" class="config-tab-pane" style="display:none;">
-            <div class="pst-config-card">
-                <h3 class="text-tertiary mb-1"><i class="ph-bold ph-image"></i> Restricciones de Carga e Imágenes</h3>
+            <div class="pst-config-card mb-2">
+                <h3 class="text-tertiary mb-1"><i class="ph-bold ph-sliders-horizontal"></i> Restricciones de Carga e Imágenes</h3>
                 <p class="text-muted mb-2" style="font-size:0.85rem;">Gestione la seguridad y los límites de subida para prevenir saturación del almacenamiento.</p>
 
                 <div class="grid-2-cols">
@@ -183,12 +183,107 @@
                     </div>
                 </div>
             </div>
+
+            <!-- GALERÍA GRÁFICA DEL STORAGE -->
+            <div class="pst-config-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.2rem; flex-wrap:wrap; gap:0.5rem; border-bottom:1px solid rgba(0,0,0,0.06); padding-bottom:0.8rem;">
+                    <div>
+                        <h3 class="text-tertiary" style="margin:0;"><i class="ph-bold ph-folder-open"></i> Gestor del Almacenamiento de Imágenes</h3>
+                        <p class="text-muted" style="font-size:0.85rem; margin:0.2rem 0 0 0;">Explore y administre gráficamente las portadas guardadas en <code>storage/uploads/articulos</code>.</p>
+                    </div>
+                    <span style="background:rgba(112, 144, 203, 0.15); color:var(--color-secundario); font-weight:bold; font-size:0.85rem; padding:0.3rem 0.8rem; border-radius:20px;">
+                        Total: <?= count($imagenesStorage ?? []) ?> imágenes
+                    </span>
+                </div>
+
+                <?php if (empty($imagenesStorage)): ?>
+                    <p class="text-muted" style="text-align:center; padding:2rem; font-style:italic;">No hay imágenes almacenadas en el directorio de artículos.</p>
+                <?php else: ?>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.25rem;">
+                        <?php foreach ($imagenesStorage as $img): ?>
+                            <div class="citation-box-glass" id="card_img_<?= md5($img['nombre']) ?>" style="padding: 0.8rem; display:flex; flex-direction:column; justify-content:space-between; align-items:center; position:relative; overflow:hidden;">
+                                
+                                <div style="width: 100%; height: 140px; border-radius: 6px; overflow: hidden; background: #f1f5f9; margin-bottom: 0.8rem; position: relative;">
+                                    <img data-src="<?= $img['url'] ?>" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 140'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f9'/%3E%3C/svg%3E" alt="<?= htmlspecialchars($img['nombre']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                                    
+                                    <div style="position: absolute; top: 6px; right: 6px; display:flex; gap:0.3rem;">
+                                        <?php if ($img['es_default']): ?>
+                                            <span style="background: #3b82f6; color: white; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; box-shadow:0 2px 4px rgba(0,0,0,0.15);">Sistema</span>
+                                        <?php elseif ($img['en_uso']): ?>
+                                            <span style="background: #10b981; color: white; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; box-shadow:0 2px 4px rgba(0,0,0,0.15);">En uso</span>
+                                        <?php else: ?>
+                                            <span style="background: #f59e0b; color: white; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; box-shadow:0 2px 4px rgba(0,0,0,0.15);">Sin uso (Huérfana)</span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+
+                                <div style="width: 100%; text-align: left; margin-bottom: 0.8rem;">
+                                    <strong style="font-size: 0.8rem; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--texto-titulos);" title="<?= htmlspecialchars($img['nombre']) ?>">
+                                        <?= htmlspecialchars($img['nombre']) ?>
+                                    </strong>
+                                    <span class="text-muted" style="font-size: 0.72rem; display: block; margin-top: 0.2rem;">
+                                        <?= $img['peso_kb'] ?> KB • <?= $img['fecha'] ?>
+                                    </span>
+                                </div>
+
+                                <div style="width: 100%; display: flex; gap: 0.3rem;">
+                                    <button type="button" class="btn btn-secondary" style="flex: 1; padding: 0.3rem 0.4rem; font-size: 0.75rem; text-align: center; justify-content: center; display:inline-flex; align-items:center; gap:0.2rem;" onclick="abrirModalVisorImagen('<?= $img['url'] ?>', '<?= htmlspecialchars($img['nombre'], ENT_QUOTES) ?>')">
+                                        <i class="ph-bold ph-eye"></i> Ver
+                                    </button>
+
+                                    <?php if (!empty($img['articulo_id'])): ?>
+                                        <a href="leer-articulo?id=<?= (int)$img['articulo_id'] ?>" target="_blank" class="btn btn-secondary" style="padding: 0.3rem 0.5rem; font-size: 0.75rem; display:inline-flex; align-items:center; gap:0.2rem;" title="Ver artículo asignado">
+                                            <i class="ph-bold ph-newspaper"></i> Artículo
+                                        </a>
+                                    <?php endif; ?>
+                                    
+                                    <?php if (!$img['en_uso'] && !$img['es_default']): ?>
+                                        <button type="button" class="btn-icon btn-delete" style="padding: 0.3rem 0.5rem;" title="Eliminar imágen huérfana" onclick="eliminarImagenStorage('<?= htmlspecialchars($img['nombre'], ENT_QUOTES) ?>', 'card_img_<?= md5($img['nombre']) ?>')">
+                                            <i class="ph-bold ph-trash"></i>
+                                        </button>
+                                    <?php else: ?>
+                                        <button type="button" class="btn-icon" style="padding: 0.3rem 0.5rem; opacity: 0.3; cursor: not-allowed;" title="<?= $img['es_default'] ? 'Imagen predeterminada del sistema' : 'No se puede eliminar porque pertenece a un artículo activo' ?>" disabled>
+                                            <i class="ph-bold ph-lock"></i>
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
+
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
 
         <button type="submit" class="btn btn-primary w-100 mt-2 btn-large justify-center" style="box-shadow: 0 10px 25px rgba(0, 34, 68, 0.2); transition: transform 0.2s ease-out;">
             <i class="ph-bold ph-floppy-disk"></i> Guardar Ajustes de la Revista
         </button>
     </form>
+</div>
+
+<!-- MODAL VISOR DE IMAGEN (IN-SITU) -->
+<div id="modalVisorImagenStorage" class="art-modal-overlay" style="display: none; z-index: 99999;">
+    <div class="art-modal-box" style="max-width: 650px; text-align: center; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(16px); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.7);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 0.6rem; margin-bottom: 1rem;">
+            <h4 id="modalVisorTitulo" style="margin: 0; font-size: 0.95rem; color: var(--texto-titulos); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 85%;">
+                Vista Previa de Imagen
+            </h4>
+            <button type="button" onclick="cerrarModalVisorImagen()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--texto-silenciado);">&times;</button>
+        </div>
+        
+        <div style="width: 100%; max-height: 420px; overflow: hidden; border-radius: 8px; background: #0f172a; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+            <img id="modalVisorImgSrc" src="" alt="Vista previa" style="max-width: 100%; max-height: 420px; object-fit: contain;">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+            <a id="modalVisorEnlaceExt" href="" target="_blank" class="btn btn-secondary" style="font-size: 0.85rem;">
+                <i class="ph-bold ph-arrow-square-out"></i> Abrir en Pestaña Nueva
+            </a>
+            <button type="button" class="btn btn-primary" onclick="cerrarModalVisorImagen()" style="font-size: 0.85rem;">
+                Cerrar
+            </button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -218,4 +313,55 @@ function eliminarFormatoCita(slug) {
         document.getElementById('configRevistaForm').appendChild(h);
     }
 }
+
+async function eliminarImagenStorage(nombre, cardId) {
+    if (!confirm(`¿Está seguro de eliminar la imágen "${nombre}" del almacenamiento del servidor? Esta acción no se puede deshacer.`)) {
+        return;
+    }
+
+    const card = document.getElementById(cardId);
+    if (card) card.style.opacity = '0.4';
+
+    try {
+        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+        const res = await fetch('api-eliminar-imagen-articulos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                csrf_token: csrfToken,
+                nombre: nombre
+            })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            if (card) {
+                card.style.transform = 'scale(0.8)';
+                card.style.opacity = '0';
+                setTimeout(() => card.remove(), 300);
+            }
+        } else {
+            alert('No se pudo eliminar la imagen: ' + (data.error || 'Error desconocido'));
+            if (card) card.style.opacity = '1';
+        }
+    } catch (e) {
+        alert('Ocurrió un error de red al intentar eliminar la imagen.');
+        if (card) card.style.opacity = '1';
+    }
+}
+
+function abrirModalVisorImagen(url, nombre) {
+    document.getElementById('modalVisorTitulo').textContent = 'Vista Previa: ' + nombre;
+    document.getElementById('modalVisorImgSrc').src = url;
+    document.getElementById('modalVisorEnlaceExt').href = url;
+    document.getElementById('modalVisorImagenStorage').style.display = 'flex';
+}
+
+function cerrarModalVisorImagen() {
+    document.getElementById('modalVisorImagenStorage').style.display = 'none';
+    document.getElementById('modalVisorImgSrc').src = '';
+}
 </script>
+<script src="../modules/Articulos/assets/js/lazy_loading.js"></script>

@@ -3,7 +3,7 @@
     <?php if (!empty($articulo)): ?>
         <?php
             $imgPortada = $articulo['imagen_portada'] ?? 'default_article.jpg';
-            $rutaImg = (strpos($imgPortada, 'http') === 0) ? $imgPortada : '../public/uploads/articulos/' . $imgPortada;
+            $rutaImg = (strpos($imgPortada, 'http') === 0) ? $imgPortada : '../storage/uploads/articulos/' . $imgPortada;
         ?>
 
         <article class="art-detail-card">
@@ -64,7 +64,7 @@
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
                         <?php foreach($similares as $sim): 
                             $img = $sim['imagen_portada'] ?? 'default_article.jpg';
-                            $ruta = (strpos($img, 'http') === 0) ? htmlspecialchars($img) : '../public/uploads/articulos/' . htmlspecialchars($img);
+                            $ruta = (strpos($img, 'http') === 0) ? htmlspecialchars($img) : '../storage/uploads/articulos/' . htmlspecialchars($img);
                         ?>
                             <div style="border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;">
                                 <div style="height: 120px; background: url('<?= $ruta ?>') center/cover;"></div>
