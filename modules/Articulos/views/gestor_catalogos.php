@@ -41,16 +41,16 @@ $tabActiva = $_GET['tab'] ?? 'cat';
     <!-- NAVEGACIÓN MODULAR DE PESTAÑAS (ANTIGRAVITY) -->
     <div class="pst-config-nav-tabs">
         <button type="button" class="tab-btn-antigravity <?= $tabActiva === 'cat' ? 'active' : '' ?>" onclick="switchCatalogTab('tabCategorias', this)">
-            <i class="ph-bold ph-folder-user"></i> Categorías (<?= count($categorias['data']) ?>)
+            <i class="ph-bold ph-folder-user"></i> Categorías (<?= $categorias['total'] ?>)
         </button>
         <button type="button" class="tab-btn-antigravity <?= $tabActiva === 'tag' ? 'active' : '' ?>" onclick="switchCatalogTab('tabEtiquetas', this)">
-            <i class="ph-bold ph-hash"></i> Etiquetas (<?= count($etiquetas['data']) ?>)
+            <i class="ph-bold ph-hash"></i> Etiquetas (<?= $etiquetas['total'] ?>)
         </button>
         <button type="button" class="tab-btn-antigravity <?= $tabActiva === 'edit' ? 'active' : '' ?>" onclick="switchCatalogTab('tabEditoriales', this)">
-            <i class="ph-bold ph-buildings"></i> Editoriales / Repositorios (<?= count($editoriales['data']) ?>)
+            <i class="ph-bold ph-buildings"></i> Editoriales / Repositorios (<?= $editoriales['total'] ?>)
         </button>
         <button type="button" class="tab-btn-antigravity <?= $tabActiva === 'aut' ? 'active' : '' ?>" onclick="switchCatalogTab('tabAutores', this)">
-            <i class="ph-bold ph-users-three"></i> Directorio de Autores
+            <i class="ph-bold ph-users-three"></i> Directorio de Autores (<?= $autores['total'] ?>)
         </button>
     </div>
 
@@ -442,4 +442,4 @@ function abrirModalEdicionAutor(id, nombre, cedula) {
 function cerrarModalEdicionAutor() {
     document.getElementById('modal-edicion-autor').style.display = 'none';
 }
-</script>
+</script>

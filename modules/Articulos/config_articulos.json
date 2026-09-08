@@ -14,13 +14,14 @@
         }
     },
     "paginacion": {
-        "limite_catalogo": 10,
-        "limite_gestor": 16,
-        "max_recomendados": 3
+        "limite_catalogo": 50,
+        "limite_gestor": 20,
+        "max_recomendados": 4,
+        "limite_gestor_catalogos": 16
     },
     "recursos": {
         "mostrar_editorial": false,
-        "mostrar_volumen": false,
+        "mostrar_volumen": true,
         "mostrar_issn": false
     },
     "buscador": {

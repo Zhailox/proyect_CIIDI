@@ -43,7 +43,7 @@
                             </span>
                         <?php endif; ?>
 
-                        <?php if (!empty($articulo['issn'])): ?>
+                        <?php if (ConfigService::get('recursos.mostrar_issn', true) && !empty($articulo['issn'])): ?>
                             <span class="art-pill-vol">
                                 ISSN: <?= htmlspecialchars($articulo['issn']) ?>
                             </span>
@@ -63,11 +63,14 @@
 
                     <!-- BARRA DE ACCIONES PRINCIPALES EN CABECERA -->
                     <div class="art-detail-actions-bar">
-                        <button type="button" class="art-btn-read" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); padding: 0.65rem 1rem; font-size: 0.88rem;" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($articulo['titulo'])) ?>, <?= htmlspecialchars(json_encode($articulo['autores_text'])) ?>, <?= $articulo['anio_publicacion'] ?>, <?= htmlspecialchars(json_encode($articulo['editorial'] ?? 'N/A')) ?>, <?= htmlspecialchars(json_encode($articulo['volumen'] ?? '')) ?>, <?= htmlspecialchars(json_encode($articulo['numero'] ?? '')) ?>, <?= htmlspecialchars(json_encode($articulo['issn'] ?? '')) ?>)">
-                            <i class="ph-bold ph-quotes"></i> Generar Cita
+                        <a class="art-btn-read" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); padding: 0.65rem 1rem; font-size: 0.88rem;" href="<?= htmlspecialchars($articulo['archivo_pdf'] ?? '#') ?>" target="_blank" rel="noopener noreferrer">
+                            <i class="ph-bold ph-quotes"></i> Leer artículo
+                        </a>
+                        <button type="button" class="art-action-icon-btn" style="width: 38px; height: 38px; background: rgba(255,255,255,0.15);  color: white; border: 1px solid rgba(255,255,255,0.3); padding: 0.65rem 1rem; font-size: 0.88rem;" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($articulo['titulo'])) ?>, <?= htmlspecialchars(json_encode($articulo['autores_text'])) ?>, <?= $articulo['anio_publicacion'] ?>, <?= htmlspecialchars(json_encode($articulo['editorial'] ?? 'N/A')) ?>, <?= htmlspecialchars(json_encode($articulo['volumen'] ?? '')) ?>, <?= htmlspecialchars(json_encode($articulo['numero'] ?? '')) ?>, <?= htmlspecialchars(json_encode($articulo['issn'] ?? '')) ?>)">
+                            <i class="ph-bold ph-quotes"></i> 
                         </button>
 
-                        <button type="button" class="art-action-icon-btn" style="width: 38px; height: 38px; background: rgba(255,255,255,0.15); color: white; border-color: rgba(255,255,255,0.3);" title="Copiar Enlace Directo" onclick="compartirEnlace(this)">
+                        <button type="button" class="art-action-icon-btn" style="width: 38px; height: 38px; background: rgba(255,255,255,0.15); color: white; border-color: rgba(255,255,255,0.3);" title="Copiar Enlace Directo" onclick="compartirEnlace(this, '<?= htmlspecialchars($articulo['archivo_pdf'] ?? '#') ?>')">
                             <i class="ph-bold ph-share-network"></i>
                         </button>
                     </div>
@@ -118,6 +121,11 @@
                         <div class="art-meta-item">
                             <span class="art-meta-label">Categoría:</span>
                             <span class="art-meta-val"><?= htmlspecialchars($articulo['categoria'] ?? 'Sin categoría') ?></span>
+                        </div>
+
+                        <div class="art-meta-item">
+                            <span class="art-meta-label">Editorial:</span>
+                            <span class="art-meta-val"><?= htmlspecialchars($articulo['editorial'] ?? 'N/A') ?></span>
                         </div>
 
                         <div class="art-meta-item">
@@ -263,9 +271,9 @@ function abrirModalCita(titulo, autores, anio, editorial, volumen, numero, issn)
 
 function cerrarModalCitas() { document.getElementById('modalCitasContainer').style.display = 'none'; }
 
-function compartirEnlace(btn) {
+function compartirEnlace(btn, enlace) {
     const origHtml = btn.innerHTML;
-    navigator.clipboard.writeText(window.location.href).then(() => {
+    navigator.clipboard.writeText(enlace).then(() => {
         btn.innerHTML = '<i class="ph ph-check"></i> Copiado';
         setTimeout(() => { btn.innerHTML = origHtml; }, 2000);
     });

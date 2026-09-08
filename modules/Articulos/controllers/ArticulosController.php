@@ -542,21 +542,22 @@ class ArticulosController {
         if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
         // 2. Ejecutamos las consultas paginadas
-            $categorias = $this->articuloModel->obtenerCatalogoPaginado('categorias', $q_cat, $p_cat, 5);
-            $etiquetas = $this->articuloModel->obtenerCatalogoPaginado('etiquetas', $q_tag, $p_tag, 5);
-            $editoriales = $this->articuloModel->obtenerCatalogoPaginado('editoriales', $q_edit, $p_edit, 5);
-            $autores = $this->articuloModel->buscarAutoresGestor($q_aut, $p_aut, 5);
+            $limiteCatalogos = ConfigService::get('paginacion.limite_gestor_catalogos', 15);
+            $categorias = $this->articuloModel->obtenerCatalogoPaginado('categorias', $q_cat, $p_cat, $limiteCatalogos);
+        $etiquetas = $this->articuloModel->obtenerCatalogoPaginado('etiquetas', $q_tag, $p_tag, $limiteCatalogos);
+        $editoriales = $this->articuloModel->obtenerCatalogoPaginado('editoriales', $q_edit, $p_edit, $limiteCatalogos);
+        $autores = $this->articuloModel->buscarAutoresGestor($q_aut, $p_aut, $limiteCatalogos);
 
-            return [
-                'categorias' => $categorias,
-                'etiquetas' => $etiquetas,
-                'editoriales' => $editoriales,
-                'autores' => $autores,
-                'busquedas' => [
-                    'q_cat' => $q_cat, 'q_tag' => $q_tag, 'q_edit' => $q_edit, 'q_aut' => $q_aut
-                ]
-            ];
-        }
+        return [
+            'categorias' => $categorias,
+            'etiquetas' => $etiquetas,
+            'editoriales' => $editoriales,
+            'autores' => $autores,
+            'busquedas' => [
+                'q_cat' => $q_cat, 'q_tag' => $q_tag, 'q_edit' => $q_edit, 'q_aut' => $q_aut
+            ]
+        ];
+    }
     public function apiCatalogos() {
         if (session_status() === PHP_SESSION_NONE) session_start();
         header('Content-Type: application/json; charset=utf-8');

@@ -1008,6 +1008,7 @@ img.loaded {
     text-decoration: none;
     transition: all 0.25s ease;
     box-shadow: 0 2px 6px rgba(11, 26, 48, 0.15);
+    cursor:pointer;
 }
 
 .art-btn-read:hover {
@@ -1342,6 +1343,45 @@ img.loaded {
         border-bottom: 3px solid var(--color-terciario, #7090cb);
     }
 }
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-secundario);
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(112, 144, 203, 0.25);
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.page-link:hover {
+    background: rgba(112, 144, 203, 0.15);
+    color: var(--color-secundario);
+    transform: translateY(-1px);
+    border-color: var(--color-terciario);
+}
+
+.page-link.active {
+    background: linear-gradient(135deg, var(--color-secundario), var(--color-terciario));
+    color: var(--blanco);
+    border-color: transparent;
+    box-shadow: 0 4px 10px rgba(80, 89, 132, 0.25);
+}
+
 
 
 

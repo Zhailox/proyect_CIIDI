@@ -111,6 +111,8 @@ class ArticuloModel {
                 r.archivo_pdf,
                 d.volumen,
                 d.numero,
+                d.issn,
+                e.nombre AS editorial,
                 d.imagen_portada,
                 d.resumen,
                 COALESCE(d.activo, true) AS activo,
@@ -128,6 +130,7 @@ class ArticuloModel {
                 ), 'Autor no registrado') AS autores_text
             FROM recursos r
             INNER JOIN detalles_articulos d ON d.id_recurso = r.id
+            LEFT JOIN editoriales e ON d.id_editorial = e.id
             WHERE " . implode(' AND ', $condiciones) . "
             ORDER BY r.id DESC
             LIMIT :limit OFFSET :offset
@@ -701,11 +704,10 @@ public function obtenerCatalogoPaginado($tabla, $buscar = '', $pagina = 1, $porP
         
         $where = "";
         if ($buscar !== '') {
-            // Usamos LOWER para que la búsqueda ignore mayúsculas y minúsculas
             $where = "WHERE LOWER(nombre) LIKE LOWER(:buscar)";
         }
 
-        // 1. Contar el total para la paginación
+        // 1. Contar el total ABSOLUTO (sin límite ni offset)
         $stmtTotal = $db->prepare("SELECT COUNT(*) FROM $tabla $where");
         if ($buscar !== '') {
             $stmtTotal->bindValue(':buscar', "%" . trim($buscar) . "%", PDO::PARAM_STR);
@@ -713,7 +715,7 @@ public function obtenerCatalogoPaginado($tabla, $buscar = '', $pagina = 1, $porP
         $stmtTotal->execute();
         $total = (int)$stmtTotal->fetchColumn();
 
-        // 2. Extraer los datos limitados
+        // 2. Extraer los datos limitados para la página actual
         $sql = "SELECT id, nombre FROM $tabla $where ORDER BY nombre ASC LIMIT :limit OFFSET :offset";
         $stmt = $db->prepare($sql);
         
@@ -726,7 +728,7 @@ public function obtenerCatalogoPaginado($tabla, $buscar = '', $pagina = 1, $porP
         
         return [
             'data' => $stmt->fetchAll(PDO::FETCH_ASSOC),
-            'total' => $total,
+            'total' => $total, 
             'paginas' => max(1, (int)ceil($total / $porPagina)),
             'pagina_actual' => $pagina
         ];
@@ -741,7 +743,6 @@ public function obtenerCatalogoPaginado($tabla, $buscar = '', $pagina = 1, $porP
         if (trim($buscar) !== '') {
             $where = "WHERE LOWER(nombre_completo) LIKE LOWER(:b) OR LOWER(cedula) LIKE LOWER(:b)";
         }
-
         $stmtTotal = $db->prepare("SELECT COUNT(*) FROM autores $where");
         if (trim($buscar) !== '') {
             $stmtTotal->bindValue(':b', "%" . trim($buscar) . "%", PDO::PARAM_STR);
@@ -749,6 +750,7 @@ public function obtenerCatalogoPaginado($tabla, $buscar = '', $pagina = 1, $porP
         $stmtTotal->execute();
         $total = (int)$stmtTotal->fetchColumn();
 
+        // 2. Extraer datos paginados
         $sql = "SELECT id, nombre_completo, cedula FROM autores $where ORDER BY nombre_completo ASC LIMIT :limit OFFSET :offset";
         $stmt = $db->prepare($sql);
         if (trim($buscar) !== '') {
@@ -760,7 +762,7 @@ public function obtenerCatalogoPaginado($tabla, $buscar = '', $pagina = 1, $porP
         
         return [
             'data' => $stmt->fetchAll(PDO::FETCH_ASSOC),
-            'total' => $total,
+            'total' => $total, // <-- AQUÍ SE DEVUELVE EL TOTAL REAL
             'paginas' => max(1, (int)ceil($total / $porPagina)),
             'pagina_actual' => $pagina
         ];
