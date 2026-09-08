@@ -109,6 +109,7 @@ body {
   border-right: 1px solid rgba(var(--blanco-puro-rgb), 0.05);
   z-index: 90;
   transition: width var(--transition-smooth); 
+  will-change: width;
 }
 
 .sidebar:hover {
@@ -237,12 +238,13 @@ body {
 /* --- Main Content --- */
 .main-content {
   flex-grow: 1;
-  padding: 1rem;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
+  gap: 1.5rem;
   min-width: 0;
 }
+
 
 
 

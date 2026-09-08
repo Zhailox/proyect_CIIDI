@@ -20,20 +20,21 @@ $buildUrl = function($page) use ($busquedaActual) {
             <p>Administración del catálogo, volúmenes y portadas de la revista digital.</p>
         </div>
        
-        <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
-            <form action="gestor-articulos" method="GET" style="display: flex; gap: 0.5rem; margin: 0;">
-                <input type="text" name="q" class="login-flat-input p-input" placeholder="Buscar por título o autor..." value="<?= htmlspecialchars($filtros['q'] ?? '') ?>" style="padding: 0.6rem; min-width: 250px;">
-                <button type="submit" class="btn btn-secondary">Buscar</button>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center;">
+            <form action="gestor-articulos" method="GET" style="display: flex; gap: 0.4rem; margin: 0;">
+                <input type="text" name="q" class="login-flat-input p-input" placeholder="Buscar por título o autor..." value="<?= htmlspecialchars($filtros['q'] ?? '') ?>" style="padding: 0.45rem 0.75rem; min-width: 220px; font-size: 0.85rem; border-radius: 6px;">
+                <button type="submit" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.85rem; border-radius: 6px;">Buscar</button>
             </form>
 
-            <a href="gestor-catalogos" class="btn btn-secondary">
+            <a href="gestor-catalogos" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.85rem; border-radius: 6px;">
                 <i class="ph-bold ph-tags"></i> Catálogos
             </a>
-            <a href="nuevo-articulo" class="btn btn-primary gestor-art-btn-new">
+            <a href="nuevo-articulo" class="btn btn-primary gestor-art-btn-new" style="padding: 0.45rem 0.85rem; font-size: 0.85rem; border-radius: 6px;">
                 <i class="ph-bold ph-plus"></i> Registrar Artículo
             </a>
         </div>
     </div>
+
 
     
 

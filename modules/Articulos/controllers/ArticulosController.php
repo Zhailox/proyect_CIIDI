@@ -505,6 +505,9 @@ class ArticulosController {
                         $this->articuloModel->actualizarAutor((int)($_POST['id'] ?? 0), $nombre_autor, $cedula_autor);
                         $_SESSION['mensaje_exito'] = 'Datos del autor actualizados correctamente.';
                     }
+                } elseif ($accion === 'eliminar_autor') {
+                    $this->articuloModel->eliminarAutor((int)($_POST['id'] ?? 0));
+                    $_SESSION['mensaje_exito'] = 'Autor eliminado correctamente.';
                 }
             } catch (Exception $e) {
                 $msg = $e->getMessage();
@@ -517,8 +520,10 @@ class ArticulosController {
                 }
             }
 
-            header('Location: gestor-catalogos');
+            $tabRedirect = $_POST['tab'] ?? 'cat';
+            header('Location: gestor-catalogos?tab=' . urlencode($tabRedirect));
             exit;
+
         }
 
         $q_cat = trim($_GET['q_cat'] ?? '');

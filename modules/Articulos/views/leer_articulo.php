@@ -1,90 +1,233 @@
 <?php require_once __DIR__ . '/../services/ConfigService.php'; ?>
-<div class="art-detail-page">
+
+<div class="art-detail-container">
+    
+    <!-- ENLACE DE NAVEGACIÓN DE REGRESO -->
+    <a href="articulos" class="art-detail-back-btn">
+        <i class="ph-bold ph-arrow-left"></i> Volver al Catálogo de Artículos
+    </a>
+
     <?php if (!empty($articulo)): ?>
         <?php
             $imgPortada = $articulo['imagen_portada'] ?? 'default_article.jpg';
             $rutaImg = (strpos($imgPortada, 'http') === 0) ? $imgPortada : '../storage/uploads/articulos/' . $imgPortada;
         ?>
 
-        <article class="art-detail-card">
-            <header class="art-detail-hero" style="background-image: url('<?= htmlspecialchars($rutaImg) ?>');">
-                <div class="art-detail-hero__overlay" style="width: 100%;">
-                    <div style="display:flex; justify-content: space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
-                        <div>
-                            <div class="art-detail-hero__meta">
-                                <span class="badge"><?= htmlspecialchars($articulo['categoria'] ?? 'Artículo') ?></span>
+        <article class="art-detail-card-main">
+            
+            <!-- CABECERA HERO DEL ARTÍCULO CIENTÍFICO -->
+            <header class="art-detail-hero-box">
+                <img src="<?= htmlspecialchars($rutaImg) ?>" alt="Portada" class="art-detail-hero-bg-img">
+                
+                <div class="art-detail-hero-content">
+                    
+                    <!-- PILLS DE METADATOS Y REVISTA -->
+                    <div class="art-detail-meta-pills">
+                        <?php 
+                        $listaCategorias = !empty($articulo['categoria']) ? array_map('trim', explode(',', $articulo['categoria'])) : ['Artículo Científico'];
+                        foreach ($listaCategorias as $catNom): 
+                        ?>
+                            <span class="art-pill-cat">
+                                <i class="ph-bold ph-bookmark"></i> <?= htmlspecialchars($catNom) ?>
+                            </span>
+                        <?php endforeach; ?>
 
-                                <?php if (ConfigService::get('recursos.mostrar_volumen', true) && (!empty($articulo['volumen']) || !empty($articulo['numero']))): ?>
-                                    <span class="art-detail-hero__volume">
-                                        Vol. <?= htmlspecialchars($articulo['volumen'] ?? 'N/A') ?>
-                                        <?= !empty($articulo['numero']) ? ' - Núm. ' . htmlspecialchars($articulo['numero']) : '' ?>
-                                    </span>
-                                <?php endif; ?>
-                            </div>
-                            <h1><?= htmlspecialchars($articulo['titulo'] ?? 'Artículo sin título') ?></h1>
-                            <p class="art-detail-hero__authors">
-                                Por: <?= htmlspecialchars($articulo['autores_text'] ?? 'Autor no registrado') ?><br>
-                                Publicado: <?= htmlspecialchars($articulo['anio_publicacion'] ?? 'Sin año') ?>
-                                <?php if (ConfigService::get('recursos.mostrar_editorial', true) && !empty($articulo['editorial'])): ?>
-                                    | Ed: <?= htmlspecialchars($articulo['editorial']) ?>
-                                <?php endif; ?>
-                                <?php if (ConfigService::get('recursos.mostrar_issn', true) && !empty($articulo['issn'])): ?>
-                                    | ISSN: <?= htmlspecialchars($articulo['issn']) ?>
-                                <?php endif; ?>
-                            </p>
-                        </div>
-                        
-                        <!-- BOTONES DE CABECERA -->
-                        <div style="display: flex; gap: 0.5rem; background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 8px;">
-                            <button type="button" class="btn" style="background:white; color:#0f172a;" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($articulo['titulo'])) ?>, <?= htmlspecialchars(json_encode($articulo['autores_text'])) ?>, <?= $articulo['anio_publicacion'] ?>, <?= htmlspecialchars(json_encode($articulo['editorial'] ?? 'N/A')) ?>, <?= htmlspecialchars(json_encode($articulo['volumen'] ?? '')) ?>, <?= htmlspecialchars(json_encode($articulo['numero'] ?? '')) ?>, <?= htmlspecialchars(json_encode($articulo['issn'] ?? '')) ?>)">
-                                <i class="ph ph-quotes"></i> Citar
-                            </button>
-                            <button type="button" class="btn" style="background:white; color:#0f172a;" onclick="compartirEnlace('<?= htmlspecialchars($articulo['archivo_pdf'] ?? '') ?>', this)">
-                                <i class="ph ph-share-network"></i> Copiar Link
-                            </button>
-                        </div>
+                        <span class="art-pill-vol">
+                            <i class="ph-bold ph-calendar-blank"></i> Año <?= htmlspecialchars($articulo['anio_publicacion'] ?? 's.f.') ?>
+                        </span>
+
+                        <?php if (ConfigService::get('recursos.mostrar_volumen', true) && (!empty($articulo['volumen']) || !empty($articulo['numero']))): ?>
+                            <span class="art-pill-vol">
+                                Vol. <?= htmlspecialchars($articulo['volumen'] ?? 'N/A') ?>
+                                <?= !empty($articulo['numero']) ? ' - Núm. ' . htmlspecialchars($articulo['numero']) : '' ?>
+                            </span>
+                        <?php endif; ?>
+
+                        <?php if (!empty($articulo['issn'])): ?>
+                            <span class="art-pill-vol">
+                                ISSN: <?= htmlspecialchars($articulo['issn']) ?>
+                            </span>
+                        <?php endif; ?>
                     </div>
+
+                    <!-- TÍTULO PRINCIPAL DEL ARTÍCULO -->
+                    <h1 class="art-detail-title"><?= htmlspecialchars($articulo['titulo'] ?? 'Artículo sin título') ?></h1>
+
+                    <!-- AUTORES DE LA PUBLICACIÓN -->
+                    <div class="art-detail-authors-box">
+                        <i class="ph-bold ph-users" style="font-size: 1.25rem; color: #7090cb;"></i>
+                        <span>
+                            <strong>Autores:</strong> <?= htmlspecialchars($articulo['autores_text'] ?? 'Autor no registrado') ?>
+                        </span>
+                    </div>
+
+                    <!-- BARRA DE ACCIONES PRINCIPALES EN CABECERA -->
+                    <div class="art-detail-actions-bar">
+                        <button type="button" class="art-btn-read" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); padding: 0.65rem 1rem; font-size: 0.88rem;" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($articulo['titulo'])) ?>, <?= htmlspecialchars(json_encode($articulo['autores_text'])) ?>, <?= $articulo['anio_publicacion'] ?>, <?= htmlspecialchars(json_encode($articulo['editorial'] ?? 'N/A')) ?>, <?= htmlspecialchars(json_encode($articulo['volumen'] ?? '')) ?>, <?= htmlspecialchars(json_encode($articulo['numero'] ?? '')) ?>, <?= htmlspecialchars(json_encode($articulo['issn'] ?? '')) ?>)">
+                            <i class="ph-bold ph-quotes"></i> Generar Cita
+                        </button>
+
+                        <button type="button" class="art-action-icon-btn" style="width: 38px; height: 38px; background: rgba(255,255,255,0.15); color: white; border-color: rgba(255,255,255,0.3);" title="Copiar Enlace Directo" onclick="compartirEnlace(this)">
+                            <i class="ph-bold ph-share-network"></i>
+                        </button>
+                    </div>
+
                 </div>
             </header>
 
-            <div class="art-detail-body">
-                <?php if (!empty($articulo['archivo_pdf'])): ?>
-                    <a href="<?= htmlspecialchars($articulo['archivo_pdf']) ?>" target="_blank" rel="noopener" class="btn art-detail-link">Ir al artículo completo</a>
-                <?php endif; ?>
-
-                <div class="art-detail-content">
-                    <h3>Resumen</h3>
-                    <p><?= nl2br(htmlspecialchars($articulo['resumen'] ?? 'Sin resumen disponible.')) ?></p>
-                </div>
+            <!-- GRID PRINCIPAL DE CONTENIDO Y FICHA TÉCNICA -->
+            <div class="art-detail-grid-layout">
                 
-                <!-- SECCIÓN DE ARTÍCULOS RELACIONADOS -->
-                <?php if (!empty($similares)): ?>
-                <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(0,0,0,0.1);">
-                    <h3 style="color: var(--texto-titulos); margin-bottom: 1.5rem;"><i class="ph-bold ph-books"></i> Artículos Recomendados</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
-                        <?php foreach($similares as $sim): 
-                            $img = $sim['imagen_portada'] ?? 'default_article.jpg';
-                            $ruta = (strpos($img, 'http') === 0) ? htmlspecialchars($img) : '../storage/uploads/articulos/' . htmlspecialchars($img);
-                        ?>
-                            <div style="border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;">
-                                <div style="height: 120px; background: url('<?= $ruta ?>') center/cover;"></div>
-                                <div style="padding: 1rem; flex-grow: 1; display: flex; flex-direction: column;">
-                                    <span style="font-size: 0.75rem; font-weight: bold; color: var(--color-secundario);"><?= htmlspecialchars($sim['categoria']) ?> • <?= $sim['anio_publicacion'] ?></span>
-                                    <h4 style="margin: 0.5rem 0; font-size: 1rem;"><a href="leer-articulo?id=<?= $sim['id'] ?>" style="color: inherit; text-decoration: none;"><?= htmlspecialchars($sim['titulo']) ?></a></h4>
-                                    <a href="leer-articulo?id=<?= $sim['id'] ?>" style="margin-top: auto; font-size: 0.85rem; font-weight: bold; color: var(--color-terciario); text-decoration: none;">Leer más ➔</a>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
+                <!-- COLUMNA IZQUIERDA: RESUMEN -->
+                <div class="art-detail-main-col">
+                    
+                    <!-- BLOQUE DE RESUMEN / ABSTRACT -->
+                    <div class="art-abstract-box">
+                        <h3><i class="ph-bold ph-text-align-left"></i> Resumen / Abstract</h3>
+                        <p><?= nl2br(htmlspecialchars($articulo['resumen'] ?? 'Sin resumen disponible para este artículo.')) ?></p>
                     </div>
+
+                    <!-- ETIQUETAS / PALABRAS CLAVE -->
+                    <?php if (!empty($articulo['etiquetas_nombres'])): ?>
+                        <div style="margin-top: 2rem;">
+                            <h4 style="color: var(--color-secundario); font-size: 0.95rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem;">
+                                <i class="ph-bold ph-hash"></i> Palabras Clave / Etiquetas
+                            </h4>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                <?php foreach ($articulo['etiquetas_nombres'] as $tag): ?>
+                                    <span style="background: rgba(112, 144, 203, 0.1); color: var(--color-secundario); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.82rem; font-weight: 600;">
+                                        #<?= htmlspecialchars($tag) ?>
+                                    </span>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
                 </div>
-                <?php endif; ?>
+
+                <!-- COLUMNA DERECHA: FICHA TÉCNICA Y METADATOS -->
+                <aside class="art-detail-sidebar-col">
+                    <div class="art-metadata-card">
+                        <h4><i class="ph-bold ph-info"></i> Ficha Técnica del Artículo</h4>
+
+                        <div class="art-meta-item">
+                            <span class="art-meta-label">ID Recurso:</span>
+                            <span class="art-meta-val">#<?= (int)$articulo['id'] ?></span>
+                        </div>
+
+                        <div class="art-meta-item">
+                            <span class="art-meta-label">Categoría:</span>
+                            <span class="art-meta-val"><?= htmlspecialchars($articulo['categoria'] ?? 'Sin categoría') ?></span>
+                        </div>
+
+                        <div class="art-meta-item">
+                            <span class="art-meta-label">Año de Publicación:</span>
+                            <span class="art-meta-val"><?= htmlspecialchars($articulo['anio_publicacion'] ?? 'N/A') ?></span>
+                        </div>
+
+                        <?php if (!empty($articulo['volumen'])): ?>
+                            <div class="art-meta-item">
+                                <span class="art-meta-label">Volumen:</span>
+                                <span class="art-meta-val">Vol. <?= htmlspecialchars($articulo['volumen']) ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (!empty($articulo['numero'])): ?>
+                            <div class="art-meta-item">
+                                <span class="art-meta-label">Número:</span>
+                                <span class="art-meta-val">Núm. <?= htmlspecialchars($articulo['numero']) ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (!empty($articulo['editorial'])): ?>
+                            <div class="art-meta-item">
+                                <span class="art-meta-label">Editorial:</span>
+                                <span class="art-meta-val"><?= htmlspecialchars($articulo['editorial']) ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (!empty($articulo['issn'])): ?>
+                            <div class="art-meta-item">
+                                <span class="art-meta-label">ISSN:</span>
+                                <span class="art-meta-val"><?= htmlspecialchars($articulo['issn']) ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <button type="button" class="art-btn-filter-apply" style="margin-top: 1.25rem;" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($articulo['titulo'])) ?>, <?= htmlspecialchars(json_encode($articulo['autores_text'])) ?>, <?= $articulo['anio_publicacion'] ?>, <?= htmlspecialchars(json_encode($articulo['editorial'] ?? 'N/A')) ?>, <?= htmlspecialchars(json_encode($articulo['volumen'] ?? '')) ?>, <?= htmlspecialchars(json_encode($articulo['numero'] ?? '')) ?>, <?= htmlspecialchars(json_encode($articulo['issn'] ?? '')) ?>)">
+                            <i class="ph-bold ph-quotes"></i> Formatos de Cita
+                        </button>
+                    </div>
+                </aside>
+
             </div>
+
         </article>
 
+        <!-- SECCIÓN DE ARTÍCULOS RELACIONADOS / RECOMENDADOS -->
+        <?php if (!empty($similares)): ?>
+            <div style="margin-top: 3rem;">
+                <h3 style="color: var(--color-secundario); font-size: 1.35rem; font-weight: 700; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="ph-bold ph-books"></i> Artículos Recomendados
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+                    <?php foreach($similares as $sim): 
+                        $img = $sim['imagen_portada'] ?? 'default_article.jpg';
+                        $ruta = (strpos($img, 'http') === 0) ? htmlspecialchars($img) : '../storage/uploads/articulos/' . htmlspecialchars($img);
+                        $titLimpio = htmlspecialchars($sim['titulo'] ?? '');
+                        $titCorto = (mb_strlen($titLimpio) > 60) ? mb_substr($titLimpio, 0, 57) . '...' : $titLimpio;
+                    ?>
+                        <article class="art-post-card">
+                            <div class="art-card-img-wrapper">
+                                <img src="<?= $ruta ?>" alt="<?= htmlspecialchars($sim['titulo']) ?>" class="art-post-img">
+                                <span class="art-badge-cat"><?= htmlspecialchars($sim['categoria']) ?></span>
+                            </div>
+
+                            <div class="art-post-body">
+                                <div class="art-post-meta">
+                                    <span class="art-year-tag"><i class="ph-bold ph-calendar-blank"></i> <?= $sim['anio_publicacion'] ?></span>
+                                    <?php if (!empty($sim['volumen']) || !empty($sim['numero'])): ?>
+                                        <span class="art-metric" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">
+                                            Vol. <?= htmlspecialchars($sim['volumen'] ?? 'N/A') ?>
+                                            <?= !empty($sim['numero']) ? ' - Núm. ' . htmlspecialchars($sim['numero']) : '' ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+
+                                <a href="leer-articulo?id=<?= $sim['id'] ?>" class="art-post-title" title="<?= htmlspecialchars($sim['titulo']) ?>">
+                                    <?= $titCorto ?>
+                                </a>
+
+                                <div class="art-authors-line">
+                                    <i class="ph-bold ph-users"></i> <?= htmlspecialchars($sim['autores_text'] ?? 'Autor no registrado') ?>
+                                </div>
+
+                                <div class="art-card-actions">
+                                    <a href="leer-articulo?id=<?= $sim['id'] ?>" class="art-btn-read">
+                                        <i class="ph-bold ph-book-open"></i> Leer
+                                    </a>
+                                    <button type="button" class="art-action-icon-btn" title="Generar Cita Académica" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($sim['titulo'])) ?>, <?= htmlspecialchars(json_encode($sim['autores_text'])) ?>, <?= $sim['anio_publicacion'] ?>, <?= htmlspecialchars(json_encode($sim['editorial'] ?? 'N/A')) ?>, <?= htmlspecialchars(json_encode($sim['volumen'] ?? '')) ?>, <?= htmlspecialchars(json_encode($sim['numero'] ?? '')) ?>, <?= htmlspecialchars(json_encode($sim['issn'] ?? '')) ?>)">
+                                        <i class="ph-bold ph-quotes"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        <?php endif; ?>
+
     <?php else: ?>
-        <div class="art-detail-empty"><p>No se encontró el artículo solicitado.</p></div>
+        <div class="art-empty-state">
+            <i class="ph-bold ph-warning-circle" style="font-size: 3rem; color: #ef4444; margin-bottom: 1rem;"></i>
+            <h3>Artículo no encontrado</h3>
+            <p>No existe el artículo solicitado o fue retirado del catálogo.</p>
+            <a href="articulos" class="art-btn-read" style="display: inline-flex; margin-top: 1rem;">Volver al Catálogo</a>
+        </div>
     <?php endif; ?>
+
 </div>
+
 <!-- INYECCIÓN DEL MODAL Y SCRIPTS GLOBALES -->
 <script>
 const configuracionesCitas = <?= json_encode(ConfigService::get('citas.estilos', [])) ?>;
@@ -99,10 +242,8 @@ function abrirModalCita(titulo, autores, anio, editorial, volumen, numero, issn)
         '{editorial}': editorial || 'S/E', '{volumen}': volumen || '', '{numero}': numero || '', '{issn}': issn || ''
     };
     
-    let count = 0;
     for (const [slug, item] of Object.entries(configuracionesCitas)) {
         if (!item.activo) continue;
-        count++;
         let textoCita = item.plantilla || '';
         for (const [k, v] of Object.entries(mockData)) { textoCita = textoCita.replaceAll(k, v); }
         
@@ -111,7 +252,7 @@ function abrirModalCita(titulo, autores, anio, editorial, volumen, numero, issn)
             <div style="margin-bottom: 0.85rem;">
                 <strong style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--color-secundario); text-transform: uppercase; margin-bottom: 0.25rem;">
                     <span>${item.nombre || slug}</span>
-                    <button type="button" onclick="copiarCitaText('${boxId}', this)" style="padding: 0.2rem 0.5rem; font-size: 0.7rem; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 3px; cursor: pointer; font-weight: 700;"><i class="ph ph-copy"></i> Copiar</button>
+                    <button type="button" onclick="copiarCitaText('${boxId}', this)" style="padding: 0.2rem 0.5rem; font-size: 0.7rem; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer; font-weight: 700;"><i class="ph ph-copy"></i> Copiar</button>
                 </strong>
                 <div id="${boxId}" style="background: #fafbfe; border: 1px solid rgba(169, 168, 166, 0.15); padding: 0.5rem 0.65rem; border-radius: 4px; font-size: 0.8rem; font-family: monospace;">${textoCita}</div>
             </div>
@@ -122,19 +263,9 @@ function abrirModalCita(titulo, autores, anio, editorial, volumen, numero, issn)
 
 function cerrarModalCitas() { document.getElementById('modalCitasContainer').style.display = 'none'; }
 
-function compartirEnlace(rutaArchivo, btn) {
-    if (!rutaArchivo) {
-        alert('Este artículo no tiene un archivo enlazado.');
-        return;
-    }
-    
-    // Convertir ruta relativa a URL absoluta
-    const linkAbsoluto = document.createElement('a');
-    linkAbsoluto.href = rutaArchivo;
-    const urlFinal = linkAbsoluto.href;
-
+function compartirEnlace(btn) {
     const origHtml = btn.innerHTML;
-    navigator.clipboard.writeText(urlFinal).then(() => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
         btn.innerHTML = '<i class="ph ph-check"></i> Copiado';
         setTimeout(() => { btn.innerHTML = origHtml; }, 2000);
     });

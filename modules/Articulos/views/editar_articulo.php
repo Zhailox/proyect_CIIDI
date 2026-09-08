@@ -142,12 +142,12 @@
                 <div class="form-group mt-1">
                     <label class="font-bold"><?= isset($articulo) ? 'Sustituir archivo físico:' : 'Subir archivo físico:' ?> <span class="art-help-icon" title="Sube una imagen representativa. El sistema la optimizará automáticamente a formato WebP.">?</span></label>
                     
-                    <div id="dropzone-portada" data-max-mb="<?= $limiteRealMb ?>" data-server-limit="<?= $esLimiteServidor ?>" data-exts="<?= htmlspecialchars($acceptStr) ?>" style="border: 2px dashed rgba(0,0,0,0.2); padding: 2rem 1rem; text-align: center; border-radius: 8px; cursor: pointer; background: #f8fafc; transition: all 0.2s;">
+                    <div id="dropzone-portada" data-max-mb="<?= $limiteRealMb ?>" data-server-limit="<?= $esLimiteServidor ?>" data-exts="<?= htmlspecialchars($acceptStr) ?>" style="border: 2px dashed rgba(112, 144, 203, 0.4); padding: 1.5rem 1rem; text-align: center; border-radius: 6px; cursor: pointer; background: rgba(244, 247, 251, 0.6); transition: all 0.25s;">
                         <input type="file" id="input_imagen_portada" name="imagen_portada" accept="<?= htmlspecialchars($acceptStr) ?>" style="display:none;">
-                        <i class="ph-bold <?= isset($articulo) ? 'ph-upload-simple' : 'ph-image' ?>" style="font-size: 2.5rem; color: var(--color-terciario);"></i>
-                        <h4 style="margin: 0.5rem 0; font-size: 0.95rem; color: var(--texto-titulos);">Arrastra una <?= isset($articulo) ? 'nueva ' : '' ?>portada o haz clic aquí</h4>
+                        <i class="ph-bold <?= isset($articulo) ? 'ph-upload-simple' : 'ph-image' ?>" style="font-size: 2rem; color: var(--color-terciario);"></i>
+                        <h4 style="margin: 0.4rem 0; font-size: 0.85rem; color: var(--texto-titulos);">Arrastra una nueva portada o haz clic aquí</h4>
                         <p style="font-size: 0.75rem; color: var(--texto-silenciado); margin: 0;">Formatos permitidos: <?= htmlspecialchars(implode(', ', $exts)) ?> (Máx. <?= $limiteRealMb ?> MB)</p>
-                        <div id="preview-image-name" style="margin-top: 0.75rem; font-size: 0.85rem; font-weight: bold; color: var(--color-secundario); display: none;"></div>
+                        <div id="preview-image-name" style="margin-top: 0.5rem; font-size: 0.8rem; font-weight: bold; color: var(--color-secundario); display: none;"></div>
                     </div>
                 </div>
 
@@ -158,7 +158,7 @@
                 </div>
             
             </div> 
-            <button type="submit" class="btn btn-primary w-100 btn-large justify-center">
+            <button type="submit" class="btn btn-primary w-100 btn-large justify-center" style="border-radius: 6px; padding: 0.6rem 1.2rem; font-size: 0.875rem;">
                 <i class="ph-bold ph-floppy-disk"></i> Guardar Cambios
             </button>
         </div>

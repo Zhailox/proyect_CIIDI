@@ -1,4 +1,5 @@
-<div class="gestor-art-container" style="max-width: 1000px; margin: 0 auto;">
+<div class="gestor-art-container">
+
     
     <div class="gestor-art-header">
         <div class="gestor-art-title-box">
@@ -36,6 +37,8 @@
         </div>
 
         <!-- TAB CITAS -->
+
+
         <div id="tabCitas" class="config-tab-pane active" style="display:block;">
             <div class="pst-config-card mb-2">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 0.8rem;">
@@ -199,67 +202,27 @@
                 <?php if (empty($imagenesStorage)): ?>
                     <p class="text-muted" style="text-align:center; padding:2rem; font-style:italic;">No hay imágenes almacenadas en el directorio de artículos.</p>
                 <?php else: ?>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.25rem;">
-                        <?php foreach ($imagenesStorage as $img): ?>
-                            <div class="citation-box-glass" id="card_img_<?= md5($img['nombre']) ?>" style="padding: 0.8rem; display:flex; flex-direction:column; justify-content:space-between; align-items:center; position:relative; overflow:hidden;">
-                                
-                                <div style="width: 100%; height: 140px; border-radius: 6px; overflow: hidden; background: #f1f5f9; margin-bottom: 0.8rem; position: relative;">
-                                    <img data-src="<?= $img['url'] ?>" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 140'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f9'/%3E%3C/svg%3E" alt="<?= htmlspecialchars($img['nombre']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
-                                    
-                                    <div style="position: absolute; top: 6px; right: 6px; display:flex; gap:0.3rem;">
-                                        <?php if ($img['es_default']): ?>
-                                            <span style="background: #3b82f6; color: white; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; box-shadow:0 2px 4px rgba(0,0,0,0.15);">Sistema</span>
-                                        <?php elseif ($img['en_uso']): ?>
-                                            <span style="background: #10b981; color: white; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; box-shadow:0 2px 4px rgba(0,0,0,0.15);">En uso</span>
-                                        <?php else: ?>
-                                            <span style="background: #f59e0b; color: white; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; box-shadow:0 2px 4px rgba(0,0,0,0.15);">Sin uso (Huérfana)</span>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
+                    <div id="galeriaStorageContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.25rem;">
+                        <!-- Renderizado vía JS paginado -->
+                    </div>
 
-                                <div style="width: 100%; text-align: left; margin-bottom: 0.8rem;">
-                                    <strong style="font-size: 0.8rem; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--texto-titulos);" title="<?= htmlspecialchars($img['nombre']) ?>">
-                                        <?= htmlspecialchars($img['nombre']) ?>
-                                    </strong>
-                                    <span class="text-muted" style="font-size: 0.72rem; display: block; margin-top: 0.2rem;">
-                                        <?= $img['peso_kb'] ?> KB • <?= $img['fecha'] ?>
-                                    </span>
-                                </div>
-
-                                <div style="width: 100%; display: flex; gap: 0.3rem;">
-                                    <button type="button" class="btn btn-secondary" style="flex: 1; padding: 0.3rem 0.4rem; font-size: 0.75rem; text-align: center; justify-content: center; display:inline-flex; align-items:center; gap:0.2rem;" onclick="abrirModalVisorImagen('<?= $img['url'] ?>', '<?= htmlspecialchars($img['nombre'], ENT_QUOTES) ?>')">
-                                        <i class="ph-bold ph-eye"></i> Ver
-                                    </button>
-
-                                    <?php if (!empty($img['articulo_id'])): ?>
-                                        <a href="leer-articulo?id=<?= (int)$img['articulo_id'] ?>" target="_blank" class="btn btn-secondary" style="padding: 0.3rem 0.5rem; font-size: 0.75rem; display:inline-flex; align-items:center; gap:0.2rem;" title="Ver artículo asignado">
-                                            <i class="ph-bold ph-newspaper"></i> Artículo
-                                        </a>
-                                    <?php endif; ?>
-                                    
-                                    <?php if (!$img['en_uso'] && !$img['es_default']): ?>
-                                        <button type="button" class="btn-icon btn-delete" style="padding: 0.3rem 0.5rem;" title="Eliminar imágen huérfana" onclick="eliminarImagenStorage('<?= htmlspecialchars($img['nombre'], ENT_QUOTES) ?>', 'card_img_<?= md5($img['nombre']) ?>')">
-                                            <i class="ph-bold ph-trash"></i>
-                                        </button>
-                                    <?php else: ?>
-                                        <button type="button" class="btn-icon" style="padding: 0.3rem 0.5rem; opacity: 0.3; cursor: not-allowed;" title="<?= $img['es_default'] ? 'Imagen predeterminada del sistema' : 'No se puede eliminar porque pertenece a un artículo activo' ?>" disabled>
-                                            <i class="ph-bold ph-lock"></i>
-                                        </button>
-                                    <?php endif; ?>
-                                </div>
-
-                            </div>
-                        <?php endforeach; ?>
+                    <div id="paginacionStorageControls" class="pagination" style="margin-top: 1.25rem;">
+                        <!-- Botones de páginas -->
                     </div>
                 <?php endif; ?>
             </div>
         </div>
 
-        <button type="submit" class="btn btn-primary w-100 mt-2 btn-large justify-center" style="box-shadow: 0 10px 25px rgba(0, 34, 68, 0.2); transition: transform 0.2s ease-out;">
-            <i class="ph-bold ph-floppy-disk"></i> Guardar Ajustes de la Revista
-        </button>
+        <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary btn-large" style="border-radius: 6px; padding: 0.6rem 1.5rem; font-size: 0.85rem; box-shadow: 0 6px 16px rgba(80, 89, 132, 0.22); display: inline-flex; align-items: center; gap: 0.5rem;">
+                <i class="ph-bold ph-floppy-disk"></i> Guardar Ajustes de la Revista
+            </button>
+        </div>
     </form>
 </div>
+
+
+
 
 <!-- MODAL VISOR DE IMAGEN (IN-SITU) -->
 <div id="modalVisorImagenStorage" class="art-modal-overlay" style="display: none; z-index: 99999;">
@@ -363,5 +326,89 @@ function cerrarModalVisorImagen() {
     document.getElementById('modalVisorImagenStorage').style.display = 'none';
     document.getElementById('modalVisorImgSrc').src = '';
 }
+
+// Paginación JavaScript del Gestor de Almacenamiento
+const imagenesDataStorage = <?= json_encode($imagenesStorage ?? [], JSON_UNESCAPED_UNICODE) ?>;
+const itemsPorPaginaStorage = 8;
+let paginaActualStorage = 1;
+
+function renderizarGaleriaStorage(pagina) {
+    const container = document.getElementById('galeriaStorageContainer');
+    const controls = document.getElementById('paginacionStorageControls');
+    if (!container || !imagenesDataStorage.length) return;
+
+    paginaActualStorage = pagina;
+    const totalPaginas = Math.ceil(imagenesDataStorage.length / itemsPorPaginaStorage);
+    const inicio = (pagina - 1) * itemsPorPaginaStorage;
+    const fin = inicio + itemsPorPaginaStorage;
+    const itemsPagina = imagenesDataStorage.slice(inicio, fin);
+
+    let html = '';
+    itemsPagina.forEach(img => {
+        const badge = img.es_default 
+            ? '<span style="background: #3b82f6; color: white; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; box-shadow:0 2px 4px rgba(0,0,0,0.15);">Sistema</span>'
+            : (img.en_uso 
+                ? '<span style="background: #10b981; color: white; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; box-shadow:0 2px 4px rgba(0,0,0,0.15);">En uso</span>'
+                : '<span style="background: #f59e0b; color: white; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; box-shadow:0 2px 4px rgba(0,0,0,0.15);">Sin uso</span>');
+
+        const btnBorrar = (!img.en_uso && !img.es_default)
+            ? `<button type="button" class="btn-icon btn-delete" style="padding: 0.3rem 0.5rem;" title="Eliminar imagen huérfana" onclick="eliminarImagenStorage('${img.nombre}', 'card_img_${md5JS(img.nombre)}')"><i class="ph-bold ph-trash"></i></button>`
+            : `<button type="button" class="btn-icon" style="padding: 0.3rem 0.5rem; opacity: 0.3; cursor: not-allowed;" title="${img.es_default ? 'Imagen predeterminada' : 'Pertenece a un artículo'}" disabled><i class="ph-bold ph-lock"></i></button>`;
+
+        const btnArticulo = img.articulo_id 
+            ? `<a href="leer-articulo?id=${img.articulo_id}" target="_blank" class="btn btn-secondary" style="padding: 0.3rem 0.5rem; font-size: 0.75rem; display:inline-flex; align-items:center; gap:0.2rem;" title="Ver artículo asignado"><i class="ph-bold ph-newspaper"></i> Artículo</a>`
+            : '';
+
+        html += `
+            <div class="citation-box-glass" id="card_img_${md5JS(img.nombre)}" style="padding: 0.8rem; display:flex; flex-direction:column; justify-content:space-between; align-items:center; position:relative; overflow:hidden;">
+                <div style="width: 100%; height: 130px; border-radius: 6px; overflow: hidden; background: #f1f5f9; margin-bottom: 0.6rem; position: relative;">
+                    <img src="${img.url}" alt="${img.nombre}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <div style="position: absolute; top: 6px; right: 6px;">${badge}</div>
+                </div>
+                <div style="width: 100%; text-align: left; margin-bottom: 0.6rem;">
+                    <strong style="font-size: 0.8rem; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--texto-titulos);" title="${img.nombre}">${img.nombre}</strong>
+                    <span class="text-muted" style="font-size: 0.72rem; display: block; margin-top: 0.15rem;">${img.peso_kb} KB • ${img.fecha}</span>
+                </div>
+                <div style="width: 100%; display: flex; gap: 0.3rem;">
+                    <button type="button" class="btn btn-secondary" style="flex: 1; padding: 0.3rem 0.4rem; font-size: 0.75rem; justify-content: center;" onclick="abrirModalVisorImagen('${img.url}', '${img.nombre}')"><i class="ph-bold ph-eye"></i> Ver</button>
+                    ${btnArticulo}
+                    ${btnBorrar}
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+
+    // Renderizado de Controles de Paginación
+    if (controls && totalPaginas > 1) {
+        let phtml = '';
+        if (paginaActualStorage > 1) {
+            phtml += `<button type="button" class="page-link" onclick="renderizarGaleriaStorage(${paginaActualStorage - 1})">← Anterior</button>`;
+        }
+        for (let i = 1; i <= totalPaginas; i++) {
+            const activeClass = i === paginaActualStorage ? 'active' : '';
+            phtml += `<button type="button" class="page-link ${activeClass}" onclick="renderizarGaleriaStorage(${i})">${i}</button>`;
+        }
+        if (paginaActualStorage < totalPaginas) {
+            phtml += `<button type="button" class="page-link" onclick="renderizarGaleriaStorage(${paginaActualStorage + 1})">Siguiente →</button>`;
+        }
+        controls.innerHTML = phtml;
+    } else if (controls) {
+        controls.innerHTML = '';
+    }
+}
+
+function md5JS(string) {
+    let hash = 0;
+    for (let i = 0; i < string.length; i++) {
+        hash = (hash << 5) - hash + string.charCodeAt(i);
+        hash |= 0;
+    }
+    return Math.abs(hash).toString(16);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderizarGaleriaStorage(1);
+});
 </script>
-<script src="../modules/Articulos/assets/js/lazy_loading.js"></script>
+<script src="../modules/Articulos/assets/js/lazy_loading.js"></script>

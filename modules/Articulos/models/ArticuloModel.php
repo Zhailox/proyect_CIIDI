@@ -510,9 +510,19 @@ public function obtenerArticuloPorId($id) {
         $stmtCategorias = $db->prepare("SELECT id_categoria FROM recurso_categorias WHERE id_recurso = ?");
         $stmtCategorias->execute([(int) $id]);
 
+        $stmtEtiquetas = $db->prepare("
+            SELECT e.nombre
+            FROM recurso_etiquetas re
+            JOIN etiquetas e ON e.id = re.id_etiqueta
+            WHERE re.id_recurso = ?
+            ORDER BY e.nombre ASC
+        ");
+        $stmtEtiquetas->execute([(int) $id]);
+
         $articulo['autores'] = $autores;
         $articulo['autores_text'] = !empty($autores) ? implode(', ', $autores) : 'Autor no registrado';
         $articulo['categorias'] = array_map('intval', $stmtCategorias->fetchAll(PDO::FETCH_COLUMN));
+        $articulo['etiquetas_nombres'] = $stmtEtiquetas->fetchAll(PDO::FETCH_COLUMN);
 
         return $articulo;
     }
@@ -520,10 +530,14 @@ public function obtenerArticuloPorId($id) {
     public function getArticulosSimilares(int $idArticulo, int $limit = 3): array {
         if ($limit <= 0) return [];
         $db = Connection::getInstance();
-        $sql = "SELECT DISTINCT r.id, r.titulo, r.anio_publicacion, d.resumen, d.imagen_portada,
-                       COALESCE((SELECT c2.nombre FROM recurso_categorias rc2 JOIN categorias c2 ON c2.id = rc2.id_categoria WHERE rc2.id_recurso = r.id LIMIT 1), 'Artículo') AS categoria
+        $sql = "SELECT DISTINCT r.id, r.titulo, r.anio_publicacion, r.archivo_pdf,
+                       d.resumen, d.imagen_portada, d.volumen, d.numero, d.issn,
+                       e.nombre AS editorial,
+                       COALESCE((SELECT c2.nombre FROM recurso_categorias rc2 JOIN categorias c2 ON c2.id = rc2.id_categoria WHERE rc2.id_recurso = r.id LIMIT 1), 'Artículo') AS categoria,
+                       COALESCE((SELECT STRING_AGG(DISTINCT a2.nombre_completo, ', ' ORDER BY a2.nombre_completo) FROM recurso_autores ra2 JOIN autores a2 ON a2.id = ra2.id_autor WHERE ra2.id_recurso = r.id), 'Autor no registrado') AS autores_text
                 FROM recursos r
                 JOIN detalles_articulos d ON r.id = d.id_recurso
+                LEFT JOIN editoriales e ON d.id_editorial = e.id
                 JOIN recurso_categorias rc ON r.id = rc.id_recurso
                 WHERE r.id_tipo_recurso = 3 
                 AND r.id != ?
@@ -838,6 +852,14 @@ public function obtenerCategoriasDelArticulo($id_recurso) {
            ->execute([trim($nombre), trim($cedula) ?: null, $id]);
         return true;
     }
+
+    public function eliminarAutor($id) {
+        $db = Connection::getInstance();
+        $db->prepare("DELETE FROM recurso_autores WHERE id_autor = ?")->execute([$id]);
+        $db->prepare("DELETE FROM autores WHERE id = ?")->execute([$id]);
+        return true;
+    }
+
     
     private function normalizarString(string $str): string {
         $str = mb_strtolower(trim($str), 'UTF-8');
