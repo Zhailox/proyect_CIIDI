@@ -105,7 +105,7 @@ $buildUrl = function($page) use ($filtros) {
         <article class="art-featured-post">
             <?php 
                 $imgPortada = $ultimo['imagen_portada'] ?? 'default_article.jpg';
-                $rutaImg = (strpos($imgPortada, 'http') === 0) ? htmlspecialchars($imgPortada) : '../public/uploads/articulos/' . htmlspecialchars($imgPortada);
+                $rutaImg = (strpos($imgPortada, 'http') === 0) ? htmlspecialchars($imgPortada) : '../storage/uploads/articulos/' . htmlspecialchars($imgPortada);
             ?>
             <img data-src="<?= $rutaImg ?>" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f9'/%3E%3C/svg%3E" alt="<?= htmlspecialchars($ultimo['titulo'] ?? 'Portada') ?>" class="art-featured-img" style="object-fit: cover; width: 100%;">
             <div class="art-featured-body">
@@ -158,7 +158,7 @@ $buildUrl = function($page) use ($filtros) {
                 <article class="art-post-card">
                     <?php 
                         $imgPortada = $art['imagen_portada'] ?? 'default_article.jpg';
-                        $rutaImg = (strpos($imgPortada, 'http') === 0) ? htmlspecialchars($imgPortada) : '../public/uploads/articulos/' . htmlspecialchars($imgPortada);
+                        $rutaImg = (strpos($imgPortada, 'http') === 0) ? htmlspecialchars($imgPortada) : '../storage/uploads/articulos/' . htmlspecialchars($imgPortada);
                     ?>
                     <img data-src="<?= $rutaImg ?>" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 180'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f9'/%3E%3C/svg%3E" alt="<?= htmlspecialchars($art['titulo'] ?? 'Portada') ?>" class="art-post-img" style="object-fit: cover; width: 100%;">
                     <div class="art-post-body">

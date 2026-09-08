@@ -199,29 +199,15 @@ class ArticulosController {
                     exit;
                 }
 
+                $tmpPath = $_FILES['imagen_portada']['tmp_name'];
                 $nombreImagen = 'art_' . time() . '_' . uniqid() . '.webp';
-                $destino = __DIR__ . '/../../../public/uploads/articulos/';
+                $destino = __DIR__ . '/../../../storage/uploads/articulos/';
                 if (!is_dir($destino)) mkdir($destino, 0777, true);
                 
                 $rutaDestino = $destino . $nombreImagen;
-                $tmpPath = $_FILES['imagen_portada']['tmp_name'];
-                $imagenOriginal = null;
-
-                // Crear instancia de imagen según su MIME real
-                if ($mimeType === 'image/jpeg') {
-                    $imagenOriginal = imagecreatefromjpeg($tmpPath);
-                } elseif ($mimeType === 'image/png') {
-                    $imagenOriginal = imagecreatefrompng($tmpPath);
-                    imagepalettetotruecolor($imagenOriginal);
-                    imagealphablending($imagenOriginal, true);
-                    imagesavealpha($imagenOriginal, true);
-                } elseif ($mimeType === 'image/webp') {
-                    $imagenOriginal = imagecreatefromwebp($tmpPath);
-                }
-
-                if ($imagenOriginal) {
-                    imagewebp($imagenOriginal, $rutaDestino, 85);
-                    imagedestroy($imagenOriginal);
+                $procesadoExitoso = $this->optimizarImagenPortada($tmpPath, $mimeType, $rutaDestino);
+                
+                if ($procesadoExitoso) {
                     $imagenFisicaCreada = $rutaDestino;
                 } else {
                     move_uploaded_file($tmpPath, $rutaDestino);
@@ -422,32 +408,13 @@ class ArticulosController {
                     }
 
                     $nombreImagen = 'art_' . time() . '_' . uniqid() . '.webp';
-                    $destino = __DIR__ . '/../../../public/uploads/articulos/';
+                    $destino = __DIR__ . '/../../../storage/uploads/articulos/';
                     if (!is_dir($destino)) mkdir($destino, 0777, true); 
                     
                     $rutaDestino = $destino . $nombreImagen;
                     $tmpPath = $_FILES['imagen_portada']['tmp_name'];
-                    $imagenOriginal = null;
-
-                    // Crear instancia de imagen según su MIME real
-                    if ($mimeType === 'image/jpeg') {
-                        $imagenOriginal = imagecreatefromjpeg($tmpPath);
-                    } elseif ($mimeType === 'image/png') {
-                        $imagenOriginal = imagecreatefrompng($tmpPath);
-                        // Preservar transparencia en PNGs
-                        imagepalettetotruecolor($imagenOriginal);
-                        imagealphablending($imagenOriginal, true);
-                        imagesavealpha($imagenOriginal, true);
-                    } elseif ($mimeType === 'image/webp') {
-                        $imagenOriginal = imagecreatefromwebp($tmpPath);
-                    }
-
-                    // Generar y guardar como WebP con 85% de calidad (balance peso/calidad)
-                    if ($imagenOriginal) {
-                        imagewebp($imagenOriginal, $rutaDestino, 85);
-                        imagedestroy($imagenOriginal);
-                    } else {
-                        // Fallback de seguridad por si falla la librería GD
+                    $procesadoExitoso = $this->optimizarImagenPortada($tmpPath, $mimeType, $rutaDestino);
+                    if (!$procesadoExitoso) {
                         move_uploaded_file($tmpPath, $rutaDestino);
                     }
                 }
@@ -610,4 +577,65 @@ class ArticulosController {
         header('Location: gestor-articulos');
         exit;
     }
+
+    /**
+     * Optimiza y comprime la imagen de portada.
+     * Redimensiona (máximo 1200px de ancho) preservando la relación de aspecto y exporta en formato WebP con calidad 80.
+     */
+    private function optimizarImagenPortada($tmpPath, $mimeType, $rutaDestino) {
+        if (!extension_loaded('gd')) {
+            return false;
+        }
+
+        $srcImg = null;
+        switch ($mimeType) {
+            case 'image/jpeg':
+            case 'image/jpg':
+                $srcImg = @imagecreatefromjpeg($tmpPath);
+                break;
+            case 'image/png':
+                $srcImg = @imagecreatefrompng($tmpPath);
+                break;
+            case 'image/webp':
+                $srcImg = @imagecreatefromwebp($tmpPath);
+                break;
+        }
+
+        if (!$srcImg) {
+            return false;
+        }
+
+        $anchoOrig = imagesx($srcImg);
+        $altoOrig = imagesy($srcImg);
+
+        if ($anchoOrig <= 0 || $altoOrig <= 0) {
+            imagedestroy($srcImg);
+            return false;
+        }
+
+        $maxAncho = 1200;
+        if ($anchoOrig > $maxAncho) {
+            $nuevoAncho = $maxAncho;
+            $nuevoAlto = (int)round(($altoOrig * $maxAncho) / $anchoOrig);
+        } else {
+            $nuevoAncho = $anchoOrig;
+            $nuevoAlto = $altoOrig;
+        }
+
+        $destImg = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
+
+        // Preservar transparencia para PNG o WebP transparentes
+        imagealphablending($destImg, false);
+        imagesavealpha($destImg, true);
+
+        imagecopyresampled($destImg, $srcImg, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $anchoOrig, $altoOrig);
+
+        $exito = @imagewebp($destImg, $rutaDestino, 80);
+
+        imagedestroy($srcImg);
+        imagedestroy($destImg);
+
+        return $exito;
+    }
 }
+

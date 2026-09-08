@@ -1,5 +1,6 @@
 <?php
 // modules/Articulos/controllers/ConfiguracionController.php
+require_once CORE_PATH . 'Database/QueryBuilder.php';
 require_once __DIR__ . '/../services/ConfigService.php';
 
 class ConfiguracionController {
@@ -87,10 +88,95 @@ class ConfiguracionController {
         }
         }
 
+        $imagenesStorage = [];
+        $dirUploads = realpath(__DIR__ . '/../../../storage/uploads/articulos');
+
+        if ($dirUploads && is_dir($dirUploads)) {
+            $qb = new QueryBuilder();
+            $detallesUso = $qb->tabla('detalles_articulos')->select('id_recurso, imagen_portada')->get();
+            
+            $mapaPortadas = [];
+            foreach ($detallesUso as $det) {
+                if (!empty($det['imagen_portada'])) {
+                    $mapaPortadas[trim($det['imagen_portada'])] = (int)$det['id_recurso'];
+                }
+            }
+
+            $archivos = array_diff(scandir($dirUploads), ['.', '..']);
+            foreach ($archivos as $archivo) {
+                $rutaCompleta = $dirUploads . DIRECTORY_SEPARATOR . $archivo;
+                if (is_file($rutaCompleta) && @getimagesize($rutaCompleta) !== false) {
+                    $esDefault = ($archivo === 'default_article.jpg');
+                    $articuloId = $mapaPortadas[$archivo] ?? null;
+                    $enUso = ($articuloId !== null) || $esDefault;
+
+                    $mtime = filemtime($rutaCompleta);
+                    $imagenesStorage[] = [
+                        'nombre' => $archivo,
+                        'url' => '../storage/uploads/articulos/' . htmlspecialchars($archivo),
+                        'peso_kb' => round(filesize($rutaCompleta) / 1024, 2),
+                        'fecha' => date("Y-m-d H:i", $mtime),
+                        'mtime' => $mtime,
+                        'en_uso' => $enUso,
+                        'articulo_id' => $articuloId,
+                        'es_default' => $esDefault
+                    ];
+                }
+            }
+
+            usort($imagenesStorage, function($a, $b) {
+                return $b['mtime'] - $a['mtime'];
+            });
+        }
+
         return [
             'config'  => ConfigService::get(),
             'mensaje' => $mensaje,
-            'error'   => $error
+            'error'   => $error,
+            'imagenesStorage' => $imagenesStorage
         ];
+    }
+
+    public function eliminarImagen() {
+        require_once CORE_PATH . 'Security/Auth.php';
+        Auth::requierePrivilegioMinimo(2);
+
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        header('Content-Type: application/json; charset=utf-8');
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+        $token = $data['csrf_token'] ?? '';
+        $nombreImg = basename(trim($data['nombre'] ?? ''));
+
+        if (empty($token) || !hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+            echo json_encode(['success' => false, 'error' => 'Token CSRF inválido o expirado.']);
+            exit;
+        }
+
+        if (empty($nombreImg) || $nombreImg === 'default_article.jpg') {
+            echo json_encode(['success' => false, 'error' => 'No está permitido borrar la imagen por defecto o un nombre vacío.']);
+            exit;
+        }
+
+        $qb = new QueryBuilder();
+        $enUso = $qb->tabla('detalles_articulos')->where('imagen_portada', '=', $nombreImg)->count();
+        if ($enUso > 0) {
+            echo json_encode(['success' => false, 'error' => 'Esta imagen está asignada a uno o más artículos activos y no puede ser eliminada.']);
+            exit;
+        }
+
+        $dirUploads = realpath(__DIR__ . '/../../../storage/uploads/articulos');
+        if ($dirUploads) {
+            $rutaFisica = $dirUploads . DIRECTORY_SEPARATOR . $nombreImg;
+            if (file_exists($rutaFisica) && is_file($rutaFisica)) {
+                if (@unlink($rutaFisica)) {
+                    echo json_encode(['success' => true, 'mensaje' => 'Imagen eliminada del almacenamiento.']);
+                    exit;
+                }
+            }
+        }
+
+        echo json_encode(['success' => false, 'error' => 'El archivo no fue encontrado o no se pudo eliminar del servidor.']);
+        exit;
     }
 }

@@ -448,7 +448,7 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
         // Solo borramos si existe, si no es la por defecto, y si NO es una URL externa (http/https)
         if ($portada && $portada !== 'default_article.jpg' && strpos($portada, 'http') !== 0) {
             $nombreLimpio = basename($portada); // Previene Directory Traversal en Linux/Windows
-            $dirUploads = realpath(__DIR__ . '/../../../public/uploads/articulos');
+            $dirUploads = realpath(__DIR__ . '/../../../storage/uploads/articulos');
             
             if ($dirUploads) {
                 $rutaFisica = $dirUploads . DIRECTORY_SEPARATOR . $nombreLimpio;
@@ -592,7 +592,7 @@ public function actualizarArticulo(
         $portadaVieja = $stmtVieja->fetchColumn();
 
         if ($portadaVieja && $portadaVieja !== $nombreImagen && $portadaVieja !== 'default_article.jpg' && strpos($portadaVieja, 'http') !== 0) {
-            $dirUploads = realpath(__DIR__ . '/../../../public/uploads/articulos');
+            $dirUploads = realpath(__DIR__ . '/../../../storage/uploads/articulos');
             if ($dirUploads) {
                 $rutaVieja = $dirUploads . DIRECTORY_SEPARATOR . basename($portadaVieja);
                 if (file_exists($rutaVieja) && is_file($rutaVieja)) {
