@@ -210,13 +210,12 @@ function urlParam($nuevosParams) {
             </form>
 
             <div class="mt-1-5">
-                <?php if($busquedas['q_aut'] === ''): ?>
-                    <p class="text-muted" style="text-align:center; font-style:italic;">Use el buscador para encontrar autores.</p>
-                <?php elseif(empty($autores)): ?>
-                    <p class="text-muted" style="text-align:center; font-style:italic;">No se encontraron resultados para "<?= htmlspecialchars($busquedas['q_aut']) ?>".</p>
+                <?php if(empty($autores['data'])): ?>
+                    <p class="text-muted" style="text-align:center; font-style:italic;">No hay autores registrados <?= !empty($busquedas['q_aut']) ? 'para "' . htmlspecialchars($busquedas['q_aut']) . '"' : '' ?>.</p>
                 <?php else: ?>
-                    <?php foreach($autores as $autor): ?>
+                    <?php foreach($autores['data'] as $autor): ?>
                         <form action="gestor-catalogos" method="POST" style="background: rgba(0,0,0,0.02); padding: 1rem; border-radius: 4px; margin-bottom: 1rem; border: 1px solid rgba(0,0,0,0.05);">
+                            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                             <input type="hidden" name="accion" value="actualizar_autor">
                             <input type="hidden" name="id" value="<?= (int)$autor['id'] ?>">
                             
@@ -233,6 +232,18 @@ function urlParam($nuevosParams) {
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
+
+            <?php if(!empty($autores['paginas']) && $autores['paginas'] > 1): ?>
+                <div style="display:flex; justify-content:center; gap:0.5rem; margin-top:1rem;">
+                    <?php if($autores['pagina_actual'] > 1): ?>
+                        <a href="<?= urlParam(['p_aut' => $autores['pagina_actual'] - 1]) ?>" class="btn btn-secondary" style="padding:0.2rem 0.6rem;">&laquo;</a>
+                    <?php endif; ?>
+                    <span style="font-size:0.9rem; align-self:center;">Pág <?= $autores['pagina_actual'] ?> de <?= $autores['paginas'] ?></span>
+                    <?php if($autores['pagina_actual'] < $autores['paginas']): ?>
+                        <a href="<?= urlParam(['p_aut' => $autores['pagina_actual'] + 1]) ?>" class="btn btn-secondary" style="padding:0.2rem 0.6rem;">&raquo;</a>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
         </div>
 
     </div>

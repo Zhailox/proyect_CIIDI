@@ -104,7 +104,7 @@ class ArticuloModel {
         $parametros[':offset'] = $offset;
 
         $sql = "
-            SELECT DISTINCT
+            SELECT
                 r.id,
                 r.titulo,
                 r.anio_publicacion,
@@ -119,11 +119,15 @@ class ArticuloModel {
                     FROM recurso_categorias rc2
                     LEFT JOIN categorias c2 ON c2.id = rc2.id_categoria
                     WHERE rc2.id_recurso = r.id
-                ), 'Sin categoría') AS categoria
+                ), 'Sin categoría') AS categoria,
+                COALESCE((
+                    SELECT STRING_AGG(DISTINCT a2.nombre_completo, ', ' ORDER BY a2.nombre_completo)
+                    FROM recurso_autores ra2
+                    JOIN autores a2 ON a2.id = ra2.id_autor
+                    WHERE ra2.id_recurso = r.id
+                ), 'Autor no registrado') AS autores_text
             FROM recursos r
             INNER JOIN detalles_articulos d ON d.id_recurso = r.id
-            LEFT JOIN recurso_autores ra ON ra.id_recurso = r.id
-            LEFT JOIN autores a ON a.id = ra.id_autor
             WHERE " . implode(' AND ', $condiciones) . "
             ORDER BY r.id DESC
             LIMIT :limit OFFSET :offset
@@ -134,19 +138,9 @@ class ArticuloModel {
         $articulos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         foreach ($articulos as &$articulo) {
-            $stmtAutores = $db->prepare("
-                SELECT a.nombre_completo
-                FROM recurso_autores ra
-                JOIN autores a ON a.id = ra.id_autor
-                WHERE ra.id_recurso = ?
-                ORDER BY a.nombre_completo ASC
-            ");
-
-            $stmtAutores->execute([$articulo['id']]);
-            $autores = $stmtAutores->fetchAll(PDO::FETCH_COLUMN);
-
-            $articulo['autores'] = $autores;
-            $articulo['autores_text'] = !empty($autores) ? implode(', ', $autores) : 'Autor no registrado';
+            $articulo['autores'] = ($articulo['autores_text'] !== 'Autor no registrado') 
+                ? explode(', ', $articulo['autores_text']) 
+                : [];
         }
 
         return $articulos;
@@ -357,11 +351,8 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
             // Creamos los autores nuevos ingresados al vuelo (Corrección PostgreSQL)
             if (!empty($autores_nuevos)) {
                 $stmtNewAutor = $db->prepare("INSERT INTO autores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
-                
-                // Extraemos todos los autores a la RAM una sola vez para iterar sobre ellos
-                $stmtTodos = $db->query("SELECT id, nombre_completo FROM autores");
-                $todosAutores = $stmtTodos->fetchAll(PDO::FETCH_ASSOC);
-                
+                $stmtSimilares = $db->prepare("SELECT id, nombre_completo FROM autores WHERE LOWER(nombre_completo) LIKE LOWER(?) LIMIT 50");
+
                 foreach ($autores_nuevos as $json_autor) {
                     $datos = json_decode($json_autor, true);
                     if ($datos && !empty($datos['nombre'])) {
@@ -383,15 +374,20 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
                             $autorId = $stmt->fetchColumn();
                         }
 
-                        // C. Búsqueda difusa (Soundex + Levenshtein <= 2)
+                        // C. Búsqueda difusa acotada (Levenshtein/Soundex sobre una muestra relevante)
                         if (!$autorId) {
-                            $normNom = $this->normalizarString($nom);
-                            
-                            foreach ($todosAutores as $candAut) {
-                                $normCand = $this->normalizarString($candAut['nombre_completo']);
-                                if ($normNom === $normCand || (levenshtein($normNom, $normCand) <= 2 && soundex($normNom) === soundex($normCand))) {
-                                    $autorId = (int)$candAut['id'];
-                                    break;
+                            $primerPalabra = explode(' ', $nom)[0] ?? '';
+                            if (strlen($primerPalabra) >= 3) {
+                                $stmtSimilares->execute(['%' . $primerPalabra . '%']);
+                                $candidatos = $stmtSimilares->fetchAll(PDO::FETCH_ASSOC);
+                                $normNom = $this->normalizarString($nom);
+
+                                foreach ($candidatos as $candAut) {
+                                    $normCand = $this->normalizarString($candAut['nombre_completo']);
+                                    if ($normNom === $normCand || (levenshtein($normNom, $normCand) <= 2 && soundex($normNom) === soundex($normCand))) {
+                                        $autorId = (int)$candAut['id'];
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -400,11 +396,6 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
                         if (!$autorId) {
                             $stmtNewAutor->execute([$nom, $cedula]);
                             $autorId = $stmtNewAutor->fetchColumn();
-                            
-                            // Lo añadimos a la lista local para no volver a insertarlo si viene repetido en el mismo envío
-                            if ($autorId) {
-                                $todosAutores[] = ['id' => $autorId, 'nombre_completo' => $nom];
-                            }
                         }
 
                         if ($autorId) {
@@ -454,17 +445,20 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
         $stmt->execute([$id_recurso]);
         $portada = $stmt->fetchColumn();
 
-        // Solo borramos si existe, si no es la por defecto, y si NO es una URL externa (http)
+        // Solo borramos si existe, si no es la por defecto, y si NO es una URL externa (http/https)
         if ($portada && $portada !== 'default_article.jpg' && strpos($portada, 'http') !== 0) {
-            $rutaFisica = __DIR__ . '/../../../public/uploads/articulos/' . $portada;
-            if (file_exists($rutaFisica)) {
-                unlink($rutaFisica); // Borra el archivo del servidor
+            $nombreLimpio = basename($portada); // Previene Directory Traversal en Linux/Windows
+            $dirUploads = realpath(__DIR__ . '/../../../public/uploads/articulos');
+            
+            if ($dirUploads) {
+                $rutaFisica = $dirUploads . DIRECTORY_SEPARATOR . $nombreLimpio;
+                if (file_exists($rutaFisica) && is_file($rutaFisica)) {
+                    @unlink($rutaFisica);
+                }
             }
         }
 
-        // 2. Eliminar de la base de datos.
-        // Gracias a las restricciones ON DELETE CASCADE de PostgreSQL, borrar en 'recursos'
-        // eliminará automáticamente sus datos en 'detalles_articulos', 'recurso_autores', etc.
+        // 2. Eliminar de la base de datos (CASCADE en PostgreSQL)
         $qb = new QueryBuilder();
         return $qb->tabla('recursos')->where('id', '=', $id_recurso)->delete();
     }
@@ -590,6 +584,21 @@ public function actualizarArticulo(
         ");
         $stmtRec->execute([$titulo, $anio_publicacion, $archivo_pdf, $id]);
 
+        // Si la portada cambió, borramos el archivo de la portada vieja del servidor
+        $stmtVieja = $db->prepare("SELECT imagen_portada FROM detalles_articulos WHERE id_recurso = ?");
+        $stmtVieja->execute([$id]);
+        $portadaVieja = $stmtVieja->fetchColumn();
+
+        if ($portadaVieja && $portadaVieja !== $nombreImagen && $portadaVieja !== 'default_article.jpg' && strpos($portadaVieja, 'http') !== 0) {
+            $dirUploads = realpath(__DIR__ . '/../../../public/uploads/articulos');
+            if ($dirUploads) {
+                $rutaVieja = $dirUploads . DIRECTORY_SEPARATOR . basename($portadaVieja);
+                if (file_exists($rutaVieja) && is_file($rutaVieja)) {
+                    @unlink($rutaVieja);
+                }
+            }
+        }
+
         $stmtDet = $db->prepare("
             UPDATE detalles_articulos
             SET id_editorial = ?, volumen = ?, numero = ?, issn = ?, imagen_portada = ?, resumen = ?
@@ -707,17 +716,38 @@ public function obtenerCatalogoPaginado($tabla, $buscar = '', $pagina = 1, $porP
         ];
     }
 
-    public function buscarAutoresGestor($buscar) {
-        if (trim($buscar) === '') return []; // Si no hay búsqueda, devolvemos vacío
-        
+    public function buscarAutoresGestor($buscar = '', $pagina = 1, $porPagina = 5) {
         $db = Connection::getInstance();
-        $termino = "%" . trim($buscar) . "%";
-        // Buscamos por nombre o por cédula limitando a 20 resultados para no saturar
-        $stmt = $db->prepare("SELECT id, nombre_completo, cedula FROM autores WHERE LOWER(nombre_completo) LIKE LOWER(:b) OR LOWER(cedula) LIKE LOWER(:b) ORDER BY nombre_completo ASC LIMIT 20");
-        $stmt->bindValue(':b', $termino, PDO::PARAM_STR);
+        $pagina = max(1, (int)$pagina);
+        $offset = ($pagina - 1) * $porPagina;
+        $where = "";
+
+        if (trim($buscar) !== '') {
+            $where = "WHERE LOWER(nombre_completo) LIKE LOWER(:b) OR LOWER(cedula) LIKE LOWER(:b)";
+        }
+
+        $stmtTotal = $db->prepare("SELECT COUNT(*) FROM autores $where");
+        if (trim($buscar) !== '') {
+            $stmtTotal->bindValue(':b', "%" . trim($buscar) . "%", PDO::PARAM_STR);
+        }
+        $stmtTotal->execute();
+        $total = (int)$stmtTotal->fetchColumn();
+
+        $sql = "SELECT id, nombre_completo, cedula FROM autores $where ORDER BY nombre_completo ASC LIMIT :limit OFFSET :offset";
+        $stmt = $db->prepare($sql);
+        if (trim($buscar) !== '') {
+            $stmt->bindValue(':b', "%" . trim($buscar) . "%", PDO::PARAM_STR);
+        }
+        $stmt->bindValue(':limit', $porPagina, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
         
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return [
+            'data' => $stmt->fetchAll(PDO::FETCH_ASSOC),
+            'total' => $total,
+            'paginas' => max(1, (int)ceil($total / $porPagina)),
+            'pagina_actual' => $pagina
+        ];
     }
 
 public function crearCategoria($nombre) {

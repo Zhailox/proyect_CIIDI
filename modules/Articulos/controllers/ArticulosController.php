@@ -118,13 +118,30 @@ class ArticulosController {
         
         $archivo_pdf = filter_var(trim($_POST['archivo_pdf'] ?? ''), FILTER_SANITIZE_URL);
         $url_imagen = filter_var(trim($_POST['url_imagen'] ?? ''), FILTER_SANITIZE_URL);
-        
+
+        // Validar esquema HTTP/HTTPS estricto para evitar SSRF o esquemas peligrosos
+        $esUrlSegura = function($url) {
+            if (empty($url)) return true;
+            $scheme = parse_url($url, PHP_URL_SCHEME);
+            $host = parse_url($url, PHP_URL_HOST);
+            if (!in_array(strtolower((string)$scheme), ['http', 'https'])) return false;
+            if (in_array(strtolower((string)$host), ['localhost', '127.0.0.1', '::1'])) return false;
+            return true;
+        };
+
+        if (!$esUrlSegura($archivo_pdf) || !$esUrlSegura($url_imagen)) {
+            $_SESSION['mensaje_error'] = "URL no válida o esquema no permitido. Asegúrese de usar enlaces web válidos (http:// o https://).";
+            header('Location: nuevo-articulo');
+            exit;
+        }
+
         $autores = $_POST['autores'] ?? [];
         $autores_nuevos = $_POST['autores_nuevos'] ?? [];
         $etiquetas = $_POST['etiquetas'] ?? [];
 
         // 2. Manejar la imagen de portada
         $nombreImagen = 'default_article.jpg';
+        $imagenFisicaCreada = null;
         
         // A. Si escribieron una URL externa, la tomamos primero
         if (!empty($url_imagen)) {
@@ -146,7 +163,6 @@ class ArticulosController {
             // Si llegó bien a PHP, validamos según nuestro JSON y de una le verificamos el MIME
             if ($_FILES['imagen_portada']['error'] === UPLOAD_ERR_OK) {
                 $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                //MIME cosa
                 $mimeType = finfo_file($finfo, $_FILES['imagen_portada']['tmp_name']);
                 finfo_close($finfo);
 
@@ -183,7 +199,7 @@ class ArticulosController {
                     exit;
                 }
 
-               $nombreImagen = 'art_' . time() . '_' . uniqid() . '.webp';
+                $nombreImagen = 'art_' . time() . '_' . uniqid() . '.webp';
                 $destino = __DIR__ . '/../../../public/uploads/articulos/';
                 if (!is_dir($destino)) mkdir($destino, 0777, true);
                 
@@ -196,7 +212,6 @@ class ArticulosController {
                     $imagenOriginal = imagecreatefromjpeg($tmpPath);
                 } elseif ($mimeType === 'image/png') {
                     $imagenOriginal = imagecreatefrompng($tmpPath);
-                    // Preservar transparencia en PNGs
                     imagepalettetotruecolor($imagenOriginal);
                     imagealphablending($imagenOriginal, true);
                     imagesavealpha($imagenOriginal, true);
@@ -204,13 +219,13 @@ class ArticulosController {
                     $imagenOriginal = imagecreatefromwebp($tmpPath);
                 }
 
-                // Generar y guardar como WebP con 85% de calidad (balance peso/calidad)
                 if ($imagenOriginal) {
                     imagewebp($imagenOriginal, $rutaDestino, 85);
                     imagedestroy($imagenOriginal);
+                    $imagenFisicaCreada = $rutaDestino;
                 } else {
-                    // Fallback de seguridad por si falla la librería GD
                     move_uploaded_file($tmpPath, $rutaDestino);
+                    $imagenFisicaCreada = $rutaDestino;
                 }
             }
         }
@@ -233,15 +248,22 @@ class ArticulosController {
                 $autores,
                 $autores_nuevos,
                 $etiquetas
-                        );
+            );
 
             $_SESSION['mensaje_exito'] = "El artículo fue publicado correctamente en la vitrina.";
             header('Location: gestor-articulos');
             exit;
 
         } catch (Exception $e) {
-            // Si hubo un error (ej. cédula de autor repetida)
-            $_SESSION['mensaje_error'] = "Error de base de datos: " . $e->getMessage();
+            if ($imagenFisicaCreada && file_exists($imagenFisicaCreada)) {
+                @unlink($imagenFisicaCreada);
+            }
+            $msgOriginal = $e->getMessage();
+            if (strpos($msgOriginal, '23505') !== false || strpos(strtolower($msgOriginal), 'duplicate') !== false || strpos(strtolower($msgOriginal), 'ya existe') !== false) {
+                $_SESSION['mensaje_error'] = "No se pudo registrar el artículo porque la cédula de un autor o un dato único ya existe registrado en el sistema.";
+            } else {
+                $_SESSION['mensaje_error'] = "Ocurrió un problema al procesar la información del artículo. Por favor verifique los campos e intente nuevamente.";
+            }
             header('Location: nuevo-articulo');
             exit;
         }
@@ -266,7 +288,7 @@ class ArticulosController {
                 
             } catch (Exception $e) {
                 if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['mensaje_error'] = "No se pudo eliminar el artículo: " . $e->getMessage();
+                $_SESSION['mensaje_error'] = "No fue posible eliminar el artículo debido a que está asociado a otros registros activos.";
             }
         }
         
@@ -455,7 +477,12 @@ class ArticulosController {
             exit;
         } catch (Exception $e) {
             if (session_status() === PHP_SESSION_NONE) session_start();
-            $_SESSION['mensaje_error'] = 'No se pudo actualizar el artículo: ' . $e->getMessage();
+            $msg = $e->getMessage();
+            if (strpos($msg, '23505') !== false || strpos(strtolower($msg), 'duplicate') !== false) {
+                $_SESSION['mensaje_error'] = 'No se pudo actualizar el artículo porque contiene un dato (como la cédula de un autor) que ya pertenece a otro registro.';
+            } else {
+                $_SESSION['mensaje_error'] = 'No se pudo actualizar la información del artículo. Verifique los datos e intente nuevamente.';
+            }
             header('Location: editar-articulo?id=' . $id);
             exit;
         }
@@ -513,7 +540,14 @@ class ArticulosController {
                     }
                 }
             } catch (Exception $e) {
-                $_SESSION['mensaje_error'] = 'Error: ' . $e->getMessage();
+                $msg = $e->getMessage();
+                if (strpos($msg, '23505') !== false || strpos(strtolower($msg), 'duplicate') !== false) {
+                    $_SESSION['mensaje_error'] = 'Ya existe un elemento registrado con este mismo nombre o cédula.';
+                } elseif (strpos($msg, '23503') !== false || strpos(strtolower($msg), 'foreign key') !== false) {
+                    $_SESSION['mensaje_error'] = 'No se puede eliminar el registro porque está siendo utilizado por uno o más artículos.';
+                } else {
+                    $_SESSION['mensaje_error'] = 'No se pudo completar la operación en el catálogo. Intente de nuevo.';
+                }
             }
 
             header('Location: gestor-catalogos');
@@ -530,6 +564,7 @@ class ArticulosController {
             $p_edit = max(1, (int)($_GET['p_edit'] ?? 1));
 
             $q_aut = trim($_GET['q_aut'] ?? ''); // Búsqueda de autores
+            $p_aut = max(1, (int)($_GET['p_aut'] ?? 1));
 
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -538,7 +573,7 @@ class ArticulosController {
             $categorias = $this->articuloModel->obtenerCatalogoPaginado('categorias', $q_cat, $p_cat, 5);
             $etiquetas = $this->articuloModel->obtenerCatalogoPaginado('etiquetas', $q_tag, $p_tag, 5);
             $editoriales = $this->articuloModel->obtenerCatalogoPaginado('editoriales', $q_edit, $p_edit, 5);
-            $autores = $this->articuloModel->buscarAutoresGestor($q_aut);
+            $autores = $this->articuloModel->buscarAutoresGestor($q_aut, $p_aut, 5);
 
             return [
                 'categorias' => $categorias,
@@ -570,7 +605,7 @@ class ArticulosController {
             $_SESSION['mensaje_exito'] = "El estado de visibilidad del artículo ha sido actualizado.";
         } catch (Exception $e) {
             if (session_status() === PHP_SESSION_NONE) session_start();
-            $_SESSION['mensaje_error'] = "No se pudo cambiar el estado: " . $e->getMessage();
+            $_SESSION['mensaje_error'] = "No se pudo cambiar la visibilidad del artículo seleccionado.";
         }
         header('Location: gestor-articulos');
         exit;
