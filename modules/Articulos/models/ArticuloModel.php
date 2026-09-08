@@ -525,7 +525,9 @@ public function obtenerArticuloPorId($id) {
                 FROM recursos r
                 JOIN detalles_articulos d ON r.id = d.id_recurso
                 JOIN recurso_categorias rc ON r.id = rc.id_recurso
-                WHERE r.id_tipo_recurso = 3 AND r.id != ?
+                WHERE r.id_tipo_recurso = 3 
+                AND r.id != ?
+                AND COALESCE(d.activo, true) = true
                 AND rc.id_categoria IN (SELECT id_categoria FROM recurso_categorias WHERE id_recurso = ?)
                 ORDER BY r.id DESC LIMIT ?";
         $stmt = $db->prepare($sql);
