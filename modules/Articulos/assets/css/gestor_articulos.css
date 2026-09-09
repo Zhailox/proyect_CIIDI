@@ -387,17 +387,17 @@ img.loaded {
     top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(15, 23, 42, 0.6); 
     backdrop-filter: blur(3px);
-    z-index: 1000;
+    z-index: 99999; 
     display: flex; 
     align-items: center; 
     justify-content: center;
 }
-
 .art-modal-box {
     background: white; 
     padding: 2.5rem; 
     border-radius: 8px;
     width: 100%; 
+    z-index: 99999; 
     max-width: 450px; 
     box-shadow: 0 20px 40px rgba(0,0,0,0.2);
     animation: modalPop 0.3s ease-out forwards;
@@ -620,4 +620,17 @@ img.loaded {
         opacity: 1;
         transform: translateY(0);
     }
+}
+/* Activa el límite en la columna lateral del Grid */
+.art-form-sidebar {
+    min-width: 0;
+}
+
+/* Fuerza el texto a truncarse con puntos suspensivos sin romper el layout */
+.art-text-truncate {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
 }

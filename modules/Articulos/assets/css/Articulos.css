@@ -987,7 +987,7 @@ img.loaded {
 }
 
 .art-btn-filter-apply:hover {
-    background-color: var(--color-principal, #162a45);
+    background-color: var(--color-terciario, #162a45);
     box-shadow: 0 4px 10px rgba(11, 26, 48, 0.2);
     transform: translateY(-1px);
 }
@@ -1381,8 +1381,16 @@ img.loaded {
     border-color: transparent;
     box-shadow: 0 4px 10px rgba(80, 89, 132, 0.25);
 }
-
-
+.art-modal-overlay {
+    position: fixed; 
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.6); 
+    backdrop-filter: blur(3px);
+    z-index: 99999; /* CAMBIO AQUÍ PARA SUPERAR AL SISTEMA MAESTRO */
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+}
 
 
 

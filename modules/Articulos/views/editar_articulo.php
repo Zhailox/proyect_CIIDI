@@ -133,7 +133,7 @@
                 ?>
                     <div class="form-group mt-1">
                         <label class="font-bold">Portada Actual:</label>
-                        <div style="font-size:0.85rem; margin-bottom: 0.5rem; color: var(--texto-silenciado);">
+                        <div class="text-muted art-text-truncate" title="<?= htmlspecialchars($portadaActual) ?>">
                             <i class="ph-bold ph-image"></i> <?= htmlspecialchars($portadaActual) ?>
                         </div>
                     </div>
@@ -147,7 +147,7 @@
                         <i class="ph-bold <?= isset($articulo) ? 'ph-upload-simple' : 'ph-image' ?>" style="font-size: 2rem; color: var(--color-terciario);"></i>
                         <h4 style="margin: 0.4rem 0; font-size: 0.85rem; color: var(--texto-titulos);">Arrastra una nueva portada o haz clic aquí</h4>
                         <p style="font-size: 0.75rem; color: var(--texto-silenciado); margin: 0;">Formatos permitidos: <?= htmlspecialchars(implode(', ', $exts)) ?> (Máx. <?= $limiteRealMb ?> MB)</p>
-                        <div id="preview-image-name" style="margin-top: 0.5rem; font-size: 0.8rem; font-weight: bold; color: var(--color-secundario); display: none;"></div>
+                        <div id="preview-image-name" class="art-text-truncate text-secondary font-bold mt-sm" style="display: none;"></div>
                     </div>
                 </div>
 
@@ -163,7 +163,8 @@
             </button>
         </div>
     </form>
-    <div id="modal-autor" class="art-modal-overlay" style="display: none;">
+</div>
+<div id="modal-autor" class="art-modal-overlay" style="display: none;">
         <div class="art-modal-box">
             <h3 class="text-secondary mt-0" style="border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 1rem;">Registrar Nuevo Autor</h3>
 
@@ -191,7 +192,6 @@
                 <button type="button" class="btn btn-primary" onclick="confirmarModalAutor()">Añadir Autor</button>
             </div>
         </div>
-    </div>
 <script>
     window.DATA_AUTORES = <?= json_encode($autores ?? []) ?>;
     window.AUTORES_SELECCIONADOS = <?= json_encode(array_map('intval', $autoresSeleccionados ?? [])) ?>;
