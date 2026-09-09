@@ -31,26 +31,21 @@ $tabActiva = $_GET['tab'] ?? 'cat';
         </a>
     </div>
 
-    <?php if (!empty($mensajeExito)): ?>
-        <div class="alert-success"><i class="ph-bold ph-check-circle"></i> <?= htmlspecialchars($mensajeExito) ?></div>
-    <?php endif; ?>
-    <?php if (!empty($mensajeError)): ?>
-        <div class="alert-error"><i class="ph-bold ph-warning-circle"></i> <?= htmlspecialchars($mensajeError) ?></div>
-    <?php endif; ?>
+    
 
     <!-- NAVEGACIÓN MODULAR DE PESTAÑAS (ANTIGRAVITY) -->
     <div class="pst-config-nav-tabs">
         <button type="button" class="tab-btn-antigravity <?= $tabActiva === 'cat' ? 'active' : '' ?>" onclick="switchCatalogTab('tabCategorias', this)">
-            <i class="ph-bold ph-folder-user"></i> Categorías (<?= count($categorias['data']) ?>)
+            <i class="ph-bold ph-folder-user"></i> Categorías (<?= $categorias['total'] ?>)
         </button>
         <button type="button" class="tab-btn-antigravity <?= $tabActiva === 'tag' ? 'active' : '' ?>" onclick="switchCatalogTab('tabEtiquetas', this)">
-            <i class="ph-bold ph-hash"></i> Etiquetas (<?= count($etiquetas['data']) ?>)
+            <i class="ph-bold ph-hash"></i> Etiquetas (<?= $etiquetas['total'] ?>)
         </button>
         <button type="button" class="tab-btn-antigravity <?= $tabActiva === 'edit' ? 'active' : '' ?>" onclick="switchCatalogTab('tabEditoriales', this)">
-            <i class="ph-bold ph-buildings"></i> Editoriales / Repositorios (<?= count($editoriales['data']) ?>)
+            <i class="ph-bold ph-buildings"></i> Editoriales / Repositorios (<?= $editoriales['total'] ?>)
         </button>
         <button type="button" class="tab-btn-antigravity <?= $tabActiva === 'aut' ? 'active' : '' ?>" onclick="switchCatalogTab('tabAutores', this)">
-            <i class="ph-bold ph-users-three"></i> Directorio de Autores
+            <i class="ph-bold ph-users-three"></i> Directorio de Autores (<?= $autores['total'] ?>)
         </button>
     </div>
 
@@ -73,6 +68,7 @@ $tabActiva = $_GET['tab'] ?? 'cat';
             <!-- Formulario de creación rápida -->
             <form action="gestor-catalogos" method="POST" style="margin-bottom: 1.25rem;">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                <input type="hidden" name="tab" value="cat">
                 <input type="hidden" name="accion" value="crear_categoria">
                 <div style="display:flex; gap:0.5rem; max-width: 500px;">
                     <input type="text" name="nombre" class="login-flat-input w-100 p-input" placeholder="Nombre de la nueva categoría..." required style="padding: 0.5rem 0.75rem; font-size: 0.85rem; border-radius: 6px;">
@@ -91,14 +87,16 @@ $tabActiva = $_GET['tab'] ?? 'cat';
                         <span style="font-weight: 600; font-size: 0.875rem; color: var(--texto-titulos);"><?= htmlspecialchars($cat['nombre']) ?></span>
                         
                         <div style="display:flex; gap: 0.35rem;">
-                            <button type="button" class="btn-icon btn-edit" title="Editar categoría" onclick="abrirModalEdicion('actualizar_categoria', <?= (int)$cat['id'] ?>, '<?= htmlspecialchars($cat['nombre'], ENT_QUOTES) ?>')">
+                            <button type="button" class="btn-icon btn-edit" title="Editar categoría" onclick="abrirModalEdicion('actualizar_categoria', <?= (int)$cat['id'] ?>, '<?= htmlspecialchars($cat['nombre'], ENT_QUOTES) ?>', 'cat')">
                                 <i class="ph-bold ph-pencil-simple"></i>
                             </button>
 
-                            <form action="gestor-catalogos" method="POST" style="margin:0;">
+                            <form action="gestor-catalogos" method="POST" class="form-inline-delete">
+                                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                                <input type="hidden" name="tab" value="cat">
                                 <input type="hidden" name="accion" value="eliminar_categoria">
                                 <input type="hidden" name="id" value="<?= (int)$cat['id'] ?>">
-                                <button type="submit" class="btn-icon btn-delete" title="Eliminar categoría" onclick="return confirm('¿Eliminar esta categoría?');">
+                                <button type="button" class="btn-icon btn-delete" title="Eliminar categoría" onclick="confirmarEliminacionCatalogo(this.form, 'Eliminar Categoría', '¿Está seguro de eliminar la categoría «<?= htmlspecialchars($cat['nombre'], ENT_QUOTES) ?>» del sistema?');">
                                     <i class="ph-bold ph-trash"></i>
                                 </button>
                             </form>
@@ -143,6 +141,7 @@ $tabActiva = $_GET['tab'] ?? 'cat';
 
             <form action="gestor-catalogos" method="POST" style="margin-bottom: 1.25rem;">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                <input type="hidden" name="tab" value="tag">
                 <input type="hidden" name="accion" value="crear_etiqueta">
                 <div style="display:flex; gap:0.5rem; max-width: 500px;">
                     <input type="text" name="nombre" class="login-flat-input w-100 p-input" placeholder="Nombre de la nueva etiqueta..." required style="padding: 0.5rem 0.75rem; font-size: 0.85rem; border-radius: 6px;">
@@ -161,14 +160,16 @@ $tabActiva = $_GET['tab'] ?? 'cat';
                         <span style="font-weight: 600; font-size: 0.875rem; color: var(--color-secundario);">#<?= htmlspecialchars($tag['nombre']) ?></span>
                         
                         <div style="display:flex; gap: 0.35rem;">
-                            <button type="button" class="btn-icon btn-edit" title="Editar etiqueta" onclick="abrirModalEdicion('actualizar_etiqueta', <?= (int)$tag['id'] ?>, '<?= htmlspecialchars($tag['nombre'], ENT_QUOTES) ?>')">
+                            <button type="button" class="btn-icon btn-edit" title="Editar etiqueta" onclick="abrirModalEdicion('actualizar_etiqueta', <?= (int)$tag['id'] ?>, '<?= htmlspecialchars($tag['nombre'], ENT_QUOTES) ?>', 'tag')">
                                 <i class="ph-bold ph-pencil-simple"></i>
                             </button>
 
-                            <form action="gestor-catalogos" method="POST" style="margin:0;">
+                            <form action="gestor-catalogos" method="POST" class="form-inline-delete">
+                                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                                <input type="hidden" name="tab" value="tag">
                                 <input type="hidden" name="accion" value="eliminar_etiqueta">
                                 <input type="hidden" name="id" value="<?= (int)$tag['id'] ?>">
-                                <button type="submit" class="btn-icon btn-delete" title="Eliminar etiqueta" onclick="return confirm('¿Eliminar esta etiqueta?');">
+                                <button type="button" class="btn-icon btn-delete" title="Eliminar etiqueta" onclick="confirmarEliminacionCatalogo(this.form, 'Eliminar Etiqueta', '¿Está seguro de eliminar la etiqueta «#<?= htmlspecialchars($tag['nombre'], ENT_QUOTES) ?>» del sistema?');">
                                     <i class="ph-bold ph-trash"></i>
                                 </button>
                             </form>
@@ -213,6 +214,7 @@ $tabActiva = $_GET['tab'] ?? 'cat';
 
             <form action="gestor-catalogos" method="POST" style="margin-bottom: 1.25rem;">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                <input type="hidden" name="tab" value="edit">
                 <input type="hidden" name="accion" value="crear_editorial">
                 <div style="display:flex; gap:0.5rem; max-width: 500px;">
                     <input type="text" name="nombre" class="login-flat-input w-100 p-input" placeholder="Nombre del nuevo editorial/repositorio..." required style="padding: 0.5rem 0.75rem; font-size: 0.85rem; border-radius: 6px;">
@@ -231,14 +233,16 @@ $tabActiva = $_GET['tab'] ?? 'cat';
                         <span style="font-weight: 600; font-size: 0.875rem; color: var(--texto-titulos);"><?= htmlspecialchars($edit['nombre']) ?></span>
                         
                         <div style="display:flex; gap: 0.35rem;">
-                            <button type="button" class="btn-icon btn-edit" title="Editar editorial" onclick="abrirModalEdicion('actualizar_editorial', <?= (int)$edit['id'] ?>, '<?= htmlspecialchars($edit['nombre'], ENT_QUOTES) ?>')">
+                            <button type="button" class="btn-icon btn-edit" title="Editar editorial" onclick="abrirModalEdicion('actualizar_editorial', <?= (int)$edit['id'] ?>, '<?= htmlspecialchars($edit['nombre'], ENT_QUOTES) ?>', 'edit')">
                                 <i class="ph-bold ph-pencil-simple"></i>
                             </button>
 
-                            <form action="gestor-catalogos" method="POST" style="margin:0;">
+                            <form action="gestor-catalogos" method="POST" class="form-inline-delete">
+                                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                                <input type="hidden" name="tab" value="edit">
                                 <input type="hidden" name="accion" value="eliminar_editorial">
                                 <input type="hidden" name="id" value="<?= (int)$edit['id'] ?>">
-                                <button type="submit" class="btn-icon btn-delete" title="Eliminar editorial" onclick="return confirm('¿Eliminar esta editorial?');">
+                                <button type="button" class="btn-icon btn-delete" title="Eliminar editorial" onclick="confirmarEliminacionCatalogo(this.form, 'Eliminar Editorial', '¿Está seguro de eliminar la editorial «<?= htmlspecialchars($edit['nombre'], ENT_QUOTES) ?>» del sistema?');">
                                     <i class="ph-bold ph-trash"></i>
                                 </button>
                             </form>
@@ -321,7 +325,7 @@ $tabActiva = $_GET['tab'] ?? 'cat';
                                                 <input type="hidden" name="accion" value="eliminar_autor">
                                                 <input type="hidden" name="tab" value="aut">
                                                 <input type="hidden" name="id" value="<?= (int)$autor['id'] ?>">
-                                                <button type="submit" class="btn-icon btn-delete" style="width: 30px; height: 30px;" title="Eliminar autor" onclick="return confirm('¿Está seguro de eliminar al autor «<?= htmlspecialchars($autor['nombre_completo'], ENT_QUOTES) ?>»?');">
+                                                <button type="button" class="btn-icon btn-delete" style="width: 30px; height: 30px;" title="Eliminar autor" onclick="confirmarEliminacionCatalogo(this.form, 'Eliminar Autor', '¿Está seguro de eliminar al autor «<?= htmlspecialchars($autor['nombre_completo'], ENT_QUOTES) ?>»?');">
                                                     <i class="ph-bold ph-trash"></i>
                                                 </button>
                                             </form>
@@ -365,6 +369,7 @@ $tabActiva = $_GET['tab'] ?? 'cat';
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
             <input type="hidden" name="accion" id="edit-accion">
             <input type="hidden" name="id" id="edit-id">
+            <input type="hidden" name="tab" id="edit-tab">
 
             <div class="form-group mt-1">
                 <label class="font-bold" style="font-size:0.85rem;">Nuevo Nombre *</label>
@@ -388,6 +393,7 @@ $tabActiva = $_GET['tab'] ?? 'cat';
         <form method="POST" action="gestor-catalogos" class="m-0">
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
             <input type="hidden" name="accion" value="actualizar_autor">
+            <input type="hidden" name="tab" value="aut">
             <input type="hidden" name="id" id="edit-autor-id">
 
             <div class="form-group mt-1">
@@ -419,14 +425,14 @@ function switchCatalogTab(tabId, btn) {
     btn.classList.add('active');
 }
 
-function abrirModalEdicion(accion, id, nombreActual) {
+function abrirModalEdicion(accion, id, nombreActual, tab) {
     document.getElementById('edit-accion').value = accion;
     document.getElementById('edit-id').value = id;
     document.getElementById('edit-nombre').value = nombreActual;
+    document.getElementById('edit-tab').value = tab;
     document.getElementById('modal-edicion-catalogo').style.display = 'flex';
     setTimeout(() => document.getElementById('edit-nombre').focus(), 100);
 }
-
 function cerrarModalEdicion() {
     document.getElementById('modal-edicion-catalogo').style.display = 'none';
 }
@@ -442,4 +448,49 @@ function abrirModalEdicionAutor(id, nombre, cedula) {
 function cerrarModalEdicionAutor() {
     document.getElementById('modal-edicion-autor').style.display = 'none';
 }
-</script>
+// --- SISTEMA DE MODALES ELEGANTES ---
+function mostrarModalSistema(tipo, titulo, mensaje, isConfirm = false, onConfirm = null) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,34,68,0.8); z-index:99999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);';
+    
+    let icon = tipo === 'success' ? '<i class="ph-bold ph-check-circle" style="color: #16a34a;"></i>' : '<i class="ph-bold ph-warning-circle" style="color: #dc2626;"></i>';
+    let btnHtml = isConfirm 
+        ? `<button type="button" class="btn btn-secondary" onclick="this.closest('div').parentElement.parentElement.remove()" style="margin-right:0.5rem;">Cancelar</button>
+           <button type="button" class="btn btn-primary" id="btn-confirm-modal">Sí, proceder</button>`
+        : `<button type="button" class="btn btn-primary w-100 justify-center" onclick="this.closest('div').parentElement.parentElement.remove()">Entendido</button>`;
+
+    overlay.innerHTML = `
+        <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+            <div style="font-size: 3.5rem; margin-bottom: 1rem;">${icon}</div>
+            <h3 style="margin: 0 0 0.5rem 0; color: #0f172a; font-size:1.2rem;">${titulo}</h3>
+            <p style="color: #475569; font-size: 0.9rem; margin-bottom: 1.5rem; line-height:1.5;">${mensaje}</p>
+            <div style="display:flex; justify-content:center;">${btnHtml}</div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+
+    if (isConfirm && onConfirm) {
+        document.getElementById('btn-confirm-modal').addEventListener('click', () => {
+            overlay.remove();
+            onConfirm();
+        });
+    }
+}
+
+// Función que captura el formulario de borrar y muestra el modal
+function confirmarEliminacionCatalogo(formElement, titulo, mensaje) {
+    mostrarModalSistema('warning', titulo, mensaje, true, () => {
+        formElement.submit();
+    });
+}
+
+// Inyección dinámica de los mensajes guardados en PHP
+<?php if (!empty($mensajeExito)): ?>
+    mostrarModalSistema('success', 'Operación Exitosa', '<?= htmlspecialchars($mensajeExito, ENT_QUOTES) ?>');
+<?php endif; ?>
+
+<?php if (!empty($mensajeError)): ?>
+    mostrarModalSistema('error', 'No se pudo completar', '<?= htmlspecialchars($mensajeError, ENT_QUOTES) ?>');
+<?php endif; ?>
+</script>

@@ -243,14 +243,37 @@ $buildUrlRemoveParam = function($param) use ($buildUrl) {
                         </div>
 
                         <div class="art-post-body">
-                            <div class="art-post-meta">
+                            <div class="art-post-meta" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                <!-- LADO IZQUIERDO: AÑO -->
                                 <span class="art-year-tag"><i class="ph-bold ph-calendar-blank"></i> <?= htmlspecialchars($art['anio_publicacion']) ?></span>
-                                <?php if (ConfigService::get('recursos.mostrar_volumen', true)): ?>
-                                    <span class="art-metric">
-                                        Vol. <?= htmlspecialchars($art['volumen'] ?? 'N/A') ?>
-                                        <?= !empty($art['numero']) ? ' - Núm. ' . htmlspecialchars($art['numero']) : '' ?>
-                                    </span>
-                                <?php endif; ?>
+                                
+                                <!-- LADO DERECHO: METADATOS COMPLEMENTARIOS (EDITORIAL, VOLUMEN, ISSN) -->
+                                <div style="display: flex; align-items: center; gap: 0.5rem; text-align: right; flex-wrap: wrap; justify-content: flex-end;">
+                                    <?php if (ConfigService::get('recursos.mostrar_editorial', true) && !empty($art['editorial'])): ?>
+                                        <span class="art-metric" style="background: transparent; color: var(--texto-silenciado); font-weight: 600; padding: 0;">
+                                            <?= htmlspecialchars($art['editorial']) ?>
+                                        </span>
+                                    <?php endif; ?>
+
+                                    <?php if (ConfigService::get('recursos.mostrar_volumen', true) && (!empty($art['volumen']) || !empty($art['numero']))): ?>
+                                        <?php if (ConfigService::get('recursos.mostrar_editorial', true) && !empty($art['editorial'])): ?>
+                                            <span style="color: var(--texto-silenciado); font-size: 0.75rem;">•</span>
+                                        <?php endif; ?>
+                                        <span class="art-metric">
+                                            Vol. <?= htmlspecialchars($art['volumen'] ?? 'N/A') ?>
+                                            <?= !empty($art['numero']) ? ' - Núm. ' . htmlspecialchars($art['numero']) : '' ?>
+                                        </span>
+                                    <?php endif; ?>
+
+                                    <?php if (ConfigService::get('recursos.mostrar_issn', true) && !empty($art['issn'])): ?>
+                                        <?php if ((ConfigService::get('recursos.mostrar_volumen', true) && (!empty($art['volumen']) || !empty($art['numero']))) || (ConfigService::get('recursos.mostrar_editorial', true) && !empty($art['editorial']))): ?>
+                                            <span style="color: var(--texto-silenciado); font-size: 0.75rem;">•</span>
+                                        <?php endif; ?>
+                                        <span class="art-metric" style="background: rgba(15, 23, 42, 0.05); color: var(--color-secundario);">
+                                            ISSN: <?= htmlspecialchars($art['issn']) ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
                             </div>
 
                             <a href="leer-articulo?id=<?= $art['id'] ?>" class="art-post-title" title="<?= htmlspecialchars($art['titulo']) ?>">

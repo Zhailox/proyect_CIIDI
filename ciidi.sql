@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict J8pBL8YIbP54ZBClrwn170gEAfhIQDOHydztgFbmgU6XkPIGFpekevT5cVS0bd8
+\restrict C4pgRauOSzbRUnJBLgLZOmuXkuWixVY5z5hEhCIh3AORqXKNvt4A5dB1uXEEU7O
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -107,7 +107,6 @@ ALTER TABLE ONLY public.categorias DROP CONSTRAINT categorias_nombre_key;
 ALTER TABLE ONLY public.carreras DROP CONSTRAINT carreras_pkey;
 ALTER TABLE ONLY public.carreras DROP CONSTRAINT carreras_nombre_key;
 ALTER TABLE ONLY public.autores DROP CONSTRAINT autores_pkey;
-ALTER TABLE ONLY public.autores DROP CONSTRAINT autores_cedula_key;
 ALTER TABLE ONLY public.auditoria DROP CONSTRAINT auditoria_pkey;
 ALTER TABLE ONLY public.accesos_recursos DROP CONSTRAINT accesos_recursos_pkey;
 ALTER TABLE public.visitantes ALTER COLUMN id DROP DEFAULT;
@@ -1875,6 +1874,10 @@ INSERT INTO public.auditoria VALUES (258, 'recursos', 137, 'DELETE', NULL, NULL,
 INSERT INTO public.auditoria VALUES (259, 'recursos', 142, 'INSERT', NULL, NULL, NULL, '{"titulo": "e", "id_tipo_recurso": 3, "ejemplares_totales": 1}', '2026-09-07 15:37:00.278657');
 INSERT INTO public.auditoria VALUES (260, 'recursos', 142, 'DELETE', NULL, NULL, '{"titulo": "e", "id_tipo_recurso": 3}', NULL, '2026-09-07 15:37:48.807771');
 INSERT INTO public.auditoria VALUES (261, 'recursos', 143, 'INSERT', NULL, NULL, NULL, '{"titulo": "Investigación y modelado de pérdidas por corriente circulante en sistemas de puesta a tierra de torres de alta tensión", "id_tipo_recurso": 3, "ejemplares_totales": 1}', '2026-09-07 15:40:32.098085');
+INSERT INTO public.auditoria VALUES (262, 'recursos', 144, 'INSERT', NULL, NULL, NULL, '{"titulo": "Propuesta de un modelo de implementación basado en aprendizaje automático para el reclutamiento de profesionales de ingeniería en una universidad pública", "id_tipo_recurso": 3, "ejemplares_totales": 1}', '2026-09-09 00:24:54.886595');
+INSERT INTO public.auditoria VALUES (263, 'recursos', 145, 'INSERT', NULL, NULL, NULL, '{"titulo": "e", "id_tipo_recurso": 3, "ejemplares_totales": 1}', '2026-09-09 00:36:32.789579');
+INSERT INTO public.auditoria VALUES (264, 'recursos', 145, 'DELETE', NULL, NULL, '{"titulo": "e", "id_tipo_recurso": 3}', NULL, '2026-09-09 00:49:28.135237');
+INSERT INTO public.auditoria VALUES (265, 'recursos', 146, 'INSERT', NULL, NULL, NULL, '{"titulo": "Modelamiento de confort adaptativo para un trapiche panelero", "id_tipo_recurso": 3, "ejemplares_totales": 1}', '2026-09-09 00:51:39.29162');
 
 
 --
@@ -1896,7 +1899,6 @@ INSERT INTO public.autores VALUES (16, 'Ing. Luis Morelo', 'V-10333444');
 INSERT INTO public.autores VALUES (17, 'Prof. Yolanda Díaz', 'V-10444555');
 INSERT INTO public.autores VALUES (18, 'Ing. Pedro Ríos', 'V-10555666');
 INSERT INTO public.autores VALUES (19, 'Prof. Ana Suárez', 'V-10666777');
-INSERT INTO public.autores VALUES (20, 'Ángel Ferrer', 'V-27100001');
 INSERT INTO public.autores VALUES (21, 'Mariela Colón', 'V-27100002');
 INSERT INTO public.autores VALUES (22, 'Javier Navas', 'V-27100003');
 INSERT INTO public.autores VALUES (23, 'Luisa Paredes', 'V-27100004');
@@ -1907,7 +1909,6 @@ INSERT INTO public.autores VALUES (27, 'Gabriela López', 'V-27100008');
 INSERT INTO public.autores VALUES (28, 'Hernán Castro', 'V-27100009');
 INSERT INTO public.autores VALUES (29, 'Isabel Ramos', 'V-27100010');
 INSERT INTO public.autores VALUES (32, 'Fernando Carmino', 'V-12312313');
-INSERT INTO public.autores VALUES (13, 'ale', 'E-1231231');
 INSERT INTO public.autores VALUES (30, 'Mariano Rajoy', 'V-9857492');
 INSERT INTO public.autores VALUES (31, 'Alejandro Alicante', 'V-12312391');
 INSERT INTO public.autores VALUES (33, 'Luis Enrique Morelos', 'E-5184865');
@@ -1915,7 +1916,6 @@ INSERT INTO public.autores VALUES (34, 'Jesús Montilla', 'V-30866991');
 INSERT INTO public.autores VALUES (35, 'Luis Miguel', 'V-17855689');
 INSERT INTO public.autores VALUES (36, 'Fausto Hernandez', 'V-21314132');
 INSERT INTO public.autores VALUES (37, 'miki', 'V-1234');
-INSERT INTO public.autores VALUES (41, 'aaaa aaa aaa', '2222222');
 INSERT INTO public.autores VALUES (42, 'González González Miguel Alejandro', 'V-32621284');
 INSERT INTO public.autores VALUES (43, 'Rojo Ramírez José Alejandro', 'V-30536364');
 INSERT INTO public.autores VALUES (44, 'Ramírez Duarte Andrus Ruben', 'V-30469331');
@@ -1955,14 +1955,23 @@ INSERT INTO public.autores VALUES (77, 'Sebastián Jesús Blanco Rojas', 'V-3060
 INSERT INTO public.autores VALUES (78, 'Tsu David Galíndez', '1231323');
 INSERT INTO public.autores VALUES (79, 'Estudiante Pruebas', 'V-99999999');
 INSERT INTO public.autores VALUES (80, 'Test Author', 'V-88888888');
-INSERT INTO public.autores VALUES (81, 'Analy De Los Angeles Hernández Cortéz', 'V-30601065');
 INSERT INTO public.autores VALUES (82, 'Anyela Alejandra Briceño Guerra', 'V-31413272');
 INSERT INTO public.autores VALUES (83, 'Abraham David Graterol Villamizar', 'V-31167863');
 INSERT INTO public.autores VALUES (84, 'Isaac José Figuera García', 'V-31239364');
 INSERT INTO public.autores VALUES (88, 'Jesus Francisco Montilla Olmos', 'V-30886991');
 INSERT INTO public.autores VALUES (89, 'Miguel Alejandro Gonzalez Gonzalez', 'V-32621283');
 INSERT INTO public.autores VALUES (90, 'Juan Piña', 'V-8398');
-INSERT INTO public.autores VALUES (91, '@''''¿1''23¿12''3¿ñ{ñ{--__´ñ´ñ´!"!"#!"$"%#$%%&%&/&()&/', 'E-14');
+INSERT INTO public.autores VALUES (99, 'José José', NULL);
+INSERT INTO public.autores VALUES (100, 'JuanJo', NULL);
+INSERT INTO public.autores VALUES (101, 'Jaliscos', NULL);
+INSERT INTO public.autores VALUES (102, 'Jorge Lira-Camargo', NULL);
+INSERT INTO public.autores VALUES (92, 'José Antonio Ogosi-Auqui', NULL);
+INSERT INTO public.autores VALUES (96, 'Guillermo Pastor Morales-Romero', NULL);
+INSERT INTO public.autores VALUES (97, 'César Gerardo León-Velarde', NULL);
+INSERT INTO public.autores VALUES (103, 'Giovanni Andrés Cortés-Tovar', NULL);
+INSERT INTO public.autores VALUES (104, 'Robinson Osorio-Hernández', NULL);
+INSERT INTO public.autores VALUES (105, 'Jairo Alexander Osorio-Saráz', NULL);
+INSERT INTO public.autores VALUES (13, 'Alejandro', 'E-22231231');
 
 
 --
@@ -1993,6 +2002,8 @@ INSERT INTO public.categorias VALUES (15, 'Psicología');
 INSERT INTO public.categorias VALUES (16, 'Economía');
 INSERT INTO public.categorias VALUES (17, 'Contaduría');
 INSERT INTO public.categorias VALUES (18, 'Ingeniería Civil');
+INSERT INTO public.categorias VALUES (10, 'Admin');
+INSERT INTO public.categorias VALUES (12, 'Andrus');
 
 
 --
@@ -2015,7 +2026,9 @@ INSERT INTO public.detalles_articulos VALUES (118, 5, '87', '213', '0012-7353', 
 INSERT INTO public.detalles_articulos VALUES (121, 8, '93', '241', '0012-7353', '2026-07-09 20:19:28.855723', 'art_1783642768_6a503a90ca313.png', 'La discapacidad motora en Colombia afecta a un porcentaje significativo de la población, constituye una problemática relevante de salud pública,  asociada  con  diversos  factores  del  país.  Este  proyecto  desarrolla  un  sistema  de  control  de  robots  asistenciales  controlados  por  señales electrooculográficas (EOG), logrando que aquellas personas con movilidad reducida tengan acceso a este tipo de tecnologías. Para el desarrollo se adquirieron señales con el hardware Bitalino para generar y normalizar un conjunto de datos, que luego se procesa con Python y Open Signals para establecer comandos confiables. El entorno de simulación se realizó en CoppeliaSim. Durante el proceso de desarrollo, se encontraron obstáculos como el ruido y la exactitud de las señales. No obstante, se ha terminado la interfaz y la conexión entre CoppeliaSim, Python y las señales EOG, permitiendo que el robot se mueva en tiempo real. En la actualidad, se realizan pruebas de funcionamiento, exactitud y precisión de los movimientos.', true);
 INSERT INTO public.detalles_articulos VALUES (122, 8, '93', '241', '0012-7353', '2026-07-09 20:08:48.117741', 'art_1783642127_6a50380feed3b.png', 'La  banca  móvil  se  ha  consolidado  como  una  herramienta  clave  para  la  inclusión  financiera,  particularmente  en  zonas  rurales  donde  las  barreras geográficas y de infraestructura limitan el acceso a servicios bancarios tradicionales. Este estudio analiza los determinantes de la aceptación de la banca móvil en ganaderos del occidente de Antioquia, Colombia, utilizando el modelo UTAUT. Se aplicó una metodología cuantitativa  basada  en  encuestas  estructuradas  a  132  productores  rurales,  evaluando  variables  como  la  expectativa  de  rendimiento,  la  expectativa de esfuerzo, la influencia social, el riesgo y la confianza. Los resultados revelan que la expectativa de rendimiento y la facilidad de uso son los principales factores que influyen en la adopción de la banca móvil, mientras que la confianza, el riesgo y la influencia social no  mostraron  un  impacto  significativo.  Estos  hallazgos  destacan  la  necesidad  de  desarrollar  estrategias  que  promuevan  el  acceso  a  plataformas digitales intuitivas y capacitaciones enfocadas en el uso de estas herramientas.', true);
 INSERT INTO public.detalles_articulos VALUES (119, 8, '93', '241', '0012-7353', '2026-07-09 20:13:49.50881', 'art_1783642429_6a50393d74626.png', 'Los techos verdes representan una estrategia pasiva eficaz para reducir la transferencia de calor hacia el interior de los edificios, especialmente en climas  cálidos  y  húmedos.  En  este  trabajo  se  presenta  un  modelo  dinámico  unidimensional  de  balance  de  calor  y  masa  para  evaluar  el  comportamiento térmico de un techo verde extensivo en condiciones de trópico húmedo. El modelo considera procesos de conducción, convección, radiación y transferencia de humedad, incorporando la evapotranspiración y parámetros de la vegetación dependientes de la especie. La calibración y simulación se realizaron usando datos experimentales obtenidos de una base experimental de techos verde ubicada en Tabasco, México, con las especies Tradescantia  spathaceay Tradescantia  pallida.  El  desempeño  del  sistema  se  evaluó  bajo  tres  escenarios  climáticos  representativos:  temporada de estiaje, temporada de lluvia y de frente frío. Los resultados muestran que la capa vegetal reduce la transferencia de calor hacia el interior del edificio, además de contribuir a la estabilización térmica del microclima del techo. El análisis de sensibilidad indica que parámetros asociados a la vegetación, en particular el índice de área foliar y la resistencia interna de las hojas, ejercen una influencia dominante en la respuesta del sistema. Aunque el modelo se limita al caso unidimensional y a especies específicas, constituye una herramienta útil para la evaluación del desempeño térmico de techos verdes en climas tropicales húmedos', true);
-INSERT INTO public.detalles_articulos VALUES (143, NULL, '93', '242', 'ISSN 0012-7353', '2026-09-07 15:40:32.098085', 'https://revistas.unal.edu.co/public/journals/21/submission_124890_112809_coverImage_es_ES.png', 'En una línea de transmisión de alta tensión de circuito único de 400 kV, la proximidad de los conductores de fase induce una corriente circulante en el conductor de tierra. Esta corriente forma un circuito cerrado a través del sistema de puesta a tierra de la base de la torre, que proporciona su ruta de retorno [1]. En este estudio, se modela y analiza la corriente circulante inducida. El modelado se realizó en el entorno MATLAB.Los resultados indican que la corriente circulante y la tensión inducida en el conductor de tierra presentan una relación aproximadamente lineal con las corrientes de los conductores de fase, y sus magnitudes se ven influenciadas por la resistencia de puesta a tierra de la torre R_g y la resistividad del suelo ρ. Además, las pérdidas de potencia en el conductor de tierra alcanzan niveles significativos en condiciones de alta corriente. Estos hallazgos resaltan la importancia de un diseño óptimo del sistema de puesta a tierra, una selección adecuada de las características del conductor de tierra y la implementación de métodos para reducir las corrientes circulantes con el fin de mejorar el rendimiento y reducir las pérdidas en las líneas de transmisión de alta tensión.', true);
+INSERT INTO public.detalles_articulos VALUES (143, 7, '93', '242', '0012-7353', '2026-09-07 15:40:32.098085', 'https://revistas.unal.edu.co/public/journals/21/submission_124890_112809_coverImage_es_ES.png', 'En una línea de transmisión de alta tensión de circuito único de 400 kV, la proximidad de los conductores de fase induce una corriente circulante en el conductor de tierra. Esta corriente forma un circuito cerrado a través del sistema de puesta a tierra de la base de la torre, que proporciona su ruta de retorno [1]. En este estudio, se modela y analiza la corriente circulante inducida. El modelado se realizó en el entorno MATLAB.Los resultados indican que la corriente circulante y la tensión inducida en el conductor de tierra presentan una relación aproximadamente lineal con las corrientes de los conductores de fase, y sus magnitudes se ven influenciadas por la resistencia de puesta a tierra de la torre R_g y la resistividad del suelo ρ. Además, las pérdidas de potencia en el conductor de tierra alcanzan niveles significativos en condiciones de alta corriente. Estos hallazgos resaltan la importancia de un diseño óptimo del sistema de puesta a tierra, una selección adecuada de las características del conductor de tierra y la implementación de métodos para reducir las corrientes circulantes con el fin de mejorar el rendimiento y reducir las pérdidas en las líneas de transmisión de alta tensión.', true);
+INSERT INTO public.detalles_articulos VALUES (146, NULL, '91', '232', '0012-735', '2026-09-09 00:51:39.29162', 'https://revistas.unal.edu.co/public/journals/21/submission_112625_95079_coverImage_es_ES.png', 'La producción de azúcar de caña no centrifugada, en Colombia se realiza en instalaciones de poscosecha que generan alta cantidad de calor y vapor, producto de la evaporación de los jugos de caña del proceso. Este estudio tuvo como objetivo mejorar las condiciones de confort de una instalación de este tipo en el municipio de Pacho, Cundinamarca, Colombia, a través de simulación bioclimática, donde se modificó el cerramiento en las paredes y en la ventana cenital. Se evalúo el confort térmico adaptativo, donde el mejor comportamiento bioclimático se  presentó  en  las  configuraciones  con  perímetro  abierto  y  ventana  cenital,  esto  debido  a  que  una  mayor  área  de  ventilación  y  efecto chimenea optimizan  la  transferencia  de  calor  y  masa;  así  mismo,  se  observó  que  hay  un  comportamiento  generalizado  de  incomodidad  térmica para los trabajadores en la zona térmica hornilla, debido a las altas emisiones de calor y vapor en esta zona', true);
+INSERT INTO public.detalles_articulos VALUES (144, 8, '93', '242', '0012-7353', '2026-09-09 00:24:54.886595', 'https://revistas.unal.edu.co/public/journals/21/submission_124428_112347_coverImage_es_ES.png', 'Esta investigación desarrolló y evaluó un modelo de aprendizaje automático para optimizar la contratación de profesionales de ingeniería en  una universidad pública, reduciendo el tiempo de evaluación, los errores y la subjetividad en el análisis de currículums. Se empleó un enfoque cuantitativo, aplicado y cuasiexperimental, utilizando procesamiento de lenguaje natural (TF-IDF), clasificación KNN bajo el esquema One vs-Rest y tres conjuntos de datos de 10, 20 y 30 CV. La información fue procesada en Google Colab mediante etapas de limpieza, vectorización, entrenamiento y evaluación. El modelo alcanzó una precisión del 82 % en la clasificación de candidatos, priorizando de manera consistente a los postulantes según su grado académico y experiencia profesional. Además, redujo el tiempo promedio de evaluación de 15 a 2,5 minutos por CV y disminuyó la tasa de error a menos del 2 %, demostrando ser una herramienta eficiente, objetiva y escalable.', true);
 
 
 --
@@ -2120,13 +2133,13 @@ INSERT INTO public.editoriales VALUES (8, 'DYNA');
 --
 
 INSERT INTO public.etiquetas VALUES (1, 'Inteligencia Artificial', '#0ea5e9');
-INSERT INTO public.etiquetas VALUES (2, 'Machine Learning', '#0ea5e9');
 INSERT INTO public.etiquetas VALUES (3, 'Educación', '#0ea5e9');
 INSERT INTO public.etiquetas VALUES (4, 'Redes Neuronales', '#0ea5e9');
 INSERT INTO public.etiquetas VALUES (5, 'Desarrollo Web', '#0ea5e9');
 INSERT INTO public.etiquetas VALUES (8, 'Teoría Matemática', '#0ea5e9');
 INSERT INTO public.etiquetas VALUES (9, 'Modelo Económico', '#0ea5e9');
 INSERT INTO public.etiquetas VALUES (10, 'Construcción', '#0ea5e9');
+INSERT INTO public.etiquetas VALUES (17, 'Machine Learning', '#0ea5e9');
 
 
 --
@@ -2260,7 +2273,6 @@ INSERT INTO public.proyecto_tutores VALUES (132, 10, 4);
 --
 
 INSERT INTO public.recurso_autores VALUES (3, 1);
-INSERT INTO public.recurso_autores VALUES (57, 41);
 INSERT INTO public.recurso_autores VALUES (58, 42);
 INSERT INTO public.recurso_autores VALUES (58, 43);
 INSERT INTO public.recurso_autores VALUES (58, 44);
@@ -2341,7 +2353,6 @@ INSERT INTO public.recurso_autores VALUES (110, 42);
 INSERT INTO public.recurso_autores VALUES (110, 43);
 INSERT INTO public.recurso_autores VALUES (110, 44);
 INSERT INTO public.recurso_autores VALUES (110, 45);
-INSERT INTO public.recurso_autores VALUES (111, 81);
 INSERT INTO public.recurso_autores VALUES (111, 82);
 INSERT INTO public.recurso_autores VALUES (111, 83);
 INSERT INTO public.recurso_autores VALUES (111, 84);
@@ -2351,7 +2362,6 @@ INSERT INTO public.recurso_autores VALUES (113, 42);
 INSERT INTO public.recurso_autores VALUES (113, 43);
 INSERT INTO public.recurso_autores VALUES (113, 44);
 INSERT INTO public.recurso_autores VALUES (113, 45);
-INSERT INTO public.recurso_autores VALUES (114, 81);
 INSERT INTO public.recurso_autores VALUES (114, 82);
 INSERT INTO public.recurso_autores VALUES (114, 83);
 INSERT INTO public.recurso_autores VALUES (114, 84);
@@ -2360,6 +2370,13 @@ INSERT INTO public.recurso_autores VALUES (116, 63);
 INSERT INTO public.recurso_autores VALUES (116, 64);
 INSERT INTO public.recurso_autores VALUES (116, 65);
 INSERT INTO public.recurso_autores VALUES (117, 46);
+INSERT INTO public.recurso_autores VALUES (144, 92);
+INSERT INTO public.recurso_autores VALUES (144, 96);
+INSERT INTO public.recurso_autores VALUES (144, 97);
+INSERT INTO public.recurso_autores VALUES (144, 102);
+INSERT INTO public.recurso_autores VALUES (146, 103);
+INSERT INTO public.recurso_autores VALUES (146, 104);
+INSERT INTO public.recurso_autores VALUES (146, 105);
 INSERT INTO public.recurso_autores VALUES (127, 42);
 INSERT INTO public.recurso_autores VALUES (127, 88);
 INSERT INTO public.recurso_autores VALUES (127, 73);
@@ -2392,8 +2409,6 @@ INSERT INTO public.recurso_autores VALUES (143, 13);
 -- Data for Name: recurso_categorias; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.recurso_categorias VALUES (143, 3);
-INSERT INTO public.recurso_categorias VALUES (143, 13);
 INSERT INTO public.recurso_categorias VALUES (122, 6);
 INSERT INTO public.recurso_categorias VALUES (122, 5);
 INSERT INTO public.recurso_categorias VALUES (122, 7);
@@ -2408,6 +2423,12 @@ INSERT INTO public.recurso_categorias VALUES (119, 7);
 INSERT INTO public.recurso_categorias VALUES (119, 1);
 INSERT INTO public.recurso_categorias VALUES (118, 7);
 INSERT INTO public.recurso_categorias VALUES (118, 4);
+INSERT INTO public.recurso_categorias VALUES (143, 3);
+INSERT INTO public.recurso_categorias VALUES (143, 13);
+INSERT INTO public.recurso_categorias VALUES (144, 3);
+INSERT INTO public.recurso_categorias VALUES (144, 13);
+INSERT INTO public.recurso_categorias VALUES (144, 1);
+INSERT INTO public.recurso_categorias VALUES (146, 3);
 
 
 --
@@ -2462,16 +2483,18 @@ INSERT INTO public.recurso_clasificaciones VALUES (132, 10, 18);
 -- Data for Name: recurso_etiquetas; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
+INSERT INTO public.recurso_etiquetas VALUES (143, 10);
+INSERT INTO public.recurso_etiquetas VALUES (143, 1);
 INSERT INTO public.recurso_etiquetas VALUES (122, 1);
-INSERT INTO public.recurso_etiquetas VALUES (122, 2);
 INSERT INTO public.recurso_etiquetas VALUES (122, 4);
 INSERT INTO public.recurso_etiquetas VALUES (121, 10);
 INSERT INTO public.recurso_etiquetas VALUES (120, 8);
 INSERT INTO public.recurso_etiquetas VALUES (119, 3);
 INSERT INTO public.recurso_etiquetas VALUES (119, 1);
 INSERT INTO public.recurso_etiquetas VALUES (118, 1);
-INSERT INTO public.recurso_etiquetas VALUES (143, 10);
-INSERT INTO public.recurso_etiquetas VALUES (143, 1);
+INSERT INTO public.recurso_etiquetas VALUES (144, 3);
+INSERT INTO public.recurso_etiquetas VALUES (144, 1);
+INSERT INTO public.recurso_etiquetas VALUES (146, 10);
 
 
 --
@@ -2550,6 +2573,8 @@ INSERT INTO public.recursos VALUES (120, 'Determinantes de la aceptación del us
 INSERT INTO public.recursos VALUES (119, 'Entorno virtual de capacitación con EOG para manipular robots asistenciales', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/124310/98135');
 INSERT INTO public.recursos VALUES (118, 'Middleware MiSCi para ciudades inteligentes extendido con datos enlazados', 3, 2020, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/83226');
 INSERT INTO public.recursos VALUES (143, 'Investigación y modelado de pérdidas por corriente circulante en sistemas de puesta a tierra de torres de alta tensión', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/124890/98825');
+INSERT INTO public.recursos VALUES (146, 'Modelamiento de confort adaptativo para un trapiche panelero', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/112625/91645');
+INSERT INTO public.recursos VALUES (144, 'Propuesta de un modelo de implementación basado en aprendizaje automático para el reclutamiento de profesionales de ingeniería en una universidad pública', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/124428/98826');
 
 
 --
@@ -2663,14 +2688,14 @@ SELECT pg_catalog.setval('public.accesos_recursos_id_seq', 1, false);
 -- Name: auditoria_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.auditoria_id_seq', 261, true);
+SELECT pg_catalog.setval('public.auditoria_id_seq', 265, true);
 
 
 --
 -- Name: autores_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.autores_id_seq', 91, true);
+SELECT pg_catalog.setval('public.autores_id_seq', 105, true);
 
 
 --
@@ -2684,7 +2709,7 @@ SELECT pg_catalog.setval('public.carreras_id_seq', 5, true);
 -- Name: categorias_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.categorias_id_seq', 9, true);
+SELECT pg_catalog.setval('public.categorias_id_seq', 24, true);
 
 
 --
@@ -2705,14 +2730,14 @@ SELECT pg_catalog.setval('public.dimensiones_operativas_id_seq', 24, true);
 -- Name: editoriales_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.editoriales_id_seq', 7, true);
+SELECT pg_catalog.setval('public.editoriales_id_seq', 12, true);
 
 
 --
 -- Name: etiquetas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.etiquetas_id_seq', 12, true);
+SELECT pg_catalog.setval('public.etiquetas_id_seq', 17, true);
 
 
 --
@@ -2768,7 +2793,7 @@ SELECT pg_catalog.setval('public.propuestas_empresa_id_seq', 2, true);
 -- Name: recursos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.recursos_id_seq', 143, true);
+SELECT pg_catalog.setval('public.recursos_id_seq', 146, true);
 
 
 --
@@ -2834,14 +2859,6 @@ ALTER TABLE ONLY public.accesos_recursos
 
 ALTER TABLE ONLY public.auditoria
     ADD CONSTRAINT auditoria_pkey PRIMARY KEY (id);
-
-
---
--- Name: autores autores_cedula_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.autores
-    ADD CONSTRAINT autores_cedula_key UNIQUE (cedula);
 
 
 --
@@ -3544,5 +3561,5 @@ ALTER TABLE ONLY public.usuarios
 -- PostgreSQL database dump complete
 --
 
-\unrestrict J8pBL8YIbP54ZBClrwn170gEAfhIQDOHydztgFbmgU6XkPIGFpekevT5cVS0bd8
+\unrestrict C4pgRauOSzbRUnJBLgLZOmuXkuWixVY5z5hEhCIh3AORqXKNvt4A5dB1uXEEU7O
 

@@ -155,7 +155,7 @@
                         <i class="ph-bold <?= isset($articulo) ? 'ph-upload-simple' : 'ph-image' ?>" style="font-size: 2rem; color: var(--color-terciario);"></i>
                         <h4 style="margin: 0.4rem 0; font-size: 0.85rem; color: var(--texto-titulos);">Arrastra una <?= isset($articulo) ? 'nueva ' : '' ?>portada o haz clic aquí</h4>
                         <p style="font-size: 0.75rem; color: var(--texto-silenciado); margin: 0;">Formatos permitidos: <?= htmlspecialchars(implode(', ', $exts)) ?> (Máx. <?= $limiteRealMb ?> MB)</p>
-                        <div id="preview-image-name" style="margin-top: 0.5rem; font-size: 0.8rem; font-weight: bold; color: var(--color-secundario); display: none;"></div>
+                        <div id="preview-image-name" class="art-text-truncate text-secondary font-bold mt-sm" style="display: none;"></div>
                     </div>
                 </div>
 
@@ -171,8 +171,8 @@
             </button>
         </div>
     </form>
-
-    <!-- Modal Elegante para Nuevo Autor -->
+</div>
+<!-- Modal Elegante para Nuevo Autor -->
 <div id="modal-autor" class="art-modal-overlay" style="display: none;">
     <div class="art-modal-box">
         <h3 class="text-secondary mt-0" style="border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 1rem;">Registrar Nuevo Autor</h3>
@@ -203,7 +203,6 @@
             <button type="button" class="btn btn-primary" onclick="confirmarModalAutor()">Añadir Autor</button>
         </div>
     </div>
-</div>
 </div>
 <!-- Puente de datos PHP -> JS -->
 <script>

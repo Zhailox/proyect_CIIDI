@@ -126,6 +126,11 @@
                         <input type="number" name="anio_minimo" value="<?= (int)($config['buscador']['anio_minimo'] ?? 2020) ?>" class="login-flat-input w-100 p-input">
                         <small class="text-muted">Límite inferior para el menú selector de años.</small>
                     </div>
+                    <div class="form-group mb-1">
+                        <label class="font-bold">Elementos en Gestor de Catálogos</label>
+                        <input type="number" name="limite_gestor_catalogos" value="<?= (int)($config['paginacion']['limite_gestor_catalogos'] ?? 15) ?>" min="1" class="login-flat-input w-100 p-input">
+                        <small class="text-muted">Cantidad de etiquetas/categorías a mostrar por pestaña.</small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -411,4 +416,4 @@ document.addEventListener('DOMContentLoaded', () => {
     renderizarGaleriaStorage(1);
 });
 </script>
-<script src="../modules/Articulos/assets/js/lazy_loading.js"></script>
+<script src="../modules/Articulos/assets/js/lazy_loading.js"></script>

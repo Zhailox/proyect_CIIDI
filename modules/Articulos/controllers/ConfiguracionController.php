@@ -50,7 +50,7 @@ class ConfiguracionController {
                 if (isset($_POST['limite_catalogo'])) $actual['paginacion']['limite_catalogo'] = max(1, (int)$_POST['limite_catalogo']);
                 if (isset($_POST['limite_gestor'])) $actual['paginacion']['limite_gestor'] = max(1, (int)$_POST['limite_gestor']);
                 if (isset($_POST['max_recomendados'])) $actual['paginacion']['max_recomendados'] = max(1, (int)$_POST['max_recomendados']);
-
+                if (isset($_POST['limite_gestor_catalogos'])) $actual['paginacion']['limite_gestor_catalogos'] = max(1, (int)$_POST['limite_gestor_catalogos']);
                 // 3. Recursos (Metadatos visuales)
                 $actual['recursos']['mostrar_editorial'] = isset($_POST['mostrar_editorial']) && $_POST['mostrar_editorial'] === '1';
                 $actual['recursos']['mostrar_volumen'] = isset($_POST['mostrar_volumen']) && $_POST['mostrar_volumen'] === '1';
