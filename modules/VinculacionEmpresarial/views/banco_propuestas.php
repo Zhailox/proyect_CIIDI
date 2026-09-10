@@ -1,8 +1,8 @@
 <?php
 require_once __DIR__ . '/../models/PropuestaEmpresaModel.php';
 $modelo_pe = new PropuestaEmpresaModel();
-$roles_profesor = ['Profesor', 'Super Administrador', 'Comite'];
-$esProfesor = isset($_SESSION['rol_nombre']) && in_array($_SESSION['rol_nombre'], $roles_profesor);
+$nivelUsuario = isset($_SESSION['nivel_privilegio']) ? (int)$_SESSION['nivel_privilegio'] : 0;
+$esProfesor = $nivelUsuario >= 1;
 
 if ($esProfesor) {
     $propuestas = $modelo_pe->getTodas();

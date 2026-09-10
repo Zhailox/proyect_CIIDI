@@ -36,9 +36,9 @@ class VinculacionController {
 
     public function procesarPropuesta() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_propuesta'], $_POST['accion'])) {
-            $roles_permitidos = ['Profesor', 'Super Administrador', 'Comite'];
-            if (!isset($_SESSION['rol_nombre']) || !in_array($_SESSION['rol_nombre'], $roles_permitidos)) {
-                die("Acceso denegado");
+            $nivelUsuario = isset($_SESSION['nivel_privilegio']) ? (int)$_SESSION['nivel_privilegio'] : 0;
+            if ($nivelUsuario < 1) {
+                die("Acceso denegado: Se requieren privilegios de docente o administrador.");
             }
             
             $id = $_POST['id_propuesta'];

@@ -1,0 +1,20 @@
+{
+    "Bibliotecario": {
+        "crear": "1",
+        "editar": "1",
+        "eliminar": "1",
+        "auditar": "1"
+    },
+    "Docente": {
+        "crear": "0",
+        "editar": "0",
+        "eliminar": "0",
+        "auditar": "0"
+    },
+    "Estudianteashdas": {
+        "crear": "0",
+        "editar": "0",
+        "eliminar": "0",
+        "auditar": "0"
+    }
+}

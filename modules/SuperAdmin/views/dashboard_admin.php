@@ -86,17 +86,27 @@
     $mantenimientoActivo = $dataMant['activo'] ?? false;
     ?>
     <details class="action-accordion">
-        <summary>Modo Mantenimiento</summary>
+        <summary>Modo Mantenimiento & Programación de Tiempo</summary>
         <div class="action-content">
-            <p style="width: 100%; font-size: 0.9rem; color: var(--texto-silenciado); margin-bottom: 1rem;">Cierra el acceso a los estudiantes y muestra una pantalla de "Mantenimiento Programado". Los administradores podrán seguir navegando.</p>
+            <p style="width: 100%; font-size: 0.9rem; color: var(--texto-silenciado); margin-bottom: 1rem;">
+                Muestra la pantalla de mantenimiento con temporizador opcional para la comunidad. Los administradores mantendrán acceso continuo.
+            </p>
             
-            <form action="alternar-mantenimiento" method="POST" style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%; margin: 0;">
-                
+            <form action="alternar-mantenimiento" method="POST" style="display: flex; flex-direction: column; gap: 0.75rem; width: 100%; margin: 0;">
                 <?php if ($mantenimientoActivo == false): ?>
-                    <!-- Solo mostramos el input si vamos a ACTIVAR el mantenimiento -->
                     <input type="text" name="mensaje" class="login-flat-input" placeholder="Mensaje para los usuarios (Opcional)..." style="padding: 0.6rem;">
+                    
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="ph-bold ph-timer" style="font-size: 1.2rem; color: var(--color-secundario);"></i>
+                        <input type="number" name="minutos_programados" min="0" class="login-flat-input" placeholder="Duración estimada en minutos (ej: 30)..." style="padding: 0.6rem; flex: 1;">
+                    </div>
+                <?php else: ?>
+                    <?php if (!empty($dataMant['fecha_fin'])): ?>
+                        <div style="background: #fef3c7; color: #92400e; padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;">
+                            <i class="ph-bold ph-clock-afternoon"></i> Mantenimiento programado finaliza a las: <?= date('H:i - d/m/Y', strtotime($dataMant['fecha_fin'])) ?>
+                        </div>
+                    <?php endif; ?>
                 <?php endif; ?>
-                
                 
                 <button type="submit" class="btn <?= $mantenimientoActivo ? 'btn-secondary' : 'btn-danger' ?>" style="width: 100%; justify-content: center;">
                     <i class="<?= $mantenimientoActivo ? 'ph-bold ph-power' : 'ph-bold ph-warning-circle' ?>"></i> 
@@ -105,19 +115,82 @@
             </form>
         </div>
     </details>
+
     <details class="action-accordion">
-        <summary style="color: #dc2626;"> Restaurar Copia de Seguridad</summary>
-        <div class="action-content">
+        <summary style="color: #dc2626;"><i class="ph-bold ph-folder-simple-star"></i> Histórico de Respaldos & Restauración</summary>
+        <div class="action-content" style="flex-direction: column;">
             <p style="width: 100%; font-size: 0.9rem; color: var(--texto-silenciado); margin-bottom: 1rem;">
-                Cargue un archivo <strong>.sql</strong> generado previamente por el sistema. <br>
-                <span style="color: #dc2626; font-weight: bold;">¡Advertencia: Esta acción sobreescribirá y reemplazará todos los datos actuales!</span>
+                Administre los archivos <strong>.sql</strong> en `storage/backups/`. Puede descargarlos, eliminarlos o restaurarlos en 2 pasos.
             </p>
             
-            <form action="restaurar-backup" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%; margin: 0;">
+            <!-- LISTA DE ARCHIVOS DE RESPALDO EXISTENTES -->
+            <?php
+            $directorioRespaldos = __DIR__ . '/../../../storage/backups/';
+            $archivosBackup = file_exists($directorioRespaldos) ? glob($directorioRespaldos . '*.sql') : [];
+            ?>
+
+            <?php if (!empty($archivosBackup)): ?>
+                <div style="width: 100%; overflow-x: auto; margin-bottom: 1.5rem;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #e2e8f0; background: #f8fafc;">
+                                <th style="padding: 0.6rem 0.8rem; color: #475569;">Archivo SQL</th>
+                                <th style="padding: 0.6rem 0.8rem; color: #475569;">Tamaño</th>
+                                <th style="padding: 0.6rem 0.8rem; color: #475569;">Fecha Generación</th>
+                                <th style="padding: 0.6rem 0.8rem; text-align: center; color: #475569;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($archivosBackup as $pathBackup): ?>
+                                <?php 
+                                $nombreBackup = basename($pathBackup);
+                                $pesoKb = round(filesize($pathBackup) / 1024, 2);
+                                $fechaBackup = date('d/m/Y H:i:s', filemtime($pathBackup));
+                                ?>
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 0.6rem 0.8rem; font-weight: 600; color: #1e293b;">
+                                        <i class="ph-bold ph-database" style="color: var(--color-secundario); margin-right: 4px;"></i>
+                                        <?= htmlspecialchars($nombreBackup) ?>
+                                    </td>
+                                    <td style="padding: 0.6rem 0.8rem; color: #64748b;"><?= $pesoKb ?> KB</td>
+                                    <td style="padding: 0.6rem 0.8rem; color: #64748b;"><?= $fechaBackup ?></td>
+                                    <td style="padding: 0.6rem 0.8rem; text-align: center;">
+                                        <div style="display: flex; gap: 0.3rem; justify-content: center;">
+                                            <a href="descargar-backup?archivo=<?= urlencode($nombreBackup) ?>" class="btn" style="background: #e0f2fe; color: #0284c7; padding: 4px 8px; font-size: 0.78rem; text-decoration: none; border-radius: 6px;" title="Descargar Archivo">
+                                                <i class="ph-bold ph-download-simple"></i>
+                                            </a>
+
+                                            <form action="restaurar-backup" method="POST" style="margin:0;">
+                                                <input type="hidden" name="archivo_guardado" value="<?= htmlspecialchars($nombreBackup) ?>">
+                                                <button type="submit" class="btn" style="background: #fef3c7; color: #d97706; border: 1px solid #fcd34d; padding: 4px 8px; font-size: 0.78rem; border-radius: 6px; cursor: pointer;" onclick="return confirm('Paso 1 de 2: ¿Desea restaurar este respaldo \'<?= htmlspecialchars($nombreBackup) ?>\'?') && confirm('Paso 2 de 2 (CONFIRMACIÓN DEFINITIVA): Esta acción sobreescribirá la Base de Datos actual. ¿Proceder?');" title="Restaurar este respaldo (2 Pasos)">
+                                                    <i class="ph-bold ph-arrow-counter-clockwise"></i>
+                                                </button>
+                                            </form>
+
+                                            <form action="eliminar-backup" method="POST" style="margin:0;">
+                                                <input type="hidden" name="archivo" value="<?= htmlspecialchars($nombreBackup) ?>">
+                                                <button type="submit" class="btn" style="background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding: 4px 8px; font-size: 0.78rem; border-radius: 6px; cursor: pointer;" onclick="return confirm('¿Eliminar el respaldo \'<?= htmlspecialchars($nombreBackup) ?>\'?');" title="Eliminar del Servidor">
+                                                    <i class="ph-bold ph-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php else: ?>
+                <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem;">No hay archivos de respaldo guardados en `storage/backups/`.</p>
+            <?php endif; ?>
+
+            <!-- Cargar Respaldo Externo en SQL -->
+            <form action="restaurar-backup" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%; margin: 0; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+                <label style="font-size: 0.85rem; font-weight: 600; color: #334155;">Subir y Restaurar un archivo SQL externo:</label>
                 <input type="file" name="backup_file" accept=".sql" class="login-flat-input" style="padding: 0.6rem;" required>
                 
-                <button type="submit" class="btn btn-danger" style="width: 100%; justify-content: center;" onclick="return confirm('¿ESTÁ COMPLETAMENTE SEGURO? Esta acción es irreversible y reemplazará la base de datos actual.');">
-                    <i class="ph-bold ph-warning-circle"></i> Ejecutar Restauración
+                <button type="submit" class="btn btn-danger" style="width: 100%; justify-content: center;" onclick="return confirm('Paso 1 de 2: ¿Desea restaurar este respaldo externo?') && confirm('Paso 2 de 2: ¡PRECAUCIÓN! Esta acción reemplazará la Base de Datos actual. ¿Proceder?');">
+                    <i class="ph-bold ph-upload-simple"></i> Subir y Restaurar BD
                 </button>
             </form>
         </div>

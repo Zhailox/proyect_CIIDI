@@ -13,10 +13,11 @@ class AdminDashboardModel {
         // 2. Usuarios suspendidos/bloqueados
         $bloqueados = $qb->tabla('usuarios')->where('activo', '=', 'false')->count();
         
-        // 3. Cantidad de profesores
+        // 3. Cantidad de docentes/profesores (filtrado por nivel de privilegio 1)
         $docentes = $qb->tabla('usuarios u')
             ->join('roles r', 'u.id_rol = r.id')
-            ->where('r.nombre', '=', 'Profesor')
+            ->join('privilegios p', 'r.privilegio_id = p.privilegio_id')
+            ->where('p.nivel_privilegio', '=', 1)
             ->count();
             
         // 4. Usuarios Online (Actividad en los últimos 15 minutos)

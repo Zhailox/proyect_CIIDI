@@ -23,6 +23,21 @@ class SuperAdminModule implements ModuleContract {
                 'titulo'           => 'Gestión de Usuarios - UPTTMBI',
                 'css'              => ['SuperAdmin.css', 'gestor.css']
             ],
+            'guardar-matriz-rbac' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'guardarMatrizRBAC'
+            ],
+            'actualizar-rol' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'actualizarRol'
+            ],
+            'revocar-sesion' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'revocarSesion'
+            ],
             'editar-usuario' => [
                 'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
                 'controlador'      => 'GestorUsuariosController',
@@ -68,6 +83,11 @@ class SuperAdminModule implements ModuleContract {
                 'titulo'           => 'Gestión de Módulos - Configuración',
                 'css'              => ['SuperAdmin.css']
             ],
+            'alternar-estado-ruta' => [
+                'controlador_path' => __DIR__ . '/controllers/ModulosController.php',
+                'controlador'      => 'ModulosController',
+                'metodo'           => 'alternarEstadoRuta'
+            ],
             // Ruta para ver los logs de errores y accesos
             'visor-logs' => [
                 'controlador_path' => __DIR__ . '/controllers/LogsController.php',
@@ -91,6 +111,16 @@ class SuperAdminModule implements ModuleContract {
                 'controlador_path' => __DIR__ . '/controllers/AdminController.php',
                 'controlador'      => 'AdminController',
                 'metodo'           => 'generarBackupTabla'
+            ],
+            'descargar-backup' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'descargarBackup'
+            ],
+            'eliminar-backup' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'eliminarBackup'
             ],
             'alternar-mantenimiento' => [
                 'controlador_path' => __DIR__ . '/controllers/AdminController.php',

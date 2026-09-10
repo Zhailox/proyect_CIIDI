@@ -60,4 +60,35 @@ class Connection {
     public function __wakeup() {
         throw new Exception("No se puede deserializar una conexión a base de datos.");
     }
+
+    /**
+     * Devuelve las credenciales de PostgreSQL centralizadas del Core.
+     */
+    public static function getCredentials(): array {
+        $conn = new self();
+        return [
+            'host' => $conn->host,
+            'port' => $conn->port,
+            'db'   => $conn->db,
+            'user' => $conn->user,
+            'pass' => $conn->pass,
+        ];
+    }
+
+    /**
+     * Retorna la ruta ejecutable de pg_dump / psql según el SO (Linux / Windows)
+     */
+    public static function getPgDumpPath(): string {
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            return '"C:\\Program Files\\PostgreSQL\\18\\bin\\pg_dump.exe"';
+        }
+        return 'pg_dump';
+    }
+
+    public static function getPsqlPath(): string {
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            return '"C:\\Program Files\\PostgreSQL\\18\\bin\\psql.exe"';
+        }
+        return 'psql';
+    }
 }

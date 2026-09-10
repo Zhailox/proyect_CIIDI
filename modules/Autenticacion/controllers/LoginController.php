@@ -92,10 +92,20 @@ class LoginController {
             session_start();
         }
         session_regenerate_id(true);
-        $_SESSION['usuario_id'] = $usuario['id'];
+        $_SESSION['usuario_id'] = (int)$usuario['id'];
         $_SESSION['nombre_usuario'] = $usuario['nombre_completo'];
         $_SESSION['rol_nombre'] = $usuario['nombre_rol'];
         $_SESSION['nivel_privilegio'] = (int) $usuario['nivel_privilegio'];
+
+        // Limpiamos cualquier bloqueo de sesión previa si existía en revoked_sessions.json
+        $archivo_sesiones = __DIR__ . '/../../../storage/revoked_sessions.json';
+        if (file_exists($archivo_sesiones)) {
+            $revogadas = json_decode(file_get_contents($archivo_sesiones), true) ?: [];
+            if (isset($revogadas[$usuario['id']])) {
+                unset($revogadas[$usuario['id']]);
+                file_put_contents($archivo_sesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
+            }
+        }
 
         try {
             $this->usuarioModel->registrarAcceso($usuario['id']);

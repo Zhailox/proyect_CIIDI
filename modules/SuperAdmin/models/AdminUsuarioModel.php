@@ -22,14 +22,15 @@ class AdminUsuarioModel {
             ->first();
     }
 
-    // Obtiene a todo el personal docente
+    // Obtiene a todo el personal docente (por nivel de privilegio docente/profesor)
     public function obtenerProfesores() {
         $qb = new QueryBuilder(); // <-- 2. Instancia nueva y limpia
         
         return $qb->tabla('usuarios u')
             ->select('u.id, u.cedula, u.nombre_completo, u.email, u.activo')
             ->join('roles r', 'u.id_rol = r.id')
-            ->where('r.nombre', '=', 'Profesor')
+            ->join('privilegios p', 'r.privilegio_id = p.privilegio_id')
+            ->where('p.nivel_privilegio', '=', 1)
             ->orderBy('u.nombre_completo', 'ASC')
             ->get();
     }
@@ -60,12 +61,44 @@ class AdminUsuarioModel {
         }
     }
 
+    // Obtiene todos los usuarios con su registro de actividad reciente
+    public function obtenerTodosLosUsuarios() {
+        $db = Connection::getInstance();
+        $sql = "
+            SELECT 
+                u.id, 
+                u.cedula, 
+                u.nombre_completo, 
+                u.email, 
+                u.activo, 
+                r.nombre AS rol_nombre, 
+                p.nivel_privilegio,
+                ra.ultima_actividad,
+                ra.conteo_accesos
+            FROM usuarios u
+            INNER JOIN roles r ON u.id_rol = r.id
+            INNER JOIN privilegios p ON r.privilegio_id = p.privilegio_id
+            LEFT JOIN registro_actividad ra ON u.id = ra.id_usuario
+            ORDER BY u.id DESC
+        ";
+        $stmt = $db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
     // Suspende o restaura el acceso de un usuario
     public function cambiarEstadoActivo(int $id, bool $nuevoEstado) {
         $db = Connection::getInstance();
         $sql = "UPDATE usuarios SET activo = ? WHERE id = ?";
         $stmt = $db->prepare($sql);
-        // En PostgreSQL los booleanos se pueden pasar como 'true' o 'false' en string
         return $stmt->execute([$nuevoEstado ? 'true' : 'false', $id]);
     }
-}
+
+    // Actualiza el nombre de un rol en la base de datos
+    public function actualizarNombreRol(int $rolId, string $nuevoNombre) {
+        $db = Connection::getInstance();
+        $sql = "UPDATE roles SET nombre = ? WHERE id = ?";
+        $stmt = $db->prepare($sql);
+        return $stmt->execute([$nuevoNombre, $rolId]);
+    }
+}
