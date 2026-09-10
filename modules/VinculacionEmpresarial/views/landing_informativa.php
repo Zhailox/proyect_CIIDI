@@ -157,3 +157,33 @@
     </section>
 
 </div>
+
+<?php if (isset($_SESSION['codigo_seguimiento'])): ?>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        Swal.fire({
+            title: '¡Propuesta Enviada con Éxito!',
+            html: `
+                <p>Su requerimiento ha ingresado al CIIDI.</p>
+                <p>Este es su <b>Código de Seguimiento</b> exclusivo:</p>
+                <div style="background: #f1f5f9; padding: 15px; margin: 15px 0; border-radius: 8px; border: 2px dashed #94a3b8;">
+                    <b style="font-size: 28px; color: #121a3e; letter-spacing: 3px; font-family: monospace;">
+                        <?php echo htmlspecialchars($_SESSION['codigo_seguimiento']); ?>
+                    </b>
+                </div>
+                <p style="font-size: 0.9em; color: #64748b;">
+                    Guárdelo en un lugar seguro. Podrá usarlo en nuestro Portal de Seguimiento para ver en tiempo real qué equipo de estudiantes solucionará su problema.
+                </p>
+            `,
+            icon: 'success',
+            confirmButtonText: 'Entendido, lo he guardado',
+            confirmButtonColor: '#121a3e',
+            allowOutsideClick: false
+        });
+    });
+</script>
+<?php 
+    unset($_SESSION['codigo_seguimiento']); 
+    unset($_SESSION['mensaje_exito']); 
+endif; ?>
