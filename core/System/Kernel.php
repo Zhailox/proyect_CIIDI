@@ -174,6 +174,17 @@ public function run() {
                     }
                 }
             }
+
+            $js_modulo = [];
+            $js_declarados = $configRuta['js'] ?? [];
+            foreach ($js_declarados as $archivo_js) {
+                foreach ($this->modulosInstalados as $nombre_carpeta => $instancia) {
+                    if (array_key_exists($ruta, $instancia->getRutas())) {
+                        $js_modulo[] = '../modules/' . $nombre_carpeta . '/assets/js/' . $archivo_js;
+                        break;
+                    }
+                }
+            }
         }
         // 3. ERROR 404
         else {

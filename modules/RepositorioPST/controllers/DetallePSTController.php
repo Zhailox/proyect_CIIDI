@@ -502,6 +502,10 @@ class DetallePSTController {
                 if ($docActual) {
                     $nuevoEstado = !($docActual['activo'] ?? true);
                     $model->cambiarEstadoPST($id, $nuevoEstado);
+                    
+                    $estTxt = $nuevoEstado ? 'Visible' : 'Oculto';
+                    AuditLogger::registrar('INFO', 'RepositorioPST', 'Alternar Visibilidad Proyecto', "Proyecto ID #{$id} cambiado a estado: {$estTxt}.");
+
                     header("Location: ?ruta=agregar-documento&msg=status_changed");
                     echo "<script>window.location.href='?ruta=agregar-documento&msg=status_changed';</script>";
                     exit;
@@ -517,6 +521,9 @@ class DetallePSTController {
             Auth::requierePrivilegioMinimo(2);
             try {
                 $model->eliminarPST($id);
+                
+                AuditLogger::registrar('WARNING', 'RepositorioPST', 'Eliminar Proyecto', "Proyecto PST ID #{$id} eliminado del repositorio.");
+
                 header("Location: ?ruta=agregar-documento&msg=deleted");
                 echo "<script>window.location.href='?ruta=agregar-documento&msg=deleted';</script>";
                 exit;
@@ -593,6 +600,7 @@ class DetallePSTController {
                 try {
                     $nuevoId = (int)$model->crearPST($datos);
                     if ($nuevoId > 0) {
+                        AuditLogger::registrar('INFO', 'RepositorioPST', 'Registrar Proyecto', "Proyecto PST registrado exitosamente: '{$datos['titulo']}' (ID: #{$nuevoId}).");
                         header("Location: ?ruta=agregar-documento&accion=crear&msg=created");
                         exit;
                     } else {

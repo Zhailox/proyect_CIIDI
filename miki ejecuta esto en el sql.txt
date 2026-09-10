@@ -1,0 +1,5 @@
+-- miki debe ejecutar esto en su base de datos:
+ALTER TABLE detalles_articulos ADD COLUMN id_categoria INTEGER;
+ALTER TABLE investigaciones_ofertadas ADD COLUMN id_propuesta_empresa INTEGER;
+ALTER TABLE propuestas_empresa ADD COLUMN motivo_rechazo TEXT;
+ALTER TABLE propuestas_empresa ADD COLUMN codigo_seguimiento VARCHAR(255);

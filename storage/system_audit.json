@@ -1,0 +1,142 @@
+[
+    {
+        "id": "log_6aa2cf2f24484",
+        "fecha_hora": "2026-09-10 15:39:27",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Editar Usuario",
+        "detalles": "Datos actualizados para el Usuario C.I. 30469331 (ANDRUS).",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa2cdcd03c28",
+        "fecha_hora": "2026-09-10 15:33:33",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Inicio de Sesión Exitoso",
+        "detalles": "El usuario ANDRUS (Comite) ha iniciado sesión.",
+        "responsable": "ANDRUS (ID: 12)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa2cdb7dc708",
+        "fecha_hora": "2026-09-10 15:33:11",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Editar Usuario",
+        "detalles": "Datos actualizados para el Usuario C.I. 30469331 (ANDRUS).",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa2cdae073a1",
+        "fecha_hora": "2026-09-10 15:33:02",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Matriz RBAC",
+        "detalles": "Se actualizaron los permisos dinámicos del sistema por rol.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa2cdaa1e46b",
+        "fecha_hora": "2026-09-10 15:32:58",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Matriz RBAC",
+        "detalles": "Se actualizaron los permisos dinámicos del sistema por rol.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa2cd6cd33a8",
+        "fecha_hora": "2026-09-10 15:31:56",
+        "nivel": "CRITICAL",
+        "modulo": "SuperAdmin",
+        "accion": "Revocar Sesión Remota",
+        "detalles": "Sesión expulsada para el Usuario ID #12",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa2cd29f38f3",
+        "fecha_hora": "2026-09-10 15:30:49",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Inicio de Sesión Exitoso",
+        "detalles": "El usuario ANDRUS (Estudianteashdas) ha iniciado sesión.",
+        "responsable": "ANDRUS (ID: 12)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa2cd164f4fb",
+        "fecha_hora": "2026-09-10 15:30:30",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Matriz RBAC",
+        "detalles": "Se actualizaron los permisos dinámicos del sistema por rol.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa2cd0d88111",
+        "fecha_hora": "2026-09-10 15:30:21",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Matriz RBAC",
+        "detalles": "Se actualizaron los permisos dinámicos del sistema por rol.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa2c84562358",
+        "fecha_hora": "2026-09-10 15:09:57",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Restablecer Clave Rápida",
+        "detalles": "Contraseña restablecida para el Usuario C.I. 11111111",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa2b9d47b0f5",
+        "fecha_hora": "2026-09-10 14:08:20",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Inicio de Sesión Exitoso",
+        "detalles": "El usuario Miguel González (Super Administrador) ha iniciado sesión.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa229a8a1926",
+        "fecha_hora": "2026-09-10 03:53:12",
+        "nivel": "INFO",
+        "modulo": "RepositorioPST",
+        "accion": "Alternar Visibilidad Proyecto",
+        "detalles": "Proyecto ID #132 cambiado a estado: Visible.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa22991840ea",
+        "fecha_hora": "2026-09-10 03:52:49",
+        "nivel": "INFO",
+        "modulo": "RepositorioPST",
+        "accion": "Alternar Visibilidad Proyecto",
+        "detalles": "Proyecto ID #132 cambiado a estado: Oculto.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa228613068b",
+        "fecha_hora": "2026-09-10 03:47:45",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Limpiar Auditoría",
+        "detalles": "Se depuraron los registros de auditoría activa de almacenamiento.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    }
+]

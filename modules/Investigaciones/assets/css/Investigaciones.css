@@ -254,7 +254,7 @@
     border-color: var(--color-terciario);
 }
 
-.inv-card-header {
+.inv-card-header { position: relative;
     height: 160px;
     background-color: #f1f5f9;
     background-size: cover;
@@ -571,5 +571,197 @@
 
 .post-btn-apply:hover {
     background-color: var(--color-principal);
+    color: #ffffff;
+}
+/* ==========================================================================
+   BADGES Y MODAL DE POSTULACIONES
+   ========================================================================== */
+
+.inv-badge-estado {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: white;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.inv-badge-estado.abierta { background-color: #10b981; }
+.inv-badge-estado.cerrada { background-color: #ef4444; }
+.inv-badge-estado.en-desarrollo { background-color: #f59e0b; }
+.inv-badge-estado.finalizada { background-color: #3b82f6; }
+
+/* OVERLAY Y MODAL */
+.inv-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(18, 26, 62, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeInModal 0.2s ease-out;
+}
+
+@keyframes fadeInModal {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.inv-modal-content {
+    background: #ffffff;
+    width: 90%;
+    max-width: 500px;
+    padding: 2.5rem;
+    border-radius: 8px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    transform: translateY(0);
+    animation: slideUpModal 0.3s ease-out;
+}
+
+@keyframes slideUpModal {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.inv-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.inv-modal-header h2 {
+    font-size: 1.4rem;
+    color: var(--color-principal);
+    font-weight: 700;
+    margin: 0;
+}
+
+.inv-modal-close {
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--texto-silenciado);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.inv-modal-close:hover {
+    color: #ef4444;
+}
+
+.inv-form-group {
+    margin-bottom: 1.2rem;
+}
+
+.inv-form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--texto-titulos);
+    font-size: 0.9rem;
+}
+
+.inv-form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--gris);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: border-color var(--transition-fast);
+}
+
+.inv-form-control:focus {
+    outline: none;
+    border-color: var(--color-secundario);
+}
+
+.inv-btn-primary {
+    background-color: var(--color-secundario);
+    color: #ffffff;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color var(--transition-fast);
+}
+
+.inv-btn-primary:hover {
+    background-color: var(--color-terciario);
+}
+/* ==========================================================================
+   NUEVOS ESTILOS DEL PANEL PROFESOR Y ADMIN
+   ========================================================================== */
+:root {
+    --inv-texto-titulos: #1E293B;
+    --inv-texto-subtitulos: #334155;
+    --inv-texto-silenciado: #64748B;
+    --inv-color-secundario: #505984;
+    --inv-color-terciario: #7090CB;
+    --inv-bg-gris: #f8fafc;
+}
+.inv-card h4, .post-card h4, .inv-modal-header h2, .inv-hero-content h1 {
+    color: var(--inv-texto-titulos) !important;
+}
+.inv-btn-primary {
+    background-color: var(--inv-color-secundario);
+    color: #ffffff;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+    display: inline-block;
+    text-align: center;
+}
+.inv-btn-primary:hover {
+    background-color: var(--inv-color-terciario);
+    color: #ffffff;
+}
+.inv-btn-read {
+    background-color: transparent;
+    color: var(--inv-texto-titulos);
+    border: 2px solid var(--inv-color-secundario);
+    padding: 0.8rem;
+    text-align: center;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+}
+.inv-btn-read:hover {
+    background-color: var(--inv-color-secundario);
+    color: #ffffff;
+}
+.post-btn-apply {
+    background-color: transparent;
+    color: var(--inv-color-secundario);
+    border: 2px solid var(--inv-color-secundario);
+    padding: 0.4rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+.post-btn-apply:hover {
+    background-color: var(--inv-color-secundario);
     color: #ffffff;
 }

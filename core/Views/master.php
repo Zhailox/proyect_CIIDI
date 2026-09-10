@@ -61,5 +61,11 @@
         <?php include CORE_VIEWS . 'footer.php'; ?>
     <?php endif; ?>
 
+    <?php if (!empty($js_modulo)): ?>
+        <?php foreach ($js_modulo as $script_vista): ?>
+            <script src="<?php echo htmlspecialchars($script_vista); ?>"></script>
+        <?php endforeach; ?>
+    <?php endif; ?>
+
 </body>
 </html>

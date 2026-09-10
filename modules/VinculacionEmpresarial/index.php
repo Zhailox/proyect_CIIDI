@@ -36,6 +36,25 @@ class VinculacionEmpresarialModule implements ModuleContract {
                 'vista' => __DIR__ . '/controllers/VinculacionController.php',
                 'metodo' => 'procesarPropuesta',
                 'oculto' => true
+            ],
+            // Portal de Transparencia (Seguimiento de Propuestas)
+            'seguimiento-empresa' => [
+                'vista'  => __DIR__ . '/views/seguimiento_empresa.php', 
+                'titulo' => 'Rastrea tu Propuesta - CIIDI',
+                'css'    => $css_modulo
+            ],
+            // Cartelera de Oportunidades (Estudiantes)
+            'cartelera-oportunidades' => [
+                'vista'  => __DIR__ . '/views/cartelera_oportunidades.php', 
+                'titulo' => 'Cartelera de Oportunidades',
+                'css'    => $css_modulo
+            ],
+            // API AJAX para buscar propuestas
+            'api-transparencia' => [
+                'controlador'      => 'TransparenciaController',
+                'controlador_path' => __DIR__ . '/controllers/TransparenciaController.php',
+                'metodo'           => 'rastrear',
+                'oculto'           => true
             ]
         ];
     }
@@ -47,10 +66,31 @@ class VinculacionEmpresarialModule implements ModuleContract {
                 'titulo'      => 'Sector Productivo',
                 'icono'       => 'ph-fill ph-buildings',
                 'enlace'      => 'empresas-inicio',
-                'activadores' => ['empresas-inicio', 'banco-propuestas'], 
+                'activadores' => ['empresas-inicio', 'seguimiento-empresa'], 
                 'subitems'    => [
                     ['ruta' => 'empresas-inicio', 'titulo' => 'Conócenos'],
-                    ['ruta' => 'banco-propuestas', 'titulo' => 'Banco de Propuestas']
+                    ['ruta' => 'seguimiento-empresa', 'titulo' => 'Seguimiento']
+                ]
+            ],
+            [
+                'tipo'        => 'parent',
+                'titulo'      => 'Estudiantes (PST)',
+                'icono'       => 'ph-fill ph-rocket-launch',
+                'enlace'      => 'cartelera-oportunidades',
+                'activadores' => ['cartelera-oportunidades'], 
+                'subitems'    => [
+                    ['ruta' => 'cartelera-oportunidades', 'titulo' => 'Oportunidades de Proyecto']
+                ]
+            ],
+            [
+                'tipo'        => 'parent',
+                'titulo'      => 'Comité de Proyectos',
+                'icono'       => 'ph-fill ph-briefcase',
+                'enlace'      => 'banco-propuestas',
+                'privilegio_minimo' => 2, // Asumiendo que 2 es Profesor/Comité
+                'activadores' => ['banco-propuestas'], 
+                'subitems'    => [
+                    ['ruta' => 'banco-propuestas', 'titulo' => 'Evaluación de Propuestas']
                 ]
             ]
         ];

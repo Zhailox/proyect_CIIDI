@@ -108,8 +108,14 @@ class ModulosController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $carpeta = $_POST['modulo_id'] ?? '';
             $nuevoEstado = $_POST['nuevo_estado'] ?? 'online';
+            $esAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
             if (in_array($carpeta, ['Autenticacion', 'SuperAdmin'])) {
+                if ($esAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['status' => 'error', 'message' => 'El núcleo del sistema no se puede modificar.']);
+                    exit;
+                }
                 header("Location: gestor-modulos");
                 exit;
             }
@@ -117,6 +123,14 @@ class ModulosController {
             $config = $this->obtenerConfiguracion();
             $config['modulos'][$carpeta] = ['estado' => $nuevoEstado];
             $this->guardarConfiguracion($config);
+
+            AuditLogger::registrar('WARNING', 'SuperAdmin', 'Alternar Estado Módulo', "Módulo {$carpeta} cambiado a estado: {$nuevoEstado}");
+
+            if ($esAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['status' => 'success', 'nuevo_estado' => $nuevoEstado, 'modulo' => $carpeta, 'message' => "Módulo '{$carpeta}' invertido a {$nuevoEstado}"]);
+                exit;
+            }
 
             header("Location: gestor-modulos");
             exit;
@@ -130,6 +144,7 @@ class ModulosController {
             $claveRuta = $_POST['ruta_clave'] ?? '';
             $nuevoEstado = $_POST['nuevo_estado'] ?? 'online'; // online | solo_lectura | offline
             $mensaje = trim($_POST['mensaje_personalizado'] ?? '');
+            $esAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
             if (!empty($claveRuta)) {
                 $config = $this->obtenerConfiguracion();
@@ -144,6 +159,13 @@ class ModulosController {
                 }
 
                 $this->guardarConfiguracion($config);
+                AuditLogger::registrar('WARNING', 'SuperAdmin', 'Feature Flag de Ruta', "Ruta '?ruta={$claveRuta}' cambiada a estado: {$nuevoEstado}");
+            }
+
+            if ($esAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['status' => 'success', 'ruta' => $claveRuta, 'nuevo_estado' => $nuevoEstado, 'message' => "Ruta '?ruta={$claveRuta}' actualizada a {$nuevoEstado}"]);
+                exit;
             }
 
             header("Location: gestor-modulos");

@@ -57,15 +57,18 @@ class LoginController {
 
         // 2. Probar si el usuario existe y si está activo
         if (!$usuario) {
+            AuditLogger::registrar('WARNING', 'Autenticacion', 'Intento de Acceso Fallido', "Intento de inicio de sesión con cédula inexistente: {$cedula}");
             return ['es_error' => true, 'mensaje' => "No se encontró ninguna cuenta con la cédula {$cedula}.", 'destino' => 'login'];
         }
 
         if ($usuario['activo'] === false) {
+            AuditLogger::registrar('WARNING', 'Autenticacion', 'Acceso Denegado', "Intento de inicio de sesión en cuenta suspendida C.I.: {$cedula}");
             return ['es_error' => true, 'mensaje' => 'Esta cuenta se encuentra actualmente suspendida por administración.', 'destino' => 'login'];
         }
 
         // 3. Probar la contraseña
         if (!password_verify($password, $usuario['contrasena'])) {
+            AuditLogger::registrar('WARNING', 'Autenticacion', 'Contraseña Incorrecta', "Intento de inicio de sesión fallido por contraseña para el usuario C.I.: {$cedula}");
             return [
                 'es_error' => true,
                 'mensaje'  => 'La contraseña ingresada es incorrecta.',
@@ -110,8 +113,10 @@ class LoginController {
         try {
             $this->usuarioModel->registrarAcceso($usuario['id']);
         } catch (Exception $e) {
-            // Si falla la auditoría, no detenemos el login, solo seguimos adelante
+            // Si falla la auditoría de BD, no detenemos el login
         }
+
+        AuditLogger::registrar('INFO', 'Autenticacion', 'Inicio de Sesión Exitoso', "El usuario {$usuario['nombre_completo']} ({$usuario['nombre_rol']}) ha iniciado sesión.");
 
         // ÉXITO: Mandamos los datos para la pantalla de bienvenida (anillo de carga)
         return [
@@ -123,20 +128,19 @@ class LoginController {
     }
 
     public function cerrarSesion() {
-        // 1. Aseguramos que PHP sepa qué sesión estamos intentando destruir
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         
-        // 2. Vaciamos las variables de la memoria RAM
+        if (isset($_SESSION['nombre_usuario'])) {
+            AuditLogger::registrar('INFO', 'Autenticacion', 'Cierre de Sesión', "El usuario {$_SESSION['nombre_usuario']} ha cerrado su sesión.");
+        }
+
         $_SESSION = [];
-        
-        // 3. Destruimos el archivo físico de la sesión en el servidor
         session_destroy();
         
-        // 4. Redirigimos al usuario a la pantalla de login (ruta relativa segura)
         header("Location: login");
-        exit; // Vital para detener cualquier otro renderizado
+        exit;
     }
     // Carga la vista del formulario de registro
     public function mostrarRegistro() {

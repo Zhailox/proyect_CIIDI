@@ -1,21 +1,52 @@
 /* ==========================================================================
-   GESTOR DE USUARIOS - UI
+   GESTOR DE USUARIOS & RBAC - ESTILOS MEJORADOS (ESTILO.MD)
    ========================================================================== */
 
 .gestor-mt-title {
-    margin-top: 2rem;
+    margin-top: 1.5rem;
 }
 
 .admin-card-panel {
-    background: var(--bg-card);
-    border-radius: 8px;
+    background: #ffffff;
+    border-radius: var(--radius-sm);
     padding: 1.5rem;
-    border: 1px solid rgba(0,0,0,0.05);
+    border: 1px solid rgba(80, 89, 132, 0.15);
     margin-bottom: 2rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    box-shadow: 0 4px 20px rgba(18, 26, 62, 0.03);
 }
 
-/* Formulario de búsqueda */
+/* Encabezados de Tablas con Alto Contraste */
+.glass-panel table th, table th {
+    color: #121a3e !important;
+    font-weight: 800 !important;
+}
+
+/* Inputs de Filtro y Controles con alto contraste */
+.sa-filter-input, select.sa-filter-input, input[type="text"].sa-filter-input {
+    background-color: #ffffff !important;
+    border: 1px solid rgba(80, 89, 132, 0.25) !important;
+    color: #121a3e !important;
+    font-weight: 700 !important;
+    font-size: 0.88rem !important;
+    border-radius: 6px !important;
+    padding: 6px 12px !important;
+    outline: none !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sa-filter-input:focus, select.sa-filter-input:focus, input[type="text"].sa-filter-input:focus {
+    border-color: var(--color-terciario) !important;
+    box-shadow: 0 0 0 3px rgba(112, 144, 203, 0.15) !important;
+    color: #121a3e !important;
+}
+
+select.sa-filter-input option {
+    background-color: #ffffff !important;
+    color: #121a3e !important;
+    font-weight: 700 !important;
+}
+
+/* Formulario de búsqueda rápida */
 .gestor-search-form {
     display: flex;
     gap: 1rem;
@@ -24,30 +55,35 @@
 
 .gestor-search-input {
     width: 100%;
-    border: none;
-    /* Estilo limpio: solo barra inferior */
-    border-bottom: 1px solid var(--gris);
-    background: transparent;
-    border-radius: 0;
-    padding: 0.4rem 0;
-    font-size: 1.1rem;
-    color: var(--texto-comun);
-    font-family: var(--font-family);
-    transition: border-color var(--transition-fast);
+    border: 1px solid rgba(80, 89, 132, 0.25);
+    background: #ffffff;
+    border-radius: 6px;
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
+    color: var(--color-principal);
+    font-weight: 600;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .gestor-search-input:focus {
     outline: none;
-    border-bottom: 2px solid var(--color-secundario);
+    border-color: var(--color-terciario);
+    box-shadow: 0 0 0 3px rgba(112, 144, 203, 0.15);
 }
+
 .btn-search-cedula {
     background-color: var(--color-secundario);
-    color: var(--texto-blanco);
+    color: #ffffff !important;
+    border-radius: 6px;
+    font-weight: 700;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
 }
 
 .btn-search-cedula:hover {
-    background-color: var(--color-secundario);
-    filter: brightness(1.1);
+    background-color: var(--color-principal);
 }
 
 .gestor-error-msg {
@@ -59,138 +95,107 @@
 /* Tarjeta del usuario buscado */
 .gestor-result-box {
     margin-top: 1.5rem;
-    border-top: 1px solid rgba(0,0,0,0.05);
+    border-top: 1px solid rgba(80, 89, 132, 0.12);
     padding-top: 1.5rem;
 }
 
 .gestor-result-title {
     color: var(--color-terciario);
     margin-bottom: 1rem;
+    font-weight: 800;
 }
 
 .gestor-user-card {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: var(--bg-main);
+    background: #ffffff;
     padding: 1.5rem;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(80, 89, 132, 0.18);
+    box-shadow: 0 4px 15px rgba(18, 26, 62, 0.04);
 }
 
 .gestor-user-name {
     margin: 0;
-    font-size: 1.4rem;
-    color: var(--texto-titulos);
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--color-principal);
 }
 
 .gestor-user-meta {
-    margin: 0.2rem 0;
-    color: var(--gris);
+    margin: 0.3rem 0;
+    color: var(--texto-silenciado);
+    font-weight: 500;
 }
 
 /* Badges (Etiquetas de estado) */
 .gestor-badge-role,
 .gestor-badge-status {
     display: inline-block;
-    padding: 0.2rem 0.8rem;
-    border-radius: 50px;
+    padding: 0.3rem 0.85rem;
+    border-radius: 6px;
     font-weight: 700;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     margin-top: 0.5rem;
     margin-right: 0.5rem;
 }
 
 .gestor-badge-role {
-    background: rgba(80, 89, 132, 0.1);
+    background: rgba(80, 89, 132, 0.12);
     color: var(--color-secundario);
+    border: 1px solid rgba(80, 89, 132, 0.2);
 }
 
 .status-active {
-    background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+    border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
 .status-suspended {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-}
-
-/* Botones de acción del usuario */
-.gestor-user-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.btn-promote {
-    border-color: var(--color-secundario);
-    color: var(--color-secundario);
-}
-
-.btn-promote:hover {
-    background-color: var(--color-secundario);
-    color: #fff;
-}
-
-.btn-status-toggle {
-    color: white;
-    border: none;
-}
-
-.toggle-suspend {
-    background-color: #ef4444;
-}
-
-.toggle-suspend:hover {
-    background-color: #dc2626;
-}
-
-.toggle-restore {
-    background-color: #10b981;
-}
-
-.toggle-restore:hover {
-    background-color: #059669;
+    background: rgba(239, 68, 68, 0.12);
+    color: #b91c1c;
+    border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
 /* Grid del Plantel Docente */
 .gestor-teachers-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
-}
-
-.gestor-empty-msg {
-    color: var(--gris);
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
 }
 
 .gestor-teacher-card {
-    background: var(--bg-card);
-    border-radius: 8px;
-    padding: 1.2rem;
-    border: 1px solid rgba(0,0,0,0.05);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    background: #ffffff;
+    border-radius: var(--radius-sm);
+    padding: 1.25rem;
+    border: 1px solid rgba(80, 89, 132, 0.18);
+    box-shadow: 0 4px 15px rgba(18, 26, 62, 0.03);
     display: flex;
     align-items: center;
     gap: 1rem;
-    transition: transform var(--transition-fast, 0.3s);
+    transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.25s ease;
 }
 
 .gestor-teacher-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(18, 26, 62, 0.07);
+    border-color: var(--color-terciario);
 }
 
 .gestor-teacher-avatar {
-    width: 45px;
-    height: 45px;
-    background: var(--color-terciario);
-    color: white;
-    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--color-secundario), var(--color-principal));
+    color: #ffffff;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: bold;
+    font-weight: 800;
     font-size: 1.2rem;
+    flex-shrink: 0;
 }
 
 .gestor-teacher-info {
@@ -199,24 +204,29 @@
 
 .gestor-teacher-name {
     margin: 0;
-    color: var(--texto-titulos);
+    color: var(--color-principal);
+    font-weight: 700;
+    font-size: 0.95rem;
 }
 
 .gestor-teacher-cedula {
     font-size: 0.8rem;
-    color: var(--gris);
+    color: var(--texto-silenciado);
 }
 
 .gestor-teacher-remove {
-    background: none;
-    border: none;
-    color: #ef4444;
-    cursor: pointer;
-    font-size: 1.2rem;
-    transition: transform 0.2s;
-    padding: 0.5rem;
+    background: rgba(112, 144, 203, 0.12);
+    color: var(--color-terciario);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    transition: background 0.2s, color 0.2s;
+    padding: 0.4rem;
 }
 
 .gestor-teacher-remove:hover {
-    transform: scale(1.15);
+    background: var(--color-terciario);
+    color: #ffffff !important;
 }

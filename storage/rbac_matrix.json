@@ -1,20 +1,26 @@
 {
-    "Bibliotecario": {
-        "crear": "1",
-        "editar": "1",
-        "eliminar": "1",
-        "auditar": "1"
-    },
-    "Docente": {
-        "crear": "0",
-        "editar": "0",
-        "eliminar": "0",
-        "auditar": "0"
-    },
     "Estudianteashdas": {
-        "crear": "0",
-        "editar": "0",
-        "eliminar": "0",
-        "auditar": "0"
+        "crear": false,
+        "editar": false,
+        "eliminar": false,
+        "auditar": false
+    },
+    "Docentessss": {
+        "crear": false,
+        "editar": false,
+        "eliminar": false,
+        "auditar": false
+    },
+    "Comite": {
+        "crear": true,
+        "editar": true,
+        "eliminar": true,
+        "auditar": false
+    },
+    "Super Administrador": {
+        "crear": true,
+        "editar": true,
+        "eliminar": true,
+        "auditar": true
     }
 }

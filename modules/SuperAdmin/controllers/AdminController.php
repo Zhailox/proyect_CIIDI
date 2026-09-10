@@ -19,11 +19,25 @@ class AdminController {
         Auth::requierePrivilegioMinimo(3);
         
         $datosGraficas = $this->dashboardModel->obtenerEstadisticas();
-        $listaTablas = $this->dashboardModel->obtenerTablasSistema(); // <-- MAGIA NUEVA
+        $listaTablas = $this->dashboardModel->obtenerTablasSistema();
+        $telemetria = $this->dashboardModel->obtenerTelemetriaServidor();
+        $ultimosLogs = $this->dashboardModel->obtenerUltimasAccionesAudit(5);
         
         return [
             'stats' => $datosGraficas,
-            'tablas' => $listaTablas // <-- Se lo pasamos a la vista
+            'tablas' => $listaTablas,
+            'telemetria' => $telemetria,
+            'ultimosLogs' => $ultimosLogs
+        ];
+    }
+
+    public function mostrarMantenimiento() {
+        Auth::requierePrivilegioMinimo(3);
+        
+        $listaTablas = $this->dashboardModel->obtenerTablasSistema();
+        
+        return [
+            'tablas' => $listaTablas
         ];
     }
 
@@ -51,11 +65,13 @@ class AdminController {
         putenv("PGPASSWORD=");
 
         if ($codigo_retorno === 0 && file_exists($rutaCompleta)) {
+            AuditLogger::registrar('INFO', 'SuperAdmin', 'Generar Respaldo BD', "Copia de seguridad completa creada: {$nombreArchivo}");
             if (session_status() === PHP_SESSION_NONE) session_start();
             $_SESSION['mensaje_admin_exito'] = "Respaldo creado de forma segura: storage/backups/" . $nombreArchivo;
             header("Location: sudoadmin");
             exit;
         } else {
+            AuditLogger::registrar('CRITICAL', 'SuperAdmin', 'Fallo Generación Respaldo BD', "Código de error: {$codigo_retorno}");
             if (session_status() === PHP_SESSION_NONE) session_start();
             $_SESSION['mensaje_admin_error'] = "Error Fatal al generar el Backup. Código: {$codigo_retorno}";
             header("Location: sudoadmin");

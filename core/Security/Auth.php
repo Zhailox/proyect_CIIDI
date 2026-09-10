@@ -97,3 +97,42 @@ class Auth {
         ];
     }
 }
+
+/**
+ * Helper Global de Auditoría Activa (System Monitoring & Audit Trail)
+ */
+class AuditLogger {
+    
+    public static function registrar(string $nivel, string $modulo, string $accion, string $detalles = '') {
+        $usuario = Auth::usuario();
+        $responsable = $usuario ? "{$usuario['nombre']} (ID: {$usuario['id']})" : "Sistema / Anónimo";
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+
+        $registro = [
+            'id'          => uniqid('log_'),
+            'fecha_hora'  => date('Y-m-d H:i:s'),
+            'nivel'       => strtoupper($nivel), // INFO | WARNING | ERROR | CRITICAL
+            'modulo'      => $modulo,
+            'accion'      => $accion,
+            'detalles'    => $detalles,
+            'responsable' => $responsable,
+            'ip'          => $ip
+        ];
+
+        $archivo = CORE_PATH . '../storage/system_audit.json';
+        $directorio = dirname($archivo);
+        if (!is_dir($directorio)) {
+            mkdir($directorio, 0777, true);
+        }
+
+        $logs = file_exists($archivo) ? (json_decode(file_get_contents($archivo), true) ?: []) : [];
+        array_unshift($logs, $registro); // Insertar al inicio para orden cronológico descendente
+        
+        // Conservar los últimos 1000 eventos en storage
+        if (count($logs) > 1000) {
+            $logs = array_slice($logs, 0, 1000);
+        }
+
+        file_put_contents($archivo, json_encode($logs, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    }
+}

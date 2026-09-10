@@ -57,7 +57,17 @@ class GestorUsuariosController {
         Auth::requierePrivilegioMinimo(3);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $matriz = $_POST['matrix'] ?? [];
+            $rawMatrix = $_POST['matrix'] ?? [];
+            $matrizProcesada = [];
+
+            foreach ($rawMatrix as $rol => $permisos) {
+                if (is_array($permisos)) {
+                    foreach ($permisos as $accion => $val) {
+                        $matrizProcesada[$rol][$accion] = ($val === '1' || $val === 1 || $val === true);
+                    }
+                }
+            }
+
             $archivo = CORE_PATH . '../storage/rbac_matrix.json';
             
             $directorio = dirname($archivo);
@@ -65,8 +75,10 @@ class GestorUsuariosController {
                 mkdir($directorio, 0777, true);
             }
 
-            file_put_contents($archivo, json_encode($matriz, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            file_put_contents($archivo, json_encode($matrizProcesada, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
             
+            AuditLogger::registrar('WARNING', 'SuperAdmin', 'Modificar Matriz RBAC', 'Se actualizaron los permisos dinámicos del sistema por rol.');
+
             if (session_status() === PHP_SESSION_NONE) session_start();
             $_SESSION['mensaje_gestor_exito'] = "Matriz de permisos RBAC actualizada correctamente.";
             header("Location: gestor-usuarios");
@@ -103,6 +115,8 @@ class GestorUsuariosController {
                     $_SESSION['rol_nombre'] = $nuevoNombre;
                 }
 
+                AuditLogger::registrar('INFO', 'SuperAdmin', 'Renombrar Rol', "Rol ID #{$rolId} renombrado de '{$nombreAnterior}' a '{$nuevoNombre}' con actualización en cascada.");
+
                 if (session_status() === PHP_SESSION_NONE) session_start();
                 $_SESSION['mensaje_gestor_exito'] = "Rol '{$nombreAnterior}' renombrado exitosamente a '{$nuevoNombre}' en BD y Matriz RBAC.";
             }
@@ -126,6 +140,8 @@ class GestorUsuariosController {
                 
                 $revogadas[(string)$usuarioIdAExpulsar] = true;
                 file_put_contents($archivo, json_encode($revogadas, JSON_PRETTY_PRINT));
+
+                AuditLogger::registrar('CRITICAL', 'SuperAdmin', 'Revocar Sesión Remota', "Sesión expulsada para el Usuario ID #{$usuarioIdAExpulsar}");
 
                 if (session_status() === PHP_SESSION_NONE) session_start();
                 $_SESSION['mensaje_gestor_exito'] = "Sesión revocada exitosamente para el usuario #{$usuarioIdAExpulsar}.";
@@ -200,6 +216,9 @@ class GestorUsuariosController {
         // Pasamos el hashSeguro al modelo (será null si no se llenaron los campos)
         $this->adminModel->actualizarUsuario($id, $cedula, $nombre, $email, $id_rol, $hashSeguro);
         
+        $detallesEdicion = "Datos actualizados para el Usuario C.I. {$cedula} ({$nombre})." . ($hashSeguro ? " Se forzó cambio de contraseña." : "");
+        AuditLogger::registrar('INFO', 'SuperAdmin', 'Editar Usuario', $detallesEdicion);
+
         header("Location: gestor-usuarios?cedula=" . urlencode($cedula));
         exit;
     }
@@ -221,7 +240,87 @@ class GestorUsuariosController {
 
             // Invertimos el estado
             $this->adminModel->cambiarEstadoActivo($id, !$estadoActual);
+            
+            $accionAudit = !$estadoActual ? 'Restaurar Cuenta Usuario' : 'Suspender Cuenta Usuario';
+            $sevAudit = !$estadoActual ? 'INFO' : 'WARNING';
+            AuditLogger::registrar($sevAudit, 'SuperAdmin', $accionAudit, "Estado de la cuenta del Usuario C.I. {$cedula} cambiado a: " . (!$estadoActual ? 'Activo' : 'Suspendido'));
+
             header("Location: gestor-usuarios?cedula=" . urlencode($cedula));
+            exit;
+        }
+    }
+
+    // Registrar nuevo usuario desde el Gestor de Usuarios
+    public function crearUsuarioAction() {
+        Auth::requierePrivilegioMinimo(3);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $cedula = trim($_POST['cedula'] ?? '');
+            $nombre = trim($_POST['nombre'] ?? '');
+            $email = trim($_POST['email'] ?? '');
+            $id_rol = (int)($_POST['id_rol'] ?? 0);
+            $clave = trim($_POST['password'] ?? '');
+
+            if (empty($cedula) || empty($nombre) || empty($email) || empty($clave) || $id_rol <= 0) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "Todos los campos son obligatorios para crear el usuario.";
+                header("Location: gestor-usuarios");
+                exit;
+            }
+
+            // Verificar duplicado de cédula
+            $existe = $this->adminModel->buscarPorCedula($cedula);
+            if ($existe) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "Ya existe un usuario registrado con la cédula C.I. {$cedula}.";
+                header("Location: gestor-usuarios");
+                exit;
+            }
+
+            $hashClave = password_hash($clave, PASSWORD_BCRYPT);
+            $exito = $this->adminModel->crearUsuario($cedula, $nombre, $email, $id_rol, $hashClave);
+
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            if ($exito) {
+                AuditLogger::registrar('INFO', 'SuperAdmin', 'Crear Usuario', "Nuevo usuario registrado: {$nombre} (C.I: {$cedula})");
+                $_SESSION['mensaje_gestor_exito'] = "Usuario '{$nombre}' creado exitosamente en el sistema.";
+            } else {
+                $_SESSION['mensaje_gestor_error'] = "Error inesperado al crear el usuario.";
+            }
+
+            header("Location: gestor-usuarios");
+            exit;
+        }
+    }
+
+    // Restablecimiento rápido de contraseña por el Administrador
+    public function resetClaveRapido() {
+        Auth::requierePrivilegioMinimo(3);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $usuarioId = (int)($_POST['usuario_id'] ?? 0);
+            $cedula = trim($_POST['cedula'] ?? '');
+            $claveNueva = trim($_POST['nueva_clave'] ?? 'Temporal2026!');
+
+            if ($usuarioId <= 0 || empty($claveNueva)) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "Datos insuficientes para restablecer la contraseña.";
+                header("Location: gestor-usuarios");
+                exit;
+            }
+
+            $hashClave = password_hash($claveNueva, PASSWORD_BCRYPT);
+            $exito = $this->adminModel->forzarRestablecerClave($usuarioId, $hashClave);
+
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            if ($exito) {
+                AuditLogger::registrar('WARNING', 'SuperAdmin', 'Restablecer Clave Rápida', "Contraseña restablecida para el Usuario C.I. {$cedula}");
+                $_SESSION['mensaje_gestor_exito'] = "Contraseña de la cuenta C.I. {$cedula} restablecida a: '{$claveNueva}'.";
+            } else {
+                $_SESSION['mensaje_gestor_error'] = "Error al restablecer la contraseña.";
+            }
+
+            header("Location: gestor-usuarios");
             exit;
         }
     }

@@ -58,13 +58,24 @@ class SuperAdminModule implements ModuleContract {
                 'controlador'      => 'GestorUsuariosController',
                 'metodo'           => 'alternarEstado'
             ],
+            'crear-usuario' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'crearUsuarioAction'
+            ],
+            'resetear-clave-usuario' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'resetClaveRapido'
+            ],
             'sudoadmin' => [
                 'controlador_path' => __DIR__ . '/controllers/AdminController.php',
                 'controlador'      => 'AdminController',
                 'metodo'           => 'mostrarPanelAdministrativo',
                 'vista'            => __DIR__ . '/views/dashboard_admin.php', 
                 'titulo'           => 'Panel de Control - Sudoadmin',
-                'css'              => ['SuperAdmin.css']
+                'css'              => ['SuperAdmin.css'],
+                'js'               => ['chart.min.js']
             ],
             // Ruta para gestionar los módulos encendidos/apagados
             'gestor-modulos' => [
@@ -88,6 +99,15 @@ class SuperAdminModule implements ModuleContract {
                 'controlador'      => 'ModulosController',
                 'metodo'           => 'alternarEstadoRuta'
             ],
+            // Ruta para gestionar Mantenimiento & Respaldos BD
+            'gestor-mantenimiento' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'mostrarMantenimiento', 
+                'vista'            => __DIR__ . '/views/gestor_mantenimiento.php', 
+                'titulo'           => 'Mantenimiento & Respaldos BD - SuperAdmin',
+                'css'              => ['SuperAdmin.css']
+            ],
             // Ruta para ver los logs de errores y accesos
             'visor-logs' => [
                 'controlador_path' => __DIR__ . '/controllers/LogsController.php',
@@ -96,6 +116,16 @@ class SuperAdminModule implements ModuleContract {
                 'vista'            => __DIR__ . '/views/visor_logs.php', 
                 'titulo'           => 'Visor de Logs - Auditoría del Sistema',
                 'css'              => ['SuperAdmin.css','logs.css']
+            ],
+            'exportar-logs' => [
+                'controlador_path' => __DIR__ . '/controllers/LogsController.php',
+                'controlador'      => 'LogsController',
+                'metodo'           => 'exportarLogs'
+            ],
+            'limpiar-logs' => [
+                'controlador_path' => __DIR__ . '/controllers/LogsController.php',
+                'controlador'      => 'LogsController',
+                'metodo'           => 'limpiarLogs'
             ],
             'generar-backup' => [
                 'controlador_path' => __DIR__ . '/controllers/AdminController.php',
@@ -144,11 +174,12 @@ class SuperAdminModule implements ModuleContract {
                 'privilegio_minimo' => 2,
                 'enlace'      => 'sudoadmin',
                 // Rutas que mantienen iluminado el panel administrativo
-                'activadores' => ['sudoadmin', 'gestor-modulos', 'visor-logs', 'gestor-usuarios'], 
+                'activadores' => ['sudoadmin', 'gestor-modulos', 'gestor-mantenimiento', 'visor-logs', 'gestor-usuarios'], 
                 'subitems'    => [
                     ['ruta' => 'sudoadmin', 'titulo' => 'Panel de Control'],
-                    ['ruta' => 'gestor-usuarios', 'titulo' => 'Gestión de Usuarios'], // BOTÓN NUEVO
+                    ['ruta' => 'gestor-usuarios', 'titulo' => 'Gestión de Usuarios'],
                     ['ruta' => 'gestor-modulos', 'titulo' => 'Gestor de Módulos'],
+                    ['ruta' => 'gestor-mantenimiento', 'titulo' => 'Mantenimiento & BD'],
                     ['ruta' => 'visor-logs', 'titulo' => 'Visor de Logs']
                 ]
             ]

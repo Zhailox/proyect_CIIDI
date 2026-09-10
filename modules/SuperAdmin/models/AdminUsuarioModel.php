@@ -101,4 +101,20 @@ class AdminUsuarioModel {
         $stmt = $db->prepare($sql);
         return $stmt->execute([$nuevoNombre, $rolId]);
     }
+
+    // Registra un nuevo usuario en la base de datos
+    public function crearUsuario(string $cedula, string $nombre, string $email, int $id_rol, string $hashClave): bool {
+        $db = Connection::getInstance();
+        $sql = "INSERT INTO usuarios (cedula, nombre_completo, email, id_rol, contrasena, activo) VALUES (?, ?, ?, ?, ?, 'true')";
+        $stmt = $db->prepare($sql);
+        return $stmt->execute([$cedula, $nombre, $email, $id_rol, $hashClave]);
+    }
+
+    // Forzar reseteo de clave por el administrador
+    public function forzarRestablecerClave(int $usuarioId, string $hashClave): bool {
+        $db = Connection::getInstance();
+        $sql = "UPDATE usuarios SET contrasena = ? WHERE id = ?";
+        $stmt = $db->prepare($sql);
+        return $stmt->execute([$hashClave, $usuarioId]);
+    }
 }

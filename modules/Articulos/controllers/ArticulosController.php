@@ -236,6 +236,8 @@ class ArticulosController {
                 $etiquetas
             );
 
+            AuditLogger::registrar('INFO', 'RevistaDigital', 'Publicar Artículo', "Nuevo artículo publicado: '{$titulo}' ({$anio_publicacion}).");
+
             $_SESSION['mensaje_exito'] = "El artículo fue publicado correctamente en la vitrina.";
             header('Location: gestor-articulos');
             exit;
@@ -269,6 +271,8 @@ class ArticulosController {
             try {
                 $this->articuloModel->eliminarArticulo($id_articulo);
                 
+                AuditLogger::registrar('WARNING', 'RevistaDigital', 'Eliminar Artículo', "Artículo ID #{$id_articulo} eliminado del catálogo.");
+
                 if (session_status() === PHP_SESSION_NONE) session_start();
                 $_SESSION['mensaje_exito'] = "El artículo ha sido eliminado del catálogo y sus archivos liberados.";
                 
