@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict C4pgRauOSzbRUnJBLgLZOmuXkuWixVY5z5hEhCIh3AORqXKNvt4A5dB1uXEEU7O
+\restrict qFf81HjLHbxbfy3ij7CQVaouGz3uejEAamcn9S45EI73ObX0wKuRwwymSe4HBkO
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -688,7 +688,8 @@ CREATE TABLE public.detalles_articulos (
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     imagen_portada text DEFAULT 'default_article.jpg'::character varying,
     resumen text,
-    activo boolean DEFAULT true
+    activo boolean DEFAULT true,
+    id_categoria integer
 );
 
 
@@ -890,6 +891,7 @@ CREATE TABLE public.investigaciones_ofertadas (
     cupos_disponibles integer DEFAULT 3,
     estado character varying(20) DEFAULT 'Abierta'::character varying,
     fecha_creacion timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    id_propuesta_empresa integer,
     CONSTRAINT investigaciones_ofertadas_estado_check CHECK (((estado)::text = ANY (ARRAY[('Abierta'::character varying)::text, ('Cerrada'::character varying)::text, ('En Desarrollo'::character varying)::text, ('Finalizada'::character varying)::text])))
 );
 
@@ -1095,7 +1097,9 @@ CREATE TABLE public.propuestas_empresa (
     descripcion_problema text NOT NULL,
     estado public.estado_propuesta_enum DEFAULT 'pendiente'::public.estado_propuesta_enum,
     fecha_creacion timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    nivel_trayecto character varying(50)
+    nivel_trayecto character varying(50),
+    motivo_rechazo text,
+    codigo_seguimiento character varying(255)
 );
 
 
@@ -1878,6 +1882,14 @@ INSERT INTO public.auditoria VALUES (262, 'recursos', 144, 'INSERT', NULL, NULL,
 INSERT INTO public.auditoria VALUES (263, 'recursos', 145, 'INSERT', NULL, NULL, NULL, '{"titulo": "e", "id_tipo_recurso": 3, "ejemplares_totales": 1}', '2026-09-09 00:36:32.789579');
 INSERT INTO public.auditoria VALUES (264, 'recursos', 145, 'DELETE', NULL, NULL, '{"titulo": "e", "id_tipo_recurso": 3}', NULL, '2026-09-09 00:49:28.135237');
 INSERT INTO public.auditoria VALUES (265, 'recursos', 146, 'INSERT', NULL, NULL, NULL, '{"titulo": "Modelamiento de confort adaptativo para un trapiche panelero", "id_tipo_recurso": 3, "ejemplares_totales": 1}', '2026-09-09 00:51:39.29162');
+INSERT INTO public.auditoria VALUES (266, 'usuarios', 12, 'INSERT', NULL, NULL, NULL, '{"email": "andrusramirez2020@gmail.com", "id_rol": 3, "nombre": "ANDRUS"}', '2026-09-09 19:26:21.824338');
+INSERT INTO public.auditoria VALUES (267, 'recursos', 129, 'DELETE', NULL, NULL, '{"titulo": "Verde   Gestion de BD", "id_tipo_recurso": 1}', NULL, '2026-09-09 23:34:35.112448');
+INSERT INTO public.auditoria VALUES (268, 'usuarios', 1, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 1, "nombre": "Adrus"}', '{"activo": true, "id_rol": 1, "nombre": "Adrus"}', '2026-09-10 11:09:57.334');
+INSERT INTO public.auditoria VALUES (269, 'usuarios', 12, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 3, "nombre": "ANDRUS"}', '{"activo": true, "id_rol": 2, "nombre": "ANDRUS"}', '2026-09-10 11:33:11.894408');
+INSERT INTO public.auditoria VALUES (270, 'usuarios', 12, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 2, "nombre": "ANDRUS"}', '{"activo": true, "id_rol": 3, "nombre": "ANDRUS"}', '2026-09-10 11:39:27.139879');
+INSERT INTO public.auditoria VALUES (271, 'recursos', 147, 'INSERT', NULL, NULL, NULL, '{"titulo": "SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WORLD C.A", "id_tipo_recurso": 1, "ejemplares_totales": 1}', '2026-09-10 21:02:31.80467');
+INSERT INTO public.auditoria VALUES (272, 'recursos', 148, 'INSERT', NULL, NULL, NULL, '{"titulo": "VALERA EDO TRUJILLO Aplicación Web Móvil para el proceso de Ascensos en la Coordinación de Formación Permanente y Docencia de la UPTTMBI Docente Asesor: Dra. María Luisa Colmenares Representante Institucional: Dra. Rossana Virgilio Representante...", "id_tipo_recurso": 1, "ejemplares_totales": 1}', '2026-09-10 21:02:31.979685');
+INSERT INTO public.auditoria VALUES (273, 'recursos', 149, 'INSERT', NULL, NULL, NULL, '{"titulo": "NUES DR. PABLO VILORIA – LA BEATRIZ SOPORTE TÉCNICO A EQUIPOS DE COMPUTACION Y USUARIOS EN CENTRO CLÍNICO “MARÍA EDELMIRA ARAUJO”, S.A. VALERA ESTADO TRUJILLO", "id_tipo_recurso": 1, "ejemplares_totales": 1}', '2026-09-10 21:02:32.217243');
 
 
 --
@@ -2021,14 +2033,14 @@ INSERT INTO public.cursos VALUES (6, 9, 'e', 'e', NULL, 'publicado', 70.00, '202
 -- Data for Name: detalles_articulos; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.detalles_articulos VALUES (120, NULL, '93', '241', '0012-7353', '2026-07-09 20:16:51.643727', 'art_1783642611_6a5039f396bec.png', 'La industria de la construcción enfrenta un serio impacto ambiental por las altas emisiones del cemento, lo que impulsa la búsqueda de alternativas sostenibles como el concreto reforzado con fibras de polipropileno (FPP). Para ello se analizó su efecto en las propiedades del concreto a través de una revisión sistemática y filtrada de 66 artículos recientes entre los años 2021 y 2025 extraídos de Scopus, ScienceDirect y MDPI. Los estudios muestran que la FPP mejora la resistencia a compresión, flexión y tracción, especialmente en proporciones cercanas al 0.5%. También aumenta la durabilidad frente a agentes agresivos y mejora la microestructura al controlar grietas, aunque, puede reducir la trabajabilidad y aumentar la porosidad, efectos mitigables mediante el uso de fibras metálicas o adiciones puzolánicas. En conclusión, el uso de FPP es una opción viable para reducir el impacto ambiental del concreto y mejorar su desempeño cuando se aplica en proporciones adecuada', true);
-INSERT INTO public.detalles_articulos VALUES (118, 5, '87', '213', '0012-7353', '2026-07-09 15:19:57.897052', 'https://revistas.unal.edu.co/public/journals/21/cover_issue_5423_es_ES.png', 'Este artículo propone una ampliación de las capacidades del middleware MiSCi, al agregar una nueva capa denominada Datos Enlazados, para  identificar,  describir,  conectar,  relacionar  y  explotar  los  distintos  datos  generados  por  los  usuarios  y  las  aplicaciones  de  la  ciudad  inteligente usando el paradigma de datos enlazados. Esta nueva capa está compuestas por distintos agentes que permiten automatizar las etapas  de  especificación,  modelado,  generación,  vinculación,  publicación  y  explotación  de  los  datos  basados  en  MEDAWEDE.  Dichos  agentes  pueden  enriquecer  ontologías  existentes  en  MiSCi,  generar  modelos  de  conocimiento  requeridos  por  los  servicios  de  MiSCi, generar datos para construir modelos de conocimiento para MiSCi, y recomendar información en contextos de incertidumbre a través de una inferencia híbrida basada en lógica descriptiva/dialéctica. Además en este trabajo se especifica un caso de estudio, donde se muestran las capacidades del MiSCi para manejar distintas situaciones críticas, apoyado en la nueva capa de enlazado de dato', true);
-INSERT INTO public.detalles_articulos VALUES (121, 8, '93', '241', '0012-7353', '2026-07-09 20:19:28.855723', 'art_1783642768_6a503a90ca313.png', 'La discapacidad motora en Colombia afecta a un porcentaje significativo de la población, constituye una problemática relevante de salud pública,  asociada  con  diversos  factores  del  país.  Este  proyecto  desarrolla  un  sistema  de  control  de  robots  asistenciales  controlados  por  señales electrooculográficas (EOG), logrando que aquellas personas con movilidad reducida tengan acceso a este tipo de tecnologías. Para el desarrollo se adquirieron señales con el hardware Bitalino para generar y normalizar un conjunto de datos, que luego se procesa con Python y Open Signals para establecer comandos confiables. El entorno de simulación se realizó en CoppeliaSim. Durante el proceso de desarrollo, se encontraron obstáculos como el ruido y la exactitud de las señales. No obstante, se ha terminado la interfaz y la conexión entre CoppeliaSim, Python y las señales EOG, permitiendo que el robot se mueva en tiempo real. En la actualidad, se realizan pruebas de funcionamiento, exactitud y precisión de los movimientos.', true);
-INSERT INTO public.detalles_articulos VALUES (122, 8, '93', '241', '0012-7353', '2026-07-09 20:08:48.117741', 'art_1783642127_6a50380feed3b.png', 'La  banca  móvil  se  ha  consolidado  como  una  herramienta  clave  para  la  inclusión  financiera,  particularmente  en  zonas  rurales  donde  las  barreras geográficas y de infraestructura limitan el acceso a servicios bancarios tradicionales. Este estudio analiza los determinantes de la aceptación de la banca móvil en ganaderos del occidente de Antioquia, Colombia, utilizando el modelo UTAUT. Se aplicó una metodología cuantitativa  basada  en  encuestas  estructuradas  a  132  productores  rurales,  evaluando  variables  como  la  expectativa  de  rendimiento,  la  expectativa de esfuerzo, la influencia social, el riesgo y la confianza. Los resultados revelan que la expectativa de rendimiento y la facilidad de uso son los principales factores que influyen en la adopción de la banca móvil, mientras que la confianza, el riesgo y la influencia social no  mostraron  un  impacto  significativo.  Estos  hallazgos  destacan  la  necesidad  de  desarrollar  estrategias  que  promuevan  el  acceso  a  plataformas digitales intuitivas y capacitaciones enfocadas en el uso de estas herramientas.', true);
-INSERT INTO public.detalles_articulos VALUES (119, 8, '93', '241', '0012-7353', '2026-07-09 20:13:49.50881', 'art_1783642429_6a50393d74626.png', 'Los techos verdes representan una estrategia pasiva eficaz para reducir la transferencia de calor hacia el interior de los edificios, especialmente en climas  cálidos  y  húmedos.  En  este  trabajo  se  presenta  un  modelo  dinámico  unidimensional  de  balance  de  calor  y  masa  para  evaluar  el  comportamiento térmico de un techo verde extensivo en condiciones de trópico húmedo. El modelo considera procesos de conducción, convección, radiación y transferencia de humedad, incorporando la evapotranspiración y parámetros de la vegetación dependientes de la especie. La calibración y simulación se realizaron usando datos experimentales obtenidos de una base experimental de techos verde ubicada en Tabasco, México, con las especies Tradescantia  spathaceay Tradescantia  pallida.  El  desempeño  del  sistema  se  evaluó  bajo  tres  escenarios  climáticos  representativos:  temporada de estiaje, temporada de lluvia y de frente frío. Los resultados muestran que la capa vegetal reduce la transferencia de calor hacia el interior del edificio, además de contribuir a la estabilización térmica del microclima del techo. El análisis de sensibilidad indica que parámetros asociados a la vegetación, en particular el índice de área foliar y la resistencia interna de las hojas, ejercen una influencia dominante en la respuesta del sistema. Aunque el modelo se limita al caso unidimensional y a especies específicas, constituye una herramienta útil para la evaluación del desempeño térmico de techos verdes en climas tropicales húmedos', true);
-INSERT INTO public.detalles_articulos VALUES (143, 7, '93', '242', '0012-7353', '2026-09-07 15:40:32.098085', 'https://revistas.unal.edu.co/public/journals/21/submission_124890_112809_coverImage_es_ES.png', 'En una línea de transmisión de alta tensión de circuito único de 400 kV, la proximidad de los conductores de fase induce una corriente circulante en el conductor de tierra. Esta corriente forma un circuito cerrado a través del sistema de puesta a tierra de la base de la torre, que proporciona su ruta de retorno [1]. En este estudio, se modela y analiza la corriente circulante inducida. El modelado se realizó en el entorno MATLAB.Los resultados indican que la corriente circulante y la tensión inducida en el conductor de tierra presentan una relación aproximadamente lineal con las corrientes de los conductores de fase, y sus magnitudes se ven influenciadas por la resistencia de puesta a tierra de la torre R_g y la resistividad del suelo ρ. Además, las pérdidas de potencia en el conductor de tierra alcanzan niveles significativos en condiciones de alta corriente. Estos hallazgos resaltan la importancia de un diseño óptimo del sistema de puesta a tierra, una selección adecuada de las características del conductor de tierra y la implementación de métodos para reducir las corrientes circulantes con el fin de mejorar el rendimiento y reducir las pérdidas en las líneas de transmisión de alta tensión.', true);
-INSERT INTO public.detalles_articulos VALUES (146, NULL, '91', '232', '0012-735', '2026-09-09 00:51:39.29162', 'https://revistas.unal.edu.co/public/journals/21/submission_112625_95079_coverImage_es_ES.png', 'La producción de azúcar de caña no centrifugada, en Colombia se realiza en instalaciones de poscosecha que generan alta cantidad de calor y vapor, producto de la evaporación de los jugos de caña del proceso. Este estudio tuvo como objetivo mejorar las condiciones de confort de una instalación de este tipo en el municipio de Pacho, Cundinamarca, Colombia, a través de simulación bioclimática, donde se modificó el cerramiento en las paredes y en la ventana cenital. Se evalúo el confort térmico adaptativo, donde el mejor comportamiento bioclimático se  presentó  en  las  configuraciones  con  perímetro  abierto  y  ventana  cenital,  esto  debido  a  que  una  mayor  área  de  ventilación  y  efecto chimenea optimizan  la  transferencia  de  calor  y  masa;  así  mismo,  se  observó  que  hay  un  comportamiento  generalizado  de  incomodidad  térmica para los trabajadores en la zona térmica hornilla, debido a las altas emisiones de calor y vapor en esta zona', true);
-INSERT INTO public.detalles_articulos VALUES (144, 8, '93', '242', '0012-7353', '2026-09-09 00:24:54.886595', 'https://revistas.unal.edu.co/public/journals/21/submission_124428_112347_coverImage_es_ES.png', 'Esta investigación desarrolló y evaluó un modelo de aprendizaje automático para optimizar la contratación de profesionales de ingeniería en  una universidad pública, reduciendo el tiempo de evaluación, los errores y la subjetividad en el análisis de currículums. Se empleó un enfoque cuantitativo, aplicado y cuasiexperimental, utilizando procesamiento de lenguaje natural (TF-IDF), clasificación KNN bajo el esquema One vs-Rest y tres conjuntos de datos de 10, 20 y 30 CV. La información fue procesada en Google Colab mediante etapas de limpieza, vectorización, entrenamiento y evaluación. El modelo alcanzó una precisión del 82 % en la clasificación de candidatos, priorizando de manera consistente a los postulantes según su grado académico y experiencia profesional. Además, redujo el tiempo promedio de evaluación de 15 a 2,5 minutos por CV y disminuyó la tasa de error a menos del 2 %, demostrando ser una herramienta eficiente, objetiva y escalable.', true);
+INSERT INTO public.detalles_articulos VALUES (120, NULL, '93', '241', '0012-7353', '2026-07-09 20:16:51.643727', 'art_1783642611_6a5039f396bec.png', 'La industria de la construcción enfrenta un serio impacto ambiental por las altas emisiones del cemento, lo que impulsa la búsqueda de alternativas sostenibles como el concreto reforzado con fibras de polipropileno (FPP). Para ello se analizó su efecto en las propiedades del concreto a través de una revisión sistemática y filtrada de 66 artículos recientes entre los años 2021 y 2025 extraídos de Scopus, ScienceDirect y MDPI. Los estudios muestran que la FPP mejora la resistencia a compresión, flexión y tracción, especialmente en proporciones cercanas al 0.5%. También aumenta la durabilidad frente a agentes agresivos y mejora la microestructura al controlar grietas, aunque, puede reducir la trabajabilidad y aumentar la porosidad, efectos mitigables mediante el uso de fibras metálicas o adiciones puzolánicas. En conclusión, el uso de FPP es una opción viable para reducir el impacto ambiental del concreto y mejorar su desempeño cuando se aplica en proporciones adecuada', true, NULL);
+INSERT INTO public.detalles_articulos VALUES (118, 5, '87', '213', '0012-7353', '2026-07-09 15:19:57.897052', 'https://revistas.unal.edu.co/public/journals/21/cover_issue_5423_es_ES.png', 'Este artículo propone una ampliación de las capacidades del middleware MiSCi, al agregar una nueva capa denominada Datos Enlazados, para  identificar,  describir,  conectar,  relacionar  y  explotar  los  distintos  datos  generados  por  los  usuarios  y  las  aplicaciones  de  la  ciudad  inteligente usando el paradigma de datos enlazados. Esta nueva capa está compuestas por distintos agentes que permiten automatizar las etapas  de  especificación,  modelado,  generación,  vinculación,  publicación  y  explotación  de  los  datos  basados  en  MEDAWEDE.  Dichos  agentes  pueden  enriquecer  ontologías  existentes  en  MiSCi,  generar  modelos  de  conocimiento  requeridos  por  los  servicios  de  MiSCi, generar datos para construir modelos de conocimiento para MiSCi, y recomendar información en contextos de incertidumbre a través de una inferencia híbrida basada en lógica descriptiva/dialéctica. Además en este trabajo se especifica un caso de estudio, donde se muestran las capacidades del MiSCi para manejar distintas situaciones críticas, apoyado en la nueva capa de enlazado de dato', true, NULL);
+INSERT INTO public.detalles_articulos VALUES (121, 8, '93', '241', '0012-7353', '2026-07-09 20:19:28.855723', 'art_1783642768_6a503a90ca313.png', 'La discapacidad motora en Colombia afecta a un porcentaje significativo de la población, constituye una problemática relevante de salud pública,  asociada  con  diversos  factores  del  país.  Este  proyecto  desarrolla  un  sistema  de  control  de  robots  asistenciales  controlados  por  señales electrooculográficas (EOG), logrando que aquellas personas con movilidad reducida tengan acceso a este tipo de tecnologías. Para el desarrollo se adquirieron señales con el hardware Bitalino para generar y normalizar un conjunto de datos, que luego se procesa con Python y Open Signals para establecer comandos confiables. El entorno de simulación se realizó en CoppeliaSim. Durante el proceso de desarrollo, se encontraron obstáculos como el ruido y la exactitud de las señales. No obstante, se ha terminado la interfaz y la conexión entre CoppeliaSim, Python y las señales EOG, permitiendo que el robot se mueva en tiempo real. En la actualidad, se realizan pruebas de funcionamiento, exactitud y precisión de los movimientos.', true, NULL);
+INSERT INTO public.detalles_articulos VALUES (122, 8, '93', '241', '0012-7353', '2026-07-09 20:08:48.117741', 'art_1783642127_6a50380feed3b.png', 'La  banca  móvil  se  ha  consolidado  como  una  herramienta  clave  para  la  inclusión  financiera,  particularmente  en  zonas  rurales  donde  las  barreras geográficas y de infraestructura limitan el acceso a servicios bancarios tradicionales. Este estudio analiza los determinantes de la aceptación de la banca móvil en ganaderos del occidente de Antioquia, Colombia, utilizando el modelo UTAUT. Se aplicó una metodología cuantitativa  basada  en  encuestas  estructuradas  a  132  productores  rurales,  evaluando  variables  como  la  expectativa  de  rendimiento,  la  expectativa de esfuerzo, la influencia social, el riesgo y la confianza. Los resultados revelan que la expectativa de rendimiento y la facilidad de uso son los principales factores que influyen en la adopción de la banca móvil, mientras que la confianza, el riesgo y la influencia social no  mostraron  un  impacto  significativo.  Estos  hallazgos  destacan  la  necesidad  de  desarrollar  estrategias  que  promuevan  el  acceso  a  plataformas digitales intuitivas y capacitaciones enfocadas en el uso de estas herramientas.', true, NULL);
+INSERT INTO public.detalles_articulos VALUES (119, 8, '93', '241', '0012-7353', '2026-07-09 20:13:49.50881', 'art_1783642429_6a50393d74626.png', 'Los techos verdes representan una estrategia pasiva eficaz para reducir la transferencia de calor hacia el interior de los edificios, especialmente en climas  cálidos  y  húmedos.  En  este  trabajo  se  presenta  un  modelo  dinámico  unidimensional  de  balance  de  calor  y  masa  para  evaluar  el  comportamiento térmico de un techo verde extensivo en condiciones de trópico húmedo. El modelo considera procesos de conducción, convección, radiación y transferencia de humedad, incorporando la evapotranspiración y parámetros de la vegetación dependientes de la especie. La calibración y simulación se realizaron usando datos experimentales obtenidos de una base experimental de techos verde ubicada en Tabasco, México, con las especies Tradescantia  spathaceay Tradescantia  pallida.  El  desempeño  del  sistema  se  evaluó  bajo  tres  escenarios  climáticos  representativos:  temporada de estiaje, temporada de lluvia y de frente frío. Los resultados muestran que la capa vegetal reduce la transferencia de calor hacia el interior del edificio, además de contribuir a la estabilización térmica del microclima del techo. El análisis de sensibilidad indica que parámetros asociados a la vegetación, en particular el índice de área foliar y la resistencia interna de las hojas, ejercen una influencia dominante en la respuesta del sistema. Aunque el modelo se limita al caso unidimensional y a especies específicas, constituye una herramienta útil para la evaluación del desempeño térmico de techos verdes en climas tropicales húmedos', true, NULL);
+INSERT INTO public.detalles_articulos VALUES (143, 7, '93', '242', '0012-7353', '2026-09-07 15:40:32.098085', 'https://revistas.unal.edu.co/public/journals/21/submission_124890_112809_coverImage_es_ES.png', 'En una línea de transmisión de alta tensión de circuito único de 400 kV, la proximidad de los conductores de fase induce una corriente circulante en el conductor de tierra. Esta corriente forma un circuito cerrado a través del sistema de puesta a tierra de la base de la torre, que proporciona su ruta de retorno [1]. En este estudio, se modela y analiza la corriente circulante inducida. El modelado se realizó en el entorno MATLAB.Los resultados indican que la corriente circulante y la tensión inducida en el conductor de tierra presentan una relación aproximadamente lineal con las corrientes de los conductores de fase, y sus magnitudes se ven influenciadas por la resistencia de puesta a tierra de la torre R_g y la resistividad del suelo ρ. Además, las pérdidas de potencia en el conductor de tierra alcanzan niveles significativos en condiciones de alta corriente. Estos hallazgos resaltan la importancia de un diseño óptimo del sistema de puesta a tierra, una selección adecuada de las características del conductor de tierra y la implementación de métodos para reducir las corrientes circulantes con el fin de mejorar el rendimiento y reducir las pérdidas en las líneas de transmisión de alta tensión.', true, NULL);
+INSERT INTO public.detalles_articulos VALUES (146, NULL, '91', '232', '0012-735', '2026-09-09 00:51:39.29162', 'https://revistas.unal.edu.co/public/journals/21/submission_112625_95079_coverImage_es_ES.png', 'La producción de azúcar de caña no centrifugada, en Colombia se realiza en instalaciones de poscosecha que generan alta cantidad de calor y vapor, producto de la evaporación de los jugos de caña del proceso. Este estudio tuvo como objetivo mejorar las condiciones de confort de una instalación de este tipo en el municipio de Pacho, Cundinamarca, Colombia, a través de simulación bioclimática, donde se modificó el cerramiento en las paredes y en la ventana cenital. Se evalúo el confort térmico adaptativo, donde el mejor comportamiento bioclimático se  presentó  en  las  configuraciones  con  perímetro  abierto  y  ventana  cenital,  esto  debido  a  que  una  mayor  área  de  ventilación  y  efecto chimenea optimizan  la  transferencia  de  calor  y  masa;  así  mismo,  se  observó  que  hay  un  comportamiento  generalizado  de  incomodidad  térmica para los trabajadores en la zona térmica hornilla, debido a las altas emisiones de calor y vapor en esta zona', true, NULL);
+INSERT INTO public.detalles_articulos VALUES (144, 8, '93', '242', '0012-7353', '2026-09-09 00:24:54.886595', 'https://revistas.unal.edu.co/public/journals/21/submission_124428_112347_coverImage_es_ES.png', 'Esta investigación desarrolló y evaluó un modelo de aprendizaje automático para optimizar la contratación de profesionales de ingeniería en  una universidad pública, reduciendo el tiempo de evaluación, los errores y la subjetividad en el análisis de currículums. Se empleó un enfoque cuantitativo, aplicado y cuasiexperimental, utilizando procesamiento de lenguaje natural (TF-IDF), clasificación KNN bajo el esquema One vs-Rest y tres conjuntos de datos de 10, 20 y 30 CV. La información fue procesada en Google Colab mediante etapas de limpieza, vectorización, entrenamiento y evaluación. El modelo alcanzó una precisión del 82 % en la clasificación de candidatos, priorizando de manera consistente a los postulantes según su grado académico y experiencia profesional. Además, redujo el tiempo promedio de evaluación de 15 a 2,5 minutos por CV y disminuyó la tasa de error a menos del 2 %, demostrando ser una herramienta eficiente, objetiva y escalable.', true, NULL);
 
 
 --
@@ -2084,9 +2096,11 @@ INSERT INTO public.detalles_proyectos VALUES (113, '2026-08-27', 'Pregrado', 'El
 INSERT INTO public.detalles_proyectos VALUES (114, '2026-08-27', 'Pregrado', 'El objetivo general del proyecto Socio Tecnológico fue realizar Soporte Técnico a Equipos de Computación y Usuarios en la Escuela Técnica Comercial “Madre Rafols”. Se utilizó la metodología del marco lógico para determinar los problemas, causas y consecuencias, se complementó con la metodología cuantitativa. Proyecto factible, de carácter descriptiva, se realizó en tres fases. Como técnica de recolección de datos se utilizó la encuesta y como instrumento el cuestionario, La fase de la elaboración de la propuesta, consistió en un Plan de mantenimiento preventivo y correctivo a los equipos de computación, y taller al usuario. Los resultados obtenidos evidencian colocar parte de los problemas da hardware y software. Este proyecto permitió aplicar los conocimientos adquiridos en arquitectura del computador', 1, 'Escuela Técnica Comercial “Madre Rafols”', 'computadoras, mantenimiento, instalación, hardware, software', '2026-08-27 10:17:48.017574', NULL, 'Trayecto I', NULL, NULL, NULL);
 INSERT INTO public.detalles_proyectos VALUES (117, '2026-08-31', 'Doctorado', 'El presente proyecto de investigación, desarrollado bajo el enfoque de la Investigación Acción Participativa (IAP), tiene como propósito fundamental desarrollar un sistema inteligente basado en algoritmos genéticos para la optimización automática de horarios en la Coordinación del Programa Nacional de Formación en Informática (PNFI) de la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry" Núcleo La Beatriz. A través de un diagnóstico participativo que incluyó entrevistas, observación directa y la aplicación de matrices FODA y CAME, se identificó que el proceso actual de elaboración de horarios se realiza de manera completamente manual, consumiendo entre tres y cuatro semanas por trimestre y generando frecuentes conflictos de asignación. La solución propuesta, seleccionada mediante matriz de decisión multicriterio, consiste en el desarrollo de un sistema con arquitectura web que emplea algoritmos genéticos multiobjetivo para procesar restricciones complejas, minimizando errores en un 95% y reduciendo el tiempo de planificación en un 90%. El proyecto beneficiará directamente a coordinadores, docentes y estudiantes del PNFI, contribuyendo a una gestión académica más eficiente y tecnológicamente confiable', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” NUES Dr', 'Algoritmos genéticos, horarios universitarios, optimización, sistema inteligente, Investigación Acción Participativa', '2026-08-31 10:08:06.559751', NULL, NULL, 'https://github.com/Zhailox/proyect_CIIDI', NULL, NULL);
 INSERT INTO public.detalles_proyectos VALUES (127, '2026-09-02', 'Pregrado', 'Aunado a esto, el proyecto responde a una necesidad real: la baja fluidez en teclado y la falta de incentivos lúdicos para aprender mecanografía, problema especialmente urgente en entornos con brecha digital; por su diseño ligero y opciones offline, Tippen Tag es viable en mercados con acceso limitado a internet (Venezuela) y adaptable/competitivo en mercados con alta adopción tecnológica (Alemania).', 1, 'Comunidad / Organización No Específicamente Nombrada', '', '2026-09-02 15:10:22.258855', NULL, 'Trayecto I', 'https://github.com/Zhailox/proyect_CIIDI/tree/Zhailox', NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (128, '2026-09-02', 'Pregrado', 'En el ámbito de la seguridad informática, la autenticación basada en contraseñas sigue siendo uno de los eslabones más vulnerables en la protección de sistemas y datos, el presente informe documenta un ejercicio práctico de auditoría de credenciales, cuyo objetivo principal es demostrar la susceptibilidad de las contraseñas débiles ante técnicas de criptoanálisis, específicamente mediante ataques de diccionario.', 1, 'Comunidad / Organización No Específicamente Nombrada', 'Waos', '2026-09-02 17:22:38.760639', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (129, '2026-09-04', 'Pregrado', 'e', 1, 'Comunidad / Organización No Específicamente Nombrada', '', '2026-09-02 17:24:52.328736', NULL, 'Trayecto I', NULL, NULL, NULL);
+INSERT INTO public.detalles_proyectos VALUES (128, '2026-09-02', 'Pregrado', 'En el ámbito de la seguridad informática, la autenticación basada en contraseñas sigue siendo uno de los eslabones más vulnerables en la protección de sistemas y datos, el presente informe documenta un ejercicio práctico de auditoría de credenciales, cuyo objetivo principal es demostrar la susceptibilidad de las contraseñas débiles ante técnicas de criptoanálisis, específicamente mediante ataques de diccionario.', 1, 'Comunidad / Organización No Específicamente Nombrada', 'Waos', '2026-09-02 17:22:38.760639', NULL, 'Trayecto I', NULL, NULL, true);
+INSERT INTO public.detalles_proyectos VALUES (149, '2026-09-11', 'Pregrado', 'El Proyecto Socio Tecnológico realizado en el Departamento de Sistemas del Centro Clínico "María Edelmira Araujo", S.A. tiene como objetivo general ofrecer soporte técnico a usuarios y equipos de computación, utilizando mantenimiento correctivo y preventivo tanto a nivel de software como de hardware. Para la implementación del proyecto, se utilizarán técnicas de entrevista y observación como estrategias de recolección de datos, además de la realización de un inventario. Se espera mejorar la eficiencia y productividad del departamento a través de estas acciones', 1, 'Centro Clínico “María Edelmira Araujo”, S', 'Soporte técnico, correctivo, preventivo, software, hardware', '2026-09-10 21:02:32.217243', NULL, 'Trayecto I', NULL, 'Proporcionar un Soporte Técnico a Usuarios y Equipos de Computación en el Centro Clínico “María Edelmira Araujo”, S.A.', true);
 INSERT INTO public.detalles_proyectos VALUES (132, '2026-09-04', 'Pregrado', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry". Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP', '2026-09-04 10:35:11.057661', NULL, 'Trayecto I', NULL, 'Desarrollar un Sistema Integral de Gestión Documentos Académicos, basado en una arquitectura modular, para la automatización de la búsqueda híbrida de información y la centralización de recursos académicos en beneficio de la comunidad del PNF en Informática.', true);
+INSERT INTO public.detalles_proyectos VALUES (147, '2026-09-11', 'Pregrado', 'Ofrecer a nuestros clientes accesorios para dispositivos móviles de calidad, brindando soluciones prácticas y accesibles que protejan, complementen y mejoren la experiencia diaria con su celular, a través de una atención personalizada y un catálogo de productos variado que se adapte a las necesidades de cada usuario.', 1, 'Smarthphone World C', '', '2026-09-10 21:02:31.80467', NULL, 'Trayecto I', NULL, 'Desarrollar un Sistema Integral de Gestión Comercial y Tienda Virtual para Smartphone World C.A., compuesto por un módulo de gestión local y una plataforma de comercio electrónico interconectados mediante una base de datos centralizada en la nube, con el fin de automatizar los procesos internos de inventario y ventas, y ampliar el alcance comercial de la empresa hacia el entorno digital.', true);
+INSERT INTO public.detalles_proyectos VALUES (148, '2026-09-11', 'Pregrado', 'El proyecto socio tecnológico tuvo como propósito desarrollar una Aplicación Web Móvil para el proceso de ascensos en la Coordinación de Formación Permanente y Docencia de la UPTTMBI. Se destaca la importancia que tienen las aplicaciones web en la vida cotidiana, dado que facilitan obtener, modificar información inmediata, dado que las mismas se ejecutan a través de internet, los datos son procesados y almacenados dentro de la web. La metodología utilizada fue programación extrema, metodología ágil de gestión de proyectos que se centra en la velocidad y la simplicidad con ciclos de desarrollo cortos y con menos documentación. De acuerdo con los objetivos establecidos, se utilizó la entrevista, encuesta, reuniones con los actores para desarrollar las historias de usuarios, se planifico, diseño, programo y realizaron pruebas a la aplicación. Como producto resultante se desarrolló una App móvil para el apoyo de los docentes en la solicitud de los procesos manejados en la Coordinación de Formación permanente y docente de la UPTTMBI, utilizando tecnologías de software libre como son PHP, Java y como gestor de base de datos se utilizó MySQL. La aplicación web móvil tiene como finalidad automatizar procesos que permitan una adecuada administración en lo referente al proceso de ascenso y solicitud de bono didáctico por parte de los docentes de la UPTTMBI, ayudando a la coordinación obtener información inmediata en tiempo real con resultados favorables, que contribuyen al desarrollo óptimo de los procesos y dando un mejor control a las necesidades de los docentes', 1, 'Coordinación de Formación Permanente y Docencia de la Universidad Politécnica Territorial del estado Trujillo Mario Briceño Iragorry', 'App, Aplicación móvil, Coordinación, Ascensos', '2026-09-10 21:02:31.979685', NULL, 'Trayecto I', NULL, 'Crear y fortalecer las condiciones intelectuales y materiales para propiciar, generar, coordinar, diseminar y difundir conocimiento científico y cultural que responda al perfeccionamiento de las y los docentes en servicio, que contribuyan de manera sustancial al mejoramiento, desarrollo y crecimiento académico.', true);
 
 
 --
@@ -2152,6 +2166,7 @@ INSERT INTO public.etiquetas VALUES (17, 'Machine Learning', '#0ea5e9');
 -- Data for Name: investigaciones_ofertadas; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
+INSERT INTO public.investigaciones_ofertadas VALUES (1, 7, 'asdasdasdasd', 'asdasdasdasdasdasd', 'asdasdasdasdasdasd', 9, NULL, 3, 'Abierta', '2026-09-09 23:15:22.674054', NULL);
 
 
 --
@@ -2180,6 +2195,7 @@ INSERT INTO public.notificaciones VALUES (6, 5, 'Actualización Moderada de Cuen
 -- Data for Name: postulaciones_estudiantes; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
+INSERT INTO public.postulaciones_estudiantes VALUES (1, 1, 7, 'asdasdasd', 'Pendiente', '2026-09-09 23:16:44.679115', NULL);
 
 
 --
@@ -2208,8 +2224,8 @@ INSERT INTO public.privilegios VALUES (6, 5);
 -- Data for Name: propuestas_empresa; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.propuestas_empresa VALUES (1, 'Punto Yali', '213123123', 'Yohan Estrada', '0416-6777467', 'yohan@gmail.com', 'facturacion', 'Hace falta que venga un mardito chavista pa matarlo', 'aceptada', '2026-09-02 21:41:41.17287', 'Trayecto II (T2)');
-INSERT INTO public.propuestas_empresa VALUES (2, '123', '123', '123', '123', '123@gmail.com', 'inventario', '123', 'aceptada', '2026-09-02 21:42:33.312089', 'Trayecto IV (T4)');
+INSERT INTO public.propuestas_empresa VALUES (1, 'Punto Yali', '213123123', 'Yohan Estrada', '0416-6777467', 'yohan@gmail.com', 'facturacion', 'Hace falta que venga un mardito chavista pa matarlo', 'aceptada', '2026-09-02 21:41:41.17287', 'Trayecto II (T2)', NULL, NULL);
+INSERT INTO public.propuestas_empresa VALUES (2, '123', '123', '123', '123', '123@gmail.com', 'inventario', '123', 'aceptada', '2026-09-02 21:42:33.312089', 'Trayecto IV (T4)', NULL, NULL);
 
 
 --
@@ -2263,9 +2279,14 @@ INSERT INTO public.proyecto_tutores VALUES (117, 10, 2);
 INSERT INTO public.proyecto_tutores VALUES (117, 39, 4);
 INSERT INTO public.proyecto_tutores VALUES (127, 40, 3);
 INSERT INTO public.proyecto_tutores VALUES (128, 40, 3);
-INSERT INTO public.proyecto_tutores VALUES (129, 40, 3);
 INSERT INTO public.proyecto_tutores VALUES (132, 28, 2);
 INSERT INTO public.proyecto_tutores VALUES (132, 10, 4);
+INSERT INTO public.proyecto_tutores VALUES (147, 22, 3);
+INSERT INTO public.proyecto_tutores VALUES (148, 29, 3);
+INSERT INTO public.proyecto_tutores VALUES (148, 30, 2);
+INSERT INTO public.proyecto_tutores VALUES (148, 31, 4);
+INSERT INTO public.proyecto_tutores VALUES (149, 35, 3);
+INSERT INTO public.proyecto_tutores VALUES (149, 36, 4);
 
 
 --
@@ -2382,7 +2403,6 @@ INSERT INTO public.recurso_autores VALUES (127, 88);
 INSERT INTO public.recurso_autores VALUES (127, 73);
 INSERT INTO public.recurso_autores VALUES (128, 34);
 INSERT INTO public.recurso_autores VALUES (128, 42);
-INSERT INTO public.recurso_autores VALUES (129, 89);
 INSERT INTO public.recurso_autores VALUES (132, 42);
 INSERT INTO public.recurso_autores VALUES (132, 43);
 INSERT INTO public.recurso_autores VALUES (132, 44);
@@ -2403,6 +2423,11 @@ INSERT INTO public.recurso_autores VALUES (119, 47);
 INSERT INTO public.recurso_autores VALUES (119, 48);
 INSERT INTO public.recurso_autores VALUES (118, 44);
 INSERT INTO public.recurso_autores VALUES (143, 13);
+INSERT INTO public.recurso_autores VALUES (147, 52);
+INSERT INTO public.recurso_autores VALUES (147, 53);
+INSERT INTO public.recurso_autores VALUES (149, 50);
+INSERT INTO public.recurso_autores VALUES (149, 51);
+INSERT INTO public.recurso_autores VALUES (149, 57);
 
 
 --
@@ -2475,8 +2500,10 @@ INSERT INTO public.recurso_clasificaciones VALUES (116, 8, 12);
 INSERT INTO public.recurso_clasificaciones VALUES (117, 7, 7);
 INSERT INTO public.recurso_clasificaciones VALUES (127, 8, 13);
 INSERT INTO public.recurso_clasificaciones VALUES (128, 7, 9);
-INSERT INTO public.recurso_clasificaciones VALUES (129, 7, 9);
 INSERT INTO public.recurso_clasificaciones VALUES (132, 10, 18);
+INSERT INTO public.recurso_clasificaciones VALUES (147, 7, 5);
+INSERT INTO public.recurso_clasificaciones VALUES (148, 9, 17);
+INSERT INTO public.recurso_clasificaciones VALUES (149, 7, 5);
 
 
 --
@@ -2565,7 +2592,6 @@ INSERT INTO public.recursos VALUES (116, 'SISTEMA INTELIGENTE PARA LA GESTIÓN A
 INSERT INTO public.recursos VALUES (117, 'SISTEMA DE OPTIMIZACIÓN BASADO EN ALGORITMOS GENÉTICOS PARA LA GESTIsadasdasdÓN DE HORARIOS DEL PNFI DE LA UPTTMBI, NÚCLEO LA BEATRIZ', 1, 2026, 1, 1, 'PST 4 David LidmarFinal.docx');
 INSERT INTO public.recursos VALUES (127, 'ACTIVIDADES ACREDITABLES IV INFORME DE MERCADEO: TIPPEN TAG', 1, 2026, 1, 1, 'storage/documentos/pst/pst_actividades_acreditables_iv_in_1788376198_636.docx');
 INSERT INTO public.recursos VALUES (128, 'Materia: Seguridad Informática', 1, 2026, 1, 1, 'storage/documentos/pst/pst_materia__seguridad_inform__tic_1788384113_508.docx');
-INSERT INTO public.recursos VALUES (129, 'Verde   Gestion de BD', 1, 2021, 1, 1, 'storage/documentos/pst/pst_verde___gestion_de_bd_1788384263_817.docx');
 INSERT INTO public.recursos VALUES (132, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Casdasdasientífico Investigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 1, 1, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1788532202_175.docx');
 INSERT INTO public.recursos VALUES (122, 'Revisión sistemática del impacto de las fibras de polipropileno en las propiedades físico-mecánicas, microestructurales y de durabilidad del Concreto', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/121649/97474');
 INSERT INTO public.recursos VALUES (121, 'Modelo matemático para el balance de calor de un techo verde en condiciones de trópico húmedo', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/123977/97473');
@@ -2575,6 +2601,9 @@ INSERT INTO public.recursos VALUES (118, 'Middleware MiSCi para ciudades intelig
 INSERT INTO public.recursos VALUES (143, 'Investigación y modelado de pérdidas por corriente circulante en sistemas de puesta a tierra de torres de alta tensión', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/124890/98825');
 INSERT INTO public.recursos VALUES (146, 'Modelamiento de confort adaptativo para un trapiche panelero', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/112625/91645');
 INSERT INTO public.recursos VALUES (144, 'Propuesta de un modelo de implementación basado en aprendizaje automático para el reclutamiento de profesionales de ingeniería en una universidad pública', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/124428/98826');
+INSERT INTO public.recursos VALUES (147, 'SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WORLD C.A', 1, 2026, 1, 1, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_c_1789088544_891.docx');
+INSERT INTO public.recursos VALUES (148, 'VALERA EDO TRUJILLO Aplicación Web Móvil para el proceso de Ascensos en la Coordinación de Formación Permanente y Docencia de la UPTTMBI Docente Asesor: Dra. María Luisa Colmenares Representante Institucional: Dra. Rossana Virgilio Representante...', 1, 2023, 1, 1, 'storage/documentos/pst/pst_valera_edo_trujillo_aplicaci___1789088548_770.docx');
+INSERT INTO public.recursos VALUES (149, 'NUES DR. PABLO VILORIA – LA BEATRIZ SOPORTE TÉCNICO A EQUIPOS DE COMPUTACION Y USUARIOS EN CENTRO CLÍNICO “MARÍA EDELMIRA ARAUJO”, S.A. VALERA ESTADO TRUJILLO', 1, 2023, 1, 1, 'storage/documentos/pst/pst_nues_dr__pablo_viloria_____la__1789088547_631.pdf');
 
 
 --
@@ -2588,10 +2617,10 @@ INSERT INTO public.registro_actividad VALUES (1, 1, NULL, '2026-03-23 14:49:58',
 -- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.roles VALUES (3, 'Estudiante', 1);
 INSERT INTO public.roles VALUES (1, 'Super Administrador', 4);
-INSERT INTO public.roles VALUES (4, 'Profesor', 2);
 INSERT INTO public.roles VALUES (2, 'Comite', 3);
+INSERT INTO public.roles VALUES (3, 'Estudianteashdas', 1);
+INSERT INTO public.roles VALUES (4, 'Docentessss', 2);
 
 
 --
@@ -2658,7 +2687,6 @@ INSERT INTO public.tutores VALUES (40, 'KarinAI', 'Karina');
 -- Data for Name: usuarios; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.usuarios VALUES (1, 'Adrus', 'andru@gmail.com', '11111111', '$2y$10$o0Uk8V6gzXNSW/EZBWvd1OoC7O6UzrU3LRbDMIqxYDou2KJGRXdUa', 1, true);
 INSERT INTO public.usuarios VALUES (2, 'lando', 'lando@gmail.com', '22222222', '$2y$10$o0Uk8V6gzXNSW/EZBWvd1OoC7O6UzrU3LRbDMIqxYDou2KJGRXdUa', 2, true);
 INSERT INTO public.usuarios VALUES (3, 'miki', 'miki@gmail.com', '33333333', '$2y$10$o0Uk8V6gzXNSW/EZBWvd1OoC7O6UzrU3LRbDMIqxYDou2KJGRXdUa', 3, true);
 INSERT INTO public.usuarios VALUES (4, 'ale', 'ale@yaju.com', '44444444', '$2y$10$o0Uk8V6gzXNSW/EZBWvd1OoC7O6UzrU3LRbDMIqxYDou2KJGRXdUa', 3, true);
@@ -2669,6 +2697,8 @@ INSERT INTO public.usuarios VALUES (11, 'Juan', '123@gmail.com', '1234', '$2y$10
 INSERT INTO public.usuarios VALUES (7, 'Miguel González', 'erwazaaaa@gmail.com', '32621284', '$2y$10$tqm17pwan91BnMUfmCAB/O01faShLfeK3jo0jYVwpQcBpGr5iLiE.', 1, true);
 INSERT INTO public.usuarios VALUES (6, 'Piñin Piña', 'pina@hotmail.com', '1', '$2y$10$wqwwyjK8T7ccki5IeOK4ueZRlW8K3g2xC42ZyOG01kDru0CNhba/a', 4, false);
 INSERT INTO public.usuarios VALUES (10, 'Wazaaaa', 'wazaaa@gmail.com', '123', '$2y$10$G7tnCsgxNo7nFV93A4H7Ie86N2RYtbppgkB6iEPg.STWF4wn2qn7O', 4, true);
+INSERT INTO public.usuarios VALUES (1, 'Adrus', 'andru@gmail.com', '11111111', '$2y$10$1sBy413YpJ9MQGlRt/g6y.OGkfno7aRuKxShONKSeWrvhQNS53YDO', 1, true);
+INSERT INTO public.usuarios VALUES (12, 'ANDRUS', 'andrusramirez2020@gmail.com', '30469331', '$2y$10$ZbFA.4WVMGxSx4yd2xWVgOHanaXCjTwoUFAtJdo12k6Nf52S.fV0G', 3, true);
 
 
 --
@@ -2688,7 +2718,7 @@ SELECT pg_catalog.setval('public.accesos_recursos_id_seq', 1, false);
 -- Name: auditoria_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.auditoria_id_seq', 265, true);
+SELECT pg_catalog.setval('public.auditoria_id_seq', 273, true);
 
 
 --
@@ -2751,7 +2781,7 @@ SELECT pg_catalog.setval('public.historico_versiones_pst_id_seq', 1, false);
 -- Name: investigaciones_ofertadas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.investigaciones_ofertadas_id_seq', 1, false);
+SELECT pg_catalog.setval('public.investigaciones_ofertadas_id_seq', 1, true);
 
 
 --
@@ -2772,7 +2802,7 @@ SELECT pg_catalog.setval('public.notificaciones_id_seq', 6, true);
 -- Name: postulaciones_estudiantes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.postulaciones_estudiantes_id_seq', 1, false);
+SELECT pg_catalog.setval('public.postulaciones_estudiantes_id_seq', 1, true);
 
 
 --
@@ -2793,7 +2823,7 @@ SELECT pg_catalog.setval('public.propuestas_empresa_id_seq', 2, true);
 -- Name: recursos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.recursos_id_seq', 146, true);
+SELECT pg_catalog.setval('public.recursos_id_seq', 149, true);
 
 
 --
@@ -2835,7 +2865,7 @@ SELECT pg_catalog.setval('public.tutores_id_seq', 40, true);
 -- Name: usuarios_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.usuarios_id_seq', 11, true);
+SELECT pg_catalog.setval('public.usuarios_id_seq', 12, true);
 
 
 --
@@ -3561,5 +3591,5 @@ ALTER TABLE ONLY public.usuarios
 -- PostgreSQL database dump complete
 --
 
-\unrestrict C4pgRauOSzbRUnJBLgLZOmuXkuWixVY5z5hEhCIh3AORqXKNvt4A5dB1uXEEU7O
+\unrestrict qFf81HjLHbxbfy3ij7CQVaouGz3uejEAamcn9S45EI73ObX0wKuRwwymSe4HBkO
 

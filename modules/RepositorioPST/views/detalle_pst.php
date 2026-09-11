@@ -161,19 +161,35 @@
                     
                     <h3><i class="ph ph-funnel"></i> Filtrar Recursos</h3>
                     
-                    <!-- Mostrar carrera como informativa (fija) -->
-                    <!-- Mostrar carrera dinámica -->
+                    <?php 
+                    $permitirFiltroCarrera = (bool)ConfigService::get('buscador.permitir_filtro_carrera', true);
+                    $selectedCarrera = $filtros['carrera_id'] ?? null;
+                    ?>
+                    <!-- Mostrar carrera dinámica o fija según la configuración -->
                     <div class="filter-group">
                         <label>Programa Académico</label>
-                        <select disabled>
-                            <?php if (!empty($carreras)): ?>
-                                <?php foreach ($carreras as $carrera): ?>
-                                    <option><?= htmlspecialchars($carrera['nombre'] ?? 'PNF en Informática') ?></option>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <option>PNF en Informática</option>
-                            <?php endif; ?>
-                        </select>
+                        <?php if ($permitirFiltroCarrera): ?>
+                            <select name="carrera_id" onchange="this.form.submit()">
+                                <option value="">Todas las carreras</option>
+                                <?php if (!empty($carreras)): ?>
+                                    <?php foreach ($carreras as $carrera): ?>
+                                        <option value="<?= $carrera['id'] ?>" <?= ((string)$selectedCarrera === (string)$carrera['id']) ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($carrera['nombre'] ?? 'PNF en Informática') ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        <?php else: ?>
+                            <select disabled>
+                                <?php if (!empty($carreras)): ?>
+                                    <?php foreach ($carreras as $carrera): ?>
+                                        <option><?= htmlspecialchars($carrera['nombre'] ?? 'PNF en Informática') ?></option>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <option>PNF en Informática</option>
+                                <?php endif; ?>
+                            </select>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Filtro por Tiempo: Histograma por Año -->

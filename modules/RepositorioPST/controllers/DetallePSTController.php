@@ -14,8 +14,18 @@ class DetallePSTController {
         $page = !empty($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
         $offset = ($page - 1) * $limit;
         
+        // Configuración de filtro dinámico de carrera
+        $permitirFiltroCarrera = (bool)ConfigService::get('buscador.permitir_filtro_carrera', true);
+        $carreraId = null;
+        if (!empty($_GET['carrera_id'])) {
+            $carreraId = (int)$_GET['carrera_id'];
+        } elseif (!$permitirFiltroCarrera) {
+            $carreraId = 1;
+        }
+
         // Capturar parámetros GET para el filtrado dinámico
         $filtros = [
+            'carrera_id'      => $carreraId,
             'linea_id'        => !empty($_GET['linea_id']) ? (int)$_GET['linea_id'] : null,
             'dimension_id'    => !empty($_GET['dimension_id']) ? (int)$_GET['dimension_id'] : null,
             'nivel_academico' => !empty($_GET['nivel_academico']) ? trim($_GET['nivel_academico']) : null,
@@ -35,28 +45,19 @@ class DetallePSTController {
         $comunidades = $model->getComunidadesBeneficiadas();
         $anioCounts = $model->getPSTCountByYear();
         
-        // Obtener lote general para KPIs y agrupamiento por líneas (marquees)
-        $todosDocs = $model->getPSTDocumentos([], 100, 0);
-        $totalPSTGeneral = count($todosDocs);
+        // Conteo rápido agregado por SQL para optimizar rendimiento
+        $conteoLineas = $model->getPSTCountByLinea();
+        $conteoTrayectos = $model->getPSTCountByTrayecto();
+        $totalPSTGeneral = $totalDocs;
         
-        $conteoLineas = [];
-        $conteoTrayectos = [];
         $pstPorLinea = [];
-        
-        foreach ($todosDocs as $doc) {
+        foreach ($documentos as $doc) {
             $lineaNombre = !empty($doc['linea_nombre']) ? trim($doc['linea_nombre']) : 'General';
-            $conteoLineas[$lineaNombre] = ($conteoLineas[$lineaNombre] ?? 0) + 1;
-            
             if (!isset($pstPorLinea[$lineaNombre])) {
                 $pstPorLinea[$lineaNombre] = [];
             }
             if (count($pstPorLinea[$lineaNombre]) < 6) {
                 $pstPorLinea[$lineaNombre][] = $doc;
-            }
-
-            if (!empty($doc['trayecto'])) {
-                $trayectoNombre = trim($doc['trayecto']);
-                $conteoTrayectos[$trayectoNombre] = ($conteoTrayectos[$trayectoNombre] ?? 0) + 1;
             }
         }
         

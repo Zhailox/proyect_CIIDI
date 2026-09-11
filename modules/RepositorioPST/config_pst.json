@@ -20,7 +20,7 @@
     },
     "paginacion": {
         "limite_catalogo": 10,
-        "limite_buscador": 5,
+        "limite_buscador": 6,
         "opciones_selector": [
             5,
             10,
@@ -39,7 +39,8 @@
     "buscador": {
         "anio_minimo_histograma": 2018,
         "orden_predeterminado": "anio_desc",
-        "resaltar_coincidencias": true
+        "resaltar_coincidencias": true,
+        "permitir_filtro_carrera": true
     },
     "visor_pdf": {
         "mostrar_toolbar": false,

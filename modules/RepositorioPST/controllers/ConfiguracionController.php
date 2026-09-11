@@ -88,6 +88,7 @@ class ConfiguracionController {
                     $actual['buscador']['orden_predeterminado'] = trim($_POST['orden_predeterminado']);
                 }
                 $actual['buscador']['resaltar_coincidencias'] = isset($_POST['resaltar_coincidencias']) && $_POST['resaltar_coincidencias'] === '1';
+                $actual['buscador']['permitir_filtro_carrera'] = isset($_POST['permitir_filtro_carrera']) && $_POST['permitir_filtro_carrera'] === '1';
 
                 // 5. Visor PDF
                 $actual['visor_pdf']['mostrar_toolbar'] = isset($_POST['mostrar_toolbar']) && $_POST['mostrar_toolbar'] === '1';

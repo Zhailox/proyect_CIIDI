@@ -1,5 +1,6 @@
 <?php
 // modules/RepositorioPST/controllers/BusquedaGlobalController.php
+require_once __DIR__ . '/../services/ConfigService.php';
 require_once __DIR__ . '/../models/DocumentoModel.php';
 
 class BusquedaGlobalController {
@@ -10,15 +11,25 @@ class BusquedaGlobalController {
         // Parámetros de búsqueda principal
         $q = isset($_GET['q']) ? trim($_GET['q']) : '';
         
-        // Paginación
-        $limit = 5; // Mostrar 5 registros por página
+        // Paginación dinámica desde la configuración del módulo
+        $limitDefault = (int)ConfigService::get('paginacion.limite_buscador', 5);
+        $limit = !empty($_GET['limit']) ? max(1, (int)$_GET['limit']) : $limitDefault;
         $page = !empty($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
         $offset = ($page - 1) * $limit;
         
-        // Filtros avanzados opcionales
+        // Configuración de filtro dinámico de carrera
+        $permitirFiltroCarrera = (bool)ConfigService::get('buscador.permitir_filtro_carrera', true);
+        $carreraId = null;
+        if (!empty($_GET['carrera_id'])) {
+            $carreraId = (int)$_GET['carrera_id'];
+        } elseif (!$permitirFiltroCarrera) {
+            $carreraId = 1; // PNF en Informática por defecto si el filtro está desactivado
+        }
+
+        // Filtros avanzados dinámicos
         $filtrosExtra = [
             'anio'         => !empty($_GET['anio']) ? (int)$_GET['anio'] : null,
-            'carrera_id'   => 1, // locked to PNF en Informática
+            'carrera_id'   => $carreraId,
             'linea_id'     => !empty($_GET['linea_id']) ? (int)$_GET['linea_id'] : null,
             'dimension_id' => !empty($_GET['dimension_id']) ? (int)$_GET['dimension_id'] : null,
         ];

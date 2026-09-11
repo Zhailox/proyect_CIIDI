@@ -7,28 +7,22 @@ class DocumentoModel {
 
     /**
      * Traducción de caracteres corruptos de codificación DOS CP850 a UTF-8.
+    /**
+     * Normalización de caracteres y conversión de codificación CP850/ISO a UTF-8.
      */
     private function cleanCP850(?string $str): string {
-        if ($str === null) return '';
+        if ($str === null || $str === '') return '';
+        
+        if (!mb_check_encoding($str, 'UTF-8')) {
+            $converted = @mb_convert_encoding($str, 'UTF-8', 'CP850, ISO-8859-1, Windows-1252');
+            if ($converted !== false && $converted !== '') {
+                $str = $converted;
+            }
+        }
         
         $map = [
-            '¢' => 'ó',
-            '¤' => 'ñ',
-            '¡' => 'í',
-            '£' => 'ú',
-            '¥' => 'Ñ',
-            '‚' => 'é',
-            ' ' => 'á', // Non-breaking space U+00A0
-            "\xC2\xA0" => 'á', // UTF-8 non-breaking space
-            "\xA0" => 'á',
-            '¢n' => 'ón',
-            '¢s' => 'ós',
-            '¡a' => 'ía',
-            '¡n' => 'ín',
-            '¡s' => 'ís',
-            '£a' => 'úa',
-            '£n' => 'ún',
-            '£s' => 'ús'
+            '¢' => 'ó', '¤' => 'ñ', '¡' => 'í', '£' => 'ú', '¥' => 'Ñ', '‚' => 'é',
+            "\xC2\xA0" => ' ', "\xA0" => ' '
         ];
         
         return strtr($str, $map);
@@ -467,6 +461,45 @@ class DocumentoModel {
             }
         }
         return !empty($trayectos) ? $trayectos : ['Trayecto I', 'Trayecto II', 'Trayecto III', 'Trayecto IV'];
+    }
+
+    public function getPSTCountByLinea(): array {
+        $db = Connection::getInstance();
+        $sql = "SELECT COALESCE(li.nombre, 'General') AS linea_nombre, COUNT(DISTINCT r.id) AS total
+                FROM public.recursos r
+                LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
+                LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
+                WHERE r.id_tipo_recurso = 1
+                GROUP BY li.nombre
+                ORDER BY total DESC";
+        $stmt = $db->query($sql);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $res = [];
+        foreach ($rows as $r) {
+            $nombre = $this->cleanCP850($r['linea_nombre']);
+            $res[$nombre] = (int)$r['total'];
+        }
+        return $res;
+    }
+
+    public function getPSTCountByTrayecto(): array {
+        $db = Connection::getInstance();
+        $sql = "SELECT dp.trayecto::text AS trayecto, COUNT(DISTINCT r.id) AS total
+                FROM public.recursos r
+                JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
+                WHERE r.id_tipo_recurso = 1 
+                  AND dp.trayecto IS NOT NULL 
+                  AND TRIM(dp.trayecto::text) != ''
+                GROUP BY dp.trayecto::text
+                ORDER BY total DESC";
+        $stmt = $db->query($sql);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $res = [];
+        foreach ($rows as $r) {
+            $nombre = $this->cleanCP850($r['trayecto']);
+            $res[$nombre] = (int)$r['total'];
+        }
+        return $res;
     }
 
     /**

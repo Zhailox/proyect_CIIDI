@@ -25,13 +25,30 @@ require_once __DIR__ . '/../services/ConfigService.php';
                     <input type="hidden" name="q" id="searchQueryHidden" value="<?= htmlspecialchars($q ?? '') ?>">
                     <input type="hidden" name="anio" id="searchYearInput" value="<?= htmlspecialchars($filtros['anio'] ?? '') ?>">
 
-                    <!-- Caja de Carrera (Bloqueada) -->
+                    <?php 
+                    $permitirFiltroCarrera = (bool)ConfigService::get('buscador.permitir_filtro_carrera', true);
+                    $selectedCarrera = $filtros['carrera_id'] ?? null;
+                    ?>
+                    <!-- Caja de Carrera (Dinámica / Bloqueada) -->
                     <div class="filter-group-card">
                         <h3><i class="ph ph-graduation-cap"></i> Programa Académico</h3>
-                        <div class="locked-value">
-                            <span>PNF en Informática</span>
-                            <span class="lock-badge"><i class="ph ph-lock-key"></i></span>
-                        </div>
+                        <?php if ($permitirFiltroCarrera): ?>
+                            <select name="carrera_id" id="carreraFilterSelect" class="filter-select-input" onchange="this.form.submit()" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--color-borde, #e2e8f0); background: #f8fafc; font-weight: 500; font-size: 0.9rem;">
+                                <option value="">Todas las carreras</option>
+                                <?php if (!empty($carreras)): ?>
+                                    <?php foreach ($carreras as $carrera): ?>
+                                        <option value="<?= $carrera['id'] ?>" <?= ((string)$selectedCarrera === (string)$carrera['id']) ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($carrera['nombre']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        <?php else: ?>
+                            <div class="locked-value">
+                                <span>PNF en Informática</span>
+                                <span class="lock-badge"><i class="ph ph-lock-key"></i></span>
+                            </div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Histograma Interactivo para el Año -->

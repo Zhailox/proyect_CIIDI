@@ -298,6 +298,17 @@
                             <span class="switch-slider"></span>
                         </label>
                     </div>
+
+                    <div class="config-switch-row" style="margin-top: 0.5rem;">
+                        <div class="config-switch-label">
+                            <strong>Habilitar Filtro Dinámico de Carrera</strong>
+                            <span>Permite alternar y filtrar por diferentes carreras en el buscador sin fijar la carrera 1.</span>
+                        </div>
+                        <label class="switch-toggle">
+                            <input type="checkbox" name="permitir_filtro_carrera" value="1" <?= !empty($config['buscador']['permitir_filtro_carrera']) ? 'checked' : '' ?>>
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="config-card">
