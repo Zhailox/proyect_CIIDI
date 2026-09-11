@@ -42,7 +42,7 @@ class BusquedaGlobalController {
         
         // Cargar colecciones para poblar selectores
         $carreras     = $model->getCarreras();
-        $lineas       = $model->getLineasInvestigacion();
+        $lineas       = $model->getLineasInvestigacion($carreraId);
         $dimensiones  = $model->getDimensionesOperativas();
         $anioCounts   = $model->getPSTCountByYear();
         

@@ -11,6 +11,12 @@
                 Supervisión global del sistema y métricas en tiempo real.
             </p>
         </div>
+
+        <div>
+            <button type="button" onclick="ejecutarTestCore()" class="btn btn-primary" style="background: #2563eb !important; border: none !important; color: #ffffff !important; font-weight: 700; padding: 10px 18px; border-radius: 8px; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(37,99,235,0.25); cursor: pointer; transition: all 0.25s ease;">
+                <i class="ph-bold ph-heartbeat"></i> Testear Respuesta del Core
+            </button>
+        </div>
     </div>
 </div>
 
@@ -287,5 +293,121 @@ if (typeof Chart === 'undefined') {
     document.head.appendChild(scriptTag);
 } else {
     document.addEventListener('DOMContentLoaded', initSuperAdminCharts);
+}
+</script>
+
+<!-- MODAL GLASSMORPHISM PARA DIAGNÓSTICO DE SALUD DEL CORE -->
+<div id="ag-core-health-modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(8px); z-index: 99999; align-items: center; justify-content: center; padding: 1.5rem;">
+    <div style="background: rgba(255, 255, 255, 0.98); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px; width: 100%; max-width: 640px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden; animation: agModalFade 0.25s cubic-bezier(0.16, 1, 0.3, 1);">
+        <div style="padding: 1.4rem 1.8rem; background: #0f172a; color: #ffffff; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(37, 99, 235, 0.2); display: flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 1.3rem;">
+                    <i class="ph-bold ph-heartbeat"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-weight: 800; font-size: 1.1rem; color: #ffffff;">Diagnóstico de Salud del Core</h3>
+                    <p style="margin: 2px 0 0 0; font-size: 0.78rem; color: #94a3b8;">Prueba en tiempo real del Núcleo del Sistema</p>
+                </div>
+            </div>
+            <button type="button" onclick="cerrarTestCoreModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.4rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <div id="ag-core-health-body" style="padding: 1.6rem; max-height: 480px; overflow-y: auto;">
+            <div style="text-align: center; padding: 2rem 0; color: #64748b;">
+                <i class="ph-bold ph-spinner spin" style="font-size: 2.2rem; color: #2563eb;"></i>
+                <p style="margin-top: 0.8rem; font-weight: 700;">Ejecutando pings sintéticos al Kernel, BD y Módulos Core...</p>
+            </div>
+        </div>
+
+        <div style="padding: 1rem 1.6rem; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: right;">
+            <button type="button" onclick="cerrarTestCoreModal()" class="btn btn-outline" style="background: #ffffff; border-color: #cbd5e1; color: #334155; font-weight: 700; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; cursor: pointer;">
+                Cerrar Diagnóstico
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function ejecutarTestCore() {
+    const modal = document.getElementById('ag-core-health-modal-overlay');
+    const body = document.getElementById('ag-core-health-body');
+    if (!modal || !body) return;
+
+    modal.style.display = 'flex';
+    body.innerHTML = `
+        <div style="text-align: center; padding: 2.5rem 0; color: #64748b;">
+            <i class="ph-bold ph-spinner spin" style="font-size: 2.5rem; color: #2563eb;"></i>
+            <p style="margin-top: 1rem; font-weight: 800; color: #0f172a; font-size: 1rem;">Diagnosticando Respuesta del Core...</p>
+            <p style="font-size: 0.82rem; color: #64748b; margin-top: 0.2rem;">Evaluando latencia de BD, constantes de Kernel y permisos de storage.</p>
+        </div>
+    `;
+
+    fetch('testear-core', {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        let htmlPruebas = '';
+        if (data.pruebas && Array.isArray(data.pruebas)) {
+            data.pruebas.forEach(item => {
+                const esOk = item.estado === 'OK';
+                const bgIcon = esOk ? '#dcfce7' : '#fee2e2';
+                const colorIcon = esOk ? '#166534' : '#991b1b';
+                const iconClass = esOk ? 'ph-check-circle' : 'ph-x-circle';
+
+                htmlPruebas += `
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem; margin-bottom: 0.8rem; display: flex; align-items: flex-start; gap: 12px;">
+                        <div style="width: 32px; height: 32px; border-radius: 8px; background: ${bgIcon}; color: ${colorIcon}; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; margin-top: 2px;">
+                            <i class="ph-bold ${iconClass}"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h4 style="margin: 0; font-size: 0.92rem; font-weight: 800; color: #0f172a;">${item.modulo}</h4>
+                                <span style="font-size: 0.75rem; font-weight: 800; background: ${bgIcon}; color: ${colorIcon}; padding: 2px 8px; border-radius: 6px;">${item.info}</span>
+                            </div>
+                            <p style="margin: 0.3rem 0 0 0; font-size: 0.82rem; color: #475569;">${item.detalles}</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        const headerColor = data.saludable ? '#059669' : '#dc2626';
+        const statusBadge = data.saludable ? 'NÚCLEO 100% SALUDABLE' : 'ATENCIÓN: REVISAR CORRECCIONES';
+
+        body.innerHTML = `
+            <div style="background: rgba(37,99,235,0.06); border: 1px solid rgba(37,99,235,0.18); border-radius: 12px; padding: 1.1rem; margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem;">
+                <div>
+                    <span style="background: ${headerColor}; color: #ffffff; font-size: 0.75rem; font-weight: 800; padding: 3px 10px; border-radius: 6px; text-transform: uppercase;">
+                        ${statusBadge}
+                    </span>
+                    <h4 style="margin: 0.5rem 0 0 0; font-size: 1.1rem; font-weight: 800; color: #0f172a;">
+                        Respuesta del Core: ${data.duracion_ms} ms
+                    </h4>
+                </div>
+                <div style="text-align: right; font-size: 0.82rem; color: #64748b;">
+                    <div><strong>PHP Version:</strong> ${data.php_version}</div>
+                    <div><strong>Memoria en Uso:</strong> ${data.memoria_mb} MB</div>
+                </div>
+            </div>
+
+            <h4 style="margin: 0 0 0.8rem 0; font-size: 0.88rem; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">Desglose de Diagnóstico Sintáctico</h4>
+            ${htmlPruebas}
+        `;
+    })
+    .catch(err => {
+        body.innerHTML = `
+            <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 1.2rem; border-radius: 10px; font-size: 0.9rem;">
+                <strong>✖ Error al ejecutar el diagnóstico de salud del Core.</strong><br>
+                Verifique la conexión del servidor o revise los logs de auditoría.
+            </div>
+        `;
+    });
+}
+
+function cerrarTestCoreModal() {
+    const modal = document.getElementById('ag-core-health-modal-overlay');
+    if (modal) modal.style.display = 'none';
 }
 </script>

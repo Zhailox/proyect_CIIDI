@@ -76,10 +76,14 @@ class DocumentoModel {
                 LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
                 LEFT JOIN public.dimensiones_operativas dims ON rc.id_dimension_operativa = dims.id
                 LEFT JOIN public.carreras c ON COALESCE(dp.id_carrera, li.id_carrera) = c.id
-                WHERE r.id_tipo_recurso = 1
-                  AND COALESCE(dp.id_carrera, li.id_carrera) = 1"; 
+                WHERE r.id_tipo_recurso = 1"; 
                 
         $execParams = [];
+
+        if (!empty($filtros['carrera_id'])) {
+            $sql .= " AND COALESCE(dp.id_carrera, li.id_carrera) = ?";
+            $execParams[] = (int)$filtros['carrera_id'];
+        }
 
         if (isset($filtros['activo'])) {
             if ($filtros['activo'] !== 'todos') {
@@ -234,10 +238,13 @@ class DocumentoModel {
                 LEFT JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
                 LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
                 LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
-                WHERE r.id_tipo_recurso = 1
-                  AND COALESCE(dp.id_carrera, li.id_carrera) = 1";
+                WHERE r.id_tipo_recurso = 1";
         
         $params = [];
+        if (!empty($filtros['carrera_id'])) {
+            $sql .= " AND COALESCE(dp.id_carrera, li.id_carrera) = ?";
+            $params[] = (int)$filtros['carrera_id'];
+        }
         if (!empty($filtros['linea_id'])) {
             $sql .= " AND rc.id_linea_investigacion = ?";
             $params[] = (int)$filtros['linea_id'];
@@ -388,19 +395,17 @@ class DocumentoModel {
         return $this->cleanArray($qb->tabla('carreras')->orderBy('nombre', 'ASC')->get());
     }
 
-    public function getLineasInvestigacion(): array {
-        if (!empty(self::$cacheLineas)) {
-            return self::$cacheLineas;
-        }
-        if (isset($_SESSION['pst_cache_lineas']) && is_array($_SESSION['pst_cache_lineas'])) {
-            self::$cacheLineas = $_SESSION['pst_cache_lineas'];
-            return self::$cacheLineas;
-        }
+    public function getLineasInvestigacion(?int $carreraId = null): array {
         $qb = new QueryBuilder();
-        $res = $this->cleanArray($qb->tabla('lineas_investigacion')->orderBy('nombre', 'ASC')->get());
-        self::$cacheLineas = $res;
-        if (session_status() === PHP_SESSION_ACTIVE) {
-            $_SESSION['pst_cache_lineas'] = $res;
+        $qb->tabla('lineas_investigacion');
+        if ($carreraId !== null && $carreraId > 0) {
+            $qb->where('id_carrera', '=', $carreraId);
+        } elseif (!empty(self::$cacheLineas)) {
+            return self::$cacheLineas;
+        }
+        $res = $this->cleanArray($qb->orderBy('nombre', 'ASC')->get());
+        if ($carreraId === null || $carreraId <= 0) {
+            self::$cacheLineas = $res;
         }
         return $res;
     }
@@ -1011,6 +1016,10 @@ class DocumentoModel {
             }
         }
         
+        if (!empty($filtros['carrera_id'])) {
+            $qb->whereRaw("COALESCE(dp.id_carrera, li.id_carrera) = ?", [(int)$filtros['carrera_id']]);
+        }
+        
         if (!empty($filtros['anio'])) {
             $qb->where('r.anio_publicacion', '=', (int)$filtros['anio']);
         }
@@ -1036,6 +1045,7 @@ class DocumentoModel {
         $qb->tabla('public.recursos r')
            ->join('public.detalles_proyectos dp', 'r.id = dp.id_recurso', 'LEFT')
            ->join('public.recurso_clasificaciones rc', 'r.id = rc.id_recurso', 'LEFT')
+           ->join('public.lineas_investigacion li', 'rc.id_linea_investigacion = li.id', 'LEFT')
            ->where('r.id_tipo_recurso', '=', 1);
            
         if (!empty($query)) {
@@ -1054,6 +1064,10 @@ class DocumentoModel {
                 }
                 $qb->whereRaw("(" . implode(" OR ", $conditions) . ")", $params);
             }
+        }
+        
+        if (!empty($filtros['carrera_id'])) {
+            $qb->whereRaw("COALESCE(dp.id_carrera, li.id_carrera) = ?", [(int)$filtros['carrera_id']]);
         }
         
         if (!empty($filtros['anio'])) {

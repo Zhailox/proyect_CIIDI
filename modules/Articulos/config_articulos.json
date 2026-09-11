@@ -8,7 +8,7 @@
             },
             "yisu": {
                 "nombre": "Yisu",
-                "activo": true,
+                "activo": false,
                 "plantilla": "{autores} Yo Yisus declaro a esta gente, indigente {anio}. WAZAAAA"
             }
         }

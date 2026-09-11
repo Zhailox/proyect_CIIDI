@@ -4,11 +4,11 @@
 // Requerimos la interfaz base
 require_once CORE_PATH . 'Interfaces/ModuleContract.php';
 
-// Clase única para el módulo del Dios del Sistema
+// Clase para el módulo de Super Administración
 class SuperAdminModule implements ModuleContract {
     
     public function getNombre(): string {
-        return 'Módulo de Super Administración (Sudoadmin)';
+        return 'Módulo de Super Administración';
     }
 
     public function getRutas(): array {
@@ -73,9 +73,14 @@ class SuperAdminModule implements ModuleContract {
                 'controlador'      => 'AdminController',
                 'metodo'           => 'mostrarPanelAdministrativo',
                 'vista'            => __DIR__ . '/views/dashboard_admin.php', 
-                'titulo'           => 'Panel de Control - Sudoadmin',
+                'titulo'           => 'Panel de Control - SuperAdmin',
                 'css'              => ['SuperAdmin.css'],
                 'js'               => ['chart.min.js']
+            ],
+            'testear-core' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'testearCore'
             ],
             // Ruta para gestionar los módulos encendidos/apagados
             'gestor-modulos' => [
@@ -98,6 +103,39 @@ class SuperAdminModule implements ModuleContract {
                 'controlador_path' => __DIR__ . '/controllers/ModulosController.php',
                 'controlador'      => 'ModulosController',
                 'metodo'           => 'alternarEstadoRuta'
+            ],
+            'detalle-modulo' => [
+                'controlador_path' => __DIR__ . '/controllers/ModulosController.php',
+                'controlador'      => 'ModulosController',
+                'metodo'           => 'detalleModulo',
+                'vista'            => __DIR__ . '/views/detalle_modulo.php', 
+                'titulo'           => 'Gestión Individual de Módulo - SuperAdmin',
+                'css'              => ['SuperAdmin.css']
+            ],
+            'guardar-config-modulo' => [
+                'controlador_path' => __DIR__ . '/controllers/ModulosController.php',
+                'controlador'      => 'ModulosController',
+                'metodo'           => 'guardarConfiguracionEspecifica'
+            ],
+            'testear-ruta' => [
+                'controlador_path' => __DIR__ . '/controllers/ModulosController.php',
+                'controlador'      => 'ModulosController',
+                'metodo'           => 'testearRuta'
+            ],
+            'purgar-cache-modulo' => [
+                'controlador_path' => __DIR__ . '/controllers/ModulosController.php',
+                'controlador'      => 'ModulosController',
+                'metodo'           => 'purgarCacheModulo'
+            ],
+            'exportar-config-sistema' => [
+                'controlador_path' => __DIR__ . '/controllers/ModulosController.php',
+                'controlador'      => 'ModulosController',
+                'metodo'           => 'exportarConfiguracion'
+            ],
+            'importar-config-sistema' => [
+                'controlador_path' => __DIR__ . '/controllers/ModulosController.php',
+                'controlador'      => 'ModulosController',
+                'metodo'           => 'importarConfiguracion'
             ],
             // Ruta para gestionar Mantenimiento & Respaldos BD
             'gestor-mantenimiento' => [
@@ -152,6 +190,16 @@ class SuperAdminModule implements ModuleContract {
                 'controlador'      => 'AdminController',
                 'metodo'           => 'eliminarBackup'
             ],
+            'verificar-respaldo' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'verificarRespaldo'
+            ],
+            'limpiar-respaldos-antiguos' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'ejecutarLimpiezaRespaldos'
+            ],
             'alternar-mantenimiento' => [
                 'controlador_path' => __DIR__ . '/controllers/AdminController.php',
                 'controlador'      => 'AdminController',
@@ -173,8 +221,8 @@ class SuperAdminModule implements ModuleContract {
                 'icono'       => 'ph-fill ph-terminal-window',
                 'privilegio_minimo' => 2,
                 'enlace'      => 'sudoadmin',
-                // Rutas que mantienen iluminado el panel administrativo
-                'activadores' => ['sudoadmin', 'gestor-modulos', 'gestor-mantenimiento', 'visor-logs', 'gestor-usuarios'], 
+                // Rutas que mantienen iluminado y desplegado el panel administrativo en el Sidebar
+                'activadores' => ['sudoadmin', 'gestor-modulos', 'detalle-modulo', 'gestor-mantenimiento', 'visor-logs', 'gestor-usuarios'], 
                 'subitems'    => [
                     ['ruta' => 'sudoadmin', 'titulo' => 'Panel de Control'],
                     ['ruta' => 'gestor-usuarios', 'titulo' => 'Gestión de Usuarios'],

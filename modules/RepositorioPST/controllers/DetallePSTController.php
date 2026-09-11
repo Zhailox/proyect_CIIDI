@@ -40,7 +40,7 @@ class DetallePSTController {
         $totalPages = ceil($totalDocs / $limit);
         
         // Obtener líneas, dimensiones, comunidades beneficiadas reales y conteo por año
-        $lineas = $model->getLineasInvestigacion();
+        $lineas = $model->getLineasInvestigacion($carreraId);
         $dimensiones = $model->getDimensionesOperativas();
         $comunidades = $model->getComunidadesBeneficiadas();
         $anioCounts = $model->getPSTCountByYear();

@@ -1,5 +1,325 @@
 [
     {
+        "id": "log_6aa37cb30455f",
+        "fecha_hora": "2026-09-11 03:59:47",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Test Respuesta Core",
+        "detalles": "Diagnóstico del Core ejecutado en 53.1ms. Memoria: 2 MB. Estado: SALUDABLE",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa379f0d3c35",
+        "fecha_hora": "2026-09-11 03:48:00",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Test Respuesta Core",
+        "detalles": "Diagnóstico del Core ejecutado en 81.01ms. Memoria: 2 MB. Estado: SALUDABLE",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa379e030792",
+        "fecha_hora": "2026-09-11 03:47:44",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Test Respuesta Core",
+        "detalles": "Diagnóstico del Core ejecutado en 164.55ms. Memoria: 2 MB. Estado: SALUDABLE",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa379654419d",
+        "fecha_hora": "2026-09-11 03:45:41",
+        "nivel": "CRITICAL",
+        "modulo": "SuperAdmin",
+        "accion": "Test Respuesta Core",
+        "detalles": "Diagnóstico del Core ejecutado en 0.44ms. Memoria: 2 MB. Estado: CON FALLOS",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa37910bd6ac",
+        "fecha_hora": "2026-09-11 03:44:16",
+        "nivel": "CRITICAL",
+        "modulo": "SuperAdmin",
+        "accion": "Test Respuesta Core",
+        "detalles": "Diagnóstico del Core ejecutado en 0.78ms. Memoria: 2 MB. Estado: CON FALLOS",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa377ca76ed6",
+        "fecha_hora": "2026-09-11 03:38:50",
+        "nivel": "INFO",
+        "modulo": "Articulos",
+        "accion": "Health Check Ruta",
+        "detalles": "Test en ruta '?ruta=articulos': OK (0.1ms)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa377ca0a1cf",
+        "fecha_hora": "2026-09-11 03:38:50",
+        "nivel": "INFO",
+        "modulo": "Articulos",
+        "accion": "Health Check Ruta",
+        "detalles": "Test en ruta '?ruta=articulos': OK (0.45ms)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa3762a871f4",
+        "fecha_hora": "2026-09-11 03:31:54",
+        "nivel": "INFO",
+        "modulo": "Articulos",
+        "accion": "Health Check Ruta",
+        "detalles": "Test en ruta '?ruta=articulos': OK (0.19ms)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa37629e1ce6",
+        "fecha_hora": "2026-09-11 03:31:53",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Feature Flag de Ruta",
+        "detalles": "Ruta '?ruta=articulos' actualizada: Estado online, Rol Mínimo 1",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa376261d8a3",
+        "fecha_hora": "2026-09-11 03:31:50",
+        "nivel": "INFO",
+        "modulo": "Articulos",
+        "accion": "Health Check Ruta",
+        "detalles": "Test en ruta '?ruta=articulos': OK (0.1ms)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa3762554a5d",
+        "fecha_hora": "2026-09-11 03:31:49",
+        "nivel": "INFO",
+        "modulo": "Articulos",
+        "accion": "Health Check Ruta",
+        "detalles": "Test en ruta '?ruta=articulos': OK (0.28ms)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa376232d181",
+        "fecha_hora": "2026-09-11 03:31:47",
+        "nivel": "INFO",
+        "modulo": "Articulos",
+        "accion": "Health Check Ruta",
+        "detalles": "Test en ruta '?ruta=articulos': OK (0.11ms)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa376229297d",
+        "fecha_hora": "2026-09-11 03:31:46",
+        "nivel": "INFO",
+        "modulo": "Articulos",
+        "accion": "Health Check Ruta",
+        "detalles": "Test en ruta '?ruta=articulos': OK (0.14ms)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa37621d1a47",
+        "fecha_hora": "2026-09-11 03:31:45",
+        "nivel": "INFO",
+        "modulo": "Articulos",
+        "accion": "Health Check Ruta",
+        "detalles": "Test en ruta '?ruta=articulos': OK (0.27ms)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa3761f65936",
+        "fecha_hora": "2026-09-11 03:31:43",
+        "nivel": "INFO",
+        "modulo": "Articulos",
+        "accion": "Health Check Ruta",
+        "detalles": "Test en ruta '?ruta=articulos': OK (0.09ms)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa3761f34e29",
+        "fecha_hora": "2026-09-11 03:31:43",
+        "nivel": "INFO",
+        "modulo": "Articulos",
+        "accion": "Health Check Ruta",
+        "detalles": "Test en ruta '?ruta=articulos': OK (0.09ms)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa3761f07daf",
+        "fecha_hora": "2026-09-11 03:31:43",
+        "nivel": "INFO",
+        "modulo": "Articulos",
+        "accion": "Health Check Ruta",
+        "detalles": "Test en ruta '?ruta=articulos': OK (0.09ms)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa3761eafcbe",
+        "fecha_hora": "2026-09-11 03:31:42",
+        "nivel": "INFO",
+        "modulo": "Articulos",
+        "accion": "Health Check Ruta",
+        "detalles": "Test en ruta '?ruta=articulos': OK (0.14ms)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa3761e21966",
+        "fecha_hora": "2026-09-11 03:31:42",
+        "nivel": "INFO",
+        "modulo": "Articulos",
+        "accion": "Health Check Ruta",
+        "detalles": "Test en ruta '?ruta=articulos': OK (0.19ms)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa3761d16ad5",
+        "fecha_hora": "2026-09-11 03:31:41",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Feature Flag de Ruta",
+        "detalles": "Ruta '?ruta=articulos' actualizada: Estado offline, Rol Mínimo 1",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa3761aa25cc",
+        "fecha_hora": "2026-09-11 03:31:38",
+        "nivel": "INFO",
+        "modulo": "Articulos",
+        "accion": "Health Check Ruta",
+        "detalles": "Test en ruta '?ruta=articulos': OK (0.11ms)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa3761a1e729",
+        "fecha_hora": "2026-09-11 03:31:38",
+        "nivel": "INFO",
+        "modulo": "Articulos",
+        "accion": "Health Check Ruta",
+        "detalles": "Test en ruta '?ruta=articulos': OK (0.16ms)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa37618b1bb1",
+        "fecha_hora": "2026-09-11 03:31:36",
+        "nivel": "INFO",
+        "modulo": "Articulos",
+        "accion": "Health Check Ruta",
+        "detalles": "Test en ruta '?ruta=articulos': OK (0.09ms)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa3761848db6",
+        "fecha_hora": "2026-09-11 03:31:36",
+        "nivel": "INFO",
+        "modulo": "Articulos",
+        "accion": "Health Check Ruta",
+        "detalles": "Test en ruta '?ruta=articulos': OK (0.33ms)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa37600a51b0",
+        "fecha_hora": "2026-09-11 03:31:12",
+        "nivel": "INFO",
+        "modulo": "Articulos",
+        "accion": "Purgado de Caché",
+        "detalles": "Se eliminaron 0 archivos de caché (0 KB liberados).",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa3754d06962",
+        "fecha_hora": "2026-09-11 03:28:13",
+        "nivel": "INFO",
+        "modulo": "Articulos",
+        "accion": "Health Check Ruta",
+        "detalles": "Test en ruta '?ruta=articulos': OK (0.47ms)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa36d5cf3198",
+        "fecha_hora": "2026-09-11 02:54:20",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Feature Flag de Ruta",
+        "detalles": "Ruta '?ruta=leer-articulo' cambiada a estado: online",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa36d45da093",
+        "fecha_hora": "2026-09-11 02:53:57",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Feature Flag de Ruta",
+        "detalles": "Ruta '?ruta=leer-articulo' cambiada a estado: offline",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa36704347a6",
+        "fecha_hora": "2026-09-11 02:27:16",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Config Módulo Guardada",
+        "detalles": "Configuración de Articulos actualizada en config_articulos.json",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa366a1ae6cc",
+        "fecha_hora": "2026-09-11 02:25:37",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Alternar Estado Módulo",
+        "detalles": "Módulo VinculacionEmpresarial cambiado a estado: offline",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa36691bb5d3",
+        "fecha_hora": "2026-09-11 02:25:21",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Alternar Estado Módulo",
+        "detalles": "Módulo Articulos cambiado a estado: online",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa36687a950a",
+        "fecha_hora": "2026-09-11 02:25:11",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Alternar Estado Módulo",
+        "detalles": "Módulo Articulos cambiado a estado: offline",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
         "id": "log_6aa3590a575c8",
         "fecha_hora": "2026-09-11 01:27:38",
         "nivel": "INFO",
