@@ -433,6 +433,42 @@ class DocumentoModel {
         return $this->cleanArray($qb->tabla('tipo_recurso')->orderBy('nombre', 'ASC')->get());
     }
 
+    public function getNivelesAcademicos(): array {
+        $db = Connection::getInstance();
+        $sql = "SELECT DISTINCT nivel_academico::text AS nivel_academico 
+                FROM public.detalles_proyectos 
+                WHERE nivel_academico IS NOT NULL AND TRIM(nivel_academico::text) != '' 
+                ORDER BY nivel_academico::text ASC";
+        $stmt = $db->query($sql);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $niveles = [];
+        foreach ($rows as $row) {
+            $clean = $this->cleanCP850($row['nivel_academico']);
+            if (!empty($clean) && !in_array($clean, $niveles)) {
+                $niveles[] = $clean;
+            }
+        }
+        return !empty($niveles) ? $niveles : ['Pregrado', 'Especialización', 'Maestría', 'Doctorado'];
+    }
+
+    public function getTrayectos(): array {
+        $db = Connection::getInstance();
+        $sql = "SELECT DISTINCT trayecto::text AS trayecto 
+                FROM public.detalles_proyectos 
+                WHERE trayecto IS NOT NULL AND TRIM(trayecto::text) != '' 
+                ORDER BY trayecto::text ASC";
+        $stmt = $db->query($sql);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $trayectos = [];
+        foreach ($rows as $row) {
+            $clean = $this->cleanCP850($row['trayecto']);
+            if (!empty($clean) && !in_array($clean, $trayectos)) {
+                $trayectos[] = $clean;
+            }
+        }
+        return !empty($trayectos) ? $trayectos : ['Trayecto I', 'Trayecto II', 'Trayecto III', 'Trayecto IV'];
+    }
+
     /**
      * Obtiene un único PST por su ID.
      */

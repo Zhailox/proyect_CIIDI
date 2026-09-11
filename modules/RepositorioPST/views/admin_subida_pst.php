@@ -72,24 +72,25 @@ if (typeof window.mammoth === 'undefined') {
                                     <label for="nivel_academico">Nivel Académico *</label>
                                     <select id="nivel_academico" name="nivel_academico" class="upload-input" onchange="toggleTrayectoByNivel()" required>
                                         <?php 
-                                        $currNivel = $_POST['nivel_academico'] ?? $documento['nivel_academico'] ?? 'Pregrado';
+                                        $modelSubida = new DocumentoModel();
+                                        $nivelesAcademicosDB = $modelSubida->getNivelesAcademicos();
+                                        $trayectosDB = $modelSubida->getTrayectos();
+                                        $currNivel = $_POST['nivel_academico'] ?? $documento['nivel_academico'] ?? ($nivelesAcademicosDB[0] ?? 'Pregrado');
+                                        foreach ($nivelesAcademicosDB as $nivelItem):
                                         ?>
-                                        <option value="Pregrado" <?= ($currNivel === 'Pregrado') ? 'selected' : '' ?>>Pregrado </option>
-                                        <option value="Especialización" <?= ($currNivel === 'Especialización') ? 'selected' : '' ?>>Especialización</option>
-                                        <option value="Maestría" <?= ($currNivel === 'Maestría') ? 'selected' : '' ?>>Maestría</option>
-                                        <option value="Doctorado" <?= ($currNivel === 'Doctorado') ? 'selected' : '' ?>>Doctorado</option>
+                                            <option value="<?= htmlspecialchars($nivelItem) ?>" <?= ($currNivel === $nivelItem) ? 'selected' : '' ?>><?= htmlspecialchars($nivelItem) ?></option>
+                                        <?php endforeach; ?>
                                     </select>
                                 </div>
                                 <div class="upload-input-group" id="container_trayecto" style="<?= ($currNivel === 'Pregrado') ? 'display: block;' : 'display: none;' ?>">
                                     <label for="trayecto">Trayecto del PNF *</label>
                                     <select id="trayecto" name="trayecto" class="upload-input">
                                         <?php 
-                                        $currTrayecto = $_POST['trayecto'] ?? $documento['trayecto'] ?? 'Trayecto I';
+                                        $currTrayecto = $_POST['trayecto'] ?? $documento['trayecto'] ?? ($trayectosDB[0] ?? 'Trayecto I');
+                                        foreach ($trayectosDB as $trItem):
                                         ?>
-                                        <option value="Trayecto I" <?= ($currTrayecto === 'Trayecto I') ? 'selected' : '' ?>>Trayecto I </option>
-                                        <option value="Trayecto II" <?= ($currTrayecto === 'Trayecto II') ? 'selected' : '' ?>>Trayecto II </option>
-                                        <option value="Trayecto III" <?= ($currTrayecto === 'Trayecto III') ? 'selected' : '' ?>>Trayecto III </option>
-                                        <option value="Trayecto IV" <?= ($currTrayecto === 'Trayecto IV') ? 'selected' : '' ?>>Trayecto IV </option>
+                                            <option value="<?= htmlspecialchars($trItem) ?>" <?= ($currTrayecto === $trItem) ? 'selected' : '' ?>><?= htmlspecialchars($trItem) ?></option>
+                                        <?php endforeach; ?>
                                     </select>
                                 </div>
                             </div>

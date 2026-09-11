@@ -1,5 +1,15 @@
 [
     {
+        "id": "log_6aa346a455db7",
+        "fecha_hora": "2026-09-11 00:09:08",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Inicio de Sesión Exitoso",
+        "detalles": "El usuario Miguel González (Super Administrador) ha iniciado sesión.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
         "id": "log_6aa2cf2f24484",
         "fecha_hora": "2026-09-10 15:39:27",
         "nivel": "INFO",

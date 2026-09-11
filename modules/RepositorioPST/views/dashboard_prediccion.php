@@ -13,10 +13,14 @@
                     <div class="form-group" style="margin-bottom: 0; min-width: 250px;">
                         <select class="form-control" id="filtro-linea-investigacion" name="linea_investigacion">
                             <option value="todas">Todas las Líneas de Investigación</option>
-                            <option value="redes">Redes y Telecomunicaciones</option>
-                            <option value="web">Desarrollo Web y Aplicaciones</option>
-                            <option value="sistemas">Sistemas de Información</option>
-                            <option value="hardware">Arquitectura de Hardware</option>
+                            <?php 
+                            require_once __DIR__ . '/../models/DocumentoModel.php';
+                            $modelDash = new DocumentoModel();
+                            $lineasDash = $modelDash->getLineasInvestigacion();
+                            foreach ($lineasDash as $lDash):
+                            ?>
+                                <option value="<?= htmlspecialchars($lDash['id']) ?>"><?= htmlspecialchars($lDash['nombre']) ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <button class="btn-action" type="button">

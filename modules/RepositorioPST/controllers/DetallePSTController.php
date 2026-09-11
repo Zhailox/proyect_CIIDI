@@ -35,14 +35,50 @@ class DetallePSTController {
         $comunidades = $model->getComunidadesBeneficiadas();
         $anioCounts = $model->getPSTCountByYear();
         
+        // Obtener lote general para KPIs y agrupamiento por líneas (marquees)
+        $todosDocs = $model->getPSTDocumentos([], 100, 0);
+        $totalPSTGeneral = count($todosDocs);
+        
+        $conteoLineas = [];
+        $conteoTrayectos = [];
+        $pstPorLinea = [];
+        
+        foreach ($todosDocs as $doc) {
+            $lineaNombre = !empty($doc['linea_nombre']) ? trim($doc['linea_nombre']) : 'General';
+            $conteoLineas[$lineaNombre] = ($conteoLineas[$lineaNombre] ?? 0) + 1;
+            
+            if (!isset($pstPorLinea[$lineaNombre])) {
+                $pstPorLinea[$lineaNombre] = [];
+            }
+            if (count($pstPorLinea[$lineaNombre]) < 6) {
+                $pstPorLinea[$lineaNombre][] = $doc;
+            }
+
+            if (!empty($doc['trayecto'])) {
+                $trayectoNombre = trim($doc['trayecto']);
+                $conteoTrayectos[$trayectoNombre] = ($conteoTrayectos[$trayectoNombre] ?? 0) + 1;
+            }
+        }
+        
+        $carreras = $model->getCarreras();
+        $nivelesAcademicos = $model->getNivelesAcademicos();
+        $trayectosList = $model->getTrayectos();
+        
         return [
-            'documentos'  => $documentos,
-            'lineas'      => $lineas,
-            'dimensiones' => $dimensiones,
-            'comunidades' => $comunidades,
-            'anioCounts'  => $anioCounts,
-            'filtros'     => $filtros,
-            'pagination'  => [
+            'documentos'        => $documentos,
+            'lineas'            => $lineas,
+            'dimensiones'       => $dimensiones,
+            'comunidades'       => $comunidades,
+            'carreras'          => $carreras,
+            'nivelesAcademicos' => $nivelesAcademicos,
+            'trayectosList'     => $trayectosList,
+            'anioCounts'        => $anioCounts,
+            'filtros'           => $filtros,
+            'totalPSTGeneral'   => $totalPSTGeneral,
+            'conteoLineas'      => $conteoLineas,
+            'conteoTrayectos'   => $conteoTrayectos,
+            'pstPorLinea'       => $pstPorLinea,
+            'pagination'        => [
                 'current_page' => $page,
                 'total_pages'  => $totalPages,
                 'total_items'  => $totalDocs,

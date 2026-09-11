@@ -3,32 +3,70 @@
     <div class="pst-container">
 
         <!-- HERO SECTION INTERACTIVO CON CANVAS Y BÚSQUEDA RÁPIDA -->
-        <section class="pst-modern-hero">
+        <section class="pst-modern-hero" style="position: relative;">
             <canvas id="pstHeroCanvas"></canvas>
             <div class="pst-hero-overlay"></div>
-            <div class="pst-hero-inner">
-                <h1 class="pst-hero-title">Proyectos Socio-Tecnológicos</h1>
+            <div class="pst-hero-inner" style="width: 100%; padding-right: 190px;">
+                <span class="pst-hero-badge" style="position: static; display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 0.75rem;"><i class="ph ph-sparkles"></i> Repositorio Institucional de Investigaciones</span>
+                
+                <h1 class="pst-hero-title" style="margin-bottom: 0.5rem;">Proyectos Socio-Tecnológicos</h1>
                 <p class="pst-hero-desc">Explora el conocimiento académico y las soluciones tecnológicas desarrolladas por nuestra comunidad universitaria.</p>
-                <span class="pst-hero-badge"><i class="ph ph-sparkles"></i> Repositorio Institucional de Investigaciones</span>
+            </div>
+
+            <!-- KPI Único: Total Proyectos PST al extremo derecho con margen equilibrado -->
+            <div class="stat-box-mini" style="position: absolute; right: 1.25rem; top: 50%; transform: translateY(-50%); background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: var(--radius-sm, 8px); padding: 0.75rem 1.1rem; display: inline-flex; align-items: center; gap: 0.85rem; box-shadow: 0 8px 25px rgba(0,0,0,0.15); z-index: 10;">
+                <div style="width: 42px; height: 42px; border-radius: var(--radius-sm, 6px); background: rgba(112, 144, 203, 0.2); color: var(--color-secundario); display: flex; align-items: center; justify-content: center; font-size: 1.35rem; flex-shrink: 0;">
+                    <i class="ph ph-file-text"></i>
+                </div>
+                <div style="text-align: left;">
+                    <h4 style="font-size: 0.68rem; color: var(--texto-silenciado); text-transform: uppercase; font-weight: 700; margin: 0; letter-spacing: 0.5px;">Total PST</h4>
+                    <div style="font-size: 1.4rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= number_format($totalPSTGeneral ?? count($documentos ?? [])) ?></div>
+                </div>
             </div>
         </section>
 
-        <!-- CARRUSELES POR LÍNEA DE INVESTIGACIÓN CON BOTÓN SOLICITAR CARGAR MÁS -->
-        <section class="pst-carousels-section">
-            <!-- Carrusel: Por Líneas de Investigación -->
+        <!-- ESTILOS Y ANIMACIONES OPTIMIZADAS GPU PARA MARQUEE INFINITO -->
+        <style>
+        @keyframes pstMarqueeLoop {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .pst-marquee-wrapper {
+            overflow: hidden;
+            width: 100%;
+            position: relative;
+            padding: 0.5rem 0;
+        }
+        .pst-marquee-track {
+            display: flex;
+            gap: 1.25rem;
+            width: max-content;
+            animation: pstMarqueeLoop 35s linear infinite;
+            will-change: transform;
+        }
+        .pst-marquee-track:hover {
+            animation-play-state: paused;
+        }
+        </style>
+
+        <!-- MARQUEE ÚNICO GENERAL DE PROYECTOS -->
+        <section class="pst-carousels-section" style="margin-top: 1.5rem; margin-bottom: 2rem;">
             <div class="pst-carousel-block">
-                <div class="pst-carousel-header">
-                    <h3><i class="ph ph-compass"></i> Proyectos Recientes por Línea</h3>
-                    <div class="pst-carousel-controls">
-                        <button type="button" class="pst-carousel-btn" onclick="scrollCarousel('carouselProyectos', -1)"><i class="ph ph-caret-left"></i></button>
-                        <button type="button" class="pst-carousel-btn" onclick="scrollCarousel('carouselProyectos', 1)"><i class="ph ph-caret-right"></i></button>
-                    </div>
+                <div class="pst-carousel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <h3 style="font-size: 1rem; font-weight: 800; color: var(--texto-titulos); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="ph ph-compass" style="color: var(--color-terciario);"></i> 
+                        Explorar Proyectos Recientes
+                    </h3>
                 </div>
-                <div class="pst-carousel-track-wrapper">
-                    <div class="pst-carousel-track" id="carouselProyectos">
-                        <?php if (!empty($documentos)): ?>
-                            <?php foreach (array_slice($documentos, 0, 8) as $docSlide): ?>
-                                <div class="pst-project-slide">
+                <?php if (!empty($documentos)): ?>
+                    <?php 
+                    $loteBase = array_slice($documentos, 0, 8);
+                    $slidesMarquee = array_merge($loteBase, $loteBase);
+                    ?>
+                    <div class="pst-marquee-wrapper">
+                        <div class="pst-marquee-track">
+                            <?php foreach ($slidesMarquee as $docSlide): ?>
+                                <div class="pst-project-slide" style="flex: 0 0 280px; min-width: 280px;">
                                     <div class="pst-slide-tags">
                                         <span class="pst-badge-soft" style="background: rgba(0, 123, 255, 0.1); color: var(--color-terciario); font-weight: 700;">
                                             <?= htmlspecialchars($docSlide['linea_nombre'] ?? 'Línea General') ?>
@@ -37,19 +75,18 @@
                                             <?= $docSlide['anio_publicacion'] ?>
                                         </span>
                                     </div>
-                                    <h4><?= htmlspecialchars($docSlide['titulo'] ?? '') ?></h4>
-                                    <p class="pst-slide-community"><i class="ph ph-buildings"></i> <?= htmlspecialchars($docSlide['comunidad_beneficiada'] ?? 'Comunidad no especificada') ?></p>
+                                    <h4 style="margin-top: 0.5rem; margin-bottom: 1rem; font-size: 0.9rem; line-height: 1.4; color: var(--texto-titulos); font-weight: 700;"><?= htmlspecialchars($docSlide['titulo'] ?? '') ?></h4>
                                     <div class="pst-slide-footer">
                                         <a href="?ruta=detalles-pst&id=<?= $docSlide['id'] ?>" class="btn-outline-repo" style="font-size: 0.75rem; text-decoration: none;">Ver Ficha</a>
                                         <button type="button" class="btn-outline-repo" style="font-size: 0.75rem; cursor: pointer;" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($docSlide['titulo'])) ?>, <?= htmlspecialchars(json_encode($docSlide['autores_nombres'] ?? 'Autores Varios')) ?>, <?= $docSlide['anio_publicacion'] ?>)"><i class="ph ph-quotes"></i></button>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
-                        <?php else: ?>
-                            <p style="color: var(--texto-silenciado); padding: 1rem;">No hay proyectos para mostrar en el carrusel.</p>
-                        <?php endif; ?>
+                        </div>
                     </div>
-                </div>
+                <?php else: ?>
+                    <p style="color: var(--texto-silenciado); padding: 1rem;">No hay proyectos disponibles.</p>
+                <?php endif; ?>
             </div>
         </section>
 
@@ -125,10 +162,17 @@
                     <h3><i class="ph ph-funnel"></i> Filtrar Recursos</h3>
                     
                     <!-- Mostrar carrera como informativa (fija) -->
+                    <!-- Mostrar carrera dinámica -->
                     <div class="filter-group">
                         <label>Programa Académico</label>
                         <select disabled>
-                            <option>PNF en Informática</option>
+                            <?php if (!empty($carreras)): ?>
+                                <?php foreach ($carreras as $carrera): ?>
+                                    <option><?= htmlspecialchars($carrera['nombre'] ?? 'PNF en Informática') ?></option>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <option>PNF en Informática</option>
+                            <?php endif; ?>
                         </select>
                     </div>
 
@@ -163,27 +207,33 @@
                         <?php endif; ?>
                     </div>
 
-                    <!-- Selector de Nivel Académico -->
+                    <!-- Selector Dinámico de Nivel Académico desde la BD -->
                     <div class="filter-group">
                         <label for="nivel_academico">Nivel Académico</label>
                         <select name="nivel_academico" id="nivel_academico_filter" onchange="this.form.submit()">
                             <option value="">Todos los Niveles</option>
-                            <option value="Pregrado" <?= (($filtros['nivel_academico'] ?? '') === 'Pregrado') ? 'selected' : '' ?>>Pregrado</option>
-                            <option value="Especialización" <?= (($filtros['nivel_academico'] ?? '') === 'Especialización') ? 'selected' : '' ?>>Especialización</option>
-                            <option value="Maestría" <?= (($filtros['nivel_academico'] ?? '') === 'Maestría') ? 'selected' : '' ?>>Maestría</option>
-                            <option value="Doctorado" <?= (($filtros['nivel_academico'] ?? '') === 'Doctorado') ? 'selected' : '' ?>>Doctorado</option>
+                            <?php if (!empty($nivelesAcademicos)): ?>
+                                <?php foreach ($nivelesAcademicos as $nivel): ?>
+                                    <option value="<?= htmlspecialchars($nivel) ?>" <?= (($filtros['nivel_academico'] ?? '') === $nivel) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($nivel) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </select>
                     </div>
 
-                    <!-- Selector de Trayecto -->
+                    <!-- Selector Dinámico de Trayecto desde la BD -->
                     <div class="filter-group">
-                        <label for="trayecto">Trayecto del PNF (Pregrado)</label>
+                        <label for="trayecto">Trayecto del PNF</label>
                         <select name="trayecto" id="trayecto_filter" onchange="this.form.submit()">
                             <option value="">Todos los Trayectos</option>
-                            <option value="Trayecto I" <?= (($filtros['trayecto'] ?? '') === 'Trayecto I') ? 'selected' : '' ?>>Trayecto I</option>
-                            <option value="Trayecto II" <?= (($filtros['trayecto'] ?? '') === 'Trayecto II') ? 'selected' : '' ?>>Trayecto II</option>
-                            <option value="Trayecto III" <?= (($filtros['trayecto'] ?? '') === 'Trayecto III') ? 'selected' : '' ?>>Trayecto III</option>
-                            <option value="Trayecto IV" <?= (($filtros['trayecto'] ?? '') === 'Trayecto IV') ? 'selected' : '' ?>>Trayecto IV</option>
+                            <?php if (!empty($trayectosList)): ?>
+                                <?php foreach ($trayectosList as $tItem): ?>
+                                    <option value="<?= htmlspecialchars($tItem) ?>" <?= (($filtros['trayecto'] ?? '') === $tItem) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($tItem) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </select>
                     </div>
 
