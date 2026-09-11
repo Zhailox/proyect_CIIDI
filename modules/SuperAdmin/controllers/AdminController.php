@@ -428,6 +428,11 @@ class AdminController {
                 if (isset($_FILES['backup_file']) && $_FILES['backup_file']['error'] === UPLOAD_ERR_OK) {
                     $rutaArchivoRestaurar = $_FILES['backup_file']['tmp_name'];
                     $origName = $_FILES['backup_file']['name'];
+                    $extension = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+
+                    if (!in_array($extension, ['sql', 'gz'], true)) {
+                        throw new RuntimeException('Solo se permiten archivos .sql o .sql.gz.');
+                    }
                 } elseif (!empty($_POST['archivo_guardado'])) {
                     $nombreLimpio = basename($_POST['archivo_guardado']);
                     $backupDir = defined('STORAGE_PATH') ? STORAGE_PATH . 'backups/' : __DIR__ . '/../../../storage/backups/';
@@ -466,7 +471,10 @@ class AdminController {
                     $psqlPath = Connection::getPsqlPath();
 
                     putenv("PGPASSWORD={$creds['pass']}");
-                    $comando = "{$psqlPath} -h {$creds['host']} -p {$creds['port']} -U {$creds['user']} -d {$creds['db']} -f \"{$rutaParaPsql}\" 2>&1";
+                    $comando = "{$psqlPath} -h {$creds['host']} -p {$creds['port']} "
+                    . "-U {$creds['user']} -d {$creds['db']} "
+                    . "--set=ON_ERROR_STOP=1 --single-transaction "
+                    . "-f \"{$rutaParaPsql}\" 2>&1";
 
                     $salida = [];
                     $codigo_retorno = 0;

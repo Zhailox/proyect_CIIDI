@@ -52,6 +52,11 @@ class SuperAdminModule implements ModuleContract {
                 'controlador'      => 'GestorUsuariosController',
                 'metodo'           => 'procesarEdicion'
             ],
+            'crear-rol' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'crearRolAction'
+            ],
             // Endpoint para alternar el estado (Suspender/Restaurar)
             'alternar-estado-usuario' => [
                 'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',

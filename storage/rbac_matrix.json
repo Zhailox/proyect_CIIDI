@@ -1,26 +1,230 @@
-{
-    "Estudianteashdas": {
-        "crear": false,
-        "editar": false,
-        "eliminar": false,
-        "auditar": false
+[
+    {
+        "Articulos": {
+            "crear": false,
+            "editar": false,
+            "eliminar": false,
+            "auditar": false
+        },
+        "Cursos": {
+            "crear": false,
+            "editar": false,
+            "eliminar": false,
+            "auditar": false
+        },
+        "Investigaciones": {
+            "crear": false,
+            "editar": false,
+            "eliminar": false,
+            "auditar": false
+        },
+        "LineasInvestigacion": {
+            "crear": false,
+            "editar": false,
+            "eliminar": false,
+            "auditar": false
+        },
+        "RepositorioPST": {
+            "crear": false,
+            "editar": false,
+            "eliminar": false,
+            "auditar": false
+        },
+        "VinculacionEmpresarial": {
+            "crear": false,
+            "editar": false,
+            "eliminar": false,
+            "auditar": false
+        }
     },
-    "Docentessss": {
-        "crear": false,
-        "editar": false,
-        "eliminar": false,
-        "auditar": false
+    {
+        "Articulos": {
+            "crear": false,
+            "editar": false,
+            "eliminar": false,
+            "auditar": false
+        },
+        "Cursos": {
+            "crear": false,
+            "editar": false,
+            "eliminar": false,
+            "auditar": false
+        },
+        "Investigaciones": {
+            "crear": false,
+            "editar": false,
+            "eliminar": false,
+            "auditar": false
+        },
+        "LineasInvestigacion": {
+            "crear": false,
+            "editar": false,
+            "eliminar": false,
+            "auditar": false
+        },
+        "RepositorioPST": {
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
+            "auditar": false
+        },
+        "VinculacionEmpresarial": {
+            "crear": false,
+            "editar": false,
+            "eliminar": false,
+            "auditar": false
+        }
     },
-    "Comite": {
-        "crear": true,
-        "editar": true,
-        "eliminar": true,
-        "auditar": false
+    {
+        "Articulos": {
+            "crear": false,
+            "editar": false,
+            "eliminar": false,
+            "auditar": false
+        },
+        "Cursos": {
+            "crear": false,
+            "editar": false,
+            "eliminar": false,
+            "auditar": false
+        },
+        "Investigaciones": {
+            "crear": false,
+            "editar": false,
+            "eliminar": false,
+            "auditar": false
+        },
+        "LineasInvestigacion": {
+            "crear": false,
+            "editar": false,
+            "eliminar": false,
+            "auditar": false
+        },
+        "RepositorioPST": {
+            "crear": false,
+            "editar": false,
+            "eliminar": false,
+            "auditar": false
+        },
+        "VinculacionEmpresarial": {
+            "crear": false,
+            "editar": false,
+            "eliminar": false,
+            "auditar": false
+        }
     },
-    "Super Administrador": {
-        "crear": true,
-        "editar": true,
-        "eliminar": true,
-        "auditar": true
+    {
+        "Articulos": {
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
+            "auditar": true
+        },
+        "Cursos": {
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
+            "auditar": true
+        },
+        "Investigaciones": {
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
+            "auditar": true
+        },
+        "LineasInvestigacion": {
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
+            "auditar": true
+        },
+        "RepositorioPST": {
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
+            "auditar": true
+        },
+        "VinculacionEmpresarial": {
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
+            "auditar": true
+        }
+    },
+    {
+        "Articulos": {
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
+            "auditar": true
+        },
+        "Cursos": {
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
+            "auditar": true
+        },
+        "Investigaciones": {
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
+            "auditar": true
+        },
+        "LineasInvestigacion": {
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
+            "auditar": true
+        },
+        "RepositorioPST": {
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
+            "auditar": true
+        },
+        "VinculacionEmpresarial": {
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
+            "auditar": true
+        }
+    },
+    {
+        "Articulos": {
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
+            "auditar": true
+        },
+        "Cursos": {
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
+            "auditar": true
+        },
+        "Investigaciones": {
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
+            "auditar": true
+        },
+        "LineasInvestigacion": {
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
+            "auditar": true
+        },
+        "RepositorioPST": {
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
+            "auditar": true
+        },
+        "VinculacionEmpresarial": {
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
+            "auditar": true
+        }
     }
-}
+]

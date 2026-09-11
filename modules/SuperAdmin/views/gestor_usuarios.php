@@ -122,9 +122,19 @@
                                 </td>
                                 <td style="padding: 10px 12px; text-align: center;">
                                     <div style="display: flex; gap: 0.4rem; justify-content: center; flex-wrap: wrap;">
-                                        <a href="editar-usuario?cedula=<?= htmlspecialchars($usr['cedula']) ?>" class="btn btn-outline" title="Editar Credenciales" style="padding: 4px 8px; font-size: 0.78rem; border-color: #cbd5e1; color: #334155; text-decoration: none; border-radius: 4px;">
-                                            <i class="ph-bold ph-pencil-simple"></i> Editar
-                                        </a>
+                                        <button type="button"
+                                            class="btn btn-outline"
+                                            title="Editar Credenciales"
+                                            style="padding: 4px 8px; font-size: 0.78rem;"
+                                            onclick="abrirModalEditarUsuario(<?= htmlspecialchars(json_encode([
+                                                'id' => $usr['id'],
+                                                'cedula' => $usr['cedula'],
+                                                'nombre' => $usr['nombre_completo'],
+                                                'email' => $usr['email'],
+                                                'rol' => $usr['rol_nombre']
+                                            ]), ENT_QUOTES, 'UTF-8') ?>)">
+                                        <i class="ph-bold ph-pencil-simple"></i> Editar
+                                    </button>
 
                                         <!-- ACCIÓN RÁPIDA: RESETEAR CLAVE TEMPORAL -->
                                         <form action="resetear-clave-usuario" method="POST" style="margin:0;" onsubmit="return confirm('¿Restablecer contraseña de esta cuenta a Temporal2026!?');">
@@ -167,71 +177,96 @@
      ========================================================================== -->
 <div id="tab-rbac" class="sa-tab-content" style="display: none;">
     <div class="glass-panel mb-2" style="padding: 1.5rem; border-radius: var(--radius-sm);">
-        <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem; font-weight: 700; color: var(--texto-titulos); display: flex; align-items: center; gap: 6px;">
-            <i class="ph-bold ph-shield-check" style="color: var(--color-secundario);"></i> Matriz Granular de Permisos por Acción (RBAC)
-        </h4>
-        <p style="font-size: 0.85rem; color: var(--texto-silenciado); margin-bottom: 1.25rem;">
-            Asigne permisos dinámicos por tipo de acción (Crear, Editar, Eliminar, Auditar) para controlar el comportamiento del sistema por cada rol.
-        </p>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+            <div>
+                <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem; font-weight: 700; color: var(--texto-titulos); display: flex; align-items: center; gap: 6px;">
+                    <i class="ph-bold ph-shield-check" style="color: var(--color-secundario);"></i> Matriz Granular de Permisos (RBAC)
+                </h4>
+                <p style="font-size: 0.85rem; color: var(--texto-silenciado); margin: 0;">
+                    Asigne permisos dinámicos por tipo de acción para controlar el comportamiento del sistema.
+                </p>
+            </div>
+            <button type="button" onclick="toggleModalCrearRol(true)" class="btn btn-solid" style="padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="ph-bold ph-plus"></i> Crear Nuevo Rol
+            </button>
+        </div>
 
         <form action="guardar-matriz-rbac" method="POST">
-            <div style="overflow-x: auto;">
+            <div style="overflow-x: auto; max-height: 600px; border: 1px solid #e2e8f0; border-radius: 8px;">
                 <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left;">
-                    <thead>
-                        <tr style="border-bottom: 2px solid #e2e8f0; background: rgba(244,247,251,0.95);">
-                            <th style="padding: 10px 12px; color: #121a3e !important; font-weight: 800;">Rol del Sistema</th>
-                            <th style="padding: 10px 12px; text-align: center; color: #121a3e !important; font-weight: 800;">Crear (POST)</th>
-                            <th style="padding: 10px 12px; text-align: center; color: #121a3e !important; font-weight: 800;">Editar (UPDATE)</th>
-                            <th style="padding: 10px 12px; text-align: center; color: #121a3e !important; font-weight: 800;">Eliminar (DELETE)</th>
-                            <th style="padding: 10px 12px; text-align: center; color: #121a3e !important; font-weight: 800;">Auditar (LOGS)</th>
+                    <thead style="position: sticky; top: 0; z-index: 10;">
+                        <tr style="border-bottom: 2px solid #e2e8f0; background: rgba(244,247,251,0.98);">
+                            <th style="padding: 10px 12px; color: #121a3e; font-weight: 800;">Jerarquía</th>
+                            <th style="padding: 10px 12px; color: #121a3e; font-weight: 800;">Módulo Objetivo</th>
+                            <?php foreach ($accionesDisponibles as $accion): ?>
+                                <th style="padding: 10px 12px; text-align: center; color: #121a3e; font-weight: 800; text-transform: capitalize;">
+                                    <?= str_replace('_', ' ', $accion) ?>
+                                </th>
+                            <?php endforeach; ?>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php 
-                        foreach ($roles as $rItem): 
-                            $rolNombre = $rItem['nombre'];
-                            $permisosRol = $matrizRBAC[$rolNombre] ?? ['crear' => true, 'editar' => false, 'eliminar' => false, 'auditar' => false];
-                        ?>
-                            <tr style="border-bottom: 1px solid #f1f5f9;">
-                                <td style="padding: 10px 12px; font-weight: 700; color: var(--texto-titulos);">
-                                    <i class="ph-bold ph-shield" style="color: var(--color-terciario); margin-right: 6px;"></i>
-                                    <?= htmlspecialchars($rolNombre) ?>
+                        <?php foreach ($privilegios as $priv): $nivel = $priv['nivel_privilegio']; ?>
+                            <?php foreach ($modulosInstalados as $indice => $moduloNombre): 
+                                $permisosNivelModulo = $matrizRBAC[$nivel][$moduloNombre] ?? [];
+                            ?>
+                            <tr style="border-bottom: 1px solid #f1f5f9; background: <?= $indice % 2 === 0 ? '#ffffff' : '#f8fafc' ?>;">
+                                <!-- Mostramos el Nivel solo en la primera fila de su bloque para que se vea limpio -->
+                                <td style="padding: 10px 12px; font-weight: 700; color: var(--color-secundario); border-right: 1px solid #e2e8f0;">
+                                    <?= $indice === 0 ? "<i class='ph-bold ph-shield-star' style='color: var(--color-terciario);'></i> Nivel {$nivel}" : "" ?>
                                 </td>
-                                <?php foreach (['crear', 'editar', 'eliminar', 'auditar'] as $accion): ?>
+                                
+                                <td style="padding: 10px 12px; font-weight: 600; color: var(--texto-titulos);">
+                                    <i class="ph-bold ph-plugs-connected" style="color: #64748b; margin-right: 4px;"></i> <?= htmlspecialchars($moduloNombre) ?>
+                                </td>
+                                
+                                <?php foreach ($accionesDisponibles as $accion): ?>
                                     <td style="padding: 10px 12px; text-align: center;">
-                                        <input type="hidden" name="matrix[<?= htmlspecialchars($rolNombre) ?>][<?= $accion ?>]" value="0">
-                                        <input type="checkbox" name="matrix[<?= htmlspecialchars($rolNombre) ?>][<?= $accion ?>]" value="1" <?= !empty($permisosRol[$accion]) ? 'checked' : '' ?> style="width: 18px; height: 18px; cursor: pointer;">
+                                        <input type="hidden" name="matrix[<?= $nivel ?>][<?= htmlspecialchars($moduloNombre) ?>][<?= $accion ?>]" value="0">
+                                        <input type="checkbox" name="matrix[<?= $nivel ?>][<?= htmlspecialchars($moduloNombre) ?>][<?= $accion ?>]" value="1" <?= !empty($permisosNivelModulo[$accion]) ? 'checked' : '' ?> style="width: 18px; height: 18px; cursor: pointer;">
                                     </td>
                                 <?php endforeach; ?>
                             </tr>
+                            <?php endforeach; ?>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
 
             <div style="margin-top: 1.25rem; display: flex; justify-content: flex-end;">
-                <button type="submit" class="btn btn-solid" style="background: var(--color-secundario) !important; color: #ffffff !important; border-radius: 6px; padding: 8px 16px; font-weight: 700;">
-                    <i class="ph-bold ph-floppy-disk"></i> Guardar Matriz RBAC
+                <button type="submit" class="btn btn-solid" style="background: var(--color-secundario) !important; color: #ffffff !important; border-radius: 6px; padding: 8px 16px; font-weight: 700; border:none;">
+                    <i class="ph-bold ph-floppy-disk"></i> Guardar Matriz RBAC Segmentada
                 </button>
             </div>
         </form>
 
-        <!-- SECCIÓN EDICIÓN Y RENOMBRADO DE ROLES -->
+        <!-- SECCIÓN EDICIÓN DE ROLES -->
         <div style="margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 1.25rem;">
             <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--texto-titulos); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 6px;">
-                <i class="ph-bold ph-pencil-line" style="color: var(--color-terciario);"></i> Renombrar Denominación de Roles (Sincronización en Cascada)
+                <i class="ph-bold ph-pencil-line" style="color: var(--color-terciario);"></i> Editar Denominación y Jerarquía de Roles
             </h4>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
                 <?php foreach ($roles as $rItem): ?>
-                    <form action="actualizar-rol" method="POST" style="background: #ffffff; border: 1px solid rgba(80, 89, 132, 0.2); padding: 0.85rem 1rem; border-radius: 8px; display: flex; gap: 0.5rem; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(18,26,62,0.02);">
+                    <form action="actualizar-rol" method="POST" style="background: #ffffff; border: 1px solid rgba(80, 89, 132, 0.2); padding: 0.85rem 1rem; border-radius: 8px; display: flex; flex-direction: column; gap: 0.6rem; box-shadow: 0 2px 8px rgba(18,26,62,0.02);">
                         <input type="hidden" name="rol_id" value="<?= $rItem['id'] ?>">
                         <input type="hidden" name="nombre_anterior" value="<?= htmlspecialchars($rItem['nombre']) ?>">
                         
-                        <input type="text" name="nuevo_nombre" value="<?= htmlspecialchars($rItem['nombre']) ?>" class="sa-filter-input" style="flex: 1; min-width: 0;" required>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <input type="text" name="nuevo_nombre" value="<?= htmlspecialchars($rItem['nombre']) ?>" class="sa-filter-input" style="flex: 1; min-width: 0;" required>
+                            
+                            <select name="privilegio_id" class="sa-filter-input" required title="Cambiar nivel jerárquico">
+                                <?php foreach ($privilegios as $priv): 
+                                    $isSelected = (isset($rItem['privilegio_id']) && $rItem['privilegio_id'] == $priv['privilegio_id']) ? 'selected' : '';
+                                ?>
+                                    <option value="<?= $priv['privilegio_id'] ?>" <?= $isSelected ?>>Nivel <?= $priv['nivel_privilegio'] ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
                         
-                        <button type="submit" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem; border-color: var(--color-secundario); color: var(--color-secundario) !important; cursor: pointer; white-space: nowrap; flex-shrink: 0;" title="Guardar Nuevo Nombre de Rol">
-                            <i class="ph-bold ph-check"></i> Renombrar
+                        <button type="submit" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem; border-color: var(--color-secundario); color: var(--color-secundario) !important; cursor: pointer; width: 100%;">
+                            <i class="ph-bold ph-check"></i> Actualizar Rol
                         </button>
                     </form>
                 <?php endforeach; ?>
@@ -262,7 +297,10 @@
                             <h4 class="gestor-teacher-name"><?= htmlspecialchars($profe['nombre_completo']) ?></h4>
                             <span class="gestor-teacher-cedula"><?= htmlspecialchars($profe['cedula']) ?></span>
                         </div>
-                        <a href="gestor-usuarios?cedula=<?= htmlspecialchars($profe['cedula']) ?>" title="Administrar Docente" class="gestor-teacher-remove" style="color: var(--color-terciario); text-decoration: none;">
+                        <a href="gestor-usuarios?cedula=<?= urlencode($profe['cedula']) ?>&tab=tab-comunidad"
+                            title="Buscar usuario docente"
+                            class="gestor-teacher-remove"
+                            style="color: var(--color-terciario); text-decoration: none;">
                             <i class="ph-bold ph-arrow-circle-right"></i>
                         </a>
                     </div>
@@ -320,23 +358,167 @@
     </div>
 </div>
 
+<!-- MODAL PARA EDITAR USUARIO -->
+
+<div id="modalEditarUsuario"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: #ffffff; width: 100%; max-width: 480px; border-radius: 12px; padding: 1.75rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(226, 232, 240, 0.8);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--color-principal); display: flex; align-items: center; gap: 8px;">
+                <i class="ph-bold ph-user-plus" style="color: var(--color-secundario);"></i>  Editar Usuario
+            </h3>
+
+            <button type="button"
+                    onclick="toggleModalEditarUsuario(false)"
+                    style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b;">
+                ✕
+            </button>
+        </div>
+
+        <form action="procesar-edicion-usuario"
+              method="POST"
+              style="display: flex; flex-direction: column; gap: 0.85rem;">
+
+            <input type="hidden" name="usuario_id" id="editarUsuarioId">
+            <input type="hidden" name="cedula_original" id="editarCedulaOriginal">
+
+            <div>
+                <label>Cédula de Identidad</label>
+                <input type="text"
+                       name="cedula"
+                       id="editarCedula"
+                       class="sa-filter-input"
+                       required
+                       style="width: 100%; box-sizing: border-box;">
+            </div>
+
+            <div>
+                <label>Nombre Completo</label>
+                <input type="text"
+                       name="nombre"
+                       id="editarNombre"
+                       class="sa-filter-input"
+                       required
+                       style="width: 100%; box-sizing: border-box;">
+            </div>
+
+            <div>
+                <label>Correo Electrónico</label>
+                <input type="email"
+                       name="email"
+                       id="editarEmail"
+                       class="sa-filter-input"
+                       required
+                       style="width: 100%; box-sizing: border-box;">
+            </div>
+
+            <div>
+                <label>Rol</label>
+                <select name="id_rol"
+                        id="editarRol"
+                        class="sa-filter-input"
+                        required
+                        style="width: 100%; box-sizing: border-box;">
+                    <?php foreach ($roles as $rol): ?>
+                        <option value="<?= $rol['id'] ?>"
+                                data-nombre="<?= htmlspecialchars($rol['nombre'], ENT_QUOTES, 'UTF-8') ?>">
+                            <?= htmlspecialchars($rol['nombre']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div>
+                <label>Nueva Contraseña</label>
+                <input type="password"
+                       name="password"
+                       class="sa-filter-input"
+                       placeholder="Dejar vacío para conservarla"
+                       style="width: 100%; box-sizing: border-box;">
+            </div>
+
+            <div>
+                <label>Confirmar Contraseña</label>
+                <input type="password"
+                       name="password_confirm"
+                       class="sa-filter-input"
+                       placeholder="Repetir solo si desea cambiarla"
+                       style="width: 100%; box-sizing: border-box;">
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.75rem;">
+                <button type="button"
+                        onclick="toggleModalEditarUsuario(false)"
+                        class="btn btn-outline" style="border-color: #cbd5e1; color: #64748b; padding: 0.65rem 1rem; border-radius: 6px; font-size: 0.85rem;">Cancelar</button>
+
+                <button type="submit"
+                        class="btn btn-solid"
+                        style="background: var(--color-secundario) !important; color: #ffffff !important; border: none;">
+                    Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL PARA CREAR NUEVO ROL -->
+<div id="modalCrearRol" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: #ffffff; width: 100%; max-width: 400px; border-radius: 12px; padding: 1.75rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(226, 232, 240, 0.8);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--color-principal); display: flex; align-items: center; gap: 8px;">
+                <i class="ph-bold ph-shield-plus" style="color: var(--color-secundario);"></i> Crear Nuevo Rol
+            </h3>
+            <button type="button" onclick="toggleModalCrearRol(false)" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b;">✕</button>
+        </div>
+
+        <form action="crear-rol" method="POST" style="display: flex; flex-direction: column; gap: 0.85rem;">
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+            
+            <div>
+                <label style="font-size: 0.78rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 4px;">Nombre del Rol</label>
+                <input type="text" name="nuevo_rol_nombre" class="sa-filter-input" placeholder="Ej: Coordinador Académico" required style="width: 100%; box-sizing: border-box;">
+            </div>
+
+            <div>
+                <label style="font-size: 0.78rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 4px;">Nivel de Privilegio Base</label>
+                <select name="nuevo_privilegio_id" class="sa-filter-input" required style="width: 100%; box-sizing: border-box;">
+                    <option value="">Seleccione un nivel...</option>
+                    <?php foreach ($privilegios as $priv): ?>
+                        <option value="<?= $priv['privilegio_id'] ?>">Nivel <?= $priv['nivel_privilegio'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.75rem;">
+                <button type="button" onclick="toggleModalCrearRol(false)" class="btn btn-outline" style="border-color: #cbd5e1; color: #64748b; padding: 0.65rem 1rem; border-radius: 6px; font-size: 0.85rem;">Cancelar</button>
+                <button type="submit" class="btn btn-solid" style="background: #10b981 !important; color: #ffffff !important; border: none; padding: 0.65rem 1.25rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700;">Crear Rol</button>
+            </div>
+        </form>
+    </div>
+</div>
 <!-- SCRIPTS LOCALES JS DE NAVEGACIÓN & FILTROS -->
 <script>
 function switchUserTab(tabId, btnElement) {
     const tabs = document.querySelectorAll('.sa-tab-content');
-    tabs.forEach(t => t.style.display = 'none');
+    tabs.forEach(tab => {
+        tab.style.display = 'none';
+        tab.classList.remove('active');
+    });
 
-    const btns = document.querySelectorAll('.sa-tab-btn');
-    btns.forEach(b => b.classList.remove('tab-active'));
+    const buttons = document.querySelectorAll('.sa-tab-btn');
+    buttons.forEach(button => button.classList.remove('tab-active'));
 
     const selectedTab = document.getElementById(tabId);
     if (selectedTab) {
         selectedTab.style.display = 'block';
+        selectedTab.classList.add('active');
     }
 
     if (btnElement) {
         btnElement.classList.add('tab-active');
     }
+
+    sessionStorage.setItem('gestorUsuariosTab', tabId);
 }
 
 function toggleModalCrearUsuario(show) {
@@ -424,8 +606,45 @@ function changeUserPage(dir) {
     currentUserPage += dir;
     applyPaginationAndFilter();
 }
+function toggleModalEditarUsuario(show) {
+    const modal = document.getElementById('modalEditarUsuario');
 
+    if (modal) {
+        modal.style.display = show ? 'flex' : 'none';
+    }
+}
+function toggleModalCrearRol(show) {
+    const modal = document.getElementById('modalCrearRol');
+    if (modal) {
+        modal.style.display = show ? 'flex' : 'none';
+    }
+}
+
+function abrirModalEditarUsuario(usuario) {
+    document.getElementById('editarUsuarioId').value = usuario.id;
+    document.getElementById('editarCedulaOriginal').value = usuario.cedula;
+    document.getElementById('editarCedula').value = usuario.cedula;
+    document.getElementById('editarNombre').value = usuario.nombre;
+    document.getElementById('editarEmail').value = usuario.email;
+
+    const selectorRol = document.getElementById('editarRol');
+
+    Array.from(selectorRol.options).forEach(opcion => {
+        opcion.selected = opcion.dataset.nombre === usuario.rol;
+    });
+
+    toggleModalEditarUsuario(true);
+}
 document.addEventListener('DOMContentLoaded', () => {
+    const parametros = new URLSearchParams(window.location.search);
+    const tabDesdeUrl = parametros.get('tab');
+    const tabGuardada = sessionStorage.getItem('gestorUsuariosTab');
+    const tabId = tabDesdeUrl || tabGuardada || 'tab-comunidad';
+    const boton = document.querySelector(
+        `.sa-tab-btn[onclick*="'${tabId}'"]`
+    );
+
+    switchUserTab(tabId, boton);
     applyPaginationAndFilter();
 });
 </script>

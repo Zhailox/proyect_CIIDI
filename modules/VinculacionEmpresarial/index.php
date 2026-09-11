@@ -69,28 +69,10 @@ class VinculacionEmpresarialModule implements ModuleContract {
                 'activadores' => ['empresas-inicio', 'seguimiento-empresa'], 
                 'subitems'    => [
                     ['ruta' => 'empresas-inicio', 'titulo' => 'Conócenos'],
+                    ['ruta' => 'seguimiento-empresa', 'titulo' => 'Seguimiento'],
+                    ['ruta' => 'cartelera-oportunidades', 'titulo' => 'Estudiantes'],
+                    ['ruta' => 'banco-propuestas', 'titulo' => 'Evaluación de Propuestas'],
                     ['ruta' => 'seguimiento-empresa', 'titulo' => 'Seguimiento']
-                ]
-            ],
-            [
-                'tipo'        => 'parent',
-                'titulo'      => 'Estudiantes (PST)',
-                'icono'       => 'ph-fill ph-rocket-launch',
-                'enlace'      => 'cartelera-oportunidades',
-                'activadores' => ['cartelera-oportunidades'], 
-                'subitems'    => [
-                    ['ruta' => 'cartelera-oportunidades', 'titulo' => 'Oportunidades de Proyecto']
-                ]
-            ],
-            [
-                'tipo'        => 'parent',
-                'titulo'      => 'Comité de Proyectos',
-                'icono'       => 'ph-fill ph-briefcase',
-                'enlace'      => 'banco-propuestas',
-                'privilegio_minimo' => 2, // Asumiendo que 2 es Profesor/Comité
-                'activadores' => ['banco-propuestas'], 
-                'subitems'    => [
-                    ['ruta' => 'banco-propuestas', 'titulo' => 'Evaluación de Propuestas']
                 ]
             ]
         ];

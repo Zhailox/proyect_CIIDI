@@ -108,7 +108,11 @@ class BackupService {
             return ['valido' => false, 'detalles' => 'El archivo de respaldo está completamente vacío (0 bytes).'];
         }
 
-        $esGzip = (str_ends_with($rutaArchivo, '.gz') || str_ends_with($rutaArchivo, '.sql.gz'));
+        $extensionGzip = str_ends_with(strtolower($rutaArchivo), '.gz');
+        $archivoInicial = file_get_contents($rutaArchivo, false, null, 0, 2);
+        $firmaGzip = $archivoInicial === "\x1f\x8b"; //Inicio de binario de los gzip
+
+        $esGzip = $extensionGzip || $firmaGzip;
         $contenido = '';
 
         if ($esGzip) {
