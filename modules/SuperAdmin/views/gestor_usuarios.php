@@ -207,6 +207,7 @@
         </div>
 
         <form action="guardar-matriz-rbac" method="POST">
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
             <!-- Contenedor del Acordeón -->
             <div style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 600px; overflow-y: auto; padding-right: 5px;">
                 
@@ -221,14 +222,10 @@
                             
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <?php if ($nivel > 3): ?>
-                                    <!-- Formulario para eliminar el nivel (solo si es > 3) -->
-                                    <form action="eliminar-nivel-privilegio" method="POST" style="margin: 0;" onsubmit="event.preventDefault(); mostrarConfirmacionUsuarios(this, 'Eliminar Nivel', '¿Seguro que deseas eliminar el nivel <?= $nivel ?>? Fallará si tiene roles asignados.', 'ph-trash', '#ef4444');">
-                                        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-                                        <input type="hidden" name="nivel" value="<?= $nivel ?>">
-                                        <button type="submit" class="btn-icon btn-delete" title="Eliminar Nivel" style="padding: 2px 6px; height: auto;" onclick="event.stopPropagation();">
-                                            <i class="ph-bold ph-trash"></i>
-                                        </button>
-                                    </form>
+                                    <!-- Botón limpio, sin form anidado -->
+                                    <button type="button" class="btn-icon btn-delete" title="Eliminar Nivel" style="padding: 2px 6px; height: auto;" onclick="event.stopPropagation(); confirmarEliminacionNivel(<?= $nivel ?>);">
+                                        <i class="ph-bold ph-trash"></i>
+                                    </button>
                                 <?php endif; ?>
                                 <i class="ph-bold ph-caret-down" style="color: #94a3b8;"></i>
                             </div>
@@ -557,6 +554,10 @@
     </div>
 </div>
 <!-- SCRIPTS LOCALES JS DE NAVEGACIÓN & FILTROS -->
+ <form id="formEliminarNivel" action="eliminar-nivel-privilegio" method="POST" style="display: none;">
+    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+    <input type="hidden" name="nivel" id="inputEliminarNivel" value="">
+</form>
 <script>
 function switchUserTab(tabId, btnElement) {
     const tabs = document.querySelectorAll('.sa-tab-content');
@@ -717,5 +718,10 @@ function mostrarConfirmacionUsuarios(form, titulo, mensaje, icono, color) {
     btnConfirm.onclick = function() { form.submit(); };
     
     document.getElementById('modalConfirmacionUsuarios').style.display = 'flex';
+}
+function confirmarEliminacionNivel(nivel) {
+    document.getElementById('inputEliminarNivel').value = nivel;
+    const form = document.getElementById('formEliminarNivel');
+    mostrarConfirmacionUsuarios(form, 'Eliminar Nivel', `¿Seguro que deseas eliminar el nivel de privilegio ${nivel}? Esta acción fallará por seguridad si aún existen roles asignados a esta jerarquía.`, 'ph-trash', '#ef4444');
 }
 </script>

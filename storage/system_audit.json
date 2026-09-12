@@ -1,5 +1,165 @@
 [
     {
+        "id": "log_6aa4d44b8f228",
+        "fecha_hora": "2026-09-12 04:25:47",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Rol",
+        "detalles": "Rol ID #3 actualizado a 'Estudiantes' (Nivel: 1).",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4d432f1524",
+        "fecha_hora": "2026-09-12 04:25:22",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Rol",
+        "detalles": "Rol ID #1 actualizado a 'Super Administrador' (Nivel: 1).",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4d4148257a",
+        "fecha_hora": "2026-09-12 04:24:52",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Rol",
+        "detalles": "Rol ID #1 actualizado a 'Super Administrador' (Nivel: 1).",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4d34bb084b",
+        "fecha_hora": "2026-09-12 04:21:31",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Matriz RBAC",
+        "detalles": "Se actualizaron los permisos granulares por Módulo y Nivel.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4d341d7d41",
+        "fecha_hora": "2026-09-12 04:21:21",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Extender Privilegios",
+        "detalles": "Se ha creado un nuevo nivel jerárquico en el sistema.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4d33eb2070",
+        "fecha_hora": "2026-09-12 04:21:18",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Eliminar Nivel",
+        "detalles": "Nivel de privilegio 6 eliminado de la BD y purgado del RBAC.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4d33a9c820",
+        "fecha_hora": "2026-09-12 04:21:14",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Eliminar Rol",
+        "detalles": "Rol ID #6 eliminado de la base de datos.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4d27037a8e",
+        "fecha_hora": "2026-09-12 04:17:52",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Rol",
+        "detalles": "Rol ID #1 actualizado a 'Super Administrador' (Nivel: 4).",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4d26c76ea9",
+        "fecha_hora": "2026-09-12 04:17:48",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Rol",
+        "detalles": "Rol ID #6 actualizado a 'IAIAIA' (Nivel: 9).",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4d267b9cf4",
+        "fecha_hora": "2026-09-12 04:17:43",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Crear Rol",
+        "detalles": "Nuevo rol creado: IAIAIA (Privilegio ID: 1)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4d24cda9c5",
+        "fecha_hora": "2026-09-12 04:17:16",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Rol",
+        "detalles": "Rol ID #1 actualizado a 'Super Administrador' (Nivel: 9).",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4d235d388e",
+        "fecha_hora": "2026-09-12 04:16:53",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Extender Privilegios",
+        "detalles": "Se ha creado un nuevo nivel jerárquico en el sistema.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4ceeec9e31",
+        "fecha_hora": "2026-09-12 04:02:54",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Eliminar Nivel",
+        "detalles": "Nivel de privilegio 6 eliminado.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4cee58ca83",
+        "fecha_hora": "2026-09-12 04:02:45",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Extender Privilegios",
+        "detalles": "Se ha creado un nuevo nivel jerárquico en el sistema.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4cee22ca32",
+        "fecha_hora": "2026-09-12 04:02:42",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Eliminar Nivel",
+        "detalles": "Nivel de privilegio 6 eliminado.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4cedae5dd2",
+        "fecha_hora": "2026-09-12 04:02:34",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Matriz RBAC",
+        "detalles": "Se actualizaron los permisos granulares por Módulo y Nivel.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
         "id": "log_6aa4c9e40438e",
         "fecha_hora": "2026-09-12 03:41:24",
         "nivel": "INFO",

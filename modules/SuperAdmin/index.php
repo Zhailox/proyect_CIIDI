@@ -224,6 +224,11 @@ class SuperAdminModule implements ModuleContract {
                 'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
                 'controlador'      => 'GestorUsuariosController',
                 'metodo'           => 'eliminarRolAction'
+            ],
+            'eliminar-nivel-privilegio' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'eliminarNivelPrivilegioAction'
             ]
         ];
     }

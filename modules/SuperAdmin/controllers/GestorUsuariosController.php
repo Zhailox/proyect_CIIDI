@@ -422,10 +422,22 @@ class GestorUsuariosController {
                 $_SESSION['mensaje_gestor_error'] = "Seguridad: No se pueden eliminar los niveles base (0 al 3) del sistema.";
             } else {
                 try {
+                    // 1. Eliminar de la Base de Datos
                     $this->adminModel->eliminarPrivilegio($nivel);
-                    AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Nivel', "Nivel de privilegio {$nivel} eliminado.");
+                    
+                    // 2. Purgar los datos fantasma del archivo JSON
+                    $archivo = CORE_PATH . '../storage/rbac_matrix.json';
+                    if (file_exists($archivo)) {
+                        $matriz = json_decode(file_get_contents($archivo), true) ?: [];
+                        if (isset($matriz[$nivel])) {
+                            unset($matriz[$nivel]); // Elimina la rama completa de ese nivel
+                            file_put_contents($archivo, json_encode($matriz, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+                        }
+                    }
+
+                    AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Nivel', "Nivel de privilegio {$nivel} eliminado de la BD y purgado del RBAC.");
                     if (session_status() === PHP_SESSION_NONE) session_start();
-                    $_SESSION['mensaje_gestor_exito'] = "Nivel {$nivel} eliminado correctamente.";
+                    $_SESSION['mensaje_gestor_exito'] = "Nivel {$nivel} eliminado y purgado de la matriz correctamente.";
                 } catch (Throwable $e) {
                     if (session_status() === PHP_SESSION_NONE) session_start();
                     $_SESSION['mensaje_gestor_error'] = "No se puede eliminar un nivel que tiene roles asignados.";
