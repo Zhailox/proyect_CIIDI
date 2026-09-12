@@ -104,40 +104,44 @@ public function getRutas(): array {
     public function getHeaderConfig(): array {
         require_once CORE_PATH . 'Security/Auth.php';
 
+        $controles = [];
+        $widgetMantenimiento = [
+            'tipo'       => 'custom_view',
+            'ruta_vista' => MODULES_PATH . 'SuperAdmin/views/header_mantenimiento_widget.php',
+            'orden'      => 70 // Se muestra antes del buscador y del perfil
+        ];
+        $controles[] = $widgetMantenimiento;
+
         // Si el usuario ESTÁ LOGUEADO
         if (Auth::check()) {
-            return [
-                // 1. Inyectamos el widget del perfil con su foto
-                [
-                    'tipo'       => 'custom_view',
-                    'ruta_vista' => __DIR__ . '/views/perfil_header.php',
-                    'css'        => 'perfil_header.css',
-                    'orden'      => 90
-                ],
-                // 2. Inyectamos el botón de Salir
-                [
-                    'tipo'   => 'button',
-                    'texto'  => 'Salir',
-                    'icono'  => 'ph-bold ph-sign-out',
-                    'enlace' => 'cerrar-sesion',
-                    'clase'  => 'btn btn-outline',
-                    'orden'      => 100
-                ]
+            $controles[] = [
+                'tipo'       => 'custom_view',
+                'ruta_vista' => __DIR__ . '/views/perfil_header.php',
+                'css'        => 'perfil_header.css',
+                'orden'      => 90
+            ];
+            $controles[] = [
+                'tipo'   => 'button',
+                'texto'  => 'Salir',
+                'icono'  => 'ph-bold ph-sign-out',
+                'enlace' => 'cerrar-sesion',
+                'clase'  => 'btn btn-outline',
+                'orden'      => 100
             ];
         } 
         // Si el usuario es un VISITANTE
         else {
-            return [
-                [
-                    'tipo'   => 'button',
-                    'texto'  => 'Acceder',
-                    'icono'  => 'ph-bold ph-sign-in',
-                    'enlace' => 'login',
-                    'clase'  => 'btn btn-outline',
-                    'orden'      => 100
-                ]
+            $controles[] = [
+                'tipo'   => 'button',
+                'texto'  => 'Acceder',
+                'icono'  => 'ph-bold ph-sign-in',
+                'enlace' => 'login',
+                'clase'  => 'btn btn-outline',
+                'orden'      => 100
             ];
         }
+
+        return $controles;
     }
 }
 

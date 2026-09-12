@@ -205,10 +205,25 @@ class SuperAdminModule implements ModuleContract {
                 'controlador'      => 'AdminController',
                 'metodo'           => 'ejecutarLimpiezaRespaldos'
             ],
+            'optimizar-bd' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'optimizarBaseDatos'
+            ],
             'alternar-mantenimiento' => [
                 'controlador_path' => __DIR__ . '/controllers/AdminController.php',
                 'controlador'      => 'AdminController',
                 'metodo'           => 'alternarMantenimiento'
+            ],
+            'programar-mantenimiento' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'programarMantenimiento'
+            ],
+            'cancelar-mantenimiento' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'cancelarMantenimiento'
             ],
             'restaurar-backup' => [
                 'controlador_path' => __DIR__ . '/controllers/AdminController.php',
@@ -229,6 +244,59 @@ class SuperAdminModule implements ModuleContract {
                 'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
                 'controlador'      => 'GestorUsuariosController',
                 'metodo'           => 'eliminarNivelPrivilegioAction'
+            ],
+            // Rutas para Tareas Programadas / System Scheduler
+            'gestor-scheduler' => [
+                'controlador_path' => __DIR__ . '/controllers/SchedulerController.php',
+                'controlador'      => 'SchedulerController',
+                'metodo'           => 'index',
+                'vista'            => __DIR__ . '/views/gestor_scheduler.php',
+                'titulo'           => 'Tareas Programadas & Cron - SuperAdmin',
+                'css'              => ['SuperAdmin.css']
+            ],
+            'alternar-estado-tarea' => [
+                'controlador_path' => __DIR__ . '/controllers/SchedulerController.php',
+                'controlador'      => 'SchedulerController',
+                'metodo'           => 'alternarEstado'
+            ],
+            'ejecutar-tarea-manual' => [
+                'controlador_path' => __DIR__ . '/controllers/SchedulerController.php',
+                'controlador'      => 'SchedulerController',
+                'metodo'           => 'ejecutarManual'
+            ],
+            'guardar-tarea-programada' => [
+                'controlador_path' => __DIR__ . '/controllers/SchedulerController.php',
+                'controlador'      => 'SchedulerController',
+                'metodo'           => 'guardarTarea'
+            ],
+            'eliminar-tarea-programada' => [
+                'controlador_path' => __DIR__ . '/controllers/SchedulerController.php',
+                'controlador'      => 'SchedulerController',
+                'metodo'           => 'eliminarTarea'
+            ],
+            // Rutas para WAF & Monitor de Seguridad
+            'visor-seguridad' => [
+                'controlador_path' => __DIR__ . '/controllers/SecurityMonitorController.php',
+                'controlador'      => 'SecurityMonitorController',
+                'metodo'           => 'index',
+                'vista'            => __DIR__ . '/views/visor_seguridad.php',
+                'titulo'           => 'Monitor WAF & Seguridad - SuperAdmin',
+                'css'              => ['SuperAdmin.css']
+            ],
+            'desbloquear-ip' => [
+                'controlador_path' => __DIR__ . '/controllers/SecurityMonitorController.php',
+                'controlador'      => 'SecurityMonitorController',
+                'metodo'           => 'desbloquearIP'
+            ],
+            'bloquear-ip-lista-negra' => [
+                'controlador_path' => __DIR__ . '/controllers/SecurityMonitorController.php',
+                'controlador'      => 'SecurityMonitorController',
+                'metodo'           => 'bloquearListaNegra'
+            ],
+            'agregar-lista-blanca' => [
+                'controlador_path' => __DIR__ . '/controllers/SecurityMonitorController.php',
+                'controlador'      => 'SecurityMonitorController',
+                'metodo'           => 'agregarListaBlanca'
             ],
             'configuracion-sistema' => [
                 'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
@@ -255,6 +323,7 @@ class SuperAdminModule implements ModuleContract {
                 'privilegio_minimo' => 2,
                 'enlace'      => 'sudoadmin',
                 // Rutas que mantienen iluminado y desplegado el panel administrativo en el Sidebar
+                'activadores' => ['sudoadmin', 'gestor-modulos', 'detalle-modulo', 'gestor-mantenimiento', 'visor-logs', 'gestor-usuarios', 'gestor-scheduler', 'visor-seguridad'], 
                 'activadores' => ['sudoadmin', 'gestor-modulos', 'detalle-modulo', 'gestor-mantenimiento', 'visor-logs', 'gestor-usuarios', 'configuracion-sistema'], 
                 'subitems'    => [
                     ['ruta' => 'sudoadmin', 'titulo' => 'Panel de Control'],
@@ -262,6 +331,8 @@ class SuperAdminModule implements ModuleContract {
                     ['ruta' => 'gestor-modulos', 'titulo' => 'Gestor de Módulos'],
                     ['ruta' => 'configuracion-sistema', 'titulo' => 'Variables de Entorno'],
                     ['ruta' => 'gestor-mantenimiento', 'titulo' => 'Mantenimiento & BD'],
+                    ['ruta' => 'gestor-scheduler', 'titulo' => 'Tareas Programadas'],
+                    ['ruta' => 'visor-seguridad', 'titulo' => 'Monitor WAF & IPs'],
                     ['ruta' => 'visor-logs', 'titulo' => 'Visor de Logs']
                 ]
             ]
@@ -277,8 +348,12 @@ class SuperAdminModule implements ModuleContract {
         // Módulo de infraestructura. No requiere tarjeta pública.
         return [];
     }
-     public function getHeaderConfig(): array {
-        return [];
+    public function getHeaderConfig(): array {
+        return [
+            'tipo'       => 'custom_view',
+            'ruta_vista' => __DIR__ . '/views/header_mantenimiento_widget.php',
+            'orden'      => 85 // Se ubica justo al lado del perfil de usuario y buscador
+        ];
     }
 }
 

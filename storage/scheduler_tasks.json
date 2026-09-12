@@ -1,0 +1,32 @@
+{
+    "limpieza_temporales": {
+        "id": "limpieza_temporales",
+        "nombre": "Limpieza de Archivos Temporales & Caché",
+        "descripcion": "Elimina archivos temporales en storage\/tmp\/, cachés expiradas y residuos de descargas.",
+        "expresion_cron": "0 3 * * *",
+        "estado": "inactivo",
+        "ultima_ejecucion": "2026-09-12 05:37:40",
+        "resultado_ultimo": "ÉXITO (0.4ms): Limpieza completada. Se depuraron 1 archivos temporales y cachés expiradas.",
+        "script": "limpiarTemporales"
+    },
+    "backup_automatico_medianoche": {
+        "id": "backup_automatico_medianoche",
+        "nombre": "Respaldo Automático de Medianoche (PostgreSQL Dump)",
+        "descripcion": "Genera un backup completo comprimido (.sql.gz) de la base de datos y purga respaldos antiguos.",
+        "expresion_cron": "0 0 * * *",
+        "estado": "inactivo",
+        "ultima_ejecucion": "2026-09-12 05:05:33",
+        "resultado_ultimo": "ÉXITO (843.12ms): Respaldo generado con éxito: backup_ciidi_2026-09-12_05-05-32.sql.gz",
+        "script": "ejecutarBackupAutomatico"
+    },
+    "purga_logs_viejos": {
+        "id": "purga_logs_viejos",
+        "nombre": "Optimización y Rotación de Logs de Auditoría",
+        "descripcion": "Mantener los logs de auditoría dentro de un límite saludable de almacenamiento.",
+        "expresion_cron": "0 4 * * 0",
+        "estado": "inactivo",
+        "ultima_ejecucion": "2026-09-12 05:05:45",
+        "resultado_ultimo": "ÉXITO (1.08ms): Optimización de logs completada. 0 registros obsoletos purgados de la auditoría.",
+        "script": "purgarLogs"
+    }
+}

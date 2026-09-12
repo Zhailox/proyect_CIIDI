@@ -68,25 +68,75 @@ public function run() {
         $ruta = isset($_GET['ruta']) ? $_GET['ruta'] : 'inicio';
         $archivo_mantenimiento = __DIR__ . '/../../storage/maintenance.json';
         if (file_exists($archivo_mantenimiento)) {
-            $dataMantenimiento = json_decode(file_get_contents($archivo_mantenimiento), true);
-            
-            if (isset($dataMantenimiento['activo']) && $dataMantenimiento['activo'] === true) {
-                // Auto-desactivar mantenimiento si vence el temporizador programado (fecha_fin)
-                if (!empty($dataMantenimiento['fecha_fin']) && strtotime($dataMantenimiento['fecha_fin']) <= time()) {
-                    $dataMantenimiento['activo'] = false;
-                    file_put_contents($archivo_mantenimiento, json_encode($dataMantenimiento, JSON_PRETTY_PRINT));
-                } else {
-                    $esAdmin = isset($_SESSION['nivel_privilegio']) && (int)$_SESSION['nivel_privilegio'] >= 3;
-                    $rutasPermitidas = ['login', 'procesar-login', 'cerrar-sesion'];
-                    
-                    if (!$esAdmin && !in_array($ruta, $rutasPermitidas)) {
-                        $mensajeCustom = !empty($dataMantenimiento['mensaje']) ? $dataMantenimiento['mensaje'] : "Estamos realizando labores de optimización. Vuelve en un momento.";
-                        $fechaFinMantenimiento = $dataMantenimiento['fecha_fin'] ?? null;
-                        
-                        http_response_code(503);
-                        require_once CORE_VIEWS . 'mantenimiento.php';
-                        exit;
+            $dataMantenimiento = json_decode(file_get_contents($archivo_mantenimiento), true) ?: [];
+            $ahora = time();
+            $cambioArchivo = false;
+
+            // 1. Revisar la agenda para auto-activar o sincronizar la ventana más cercana
+            $agenda = $dataMantenimiento['agenda'] ?? [];
+            $mantMasCercano = null;
+            $hayActivoEnAgenda = false;
+
+            foreach ($agenda as &$item) {
+                $inicioTs = strtotime($item['fecha_inicio'] ?? '');
+                $finTs = strtotime($item['fecha_fin'] ?? '');
+
+                if ($inicioTs && $finTs) {
+                    if ($inicioTs <= $ahora && $finTs > $ahora) {
+                        $item['activo'] = true;
+                        $item['programado'] = false;
+                        $hayActivoEnAgenda = true;
+                        $mantMasCercano = $item;
+                    } elseif ($inicioTs > $ahora) {
+                        $item['activo'] = false;
+                        $item['programado'] = true;
+                        if ($mantMasCercano === null || $inicioTs < strtotime($mantMasCercano['fecha_inicio'])) {
+                            $mantMasCercano = $item;
+                        }
+                    } else {
+                        $item['activo'] = false;
+                        $item['programado'] = false;
                     }
+                }
+            }
+
+            // Sincronizar estado principal si proviene de una ventana agendada
+            if ($hayActivoEnAgenda && empty($dataMantenimiento['activo'])) {
+                $dataMantenimiento['activo'] = true;
+                $dataMantenimiento['fecha_inicio'] = $mantMasCercano['fecha_inicio'];
+                $dataMantenimiento['fecha_fin'] = $mantMasCercano['fecha_fin'];
+                $dataMantenimiento['mensaje'] = $mantMasCercano['mensaje'];
+                $cambioArchivo = true;
+            } elseif (!$hayActivoEnAgenda && !empty($dataMantenimiento['activo']) && !empty($dataMantenimiento['fecha_fin']) && strtotime($dataMantenimiento['fecha_fin']) <= $ahora) {
+                $dataMantenimiento['activo'] = false;
+                $cambioArchivo = true;
+            }
+
+            if (!empty($mantMasCercano) && empty($dataMantenimiento['activo'])) {
+                if (($dataMantenimiento['fecha_inicio'] ?? '') !== $mantMasCercano['fecha_inicio']) {
+                    $dataMantenimiento['fecha_inicio'] = $mantMasCercano['fecha_inicio'];
+                    $dataMantenimiento['fecha_fin'] = $mantMasCercano['fecha_fin'];
+                    $dataMantenimiento['mensaje'] = $mantMasCercano['mensaje'];
+                    $cambioArchivo = true;
+                }
+            }
+
+            if ($cambioArchivo) {
+                $dataMantenimiento['agenda'] = $agenda;
+                file_put_contents($archivo_mantenimiento, json_encode($dataMantenimiento, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            }
+
+            if (isset($dataMantenimiento['activo']) && $dataMantenimiento['activo'] === true) {
+                $esAdmin = isset($_SESSION['nivel_privilegio']) && (int)$_SESSION['nivel_privilegio'] >= 3;
+                $rutasPermitidas = ['login', 'procesar-login', 'cerrar-sesion'];
+                
+                if (!$esAdmin && !in_array($ruta, $rutasPermitidas)) {
+                    $mensajeCustom = !empty($dataMantenimiento['mensaje']) ? $dataMantenimiento['mensaje'] : "Estamos realizando labores de optimización. Vuelve en un momento.";
+                    $fechaFinMantenimiento = $dataMantenimiento['fecha_fin'] ?? null;
+                    
+                    http_response_code(503);
+                    require_once CORE_VIEWS . 'mantenimiento.php';
+                    exit;
                 }
             }
         }

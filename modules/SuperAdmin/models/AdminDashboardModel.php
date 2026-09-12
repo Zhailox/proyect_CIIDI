@@ -81,22 +81,33 @@ class AdminDashboardModel {
             $activeConnections = 1;
         }
 
-        // 3. Espacio, archivos e inodos en directorio storage/
+        // 3. Espacio, archivos e inodos en directorio storage/ (Con caché temporal de 5 minutos)
         $storageDir = CORE_PATH . '../storage';
-        $storageBytes = 0;
+        $cacheFile = $storageDir . '/.telemetry_cache.json';
+        $storageMb = 0;
         $totalFilesCount = 0;
-        if (is_dir($storageDir)) {
-            $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($storageDir, RecursiveDirectoryIterator::SKIP_DOTS));
-            foreach ($iterator as $file) {
-                $storageBytes += $file->getSize();
-                $totalFilesCount++;
+
+        if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < 300)) {
+            $cached = json_decode(file_get_contents($cacheFile), true);
+            if (is_array($cached)) {
+                $storageMb = $cached['storage_mb'] ?? 0;
+                $totalFilesCount = $cached['files_count'] ?? 0;
             }
+        } else {
+            $storageBytes = 0;
+            if (is_dir($storageDir)) {
+                $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($storageDir, RecursiveDirectoryIterator::SKIP_DOTS));
+                foreach ($iterator as $file) {
+                    $storageBytes += $file->getSize();
+                    $totalFilesCount++;
+                }
+            }
+            $storageMb = round($storageBytes / (1024 * 1024), 2);
+            @file_put_contents($cacheFile, json_encode(['storage_mb' => $storageMb, 'files_count' => $totalFilesCount]));
         }
-        $storageMb = round($storageBytes / (1024 * 1024), 2);
 
         // Espacio libre y total en disco
         $diskFree = @disk_free_space($storageDir);
-        $diskTotal = @disk_total_space($storageDir);
         $diskFreeFormatted = $diskFree !== false ? round($diskFree / (1024 * 1024 * 1024), 2) . " GB libre" : "N/D";
 
         // 4. Uso de memoria PHP
@@ -141,10 +152,7 @@ class AdminDashboardModel {
         $archivo = CORE_PATH . '../storage/system_audit.json';
         if (!file_exists($archivo)) return [];
         $logs = json_decode(file_get_contents($archivo), true) ?: [];
-        // Ordenar desc por fecha
-        usort($logs, function($a, $b) {
-            return strtotime($b['fecha_hora'] ?? 0) - strtotime($a['fecha_hora'] ?? 0);
-        });
+        $logs = array_reverse($logs);
         return array_slice($logs, 0, $limit);
     }
 
@@ -153,5 +161,47 @@ class AdminDashboardModel {
         $sql = "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public' ORDER BY tablename ASC";
         $stmt = $db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    public function optimizarBaseDatos(): array {
+        $db = Connection::getInstance();
+        try {
+            $db->exec("VACUUM ANALYZE");
+            return ['exito' => true, 'mensaje' => 'Optimización de tablas (VACUUM ANALYZE) ejecutada con éxito en PostgreSQL.'];
+        } catch (Exception $e) {
+            return ['exito' => false, 'mensaje' => 'Error al optimizar BD: ' . $e->getMessage()];
+        }
+    }
+
+    public function obtenerMetricasTablas(): array {
+        $db = Connection::getInstance();
+        try {
+            $sql = "SELECT 
+                        relname AS tabla,
+                        pg_size_pretty(pg_total_relation_size(relid)) AS tamano,
+                        pg_total_relation_size(relid) AS bytes,
+                        n_live_tup AS total_filas
+                    FROM pg_catalog.pg_stat_user_tables
+                    ORDER BY pg_total_relation_size(relid) DESC
+                    LIMIT 8";
+            $stmt = $db->query($sql);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+
+    public function obtenerConsultasActivas(): array {
+        $db = Connection::getInstance();
+        try {
+            $sql = "SELECT pid, usename, query, state, NOW() - query_start AS duracion
+                    FROM pg_stat_activity 
+                    WHERE state != 'idle' AND pid != pg_backend_pid()
+                    ORDER BY duracion DESC LIMIT 5";
+            $stmt = $db->query($sql);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (Exception $e) {
+            return [];
+        }
     }
 }

@@ -24,13 +24,16 @@ class LogsModel {
             ->get();
     }
 
-    public function obtenerAuditTrail(?string $nivel = null, ?string $modulo = null, ?string $fechaInicio = null, ?string $fechaFin = null): array {
+    public function obtenerAuditTrailPaginado(?string $nivel = null, ?string $modulo = null, ?string $fechaInicio = null, ?string $fechaFin = null, int $pagina = 1, int $porPagina = 15): array {
         $archivo = CORE_PATH . '../storage/system_audit.json';
-        if (!file_exists($archivo)) return [];
+        if (!file_exists($archivo)) {
+            return ['data' => [], 'total' => 0, 'pagina' => 1, 'paginas' => 1, 'por_pagina' => $porPagina];
+        }
 
         $logs = json_decode(file_get_contents($archivo), true) ?: [];
+        $logs = array_reverse($logs);
 
-        return array_values(array_filter($logs, function($l) use ($nivel, $modulo, $fechaInicio, $fechaFin) {
+        $filtered = array_values(array_filter($logs, function($l) use ($nivel, $modulo, $fechaInicio, $fechaFin) {
             if (!empty($nivel) && strtoupper($l['nivel']) !== strtoupper($nivel)) return false;
             if (!empty($modulo) && strtolower($l['modulo']) !== strtolower($modulo)) return false;
             
@@ -48,6 +51,26 @@ class LogsModel {
 
             return true;
         }));
+
+        $total = count($filtered);
+        $paginas = max(1, (int) ceil($total / $porPagina));
+        $paginaActual = max(1, min($pagina, $paginas));
+        $offset = ($paginaActual - 1) * $porPagina;
+
+        $items = array_slice($filtered, $offset, $porPagina);
+
+        return [
+            'data'       => $items,
+            'total'      => $total,
+            'pagina'     => $paginaActual,
+            'paginas'    => $paginas,
+            'por_pagina' => $porPagina
+        ];
+    }
+
+    public function obtenerAuditTrail(?string $nivel = null, ?string $modulo = null, ?string $fechaInicio = null, ?string $fechaFin = null): array {
+        $res = $this->obtenerAuditTrailPaginado($nivel, $modulo, $fechaInicio, $fechaFin, 1, 5000);
+        return $res['data'];
     }
 
     public function limpiarLogsAudit(): bool {

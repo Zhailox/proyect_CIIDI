@@ -29,6 +29,7 @@ $elementosCabecera = $this->getControlesHeader();
         <?php elseif ($control['tipo'] === 'custom_view'): ?>
             <?php 
                 if (file_exists($control['ruta_vista'])) {
+                    $controlData = $control;
                     include $control['ruta_vista'];
                 }
             ?>

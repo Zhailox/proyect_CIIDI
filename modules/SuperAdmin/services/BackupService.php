@@ -15,16 +15,23 @@ class BackupService {
     }
 
     /**
-     * Genera un respaldo PostgreSQL comprimido en GZIP con políticas de retención.
+     * Genera un respaldo PostgreSQL en formato comprimido (.sql.gz), SQL plano (.sql) o texto (.txt) con políticas de retención.
      */
-    public static function crearBackup(bool $comprimir = true, bool $soloEsquema = false, ?string $tabla = null): array {
+    public static function crearBackup(string $formato = 'sql.gz', bool $soloEsquema = false, ?string $tabla = null, ?string $prefijoCustom = null): array {
         $creds = Connection::getCredentials();
         $pgDumpPath = Connection::getPgDumpPath();
         $backupDir = self::getBackupDir();
 
         $fecha = date('Y-m-d_H-i-s');
-        $prefix = $tabla ? "tabla_{$tabla}" : ($soloEsquema ? "esquema_ciidi" : "backup_ciidi");
-        $ext = $comprimir ? ".sql.gz" : ".sql";
+        $prefix = $prefijoCustom ?: ($tabla ? "tabla_{$tabla}" : ($soloEsquema ? "esquema_ciidi" : "backup_ciidi"));
+        
+        $formatoLimpio = strtolower($formato);
+        if (!in_array($formatoLimpio, ['sql.gz', 'sql', 'txt'], true)) {
+            $formatoLimpio = 'sql.gz';
+        }
+
+        $comprimir = ($formatoLimpio === 'sql.gz');
+        $ext = ".{$formatoLimpio}";
         $nombreArchivo = "{$prefix}_{$fecha}{$ext}";
         $rutaCompleta = $backupDir . $nombreArchivo;
         $tempSqlPath = $comprimir ? $backupDir . "temp_{$fecha}.sql" : $rutaCompleta;
@@ -51,7 +58,7 @@ class BackupService {
             ];
         }
 
-        // Compresión GZIP
+        // Compresión GZIP si se solicitó
         if ($comprimir) {
             $rawContent = file_get_contents($tempSqlPath);
             $compressedData = gzencode($rawContent, 9);
@@ -79,7 +86,7 @@ class BackupService {
      */
     public static function limpiarRespaldosAntiguos(int $diasRetencion = 30): int {
         $backupDir = self::getBackupDir();
-        $archivos = glob($backupDir . '*.{sql,sql.gz}', GLOB_BRACE);
+        $archivos = glob($backupDir . '*.{sql,sql.gz,txt}', GLOB_BRACE);
         $limiteTiempo = time() - ($diasRetencion * 86400);
         $eliminados = 0;
 
@@ -96,7 +103,7 @@ class BackupService {
     }
 
     /**
-     * Verificación de Integridad (Dry-Run Parse & Syntax Check) para archivos .sql o .sql.gz.
+     * Verificación de Integridad (Dry-Run Parse & Syntax Check) para archivos .sql, .sql.gz o .txt.
      */
     public static function verificarIntegridad(string $rutaArchivo): array {
         if (!file_exists($rutaArchivo)) {
@@ -123,19 +130,19 @@ class BackupService {
             $buffer = '';
             while (!gzeof($zp)) {
                 $buffer .= gzread($zp, 8192);
-                if (strlen($buffer) > 100000) break; // Inspeccionar encabezados sin sobrecargar memoria
+                if (strlen($buffer) > 150000) break; // Inspeccionar encabezados sin sobrecargar memoria
             }
             gzclose($zp);
             $contenido = $buffer;
         } else {
-            $contenido = file_get_contents($rutaArchivo, false, null, 0, 100000);
+            $contenido = file_get_contents($rutaArchivo, false, null, 0, 150000);
         }
 
         if (empty(trim($contenido))) {
             return ['valido' => false, 'detalles' => 'No se pudo extraer contenido SQL del archivo de respaldo.'];
         }
 
-        // Inspeccionar sintaxis SQL esencial (PostgreSQL markers)
+        // Inspeccionar sintaxis SQL esencial y contar objetos
         $patronesValidos = [
             'PostgreSQL database dump',
             'CREATE TABLE',
@@ -159,11 +166,21 @@ class BackupService {
             ];
         }
 
+        // Extraer estadísticas adicionales para inspección previa
+        preg_match_all('/CREATE TABLE\s+(?:IF NOT EXISTS\s+)?([a-zA-Z0-9_\.]+)/i', $contenido, $tablaMatches);
+        $tablasEncontradas = array_unique($tablaMatches[1] ?? []);
+
+        preg_match_all('/INSERT INTO/i', $contenido, $insertMatches);
+        $totalInserts = count($insertMatches[0] ?? []);
+
         return [
             'valido' => true,
-            'detalles' => 'Integridad y estructura SQL verificadas correctamente (' . ($esGzip ? 'Comprimido GZIP' : 'SQL Plano') . '). Coincidencias DDL/DML: ' . $coincidencias,
+            'detalles' => 'Integridad y estructura SQL verificadas correctamente (' . ($esGzip ? 'Comprimido GZIP' : 'SQL Plano / Texto') . '). Coincidencias DDL/DML: ' . $coincidencias,
             'esGzip' => $esGzip,
-            'tamano' => $tamano
+            'tamano' => $tamano,
+            'tablas_detectadas' => array_values($tablasEncontradas),
+            'total_inserts_estimados' => $totalInserts
         ];
     }
 }
+

@@ -17,15 +17,19 @@ class LogsController {
         $fModulo      = trim($_GET['modulo'] ?? '');
         $fFechaInicio = trim($_GET['fecha_inicio'] ?? '');
         $fFechaFin    = trim($_GET['fecha_fin'] ?? '');
+        $pagina       = max(1, (int)($_GET['p'] ?? 1));
 
         $auditoriaDB  = $this->logsModel->obtenerAuditoriaDB();
         $accesos      = $this->logsModel->obtenerAccesos();
-        $auditTrail   = $this->logsModel->obtenerAuditTrail($fNivel, $fModulo, $fFechaInicio, $fFechaFin);
+        $resTrail     = $this->logsModel->obtenerAuditTrailPaginado($fNivel, $fModulo, $fFechaInicio, $fFechaFin, $pagina, 15);
 
         return [
             'logs_db'      => $auditoriaDB,
             'logs_auth'    => $accesos,
-            'audit_trail'  => $auditTrail,
+            'audit_trail'  => $resTrail['data'],
+            'total_trail'  => $resTrail['total'],
+            'pagina_actual'=> $resTrail['pagina'],
+            'total_paginas'=> $resTrail['paginas'],
             'f_nivel'      => $fNivel,
             'f_modulo'     => $fModulo,
             'f_fecha_init' => $fFechaInicio,

@@ -52,15 +52,11 @@ class ModulosController {
             $ruta_index = MODULES_PATH . $carpeta . '/index.php';
             
             if (file_exists($ruta_index)) {
-                // Importamos usando require_once para no redelinear la clase si el Kernel ya la cargó
-                $modulo = require_once $ruta_index;
-                
-                // Si require_once retorna true porque ya fue cargado previamente, obtenemos la instancia por el nombre de la clase
-                if ($modulo === true) {
-                    $claseModulo = $carpeta . 'Module';
-                    if (class_exists($claseModulo)) {
-                        $modulo = new $claseModulo();
-                    }
+                $claseModulo = $carpeta . 'Module';
+                if (class_exists($claseModulo)) {
+                    $modulo = new $claseModulo();
+                } else {
+                    $modulo = require_once $ruta_index;
                 }
                 
                 if ($modulo instanceof ModuleContract) {

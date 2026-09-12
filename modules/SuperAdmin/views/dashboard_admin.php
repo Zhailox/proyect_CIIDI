@@ -55,6 +55,26 @@
         </div>
     </a>
 
+    <a href="gestor-scheduler" class="sa-quick-card glass-card hover-glow" style="border-radius: var(--radius-sm); text-decoration: none;">
+        <div class="sa-quick-icon" style="background: rgba(16, 185, 129, 0.15); color: #059669;">
+            <i class="ph-bold ph-clock-clockwise"></i>
+        </div>
+        <div>
+            <h4 style="margin:0; font-size: 0.95rem; font-weight: 700; color: var(--texto-titulos);">Tareas Programadas & Cron</h4>
+            <p style="margin:3px 0 0 0; font-size: 0.78rem; color: var(--texto-silenciado);">Procesos automáticos, limpiezas de temporales y backups.</p>
+        </div>
+    </a>
+
+    <a href="visor-seguridad" class="sa-quick-card glass-card hover-glow" style="border-radius: var(--radius-sm); text-decoration: none;">
+        <div class="sa-quick-icon" style="background: rgba(220, 38, 38, 0.15); color: #dc2626;">
+            <i class="ph-bold ph-shield-warning"></i>
+        </div>
+        <div>
+            <h4 style="margin:0; font-size: 0.95rem; font-weight: 700; color: var(--texto-titulos);">Monitor WAF & IPs</h4>
+            <p style="margin:3px 0 0 0; font-size: 0.78rem; color: var(--texto-silenciado);">Control de fuerza bruta, lista negra de IPs e integridad SHA-256.</p>
+        </div>
+    </a>
+
     <a href="visor-logs" class="sa-quick-card glass-card hover-glow" style="border-radius: var(--radius-sm); text-decoration: none;">
         <div class="sa-quick-icon" style="background: rgba(18, 26, 62, 0.15); color: var(--color-principal);">
             <i class="ph-bold ph-shield-check"></i>
