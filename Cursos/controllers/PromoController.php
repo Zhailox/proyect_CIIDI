@@ -41,8 +41,6 @@ class PromoController {
 
     public function mostrarCatalogo(): array {
         $usuario_actual  = Auth::usuario();
-        $nivel           = $usuario_actual['nivel'] ?? -1;
-        $puede_gestionar = ($nivel >= $this->cfg['roles']['nivel_crear_curso']);
 
         $filtros  = [];
         $pagina   = max(1, (int)($_GET['pagina'] ?? 1));
@@ -54,15 +52,8 @@ class PromoController {
             $porPagina = $this->cfg['paginacion']['limite_catalogo'];
         }
 
-        // Filtro de estado: solo gestores ven todos los estados
-        if (!empty($_GET['estado']) && $puede_gestionar) {
-            $estados_validos = ['publicado', 'borrador', 'archivado'];
-            if (in_array($_GET['estado'], $estados_validos)) {
-                $filtros['estado'] = $_GET['estado'];
-            }
-        } elseif (!$puede_gestionar) {
-            $filtros['estado'] = 'publicado';
-        }
+        // Catálogo público: SIEMPRE solo los publicados
+        $filtros['estado'] = 'publicado';
 
         // Búsqueda de texto purificada
         if (!empty($_GET['busqueda'])) {
@@ -84,17 +75,73 @@ class PromoController {
             'opciones'      => $opciones,
         ];
 
-        // Mensajes flash
         $mensaje_exito = $_SESSION['cur_exito'] ?? null;
         $mensaje_error = $_SESSION['cur_error'] ?? null;
         unset($_SESSION['cur_exito'], $_SESSION['cur_error']);
 
-        // Configuración para la vista (lazy_load, placeholder, moodle fallback)
         $config_vista = $this->cfg;
 
         return compact(
             'cursos', 'estadisticas', 'filtros', 'paginacion',
             'mensaje_exito', 'mensaje_error', 'usuario_actual', 'config_vista'
+        );
+    }
+
+    // ─────────────────────────────────────────────────────────
+    //  GESTIÓN DE CURSOS (Mis Cursos / Admin)
+    // ─────────────────────────────────────────────────────────
+
+    public function mostrarGestion(): array {
+        $nivel_requerido = $this->cfg['roles']['nivel_crear_curso'] ?? 1;
+        Auth::requierePrivilegioMinimo($nivel_requerido);
+        
+        $usuario_actual = Auth::usuario();
+        $nivel = (int)($usuario_actual['nivel'] ?? -1);
+        $id_usuario = (int)($usuario_actual['id'] ?? 0);
+        
+        $filtros  = [];
+        $pagina   = max(1, (int)($_GET['pagina'] ?? 1));
+        // En la gestión podemos mostrar un poco más de elementos por página, ej 12 fijos
+        $porPagina = 12;
+
+        if (!empty($_GET['estado'])) {
+            $estados_validos = ['publicado', 'borrador', 'archivado'];
+            if (in_array($_GET['estado'], $estados_validos)) {
+                $filtros['estado'] = $_GET['estado'];
+            }
+        }
+
+        if (!empty($_GET['busqueda'])) {
+            $filtros['busqueda'] = $this->limpiarTexto($_GET['busqueda'], 200);
+        }
+
+        // Si es profesor (nivel 1), limitar a "Mis Cursos"
+        $nivel_admin = $this->cfg['roles']['nivel_eliminar_curso'] ?? 2;
+        if ($nivel < $nivel_admin) {
+            $filtros['id_docente'] = $id_usuario;
+        }
+
+        $resultado = $this->model->listarCursos($filtros, $pagina, $porPagina);
+        $cursos    = $resultado['cursos'];
+        $total     = $resultado['total'];
+
+        $total_paginas = (int)ceil($total / $porPagina);
+        $paginacion    = [
+            'pagina_actual' => $pagina,
+            'total_paginas' => $total_paginas,
+            'total'         => $total,
+            'por_pagina'    => $porPagina,
+        ];
+
+        $mensaje_exito = $_SESSION['cur_exito'] ?? null;
+        $mensaje_error = $_SESSION['cur_error'] ?? null;
+        unset($_SESSION['cur_exito'], $_SESSION['cur_error']);
+        
+        $config_vista = $this->cfg;
+
+        return compact(
+            'cursos', 'filtros', 'paginacion', 'mensaje_exito', 'mensaje_error', 
+            'usuario_actual', 'config_vista'
         );
     }
 

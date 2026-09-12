@@ -27,465 +27,200 @@ $m_duracion = htmlspecialchars($meta['duracion'] ?? '');
 $m_cupo     = (int)($meta['cupo_maximo'] ?? 0);
 ?>
 
-<div class="cur-form-page">
-
-    <!-- Breadcrumb -->
-    <nav class="cur-breadcrumb">
-        <a href="?ruta=cursos"><i class="ph-fill ph-graduation-cap"></i> Catálogo de Cursos</a>
-        <i class="ph-bold ph-caret-right"></i>
-        <span><?= htmlspecialchars($titulo_form) ?></span>
-    </nav>
-
-    <!-- Card principal -->
-    <div class="cur-form-card">
-
-        <!-- Header -->
-        <div class="cur-form-header">
-            <div class="cur-form-header-left">
-                <div class="cur-form-header-icon <?= $es_editar ? 'icon--edit' : 'icon--create' ?>">
-                    <i class="ph-fill <?= $es_editar ? 'ph-pencil-simple' : 'ph-plus-circle' ?>"></i>
-                </div>
-                <div class="cur-form-header-text">
-                    <h2><?= htmlspecialchars($titulo_form) ?></h2>
-                    <p><?= $es_editar
-                        ? 'Modifica los datos del curso y guarda los cambios.'
-                        : 'Completa todos los campos para publicitar el curso en Moodle.'
-                    ?></p>
-                </div>
+<div class="cur-wrapper" style="max-width: 1200px;">
+    
+    <div style="margin-bottom: 2rem;">
+        <a href="?ruta=cursos-gestion" style="color:var(--cur-muted); text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem; font-weight:600; font-size:0.9rem; margin-bottom:1rem; transition:color 0.2s;" onmouseover="this.style.color='var(--cur-primary)';" onmouseout="this.style.color='var(--cur-muted)';"><i class="ph-bold ph-arrow-left"></i> Volver a la Gestión</a>
+        
+        <h1 style="font-size: 2.5rem; font-weight: 800; color: var(--cur-dark); margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.8rem;">
+            <div style="width:50px; height:50px; border-radius:12px; background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); color:white; display:flex; align-items:center; justify-content:center; font-size:1.6rem; box-shadow:0 10px 20px rgba(37, 99, 235, 0.3);">
+                <i class="ph-fill <?= $es_editar ? 'ph-pencil-simple' : 'ph-plus' ?>"></i>
             </div>
-            <a href="?ruta=cursos" class="cur-form-back-btn">
-                <i class="ph-bold ph-arrow-left"></i> Volver
-            </a>
-        </div>
+            <?= htmlspecialchars($titulo_form) ?>
+        </h1>
+        <p style="color:var(--cur-muted); font-size:1.05rem;">
+            <?= $es_editar ? 'Modifica los datos del curso y guarda los cambios.' : 'Completa todos los campos para registrar un nuevo curso en el ecosistema.' ?>
+        </p>
+    </div>
 
-        <!-- Error de validación -->
-        <?php if (!empty($error)): ?>
-        <div class="cur-form-alert cur-form-alert--error">
-            <i class="ph-fill ph-warning-circle"></i>
-            <span><?= htmlspecialchars($error) ?></span>
-        </div>
+    <?php if (!empty($error)): ?>
+        <div class="cur-flash cur-flash-error" style="border-radius:12px; margin-bottom:2rem;"><i class="ph-fill ph-warning-circle"></i> <?= htmlspecialchars($error) ?></div>
+    <?php endif; ?>
+
+    <form method="POST" action="<?= $accion_url ?>" id="form-curso" enctype="multipart/form-data" novalidate style="display:flex; flex-direction:column; gap:2rem;">
+        <?= $csrf_token ?? '' ?>
+        <?php if ($es_editar): ?>
+            <input type="hidden" name="id" value="<?= (int)$f_id ?>">
         <?php endif; ?>
 
-        <!-- FORMULARIO -->
-        <form
-            method="POST"
-            action="<?= $accion_url ?>"
-            class="cur-form"
-            id="form-curso"
-            enctype="multipart/form-data"
-            novalidate
-        >
-            <!-- CSRF Token -->
-            <?= $csrf_token ?? '' ?>
-
-            <?php if ($es_editar): ?>
-                <input type="hidden" name="id" value="<?= (int)$f_id ?>">
-            <?php endif; ?>
-
-            <!-- ════ SECCIÓN 1: Información Principal ════ -->
-            <div class="cur-form-section">
-                <div class="cur-form-section-title">
-                    <span class="cur-form-section-num">01</span>
-                    <h3>Información Principal</h3>
+        <!-- SECCIÓN 1: PRINCIPAL -->
+        <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04);">
+            <h3 style="font-weight:800; color:var(--cur-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;"><i class="ph-fill ph-info" style="color:var(--cur-primary);"></i> 1. Información Principal</h3>
+            
+            <div style="margin-bottom:1.5rem;">
+                <label for="titulo" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Título del Curso <span style="color:var(--cur-danger);">*</span></label>
+                <div style="position:relative;">
+                    <i class="ph-bold ph-text-aa" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                    <input type="text" id="titulo" name="titulo" value="<?= $f_titulo ?>" placeholder="Ej: Fundamentos de Inteligencia Artificial" required style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(79,70,229,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
                 </div>
+            </div>
 
-                <!-- Título -->
-                <div class="cur-field-group cur-field-group--full">
-                    <label for="titulo" class="cur-field-label">
-                        Título del Curso <span class="cur-field-required">*</span>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:1.5rem;">
+                <div>
+                    <label for="id_docente" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Docente Responsable <span style="color:var(--cur-danger);">*</span></label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-chalkboard-teacher" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <select id="id_docente" name="id_docente" required style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(79,70,229,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                            <option value="">— Seleccionar docente —</option>
+                            <?php foreach ($docentes as $doc): ?>
+                            <option value="<?= (int)$doc['id'] ?>" <?= ($f_docente == $doc['id']) ? 'selected' : '' ?>><?= htmlspecialchars($doc['nombre_completo']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted); pointer-events:none;"></i>
+                    </div>
+                </div>
+                <div>
+                    <label for="estado" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Estado Inicial</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-toggle-right" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <select id="estado" name="estado" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(79,70,229,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                            <option value="borrador" <?= $f_estado === 'borrador' ? 'selected' : '' ?>>Borrador (Oculto)</option>
+                            <option value="publicado" <?= $f_estado === 'publicado' ? 'selected' : '' ?>>Publicado (Visible en catálogo)</option>
+                            <option value="archivado" <?= $f_estado === 'archivado' ? 'selected' : '' ?>>Archivado</option>
+                        </select>
+                        <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted); pointer-events:none;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 2: DESCRIPCIÓN Y MULTIMEDIA -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap:2rem;">
+            
+            <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04); display:flex; flex-direction:column;">
+                <h3 style="font-weight:800; color:var(--cur-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;"><i class="ph-fill ph-article" style="color:var(--cur-primary);"></i> 2. Descripción General</h3>
+                <label for="descripcion" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Resumen del Curso <span style="color:var(--cur-danger);">*</span></label>
+                <textarea id="descripcion" name="descripcion" required rows="7" placeholder="Escribe un resumen atractivo para los estudiantes..." style="width:100%; padding:1rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1rem; outline:none; font-family:inherit; resize:vertical; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(79,70,229,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';"><?= $f_desc ?></textarea>
+            </div>
+
+            <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04); display:flex; flex-direction:column;">
+                <h3 style="font-weight:800; color:var(--cur-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;"><i class="ph-fill ph-image" style="color:var(--cur-primary);"></i> 3. Recursos Multimedia</h3>
+                
+                <div style="margin-bottom:1.5rem;">
+                    <label style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Imagen de Portada (Máx <?= $img_max_mb ?>MB)</label>
+                    <label style="display:block; border:2px dashed var(--cur-border); border-radius:12px; padding:2rem; text-align:center; cursor:pointer; background:#F8FAFC; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--cur-primary)';" onmouseout="this.style.borderColor='var(--cur-border)';">
+                        <i class="ph-fill ph-upload-simple" style="font-size:2.5rem; color:var(--cur-muted); margin-bottom:1rem; display:block;"></i>
+                        <strong style="color:var(--cur-primary);">Seleccionar Imagen</strong>
+                        <div style="font-size:0.85rem; color:var(--cur-muted); margin-top:0.5rem;">Formatos: <?= $img_exts ?></div>
+                        <input type="file" name="portada" id="portada" accept="image/*" style="display:none;" onchange="document.getElementById('file-name').textContent = this.files[0].name;">
+                        <div id="file-name" style="margin-top:1rem; font-weight:600; color:var(--cur-dark);"></div>
                     </label>
-                    <div class="cur-field-input-wrap">
-                        <i class="ph-fill ph-text-aa cur-field-icon"></i>
-                        <input
-                            type="text" id="titulo" name="titulo"
-                            class="cur-field-input"
-                            value="<?= $f_titulo ?>"
-                            placeholder="Ej: Fundamentos de Inteligencia Artificial Aplicada"
-                            maxlength="255" required autocomplete="off"
-                        >
-                    </div>
+                    <?php if ($f_img): ?>
+                        <div style="margin-top:1rem; padding:1rem; background:rgba(16, 185, 129, 0.1); border-radius:8px; display:flex; align-items:center; gap:1rem;">
+                            <img src="<?= $f_img ?>" alt="Actual" style="width:50px; height:50px; object-fit:cover; border-radius:6px;">
+                            <span style="font-weight:600; color:#065F46; font-size:0.9rem;">El curso ya cuenta con una imagen. Sube otra si deseas reemplazarla.</span>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
-                <!-- Docente + Estado -->
-                <div class="cur-field-row">
-                    <div class="cur-field-group">
-                        <label for="id_docente" class="cur-field-label">
-                            Docente Responsable <span class="cur-field-required">*</span>
-                        </label>
-                        <div class="cur-field-input-wrap">
-                            <i class="ph-fill ph-chalkboard-teacher cur-field-icon"></i>
-                            <select id="id_docente" name="id_docente" class="cur-field-select" required>
-                                <option value="">— Seleccionar docente —</option>
-                                <?php foreach ($docentes as $doc): ?>
-                                <option
-                                    value="<?= (int)$doc['id'] ?>"
-                                    <?= ($f_docente == $doc['id']) ? 'selected' : '' ?>
-                                >
-                                    <?= htmlspecialchars($doc['nombre_completo']) ?>
-                                </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="cur-field-group">
-                        <label for="estado" class="cur-field-label">Estado de Publicación</label>
-                        <div class="cur-field-input-wrap">
-                            <i class="ph-fill ph-toggle-right cur-field-icon"></i>
-                            <select id="estado" name="estado" class="cur-field-select">
-                                <option value="borrador"  <?= $f_estado === 'borrador'  ? 'selected' : '' ?>>Borrador</option>
-                                <option value="publicado" <?= $f_estado === 'publicado' ? 'selected' : '' ?>>Publicado</option>
-                                <option value="archivado" <?= $f_estado === 'archivado' ? 'selected' : '' ?>>Archivado</option>
-                            </select>
-                        </div>
-                        <div class="cur-estado-pills" id="estado-pills">
-                            <span class="cur-estado-pill cur-estado-pill--borrador  <?= $f_estado === 'borrador'  ? 'active' : '' ?>">✏️ Borrador</span>
-                            <span class="cur-estado-pill cur-estado-pill--publicado <?= $f_estado === 'publicado' ? 'active' : '' ?>">✅ Publicado</span>
-                            <span class="cur-estado-pill cur-estado-pill--archivado <?= $f_estado === 'archivado' ? 'active' : '' ?>">📦 Archivado</span>
-                        </div>
+                <div>
+                    <label for="url_video_preview" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Video Promocional (Opcional)</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-video-camera" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <input type="url" id="url_video_preview" name="url_video_preview" value="<?= $m_video ?>" placeholder="https://youtube.com/..." style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(79,70,229,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
                     </div>
                 </div>
             </div>
 
-            <!-- ════ SECCIÓN 2: Descripción ════ -->
-            <div class="cur-form-section">
-                <div class="cur-form-section-title">
-                    <span class="cur-form-section-num">02</span>
-                    <h3>Descripción del Curso</h3>
-                </div>
+        </div>
 
-                <div class="cur-field-group cur-field-group--full">
-                    <label for="descripcion" class="cur-field-label">Descripción completa</label>
-                    <textarea
-                        id="descripcion" name="descripcion"
-                        class="cur-field-textarea" rows="6"
-                        placeholder="Describe los objetivos, contenidos, audiencia objetivo y beneficios del curso. Esta información se mostrará en el catálogo y en la página de detalle…"
-                    ><?= $f_desc ?></textarea>
-                    <div class="cur-field-counter">
-                        <span id="desc-count">0</span> caracteres
+        <!-- SECCIÓN 3: METADATOS TÉCNICOS -->
+        <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04);">
+            <h3 style="font-weight:800; color:var(--cur-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;"><i class="ph-fill ph-sliders" style="color:var(--cur-primary);"></i> 4. Parámetros Académicos</h3>
+            
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:1.5rem;">
+                
+                <div>
+                    <label for="url_moodle" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">URL de Moodle</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-link" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <input type="url" id="url_moodle" name="url_moodle" value="<?= $m_moodle ?>" placeholder="Enlace al curso virtual..." style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(79,70,229,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
                     </div>
                 </div>
+
+                <div>
+                    <label for="modalidad" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Modalidad</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-desktop" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <select id="modalidad" name="modalidad" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(79,70,229,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                            <option value="Virtual" <?= $m_modal === 'Virtual' ? 'selected' : '' ?>>Virtual</option>
+                            <option value="Presencial" <?= $m_modal === 'Presencial' ? 'selected' : '' ?>>Presencial</option>
+                            <option value="Híbrido" <?= $m_modal === 'Híbrido' ? 'selected' : '' ?>>Híbrido / Semipresencial</option>
+                        </select>
+                        <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted); pointer-events:none;"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="nivel" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Nivel de Dificultad</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-stairs" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <select id="nivel" name="nivel" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(79,70,229,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                            <option value="Básico" <?= $m_nivel === 'Básico' ? 'selected' : '' ?>>Básico</option>
+                            <option value="Intermedio" <?= $m_nivel === 'Intermedio' ? 'selected' : '' ?>>Intermedio</option>
+                            <option value="Avanzado" <?= $m_nivel === 'Avanzado' ? 'selected' : '' ?>>Avanzado</option>
+                        </select>
+                        <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted); pointer-events:none;"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="duracion" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Duración (Horas/Semanas)</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-clock" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <input type="text" id="duracion" name="duracion" value="<?= $m_duracion ?>" placeholder="Ej: 40 horas académicas" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(79,70,229,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="cupo_maximo" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Cupo Máximo</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-users-three" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <input type="number" id="cupo_maximo" name="cupo_maximo" value="<?= $m_cupo ?>" min="0" placeholder="0 = Ilimitado" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(79,70,229,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="nota_minima_aprobacion" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Nota de Aprobación (%)</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-percent" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <input type="number" step="0.01" id="nota_minima_aprobacion" name="nota_minima_aprobacion" value="<?= htmlspecialchars((string)$f_nota) ?>" min="0" max="100" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(79,70,229,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                    </div>
+                </div>
+
             </div>
+        </div>
 
-            <!-- ════ SECCIÓN 3: Integración con Moodle ════ -->
-            <div class="cur-form-section">
-                <div class="cur-form-section-title">
-                    <span class="cur-form-section-num">03</span>
-                    <h3>Integración con Moodle</h3>
-                    <p class="cur-form-section-title-hint">Enlaza el curso con la plataforma</p>
-                </div>
-
-                <!-- Tip informativo -->
-                <div class="cur-moodle-tip">
-                    <i class="ph-fill ph-info"></i>
-                    <span>
-                        <strong>¿Cómo obtener la URL?</strong> Entra a Moodle, navega al curso que deseas enlazar
-                        y copia la URL de la barra de direcciones (Ej: <em>https://moodle.universidad.edu/course/view.php?id=123</em>).
-                    </span>
-                </div>
-
-                <!-- URL Moodle + URL Video -->
-                <div class="cur-field-row">
-                    <div class="cur-field-group cur-field-group--full">
-                        <label for="url_moodle" class="cur-field-label">
-                            URL del Curso en Moodle
-                            <span class="cur-field-hint">(Recomendado para cursos publicados)</span>
-                        </label>
-                        <div class="cur-field-input-wrap">
-                            <i class="ph-fill ph-graduation-cap cur-field-icon"></i>
-                            <input
-                                type="url" id="url_moodle" name="url_moodle"
-                                class="cur-field-input"
-                                value="<?= $m_moodle ?>"
-                                placeholder="https://moodle.universidad.edu/course/view.php?id=…"
-                            >
-                        </div>
-                    </div>
-
-                    <div class="cur-field-group cur-field-group--full">
-                        <label for="url_video_preview" class="cur-field-label">
-                            URL de Video de Vista Previa
-                            <span class="cur-field-hint">(YouTube o Vimeo — Opcional)</span>
-                        </label>
-                        <div class="cur-field-input-wrap">
-                            <i class="ph-fill ph-play-circle cur-field-icon"></i>
-                            <input
-                                type="url" id="url_video_preview" name="url_video_preview"
-                                class="cur-field-input"
-                                value="<?= $m_video ?>"
-                                placeholder="https://www.youtube.com/watch?v=…"
-                            >
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ════ SECCIÓN 4: Detalles del Curso ════ -->
-            <div class="cur-form-section">
-                <div class="cur-form-section-title">
-                    <span class="cur-form-section-num">04</span>
-                    <h3>Detalles del Curso</h3>
-                </div>
-
-                <div class="cur-field-row">
-                    <!-- Modalidad -->
-                    <div class="cur-field-group">
-                        <label for="modalidad" class="cur-field-label">Modalidad</label>
-                        <div class="cur-field-input-wrap">
-                            <i class="ph-fill ph-monitor cur-field-icon"></i>
-                            <select id="modalidad" name="modalidad" class="cur-field-select">
-                                <option value="Virtual"    <?= $m_modal === 'Virtual'    ? 'selected' : '' ?>>🖥️ Virtual</option>
-                                <option value="Presencial" <?= $m_modal === 'Presencial' ? 'selected' : '' ?>>📍 Presencial</option>
-                                <option value="Híbrido"    <?= $m_modal === 'Híbrido'    ? 'selected' : '' ?>>🔄 Híbrido</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Nivel -->
-                    <div class="cur-field-group">
-                        <label for="nivel" class="cur-field-label">Nivel</label>
-                        <div class="cur-field-input-wrap">
-                            <i class="ph-fill ph-chart-bar-horizontal cur-field-icon"></i>
-                            <select id="nivel" name="nivel" class="cur-field-select">
-                                <option value="Básico"      <?= $m_nivel === 'Básico'      ? 'selected' : '' ?>>🟢 Básico</option>
-                                <option value="Intermedio"  <?= $m_nivel === 'Intermedio'  ? 'selected' : '' ?>>🟡 Intermedio</option>
-                                <option value="Avanzado"    <?= $m_nivel === 'Avanzado'    ? 'selected' : '' ?>>🔴 Avanzado</option>
-                                <option value="Todos los niveles" <?= $m_nivel === 'Todos los niveles' ? 'selected' : '' ?>>🌐 Todos los niveles</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Duración -->
-                    <div class="cur-field-group">
-                        <label for="duracion" class="cur-field-label">
-                            Duración
-                            <span class="cur-field-hint">(Texto libre)</span>
-                        </label>
-                        <div class="cur-field-input-wrap">
-                            <i class="ph-fill ph-clock cur-field-icon"></i>
-                            <input
-                                type="text" id="duracion" name="duracion"
-                                class="cur-field-input"
-                                value="<?= $m_duracion ?>"
-                                placeholder="Ej: 40 horas, 4 semanas…"
-                                maxlength="80"
-                            >
-                        </div>
-                    </div>
-
-                    <!-- Cupo Máximo -->
-                    <div class="cur-field-group">
-                        <label for="cupo_maximo" class="cur-field-label">
-                            Cupo Máximo
-                            <span class="cur-field-hint">(0 = sin límite)</span>
-                        </label>
-                        <div class="cur-field-input-wrap">
-                            <i class="ph-fill ph-users cur-field-icon"></i>
-                            <input
-                                type="number" id="cupo_maximo" name="cupo_maximo"
-                                class="cur-field-input"
-                                value="<?= $m_cupo ?>"
-                                min="0" max="9999" step="1"
-                                placeholder="30"
-                            >
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ════ SECCIÓN 5: Imagen y Configuración ════ -->
-            <div class="cur-form-section">
-                <div class="cur-form-section-title">
-                    <span class="cur-form-section-num">05</span>
-                    <h3>Imagen y Evaluación</h3>
-                </div>
-
-                <div class="cur-field-row">
-                    <!-- Imagen de portada — opción URL o archivo -->
-                    <div class="cur-field-group cur-field-group--full">
-                        <label class="cur-field-label">
-                            Imagen de Portada
-                            <span class="cur-field-hint">Elige URL externa <em>o</em> sube un archivo (el archivo tiene prioridad)</span>
-                        </label>
-
-                        <!-- Opción A: URL -->
-                        <div class="cur-field-input-wrap" style="margin-bottom: 0.6rem;">
-                            <i class="ph-fill ph-link cur-field-icon"></i>
-                            <input
-                                type="url" id="imagen_portada" name="imagen_portada"
-                                class="cur-field-input"
-                                value="<?= $f_img ?>"
-                                placeholder="https://…/portada-curso.jpg"
-                                oninput="actualizarPreview(this.value)"
-                            >
-                        </div>
-
-                        <!-- Opción B: Archivo -->
-                        <div class="cur-field-input-wrap">
-                            <i class="ph-fill ph-upload cur-field-icon"></i>
-                            <input
-                                type="file"
-                                id="imagen_portada_file"
-                                name="imagen_portada_file"
-                                class="cur-field-input"
-                                style="padding: 0.5rem 0.75rem;"
-                                accept="image/jpeg,image/png,image/gif,image/webp"
-                                onchange="previsualizarArchivo(this)"
-                            >
-                        </div>
-                        <span class="cur-field-info">
-                            <i class="ph-fill ph-info"></i>
-                            Formatos: <?= htmlspecialchars($img_exts, ENT_QUOTES, 'UTF-8') ?> — Máx. <?= $img_max_mb ?> MB.
-                            <?php if (!empty($cfg['imagenes']['convertir_a_webp'])): ?>
-                                Las imágenes se convierten automáticamente a <strong>WebP</strong>.
-                            <?php endif; ?>
-                        </span>
-
-                        <!-- Preview de imagen -->
-                        <div class="cur-img-preview-box" id="img-preview-box">
-                            <div class="cur-img-preview-inner" id="img-preview"
-                                 style="background-image: url('<?= $f_img ?>')">
-                                <?php if (empty($f_img)): ?>
-                                <div class="cur-img-placeholder">
-                                    <i class="ph-fill ph-image"></i>
-                                    <span>Vista previa de la portada</span>
-                                </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </div>
-
-
-                    <!-- Nota mínima de aprobación -->
-                    <div class="cur-field-group cur-field-group--full">
-                        <label for="nota_minima" class="cur-field-label">
-                            Nota Mínima de Aprobación
-                        </label>
-                        <div class="cur-field-input-wrap">
-                            <i class="ph-fill ph-medal cur-field-icon"></i>
-                            <input
-                                type="number" id="nota_minima" name="nota_minima_aprobacion"
-                                class="cur-field-input"
-                                value="<?= htmlspecialchars((string)$f_nota) ?>"
-                                min="0" max="100" step="0.01" placeholder="70.00"
-                            >
-                        </div>
-                        <span class="cur-field-info">Escala de 0 a 100 puntos</span>
-
-                        <!-- Indicador visual -->
-                        <div class="cur-nota-indicator" id="nota-indicator">
-                            <div class="cur-nota-bar">
-                                <div class="cur-nota-fill" id="nota-fill" style="width: <?= min(100, (float)$f_nota) ?>%"></div>
-                            </div>
-                            <span class="cur-nota-val" id="nota-val"><?= number_format((float)$f_nota, 1) ?>%</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Footer: acciones -->
-            <div class="cur-form-footer">
-                <a href="?ruta=cursos" class="cur-form-btn cur-form-btn--cancel">
-                    <i class="ph-bold ph-x-circle"></i>
-                    Cancelar
-                </a>
-                <button type="submit" class="cur-form-btn cur-form-btn--submit" id="btn-submit">
-                    <i class="ph-bold <?= $es_editar ? 'ph-floppy-disk' : 'ph-paper-plane-tilt' ?>"></i>
-                    <span id="btn-label"><?= $es_editar ? 'Guardar Cambios' : 'Registrar Curso' ?></span>
-                    <span id="btn-spinner" style="display:none;"><span class="cur-spinner"></span></span>
-                </button>
-            </div>
-
-        </form>
-    </div><!-- /.cur-form-card -->
-
-</div><!-- /.cur-form-page -->
-
-<script>
-(function () {
-    // ── Contador de caracteres en descripción ──
-    var textarea = document.getElementById('descripcion');
-    var counter  = document.getElementById('desc-count');
-    if (textarea && counter) {
-        var update = function() { counter.textContent = textarea.value.length; };
-        textarea.addEventListener('input', update);
-        update();
-    }
-
-    // ── Preview de imagen en tiempo real ──
-    var imgInput   = document.getElementById('imagen_portada');
-    var imgPreview = document.getElementById('img-preview');
-    if (imgInput && imgPreview) {
-        imgInput.addEventListener('input', function () {
-            var url = this.value.trim();
-            var placeholder = imgPreview.querySelector('.cur-img-placeholder');
-            if (url) {
-                imgPreview.style.backgroundImage = "url('" + url + "')";
-                if (placeholder) placeholder.style.display = 'none';
-            } else {
-                imgPreview.style.backgroundImage = 'none';
-                if (placeholder) placeholder.style.display = 'flex';
-            }
-        });
-    }
-
-    // ── Indicador visual de nota mínima ──
-    var notaInput = document.getElementById('nota_minima');
-    var notaFill  = document.getElementById('nota-fill');
-    var notaVal   = document.getElementById('nota-val');
-    if (notaInput && notaFill && notaVal) {
-        notaInput.addEventListener('input', function () {
-            var val = Math.min(100, Math.max(0, parseFloat(this.value) || 0));
-            notaFill.style.width = val + '%';
-            notaVal.textContent  = val.toFixed(1) + '%';
-            notaFill.className   = 'cur-nota-fill' +
-                (val >= 70 ? ' ok' : val >= 50 ? ' warn' : ' low');
-        });
-        // Inicializar clase
-        var initVal = parseFloat(notaInput.value) || 70;
-        notaFill.className = 'cur-nota-fill' +
-            (initVal >= 70 ? ' ok' : initVal >= 50 ? ' warn' : ' low');
-    }
-
-    // ── Pills de estado sincronizadas ──
-    var estadoSelect = document.getElementById('estado');
-    var pills        = document.querySelectorAll('.cur-estado-pill');
-    if (estadoSelect && pills.length) {
-        estadoSelect.addEventListener('change', function () {
-            pills.forEach(function(p) { p.classList.remove('active'); });
-            var active = document.querySelector('.cur-estado-pill--' + this.value);
-            if (active) active.classList.add('active');
-        });
-    }
-
-    // ── Efecto de carga al enviar ──
-    var form     = document.getElementById('form-curso');
-    var btnSub   = document.getElementById('btn-submit');
-    var btnLabel = document.getElementById('btn-label');
-    var btnSpin  = document.getElementById('btn-spinner');
-    if (form && btnSub) {
-        form.addEventListener('submit', function (e) {
-            // Validación mínima de HTML5
-            if (!form.checkValidity()) return;
-            btnSub.disabled = true;
-            if (btnLabel) btnLabel.style.display = 'none';
-            if (btnSpin)  btnSpin.style.display  = 'inline-flex';
-        });
-    }
-
-    // ── Validación visual en tiempo real del URL de Moodle ──
-    var moodleInput = document.getElementById('url_moodle');
-    if (moodleInput) {
-        moodleInput.addEventListener('blur', function() {
-            var val = this.value.trim();
-            if (val && !val.startsWith('http')) {
-                this.style.borderColor = '#ef4444';
-                this.title = 'La URL debe empezar con http:// o https://';
-            } else {
-                this.style.borderColor = '';
-                this.title = '';
-            }
-        });
-    }
-})();
-</script>
+        <div style="display:flex; justify-content:flex-end; padding-top:1rem; padding-bottom:3rem; gap:1rem;">
+            <a href="?ruta=cursos-gestion" style="background: white; color: var(--cur-dark); border: 1px solid var(--cur-border); padding: 1rem 2rem; border-radius: 50px; font-weight: 700; font-size: 1.15rem; text-decoration:none; transition: background 0.2s;" onmouseover="this.style.background='#F1F5F9';" onmouseout="this.style.background='white';">Cancelar</a>
+            
+            <button type="submit" style="
+                background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); 
+                color: white; 
+                border: none; 
+                padding: 1rem 2.5rem; 
+                border-radius: 50px; 
+                font-weight: 700; 
+                font-size: 1.15rem; 
+                display:flex; 
+                align-items:center; 
+                gap: 0.8rem;
+                box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+                cursor: pointer;
+                transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
+            " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 15px 35px rgba(37, 99, 235, 0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 25px rgba(37, 99, 235, 0.4)';">
+                <i class="ph-bold ph-floppy-disk" style="font-size: 1.4rem;"></i> <?= $es_editar ? 'Guardar Cambios' : 'Crear Curso' ?>
+            </button>
+        </div>
+    </form>
+</div>

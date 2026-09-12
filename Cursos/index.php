@@ -69,6 +69,16 @@ class CursosModule implements ModuleContract {
                 'css'              => ['cursos.css'],
             ],
 
+            // ── Gestión de Cursos (Profesores/Admin) ──────────────
+            'cursos-gestion' => [
+                'controlador_path' => $ctrl,
+                'controlador'      => 'PromoController',
+                'metodo'           => 'mostrarGestion',
+                'vista'            => __DIR__ . '/views/gestion_cursos.php',
+                'titulo'           => 'Gestión de Cursos',
+                'css'              => ['cursos.css'],
+            ],
+
             // ── Configuración del módulo (SuperAdmin) ─────────────
             'cursos-config' => [
                 'controlador_path' => $ctrl,
@@ -93,11 +103,11 @@ class CursosModule implements ModuleContract {
                 'titulo'      => 'Cursos',
                 'icono'       => 'ph-fill ph-graduation-cap',
                 'enlace'      => 'cursos',
-                'activadores' => ['cursos', 'cursos-crear', 'cursos-editar', 'cursos-config'],
+                'activadores' => ['cursos', 'cursos-gestion', 'cursos-crear', 'cursos-editar', 'cursos-config'],
                 'subitems'    => [
-                    ['ruta' => 'cursos',        'titulo' => 'Oferta Formativa'],
-                    ['ruta' => 'cursos-crear',  'titulo' => 'Registrar Curso',   'nivel_minimo' => 1],
-                    ['ruta' => 'cursos-config', 'titulo' => 'Configuración',     'nivel_minimo' => 3],
+                    ['ruta' => 'cursos',         'titulo' => 'Oferta Formativa'],
+                    ['ruta' => 'cursos-gestion', 'titulo' => 'Gestión de Cursos', 'nivel_minimo' => 1],
+                    ['ruta' => 'cursos-config',  'titulo' => 'Configuración',     'nivel_minimo' => 3],
                 ],
             ],
         ];
