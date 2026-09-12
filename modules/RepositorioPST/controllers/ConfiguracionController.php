@@ -6,7 +6,7 @@ class ConfiguracionController {
 
     public function index(): array {
         require_once CORE_PATH . 'Security/Auth.php';
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         if (session_status() === PHP_SESSION_NONE) {
             @session_start();

@@ -83,6 +83,7 @@ public function getRutas(): array {
                 'titulo'      => 'Perfil',
                 'icono'       => 'ph-fill ph-user-circle',
                 'enlace'      => 'perfil',
+                'privilegio_minimo' => 100,
                 // Estas rutas mantendrán encendido el contenedor padre en el sidebar
                 'activadores' => ['perfil'], 
                 'subitems'    => [

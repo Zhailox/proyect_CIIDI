@@ -14,7 +14,7 @@ class AdminController {
     }
 
     public function mostrarPanelAdministrativo() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         try {
             $datosGraficas = $this->dashboardModel->obtenerEstadisticas();
             $listaTablas = $this->dashboardModel->obtenerTablasSistema();
@@ -39,7 +39,7 @@ class AdminController {
      * Test de Diagnóstico Integrado del Core del Sistema
      */
     public function testearCore() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         header('Content-Type: application/json');
 
         $inicio = microtime(true);
@@ -181,7 +181,7 @@ class AdminController {
     }
 
     public function mostrarMantenimiento() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         try {
             $listaTablas = $this->dashboardModel->obtenerTablasSistema();
             $metricasTablas = $this->dashboardModel->obtenerMetricasTablas();
@@ -198,7 +198,7 @@ class AdminController {
     }
 
     public function optimizarBaseDatos() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         try {
             $res = $this->dashboardModel->optimizarBaseDatos();
             if (session_status() === PHP_SESSION_NONE) session_start();
@@ -218,7 +218,7 @@ class AdminController {
     }
 
     public function generarBackup() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         try {
             $formato = $_POST['formato'] ?? ($_GET['formato'] ?? 'sql.gz');
             $res = BackupService::crearBackup($formato, false);
@@ -239,7 +239,7 @@ class AdminController {
     }
 
     public function generarBackupEsquema() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         try {
             $formato = $_POST['formato'] ?? ($_GET['formato'] ?? 'sql');
             $res = BackupService::crearBackup($formato, true);
@@ -260,7 +260,7 @@ class AdminController {
     }
 
     public function generarBackupTabla() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 header("Location: gestor-mantenimiento");
@@ -295,7 +295,7 @@ class AdminController {
     }
 
     public function verificarRespaldo() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         try {
             $archivo = $_GET['archivo'] ?? '';
             $nombreLimpio = basename($archivo);
@@ -321,7 +321,7 @@ class AdminController {
     }
 
     public function ejecutarLimpiezaRespaldos() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         try {
             $dias = !empty($_GET['dias']) ? max(1, (int)$_GET['dias']) : 30;
             $purgados = BackupService::limpiarRespaldosAntiguos($dias);
@@ -338,7 +338,7 @@ class AdminController {
     }
 
     public function descargarBackup() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         try {
             $archivo = $_GET['archivo'] ?? '';
             $nombreLimpio = basename($archivo);
@@ -366,7 +366,7 @@ class AdminController {
     }
 
     public function eliminarBackup() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         try {
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $archivo = $_POST['archivo'] ?? '';
@@ -392,7 +392,7 @@ class AdminController {
     }
 
     public function alternarMantenimiento() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         try {
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $archivo = defined('STORAGE_PATH') ? STORAGE_PATH . 'maintenance.json' : __DIR__ . '/../../../storage/maintenance.json';
@@ -438,7 +438,7 @@ class AdminController {
     }
 
     public function programarMantenimiento() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         try {
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $fechaInicioInput = trim($_POST['fecha_inicio'] ?? '');
@@ -515,7 +515,7 @@ class AdminController {
     }
 
     public function cancelarMantenimiento() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         try {
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $archivo = defined('STORAGE_PATH') ? STORAGE_PATH . 'maintenance.json' : __DIR__ . '/../../../storage/maintenance.json';
@@ -566,7 +566,7 @@ class AdminController {
     }
 
     public function restaurarBackup() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         try {
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $rutaArchivoRestaurar = null;

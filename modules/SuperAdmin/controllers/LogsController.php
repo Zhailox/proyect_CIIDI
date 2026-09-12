@@ -11,7 +11,7 @@ class LogsController {
     }
 
     public function index() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         $fNivel       = trim($_GET['nivel'] ?? '');
         $fModulo      = trim($_GET['modulo'] ?? '');
@@ -38,7 +38,7 @@ class LogsController {
     }
 
     public function exportarLogs() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         $formato      = trim($_GET['formato'] ?? 'csv'); // csv | pdf
         $fNivel       = trim($_GET['nivel'] ?? '');
@@ -134,7 +134,7 @@ class LogsController {
     }
 
     public function limpiarLogs() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->logsModel->limpiarLogsAudit();

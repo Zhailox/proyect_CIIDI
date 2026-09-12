@@ -6,7 +6,7 @@ class PerfilController {
 
     public function mostrarDashboard() {
         // 1. EL GUARDIÁN: Validamos seguridad ANTES de imprimir HTML
-        Auth::requierePrivilegioMinimo(0);
+        Auth::requierePrivilegioMinimo(10);
         
         // 2. Extraemos los datos del usuario activo
         $usuario = Auth::usuario();

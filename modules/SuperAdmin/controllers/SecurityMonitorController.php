@@ -7,7 +7,7 @@ require_once CORE_PATH . 'Security/RateLimiter.php';
 class SecurityMonitorController {
 
     public function index() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         $intentos = RateLimiter::obtenerIntentos();
         $blacklist = RateLimiter::obtenerListaNegra();
@@ -23,7 +23,7 @@ class SecurityMonitorController {
     }
 
     public function desbloquearIP() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ip = trim($_POST['ip'] ?? '');
@@ -40,7 +40,7 @@ class SecurityMonitorController {
     }
 
     public function bloquearListaNegra() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ip = trim($_POST['ip'] ?? '');
@@ -59,7 +59,7 @@ class SecurityMonitorController {
     }
 
     public function agregarListaBlanca() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ip = trim($_POST['ip'] ?? '');

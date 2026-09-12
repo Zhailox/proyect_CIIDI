@@ -2,10 +2,10 @@
     "paginacion": {
         "logs": 50,
         "usuarios": 15,
-        "docentes": 15
+        "docentes": 16
     },
     "seguridad": {
-        "timeout_minutos": 150,
+        "timeout_minutos": 151,
         "intentos_login": 5
     },
     "smtp": {

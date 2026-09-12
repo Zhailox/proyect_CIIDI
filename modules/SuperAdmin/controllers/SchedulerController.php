@@ -7,7 +7,7 @@ require_once __DIR__ . '/../services/SchedulerService.php';
 class SchedulerController {
 
     public function index() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         $tareas = SchedulerService::obtenerTareas();
         $diagnostico = SchedulerService::diagnosticarEntornoCron();
@@ -19,7 +19,7 @@ class SchedulerController {
     }
 
     public function alternarEstado() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $idTarea = trim($_POST['tarea_id'] ?? '');
@@ -36,7 +36,7 @@ class SchedulerController {
     }
 
     public function ejecutarManual() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $idTarea = trim($_POST['tarea_id'] ?? '');
@@ -64,7 +64,7 @@ class SchedulerController {
     }
 
     public function guardarTarea() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = trim($_POST['tarea_id'] ?? '');
@@ -91,7 +91,7 @@ class SchedulerController {
     }
 
     public function eliminarTarea() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = trim($_POST['tarea_id'] ?? '');

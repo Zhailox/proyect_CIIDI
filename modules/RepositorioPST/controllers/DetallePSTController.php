@@ -300,7 +300,7 @@ class DetallePSTController {
                 }
             }
         } else {
-            Auth::requierePrivilegioMinimo(1);
+            Auth::requierePrivilegioMinimo(2);
         }
 
         $model = new DocumentoModel();
@@ -533,7 +533,7 @@ class DetallePSTController {
 
         // 0.3 Procesar Acción: ALTERNAR ESTADO (Activar / Ocultar - Soft Delete)
         if ($accion === 'toggle_estado' && $id) {
-            Auth::requierePrivilegioMinimo(1);
+            Auth::requierePrivilegioMinimo(2);
             try {
                 $docActual = $model->getPSTDocumentoById($id);
                 if ($docActual) {
@@ -553,7 +553,7 @@ class DetallePSTController {
             }
         }
         
-        // 1. Procesar Acción: ELIMINAR (Requiere Bibliotecario / Admin = Nivel 2+)
+        // 1. Procesar Acción: ELIMINAR
         if ($accion === 'eliminar' && $id) {
             Auth::requierePrivilegioMinimo(2);
             try {

@@ -36,7 +36,7 @@ class InvestigacionController {
     }
 
     public function mostrarPanelPostulaciones(): array {
-        Auth::requierePrivilegioMinimo(0);
+        Auth::requierePrivilegioMinimo(5);
         $user = Auth::usuario();
 
         $lineas = $this->model->obtenerLineas();
@@ -68,7 +68,7 @@ class InvestigacionController {
     }
 
     public function procesarPostulacion() {
-        Auth::requierePrivilegioMinimo(0);
+        Auth::requierePrivilegioMinimo(5);
         $user = Auth::usuario();
         
         $id_inv = (int)($_POST['id_investigacion'] ?? 0);
@@ -286,7 +286,7 @@ class InvestigacionController {
     // ──────────────────────────────────────────────────────────────────────────
 
     public function mostrarPanelAdmin(): array {
-        Auth::requierePrivilegioMinimo(2);
+        Auth::requierePrivilegioMinimo(1);
         
         $investigaciones = $this->model->obtenerTodasAdmin();
         $postulaciones = $this->model->obtenerPostulacionesAdmin();
@@ -296,7 +296,7 @@ class InvestigacionController {
     }
 
     public function cambiarEstado() {
-        Auth::requierePrivilegioMinimo(2);
+        Auth::requierePrivilegioMinimo(1);
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
         
         $id = (int)($_POST['id'] ?? 0);

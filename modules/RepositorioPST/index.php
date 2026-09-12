@@ -65,14 +65,14 @@ class RepositorioPSTModule implements ModuleContract {
                 'tipo'        => 'parent',
                 'titulo'      => 'Repositorio',
                 'icono'       => 'ph-fill ph-book-open-text',
-                'privilegio_minimo' => -1,
+                'privilegio_minimo' => 999,
                 'enlace'      => 'repositorio',
                 'activadores' => ['repositorio', 'detalles-pst', 'agregar-documento', 'buscador', 'configuracion-pst'],
                 'subitems'    => [
-                    ['ruta' => 'repositorio', 'titulo' => 'Explorar Proyectos', 'privilegio_minimo' => -1],
-                    ['ruta' => 'buscador', 'titulo' => 'Buscador Unificado', 'privilegio_minimo' => -1],
-                    ['ruta' => 'agregar-documento', 'titulo' => 'Gestión Documental', 'privilegio_minimo' => 1],
-                    ['ruta' => 'configuracion-pst', 'titulo' => 'Configuración Repositorio', 'privilegio_minimo' => 1]
+                    ['ruta' => 'repositorio', 'titulo' => 'Explorar Proyectos', 'privilegio_minimo' => 999],
+                    ['ruta' => 'buscador', 'titulo' => 'Buscador Unificado', 'privilegio_minimo' => 999],
+                    ['ruta' => 'agregar-documento', 'titulo' => 'Gestión Documental', 'privilegio_minimo' => 2],
+                    ['ruta' => 'configuracion-pst', 'titulo' => 'Configuración Repositorio', 'privilegio_minimo' => 2]
                 ]
             ]
         ];

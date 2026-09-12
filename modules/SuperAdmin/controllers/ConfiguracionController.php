@@ -5,7 +5,7 @@ require_once __DIR__ . '/../services/SystemConfigService.php'; // Asegúrate de 
 class ConfiguracionController {
     
     public function index() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         
         $config = ConfigService::get();
         $mensajeExito = $_SESSION['mensaje_config_exito'] ?? '';
@@ -20,7 +20,7 @@ class ConfiguracionController {
     }
 
     public function guardar() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $config = ConfigService::get();

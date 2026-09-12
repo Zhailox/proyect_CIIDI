@@ -42,24 +42,29 @@ class Auth {
     public static function requierePrivilegioMinimo(int $nivelExigido, ?string $permisoRuta = null, ?string $moduloRuta = null) {
         if (!self::check()) { header("Location: login"); exit; }
 
-        $nivelUsuario = (int)($_SESSION['nivel_privilegio'] ?? -1);
-        $nivelDios = 999; 
+        $nivelUsuario = (int)($_SESSION['nivel_privilegio'] ?? 999);
+        $nivelDios = 0;
 
-        if ($nivelUsuario < $nivelExigido && $nivelUsuario < $nivelDios) {
+        if ($nivelUsuario > $nivelExigido && $nivelUsuario !== $nivelDios) {
             self::render403();
         }
 
-        // Nueva verificación en 3D: Nivel -> Módulo -> Acción
-        if ($permisoRuta !== null && $moduloRuta !== null && $nivelUsuario < $nivelDios) {
+        if ($permisoRuta !== null && $moduloRuta !== null && $nivelUsuario !== $nivelDios) {
             $archivo_rbac = CORE_PATH . '../storage/rbac_matrix.json';
+            
             if (file_exists($archivo_rbac)) {
                 $matrix = json_decode(file_get_contents($archivo_rbac), true) ?: [];
                 
-                if (isset($matrix[$nivelUsuario][$moduloRuta][$permisoRuta]) && $matrix[$nivelUsuario][$moduloRuta][$permisoRuta] === false) {
+                // Si el permiso no está marcado como 'true' en la matriz para este nivel y módulo, se bloquea.
+                if (empty($matrix[$nivelUsuario][$moduloRuta][$permisoRuta])) {
                     self::render403();
                 }
+            } else {
+                // Si el archivo JSON no existe pero se exige un permiso, se deniega por seguridad (Fail-Safe)
+                self::render403();
             }
         }
+
         return true;
     }
 

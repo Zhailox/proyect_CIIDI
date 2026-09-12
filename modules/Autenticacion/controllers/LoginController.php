@@ -101,7 +101,7 @@ class LoginController {
             $data = json_decode(file_get_contents($archivoMant), true);
             if (isset($data['activo']) && $data['activo'] === true) {
                 $nivelUsuario = (int) $usuario['nivel_privilegio'];
-                if ($nivelUsuario < 3) {
+                if ($nivelUsuario == 0) {
                     // Error: solo administradores pueden acceder durante mantenimiento
                     $_SESSION['error_login'] = 'El sistema está en mantenimiento. Solo administradores pueden acceder.';
                     header("Location: login");
