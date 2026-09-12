@@ -1,5 +1,105 @@
 [
     {
+        "id": "log_6aa4e1a491b65",
+        "fecha_hora": "2026-09-12 05:22:44",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Variables Globales",
+        "detalles": "Se actualizaron las variables de entorno del sistema.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4e1a21e964",
+        "fecha_hora": "2026-09-12 05:22:42",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Variables Globales",
+        "detalles": "Se actualizaron las variables de entorno del sistema.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4e19f536a2",
+        "fecha_hora": "2026-09-12 05:22:39",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Variables Globales",
+        "detalles": "Se actualizaron las variables de entorno del sistema.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4e1981999d",
+        "fecha_hora": "2026-09-12 05:22:32",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Variables Globales",
+        "detalles": "Se actualizaron las variables de entorno del sistema.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4e0bd31f72",
+        "fecha_hora": "2026-09-12 05:18:53",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Variables Globales",
+        "detalles": "Se actualizaron las variables de entorno del sistema.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4e0ba82af4",
+        "fecha_hora": "2026-09-12 05:18:50",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Variables Globales",
+        "detalles": "Se actualizaron las variables de entorno del sistema.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4df7e1f54b",
+        "fecha_hora": "2026-09-12 05:13:34",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Variables Globales",
+        "detalles": "Se actualizaron las variables de entorno del sistema.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4def841d21",
+        "fecha_hora": "2026-09-12 05:11:20",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Variables Globales",
+        "detalles": "Se actualizaron las variables de entorno del sistema.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4ded9ec215",
+        "fecha_hora": "2026-09-12 05:10:49",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Variables Globales",
+        "detalles": "Se actualizaron las variables de entorno del sistema.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4ded2cdd6e",
+        "fecha_hora": "2026-09-12 05:10:42",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Variables Globales",
+        "detalles": "Se actualizaron las variables de entorno del sistema.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
         "id": "log_6aa4d44b8f228",
         "fecha_hora": "2026-09-12 04:25:47",
         "nivel": "INFO",

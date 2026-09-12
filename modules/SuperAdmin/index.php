@@ -229,6 +229,19 @@ class SuperAdminModule implements ModuleContract {
                 'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
                 'controlador'      => 'GestorUsuariosController',
                 'metodo'           => 'eliminarNivelPrivilegioAction'
+            ],
+            'configuracion-sistema' => [
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'controlador'      => 'ConfiguracionController',
+                'metodo'           => 'index',
+                'vista'            => __DIR__ . '/views/configuracion_sistema.php', 
+                'titulo'           => 'Configuración Global - SuperAdmin',
+                'css'              => ['SuperAdmin.css', 'gestor.css']
+            ],
+            'guardar-configuracion-sistema' => [
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'controlador'      => 'ConfiguracionController',
+                'metodo'           => 'guardar'
             ]
         ];
     }
@@ -242,11 +255,12 @@ class SuperAdminModule implements ModuleContract {
                 'privilegio_minimo' => 2,
                 'enlace'      => 'sudoadmin',
                 // Rutas que mantienen iluminado y desplegado el panel administrativo en el Sidebar
-                'activadores' => ['sudoadmin', 'gestor-modulos', 'detalle-modulo', 'gestor-mantenimiento', 'visor-logs', 'gestor-usuarios'], 
+                'activadores' => ['sudoadmin', 'gestor-modulos', 'detalle-modulo', 'gestor-mantenimiento', 'visor-logs', 'gestor-usuarios', 'configuracion-sistema'], 
                 'subitems'    => [
                     ['ruta' => 'sudoadmin', 'titulo' => 'Panel de Control'],
                     ['ruta' => 'gestor-usuarios', 'titulo' => 'Gestión de Usuarios'],
                     ['ruta' => 'gestor-modulos', 'titulo' => 'Gestor de Módulos'],
+                    ['ruta' => 'configuracion-sistema', 'titulo' => 'Variables de Entorno'],
                     ['ruta' => 'gestor-mantenimiento', 'titulo' => 'Mantenimiento & BD'],
                     ['ruta' => 'visor-logs', 'titulo' => 'Visor de Logs']
                 ]

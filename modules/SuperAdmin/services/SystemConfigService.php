@@ -6,18 +6,14 @@ class ConfigService {
 
     private static function getPath(): string {
         if (self::$configPath === null) {
-            self::$configPath = __DIR__ . '/../../../storage/config_articulos.json';
+            self::$configPath = __DIR__ . '/../../../storage/system_config.json';
         }
         // Si no existe, creamos uno por defecto
         if (!file_exists(self::$configPath)) {
             $default = [
-                "citas" => ["estilos" => [
-                    "apa7" => ["nombre" => "Estilo APA", "activo" => true, "plantilla" => "{autores} ({anio}). {titulo}. {editorial}. Vol {volumen}({numero}). ISSN: {issn}"]
-                ]],
-                "paginacion" => ["limite_catalogo" => 16, "limite_gestor" => 15, "max_recomendados" => 3],
-                "recursos" => ["mostrar_editorial" => true, "mostrar_volumen" => true, "mostrar_issn" => true],
-                "buscador" => ["anio_minimo" => 2020, "resaltar_coincidencias" => true],
-                "archivos" => ["max_size_mb" => 5, "max_autores" => 6]
+                "paginacion" => ["logs" => 50, "usuarios" => 15, "docentes" => 15],
+                "seguridad" => ["timeout_minutos" => 120, "intentos_login" => 5],
+                "smtp" => ["host" => "", "port" => 587, "user" => "sistema@universidad.edu", "pass" => "", "from_email" => "sistema@universidad.edu"]
             ];
             file_put_contents(self::$configPath, json_encode($default, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
         }

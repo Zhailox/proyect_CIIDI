@@ -1,0 +1,18 @@
+{
+    "paginacion": {
+        "logs": 50,
+        "usuarios": 15,
+        "docentes": 15
+    },
+    "seguridad": {
+        "timeout_minutos": 150,
+        "intentos_login": 5
+    },
+    "smtp": {
+        "host": "",
+        "port": 587,
+        "user": "ciidi@uppttmbi.edu",
+        "pass": "",
+        "from_email": "ciidi@upttmbi.edu"
+    }
+}
