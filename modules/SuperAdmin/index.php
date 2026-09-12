@@ -205,10 +205,25 @@ class SuperAdminModule implements ModuleContract {
                 'controlador'      => 'AdminController',
                 'metodo'           => 'ejecutarLimpiezaRespaldos'
             ],
+            'optimizar-bd' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'optimizarBaseDatos'
+            ],
             'alternar-mantenimiento' => [
                 'controlador_path' => __DIR__ . '/controllers/AdminController.php',
                 'controlador'      => 'AdminController',
                 'metodo'           => 'alternarMantenimiento'
+            ],
+            'programar-mantenimiento' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'programarMantenimiento'
+            ],
+            'cancelar-mantenimiento' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'cancelarMantenimiento'
             ],
             'restaurar-backup' => [
                 'controlador_path' => __DIR__ . '/controllers/AdminController.php',
@@ -318,8 +333,12 @@ class SuperAdminModule implements ModuleContract {
         // Módulo de infraestructura. No requiere tarjeta pública.
         return [];
     }
-     public function getHeaderConfig(): array {
-        return [];
+    public function getHeaderConfig(): array {
+        return [
+            'tipo'       => 'custom_view',
+            'ruta_vista' => __DIR__ . '/views/header_mantenimiento_widget.php',
+            'orden'      => 85 // Se ubica justo al lado del perfil de usuario y buscador
+        ];
     }
 }
 

@@ -184,17 +184,44 @@ class AdminController {
         Auth::requierePrivilegioMinimo(3);
         try {
             $listaTablas = $this->dashboardModel->obtenerTablasSistema();
-            return ['tablas' => $listaTablas];
+            $metricasTablas = $this->dashboardModel->obtenerMetricasTablas();
+            $consultasActivas = $this->dashboardModel->obtenerConsultasActivas();
+            return [
+                'tablas' => $listaTablas,
+                'metricas_tablas' => $metricasTablas,
+                'consultas_activas' => $consultasActivas
+            ];
         } catch (Throwable $e) {
             AuditLogger::registrar('CRITICAL', 'SuperAdmin', 'Error Mantenimiento View', $e->getMessage());
-            return ['tablas' => []];
+            return ['tablas' => [], 'metricas_tablas' => [], 'consultas_activas' => []];
         }
+    }
+
+    public function optimizarBaseDatos() {
+        Auth::requierePrivilegioMinimo(3);
+        try {
+            $res = $this->dashboardModel->optimizarBaseDatos();
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            if ($res['exito']) {
+                AuditLogger::registrar('INFO', 'SuperAdmin', 'Optimizar BD', 'VACUUM ANALYZE ejecutado exitosamente.');
+                $_SESSION['mensaje_admin_exito'] = $res['mensaje'];
+            } else {
+                $_SESSION['mensaje_admin_error'] = $res['mensaje'];
+            }
+        } catch (Throwable $e) {
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            $_SESSION['mensaje_admin_error'] = "Error al optimizar BD: " . $e->getMessage();
+        }
+
+        header("Location: gestor-mantenimiento");
+        exit;
     }
 
     public function generarBackup() {
         Auth::requierePrivilegioMinimo(3);
         try {
-            $res = BackupService::crearBackup(true, false);
+            $formato = $_POST['formato'] ?? ($_GET['formato'] ?? 'sql.gz');
+            $res = BackupService::crearBackup($formato, false);
             if (session_status() === PHP_SESSION_NONE) session_start();
             if ($res['exito']) {
                 $_SESSION['mensaje_admin_exito'] = $res['mensaje'];
@@ -214,7 +241,8 @@ class AdminController {
     public function generarBackupEsquema() {
         Auth::requierePrivilegioMinimo(3);
         try {
-            $res = BackupService::crearBackup(true, true);
+            $formato = $_POST['formato'] ?? ($_GET['formato'] ?? 'sql');
+            $res = BackupService::crearBackup($formato, true);
             if (session_status() === PHP_SESSION_NONE) session_start();
             if ($res['exito']) {
                 $_SESSION['mensaje_admin_exito'] = "Respaldo del ESQUEMA creado de forma segura: " . $res['nombre'];
@@ -240,6 +268,7 @@ class AdminController {
             }
 
             $tabla = trim($_POST['nombre_tabla'] ?? '');
+            $formato = trim($_POST['formato'] ?? 'sql.gz');
 
             if (empty($tabla) || !preg_match('/^[a-zA-Z0-9_]+$/', $tabla)) {
                 if (session_status() === PHP_SESSION_NONE) session_start();
@@ -248,10 +277,10 @@ class AdminController {
                 exit;
             }
 
-            $res = BackupService::crearBackup(true, false, $tabla);
+            $res = BackupService::crearBackup($formato, false, $tabla);
             if (session_status() === PHP_SESSION_NONE) session_start();
             if ($res['exito']) {
-                $_SESSION['mensaje_admin_exito'] = "Respaldo de la TABLA '{$tabla}' creado: " . $res['nombre'];
+                $_SESSION['mensaje_admin_exito'] = "Respaldo de la TABLA '{$tabla}' creado ({$formato}): " . $res['nombre'];
             } else {
                 $_SESSION['mensaje_admin_error'] = $res['mensaje'];
             }
@@ -278,9 +307,9 @@ class AdminController {
             if (session_status() === PHP_SESSION_NONE) session_start();
 
             if ($res['valido']) {
-                $_SESSION['mensaje_admin_exito'] = "✅ Verificación exitosa para '{$nombreLimpio}': " . $res['detalles'];
+                $_SESSION['mensaje_admin_exito'] = "Verificación exitosa para '{$nombreLimpio}': " . $res['detalles'];
             } else {
-                $_SESSION['mensaje_admin_error'] = "❌ Fallo de integridad en '{$nombreLimpio}': " . $res['detalles'];
+                $_SESSION['mensaje_admin_error'] = "Fallo de integridad en '{$nombreLimpio}': " . $res['detalles'];
             }
         } catch (Throwable $e) {
             if (session_status() === PHP_SESSION_NONE) session_start();
@@ -366,21 +395,23 @@ class AdminController {
         Auth::requierePrivilegioMinimo(3);
         try {
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $archivo = __DIR__ . '/../../../storage/maintenance.json';
+                $archivo = defined('STORAGE_PATH') ? STORAGE_PATH . 'maintenance.json' : __DIR__ . '/../../../storage/maintenance.json';
                 $actual = file_exists($archivo) ? json_decode(file_get_contents($archivo), true) : ['activo' => false];
                 $nuevoEstado = !$actual['activo'];
                 $mensaje = trim($_POST['mensaje'] ?? '');
                 $minutosMantenimiento = (int)($_POST['minutos_programados'] ?? 0);
 
-                $fechaFin = $minutosMantenimiento > 0 
+                $fechaFin = ($nuevoEstado && $minutosMantenimiento > 0) 
                     ? date('Y-m-d H:i:s', strtotime("+{$minutosMantenimiento} minutes"))
                     : null;
 
                 $data = [
                     'activo' => $nuevoEstado,
                     'mensaje' => $mensaje,
+                    'fecha_inicio' => $nuevoEstado ? date('Y-m-d H:i:s') : null,
                     'fecha_fin' => $fechaFin,
-                    'minutos' => $minutosMantenimiento
+                    'minutos' => $minutosMantenimiento,
+                    'programado' => false
                 ];
 
                 file_put_contents($archivo, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
@@ -393,13 +424,129 @@ class AdminController {
 
                 if (session_status() === PHP_SESSION_NONE) session_start();
                 $_SESSION['mensaje_admin_exito'] = $nuevoEstado
-                    ? "Modo Mantenimiento ACTIVADO. Plataforma restringida."
+                    ? "Modo Mantenimiento ACTIVADO. Plataforma aislada."
                     : "Modo Mantenimiento DESACTIVADO. Sistema abierto a usuarios.";
             }
         } catch (Throwable $e) {
             if (session_status() === PHP_SESSION_NONE) session_start();
             AuditLogger::registrar('CRITICAL', 'SuperAdmin', 'Excepción Alternar Mantenimiento', $e->getMessage());
             $_SESSION['mensaje_admin_error'] = "Error al modificar modo mantenimiento: " . $e->getMessage();
+        }
+
+        header("Location: gestor-mantenimiento");
+        exit;
+    }
+
+    public function programarMantenimiento() {
+        Auth::requierePrivilegioMinimo(3);
+        try {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $fechaInicioInput = trim($_POST['fecha_inicio'] ?? '');
+                $duracionMinutos = max(1, (int)($_POST['duracion_minutos'] ?? 30));
+                $mensaje = trim($_POST['mensaje'] ?? 'Mantenimiento programado de infraestructura.');
+
+                if (empty($fechaInicioInput)) {
+                    throw new InvalidArgumentException("Debe seleccionar una fecha y hora de inicio.");
+                }
+
+                // Reemplazar la T del input datetime-local
+                $fechaFormateada = str_replace('T', ' ', $fechaInicioInput);
+                if (strlen($fechaFormateada) === 16) {
+                    $fechaFormateada .= ':00';
+                }
+
+                $timestampInicio = strtotime($fechaFormateada);
+                if (!$timestampInicio) {
+                    throw new InvalidArgumentException("Formato de fecha u hora no válido.");
+                }
+
+                $ahora = time();
+                $esParaAhora = ($timestampInicio <= ($ahora + 10)); // tolerancia 10s
+                $fechaFin = date('Y-m-d H:i:s', $timestampInicio + ($duracionMinutos * 60));
+
+                $archivo = defined('STORAGE_PATH') ? STORAGE_PATH . 'maintenance.json' : __DIR__ . '/../../../storage/maintenance.json';
+                
+                // Leer agenda previa si existe
+                $data = file_exists($archivo) ? (json_decode(file_get_contents($archivo), true) ?: []) : [];
+                $agendaPrevias = $data['agenda'] ?? [];
+
+                $nuevaEntrada = [
+                    'id' => 'mant_' . time() . '_' . rand(100, 999),
+                    'activo' => $esParaAhora,
+                    'programado' => !$esParaAhora,
+                    'fecha_inicio' => $fechaFormateada,
+                    'fecha_fin' => $fechaFin,
+                    'duracion_minutos' => $duracionMinutos,
+                    'mensaje' => $mensaje,
+                    'creado_el' => date('Y-m-d H:i:s')
+                ];
+
+                // Mantener estado activo si está vigente o si la nueva entrada es inmediata
+                $estadoGeneral = $esParaAhora || (!empty($data['activo']));
+                $agendaPrevias[] = $nuevaEntrada;
+
+                $dataGuardar = [
+                    'activo' => $estadoGeneral,
+                    'programado' => !$esParaAhora,
+                    'fecha_inicio' => $fechaFormateada,
+                    'fecha_fin' => $fechaFin,
+                    'duracion_minutos' => $duracionMinutos,
+                    'mensaje' => $mensaje,
+                    'agenda' => array_values($agendaPrevias)
+                ];
+
+                file_put_contents($archivo, json_encode($dataGuardar, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+                if ($esParaAhora) {
+                    $this->cerrarSesionesNoAdmin();
+                }
+                AuditLogger::registrar('INFO', 'SuperAdmin', 'Programar Mantenimiento', "Ventana agendada para: {$fechaFormateada}");
+
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_admin_exito'] = "Ventana de Mantenimiento agendada para " . date('H:i - d/m/Y', $timestampInicio);
+            }
+        } catch (Throwable $e) {
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            AuditLogger::registrar('CRITICAL', 'SuperAdmin', 'Excepción Programar Mantenimiento', $e->getMessage());
+            $_SESSION['mensaje_admin_error'] = "Error al programar mantenimiento: " . $e->getMessage();
+        }
+
+        header("Location: gestor-mantenimiento");
+        exit;
+    }
+
+    public function cancelarMantenimiento() {
+        Auth::requierePrivilegioMinimo(3);
+        try {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $archivo = defined('STORAGE_PATH') ? STORAGE_PATH . 'maintenance.json' : __DIR__ . '/../../../storage/maintenance.json';
+                $idAgenda = trim($_POST['id_agenda'] ?? '');
+
+                if (file_exists($archivo)) {
+                    $data = json_decode(file_get_contents($archivo), true) ?: [];
+                    if (!empty($idAgenda) && !empty($data['agenda'])) {
+                        $data['agenda'] = array_values(array_filter($data['agenda'], function($item) use ($idAgenda) {
+                            return ($item['id'] ?? '') !== $idAgenda;
+                        }));
+                    } else {
+                        // Cancelar todo y desactivar
+                        $data = [
+                            'activo' => false,
+                            'programado' => false,
+                            'agenda' => []
+                        ];
+                    }
+
+                    file_put_contents($archivo, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+                    AuditLogger::registrar('WARNING', 'SuperAdmin', 'Cancelar Mantenimiento', 'Se canceló la programación de mantenimiento.');
+                    
+                    if (session_status() === PHP_SESSION_NONE) session_start();
+                    $_SESSION['mensaje_admin_exito'] = "Programación de mantenimiento cancelada con éxito.";
+                }
+            }
+        } catch (Throwable $e) {
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            AuditLogger::registrar('CRITICAL', 'SuperAdmin', 'Excepción Cancelar Mantenimiento', $e->getMessage());
+            $_SESSION['mensaje_admin_error'] = "Error al cancelar mantenimiento: " . $e->getMessage();
         }
 
         header("Location: gestor-mantenimiento");
@@ -452,6 +599,9 @@ class AdminController {
                         header("Location: gestor-mantenimiento");
                         exit;
                     }
+
+                    // Auto-Checkpoint Preventivo antes de sobreescribir la BD
+                    $checkpoint = BackupService::crearBackup('sql.gz', false, null, 'pre_restore_checkpoint');
 
                     // Si está comprimido en GZIP, descomprimir temporalmente para psql
                     $rutaParaPsql = $rutaArchivoRestaurar;

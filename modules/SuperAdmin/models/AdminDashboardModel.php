@@ -162,4 +162,46 @@ class AdminDashboardModel {
         $stmt = $db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
+
+    public function optimizarBaseDatos(): array {
+        $db = Connection::getInstance();
+        try {
+            $db->exec("VACUUM ANALYZE");
+            return ['exito' => true, 'mensaje' => 'Optimización de tablas (VACUUM ANALYZE) ejecutada con éxito en PostgreSQL.'];
+        } catch (Exception $e) {
+            return ['exito' => false, 'mensaje' => 'Error al optimizar BD: ' . $e->getMessage()];
+        }
+    }
+
+    public function obtenerMetricasTablas(): array {
+        $db = Connection::getInstance();
+        try {
+            $sql = "SELECT 
+                        relname AS tabla,
+                        pg_size_pretty(pg_total_relation_size(relid)) AS tamano,
+                        pg_total_relation_size(relid) AS bytes,
+                        n_live_tup AS total_filas
+                    FROM pg_catalog.pg_stat_user_tables
+                    ORDER BY pg_total_relation_size(relid) DESC
+                    LIMIT 8";
+            $stmt = $db->query($sql);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+
+    public function obtenerConsultasActivas(): array {
+        $db = Connection::getInstance();
+        try {
+            $sql = "SELECT pid, usename, query, state, NOW() - query_start AS duracion
+                    FROM pg_stat_activity 
+                    WHERE state != 'idle' AND pid != pg_backend_pid()
+                    ORDER BY duracion DESC LIMIT 5";
+            $stmt = $db->query($sql);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (Exception $e) {
+            return [];
+        }
+    }
 }
