@@ -81,22 +81,33 @@ class AdminDashboardModel {
             $activeConnections = 1;
         }
 
-        // 3. Espacio, archivos e inodos en directorio storage/
+        // 3. Espacio, archivos e inodos en directorio storage/ (Con caché temporal de 5 minutos)
         $storageDir = CORE_PATH . '../storage';
-        $storageBytes = 0;
+        $cacheFile = $storageDir . '/.telemetry_cache.json';
+        $storageMb = 0;
         $totalFilesCount = 0;
-        if (is_dir($storageDir)) {
-            $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($storageDir, RecursiveDirectoryIterator::SKIP_DOTS));
-            foreach ($iterator as $file) {
-                $storageBytes += $file->getSize();
-                $totalFilesCount++;
+
+        if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < 300)) {
+            $cached = json_decode(file_get_contents($cacheFile), true);
+            if (is_array($cached)) {
+                $storageMb = $cached['storage_mb'] ?? 0;
+                $totalFilesCount = $cached['files_count'] ?? 0;
             }
+        } else {
+            $storageBytes = 0;
+            if (is_dir($storageDir)) {
+                $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($storageDir, RecursiveDirectoryIterator::SKIP_DOTS));
+                foreach ($iterator as $file) {
+                    $storageBytes += $file->getSize();
+                    $totalFilesCount++;
+                }
+            }
+            $storageMb = round($storageBytes / (1024 * 1024), 2);
+            @file_put_contents($cacheFile, json_encode(['storage_mb' => $storageMb, 'files_count' => $totalFilesCount]));
         }
-        $storageMb = round($storageBytes / (1024 * 1024), 2);
 
         // Espacio libre y total en disco
         $diskFree = @disk_free_space($storageDir);
-        $diskTotal = @disk_total_space($storageDir);
         $diskFreeFormatted = $diskFree !== false ? round($diskFree / (1024 * 1024 * 1024), 2) . " GB libre" : "N/D";
 
         // 4. Uso de memoria PHP
@@ -141,10 +152,7 @@ class AdminDashboardModel {
         $archivo = CORE_PATH . '../storage/system_audit.json';
         if (!file_exists($archivo)) return [];
         $logs = json_decode(file_get_contents($archivo), true) ?: [];
-        // Ordenar desc por fecha
-        usort($logs, function($a, $b) {
-            return strtotime($b['fecha_hora'] ?? 0) - strtotime($a['fecha_hora'] ?? 0);
-        });
+        $logs = array_reverse($logs);
         return array_slice($logs, 0, $limit);
     }
 

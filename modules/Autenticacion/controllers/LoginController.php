@@ -41,6 +41,20 @@ class LoginController {
     public function procesar() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return false;
 
+        require_once CORE_PATH . 'Security/RateLimiter.php';
+
+        $ip = RateLimiter::obtenerIPCliente();
+        $checkWAF = RateLimiter::estaBloqueada($ip);
+
+        if ($checkWAF['bloqueada']) {
+            AuditLogger::registrar('CRITICAL', 'Autenticacion', 'Acceso Rechazado por WAF', "Intento de login bloqueado para IP: {$ip}. Razón: {$checkWAF['razon']}");
+            return [
+                'es_error' => true,
+                'mensaje'  => 'Seguridad WAF: ' . $checkWAF['razon'],
+                'destino'  => 'login'
+            ];
+        }
+
         $cedula = trim($_POST['cedula'] ?? '');
         $password = trim($_POST['password'] ?? '');
 
@@ -57,17 +71,20 @@ class LoginController {
 
         // 2. Probar si el usuario existe y si está activo
         if (!$usuario) {
+            RateLimiter::registrarIntentoFallido($ip, $cedula);
             AuditLogger::registrar('WARNING', 'Autenticacion', 'Intento de Acceso Fallido', "Intento de inicio de sesión con cédula inexistente: {$cedula}");
             return ['es_error' => true, 'mensaje' => "No se encontró ninguna cuenta con la cédula {$cedula}.", 'destino' => 'login'];
         }
 
         if ($usuario['activo'] === false) {
+            RateLimiter::registrarIntentoFallido($ip, $cedula);
             AuditLogger::registrar('WARNING', 'Autenticacion', 'Acceso Denegado', "Intento de inicio de sesión en cuenta suspendida C.I.: {$cedula}");
             return ['es_error' => true, 'mensaje' => 'Esta cuenta se encuentra actualmente suspendida por administración.', 'destino' => 'login'];
         }
 
         // 3. Probar la contraseña
         if (!password_verify($password, $usuario['contrasena'])) {
+            RateLimiter::registrarIntentoFallido($ip, $cedula);
             AuditLogger::registrar('WARNING', 'Autenticacion', 'Contraseña Incorrecta', "Intento de inicio de sesión fallido por contraseña para el usuario C.I.: {$cedula}");
             return [
                 'es_error' => true,
@@ -75,6 +92,9 @@ class LoginController {
                 'destino'  => 'login'
             ];
         }
+
+        // Éxito: Limpiamos los intentos acumulados de la IP
+        RateLimiter::limpiarIntentosExitosa($ip);
         // Verificar que el server no esté en mantenimiento
         $archivoMant = __DIR__ . '/../../../storage/maintenance.json';
         if (file_exists($archivoMant)) {

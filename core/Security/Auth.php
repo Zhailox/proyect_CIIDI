@@ -99,18 +99,7 @@ class AuditLogger {
     public static function registrar(string $nivel, string $modulo, string $accion, string $detalles = '') {
         $usuario = Auth::usuario();
         $responsable = $usuario ? "{$usuario['nombre']} (ID: {$usuario['id']})" : "Sistema / Anónimo";
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
-
-        $registro = [
-            'id'          => uniqid('log_'),
-            'fecha_hora'  => date('Y-m-d H:i:s'),
-            'nivel'       => strtoupper($nivel), // INFO | WARNING | ERROR | CRITICAL
-            'modulo'      => $modulo,
-            'accion'      => $accion,
-            'detalles'    => $detalles,
-            'responsable' => $responsable,
-            'ip'          => $ip
-        ];
+        $ip = class_exists('RateLimiter') ? RateLimiter::obtenerIPCliente() : ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
 
         $archivo = CORE_PATH . '../storage/system_audit.json';
         $directorio = dirname($archivo);
@@ -119,6 +108,29 @@ class AuditLogger {
         }
 
         $logs = file_exists($archivo) ? (json_decode(file_get_contents($archivo), true) ?: []) : [];
+
+        // Obtener el Hash del registro inmediatamente anterior para el encadenamiento Tamper-Proof
+        $hashAnterior = !empty($logs) && isset($logs[0]['hash_integridad']) ? $logs[0]['hash_integridad'] : 'GENESIS_CIIDI_V1';
+        $idLog = uniqid('log_');
+        $fechaHora = date('Y-m-d H:i:s');
+
+        // Generar Hash SHA-256 de integridad (Cadena de Custodia Criptográfica)
+        $payloadIntegridad = "{$idLog}|{$fechaHora}|{$nivel}|{$modulo}|{$accion}|{$detalles}|{$responsable}|{$ip}|{$hashAnterior}";
+        $hashIntegridad = hash('sha256', $payloadIntegridad);
+
+        $registro = [
+            'id'              => $idLog,
+            'fecha_hora'      => $fechaHora,
+            'nivel'           => strtoupper($nivel), // INFO | WARNING | ERROR | CRITICAL
+            'modulo'          => $modulo,
+            'accion'          => $accion,
+            'detalles'        => $detalles,
+            'responsable'     => $responsable,
+            'ip'              => $ip,
+            'hash_anterior'   => $hashAnterior,
+            'hash_integridad' => $hashIntegridad
+        ];
+
         array_unshift($logs, $registro); // Insertar al inicio para orden cronológico descendente
         
         // Conservar los últimos 1000 eventos en storage
@@ -127,5 +139,58 @@ class AuditLogger {
         }
 
         file_put_contents($archivo, json_encode($logs, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    }
+
+    /**
+     * Valida la integridad criptográfica SHA-256 de todos los registros de auditoría almacenados.
+     */
+    public static function verificarIntegridadCadena(): array {
+        $archivo = CORE_PATH . '../storage/system_audit.json';
+        if (!file_exists($archivo)) {
+            return ['integro' => true, 'mensaje' => 'El archivo de auditoría está vacío o no ha sido generado.', 'total' => 0, 'corruptos' => 0];
+        }
+
+        $logs = json_decode(file_get_contents($archivo), true) ?: [];
+        if (empty($logs)) {
+            return ['integro' => true, 'mensaje' => 'No existen eventos de auditoría registrados.', 'total' => 0, 'corruptos' => 0];
+        }
+
+        $corruptos = [];
+        $total = count($logs);
+
+        for ($i = 0; $i < $total; $i++) {
+            $current = $logs[$i];
+            
+            // Si el log viejo no tiene hash_integridad (legacy), lo omitimos de la falla estricta
+            if (!isset($current['hash_integridad'])) continue;
+
+            $hashGuardado = $current['hash_integridad'];
+            $hashAntGuardado = $current['hash_anterior'] ?? 'GENESIS_CIIDI_V1';
+
+            $payload = "{$current['id']}|{$current['fecha_hora']}|{$current['nivel']}|{$current['modulo']}|{$current['accion']}|{$current['detalles']}|{$current['responsable']}|{$current['ip']}|{$hashAntGuardado}";
+            $hashCalculado = hash('sha256', $payload);
+
+            if ($hashCalculado !== $hashGuardado) {
+                $corruptos[] = [
+                    'id' => $current['id'],
+                    'fecha_hora' => $current['fecha_hora'],
+                    'accion' => $current['accion'],
+                    'hash_esperado' => $hashCalculado,
+                    'hash_guardado' => $hashGuardado
+                ];
+            }
+        }
+
+        $integro = count($corruptos) === 0;
+
+        return [
+            'integro'   => $integro,
+            'total'     => $total,
+            'corruptos' => count($corruptos),
+            'detalles'  => $corruptos,
+            'mensaje'   => $integro 
+                ? "La cadena criptográfica de auditoría es 100% íntegra ({$total} registros firmados digitalmente)."
+                : "¡ALERTA DE SEGURIDAD! Se detectaron " . count($corruptos) . " registros manipulados o con firmas alteradas."
+        ];
     }
 }

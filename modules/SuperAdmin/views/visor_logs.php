@@ -131,6 +131,43 @@
             </tbody>
         </table>
     </div>
+
+    <!-- CONTROLES DE PAGINACIÓN -->
+    <?php if ($total_paginas > 1): ?>
+        <?php 
+            $queryParams = $_GET;
+            unset($queryParams['p']);
+            $queryString = http_build_query($queryParams);
+            $baseUrl = 'visor-logs?' . ($queryString ? $queryString . '&' : '');
+        ?>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; flex-wrap: wrap; gap: 1rem; background: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <div style="font-size: 0.82rem; color: #64748b; font-weight: 600;">
+                Mostrando página <b><?= $pagina_actual ?></b> de <b><?= $total_paginas ?></b> (Total: <b><?= $total_trail ?></b> registros)
+            </div>
+
+            <div style="display: flex; gap: 0.35rem; align-items: center;">
+                <?php if ($pagina_actual > 1): ?>
+                    <a href="<?= $baseUrl ?>p=1" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem; border-color: #cbd5e1; color: #334155; text-decoration: none;">&laquo; Primero</a>
+                    <a href="<?= $baseUrl ?>p=<?= $pagina_actual - 1 ?>" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem; border-color: #cbd5e1; color: #334155; text-decoration: none;">&lsaquo; Ant</a>
+                <?php endif; ?>
+
+                <?php 
+                    $rangoInicio = max(1, $pagina_actual - 2);
+                    $rangoFin = min($total_paginas, $pagina_actual + 2);
+                    for ($i = $rangoInicio; $i <= $rangoFin; $i++): 
+                ?>
+                    <a href="<?= $baseUrl ?>p=<?= $i ?>" class="btn" style="padding: 4px 10px; font-size: 0.8rem; text-decoration: none; border-radius: 4px; <?= $i === $pagina_actual ? 'background: var(--color-secundario, #002244); color: white; font-weight: 700;' : 'background: white; border: 1px solid #cbd5e1; color: #334155;' ?>">
+                        <?= $i ?>
+                    </a>
+                <?php endfor; ?>
+
+                <?php if ($pagina_actual < $total_paginas): ?>
+                    <a href="<?= $baseUrl ?>p=<?= $pagina_actual + 1 ?>" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem; border-color: #cbd5e1; color: #334155; text-decoration: none;">Sig &rsaquo;</a>
+                    <a href="<?= $baseUrl ?>p=<?= $total_paginas ?>" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem; border-color: #cbd5e1; color: #334155; text-decoration: none;">Último &raquo;</a>
+                <?php endif; ?>
+            </div>
+        </div>
+    <?php endif; ?>
 </div>
 
 <!-- 2. PANTALLA: CONTROL DE ACCESOS -->
