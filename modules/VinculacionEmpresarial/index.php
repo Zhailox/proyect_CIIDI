@@ -66,13 +66,13 @@ class VinculacionEmpresarialModule implements ModuleContract {
                 'titulo'      => 'Sector Productivo',
                 'icono'       => 'ph-fill ph-buildings',
                 'enlace'      => 'empresas-inicio',
-                'activadores' => ['empresas-inicio', 'seguimiento-empresa'], 
+                'activadores' => ['empresas-inicio', 'seguimiento-empresa', 'cartelera-oportunidades', 'banco-propuestas'], 
+                'privilegio_minimo' => 999,
                 'subitems'    => [
-                    ['ruta' => 'empresas-inicio', 'titulo' => 'Conócenos'],
-                    ['ruta' => 'seguimiento-empresa', 'titulo' => 'Seguimiento'],
-                    ['ruta' => 'cartelera-oportunidades', 'titulo' => 'Estudiantes'],
-                    ['ruta' => 'banco-propuestas', 'titulo' => 'Evaluación de Propuestas'],
-                    ['ruta' => 'seguimiento-empresa', 'titulo' => 'Seguimiento']
+                    ['ruta' => 'empresas-inicio', 'titulo' => 'Conócenos', 'privilegio_minimo' => 999],
+                    ['ruta' => 'seguimiento-empresa', 'titulo' => 'Seguimiento', 'privilegio_minimo' => 999],
+                    ['ruta' => 'cartelera-oportunidades', 'titulo' => 'Estudiantes', 'privilegio_minimo' => 5],
+                    ['ruta' => 'banco-propuestas', 'titulo' => 'Evaluación de Propuestas', 'privilegio_minimo' => 1]
                 ]
             ]
         ];

@@ -63,7 +63,7 @@ class GestorUsuariosController {
     }
 
     public function guardarMatrizRBAC() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $rawMatrix = $_POST['matrix'] ?? [];
@@ -98,7 +98,7 @@ class GestorUsuariosController {
     }
 
     public function actualizarRol() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $rolId = (int)($_POST['rol_id'] ?? 0);
@@ -116,8 +116,8 @@ class GestorUsuariosController {
                 }
             }
 
-            // MODO DIOS: Si eres nivel 3 o superior, puedes crear/asignar lo que quieras.
-            if ($nivelSeleccionado > $miNivel && $miNivel < 3) {
+            
+            if ($nuevoPrivilegioId < $miNivel && $miNivel !== 0) {
                 if (session_status() === PHP_SESSION_NONE) session_start();
                 $_SESSION['mensaje_gestor_error'] = "Seguridad: No puedes asignar un nivel jerárquico superior al tuyo.";
                 header("Location: gestor-usuarios");
@@ -140,7 +140,7 @@ class GestorUsuariosController {
         }
     }
     public function crearRolAction() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nombre = trim($_POST['nuevo_rol_nombre'] ?? '');
@@ -154,7 +154,7 @@ class GestorUsuariosController {
                 exit;
             }
 
-            if ($privilegioId > $miNivel) {
+            if ($privilegioId <= $miNivel) {
                 if (session_status() === PHP_SESSION_NONE) session_start();
                 $_SESSION['mensaje_gestor_error'] = "No puedes crear un rol con un nivel jerárquico superior al tuyo.";
                 header("Location: gestor-usuarios");
@@ -185,7 +185,7 @@ class GestorUsuariosController {
     }
 
     public function revocarSesion() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $usuarioIdAExpulsar = (int)($_POST['usuario_id'] ?? 0);
@@ -310,7 +310,7 @@ class GestorUsuariosController {
 
     // Registrar nuevo usuario desde el Gestor de Usuarios
     public function crearUsuarioAction() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $cedula = trim($_POST['cedula'] ?? '');
@@ -353,7 +353,7 @@ class GestorUsuariosController {
 
     // Restablecimiento rápido de contraseña por el Administrador
     public function resetClaveRapido() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $usuarioId = (int)($_POST['usuario_id'] ?? 0);
@@ -383,7 +383,7 @@ class GestorUsuariosController {
         }
     }
     public function crearNivelPrivilegioAction() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->adminModel->extenderNivelPrivilegio();
             AuditLogger::registrar('WARNING', 'SuperAdmin', 'Extender Privilegios', "Se ha creado un nuevo nivel jerárquico en el sistema.");
@@ -395,7 +395,7 @@ class GestorUsuariosController {
     }
 
     public function eliminarRolAction() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $rolId = (int)($_POST['rol_id'] ?? 0);
             try {
@@ -412,7 +412,7 @@ class GestorUsuariosController {
         }
     }
     public function eliminarNivelPrivilegioAction() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nivel = (int)($_POST['nivel'] ?? 0);
             

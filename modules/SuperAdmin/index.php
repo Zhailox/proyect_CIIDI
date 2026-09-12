@@ -297,6 +297,19 @@ class SuperAdminModule implements ModuleContract {
                 'controlador_path' => __DIR__ . '/controllers/SecurityMonitorController.php',
                 'controlador'      => 'SecurityMonitorController',
                 'metodo'           => 'agregarListaBlanca'
+            ],
+            'configuracion-sistema' => [
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'controlador'      => 'ConfiguracionController',
+                'metodo'           => 'index',
+                'vista'            => __DIR__ . '/views/configuracion_sistema.php', 
+                'titulo'           => 'Configuración Global - SuperAdmin',
+                'css'              => ['SuperAdmin.css', 'gestor.css']
+            ],
+            'guardar-configuracion-sistema' => [
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'controlador'      => 'ConfiguracionController',
+                'metodo'           => 'guardar'
             ]
         ];
     }
@@ -307,18 +320,19 @@ class SuperAdminModule implements ModuleContract {
                 'tipo'        => 'parent',
                 'titulo'      => 'SuperAdmin',
                 'icono'       => 'ph-fill ph-terminal-window',
-                'privilegio_minimo' => 2,
+                'privilegio_minimo' => 0,
                 'enlace'      => 'sudoadmin',
                 // Rutas que mantienen iluminado y desplegado el panel administrativo en el Sidebar
-                'activadores' => ['sudoadmin', 'gestor-modulos', 'detalle-modulo', 'gestor-mantenimiento', 'visor-logs', 'gestor-usuarios', 'gestor-scheduler', 'visor-seguridad'], 
+                'activadores' => ['sudoadmin', 'gestor-modulos', 'detalle-modulo', 'gestor-mantenimiento', 'visor-logs', 'gestor-usuarios', 'gestor-scheduler', 'visor-seguridad', 'configuracion-sistema'], 
                 'subitems'    => [
-                    ['ruta' => 'sudoadmin', 'titulo' => 'Panel de Control'],
-                    ['ruta' => 'gestor-usuarios', 'titulo' => 'Gestión de Usuarios'],
-                    ['ruta' => 'gestor-modulos', 'titulo' => 'Gestor de Módulos'],
-                    ['ruta' => 'gestor-mantenimiento', 'titulo' => 'Mantenimiento & BD'],
-                    ['ruta' => 'gestor-scheduler', 'titulo' => 'Tareas Programadas'],
-                    ['ruta' => 'visor-seguridad', 'titulo' => 'Monitor WAF & IPs'],
-                    ['ruta' => 'visor-logs', 'titulo' => 'Visor de Logs']
+                    ['ruta' => 'sudoadmin', 'titulo' => 'Panel de Control', 'privilegio_minimo' => 0],
+                    ['ruta' => 'gestor-usuarios', 'titulo' => 'Gestión de Usuarios', 'privilegio_minimo' => 0],
+                    ['ruta' => 'gestor-modulos', 'titulo' => 'Gestor de Módulos', 'privilegio_minimo' => 0],
+                    ['ruta' => 'configuracion-sistema', 'titulo' => 'Variables de Entorno', 'privilegio_minimo' => 0],
+                    ['ruta' => 'gestor-mantenimiento', 'titulo' => 'Mantenimiento & BD', 'privilegio_minimo' => 0],
+                    ['ruta' => 'gestor-scheduler', 'titulo' => 'Tareas Programadas', 'privilegio_minimo' => 0],
+                    ['ruta' => 'visor-seguridad', 'titulo' => 'Monitor WAF & IPs', 'privilegio_minimo' => 0],
+                    ['ruta' => 'visor-logs', 'titulo' => 'Visor de Logs', 'privilegio_minimo' => 0]
                 ]
             ]
         ];

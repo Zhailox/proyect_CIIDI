@@ -39,7 +39,7 @@ class ModulosController {
     }
 
     public function index() {
-        Auth::requierePrivilegioMinimo(3); 
+        Auth::requierePrivilegioMinimo(0); 
 
         $config = $this->obtenerConfiguracion();
         $estadosModulos = $config['modulos'] ?? [];
@@ -101,7 +101,7 @@ class ModulosController {
     }
 
     public function alternarEstado() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $carpeta = $_POST['modulo_id'] ?? '';
@@ -136,7 +136,7 @@ class ModulosController {
     }
 
     public function alternarEstadoRuta() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $claveRuta   = $_POST['ruta_clave'] ?? '';
@@ -176,7 +176,7 @@ class ModulosController {
     }
 
     public function detalleModulo() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         $idModulo = $_GET['id'] ?? $_GET['modulo'] ?? '';
         if (empty($idModulo)) {
@@ -333,7 +333,7 @@ class ModulosController {
     }
 
     public function guardarConfiguracionEspecifica() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $idModulo = $_POST['modulo_id'] ?? '';
@@ -373,7 +373,7 @@ class ModulosController {
      * Probador sintáctico / Health-Check de Ruta
      */
     public function testearRuta() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         header('Content-Type: application/json');
 
         $moduloId  = $_POST['modulo_id'] ?? '';
@@ -468,7 +468,7 @@ class ModulosController {
      * Limpieza de Caché y Archivos Temporales del Módulo
      */
     public function purgarCacheModulo() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         header('Content-Type: application/json');
 
         $moduloId = $_POST['modulo_id'] ?? '';
@@ -512,7 +512,7 @@ class ModulosController {
      * Exportación de la Configuración Global del Sistema
      */
     public function exportarConfiguracion() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
         $config = $this->obtenerConfiguracion();
 
         $filename = "config_system_" . date('Ymd_His') . ".json";
@@ -526,7 +526,7 @@ class ModulosController {
      * Importación / Restablecimiento de Configuración del Sistema
      */
     public function importarConfiguracion() {
-        Auth::requierePrivilegioMinimo(3);
+        Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $esAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
@@ -556,4 +556,4 @@ class ModulosController {
         header("Location: gestor-modulos");
         exit;
     }
-}
+}

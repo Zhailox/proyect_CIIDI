@@ -1,7 +1,7 @@
 <?php
 // Obtenemos el nivel del usuario actual (si es visitante, su nivel es -1)
 require_once CORE_PATH . 'Security/Auth.php';
-$nivelUsuario = Auth::check() ? Auth::usuario()['nivel'] : -1;
+$nivelUsuario = Auth::check() ? (int)Auth::usuario()['nivel'] : 999;
 ?>
 <aside class="sidebar">
   <h2 class="sidebar-title">Navegación Global</h2>
@@ -14,11 +14,10 @@ $nivelUsuario = Auth::check() ? Auth::usuario()['nivel'] : -1;
     
     <?php foreach ($menu_dinamico as $item): ?>
         <?php
-        // 1. Verificamos el nivel exigido por este botón (si no dice nada, asumimos 0 = Estudiante)
-        $privilegioExigido = $item['privilegio_minimo'] ?? 0;
+        $privilegioExigido = $item['privilegio_minimo'] ?? 999;
 
         // 2. Si el usuario tiene menos nivel del exigido, SALTAMOS al siguiente botón (lo ocultamos)
-        if ($nivelUsuario < $privilegioExigido) {
+       if ($nivelUsuario > $privilegioExigido) {
             continue; 
         }
         ?>
@@ -52,8 +51,8 @@ $nivelUsuario = Auth::check() ? Auth::usuario()['nivel'] : -1;
                 <div class="sub-menu">
                     <?php foreach ($item['subitems'] as $sub): ?>
                         <?php 
-                            $subPriv = $sub['privilegio_minimo'] ?? 0;
-                            if ($nivelUsuario < $subPriv) continue;
+                            $subPriv = $sub['privilegio_minimo'] ?? 999;
+                            if ($nivelUsuario > $subPriv) continue;
                         ?>
                         <a href="<?php echo $sub['ruta']; ?>" class="sub-nav-item <?php echo ($ruta == $sub['ruta']) ? 'active' : ''; ?>">
                             <span class="nav-text"><?php echo $sub['titulo']; ?></span>

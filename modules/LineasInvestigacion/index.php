@@ -75,11 +75,12 @@ class LineasInvestigacionModule implements ModuleContract {
                 'icono'       => 'ph-fill ph-graph',
                 'enlace'      => 'lineas-investigacion',
                 'activadores' => ['lineas-investigacion', 'detalle-linea', 'gestionar-lineas', 'gestionar-dimensiones', 'analitica'],
+                'privilegio_minimo' => 999,
                 'subitems'    => [
-                    ['ruta' => 'lineas-investigacion',  'titulo' => 'Explorar Líneas'],
-                    ['ruta' => 'analitica',             'titulo' => 'Analítica IA'],
-                    ['ruta' => 'gestionar-lineas',      'titulo' => 'Gestionar Líneas'],
-                    ['ruta' => 'gestionar-dimensiones', 'titulo' => 'Gestionar Dimensiones'],
+                    ['ruta' => 'lineas-investigacion',  'titulo' => 'Explorar Líneas', 'privilegio_minimo' => 999],
+                    ['ruta' => 'analitica',             'titulo' => 'Analítica IA', 'privilegio_minimo' => 2],
+                    ['ruta' => 'gestionar-lineas',      'titulo' => 'Gestionar Líneas', 'privilegio_minimo' => 1],
+                    ['ruta' => 'gestionar-dimensiones', 'titulo' => 'Gestionar Dimensiones', 'privilegio_minimo' => 1],
                 ]
             ]
         ];

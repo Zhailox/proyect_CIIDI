@@ -128,13 +128,14 @@ class InvestigacionesModule implements ModuleContract {
                     'mis-investigaciones', 'crear-investigacion', 'editar-investigacion',
                     'mis-postulantes', 'panel-investigaciones-admin',
                 ],
+                'privilegio_minimo' => 5,
                 'subitems' => [
-                    ['ruta' => 'investigaciones',             'titulo' => 'Cartelera I+D'],
-                    ['ruta' => 'postulaciones-investigacion', 'titulo' => 'Panel Postulaciones'],
-                    ['ruta' => 'investigadores',              'titulo' => 'Investigadores'],
+                    ['ruta' => 'investigaciones',             'titulo' => 'Cartelera I+D', 'privilegio_minimo' => 5],
+                    ['ruta' => 'postulaciones-investigacion', 'titulo' => 'Panel Postulaciones', 'privilegio_minimo' => 5],
+                    ['ruta' => 'investigadores',              'titulo' => 'Investigadores', 'privilegio_minimo' => 5],
                     ['ruta' => 'mis-investigaciones',         'titulo' => 'Mis Investigaciones',  'privilegio_minimo' => 1],
                     ['ruta' => 'mis-postulantes',             'titulo' => 'Mis Postulantes',       'privilegio_minimo' => 1],
-                    ['ruta' => 'panel-investigaciones-admin', 'titulo' => 'Panel Admin I+D',        'privilegio_minimo' => 2],
+                    ['ruta' => 'panel-investigaciones-admin', 'titulo' => 'Panel Admin I+D',        'privilegio_minimo' => 1],
                 ],
             ],
         ];

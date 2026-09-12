@@ -35,9 +35,9 @@
         "csrf_activo": true
     },
     "roles": {
-        "nivel_ver_catalogo": -1,
-        "nivel_crear_curso": 1,
+        "nivel_ver_catalogo": 999,
+        "nivel_crear_curso": 2,
         "nivel_eliminar_curso": 2,
-        "nivel_ver_config": 3
+        "nivel_ver_config": 0
     }
 }

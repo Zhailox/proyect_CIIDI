@@ -111,10 +111,9 @@ public function getRutas(): array {
                 'icono'       => 'ph-fill ph-newspaper',
                 'enlace'      => 'articulos',
                 'activadores' => ['articulos', 'leer-articulo', 'gestor-articulos', 'nuevo-articulo', 'procesar-articulo', 'editar-articulo', 'actualizar-articulo', 'eliminar-articulo', 'gestor-catalogos', 'configuracion-articulos'],
-                'privilegio_minimo' => 0, // El menú padre lo ven todos
+                'privilegio_minimo' => 999, // El menú padre lo ven todos
                 'subitems'    => [
-                    ['ruta' => 'articulos', 'titulo' => 'Revista Digital', 'privilegio_minimo' => 0],
-                    // Este sub-ítem solo lo verán los administradores/bibliotecarios
+                    ['ruta' => 'articulos', 'titulo' => 'Revista Digital', 'privilegio_minimo' => 999],
                     ['ruta' => 'gestor-articulos', 'titulo' => 'Gestor Interno', 'privilegio_minimo' => 2],
                     ['ruta' => 'configuracion-articulos', 'titulo' => 'Ajustes de Revista', 'privilegio_minimo' => 2]
                 ]

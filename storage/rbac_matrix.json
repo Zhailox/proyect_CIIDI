@@ -1,5 +1,5 @@
-[
-    {
+{
+    "0": {
         "Articulos": {
             "crear": false,
             "editar": false,
@@ -37,7 +37,7 @@
             "auditar": false
         }
     },
-    {
+    "1": {
         "Articulos": {
             "crear": false,
             "editar": false,
@@ -75,7 +75,7 @@
             "auditar": false
         }
     },
-    {
+    "2": {
         "Articulos": {
             "crear": true,
             "editar": true,
@@ -113,7 +113,7 @@
             "auditar": false
         }
     },
-    {
+    "3": {
         "Articulos": {
             "crear": true,
             "editar": true,
@@ -151,7 +151,7 @@
             "auditar": true
         }
     },
-    {
+    "4": {
         "Articulos": {
             "crear": true,
             "editar": true,
@@ -189,7 +189,7 @@
             "auditar": true
         }
     },
-    {
+    "5": {
         "Articulos": {
             "crear": true,
             "editar": true,
@@ -227,7 +227,7 @@
             "auditar": true
         }
     },
-    {
+    "6": {
         "Articulos": {
             "crear": false,
             "editar": true,
@@ -264,5 +264,17 @@
             "eliminar": false,
             "auditar": false
         }
+    },
+    "IAIAIA": {
+        "crear": false,
+        "editar": false,
+        "eliminar": false,
+        "auditar": false
+    },
+    "IAIAAIA": {
+        "crear": false,
+        "editar": false,
+        "eliminar": false,
+        "auditar": false
     }
-]
+}
