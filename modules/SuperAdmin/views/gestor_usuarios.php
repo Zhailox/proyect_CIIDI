@@ -133,22 +133,33 @@
                                                 'email' => $usr['email'],
                                                 'rol' => $usr['rol_nombre']
                                             ]), ENT_QUOTES, 'UTF-8') ?>)">
-                                        <i class="ph-bold ph-pencil-simple"></i> Editar
-                                    </button>
+                                            <i class="ph-bold ph-pencil-simple"></i> Editar
+                                        </button>
 
-                                        <!-- ACCIÓN RÁPIDA: RESETEAR CLAVE TEMPORAL -->
-                                        <form action="resetear-clave-usuario" method="POST" style="margin:0;" onsubmit="return confirm('¿Restablecer contraseña de esta cuenta a Temporal2026!?');">
+                                        <!-- CLAVE -->
+                                        <form action="resetear-clave-usuario" method="POST" style="margin:0;">
                                             <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
                                             <input type="hidden" name="cedula" value="<?= htmlspecialchars($usr['cedula']) ?>">
-                                            <button type="submit" class="btn" title="Restablecer Clave a Temporal2026!" style="background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 8px; font-size: 0.78rem; border-radius: 4px; cursor: pointer; font-weight: 600;">
+                                            <button type="button" class="btn" title="Restablecer Clave" style="background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 8px; font-size: 0.78rem; border-radius: 4px; cursor: pointer; font-weight: 600;" onclick="mostrarConfirmacionUsuarios(this.form, 'Restablecer Contraseña', '¿Restablecer contraseña a Temporal2026!?', 'ph-key', '#d97706')">
                                                 <i class="ph-bold ph-key"></i> Clave
                                             </button>
                                         </form>
 
+                                        <!-- REVOCAR -->
                                         <form action="revocar-sesion" method="POST" style="margin:0;">
                                             <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
-                                            <button type="submit" class="btn" title="Cerrar Sesión Remota (Kill Session)" style="background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); padding: 4px 8px; font-size: 0.78rem; border-radius: 4px; cursor: pointer; font-weight: 600;">
+                                            <button type="button" class="btn" title="Cerrar Sesión Remota" style="background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); padding: 4px 8px; font-size: 0.78rem; border-radius: 4px; cursor: pointer; font-weight: 600;" onclick="mostrarConfirmacionUsuarios(this.form, 'Revocar Sesión', '¿Expulsar a este usuario del sistema?', 'ph-power', '#ef4444')">
                                                 <i class="ph-bold ph-power"></i> Revocar
+                                            </button>
+                                        </form>
+
+                                        <!-- SUSPENDER / RESTAURAR -->
+                                        <form action="alternar-estado-usuario" method="POST" style="margin:0;">
+                                            <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
+                                            <input type="hidden" name="cedula" value="<?= htmlspecialchars($usr['cedula']) ?>">
+                                            <input type="hidden" name="estado_actual" value="<?= $usr['activo'] ? '1' : '0' ?>">
+                                            <button type="button" class="btn" style="background: <?= $usr['activo'] ? 'rgba(239,68,68,0.12)' : 'rgba(16,185,129,0.12)' ?>; color: <?= $usr['activo'] ? '#ef4444' : '#10b981' ?>; border: 1px solid <?= $usr['activo'] ? 'rgba(239,68,68,0.25)' : 'rgba(16,185,129,0.25)' ?>; padding: 4px 8px; font-size: 0.78rem; border-radius: 4px; cursor: pointer; font-weight: 600;" onclick="mostrarConfirmacionUsuarios(this.form, '<?= $usr['activo'] ? 'Suspender' : 'Restaurar' ?> Cuenta', '¿Confirma que desea <?= $usr['activo'] ? 'SUSPENDER' : 'RESTAURAR' ?> al usuario <?= htmlspecialchars($usr['nombre_completo'], ENT_QUOTES) ?>?', '<?= $usr['activo'] ? 'ph-user-minus' : 'ph-user-check' ?>', '<?= $usr['activo'] ? '#ef4444' : '#10b981' ?>')">
+                                                <i class="ph-bold <?= $usr['activo'] ? 'ph-user-minus' : 'ph-user-check' ?>"></i> <?= $usr['activo'] ? 'Suspender' : 'Restaurar' ?>
                                             </button>
                                         </form>
                                     </div>
@@ -187,51 +198,76 @@
                     Asigne permisos dinámicos por tipo de acción para controlar el comportamiento del sistema.
                 </p>
             </div>
-            <button type="button" onclick="toggleModalCrearRol(true)" class="btn btn-solid" style="padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                <i class="ph-bold ph-plus"></i> Crear Nuevo Rol
-            </button>
+            <form action="crear-nivel-privilegio" method="POST" style="margin: 0;">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                <button type="button" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem; border-color: var(--color-terciario); color: var(--color-terciario);" onclick="mostrarConfirmacionUsuarios(this.form, 'Extender Privilegios', '¿Crear un nuevo nivel jerárquico superior en la base de datos?', 'ph-sort-ascending', 'var(--color-terciario)')">
+                    <i class="ph-bold ph-plus"></i> Añadir Nivel
+                </button>
+            </form>
         </div>
 
         <form action="guardar-matriz-rbac" method="POST">
-            <div style="overflow-x: auto; max-height: 600px; border: 1px solid #e2e8f0; border-radius: 8px;">
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left;">
-                    <thead style="position: sticky; top: 0; z-index: 10;">
-                        <tr style="border-bottom: 2px solid #e2e8f0; background: rgba(244,247,251,0.98);">
-                            <th style="padding: 10px 12px; color: #121a3e; font-weight: 800;">Jerarquía</th>
-                            <th style="padding: 10px 12px; color: #121a3e; font-weight: 800;">Módulo Objetivo</th>
-                            <?php foreach ($accionesDisponibles as $accion): ?>
-                                <th style="padding: 10px 12px; text-align: center; color: #121a3e; font-weight: 800; text-transform: capitalize;">
-                                    <?= str_replace('_', ' ', $accion) ?>
-                                </th>
-                            <?php endforeach; ?>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($privilegios as $priv): $nivel = $priv['nivel_privilegio']; ?>
-                            <?php foreach ($modulosInstalados as $indice => $moduloNombre): 
-                                $permisosNivelModulo = $matrizRBAC[$nivel][$moduloNombre] ?? [];
-                            ?>
-                            <tr style="border-bottom: 1px solid #f1f5f9; background: <?= $indice % 2 === 0 ? '#ffffff' : '#f8fafc' ?>;">
-                                <!-- Mostramos el Nivel solo en la primera fila de su bloque para que se vea limpio -->
-                                <td style="padding: 10px 12px; font-weight: 700; color: var(--color-secundario); border-right: 1px solid #e2e8f0;">
-                                    <?= $indice === 0 ? "<i class='ph-bold ph-shield-star' style='color: var(--color-terciario);'></i> Nivel {$nivel}" : "" ?>
-                                </td>
-                                
-                                <td style="padding: 10px 12px; font-weight: 600; color: var(--texto-titulos);">
-                                    <i class="ph-bold ph-plugs-connected" style="color: #64748b; margin-right: 4px;"></i> <?= htmlspecialchars($moduloNombre) ?>
-                                </td>
-                                
-                                <?php foreach ($accionesDisponibles as $accion): ?>
-                                    <td style="padding: 10px 12px; text-align: center;">
-                                        <input type="hidden" name="matrix[<?= $nivel ?>][<?= htmlspecialchars($moduloNombre) ?>][<?= $accion ?>]" value="0">
-                                        <input type="checkbox" name="matrix[<?= $nivel ?>][<?= htmlspecialchars($moduloNombre) ?>][<?= $accion ?>]" value="1" <?= !empty($permisosNivelModulo[$accion]) ? 'checked' : '' ?> style="width: 18px; height: 18px; cursor: pointer;">
-                                    </td>
-                                <?php endforeach; ?>
-                            </tr>
-                            <?php endforeach; ?>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+            <!-- Contenedor del Acordeón -->
+            <div style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 600px; overflow-y: auto; padding-right: 5px;">
+                
+                <?php foreach ($privilegios as $priv): $nivel = $priv['nivel_privilegio']; ?>
+                    <!-- Se añade flex-shrink: 0 para evitar que se aplasten -->
+                    <details style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.02); flex-shrink: 0;">
+                        <summary style="padding: 12px 16px; font-weight: 800; color: var(--color-secundario); cursor: pointer; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; list-style: none;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="ph-bold ph-shield-star" style="color: var(--color-terciario); font-size: 1.2rem;"></i>
+                                Configurar Permisos del Nivel <?= htmlspecialchars($nivel) ?>
+                            </div>
+                            
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <?php if ($nivel > 3): ?>
+                                    <!-- Formulario para eliminar el nivel (solo si es > 3) -->
+                                    <form action="eliminar-nivel-privilegio" method="POST" style="margin: 0;" onsubmit="event.preventDefault(); mostrarConfirmacionUsuarios(this, 'Eliminar Nivel', '¿Seguro que deseas eliminar el nivel <?= $nivel ?>? Fallará si tiene roles asignados.', 'ph-trash', '#ef4444');">
+                                        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                                        <input type="hidden" name="nivel" value="<?= $nivel ?>">
+                                        <button type="submit" class="btn-icon btn-delete" title="Eliminar Nivel" style="padding: 2px 6px; height: auto;" onclick="event.stopPropagation();">
+                                            <i class="ph-bold ph-trash"></i>
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+                                <i class="ph-bold ph-caret-down" style="color: #94a3b8;"></i>
+                            </div>
+                        </summary>
+                        
+                        <div style="padding: 0; overflow-x: auto; border-top: 1px solid #e2e8f0;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+                                <thead style="background: rgba(244,247,251,0.5);">
+                                    <tr>
+                                        <th style="padding: 8px 16px; color: #121a3e; font-weight: 800;">Módulo Objetivo</th>
+                                        <?php foreach ($accionesDisponibles as $accion): ?>
+                                            <th style="padding: 8px 12px; text-align: center; color: #121a3e; font-weight: 800; text-transform: capitalize;">
+                                                <?= str_replace('_', ' ', $accion) ?>
+                                            </th>
+                                        <?php endforeach; ?>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($modulosInstalados as $indice => $moduloNombre): 
+                                        $permisosNivelModulo = $matrizRBAC[$nivel][$moduloNombre] ?? [];
+                                    ?>
+                                        <tr style="border-bottom: 1px solid #f1f5f9; background: <?= $indice % 2 === 0 ? '#ffffff' : '#f8fafc' ?>;">
+                                            <td style="padding: 8px 16px; font-weight: 600; color: var(--texto-titulos);">
+                                                <i class="ph-bold ph-plugs-connected" style="color: #64748b; margin-right: 4px;"></i> <?= htmlspecialchars($moduloNombre) ?>
+                                            </td>
+                                            <?php foreach ($accionesDisponibles as $accion): ?>
+                                                <td style="padding: 8px 12px; text-align: center;">
+                                                    <input type="hidden" name="matrix[<?= $nivel ?>][<?= htmlspecialchars($moduloNombre) ?>][<?= $accion ?>]" value="0">
+                                                    <input type="checkbox" name="matrix[<?= $nivel ?>][<?= htmlspecialchars($moduloNombre) ?>][<?= $accion ?>]" value="1" <?= !empty($permisosNivelModulo[$accion]) ? 'checked' : '' ?> style="width: 16px; height: 16px; cursor: pointer;">
+                                                </td>
+                                            <?php endforeach; ?>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </details>
+                <?php endforeach; ?>
+
             </div>
 
             <div style="margin-top: 1.25rem; display: flex; justify-content: flex-end;">
@@ -246,6 +282,9 @@
             <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--texto-titulos); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 6px;">
                 <i class="ph-bold ph-pencil-line" style="color: var(--color-terciario);"></i> Editar Denominación y Jerarquía de Roles
             </h4>
+            <button type="button" onclick="toggleModalCrearRol(true)" class="btn btn-solid" style="padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="ph-bold ph-plus"></i> Crear Nuevo Rol
+            </button>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
                 <?php foreach ($roles as $rItem): ?>
@@ -265,9 +304,18 @@
                             </select>
                         </div>
                         
-                        <button type="submit" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem; border-color: var(--color-secundario); color: var(--color-secundario) !important; cursor: pointer; width: 100%;">
-                            <i class="ph-bold ph-check"></i> Actualizar Rol
-                        </button>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                            <button type="submit" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem; border-color: var(--color-secundario); color: var(--color-secundario) !important; cursor: pointer; flex: 1;">
+                                <i class="ph-bold ph-check"></i> Actualizar
+                            </button>
+                            <button type="button" class="btn btn-solid" style="background: rgba(239,68,68,0.1) !important; color: #ef4444 !important; border: 1px solid rgba(239,68,68,0.3); padding: 6px 12px; font-size: 0.8rem; cursor: pointer;" onclick="mostrarConfirmacionUsuarios(document.getElementById('form-del-rol-<?= $rItem['id'] ?>'), 'Eliminar Rol', '¿Seguro que desea eliminar el rol <?= htmlspecialchars($rItem['nombre'], ENT_QUOTES) ?>? Si tiene usuarios fallará por seguridad.', 'ph-trash', '#ef4444')" title="Eliminar Rol">
+                                <i class="ph-bold ph-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </form>
+                    <form id="form-del-rol-<?= $rItem['id'] ?>" action="eliminar-rol" method="POST" style="display:none;">
+                        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                        <input type="hidden" name="rol_id" value="<?= $rItem['id'] ?>">
                     </form>
                 <?php endforeach; ?>
             </div>
@@ -496,6 +544,18 @@
         </form>
     </div>
 </div>
+<!-- MODAL DE CONFIRMACIÓN UNIVERSAL -->
+<div id="modalConfirmacionUsuarios" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); z-index: 99999; align-items: center; justify-content: center;">
+    <div style="background: #ffffff; border-radius: 12px; width: 90%; max-width: 400px; padding: 2rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); text-align: center;">
+        <div id="modalConfirmIcon" style="font-size: 3.5rem; margin-bottom: 1rem;"></div>
+        <h3 id="modalConfirmTitle" style="margin: 0 0 0.5rem 0; font-size: 1.2rem; color: var(--texto-titulos);"></h3>
+        <p id="modalConfirmMessage" style="color: var(--texto-silenciado); font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5;"></p>
+        <div style="display: flex; justify-content: center; gap: 0.5rem;">
+            <button type="button" class="btn btn-outline" onclick="document.getElementById('modalConfirmacionUsuarios').style.display='none'" style="border-color: #cbd5e1; color: #64748b;">Cancelar</button>
+            <button type="button" id="modalConfirmBtn" class="btn btn-solid" style="color: #ffffff;">Confirmar</button>
+        </div>
+    </div>
+</div>
 <!-- SCRIPTS LOCALES JS DE NAVEGACIÓN & FILTROS -->
 <script>
 function switchUserTab(tabId, btnElement) {
@@ -647,4 +707,15 @@ document.addEventListener('DOMContentLoaded', () => {
     switchUserTab(tabId, boton);
     applyPaginationAndFilter();
 });
+function mostrarConfirmacionUsuarios(form, titulo, mensaje, icono, color) {
+    document.getElementById('modalConfirmTitle').textContent = titulo;
+    document.getElementById('modalConfirmMessage').textContent = mensaje;
+    document.getElementById('modalConfirmIcon').innerHTML = `<i class="ph-bold ${icono}" style="color: ${color};"></i>`;
+    
+    const btnConfirm = document.getElementById('modalConfirmBtn');
+    btnConfirm.style.background = color;
+    btnConfirm.onclick = function() { form.submit(); };
+    
+    document.getElementById('modalConfirmacionUsuarios').style.display = 'flex';
+}
 </script>

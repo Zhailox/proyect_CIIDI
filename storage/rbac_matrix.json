@@ -77,33 +77,33 @@
     },
     {
         "Articulos": {
-            "crear": false,
-            "editar": false,
-            "eliminar": false,
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
             "auditar": false
         },
         "Cursos": {
-            "crear": false,
-            "editar": false,
-            "eliminar": false,
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
             "auditar": false
         },
         "Investigaciones": {
-            "crear": false,
-            "editar": false,
-            "eliminar": false,
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
             "auditar": false
         },
         "LineasInvestigacion": {
-            "crear": false,
-            "editar": false,
-            "eliminar": false,
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
             "auditar": false
         },
         "RepositorioPST": {
-            "crear": false,
-            "editar": false,
-            "eliminar": false,
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
             "auditar": false
         },
         "VinculacionEmpresarial": {

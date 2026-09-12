@@ -107,9 +107,19 @@ class GestorUsuariosController {
             $nuevoPrivilegioId = (int)($_POST['privilegio_id'] ?? 0);
             $miNivel = (int)($_SESSION['nivel_privilegio'] ?? 0);
 
-            if ($nuevoPrivilegioId > $miNivel) {
+            // Extraer el Nivel Real asociado a este Privilegio ID
+            $privilegios = $this->adminModel->obtenerPrivilegios();
+            $nivelSeleccionado = 0;
+            foreach($privilegios as $p) {
+                if ($p['privilegio_id'] == $nuevoPrivilegioId) { // o $privilegioId en crearRolAction
+                    $nivelSeleccionado = $p['nivel_privilegio']; break;
+                }
+            }
+
+            // MODO DIOS: Si eres nivel 3 o superior, puedes crear/asignar lo que quieras.
+            if ($nivelSeleccionado > $miNivel && $miNivel < 3) {
                 if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['mensaje_gestor_error'] = "Violación de seguridad: No tienes autoridad para asignar un nivel de privilegio superior al tuyo.";
+                $_SESSION['mensaje_gestor_error'] = "Seguridad: No puedes asignar un nivel jerárquico superior al tuyo.";
                 header("Location: gestor-usuarios");
                 exit;
             }
@@ -368,6 +378,59 @@ class GestorUsuariosController {
                 $_SESSION['mensaje_gestor_error'] = "Error al restablecer la contraseña.";
             }
 
+            header("Location: gestor-usuarios");
+            exit;
+        }
+    }
+    public function crearNivelPrivilegioAction() {
+        Auth::requierePrivilegioMinimo(3);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->adminModel->extenderNivelPrivilegio();
+            AuditLogger::registrar('WARNING', 'SuperAdmin', 'Extender Privilegios', "Se ha creado un nuevo nivel jerárquico en el sistema.");
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            $_SESSION['mensaje_gestor_exito'] = "Se ha extendido la jerarquía del sistema con un nuevo nivel.";
+            header("Location: gestor-usuarios");
+            exit;
+        }
+    }
+
+    public function eliminarRolAction() {
+        Auth::requierePrivilegioMinimo(3);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $rolId = (int)($_POST['rol_id'] ?? 0);
+            try {
+                $this->adminModel->eliminarRol($rolId);
+                AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Rol', "Rol ID #{$rolId} eliminado de la base de datos.");
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_exito'] = "Rol eliminado correctamente.";
+            } catch (Throwable $e) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "No se puede eliminar un rol que ya tiene usuarios asignados.";
+            }
+            header("Location: gestor-usuarios");
+            exit;
+        }
+    }
+    public function eliminarNivelPrivilegioAction() {
+        Auth::requierePrivilegioMinimo(3);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $nivel = (int)($_POST['nivel'] ?? 0);
+            
+            // Protección de los niveles base
+            if ($nivel <= 3) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "Seguridad: No se pueden eliminar los niveles base (0 al 3) del sistema.";
+            } else {
+                try {
+                    $this->adminModel->eliminarPrivilegio($nivel);
+                    AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Nivel', "Nivel de privilegio {$nivel} eliminado.");
+                    if (session_status() === PHP_SESSION_NONE) session_start();
+                    $_SESSION['mensaje_gestor_exito'] = "Nivel {$nivel} eliminado correctamente.";
+                } catch (Throwable $e) {
+                    if (session_status() === PHP_SESSION_NONE) session_start();
+                    $_SESSION['mensaje_gestor_error'] = "No se puede eliminar un nivel que tiene roles asignados.";
+                }
+            }
             header("Location: gestor-usuarios");
             exit;
         }

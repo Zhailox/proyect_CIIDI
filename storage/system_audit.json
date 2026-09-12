@@ -1,5 +1,445 @@
 [
     {
+        "id": "log_6aa4c9e40438e",
+        "fecha_hora": "2026-09-12 03:41:24",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Rol",
+        "detalles": "Rol ID #3 actualizado a 'Estudiantesss' (Nivel: 1).",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4c5708b257",
+        "fecha_hora": "2026-09-12 03:22:24",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Extender Privilegios",
+        "detalles": "Se ha creado un nuevo nivel jerárquico en el sistema.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4c5684a50c",
+        "fecha_hora": "2026-09-12 03:22:16",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Eliminar Rol",
+        "detalles": "Rol ID #5 eliminado de la base de datos.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4c4e8ac185",
+        "fecha_hora": "2026-09-12 03:20:08",
+        "nivel": "CRITICAL",
+        "modulo": "SuperAdmin",
+        "accion": "Fallo Restauración BD",
+        "detalles": "SET SET SET SET SET SET  set_config ------------  (1 fila)  SET SET SET SET psql:C:\/WINDOWS\/TEMP\/restore_temp_1789183208.sql:29: ERROR:  type \"accion_acceso_enum\" already exists",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4c4d294d4d",
+        "fecha_hora": "2026-09-12 03:19:46",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Crear Backup",
+        "detalles": "Respaldo esquema_ciidi_2026-09-12_03-19-46.sql.gz generado exitosamente. Respaldos antiguos purgados: 0",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4c4a6dd7d1",
+        "fecha_hora": "2026-09-12 03:19:02",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Crear Backup",
+        "detalles": "Respaldo tabla_privilegios_2026-09-12_03-19-02.sql.gz generado exitosamente. Respaldos antiguos purgados: 0",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4c31a1beab",
+        "fecha_hora": "2026-09-12 03:12:26",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Rol",
+        "detalles": "Rol ID #3 actualizado a 'Estudiantes' (Nivel: 1).",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4c317258bb",
+        "fecha_hora": "2026-09-12 03:12:23",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Rol",
+        "detalles": "Rol ID #3 actualizado a 'Estudiantesss' (Nivel: 1).",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4c123bab01",
+        "fecha_hora": "2026-09-12 03:04:03",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Test Respuesta Core",
+        "detalles": "Diagnóstico del Core ejecutado en 28.88ms. Memoria: 2 MB. Estado: SALUDABLE",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4c11dd10bf",
+        "fecha_hora": "2026-09-12 03:03:57",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Test Respuesta Core",
+        "detalles": "Diagnóstico del Core ejecutado en 143.74ms. Memoria: 2 MB. Estado: SALUDABLE",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4c10b8e569",
+        "fecha_hora": "2026-09-12 03:03:39",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Test Respuesta Core",
+        "detalles": "Diagnóstico del Core ejecutado en 28.49ms. Memoria: 2 MB. Estado: SALUDABLE",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4c1023cee2",
+        "fecha_hora": "2026-09-12 03:03:30",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Test Respuesta Core",
+        "detalles": "Diagnóstico del Core ejecutado en 28.12ms. Memoria: 2 MB. Estado: SALUDABLE",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4c0f92aed8",
+        "fecha_hora": "2026-09-12 03:03:21",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Test Respuesta Core",
+        "detalles": "Diagnóstico del Core ejecutado en 31.75ms. Memoria: 2 MB. Estado: SALUDABLE",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4bdeadd8fd",
+        "fecha_hora": "2026-09-12 02:50:18",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Restaurar Cuenta Usuario",
+        "detalles": "Estado de la cuenta del Usuario C.I. 80 cambiado a: Activo",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4bde8dffd2",
+        "fecha_hora": "2026-09-12 02:50:16",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Suspender Cuenta Usuario",
+        "detalles": "Estado de la cuenta del Usuario C.I. 80 cambiado a: Suspendido",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4bde314bbf",
+        "fecha_hora": "2026-09-12 02:50:11",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Editar Usuario",
+        "detalles": "Datos actualizados para el Usuario C.I. 80 (Cepillíno). Se forzó cambio de contraseña.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4bdd98e831",
+        "fecha_hora": "2026-09-12 02:50:01",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Restablecer Clave Rápida",
+        "detalles": "Contraseña restablecida para el Usuario C.I. 80",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4bdd5dc502",
+        "fecha_hora": "2026-09-12 02:49:57",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Editar Usuario",
+        "detalles": "Datos actualizados para el Usuario C.I. 80 (Cepillíno).",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4bdb45cd83",
+        "fecha_hora": "2026-09-12 02:49:24",
+        "nivel": "CRITICAL",
+        "modulo": "SuperAdmin",
+        "accion": "Revocar Sesión Remota",
+        "detalles": "Sesión expulsada para el Usuario ID #13",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4bb90c6f18",
+        "fecha_hora": "2026-09-12 02:40:16",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Restaurar Cuenta Usuario",
+        "detalles": "Estado de la cuenta del Usuario C.I. 80 cambiado a: Activo",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4bb8ea057d",
+        "fecha_hora": "2026-09-12 02:40:14",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Suspender Cuenta Usuario",
+        "detalles": "Estado de la cuenta del Usuario C.I. 80 cambiado a: Suspendido",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4bac9efc19",
+        "fecha_hora": "2026-09-12 02:36:57",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Restaurar Cuenta Usuario",
+        "detalles": "Estado de la cuenta del Usuario C.I. 30469331 cambiado a: Activo",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4bac731b25",
+        "fecha_hora": "2026-09-12 02:36:55",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Suspender Cuenta Usuario",
+        "detalles": "Estado de la cuenta del Usuario C.I. 30469331 cambiado a: Suspendido",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4bac538d14",
+        "fecha_hora": "2026-09-12 02:36:53",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Restaurar Cuenta Usuario",
+        "detalles": "Estado de la cuenta del Usuario C.I. 30469331 cambiado a: Activo",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4bac1b22b2",
+        "fecha_hora": "2026-09-12 02:36:49",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Suspender Cuenta Usuario",
+        "detalles": "Estado de la cuenta del Usuario C.I. 30469331 cambiado a: Suspendido",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4b8e6ee770",
+        "fecha_hora": "2026-09-12 02:28:54",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Matriz RBAC",
+        "detalles": "Se actualizaron los permisos granulares por Módulo y Nivel.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4b66f34cbe",
+        "fecha_hora": "2026-09-12 02:18:23",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Test Respuesta Core",
+        "detalles": "Diagnóstico del Core ejecutado en 26.37ms. Memoria: 2 MB. Estado: SALUDABLE",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4b66b8250d",
+        "fecha_hora": "2026-09-12 02:18:19",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Test Respuesta Core",
+        "detalles": "Diagnóstico del Core ejecutado en 28.33ms. Memoria: 2 MB. Estado: SALUDABLE",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4b6640787a",
+        "fecha_hora": "2026-09-12 02:18:12",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Test Respuesta Core",
+        "detalles": "Diagnóstico del Core ejecutado en 30.97ms. Memoria: 2 MB. Estado: SALUDABLE",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4b4caeee8b",
+        "fecha_hora": "2026-09-12 02:11:22",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Alternar Estado Módulo",
+        "detalles": "Módulo VinculacionEmpresarial cambiado a estado: online",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4b4c94dccc",
+        "fecha_hora": "2026-09-12 02:11:21",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Alternar Estado Módulo",
+        "detalles": "Módulo Investigaciones cambiado a estado: online",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4b4c8d681c",
+        "fecha_hora": "2026-09-12 02:11:20",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Alternar Estado Módulo",
+        "detalles": "Módulo Investigaciones cambiado a estado: offline",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4b4c895c6a",
+        "fecha_hora": "2026-09-12 02:11:20",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Alternar Estado Módulo",
+        "detalles": "Módulo Investigaciones cambiado a estado: online",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4b4c800841",
+        "fecha_hora": "2026-09-12 02:11:20",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Alternar Estado Módulo",
+        "detalles": "Módulo LineasInvestigacion cambiado a estado: online",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4b4c750c5e",
+        "fecha_hora": "2026-09-12 02:11:19",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Alternar Estado Módulo",
+        "detalles": "Módulo Cursos cambiado a estado: online",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4b234db8eb",
+        "fecha_hora": "2026-09-12 02:00:20",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Rol",
+        "detalles": "Rol ID #3 actualizado a 'Estudiantes' (Nivel: 1).",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4b23011e65",
+        "fecha_hora": "2026-09-12 02:00:16",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Rol",
+        "detalles": "Rol ID #3 actualizado a 'Estudiantes' (Nivel: 2).",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4b22bd2c4c",
+        "fecha_hora": "2026-09-12 02:00:11",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Rol",
+        "detalles": "Rol ID #5 actualizado a 'IAIAIA' (Nivel: 2).",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4b2282ed0a",
+        "fecha_hora": "2026-09-12 02:00:08",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Rol",
+        "detalles": "Rol ID #5 actualizado a 'IAIAIA' (Nivel: 1).",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4b22152666",
+        "fecha_hora": "2026-09-12 02:00:01",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Rol",
+        "detalles": "Rol ID #5 actualizado a 'IAIAIA' (Nivel: 2).",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4b1d51b3e9",
+        "fecha_hora": "2026-09-12 01:58:45",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Inicio de Sesión Exitoso",
+        "detalles": "El usuario Miguel González (Super Administrador) ha iniciado sesión.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4b1ceb3907",
+        "fecha_hora": "2026-09-12 01:58:38",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Cierre de Sesión",
+        "detalles": "El usuario Cepillín ha cerrado su sesión.",
+        "responsable": "Cepillín (ID: 13)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4b1cc302a1",
+        "fecha_hora": "2026-09-12 01:58:36",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Inicio de Sesión Exitoso",
+        "detalles": "El usuario Cepillín (Estudiantes) ha iniciado sesión.",
+        "responsable": "Cepillín (ID: 13)",
+        "ip": "::1"
+    },
+    {
+        "id": "log_6aa4b1c8ea47a",
+        "fecha_hora": "2026-09-12 01:58:32",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Cierre de Sesión",
+        "detalles": "El usuario Miguel González ha cerrado su sesión.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1"
+    },
+    {
         "id": "log_6aa4762b0c0ff",
         "fecha_hora": "2026-09-11 21:44:11",
         "nivel": "CRITICAL",

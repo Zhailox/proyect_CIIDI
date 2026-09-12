@@ -139,5 +139,27 @@ class AdminUsuarioModel {
         $stmt = $db->prepare($sql);
         return $stmt->execute([trim($nuevoNombre), $privilegioId, $rolId]);
     }
-    
+    // Extiende la jerarquía añadiendo el siguiente número disponible
+    public function extenderNivelPrivilegio(): bool {
+        $db = Connection::getInstance();
+        $stmt = $db->query("SELECT MAX(nivel_privilegio) FROM privilegios");
+        $maxNivel = (int) $stmt->fetchColumn();
+        $nuevoNivel = $maxNivel + 1;
+        
+        $stmtInsert = $db->prepare("INSERT INTO privilegios (nivel_privilegio) VALUES (?)");
+        return $stmtInsert->execute([$nuevoNivel]);
+    }
+
+    // Elimina un rol (fallará intencionalmente por protección de BD si tiene usuarios asignados)
+    public function eliminarRol(int $id): bool {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("DELETE FROM roles WHERE id = ?");
+        return $stmt->execute([$id]);
+    }
+    // Elimina un nivel de privilegio específico
+    public function eliminarPrivilegio(int $nivel): bool {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("DELETE FROM privilegios WHERE nivel_privilegio = ?");
+        return $stmt->execute([$nivel]);
+    }
 }
