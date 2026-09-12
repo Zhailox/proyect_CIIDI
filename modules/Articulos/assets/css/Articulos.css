@@ -1381,16 +1381,6 @@ img.loaded {
     border-color: transparent;
     box-shadow: 0 4px 10px rgba(80, 89, 132, 0.25);
 }
-.art-modal-overlay {
-    position: fixed; 
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(15, 23, 42, 0.6); 
-    backdrop-filter: blur(3px);
-    z-index: 99999; /* CAMBIO AQUÍ PARA SUPERAR AL SISTEMA MAESTRO */
-    display: flex; 
-    align-items: center; 
-    justify-content: center;
-}
 
 
 

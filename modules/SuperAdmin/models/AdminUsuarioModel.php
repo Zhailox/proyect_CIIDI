@@ -30,7 +30,7 @@ class AdminUsuarioModel {
             ->select('u.id, u.cedula, u.nombre_completo, u.email, u.activo')
             ->join('roles r', 'u.id_rol = r.id')
             ->join('privilegios p', 'r.privilegio_id = p.privilegio_id')
-            ->where('p.nivel_privilegio', '=', 1)
+            ->where('p.nivel_privilegio', '=', 2)
             ->orderBy('u.nombre_completo', 'ASC')
             ->get();
     }
@@ -39,7 +39,7 @@ class AdminUsuarioModel {
     public function obtenerRoles() {
         $qb = new QueryBuilder();
         return $qb->tabla('roles r')
-            ->select('r.id, r.nombre')
+            ->select('r.id, r.nombre, r.privilegio_id, p.nivel_privilegio') // <-- Agregados los campos
             ->join('privilegios p', 'r.privilegio_id = p.privilegio_id')
             ->orderBy('p.nivel_privilegio', 'ASC')
             ->get();
@@ -117,4 +117,49 @@ class AdminUsuarioModel {
         $stmt = $db->prepare($sql);
         return $stmt->execute([$hashClave, $usuarioId]);
     }
-}
+    // Obtiene el catálogo de niveles de privilegio (0 al 5)
+    public function obtenerPrivilegios() {
+        $qb = new QueryBuilder();
+        return $qb->tabla('privilegios')->orderBy('nivel_privilegio', 'ASC')->get();
+    }
+
+    // Crea un nuevo rol vinculado a un nivel de privilegio
+    public function crearRol(string $nombre, int $privilegio_id): bool {
+        $db = Connection::getInstance();
+        $sql = "INSERT INTO roles (nombre, privilegio_id) VALUES (?, ?)";
+        $stmt = $db->prepare($sql);
+        return $stmt->execute([trim($nombre), $privilegio_id]);
+    }
+    
+
+    // Actualiza el nombre y el nivel jerárquico de un rol existente
+    public function actualizarRolGeneral(int $rolId, string $nuevoNombre, int $privilegioId): bool {
+        $db = Connection::getInstance();
+        $sql = "UPDATE roles SET nombre = ?, privilegio_id = ? WHERE id = ?";
+        $stmt = $db->prepare($sql);
+        return $stmt->execute([trim($nuevoNombre), $privilegioId, $rolId]);
+    }
+    // Extiende la jerarquía añadiendo el siguiente número disponible
+    public function extenderNivelPrivilegio(): bool {
+        $db = Connection::getInstance();
+        $stmt = $db->query("SELECT MAX(nivel_privilegio) FROM privilegios");
+        $maxNivel = (int) $stmt->fetchColumn();
+        $nuevoNivel = $maxNivel + 1;
+        
+        $stmtInsert = $db->prepare("INSERT INTO privilegios (nivel_privilegio) VALUES (?)");
+        return $stmtInsert->execute([$nuevoNivel]);
+    }
+
+    // Elimina un rol (fallará intencionalmente por protección de BD si tiene usuarios asignados)
+    public function eliminarRol(int $id): bool {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("DELETE FROM roles WHERE id = ?");
+        return $stmt->execute([$id]);
+    }
+    // Elimina un nivel de privilegio específico
+    public function eliminarPrivilegio(int $nivel): bool {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("DELETE FROM privilegios WHERE nivel_privilegio = ?");
+        return $stmt->execute([$nivel]);
+    }
+}

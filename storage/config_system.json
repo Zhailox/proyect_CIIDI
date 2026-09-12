@@ -13,9 +13,12 @@
             "estado": "online"
         },
         "VinculacionEmpresarial": {
-            "estado": "offline"
+            "estado": "online"
         },
         "RepositorioPST": {
+            "estado": "online"
+        },
+        "LineasInvestigacion": {
             "estado": "online"
         }
     },

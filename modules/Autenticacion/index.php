@@ -84,7 +84,7 @@ public function getRutas(): array {
                 'icono'       => 'ph-fill ph-user-circle',
                 'enlace'      => 'perfil',
                 // Estas rutas mantendrán encendido el contenedor padre en el sidebar
-                'activadores' => ['perfil', 'recuperar-cuenta', 'login'], 
+                'activadores' => ['perfil'], 
                 'subitems'    => [
                     
                 ]

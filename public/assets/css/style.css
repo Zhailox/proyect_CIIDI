@@ -149,10 +149,10 @@ body {
 .nav-item {
   display: flex;
   align-items: center;
-  padding: 0.85rem;
+  padding: 0.60rem;
   color: var(--texto-inactivo);
   text-decoration: none;
-  font-size: 0.95rem;
+  font-size: 0.90rem;
   font-weight: 500;
   border-radius: var(--radius-sm);
   transition: all var(--transition-fast);
@@ -215,7 +215,7 @@ body {
 
 .sub-nav-item {
   display: block;
-  padding: 0.6rem 1rem 0.6rem 2.5rem; 
+  padding: 0.5rem 1rem 0.5rem 2.5rem; 
   color: var(--texto-inactivo);
   text-decoration: none;
   font-size: 0.85rem; 

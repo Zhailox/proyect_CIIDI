@@ -12,10 +12,8 @@ class GestorUsuariosController {
     }
 
     public function index() {
-        // Nivel 2 mínimo (Bibliotecario o SuperAdmin)
         Auth::requierePrivilegioMinimo(2);
 
-        // Capturamos si hay una búsqueda activa
         $cedulaBusqueda = trim($_GET['cedula'] ?? '');
         $resultadoBusqueda = null;
         $mensajeError = null;
@@ -27,17 +25,28 @@ class GestorUsuariosController {
             }
         }
 
-        // Cargamos la lista de profesores para la segunda sección
-        $profesores = $this->adminModel->obtenerProfesores();
+        // Escanear dinámicamente los módulos instalados (Excluyendo el Core)
+        $modulosInstalados = [];
+        $carpetas = array_diff(scandir(MODULES_PATH), array('.', '..'));
+        foreach ($carpetas as $c) {
+            if (is_dir(MODULES_PATH . $c) && !in_array($c, ['Autenticacion', 'SuperAdmin'])) {
+                $modulosInstalados[] = $c;
+            }
+        }
+
+        $accionesDisponibles = ['crear', 'editar', 'eliminar', 'auditar'];
 
         return [
+            'modulosInstalados' => $modulosInstalados,
+            'accionesDisponibles' => $accionesDisponibles,
             'cedulaBusqueda' => $cedulaBusqueda,
             'usuarioEncontrado' => $resultadoBusqueda,
             'mensajeError' => $mensajeError,
-            'profesores' => $profesores,
+            'profesores' => $this->adminModel->obtenerProfesores(),
             'todosLosUsuarios' => $this->adminModel->obtenerTodosLosUsuarios(),
             'matrizRBAC' => $this->obtenerMatrizRBAC(),
-            'roles' => $this->adminModel->obtenerRoles()
+            'roles' => $this->adminModel->obtenerRoles(),
+            'privilegios' => $this->adminModel->obtenerPrivilegios()
         ];
     }
 
@@ -60,16 +69,18 @@ class GestorUsuariosController {
             $rawMatrix = $_POST['matrix'] ?? [];
             $matrizProcesada = [];
 
-            foreach ($rawMatrix as $rol => $permisos) {
-                if (is_array($permisos)) {
-                    foreach ($permisos as $accion => $val) {
-                        $matrizProcesada[$rol][$accion] = ($val === '1' || $val === 1 || $val === true);
+            // Matriz 3D: Nivel -> Modulo -> Accion
+            foreach ($rawMatrix as $nivel => $modulos) {
+                if (is_array($modulos)) {
+                    foreach ($modulos as $nombreModulo => $permisos) {
+                        foreach ($permisos as $accion => $val) {
+                            $matrizProcesada[$nivel][$nombreModulo][$accion] = ($val === '1' || $val === 1 || $val === true);
+                        }
                     }
                 }
             }
 
             $archivo = CORE_PATH . '../storage/rbac_matrix.json';
-            
             $directorio = dirname($archivo);
             if (!is_dir($directorio)) {
                 mkdir($directorio, 0777, true);
@@ -77,10 +88,10 @@ class GestorUsuariosController {
 
             file_put_contents($archivo, json_encode($matrizProcesada, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
             
-            AuditLogger::registrar('WARNING', 'SuperAdmin', 'Modificar Matriz RBAC', 'Se actualizaron los permisos dinámicos del sistema por rol.');
+            AuditLogger::registrar('WARNING', 'SuperAdmin', 'Modificar Matriz RBAC', 'Se actualizaron los permisos granulares por Módulo y Nivel.');
 
             if (session_status() === PHP_SESSION_NONE) session_start();
-            $_SESSION['mensaje_gestor_exito'] = "Matriz de permisos RBAC actualizada correctamente.";
+            $_SESSION['mensaje_gestor_exito'] = "Matriz de permisos segmentada actualizada correctamente.";
             header("Location: gestor-usuarios");
             exit;
         }
@@ -93,34 +104,81 @@ class GestorUsuariosController {
             $rolId = (int)($_POST['rol_id'] ?? 0);
             $nombreAnterior = trim($_POST['nombre_anterior'] ?? '');
             $nuevoNombre = trim($_POST['nuevo_nombre'] ?? '');
+            $nuevoPrivilegioId = (int)($_POST['privilegio_id'] ?? 0);
+            $miNivel = (int)($_SESSION['nivel_privilegio'] ?? 0);
 
-            if ($rolId > 0 && !empty($nuevoNombre) && $nombreAnterior !== $nuevoNombre) {
-                // 1. Actualizamos el nombre en la base de datos PostgreSQL
-                $this->adminModel->actualizarNombreRol($rolId, $nuevoNombre);
-
-                // 2. Actualización en cascada en la matriz RBAC (storage/rbac_matrix.json)
-                $archivo = CORE_PATH . '../storage/rbac_matrix.json';
-                if (file_exists($archivo)) {
-                    $matriz = json_decode(file_get_contents($archivo), true) ?: [];
-                    if (isset($matriz[$nombreAnterior])) {
-                        $permisosPrevios = $matriz[$nombreAnterior];
-                        unset($matriz[$nombreAnterior]);
-                        $matriz[$nuevoNombre] = $permisosPrevios;
-                        file_put_contents($archivo, json_encode($matriz, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-                    }
+            // Extraer el Nivel Real asociado a este Privilegio ID
+            $privilegios = $this->adminModel->obtenerPrivilegios();
+            $nivelSeleccionado = 0;
+            foreach($privilegios as $p) {
+                if ($p['privilegio_id'] == $nuevoPrivilegioId) { // o $privilegioId en crearRolAction
+                    $nivelSeleccionado = $p['nivel_privilegio']; break;
                 }
+            }
 
-                // 3. Si el usuario actual posee este rol, refrescar la variable de sesión en vivo
+            // MODO DIOS: Si eres nivel 3 o superior, puedes crear/asignar lo que quieras.
+            if ($nivelSeleccionado > $miNivel && $miNivel < 3) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "Seguridad: No puedes asignar un nivel jerárquico superior al tuyo.";
+                header("Location: gestor-usuarios");
+                exit;
+            }
+
+            if ($rolId > 0 && !empty($nuevoNombre) && $nuevoPrivilegioId > 0) {
+                $this->adminModel->actualizarRolGeneral($rolId, $nuevoNombre, $nuevoPrivilegioId);
+
                 if (isset($_SESSION['rol_nombre']) && $_SESSION['rol_nombre'] === $nombreAnterior) {
                     $_SESSION['rol_nombre'] = $nuevoNombre;
                 }
 
-                AuditLogger::registrar('INFO', 'SuperAdmin', 'Renombrar Rol', "Rol ID #{$rolId} renombrado de '{$nombreAnterior}' a '{$nuevoNombre}' con actualización en cascada.");
-
+                AuditLogger::registrar('INFO', 'SuperAdmin', 'Modificar Rol', "Rol ID #{$rolId} actualizado a '{$nuevoNombre}' (Nivel: {$nuevoPrivilegioId}).");
                 if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['mensaje_gestor_exito'] = "Rol '{$nombreAnterior}' renombrado exitosamente a '{$nuevoNombre}' en BD y Matriz RBAC.";
+                $_SESSION['mensaje_gestor_exito'] = "Rol actualizado exitosamente en la base de datos.";
+            }
+            header("Location: gestor-usuarios");
+            exit;
+        }
+    }
+    public function crearRolAction() {
+        Auth::requierePrivilegioMinimo(3);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $nombre = trim($_POST['nuevo_rol_nombre'] ?? '');
+            $privilegioId = (int)($_POST['nuevo_privilegio_id'] ?? 0);
+            $miNivel = (int)($_SESSION['nivel_privilegio'] ?? 0);
+
+            if (empty($nombre) || $privilegioId <= 0) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "El nombre y el nivel de privilegio son obligatorios.";
+                header("Location: gestor-usuarios");
+                exit;
             }
 
+            if ($privilegioId > $miNivel) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "No puedes crear un rol con un nivel jerárquico superior al tuyo.";
+                header("Location: gestor-usuarios");
+                exit;
+            }
+
+            try {
+                $this->adminModel->crearRol($nombre, $privilegioId);
+                
+                // Inicializar en la matriz RBAC vacía
+                $archivo = CORE_PATH . '../storage/rbac_matrix.json';
+                $matriz = file_exists($archivo) ? (json_decode(file_get_contents($archivo), true) ?: []) : [];
+                if (!isset($matriz[$nombre])) {
+                    $matriz[$nombre] = ['crear' => false, 'editar' => false, 'eliminar' => false, 'auditar' => false];
+                    file_put_contents($archivo, json_encode($matriz, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+                }
+
+                AuditLogger::registrar('WARNING', 'SuperAdmin', 'Crear Rol', "Nuevo rol creado: {$nombre} (Privilegio ID: {$privilegioId})");
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_exito'] = "Rol '{$nombre}' creado correctamente e integrado a la matriz RBAC.";
+            } catch (Throwable $e) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "Error al crear el rol. Posible nombre duplicado.";
+            }
             header("Location: gestor-usuarios");
             exit;
         }
@@ -320,6 +378,71 @@ class GestorUsuariosController {
                 $_SESSION['mensaje_gestor_error'] = "Error al restablecer la contraseña.";
             }
 
+            header("Location: gestor-usuarios");
+            exit;
+        }
+    }
+    public function crearNivelPrivilegioAction() {
+        Auth::requierePrivilegioMinimo(3);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->adminModel->extenderNivelPrivilegio();
+            AuditLogger::registrar('WARNING', 'SuperAdmin', 'Extender Privilegios', "Se ha creado un nuevo nivel jerárquico en el sistema.");
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            $_SESSION['mensaje_gestor_exito'] = "Se ha extendido la jerarquía del sistema con un nuevo nivel.";
+            header("Location: gestor-usuarios");
+            exit;
+        }
+    }
+
+    public function eliminarRolAction() {
+        Auth::requierePrivilegioMinimo(3);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $rolId = (int)($_POST['rol_id'] ?? 0);
+            try {
+                $this->adminModel->eliminarRol($rolId);
+                AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Rol', "Rol ID #{$rolId} eliminado de la base de datos.");
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_exito'] = "Rol eliminado correctamente.";
+            } catch (Throwable $e) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "No se puede eliminar un rol que ya tiene usuarios asignados.";
+            }
+            header("Location: gestor-usuarios");
+            exit;
+        }
+    }
+    public function eliminarNivelPrivilegioAction() {
+        Auth::requierePrivilegioMinimo(3);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $nivel = (int)($_POST['nivel'] ?? 0);
+            
+            // Protección de los niveles base
+            if ($nivel <= 3) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "Seguridad: No se pueden eliminar los niveles base (0 al 3) del sistema.";
+            } else {
+                try {
+                    // 1. Eliminar de la Base de Datos
+                    $this->adminModel->eliminarPrivilegio($nivel);
+                    
+                    // 2. Purgar los datos fantasma del archivo JSON
+                    $archivo = CORE_PATH . '../storage/rbac_matrix.json';
+                    if (file_exists($archivo)) {
+                        $matriz = json_decode(file_get_contents($archivo), true) ?: [];
+                        if (isset($matriz[$nivel])) {
+                            unset($matriz[$nivel]); // Elimina la rama completa de ese nivel
+                            file_put_contents($archivo, json_encode($matriz, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+                        }
+                    }
+
+                    AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Nivel', "Nivel de privilegio {$nivel} eliminado de la BD y purgado del RBAC.");
+                    if (session_status() === PHP_SESSION_NONE) session_start();
+                    $_SESSION['mensaje_gestor_exito'] = "Nivel {$nivel} eliminado y purgado de la matriz correctamente.";
+                } catch (Throwable $e) {
+                    if (session_status() === PHP_SESSION_NONE) session_start();
+                    $_SESSION['mensaje_gestor_error'] = "No se puede eliminar un nivel que tiene roles asignados.";
+                }
+            }
             header("Location: gestor-usuarios");
             exit;
         }

@@ -204,7 +204,7 @@ select.sa-filter-input option {
 
 .gestor-teacher-name {
     margin: 0;
-    color: var(--color-principal);
+    color: var(--negro);
     font-weight: 700;
     font-size: 0.95rem;
 }

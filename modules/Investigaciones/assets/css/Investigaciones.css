@@ -368,7 +368,7 @@
     align-items: center;
     
     /* Imagen de fondo desde la carpeta assets/img */
-    background: url('../img/hero-propuesta.png') center/cover no-repeat;
+    background: url('../img/propuesta.jpg') center/cover no-repeat;
     border-bottom: none;
 }
 
