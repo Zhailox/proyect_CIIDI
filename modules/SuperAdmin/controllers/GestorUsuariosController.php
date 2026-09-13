@@ -14,11 +14,6 @@ class GestorUsuariosController {
     public function index() {
         Auth::requierePrivilegioMinimo(2);
 
-        // Auto-purga de registros de nivel_privilegio duplicados huérfanos
-        try {
-            $this->adminModel->purgarDuplicadosPrivilegios();
-        } catch (Throwable $e) {}
-
         $cedulaBusqueda = trim($_GET['cedula'] ?? '');
         $resultadoBusqueda = null;
         $mensajeError = null;

@@ -1,5 +1,53 @@
 [
     {
+        "id": "log_6aa6479310a87",
+        "fecha_hora": "2026-09-13 06:49:55",
+        "nivel": "INFO",
+        "modulo": "RepositorioPST",
+        "accion": "Alternar Visibilidad Proyecto",
+        "detalles": "Proyecto ID #147 cambiado a estado: Visible.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "543106092d46b390b52dc05d149686e5963c6df7bd1dbbf8f8bec8af9871afba",
+        "hash_integridad": "964b470a786d07ef80220e36900d83f8207be0262f11697fcef144c5bb3dffae"
+    },
+    {
+        "id": "log_6aa64790ddb40",
+        "fecha_hora": "2026-09-13 06:49:52",
+        "nivel": "INFO",
+        "modulo": "RepositorioPST",
+        "accion": "Alternar Visibilidad Proyecto",
+        "detalles": "Proyecto ID #147 cambiado a estado: Oculto.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "9737866ca3bd1b5a70c4da8c61e0eb77200cf8558b4da18a30d9c017aa329fcc",
+        "hash_integridad": "543106092d46b390b52dc05d149686e5963c6df7bd1dbbf8f8bec8af9871afba"
+    },
+    {
+        "id": "log_6aa6478a530a0",
+        "fecha_hora": "2026-09-13 06:49:46",
+        "nivel": "INFO",
+        "modulo": "RepositorioPST",
+        "accion": "Alternar Visibilidad Proyecto",
+        "detalles": "Proyecto ID #147 cambiado a estado: Visible.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "6b4863c148fdb94513e6cd3ae1c1512853dd1581995efd6e983482db175571da",
+        "hash_integridad": "9737866ca3bd1b5a70c4da8c61e0eb77200cf8558b4da18a30d9c017aa329fcc"
+    },
+    {
+        "id": "log_6aa647870e50e",
+        "fecha_hora": "2026-09-13 06:49:43",
+        "nivel": "INFO",
+        "modulo": "RepositorioPST",
+        "accion": "Alternar Visibilidad Proyecto",
+        "detalles": "Proyecto ID #147 cambiado a estado: Oculto.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "d1d832f142b89a2b7414e61519964f72cd019fc7f68372470260ea4b028b1889",
+        "hash_integridad": "6b4863c148fdb94513e6cd3ae1c1512853dd1581995efd6e983482db175571da"
+    },
+    {
         "id": "log_6aa63e3c4909f",
         "fecha_hora": "2026-09-13 06:10:04",
         "nivel": "INFO",

@@ -279,7 +279,7 @@ class DetallePSTController {
 
         // Si es petición AJAX, responder con JSON si no se tienen permisos en lugar de 302 redirect
         if (in_array($accion, ['extraer', 'crear_ajax', 'simular_extraccion'])) {
-            if (!Auth::check() || (int)($_SESSION['nivel_privilegio'] ?? -1) < 1) {
+            if (!Auth::requierePrivilegioMinimo(1, null, null, false)) {
                 header('Content-Type: application/json; charset=utf-8');
                 echo json_encode([
                     'status' => 'error',
@@ -544,7 +544,6 @@ class DetallePSTController {
                     AuditLogger::registrar('INFO', 'RepositorioPST', 'Alternar Visibilidad Proyecto', "Proyecto ID #{$id} cambiado a estado: {$estTxt}.");
 
                     header("Location: ?ruta=agregar-documento&msg=status_changed");
-                    echo "<script>window.location.href='?ruta=agregar-documento&msg=status_changed';</script>";
                     exit;
                 }
             } catch (Exception $e) {
@@ -562,7 +561,6 @@ class DetallePSTController {
                 AuditLogger::registrar('WARNING', 'RepositorioPST', 'Eliminar Proyecto', "Proyecto PST ID #{$id} eliminado del repositorio.");
 
                 header("Location: ?ruta=agregar-documento&msg=deleted");
-                echo "<script>window.location.href='?ruta=agregar-documento&msg=deleted';</script>";
                 exit;
             } catch (Exception $e) {
                 $error = "Error al intentar eliminar el recurso: " . $e->getMessage();
@@ -805,19 +803,23 @@ class DetallePSTController {
 
         $lineas = $model->getLineasInvestigacion();
         $dimensiones = $model->getDimensionesOperativas();
+        $nivelesAcademicos = $model->getNivelesAcademicos();
+        $trayectosList = $model->getTrayectos();
         
         return [
-            'accion'      => $accion,
-            'documentos'  => $documentos,
-            'documento'   => $documento,
-            'autores'     => $autores,
-            'tutores'     => $tutores,
-            'lineas'      => $lineas,
-            'dimensiones' => $dimensiones,
-            'pagination'  => $pagination,
-            'q'           => $q,
-            'error'       => $error,
-            'success'     => $success
+            'accion'            => $accion,
+            'documentos'        => $documentos,
+            'documento'         => $documento,
+            'autores'           => $autores,
+            'tutores'           => $tutores,
+            'lineas'            => $lineas,
+            'dimensiones'       => $dimensiones,
+            'nivelesAcademicos' => $nivelesAcademicos,
+            'trayectosList'     => $trayectosList,
+            'pagination'        => $pagination,
+            'q'                 => $q,
+            'error'             => $error,
+            'success'           => $success
         ];
     }
 }
