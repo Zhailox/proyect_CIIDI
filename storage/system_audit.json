@@ -1,5 +1,53 @@
 [
     {
+        "id": "log_6aa61f16c5d49",
+        "fecha_hora": "2026-09-13 03:57:10",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Inicio de Sesión Exitoso",
+        "detalles": "El usuario Miguel González (Super Administrador) ha iniciado sesión.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "c624331a68156233aa6f0026f0a5ec3d794b03733428b964ac1d79c2bd412d82",
+        "hash_integridad": "ab5b5c460db1b12bebbf935a742ed56ab8cbe68544196337a1877cdb37b3683d"
+    },
+    {
+        "id": "log_6aa61d51e7d01",
+        "fecha_hora": "2026-09-13 03:49:37",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Cierre de Sesión",
+        "detalles": "El usuario Miguel González ha cerrado su sesión.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "106c2822e6a251b615090773bdafcb76bdf5d647ed420324908e18622d6778d1",
+        "hash_integridad": "c624331a68156233aa6f0026f0a5ec3d794b03733428b964ac1d79c2bd412d82"
+    },
+    {
+        "id": "log_6aa615398cee6",
+        "fecha_hora": "2026-09-13 03:15:05",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Inicio de Sesión Exitoso",
+        "detalles": "El usuario Miguel González (Super Administrador) ha iniciado sesión.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "c30053b1cad4f3413eb4bf5e81e04ec9dc3536c2245632f3d1eea27b8871c1a4",
+        "hash_integridad": "106c2822e6a251b615090773bdafcb76bdf5d647ed420324908e18622d6778d1"
+    },
+    {
+        "id": "log_6aa6134431146",
+        "fecha_hora": "2026-09-13 03:06:44",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Cierre de Sesión",
+        "detalles": "El usuario Miguel González ha cerrado su sesión.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "c122c326a88425a2634faec23b42c9f1afe332afde82a7ed6891d2d91dd07a31",
+        "hash_integridad": "c30053b1cad4f3413eb4bf5e81e04ec9dc3536c2245632f3d1eea27b8871c1a4"
+    },
+    {
         "id": "log_6aa5fb18b2aff",
         "fecha_hora": "2026-09-13 01:23:36",
         "nivel": "WARNING",
