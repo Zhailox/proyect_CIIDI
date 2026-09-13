@@ -1,7 +1,12 @@
 <?php
-// Obtenemos el nivel del usuario actual (si es visitante, su nivel es -1)
+// Obtenemos el nivel y rol del usuario actual
 require_once CORE_PATH . 'Security/Auth.php';
-$nivelUsuario = Auth::check() ? (int)Auth::usuario()['nivel'] : 999;
+$usuarioActivo = Auth::check() ? Auth::usuario() : null;
+$nivelUsuario  = $usuarioActivo ? (int)$usuarioActivo['nivel'] : 999;
+$rolNombre     = $usuarioActivo ? ($usuarioActivo['rol'] ?? '') : '';
+
+// Es SuperAdmin si nivel es 0 O si el nombre del rol contiene "admin" o "super"
+$esAdminTotal  = ($nivelUsuario === 0) || (stripos($rolNombre, 'admin') !== false) || (stripos($rolNombre, 'super') !== false);
 ?>
 <aside class="sidebar">
   <h2 class="sidebar-title">Navegación Global</h2>
@@ -16,8 +21,8 @@ $nivelUsuario = Auth::check() ? (int)Auth::usuario()['nivel'] : 999;
         <?php
         $privilegioExigido = $item['privilegio_minimo'] ?? 999;
 
-        // 2. Si el usuario tiene menos nivel del exigido, SALTAMOS al siguiente botón (lo ocultamos)
-       if ($nivelUsuario > $privilegioExigido) {
+        // Si es SuperAdmin/Admin Total jamás se oculta ningún menú.
+        if (!$esAdminTotal && $nivelUsuario > $privilegioExigido) {
             continue; 
         }
         ?>
@@ -52,7 +57,7 @@ $nivelUsuario = Auth::check() ? (int)Auth::usuario()['nivel'] : 999;
                     <?php foreach ($item['subitems'] as $sub): ?>
                         <?php 
                             $subPriv = $sub['privilegio_minimo'] ?? 999;
-                            if ($nivelUsuario > $subPriv) continue;
+                            if (!$esAdminTotal && $nivelUsuario > $subPriv) continue;
                         ?>
                         <a href="<?php echo $sub['ruta']; ?>" class="sub-nav-item <?php echo ($ruta == $sub['ruta']) ? 'active' : ''; ?>">
                             <span class="nav-text"><?php echo $sub['titulo']; ?></span>

@@ -107,14 +107,14 @@ class InvestigacionController {
     // ──────────────────────────────────────────────────────────────────────────
 
     public function mostrarMisInvestigaciones(): array {
-        Auth::requierePrivilegioMinimo(1);
+        Auth::requierePrivilegioMinimo(1, 'auditar', 'Investigaciones');
         $user = Auth::usuario();
         $investigaciones = $this->model->obtenerMisInvestigaciones((int)$user['id']);
         return compact('investigaciones');
     }
 
     public function mostrarFormCrear(): array {
-        Auth::requierePrivilegioMinimo(1);
+        Auth::requierePrivilegioMinimo(1, 'crear', 'Investigaciones');
         $lineas = $this->model->obtenerLineas();
         // Variables por defecto para el formulario
         $investigacion = [
@@ -126,7 +126,7 @@ class InvestigacionController {
     }
 
     public function mostrarFormEditar(): array {
-        Auth::requierePrivilegioMinimo(1);
+        Auth::requierePrivilegioMinimo(1, 'editar', 'Investigaciones');
         $user = Auth::usuario();
         $id = (int)($_GET['id'] ?? 0);
         

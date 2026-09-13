@@ -13,7 +13,7 @@
             "estado": "online"
         },
         "VinculacionEmpresarial": {
-            "estado": "online"
+            "estado": "offline"
         },
         "RepositorioPST": {
             "estado": "online"

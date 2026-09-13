@@ -533,7 +533,7 @@ class DetallePSTController {
 
         // 0.3 Procesar Acción: ALTERNAR ESTADO (Activar / Ocultar - Soft Delete)
         if ($accion === 'toggle_estado' && $id) {
-            Auth::requierePrivilegioMinimo(2);
+            Auth::requierePrivilegioMinimo(2, 'editar', 'RepositorioPST');
             try {
                 $docActual = $model->getPSTDocumentoById($id);
                 if ($docActual) {
@@ -555,7 +555,7 @@ class DetallePSTController {
         
         // 1. Procesar Acción: ELIMINAR
         if ($accion === 'eliminar' && $id) {
-            Auth::requierePrivilegioMinimo(2);
+            Auth::requierePrivilegioMinimo(2, 'eliminar', 'RepositorioPST');
             try {
                 $model->eliminarPST($id);
                 

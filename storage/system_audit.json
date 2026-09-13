@@ -1,5 +1,65 @@
 [
     {
+        "id": "log_6aa5f2b3a5ca9",
+        "fecha_hora": "2026-09-13 00:47:47",
+        "nivel": "INFO",
+        "modulo": "Articulos",
+        "accion": "Health Check Ruta",
+        "detalles": "Test en ruta '?ruta=articulos': OK (8.59ms)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "6fdce095e76c5cd60c96f1e2ec605723f69e930e182a6838a9926d082816a43c",
+        "hash_integridad": "be3ca02c3b7d2e42e7fbee3c714d7a42a72a58724a9b8e41d25cb615d0c86425"
+    },
+    {
+        "id": "log_6aa5eba444912",
+        "fecha_hora": "2026-09-13 00:17:40",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Alternar Estado Módulo",
+        "detalles": "Módulo VinculacionEmpresarial cambiado a estado: offline",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "70ca93390beb56a83b150476f454e60cb569fe488f3b5e6137004fd45848ee87",
+        "hash_integridad": "6fdce095e76c5cd60c96f1e2ec605723f69e930e182a6838a9926d082816a43c"
+    },
+    {
+        "id": "log_6aa5eb7ee223c",
+        "fecha_hora": "2026-09-13 00:17:02",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Inicio de Sesión Exitoso",
+        "detalles": "El usuario Miguel González (Super Administrador) ha iniciado sesión.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "63c9c3e980b4980e1a1de2f26ba0005f79ae0c4035d9527a92409600456bffdf",
+        "hash_integridad": "70ca93390beb56a83b150476f454e60cb569fe488f3b5e6137004fd45848ee87"
+    },
+    {
+        "id": "log_6aa5eb7c8dd7f",
+        "fecha_hora": "2026-09-13 00:17:00",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Cierre de Sesión",
+        "detalles": "El usuario Miguel González ha cerrado su sesión.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "60636357a7410ad27fd808377f0b5f72f6a607b61bff2684760def31f34819ce",
+        "hash_integridad": "63c9c3e980b4980e1a1de2f26ba0005f79ae0c4035d9527a92409600456bffdf"
+    },
+    {
+        "id": "log_6aa5db9b45441",
+        "fecha_hora": "2026-09-12 23:09:15",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Inicio de Sesión Exitoso",
+        "detalles": "El usuario Miguel González (Super Administrador) ha iniciado sesión.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "cdabb474243848f97acf847a32e4c85bc872fbe6bff3339c7209fd0c18f6a20a",
+        "hash_integridad": "60636357a7410ad27fd808377f0b5f72f6a607b61bff2684760def31f34819ce"
+    },
+    {
         "id": "log_6aa5d6c60d921",
         "fecha_hora": "2026-09-12 22:48:38",
         "nivel": "INFO",

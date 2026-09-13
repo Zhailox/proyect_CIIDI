@@ -71,7 +71,7 @@ class VinculacionEmpresarialModule implements ModuleContract {
                 'subitems'    => [
                     ['ruta' => 'empresas-inicio', 'titulo' => 'Conócenos', 'privilegio_minimo' => 999],
                     ['ruta' => 'seguimiento-empresa', 'titulo' => 'Seguimiento', 'privilegio_minimo' => 999],
-                    ['ruta' => 'cartelera-oportunidades', 'titulo' => 'Estudiantes', 'privilegio_minimo' => 5],
+                    ['ruta' => 'cartelera-oportunidades', 'titulo' => 'Estudiantes', 'privilegio_minimo' => 999],
                     ['ruta' => 'banco-propuestas', 'titulo' => 'Evaluación de Propuestas', 'privilegio_minimo' => 1]
                 ]
             ]
