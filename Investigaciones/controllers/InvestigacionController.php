@@ -48,7 +48,7 @@ class InvestigacionController {
         
         $investigaciones = $this->model->listarInvestigaciones($filtros);
         
-        $agrupadas = ['t3' => [], 't4' => [], 'maestria' => []];
+        $agrupadas = ['t1' => [], 't2' => [], 't3' => [], 't4' => [], 'maestria' => []];
         foreach ($investigaciones as $inv) {
             $trayecto = $inv['trayecto'] ?? 't4';
             if (isset($agrupadas[$trayecto])) {
