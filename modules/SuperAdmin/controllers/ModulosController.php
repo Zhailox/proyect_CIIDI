@@ -261,7 +261,7 @@ class ModulosController {
             $configJsonData = json_decode($raw, true);
         }
 
-        // Obtener la lista dinámica de roles registrados en la BD PostgreSQL
+        // Obtener la lista dinámica de roles registrados en la BD PostgreSQL (Agrupados por nivel de privilegio único)
         $rolesDinamicos = [
             ['nivel' => 0, 'nombre' => 'Público / Libres (Sin Autenticación)']
         ];
@@ -271,17 +271,19 @@ class ModulosController {
                 require_once CORE_PATH . 'Database/Connection.php';
                 $db = Connection::getInstance();
                 $stmt = $db->query("
-                    SELECT r.id, r.nombre, p.nivel_privilegio
-                    FROM roles r
-                    INNER JOIN privilegios p ON r.privilegio_id = p.privilegio_id
+                    SELECT p.nivel_privilegio, string_agg(r.nombre, ' / ') AS nombres_roles
+                    FROM privilegios p
+                    LEFT JOIN roles r ON r.privilegio_id = p.privilegio_id
+                    GROUP BY p.nivel_privilegio
                     ORDER BY p.nivel_privilegio ASC
                 ");
                 $rolesDb = $stmt->fetchAll();
                 foreach ($rolesDb as $rDb) {
+                    $nivel = (int)$rDb['nivel_privilegio'];
+                    $nombreRol = !empty($rDb['nombres_roles']) ? $rDb['nombres_roles'] : "Nivel {$nivel}";
                     $rolesDinamicos[] = [
-                        'id'    => (int)$rDb['id'],
-                        'nivel' => (int)$rDb['nivel_privilegio'],
-                        'nombre' => htmlspecialchars($rDb['nombre']) . " (Nivel " . (int)$rDb['nivel_privilegio'] . ")"
+                        'nivel'  => $nivel,
+                        'nombre' => htmlspecialchars($nombreRol) . " (Nivel " . $nivel . ")"
                     ];
                 }
             }

@@ -31,7 +31,7 @@
         },
         "articulos": {
             "estado": "online",
-            "rol_minimo": 1
+            "rol_minimo": 0
         }
     }
 }

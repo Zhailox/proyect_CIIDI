@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict ZLPF2mOubepSbbFCfMceHUgAdVYFwBZw8sns8B6izLIQKccFRFd8ul2LL9sboOP
+\restrict k6XBzXeygDEpoZkPJVHBSCxjaciW3YcEcxWNmF7yLtZFqsGrpek32GNjEV20Ng9
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -30,7 +30,6 @@ ALTER TABLE ONLY public.recurso_autores DROP CONSTRAINT recurso_autores_id_autor
 ALTER TABLE ONLY public.proyecto_tutores DROP CONSTRAINT proyecto_tutores_tipo_tutor_id_fkey;
 ALTER TABLE ONLY public.proyecto_tutores DROP CONSTRAINT proyecto_tutores_id_tutor_fkey;
 ALTER TABLE ONLY public.proyecto_tutores DROP CONSTRAINT proyecto_tutores_id_recurso_fkey;
-ALTER TABLE ONLY public.roles DROP CONSTRAINT privilegio_fk;
 ALTER TABLE ONLY public.preferencias_usuario DROP CONSTRAINT preferencias_usuario_id_usuario_fkey;
 ALTER TABLE ONLY public.notificaciones DROP CONSTRAINT notificaciones_id_usuario_fkey;
 ALTER TABLE ONLY public.lineas_investigacion DROP CONSTRAINT lineas_investigacion_id_carrera_fkey;
@@ -86,7 +85,6 @@ ALTER TABLE ONLY public.recurso_categorias DROP CONSTRAINT recurso_categorias_pk
 ALTER TABLE ONLY public.recurso_autores DROP CONSTRAINT recurso_autores_pkey;
 ALTER TABLE ONLY public.proyecto_tutores DROP CONSTRAINT proyecto_tutores_pkey;
 ALTER TABLE ONLY public.propuestas_empresa DROP CONSTRAINT propuestas_empresa_pkey;
-ALTER TABLE ONLY public.privilegios DROP CONSTRAINT privilegios_pkey;
 ALTER TABLE ONLY public.preferencias_usuario DROP CONSTRAINT preferencias_usuario_pkey;
 ALTER TABLE ONLY public.postulaciones_estudiantes DROP CONSTRAINT postulaciones_estudiantes_pkey;
 ALTER TABLE ONLY public.notificaciones DROP CONSTRAINT notificaciones_pkey;
@@ -1054,7 +1052,8 @@ ALTER TABLE public.preferencias_usuario OWNER TO postgres;
 
 CREATE TABLE public.privilegios (
     privilegio_id integer NOT NULL,
-    nivel_privilegio integer DEFAULT 0 NOT NULL
+    nivel_privilegio integer DEFAULT 0 NOT NULL,
+    CONSTRAINT unique_nivel_privilegio UNIQUE (nivel_privilegio)
 );
 
 
@@ -2656,16 +2655,6 @@ INSERT INTO public.registro_actividad VALUES (1, 1, NULL, '2026-03-23 14:49:58',
 
 
 --
--- Data for Name: privilegios; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-INSERT INTO public.privilegios VALUES (1, 0);
-INSERT INTO public.privilegios VALUES (2, 1);
-INSERT INTO public.privilegios VALUES (3, 2);
-INSERT INTO public.privilegios VALUES (6, 5);
-
-
---
 -- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -3106,14 +3095,6 @@ ALTER TABLE ONLY public.preferencias_usuario
 
 
 --
--- Name: privilegios privilegios_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.privilegios
-    ADD CONSTRAINT privilegios_pkey PRIMARY KEY (privilegio_id);
-
-
---
 -- Name: propuestas_empresa propuestas_empresa_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -3546,14 +3527,6 @@ ALTER TABLE ONLY public.preferencias_usuario
 
 
 --
--- Name: roles privilegio_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.roles
-    ADD CONSTRAINT privilegio_fk FOREIGN KEY (privilegio_id) REFERENCES public.privilegios(privilegio_id) NOT VALID;
-
-
---
 -- Name: proyecto_tutores proyecto_tutores_id_recurso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -3645,5 +3618,5 @@ ALTER TABLE ONLY public.usuarios
 -- PostgreSQL database dump complete
 --
 
-\unrestrict ZLPF2mOubepSbbFCfMceHUgAdVYFwBZw8sns8B6izLIQKccFRFd8ul2LL9sboOP
+\unrestrict k6XBzXeygDEpoZkPJVHBSCxjaciW3YcEcxWNmF7yLtZFqsGrpek32GNjEV20Ng9
 

@@ -117,10 +117,32 @@ class AdminUsuarioModel {
         $stmt = $db->prepare($sql);
         return $stmt->execute([$hashClave, $usuarioId]);
     }
-    // Obtiene el catálogo de niveles de privilegio (0 al 5)
+    // Obtiene el catálogo de niveles de privilegio (Niveles únicos ordenados)
     public function obtenerPrivilegios() {
-        $qb = new QueryBuilder();
-        return $qb->tabla('privilegios')->orderBy('nivel_privilegio', 'ASC')->get();
+        $db = Connection::getInstance();
+        $sql = "
+            SELECT DISTINCT ON (nivel_privilegio) privilegio_id, nivel_privilegio
+            FROM privilegios
+            ORDER BY nivel_privilegio ASC, privilegio_id ASC
+        ";
+        $stmt = $db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    // Purga de forma limpia las filas con nivel_privilegio repetidos que no estén vinculadas a un rol activo
+    public function purgarDuplicadosPrivilegios(): int {
+        $db = Connection::getInstance();
+        $sql = "
+            DELETE FROM privilegios p1
+            USING privilegios p2
+            WHERE p1.nivel_privilegio = p2.nivel_privilegio
+              AND p1.privilegio_id > p2.privilegio_id
+              AND p1.privilegio_id NOT IN (SELECT DISTINCT privilegio_id FROM roles WHERE privilegio_id IS NOT NULL)
+        ";
+        $stmt = $db->prepare($sql);
+        $stmt->execute();
+        return $stmt->rowCount();
     }
 
     // Crea un nuevo rol vinculado a un nivel de privilegio
