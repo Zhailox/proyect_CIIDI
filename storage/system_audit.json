@@ -1,5 +1,65 @@
 [
     {
+        "id": "log_6aa5e14678ff7",
+        "fecha_hora": "2026-09-12 23:33:26",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Crear Backup",
+        "detalles": "Respaldo backup_ciidi_2026-09-12_23-33-26.sql generado exitosamente. Respaldos antiguos purgados: 0",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "cf23f93bab274fe37d2c3892950e04195d852f23556c2c14d791f5bbb79e7b51",
+        "hash_integridad": "bce31195fb872e6ef79239e97dd970f6bcb873e7d732b908fab11b7f89ff2e8a"
+    },
+    {
+        "id": "log_6aa5e1233157a",
+        "fecha_hora": "2026-09-12 23:32:51",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Crear Backup",
+        "detalles": "Respaldo backup_ciidi_2026-09-12_23-32-50.sql.gz generado exitosamente. Respaldos antiguos purgados: 0",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "c52a4f034f1563229ebf3bc7e13870efeb78ff224e18781bd552df1fdb8de5f7",
+        "hash_integridad": "cf23f93bab274fe37d2c3892950e04195d852f23556c2c14d791f5bbb79e7b51"
+    },
+    {
+        "id": "log_6aa5e118675ce",
+        "fecha_hora": "2026-09-12 23:32:40",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Inicio de Sesión Exitoso",
+        "detalles": "El usuario Miguel González (Super Administrador) ha iniciado sesión.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "223fdf1cb7310e2558ef475aed07f8515a18aa3e11aded6a98ff0cf496266611",
+        "hash_integridad": "c52a4f034f1563229ebf3bc7e13870efeb78ff224e18781bd552df1fdb8de5f7"
+    },
+    {
+        "id": "log_6aa5e114a7980",
+        "fecha_hora": "2026-09-12 23:32:36",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Cierre de Sesión",
+        "detalles": "El usuario Sixsevenaldo González ha cerrado su sesión.",
+        "responsable": "Sixsevenaldo González (ID: 14)",
+        "ip": "::1",
+        "hash_anterior": "0ea669c8b1310ce3c97467128640b52d6fbf78e604133d11e4fd697ea9fcc800",
+        "hash_integridad": "223fdf1cb7310e2558ef475aed07f8515a18aa3e11aded6a98ff0cf496266611"
+    },
+    {
+        "id": "log_6aa5da74ef860",
+        "fecha_hora": "2026-09-12 23:04:20",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Inicio de Sesión Exitoso",
+        "detalles": "El usuario Sixsevenaldo González (Estudiantes) ha iniciado sesión.",
+        "responsable": "Sixsevenaldo González (ID: 14)",
+        "ip": "::1",
+        "hash_anterior": "cdabb474243848f97acf847a32e4c85bc872fbe6bff3339c7209fd0c18f6a20a",
+        "hash_integridad": "0ea669c8b1310ce3c97467128640b52d6fbf78e604133d11e4fd697ea9fcc800"
+    },
+    {
         "id": "log_6aa5d6c60d921",
         "fecha_hora": "2026-09-12 22:48:38",
         "nivel": "INFO",
