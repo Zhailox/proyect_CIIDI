@@ -7,8 +7,11 @@ class LoginController {
     
     private $usuarioModel;
 
-    public function __construct() {
-        $this->usuarioModel = new UsuarioModel();
+    private function getUsuarioModel() {
+        if ($this->usuarioModel === null) {
+            $this->usuarioModel = new UsuarioModel();
+        }
+        return $this->usuarioModel;
     }
 
     // Prepara los datos (si hubiera) y permite que el Kernel cargue la vista
@@ -60,7 +63,7 @@ class LoginController {
 
         // 1. Probar la Base de Datos
         try {
-            $usuario = $this->usuarioModel->intentarAutenticacion($cedula);
+            $usuario = $this->getUsuarioModel()->intentarAutenticacion($cedula);
         } catch (Exception $e) {
             return [
                 'es_error' => true,

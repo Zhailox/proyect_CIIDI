@@ -1,6 +1,6 @@
 <?php
 // Se obtienen las configuraciones del header recolectadas por el Kernel
-$elementosCabecera = $this->getControlesHeader();
+$elementosCabecera = (isset($this) && method_exists($this, 'getControlesHeader')) ? $this->getControlesHeader() : [];
 ?>
 
 <header class="main-header">

@@ -339,10 +339,13 @@
 <!-- NAVEGACIÓN CORREDIZA POR PESTAÑAS (TABS UNIFICADOS) -->
 <div class="ag-tabs-nav">
     <button type="button" class="ag-tab-btn active" onclick="switchTab('tab-gestion-bd', this)">
-        <i class="ph-bold ph-database"></i> 1. Gestión de Respaldos e Importación BD
+        <i class="ph-bold ph-database"></i> 1. Respaldos e Importación BD
+    </button>
+    <button type="button" class="ag-tab-btn" onclick="switchTab('tab-config-bd', this)">
+        <i class="ph-bold ph-gear-six"></i> 2. Configuración BD & Break-Glass
     </button>
     <button type="button" class="ag-tab-btn" onclick="switchTab('tab-mantenimiento', this)">
-        <i class="ph-bold ph-timer"></i> 2. Ventana de Mantenimiento Programado
+        <i class="ph-bold ph-timer"></i> 3. Ventana de Mantenimiento
     </button>
 </div>
 
@@ -592,7 +595,125 @@
 </div>
 
 <!-- ==========================================
-     PESTAÑA 2: VENTANA DE MANTENIMIENTO PROGRAMADO
+     PESTAÑA 2: CONFIGURACIÓN DE BASE DE DATOS Y CUENTA DE EMERGENCIA
+     ========================================== -->
+<div id="tab-config-bd" class="ag-tab-pane">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+        
+        <!-- TARJETA: MODIFICAR PARÁMETROS DE CONEXIÓN BD -->
+        <div class="ag-glass-card">
+            <h3 style="margin: 0 0 0.4rem 0; font-size: 1.15rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: flex; align-items: center; gap: 8px;">
+                <i class="ph-bold ph-database" style="color: var(--color-secundario);"></i> Conexión PostgreSQL Dinámica
+            </h3>
+            <p style="font-size: 0.86rem; color: var(--texto-silenciado, #64748b); margin-bottom: 1.4rem; line-height: 1.45;">
+                Actualiza el Host, Puerto, Base de Datos, Usuario y Contraseña de PostgreSQL. Requiere confirmar la contraseña de tu cuenta actual de SuperAdmin.
+            </p>
+
+            <form action="guardar-configuracion-bd" method="POST" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Host del Servidor</label>
+                        <input type="text" name="host" class="ag-input" value="<?= htmlspecialchars($db_creds['host'] ?? 'localhost') ?>" required style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Puerto</label>
+                        <input type="text" name="port" class="ag-input" value="<?= htmlspecialchars($db_creds['port'] ?? '5432') ?>" required style="width: 100%;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Base de Datos</label>
+                        <input type="text" name="db" class="ag-input" value="<?= htmlspecialchars($db_creds['db'] ?? 'ciidi') ?>" required style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Usuario PostgreSQL</label>
+                        <input type="text" name="user" class="ag-input" value="<?= htmlspecialchars($db_creds['user'] ?? 'miki') ?>" required style="width: 100%;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Contraseña PostgreSQL</label>
+                    <input type="password" name="pass" class="ag-input" value="<?= htmlspecialchars($db_creds['pass'] ?? '') ?>" placeholder="Contraseña de la BD" style="width: 100%;">
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid rgba(80,89,132,0.15); margin: 0.5rem 0;">
+
+                <div style="background: rgba(37,99,235,0.05); border: 1px solid rgba(37,99,235,0.2); padding: 1rem; border-radius: 10px;">
+                    <label style="font-size: 0.82rem; font-weight: 800; color: var(--color-secundario); display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                        <i class="ph-bold ph-shield-check"></i> Confirmar con Tu Contraseña de SuperAdmin (Re-Autenticación)
+                    </label>
+                    <input type="password" name="admin_confirm_password" class="ag-input" placeholder="Ingresa tu contraseña actual de usuario" required style="width: 100%; border-color: rgba(37,99,235,0.4);">
+                </div>
+
+                <button type="submit" class="ag-btn-flat" style="justify-content: center; padding: 11px !important;">
+                    <i class="ph-bold ph-floppy-disk"></i> Guardar Cambios de Conexión BD
+                </button>
+            </form>
+        </div>
+
+        <!-- TARJETA: CUENTA DE EMERGENCIA LOCAL (BREAK-GLASS ACCOUNT) -->
+        <div class="ag-glass-card">
+            <h3 style="margin: 0 0 0.4rem 0; font-size: 1.15rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: flex; align-items: center; gap: 8px;">
+                <i class="ph-bold ph-user-gear" style="color: #dc2626;"></i> Cuenta de Emergencia Local (Break-Glass)
+            </h3>
+            <p style="font-size: 0.86rem; color: var(--texto-silenciado, #64748b); margin-bottom: 1.4rem; line-height: 1.45;">
+                Configura una cuenta de súper acceso independiente almacenada localmente en JSON. Se usará como salvavidas si la BD PostgreSQL sufre una caída total.
+            </p>
+
+            <?php if (!empty($emergency_data['usuario'])): ?>
+                <div style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); padding: 0.85rem 1.1rem; border-radius: 10px; margin-bottom: 1.2rem; font-size: 0.84rem; color: #047857;">
+                    <div style="font-weight: 800; display: flex; align-items: center; gap: 6px;">
+                        <i class="ph-bold ph-check-circle"></i> Cuenta de Emergencia Configurada
+                    </div>
+                    <div style="margin-top: 4px;"><strong>Usuario Local:</strong> <?= htmlspecialchars($emergency_data['usuario']) ?></div>
+                    <?php if (!empty($emergency_data['actualizado_el'])): ?>
+                        <div style="font-size: 0.76rem; opacity: 0.85;">Última actualización: <?= htmlspecialchars($emergency_data['actualizado_el']) ?> por <?= htmlspecialchars($emergency_data['actualizado_por'] ?? 'SuperAdmin') ?></div>
+                    <?php endif; ?>
+                </div>
+            <?php else: ?>
+                <div style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); padding: 0.85rem 1.1rem; border-radius: 10px; margin-bottom: 1.2rem; font-size: 0.84rem; color: #b45309;">
+                    <i class="ph-bold ph-warning"></i> No se ha configurado una cuenta de emergencia local todavía.
+                </div>
+            <?php endif; ?>
+
+            <form action="guardar-cuenta-emergencia" method="POST" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Usuario de Emergencia</label>
+                    <input type="text" name="emergency_user" class="ag-input" value="<?= htmlspecialchars($emergency_data['usuario'] ?? 'admin_emergencia') ?>" required style="width: 100%;">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Contraseña de Emergencia</label>
+                        <input type="password" name="emergency_pass" class="ag-input" placeholder="Nueva Contraseña" required style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Confirmar Contraseña</label>
+                        <input type="password" name="emergency_pass_confirm" class="ag-input" placeholder="Repite Contraseña" required style="width: 100%;">
+                    </div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid rgba(80,89,132,0.15); margin: 0.5rem 0;">
+
+                <div style="background: rgba(220,38,38,0.05); border: 1px solid rgba(220,38,38,0.2); padding: 1rem; border-radius: 10px;">
+                    <label style="font-size: 0.82rem; font-weight: 800; color: #dc2626; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                        <i class="ph-bold ph-shield-check"></i> Confirmar con Tu Contraseña de SuperAdmin
+                    </label>
+                    <input type="password" name="admin_confirm_password" class="ag-input" placeholder="Ingresa tu contraseña actual de usuario" required style="width: 100%; border-color: rgba(220,38,38,0.4);">
+                </div>
+
+                <button type="submit" class="ag-btn-danger-flat" style="justify-content: center; padding: 11px !important;">
+                    <i class="ph-bold ph-key"></i> Configurar Cuenta Break-Glass
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<!-- ==========================================
+     PESTAÑA 3: VENTANA DE MANTENIMIENTO PROGRAMADO
      ========================================== -->
 <div id="tab-mantenimiento" class="ag-tab-pane">
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">

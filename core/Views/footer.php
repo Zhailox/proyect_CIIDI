@@ -34,7 +34,7 @@
         <li><a href="#"><i class="ph-fill ph-youtube-logo"></i> @upttmbi</a></li>
       </ul>
       
-      <p class="footer-text" style="margin-top: 1.5rem; font-style: italic; font-weight: bold; color: var(--text-white);">
+      <p class="footer-text" style="margin-top: 1.5rem; font-style: italic; font-weight: bold; color: var(--color-secundario);">
         "Somos Excelencia Académica para Construir Patria..."
       </p>
     </div>

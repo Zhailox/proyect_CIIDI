@@ -7,6 +7,8 @@ $rolNombre     = $usuarioActivo ? ($usuarioActivo['rol'] ?? '') : '';
 
 // Es SuperAdmin si nivel es 0 O si el nombre del rol contiene "admin" o "super"
 $esAdminTotal  = ($nivelUsuario === 0) || (stripos($rolNombre, 'admin') !== false) || (stripos($rolNombre, 'super') !== false);
+$menu_dinamico = $menu_dinamico ?? [];
+$ruta          = $ruta ?? '';
 ?>
 <aside class="sidebar">
   <h2 class="sidebar-title">Navegación Global</h2>
