@@ -94,7 +94,7 @@ class CursosModule implements ModuleContract {
                 'icono'       => 'ph-fill ph-graduation-cap',
                 'enlace'      => 'cursos',
                 'activadores' => ['cursos', 'cursos-crear', 'cursos-editar', 'cursos-config'],
-                'privilegio_minimo' => 5,
+                'privilegio_minimo' => 999,
                 'subitems'    => [
                     ['ruta' => 'cursos',        'titulo' => 'Oferta Formativa'],
                     ['ruta' => 'cursos-crear',  'titulo' => 'Registrar Curso', 'privilegio_minimo' => 2],

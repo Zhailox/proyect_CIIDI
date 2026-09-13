@@ -47,7 +47,7 @@ class ArticulosController {
     }
 
     public function gestor() {
-        Auth::requierePrivilegioMinimo(2);
+        Auth::requierePrivilegioMinimo(2, 'auditar', 'Articulos');
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         $filtros = [
@@ -66,8 +66,8 @@ class ArticulosController {
         ];
     }
     public function nuevo() {
-        // Candado: Solo administradores o bibliotecarios
-        Auth::requierePrivilegioMinimo(2);
+        // Candado: Solo administradores o bibliotecarios con permiso crear
+        Auth::requierePrivilegioMinimo(2, 'crear', 'Articulos');
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
@@ -83,7 +83,7 @@ class ArticulosController {
         ];
     }
     public function procesar() {
-        Auth::requierePrivilegioMinimo(2);
+        Auth::requierePrivilegioMinimo(2, 'crear', 'Articulos');
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
             $_SESSION['mensaje_error'] = "Petición rechazada por seguridad (Token CSRF inválido o expirado).";
@@ -257,7 +257,7 @@ class ArticulosController {
         }
     }
     public function eliminar() {
-        Auth::requierePrivilegioMinimo(2);
+        Auth::requierePrivilegioMinimo(2, 'eliminar', 'Articulos');
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
             $_SESSION['mensaje_error'] = "Petición rechazada por seguridad (Token CSRF inválido o expirado).";
@@ -287,7 +287,7 @@ class ArticulosController {
         exit;
     }
     public function editar() {
-        Auth::requierePrivilegioMinimo(2);
+        Auth::requierePrivilegioMinimo(2, 'editar', 'Articulos');
         if (session_status() === PHP_SESSION_NONE) session_start();
             if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
@@ -314,7 +314,7 @@ class ArticulosController {
     }
 
     public function actualizar() {
-        Auth::requierePrivilegioMinimo(2);
+        Auth::requierePrivilegioMinimo(2, 'editar', 'Articulos');
         if (session_status() === PHP_SESSION_NONE) session_start();
             if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
                 $_SESSION['mensaje_error'] = "Petición rechazada por seguridad (Token CSRF inválido o expirado).";
