@@ -13,8 +13,17 @@ class ConfigService {
             $default = [
                 "paginacion" => ["logs" => 50, "usuarios" => 15, "docentes" => 15],
                 "seguridad" => ["timeout_minutos" => 120, "intentos_login" => 5],
-                "smtp" => ["host" => "", "port" => 587, "user" => "sistema@universidad.edu", "pass" => "", "from_email" => "sistema@universidad.edu"]
-            ];
+                "smtp" => ["host" => "", "port" => 587, "user" => "sistema@universidad.edu", "pass" => "", "from_email" => "sistema@universidad.edu"],
+                "accesos_modulos" => [
+                    "cursos" => ["publico" => 999, "admin" => 2],
+                    "articulos" => ["publico" => 999, "admin" => 1],
+                    "pst" => ["publico" => 999, "admin" => 2],
+                    "lineas" => ["publico" => 999, "admin" => 1],
+                    "investigacion" => ["publico" => 999, "admin" => 1],
+                    "superadmin" => ["admin" => 0],
+                    "autenticacion" => ["publico" => 999, "admin" => 0]
+                ]
+                ];
             file_put_contents(self::$configPath, json_encode($default, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
         }
         return self::$configPath;

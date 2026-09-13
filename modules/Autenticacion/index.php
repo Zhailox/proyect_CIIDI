@@ -37,6 +37,11 @@ public function getRutas(): array {
                 'controlador'      => 'LoginController',
                 'metodo'           => 'cerrarSesion'
             ],
+            'logout' => [
+                'controlador_path' => __DIR__ . '/controllers/LoginController.php',
+                'controlador'      => 'LoginController',
+                'metodo'           => 'cerrarSesion'
+            ],
             // Pantalla del Dashboard (Protegida)
             'perfil' => [
                 'controlador_path' => __DIR__ . '/controllers/PerfilController.php',

@@ -39,6 +39,16 @@ class ConfiguracionController {
             $config['smtp']['port'] = (int)($_POST['smtp_port'] ?? 587);
             $config['smtp']['user'] = trim($_POST['smtp_user'] ?? '');
             $config['smtp']['from_email'] = trim($_POST['smtp_from'] ?? '');
+            $modulosEstandar = ['cursos', 'articulos', 'pst', 'lineas', 'investigacion'];
+            foreach ($modulosEstandar as $mod) {
+                $config['accesos_modulos'][$mod]['publico'] = (int)($_POST["acceso_{$mod}_publico"] ?? 999);
+                $config['accesos_modulos'][$mod]['admin']   = (int)($_POST["acceso_{$mod}_admin"] ?? 0);
+            }
+            
+            // Módulos con accesos únicos
+            $config['accesos_modulos']['superadmin']['admin'] = (int)($_POST['acceso_superadmin_admin'] ?? 0);
+            $config['accesos_modulos']['autenticacion']['publico'] = (int)($_POST['acceso_autenticacion_publico'] ?? 999);
+            $config['accesos_modulos']['autenticacion']['admin'] = (int)($_POST['acceso_autenticacion_admin'] ?? 0);
             
             // Solo actualizamos la contraseña si se escribió una nueva
             if (!empty($_POST['smtp_pass'])) {

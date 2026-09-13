@@ -306,6 +306,16 @@ class SuperAdminModule implements ModuleContract {
                 'titulo'           => 'Configuración Global - SuperAdmin',
                 'css'              => ['SuperAdmin.css', 'gestor.css']
             ],
+            'guardar-configuracion-bd' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'guardarConfiguracionBD'
+            ],
+            'guardar-cuenta-emergencia' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'guardarCuentaEmergencia'
+            ],
             'guardar-configuracion-sistema' => [
                 'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
                 'controlador'      => 'ConfiguracionController',

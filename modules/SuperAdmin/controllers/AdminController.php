@@ -9,17 +9,20 @@ class AdminController {
     
     private $dashboardModel;
 
-    public function __construct() {
-        $this->dashboardModel = new AdminDashboardModel();
+    private function getDashboardModel() {
+        if ($this->dashboardModel === null) {
+            $this->dashboardModel = new AdminDashboardModel();
+        }
+        return $this->dashboardModel;
     }
 
     public function mostrarPanelAdministrativo() {
         Auth::requierePrivilegioMinimo(0);
         try {
-            $datosGraficas = $this->dashboardModel->obtenerEstadisticas();
-            $listaTablas = $this->dashboardModel->obtenerTablasSistema();
-            $telemetria = $this->dashboardModel->obtenerTelemetriaServidor();
-            $ultimosLogs = $this->dashboardModel->obtenerUltimasAccionesAudit(5);
+            $datosGraficas = $this->getDashboardModel()->obtenerEstadisticas();
+            $listaTablas = $this->getDashboardModel()->obtenerTablasSistema();
+            $telemetria = $this->getDashboardModel()->obtenerTelemetriaServidor();
+            $ultimosLogs = $this->getDashboardModel()->obtenerUltimasAccionesAudit(5);
             
             return [
                 'stats' => $datosGraficas,
@@ -182,19 +185,29 @@ class AdminController {
 
     public function mostrarMantenimiento() {
         Auth::requierePrivilegioMinimo(0);
+        $dbCreds = Connection::getCredentials();
+        $emergFile = defined('STORAGE_PATH') ? STORAGE_PATH . 'emergency_admin.json' : __DIR__ . '/../../../storage/emergency_admin.json';
+        $emergData = file_exists($emergFile) ? (json_decode(file_get_contents($emergFile), true) ?: []) : [];
+
+        $listaTablas = [];
+        $metricasTablas = [];
+        $consultasActivas = [];
+
         try {
-            $listaTablas = $this->dashboardModel->obtenerTablasSistema();
-            $metricasTablas = $this->dashboardModel->obtenerMetricasTablas();
-            $consultasActivas = $this->dashboardModel->obtenerConsultasActivas();
-            return [
-                'tablas' => $listaTablas,
-                'metricas_tablas' => $metricasTablas,
-                'consultas_activas' => $consultasActivas
-            ];
+            $listaTablas = $this->getDashboardModel()->obtenerTablasSistema();
+            $metricasTablas = $this->getDashboardModel()->obtenerMetricasTablas();
+            $consultasActivas = $this->getDashboardModel()->obtenerConsultasActivas();
         } catch (Throwable $e) {
-            AuditLogger::registrar('CRITICAL', 'SuperAdmin', 'Error Mantenimiento View', $e->getMessage());
-            return ['tablas' => [], 'metricas_tablas' => [], 'consultas_activas' => []];
+            // Si la BD está caída, continuamos sin romper el renderizado de la vista de mantenimiento
         }
+
+        return [
+            'tablas' => $listaTablas,
+            'metricas_tablas' => $metricasTablas,
+            'consultas_activas' => $consultasActivas,
+            'db_creds' => $dbCreds,
+            'emergency_data' => $emergData
+        ];
     }
 
     public function optimizarBaseDatos() {
@@ -656,6 +669,125 @@ class AdminController {
             $_SESSION['mensaje_admin_error'] = "Error inesperado al restaurar: " . $e->getMessage();
         }
 
+        header("Location: gestor-mantenimiento");
+        exit;
+    }
+
+    /**
+     * Actualiza la configuración de la base de datos previa verificación de la contraseña del SuperAdmin.
+     */
+    public function guardarConfiguracionBD() {
+        Auth::requierePrivilegioMinimo(0);
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $host = trim($_POST['host'] ?? 'localhost');
+                $port = trim($_POST['port'] ?? '5432');
+                $db   = trim($_POST['db'] ?? 'ciidi');
+                $user = trim($_POST['user'] ?? 'miki');
+                $pass = $_POST['pass'] ?? '';
+                $adminPass = $_POST['admin_confirm_password'] ?? '';
+
+                // Verificar si estamos en modo emergencia (sin BD disponible) o usuario normal
+                $modoEmergencia = $_SESSION['modo_emergencia'] ?? false;
+
+                if (!$modoEmergencia) {
+                    $usuarioId = $_SESSION['usuario_id'] ?? null;
+                    if (!$usuarioId) {
+                        $_SESSION['mensaje_admin_error'] = "Sesión no válida.";
+                        header("Location: gestor-mantenimiento");
+                        exit;
+                    }
+
+                    $dbConn = Connection::getInstance();
+                    $stmt = $dbConn->prepare("SELECT contrasena FROM usuarios WHERE id = :id LIMIT 1");
+                    $stmt->execute(['id' => $usuarioId]);
+                    $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                    if (!$userData || !password_verify($adminPass, $userData['contrasena'])) {
+                        $_SESSION['mensaje_admin_error'] = "Re-autenticación fallida: La contraseña actual del SuperAdmin es incorrecta.";
+                        header("Location: gestor-mantenimiento");
+                        exit;
+                    }
+                }
+
+                // Guardar la nueva configuración
+                if (Connection::saveCredentials($host, $port, $db, $user, $pass)) {
+                    AuditLogger::registrar('WARNING', 'SuperAdmin', 'Modificar Configuración BD', "Parámetros de conexión BD actualizados. Host: {$host}, BD: {$db}, User: {$user}");
+                    $_SESSION['mensaje_admin_exito'] = "Configuración de la Base de Datos actualizada y guardada exitosamente.";
+                } else {
+                    $_SESSION['mensaje_admin_error'] = "No se pudieron guardar las credenciales en el archivo de configuración.";
+                }
+            } catch (Throwable $e) {
+                $_SESSION['mensaje_admin_error'] = "Error al procesar el cambio de configuración de BD: " . $e->getMessage();
+            }
+        }
+        header("Location: gestor-mantenimiento");
+        exit;
+    }
+
+    /**
+     * Crea o actualiza las credenciales de la cuenta de emergencia local (Break-Glass Account).
+     */
+    public function guardarCuentaEmergencia() {
+        Auth::requierePrivilegioMinimo(0);
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $usuario = trim($_POST['emergency_user'] ?? '');
+            $pass = $_POST['emergency_pass'] ?? '';
+            $passConfirm = $_POST['emergency_pass_confirm'] ?? '';
+            $adminPass = $_POST['admin_confirm_password'] ?? '';
+
+            if (empty($usuario) || empty($pass)) {
+                $_SESSION['mensaje_admin_error'] = "El usuario y la contraseña de emergencia son obligatorios.";
+                header("Location: gestor-mantenimiento");
+                exit;
+            }
+
+            if ($pass !== $passConfirm) {
+                $_SESSION['mensaje_admin_error'] = "Las contraseñas de emergencia no coinciden.";
+                header("Location: gestor-mantenimiento");
+                exit;
+            }
+
+            // Verificar contraseña del SuperAdmin logueado
+            $usuarioId = $_SESSION['usuario_id'] ?? null;
+            try {
+                $dbConn = Connection::getInstance();
+                $stmt = $dbConn->prepare("SELECT contrasena FROM usuarios WHERE id = :id LIMIT 1");
+                $stmt->execute(['id' => $usuarioId]);
+                $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if (!$userData || !password_verify($adminPass, $userData['contrasena'])) {
+                    $_SESSION['mensaje_admin_error'] = "Re-autenticación fallida: La contraseña actual del SuperAdmin es incorrecta.";
+                    header("Location: gestor-mantenimiento");
+                    exit;
+                }
+
+                $emergFile = defined('STORAGE_PATH') ? STORAGE_PATH . 'emergency_admin.json' : __DIR__ . '/../../../storage/emergency_admin.json';
+                $emergData = [
+                    'usuario' => $usuario,
+                    'hash_contrasena' => password_hash($pass, PASSWORD_BCRYPT),
+                    'activo' => true,
+                    'actualizado_por' => $_SESSION['nombre_usuario'] ?? 'SuperAdmin',
+                    'actualizado_el' => date('Y-m-d H:i:s')
+                ];
+
+                $dir = dirname($emergFile);
+                if (!is_dir($dir)) mkdir($dir, 0777, true);
+
+                if (file_put_contents($emergFile, json_encode($emergData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) !== false) {
+                    AuditLogger::registrar('WARNING', 'SuperAdmin', 'Configurar Cuenta Emergencia', "Cuenta local Break-Glass configurada para usuario: {$usuario}");
+                    $_SESSION['mensaje_admin_exito'] = "Cuenta de Emergencia local (Break-Glass Account) guardada correctamente.";
+                } else {
+                    $_SESSION['mensaje_admin_error'] = "Error al guardar el archivo de la cuenta de emergencia.";
+                }
+            } catch (Throwable $e) {
+                $_SESSION['mensaje_admin_error'] = "Error al configurar cuenta de emergencia: " . $e->getMessage();
+            }
+        }
         header("Location: gestor-mantenimiento");
         exit;
     }

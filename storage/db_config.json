@@ -1,0 +1,8 @@
+{
+    "host": "localhost",
+    "port": "5432",
+    "db": "ciidi",
+    "user": "miki",
+    "pass": "1234",
+    "updated_at": "2026-09-13 03:59:20"
+}
