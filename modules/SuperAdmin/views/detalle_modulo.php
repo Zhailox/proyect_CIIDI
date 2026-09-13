@@ -558,6 +558,27 @@ function toggleModuloAjaxDM(moduloId, inputEl) {
                 badge.innerHTML = `<i class="ph-bold ${iconClass}"></i> ${nuevoEstado.toUpperCase()}`;
                 badge.className = `badge-status-${moduloId} ${nuevoEstado === 'online' ? 'ag-badge-online' : 'ag-badge-offline'}`;
             }
+
+            // Actualización dinámica del menú lateral (Sidebar)
+            if (Array.isArray(data.rutas)) {
+                data.rutas.forEach(ruta => {
+                    const navItems = document.querySelectorAll(`a[href="${ruta}"]`);
+                    navItems.forEach(link => {
+                        const parentNav = link.closest('.nav-item, .sub-nav-item, .nav-parent');
+                        if (parentNav) {
+                            if (nuevoEstado === 'offline') {
+                                parentNav.style.transition = 'all 0.3s ease';
+                                parentNav.style.opacity = '0';
+                                setTimeout(() => { parentNav.style.display = 'none'; }, 300);
+                            } else {
+                                parentNav.style.display = '';
+                                parentNav.style.opacity = '1';
+                            }
+                        }
+                    });
+                });
+            }
+
             showSAToast(data.message, 'success');
         } else {
             inputEl.checked = !inputEl.checked;

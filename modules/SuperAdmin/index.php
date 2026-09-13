@@ -274,6 +274,11 @@ class SuperAdminModule implements ModuleContract {
                 'controlador'      => 'SchedulerController',
                 'metodo'           => 'eliminarTarea'
             ],
+            'ver-log-tarea' => [
+                'controlador_path' => __DIR__ . '/controllers/SchedulerController.php',
+                'controlador'      => 'SchedulerController',
+                'metodo'           => 'verLog'
+            ],
             // Rutas para WAF & Monitor de Seguridad
             'visor-seguridad' => [
                 'controlador_path' => __DIR__ . '/controllers/SecurityMonitorController.php',
