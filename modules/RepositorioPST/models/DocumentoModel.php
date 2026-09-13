@@ -131,7 +131,11 @@ class DocumentoModel {
             $execParams[] = (int)$filtros['anio'];
         }
         
-        $sql .= " ORDER BY r.id DESC LIMIT ? OFFSET ?";
+        if (!empty($filtros['orden']) && $filtros['orden'] === 'asc') {
+            $sql .= " ORDER BY r.anio_publicacion ASC, r.id ASC LIMIT ? OFFSET ?";
+        } else {
+            $sql .= " ORDER BY r.anio_publicacion DESC, r.id DESC LIMIT ? OFFSET ?";
+        }
         
         $execParams[] = $limit;
         $execParams[] = $offset;
@@ -470,19 +474,22 @@ class DocumentoModel {
 
     public function getPSTCountByLinea(): array {
         $db = Connection::getInstance();
-        $sql = "SELECT COALESCE(li.nombre, 'General') AS linea_nombre, COUNT(DISTINCT r.id) AS total
-                FROM public.recursos r
-                LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
-                LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
-                WHERE r.id_tipo_recurso = 1
-                GROUP BY li.nombre
-                ORDER BY total DESC";
+        $sql = "SELECT li.id, li.nombre, li.descripcion, COUNT(DISTINCT r.id) AS total
+                FROM public.lineas_investigacion li
+                LEFT JOIN public.recurso_clasificaciones rc ON li.id = rc.id_linea_investigacion
+                LEFT JOIN public.recursos r ON rc.id_recurso = r.id AND r.id_tipo_recurso = 1
+                GROUP BY li.id, li.nombre, li.descripcion
+                ORDER BY li.id ASC";
         $stmt = $db->query($sql);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $res = [];
         foreach ($rows as $r) {
-            $nombre = $this->cleanCP850($r['linea_nombre']);
-            $res[$nombre] = (int)$r['total'];
+            $res[] = [
+                'id'          => (int)$r['id'],
+                'nombre'      => $this->cleanCP850($r['nombre']),
+                'descripcion' => $this->cleanCP850($r['descripcion'] ?? ''),
+                'total'       => (int)$r['total']
+            ];
         }
         return $res;
     }
@@ -499,10 +506,18 @@ class DocumentoModel {
                 ORDER BY total DESC";
         $stmt = $db->query($sql);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        $res = [];
+        
+        $res = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
+        $romanMap = ['I' => 1, 'II' => 2, 'III' => 3, 'IV' => 4, '1' => 1, '2' => 2, '3' => 3, '4' => 4];
+
         foreach ($rows as $r) {
-            $nombre = $this->cleanCP850($r['trayecto']);
-            $res[$nombre] = (int)$r['total'];
+            $val = trim($this->cleanCP850($r['trayecto']));
+            $cleanVal = strtoupper(str_replace(['Trayecto', 'TRAYECTO', ' '], '', $val));
+            if (isset($romanMap[$cleanVal])) {
+                $res[$romanMap[$cleanVal]] += (int)$r['total'];
+            } elseif (is_numeric($cleanVal) && isset($res[(int)$cleanVal])) {
+                $res[(int)$cleanVal] += (int)$r['total'];
+            }
         }
         return $res;
     }
@@ -896,6 +911,11 @@ class DocumentoModel {
     public function eliminarPST(int $id): bool {
         $db = Connection::getInstance();
         try {
+            // Obtener el archivo adjunto para borrarlo físicamente
+            $stmtFile = $db->prepare("SELECT archivo_pdf FROM public.recursos WHERE id = ?");
+            $stmtFile->execute([$id]);
+            $archivoPath = $stmtFile->fetchColumn();
+
             $db->beginTransaction();
             
             $stmt = $db->prepare("DELETE FROM public.proyecto_tutores WHERE id_recurso = ?");
@@ -914,9 +934,20 @@ class DocumentoModel {
             $stmt->execute([$id]);
             
             $db->commit();
+
+            // Limpieza del archivo físico en el servidor
+            if (!empty($archivoPath)) {
+                $fullPath = ROOT_PATH . '/' . ltrim($archivoPath, '/\\');
+                if (file_exists($fullPath) && is_file($fullPath)) {
+                    @unlink($fullPath);
+                }
+            }
+
             return true;
         } catch (Exception $e) {
-            $db->rollBack();
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
             error_log("Error al eliminar PST: " . $e->getMessage());
             throw $e;
         }

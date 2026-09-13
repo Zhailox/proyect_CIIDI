@@ -56,6 +56,9 @@ class ConfiguracionController {
                 }
 
                 // 2. Paginación
+                if (isset($_POST['modo_carga'])) {
+                    $actual['paginacion']['modo_carga'] = trim($_POST['modo_carga']);
+                }
                 if (isset($_POST['limite_catalogo'])) {
                     $actual['paginacion']['limite_catalogo'] = max(1, (int)$_POST['limite_catalogo']);
                 }

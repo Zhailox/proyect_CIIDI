@@ -10,14 +10,23 @@ class RepositorioPSTModule implements ModuleContract {
 
     public function getRutas(): array {
         return [
+            'inicio-pst' => [
+                'vista'  => __DIR__ . '/views/inicio_repositorio.php',
+                'controlador' => 'InicioRepositorioController',
+                'controlador_path' => __DIR__ . '/controllers/InicioRepositorioController.php',
+                'metodo' => 'index',
+                'titulo' => 'Inicio Repositorio PST',
+                'css'    => ['RepositorioPST.css']
+            ],
             'repositorio' => [
-                'vista'  => __DIR__ . '/views/detalle_pst.php',
-                'controlador' => 'DetallePSTController',
-                'controlador_path' => __DIR__ . '/controllers/DetallePSTController.php',
+                'vista'  => __DIR__ . '/views/inicio_repositorio.php',
+                'controlador' => 'InicioRepositorioController',
+                'controlador_path' => __DIR__ . '/controllers/InicioRepositorioController.php',
                 'metodo' => 'index',
                 'titulo' => 'Explorar Repositorio',
                 'css'    => ['RepositorioPST.css']
             ],
+
             'agregar-documento' => [
                 'vista'  => __DIR__ . '/views/admin_subida_pst.php',
                 'controlador' => 'DetallePSTController',

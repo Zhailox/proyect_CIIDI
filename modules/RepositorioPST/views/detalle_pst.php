@@ -316,7 +316,7 @@
         draw() {
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(112, 144, 203, 0.7)';
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.85)'; // Nodos azul claro brillante
             ctx.fill();
         }
     }
@@ -339,8 +339,8 @@
                     ctx.beginPath();
                     ctx.moveTo(particles[i].x, particles[i].y);
                     ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.strokeStyle = `rgba(112, 144, 203, ${1 - dist / 110})`;
-                    ctx.lineWidth = 0.6;
+                    ctx.strokeStyle = `rgba(56, 189, 248, ${0.45 * (1 - dist / 110)})`;
+                    ctx.lineWidth = 0.8;
                     ctx.stroke();
                 }
             }

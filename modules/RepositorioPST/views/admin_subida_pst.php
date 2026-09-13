@@ -416,7 +416,12 @@ if (typeof window.mammoth === 'undefined') {
                                                      <i class="ph ph-pencil-simple"></i> Editar
                                                  </a>
 
-                                                 <?php if ($nivelUsuario >= 2): ?>
+                                                 <?php 
+                                                 $rolNombreSession = strtolower($_SESSION['rol_nombre'] ?? '');
+                                                 $esAdmin = ($rolNombreSession === 'administrador' || $rolNombreSession === 'superadmin' || $rolNombreSession === 'admin');
+                                                 $puedeEliminar = ($nivelUsuario === 0) || ($nivelUsuario >= 2) || $esAdmin;
+                                                 if ($puedeEliminar): 
+                                                 ?>
                                                      <a href="javascript:void(0)" class="btn-action-delete" title="Eliminar Registro Definitivo" onclick="confirmarEliminacionModal('?ruta=agregar-documento&accion=eliminar&id=<?= $doc['id'] ?>')">
                                                          <i class="ph ph-trash"></i> Eliminar
                                                      </a>

@@ -1,5 +1,65 @@
 [
     {
+        "id": "log_6aa63e3c4909f",
+        "fecha_hora": "2026-09-13 06:10:04",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Inicio de Sesión Exitoso",
+        "detalles": "El usuario Miguel González (Super Administrador) ha iniciado sesión.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "de556bd4a2dde78acec40b7fb348483fe411686a74eca832dfb75370d4ea4a54",
+        "hash_integridad": "d1d832f142b89a2b7414e61519964f72cd019fc7f68372470260ea4b028b1889"
+    },
+    {
+        "id": "log_6aa63e3594675",
+        "fecha_hora": "2026-09-13 06:09:57",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Cierre de Sesión",
+        "detalles": "El usuario Miguel González ha cerrado su sesión.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "f5956d0bbdb3e36f2dd9d0c8ecd629eac81ed496a7a84a6fc8b348def079373d",
+        "hash_integridad": "de556bd4a2dde78acec40b7fb348483fe411686a74eca832dfb75370d4ea4a54"
+    },
+    {
+        "id": "log_6aa63d630ad90",
+        "fecha_hora": "2026-09-13 06:06:27",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Inicio de Sesión Exitoso",
+        "detalles": "El usuario Miguel González (Super Administrador) ha iniciado sesión.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "7e543c736912a33fba185a29038756b7154998434c702abcb640984c6d2a4b37",
+        "hash_integridad": "f5956d0bbdb3e36f2dd9d0c8ecd629eac81ed496a7a84a6fc8b348def079373d"
+    },
+    {
+        "id": "log_6aa63d14882da",
+        "fecha_hora": "2026-09-13 06:05:08",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Inicio de Sesión Exitoso",
+        "detalles": "El usuario Miguel González (Super Administrador) ha iniciado sesión.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "044c1137684fab29a7135815b5b7c4a7996c5fd07733ea32141d54c9ddc5468d",
+        "hash_integridad": "7e543c736912a33fba185a29038756b7154998434c702abcb640984c6d2a4b37"
+    },
+    {
+        "id": "log_6aa63d03d0e69",
+        "fecha_hora": "2026-09-13 06:04:51",
+        "nivel": "INFO",
+        "modulo": "Autenticacion",
+        "accion": "Cierre de Sesión",
+        "detalles": "El usuario Miguel González ha cerrado su sesión.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "ce92c1537a01f7bacab05e64d6311ebb87cf4ba6de273c08eb62b4f7722472c6",
+        "hash_integridad": "044c1137684fab29a7135815b5b7c4a7996c5fd07733ea32141d54c9ddc5468d"
+    },
+    {
         "id": "log_6aa631302a4a8",
         "fecha_hora": "2026-09-13 05:14:24",
         "nivel": "WARNING",

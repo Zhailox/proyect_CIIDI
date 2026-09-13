@@ -306,7 +306,7 @@ require_once __DIR__ . '/../services/ConfigService.php';
         draw() {
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(0, 102, 255, 0.85)'; // Nodos azul brillante e intenso
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.85)'; // Nodos azul claro brillante
             ctx.fill();
         }
     }
@@ -331,8 +331,8 @@ require_once __DIR__ . '/../services/ConfigService.php';
                     ctx.beginPath();
                     ctx.moveTo(particles[i].x, particles[i].y);
                     ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.strokeStyle = `rgba(0, 102, 255, ${0.55 * (1 - dist / 185)})`;
-                    ctx.lineWidth = 1.8;
+                    ctx.strokeStyle = `rgba(56, 189, 248, ${0.45 * (1 - dist / 185)})`;
+                    ctx.lineWidth = 1.2;
                     ctx.stroke();
                 }
             }
