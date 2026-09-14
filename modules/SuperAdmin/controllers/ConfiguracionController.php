@@ -39,12 +39,22 @@ class ConfiguracionController {
             $config['smtp']['port'] = (int)($_POST['smtp_port'] ?? 587);
             $config['smtp']['user'] = trim($_POST['smtp_user'] ?? '');
             $config['smtp']['from_email'] = trim($_POST['smtp_from'] ?? '');
-            $modulosEstandar = ['cursos', 'articulos', 'pst', 'lineas', 'investigacion', 'autenticacion', 'vinculacion_empresarial'];
-            foreach ($modulosEstandar as $mod) {
-                $config['accesos_modulos'][$mod]['publico'] = (int)($_POST["acceso_{$mod}_publico"] ?? 999);
-                $config['accesos_modulos'][$mod]['admin']   = (int)($_POST["acceso_{$mod}_admin"] ?? 0);
-            }
             
+            // Accesos Dinámicos
+            if (isset($_POST['accesos']) && is_array($_POST['accesos'])) {
+                foreach ($_POST['accesos'] as $slug => $niveles) {
+                    if ($slug === 'superadmin' || $slug === 'super_admin') continue; // Blindaje absoluto
+                    
+                    if ($slug === 'autenticacion') {
+                        // Forzamos desde el backend que jamás supere 998
+                        $config['accesos_modulos'][$slug]['publico'] = min(998, (int)($niveles['publico'] ?? 998));
+                    } else {
+                        // Creación y actualización automática de cualquier otro módulo
+                        $config['accesos_modulos'][$slug]['publico'] = (int)($niveles['publico'] ?? 999);
+                        $config['accesos_modulos'][$slug]['admin'] = (int)($niveles['admin'] ?? 1);
+                    }
+                }
+            }
             
             // Solo actualizamos la contraseña si se escribió una nueva
             if (!empty($_POST['smtp_pass'])) {

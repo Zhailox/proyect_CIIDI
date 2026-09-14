@@ -9,8 +9,8 @@ class DetallePSTController {
     private int $nivelPublico;
     
     public function __construct() {
-        $this->nivelAdmin   = SystemConfigService::get('accesos_modulos.pst.admin', 1);
-        $this->nivelPublico = SystemConfigService::get('accesos_modulos.pst.publico', 10);
+        $this->nivelAdmin   = SystemConfigService::get('accesos_modulos.repositorio_pst.admin', 1);
+        $this->nivelPublico = SystemConfigService::get('accesos_modulos.repositorio_pst.publico', 10);
     }
     public function index(): array {
         $model = new DocumentoModel();
@@ -170,9 +170,8 @@ class DetallePSTController {
                 die("Proyecto no encontrado en el sistema.");
             }
 
-            if (isset($doc['activo']) && !$doc['activo'] && (int)($_SESSION['nivel_privilegio'] ?? 999) < 0) {
-                http_response_code(403);
-                die("Acceso denegado: Este proyecto se encuentra desactivado o no disponible.");
+            if (isset($doc['activo']) && !$doc['activo']) {
+                Auth::requierePrivilegioMinimo($this->nivelAdmin);
             }
             
             $dbPath = !empty($doc['archivo_pdf']) ? $doc['archivo_pdf'] : '';
@@ -286,7 +285,7 @@ class DetallePSTController {
 
         // Si es petición AJAX, responder con JSON si no se tienen permisos en lugar de 302 redirect
         if (in_array($accion, ['extraer', 'crear_ajax', 'simular_extraccion'])) {
-            if (!Auth::requierePrivilegioMinimo($this->$nivelAdmin, 'crear', 'RepositorioPST')) {
+            if (!Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'RepositorioPST')) {
                 header('Content-Type: application/json; charset=utf-8');
                 echo json_encode([
                     'status' => 'error',
@@ -309,6 +308,9 @@ class DetallePSTController {
         } else {
             Auth::requierePrivilegioMinimo($this->nivelAdmin);
         }
+        if ($accion === 'crear') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'RepositorioPST');
+        if ($accion === 'editar') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'RepositorioPST');
+        if ($accion === 'eliminar') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'RepositorioPST');
 
         $model = new DocumentoModel();
         

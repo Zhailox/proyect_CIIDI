@@ -1,6 +1,4 @@
 <?php
-
-
 class SystemConfigService {
     private static ?string $configPath = null;
 
@@ -8,23 +6,32 @@ class SystemConfigService {
         if (self::$configPath === null) {
             self::$configPath = __DIR__ . '/../../../storage/system_config.json';
         }
-        // Si no existe, creamos uno por defecto
+        
         if (!file_exists(self::$configPath)) {
+            $modulosDir = realpath(__DIR__ . '/../../'); // Carpeta base de modulos/
+            $accesosDinamicos = [
+                "superadmin" => ["admin" => 0],
+                "autenticacion" => ["publico" => 998, "admin" => 0]
+            ];
+
+            if ($modulosDir && is_dir($modulosDir)) {
+                foreach (array_diff(scandir($modulosDir), ['.', '..']) as $carpeta) {
+                    if (is_dir($modulosDir . '/' . $carpeta)) {
+                        // Convierte "RepositorioPST" a "repositorio_p_s_t" o "Cursos" a "cursos"
+                        $slug = strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $carpeta));
+                        if (!isset($accesosDinamicos[$slug])) {
+                            $accesosDinamicos[$slug] = ["publico" => 999, "admin" => 1];
+                        }
+                    }
+                }
+            }
+
             $default = [
                 "paginacion" => ["logs" => 50, "usuarios" => 15, "docentes" => 15],
                 "seguridad" => ["timeout_minutos" => 120, "intentos_login" => 5],
                 "smtp" => ["host" => "", "port" => 587, "user" => "sistema@universidad.edu", "pass" => "", "from_email" => "sistema@universidad.edu"],
-                "accesos_modulos" => [
-                "cursos" => ["publico" => 999, "admin" => 2],
-                "articulos" => ["publico" => 999, "admin" => 1],
-                "pst" => ["publico" => 999, "admin" => 2],
-                "lineas" => ["publico" => 999, "admin" => 1],
-                "investigacion" => ["publico" => 999, "admin" => 1],
-                "vinculacion_empresarial" => ["publico" => 999, "admin" => 1],
-                "superadmin" => ["admin" => 0],
-                "autenticacion" => ["publico" => 999, "admin" => 0]
-            ]
-                ];
+                "accesos_modulos" => $accesosDinamicos
+            ];
             file_put_contents(self::$configPath, json_encode($default, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
         }
         return self::$configPath;

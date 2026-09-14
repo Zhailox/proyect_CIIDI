@@ -1,43 +1,5 @@
-[
-    {
-        "Articulos": {
-            "crear": true,
-            "editar": true,
-            "eliminar": true,
-            "auditar": true
-        },
-        "Cursos": {
-            "crear": true,
-            "editar": true,
-            "eliminar": true,
-            "auditar": true
-        },
-        "Investigaciones": {
-            "crear": true,
-            "editar": true,
-            "eliminar": true,
-            "auditar": true
-        },
-        "LineasInvestigacion": {
-            "crear": true,
-            "editar": true,
-            "eliminar": true,
-            "auditar": true
-        },
-        "RepositorioPST": {
-            "crear": true,
-            "editar": true,
-            "eliminar": true,
-            "auditar": true
-        },
-        "VinculacionEmpresarial": {
-            "crear": true,
-            "editar": true,
-            "eliminar": true,
-            "auditar": true
-        }
-    },
-    {
+{
+    "1": {
         "Articulos": {
             "crear": true,
             "editar": true,
@@ -48,13 +10,13 @@
             "crear": false,
             "editar": false,
             "eliminar": false,
-            "auditar": false
+            "auditar": true
         },
         "Investigaciones": {
             "crear": true,
             "editar": true,
             "eliminar": true,
-            "auditar": false
+            "auditar": true
         },
         "LineasInvestigacion": {
             "crear": false,
@@ -75,7 +37,7 @@
             "auditar": false
         }
     },
-    {
+    "2": {
         "Articulos": {
             "crear": false,
             "editar": false,
@@ -113,7 +75,7 @@
             "auditar": false
         }
     },
-    {
+    "3": {
         "Articulos": {
             "crear": false,
             "editar": false,
@@ -151,7 +113,7 @@
             "auditar": false
         }
     },
-    {
+    "4": {
         "Articulos": {
             "crear": true,
             "editar": true,
@@ -189,7 +151,7 @@
             "auditar": true
         }
     },
-    {
+    "5": {
         "Articulos": {
             "crear": true,
             "editar": true,
@@ -227,7 +189,7 @@
             "auditar": true
         }
     },
-    {
+    "6": {
         "Articulos": {
             "crear": false,
             "editar": true,
@@ -265,4 +227,4 @@
             "auditar": false
         }
     }
-]
+}

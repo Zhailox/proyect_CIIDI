@@ -141,46 +141,55 @@
                 <i class="ph-bold ph-lock-key" style="color: var(--color-terciario);"></i> Niveles de Privilegio por Módulo
             </h4>
             <p style="font-size: 0.85rem; color: var(--texto-silenciado); margin-bottom: 1.25rem;">
-                Define el nivel numérico mínimo requerido para visualizar (Público) y administrar (Admin) cada sección. Nivel 0 = Máximo Poder, 999 = Acceso Libre.
+                Define el nivel numérico mínimo requerido para visualizar y administrar. Nivel 0 = Máximo Poder.
             </p>
             
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
                 
                 <?php 
-                $modulosUi = [
-                    'cursos' => 'Módulo de Cursos', 
-                    'articulos' => 'Módulo de Artículos', 
-                    'pst' => 'Repositorio PST', 
-                    'lineas' => 'Líneas de Investigación', 
-                    'investigacion' => 'Investigaciones',
-                    'vinculacion_empresarial' => 'Vinculación Empresarial'
-                ];
-                foreach ($modulosUi as $key => $titulo): 
-                    $valPub = $config['accesos_modulos'][$key]['publico'] ?? 999;
-                    $valAdm = $config['accesos_modulos'][$key]['admin'] ?? 0;
+                $rutaModulos = realpath(CORE_PATH . '../modules');
+                $modulosDinamicos = [];
+                
+                if ($rutaModulos && is_dir($rutaModulos)) {
+                    foreach (array_diff(scandir($rutaModulos), ['.', '..']) as $carpeta) {
+                        if (is_dir($rutaModulos . '/' . $carpeta)) {
+                            $slug = strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $carpeta));
+                            if (in_array($slug, ['superadmin', 'super_admin', 'autenticacion', 'core'])) continue;
+                            
+                            // Formatea el nombre separando mayúsculas (Ej. RepositorioPST -> Repositorio PST)
+                           $titulo = trim(preg_replace('/(?<=[a-z])(?=[A-Z])/', ' ', $carpeta));
+                            $modulosDinamicos[$slug] = $titulo;
+                        }
+                    }
+                }
+
+                foreach ($modulosDinamicos as $slug => $titulo): 
+                    $valPub = $config['accesos_modulos'][$slug]['publico'] ?? 999;
+                    $valAdm = $config['accesos_modulos'][$slug]['admin'] ?? 1;
                 ?>
                 <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <h5 style="margin: 0 0 10px 0; color: var(--negro); font-size: 0.9rem;"><i class="ph-bold ph-plugs-connected"></i> <?= $titulo ?></h5>
+                    <h5 style="margin: 0 0 10px 0; color: var(--negro); font-size: 0.9rem;"><i class="ph-bold ph-plugs-connected"></i> Módulo: <?= htmlspecialchars($titulo) ?></h5>
                     <div style="display: flex; gap: 1rem;">
                         <div style="flex: 1;">
                             <label style="font-size: 0.75rem; font-weight: 700; color: var(--texto-silenciado);">Nivel Público (Ver)</label>
-                            <input type="number" name="acceso_<?= $key ?>_publico" value="<?= $valPub ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
+                            <input type="number" name="accesos[<?= $slug ?>][publico]" value="<?= $valPub ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
                         </div>
                         <div style="flex: 1;">
                             <label style="font-size: 0.75rem; font-weight: 700; color: var(--texto-silenciado);">Nivel Admin (Gestionar)</label>
-                            <input type="number" name="acceso_<?= $key ?>_admin" value="<?= $valAdm ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
+                            <input type="number" name="accesos[<?= $slug ?>][admin]" value="<?= $valAdm ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
                         </div>
                     </div>
                 </div>
                 <?php endforeach; ?>
 
-                <!-- Módulos Especiales -->
+                <!-- Módulo Especial Autenticación -->
                 <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
                     <h5 style="margin: 0 0 10px 0; color: #10b981; font-size: 0.9rem;"><i class="ph-bold ph-sign-in"></i> Autenticación</h5>
                     <div style="display: flex; gap: 1rem;">
                         <div style="flex: 1;">
                             <label style="font-size: 0.75rem; font-weight: 700; color: var(--texto-silenciado);">Nivel Login/Registro</label>
-                            <input type="number" max="998" name="acceso_autenticacion_publico" value="<?= $config['accesos_modulos']['autenticacion']['publico'] ?? 999 ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
+                            <!-- Límite estricto establecido a 998 visualmente -->
+                            <input type="number" max="998" name="accesos[autenticacion][publico]" value="<?= $config['accesos_modulos']['autenticacion']['publico'] ?? 998 ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
                         </div>
                     </div>
                 </div>

@@ -1,10 +1,18 @@
 {
     "7": {
-        "url_moodle": "https:\/\/github.com\/Zhailox\/proyect_CIIDI\/commit\/98a39109a8a3a11c5baea85063795fb70e3838ae",
+        "url_moodle": "https:\/\/www.youtube.com\/watch?v=1rXVRH1Ne1Q",
         "url_video_preview": "",
         "modalidad": "Híbrido",
         "nivel": "Avanzado",
-        "duracion": "222",
-        "cupo_maximo": 5
+        "duracion": "123",
+        "cupo_maximo": 123
+    },
+    "8": {
+        "url_moodle": "https:\/\/www.youtube.com\/watch?v=1rXVRH1Ne1Q",
+        "url_video_preview": "",
+        "modalidad": "Virtual",
+        "nivel": "Intermedio",
+        "duracion": "ae",
+        "cupo_maximo": 123
     }
 }

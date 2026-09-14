@@ -38,6 +38,19 @@
         <?php unset($_SESSION['mensaje_gestor_error']); ?>
     </div>
 <?php endif; ?>
+<?php 
+// Identificamos dinámicamente el ID que corresponde al Nivel Dios (0)
+$idPrivilegioCero = null;
+if (isset($privilegios)) {
+    foreach ($privilegios as $p) {
+        if ((int)$p['nivel_privilegio'] === 0) {
+            $idPrivilegioCero = $p['privilegio_id'];
+            break;
+        }
+    }
+}
+?>
+
 
 <!-- NAVEGACIÓN INTERNA EN PESTAÑAS (TABS) PARA SECCIONAR RESPONSABILIDADES -->
 <div class="sa-tabs-header glass-panel mb-2" style="background: #ffffff; padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(80,89,132,0.15);">
@@ -208,11 +221,10 @@
 
         <form action="guardar-matriz-rbac" method="POST">
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-            <!-- Contenedor del Acordeón -->
             <div style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 600px; overflow-y: auto; padding-right: 5px;">
                 
-                <?php foreach ($privilegios as $priv): $nivel = $priv['nivel_privilegio']; ?>
-                    <!-- Se añade flex-shrink: 0 para evitar que se aplasten -->
+                <?php foreach ($privilegios as $priv): $nivel = $priv['nivel_privilegio']; if ($nivel === 0) continue;?>
+
                     <details style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.02); flex-shrink: 0;">
                         <summary style="padding: 12px 16px; font-weight: 800; color: var(--color-secundario); cursor: pointer; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; list-style: none;">
                             <div style="display: flex; align-items: center; gap: 8px;">
@@ -284,7 +296,24 @@
             </button>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
-                <?php foreach ($roles as $rItem): ?>
+                <?php foreach ($roles as $rItem): 
+                    $esRolSupremo = (isset($idPrivilegioCero) && $rItem['privilegio_id'] == $idPrivilegioCero);
+                    if ($esRolSupremo): 
+                ?>
+                <!-- TARJETA INMUTABLE PARA EL ROL SUPREMO -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.85rem 1rem; border-radius: 8px; display: flex; flex-direction: column; gap: 0.6rem;">
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <input type="text" value="<?= htmlspecialchars($rItem['nombre']) ?>" class="sa-filter-input" style="flex: 1; min-width: 0; background: #e2e8f0; cursor: not-allowed; color: #64748b;" readonly title="El rol base no puede ser alterado">
+                            <span style="background: #1e293b; color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 700;">Nivel 0</span>
+                        </div>
+                        <div style="display: flex; margin-top: 0.5rem;">
+                            <button type="button" class="btn" style="width: 100%; background: #cbd5e1; color: #64748b; padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; cursor: not-allowed;" disabled>
+                                <i class="ph-bold ph-lock-key"></i> Rol de Sistema (Inalterable)
+                            </button>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <!-- FORMULARIO NORMAL PARA LOS DEMÁS ROLES -->
                     <form action="actualizar-rol" method="POST" style="background: #ffffff; border: 1px solid rgba(80, 89, 132, 0.2); padding: 0.85rem 1rem; border-radius: 8px; display: flex; flex-direction: column; gap: 0.6rem; box-shadow: 0 2px 8px rgba(18,26,62,0.02);">
                         <input type="hidden" name="rol_id" value="<?= $rItem['id'] ?>">
                         <input type="hidden" name="nombre_anterior" value="<?= htmlspecialchars($rItem['nombre']) ?>">
@@ -294,6 +323,7 @@
                             
                             <select name="privilegio_id" class="sa-filter-input" required title="Cambiar nivel jerárquico">
                                 <?php foreach ($privilegios as $priv): 
+                                    if ((int)$priv['nivel_privilegio'] === 0) continue; // <-- Oculta Nivel 0
                                     $isSelected = (isset($rItem['privilegio_id']) && $rItem['privilegio_id'] == $priv['privilegio_id']) ? 'selected' : '';
                                 ?>
                                     <option value="<?= $priv['privilegio_id'] ?>" <?= $isSelected ?>>Nivel <?= $priv['nivel_privilegio'] ?></option>
@@ -305,7 +335,7 @@
                             <button type="submit" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem; border-color: var(--color-secundario); color: var(--color-secundario) !important; cursor: pointer; flex: 1;">
                                 <i class="ph-bold ph-check"></i> Actualizar
                             </button>
-                            <button type="button" class="btn btn-solid" style="background: rgba(239,68,68,0.1) !important; color: #ef4444 !important; border: 1px solid rgba(239,68,68,0.3); padding: 6px 12px; font-size: 0.8rem; cursor: pointer;" onclick="mostrarConfirmacionUsuarios(document.getElementById('form-del-rol-<?= $rItem['id'] ?>'), 'Eliminar Rol', '¿Seguro que desea eliminar el rol <?= htmlspecialchars($rItem['nombre'], ENT_QUOTES) ?>? Si tiene usuarios fallará por seguridad.', 'ph-trash', '#ef4444')" title="Eliminar Rol">
+                            <button type="button" class="btn btn-solid" style="background: rgba(239,68,68,0.1) !important; color: #ef4444 !important; border: 1px solid rgba(239,68,68,0.3); padding: 6px 12px; font-size: 0.8rem; cursor: pointer;" onclick="mostrarConfirmacionUsuarios(document.getElementById('form-del-rol-<?= $rItem['id'] ?>'), 'Eliminar Rol', '¿Seguro que desea eliminar el rol <?= htmlspecialchars($rItem['nombre'], ENT_QUOTES) ?>?', 'ph-trash', '#ef4444')">
                                 <i class="ph-bold ph-trash"></i> Eliminar
                             </button>
                         </div>
@@ -314,6 +344,7 @@
                         <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                         <input type="hidden" name="rol_id" value="<?= $rItem['id'] ?>">
                     </form>
+                <?php endif; ?>
                 <?php endforeach; ?>
             </div>
         </div>
@@ -459,14 +490,13 @@
 
             <div>
                 <label>Rol</label>
-                <select name="id_rol"
-                        id="editarRol"
-                        class="sa-filter-input"
-                        required
-                        style="width: 100%; box-sizing: border-box;">
-                    <?php foreach ($roles as $rol): ?>
-                        <option value="<?= $rol['id'] ?>"
-                                data-nombre="<?= htmlspecialchars($rol['nombre'], ENT_QUOTES, 'UTF-8') ?>">
+                <select name="id_rol" id="editarRol" class="sa-filter-input" required style="width: 100%; box-sizing: border-box;">
+                    <?php foreach ($roles as $rol): 
+                        $esRolCero = (isset($idPrivilegioCero) && $rol['privilegio_id'] == $idPrivilegioCero) ? 'true' : 'false';
+                    ?>
+                        <option value="<?= $rol['id'] ?>" 
+                                data-nombre="<?= htmlspecialchars($rol['nombre'], ENT_QUOTES, 'UTF-8') ?>"
+                                data-es-cero="<?= $esRolCero ?>">
                             <?= htmlspecialchars($rol['nombre']) ?>
                         </option>
                     <?php endforeach; ?>
@@ -528,7 +558,9 @@
                 <label style="font-size: 0.78rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 4px;">Nivel de Privilegio Base</label>
                 <select name="nuevo_privilegio_id" class="sa-filter-input" required style="width: 100%; box-sizing: border-box;">
                     <option value="">Seleccione un nivel...</option>
-                    <?php foreach ($privilegios as $priv): ?>
+                    <?php foreach ($privilegios as $priv): 
+                        if ((int)$priv['nivel_privilegio'] === 0) continue;
+                    ?>
                         <option value="<?= $priv['privilegio_id'] ?>">Nivel <?= $priv['nivel_privilegio'] ?></option>
                     <?php endforeach; ?>
                 </select>

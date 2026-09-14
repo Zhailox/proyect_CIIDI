@@ -70,8 +70,8 @@ class RepositorioPSTModule implements ModuleContract {
 
     // NUEVO: El plano visual del menú para este módulo
     public function getMenuConfig(): array {
-        $nivelAdmin = SystemConfigService::get('accesos_modulos.pst.admin', 0);
-        $nivelPublico = SystemConfigService::get('accesos_modulos.pst.publico', 999);
+        $nivelAdmin = SystemConfigService::get('accesos_modulos.repositorio_pst.admin', 0);
+        $nivelPublico = SystemConfigService::get('accesos_modulos.repositorio_pst.publico', 999);
         return [
             [
                 'tipo'        => 'parent',

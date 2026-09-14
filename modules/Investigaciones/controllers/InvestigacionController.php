@@ -1,19 +1,18 @@
 <?php
 // modules/Investigaciones/controllers/InvestigacionController.php
 require_once __DIR__ . '/../models/InvestigacionModel.php';
-require_once CORE_PATH . 'Security/Auth.php';
 require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
+require_once CORE_PATH . 'Security/Auth.php';
 
 class InvestigacionController {
-
-    private InvestigacionModel $model;
     private int $nivelAdmin;
     private int $nivelPublico;
+    private InvestigacionModel $model;
 
     public function __construct() {
         $this->model = new InvestigacionModel();
-        $this->nivelAdmin   = SystemConfigService::get('accesos_modulos.investigacion.admin', 1);
-        $this->nivelPublico = SystemConfigService::get('accesos_modulos.investigacion.publico', 10);
+        $this->nivelAdmin   = SystemConfigService::get('accesos_modulos.investigaciones.admin', 1);
+        $this->nivelPublico   = SystemConfigService::get('accesos_modulos.investigaciones.publico', 10);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -53,7 +52,7 @@ class InvestigacionController {
         
         $investigaciones = $this->model->listarInvestigaciones($filtros);
         
-        $agrupadas = ['t3' => [], 't4' => [], 'maestria' => []];
+        $agrupadas = ['t1' => [], 't2' => [], 't3' => [], 't4' => [], 'maestria' => []];
         foreach ($investigaciones as $inv) {
             $trayecto = $inv['trayecto'] ?? 't4';
             if (isset($agrupadas[$trayecto])) {
@@ -73,7 +72,7 @@ class InvestigacionController {
     }
 
     public function procesarPostulacion() {
-        Auth::requierePrivilegioMinimo($this->nivelPublico);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'Investigaciones');
         $user = Auth::usuario();
         
         $id_inv = (int)($_POST['id_investigacion'] ?? 0);
@@ -106,10 +105,6 @@ class InvestigacionController {
         $investigadores = $this->model->obtenerInvestigadores();
         return compact('investigadores');
     }
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // PROFESORES (Nivel >= 1)
-    // ──────────────────────────────────────────────────────────────────────────
 
     public function mostrarMisInvestigaciones(): array {
         Auth::requierePrivilegioMinimo($this->nivelAdmin);
@@ -149,7 +144,7 @@ class InvestigacionController {
     }
 
     public function guardarInvestigacion() {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'Investigaciones');
         $user = Auth::usuario();
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
@@ -197,7 +192,7 @@ class InvestigacionController {
     }
 
     public function actualizarInvestigacion() {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Investigaciones');
         $user = Auth::usuario();
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
@@ -239,7 +234,7 @@ class InvestigacionController {
     }
 
     public function eliminarInvestigacion() {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'Investigaciones');
         $user = Auth::usuario();
         $id = (int)($_POST['id'] ?? 0);
         
@@ -301,7 +296,7 @@ class InvestigacionController {
     }
 
     public function cambiarEstado() {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Investigaciones');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
         
         $id = (int)($_POST['id'] ?? 0);

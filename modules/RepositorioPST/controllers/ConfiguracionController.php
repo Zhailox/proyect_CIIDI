@@ -8,12 +8,12 @@ class ConfiguracionController {
     private int $nivelPublico;
     
     public function __construct() {
-        $this->nivelAdmin   = SystemConfigService::get('accesos_modulos.pst.admin', 1);
-        $this->nivelPublico = SystemConfigService::get('accesos_modulos.pst.publico', 10);
+        $this->nivelAdmin   = SystemConfigService::get('accesos_modulos.repositorio_pst.admin', 1);
+        $this->nivelPublico = SystemConfigService::get('accesos_modulos.repositorio_pst.publico', 10);
     }
     public function index(): array {
         require_once CORE_PATH . 'Security/Auth.php';
-        Auth::requierePrivilegioMinimo($this->nivelAdmin);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', "RepositorioPST");
 
         if (session_status() === PHP_SESSION_NONE) {
             @session_start();
