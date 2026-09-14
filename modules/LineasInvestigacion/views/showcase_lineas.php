@@ -68,7 +68,7 @@
                     </div>
                     <div>
                         <h2 class="li-card-title">
-                            <?= htmlspecialchars(ucwords(strtolower($linea['nombre']))) ?>
+                            <?= htmlspecialchars(mb_convert_case($linea['nombre'], MB_CASE_TITLE, 'UTF-8')) ?>
                         </h2>
                         <?php if (!empty($linea['carrera_nombre'])): ?>
                         <div class="li-carrera-badge" style="margin-top:0.4rem;">

@@ -2,6 +2,13 @@
 // modules/Autenticacion/controllers/LoginController.php
 require_once __DIR__ . '/../models/UsuarioModel.php';
 require_once CORE_PATH . 'Security/Auth.php';
+require_once CORE_PATH . 'Helpers/PHPMailer/Exception.php';
+require_once CORE_PATH . 'Helpers/PHPMailer/PHPMailer.php';
+require_once CORE_PATH . 'Helpers/PHPMailer/SMTP.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+use PHPMailer\PHPMailer\SMTP;
 
 class LoginController {
     
@@ -29,12 +36,130 @@ class LoginController {
     }
     // Método para la pantalla de recuperar contraseña
     public function mostrarRecuperar() {
-        // Si ya está logueado, no tiene sentido que recupere clave
         if (Auth::check()) {
             header("Location: perfil");
             exit;
         }
-        return [];
+        $error = $_SESSION['error_recuperar'] ?? null;
+        $exito = $_SESSION['exito_recuperar'] ?? null;
+        unset($_SESSION['error_recuperar'], $_SESSION['exito_recuperar']);
+        return ['error' => $error, 'exito' => $exito];
+    }
+    
+    public function procesarRecuperacion() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+        
+        $metodo = $_POST['metodo_recuperacion'] ?? '';
+        $dato = trim($_POST['dato_recuperacion'] ?? '');
+        
+        $usuario = null;
+        if ($metodo === 'cedula') {
+            $usuario = $this->usuarioModel->findByCedula($dato);
+        } else {
+            $usuario = $this->usuarioModel->findByEmail($dato);
+        }
+        
+        if ($usuario && !empty($usuario['email'])) {
+            $codigo = sprintf("%06d", mt_rand(1, 999999));
+            $this->usuarioModel->guardarTokenRecuperacion($usuario['id'], $codigo);
+            
+            $mail = new PHPMailer(true);
+            try {
+                // CONFIGURACIÓN SMTP
+                $mail->isSMTP();
+                $mail->Host       = 'smtp.gmail.com'; 
+                $mail->SMTPAuth   = true;
+                $mail->Username   = 'orlando5711666@gmail.com'; 
+                $mail->Password   = 'hkwtkytxrqxslngb'; 
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->Port       = 587;
+                $mail->CharSet    = 'UTF-8';
+
+                $mail->setFrom('no-reply@ciidi.edu.ve', 'Sistema CIIDI');
+                $mail->addAddress($usuario['email'], $usuario['nombre_completo']);
+
+                $mail->isHTML(true);
+                $mail->Subject = 'Código de Recuperación de Acceso - CIIDI';
+                $mail->Body    = "
+                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;'>
+                        <div style='background-color: #121a3e; padding: 20px; text-align: center; color: white;'>
+                            <h2 style='margin: 0;'>Recuperación de Contraseña</h2>
+                        </div>
+                        <div style='padding: 20px; background-color: #ffffff; color: #333333;'>
+                            <p>Hola <b>{$usuario['nombre_completo']}</b>,</p>
+                            <p>Hemos recibido una solicitud para restablecer el acceso a tu cuenta en el sistema CIIDI.</p>
+                            <p>Tu código de seguridad de 6 dígitos es:</p>
+                            <div style='text-align: center; margin: 20px 0;'>
+                                <span style='font-size: 32px; font-weight: bold; color: #121a3e; letter-spacing: 5px; background: #f1f5f9; padding: 10px 20px; border-radius: 8px; border: 1px dashed #94a3b8;'>$codigo</span>
+                            </div>
+                            <p style='color: #ef4444; font-size: 0.9em;'>⚠ Este código expirará en 15 minutos.</p>
+                            <p>Si no solicitaste este cambio, puedes ignorar este correo de forma segura.</p>
+                        </div>
+                        <div style='background-color: #f8fafc; padding: 15px; text-align: center; font-size: 0.8em; color: #64748b;'>
+                            &copy; " . date('Y') . " Sistema CIIDI - Todos los derechos reservados.
+                        </div>
+                    </div>
+                ";
+                $mail->AltBody = "Hola {$usuario['nombre_completo']},\n\nTu código de recuperación es: $codigo\n\nEste código expirará en 15 minutos.";
+
+                $mail->send();
+                $_SESSION['exito_recuperar'] = "Hemos enviado un código a tu correo: {$usuario['email']}. Revisa tu bandeja de entrada o la carpeta de Spam.";
+            } catch (Exception $e) {
+                // Fallback para pruebas locales si falla el SMTP por no estar configurado aún
+                $_SESSION['exito_recuperar'] = "Código generado (SMTP aún no configurado). Para continuar tus pruebas locales el código es: $codigo";
+            }
+            
+            header("Location: ?ruta=ingresar-codigo&uid=" . $usuario['id']);
+            exit;
+        } else {
+            $_SESSION['error_recuperar'] = "No se encontró ningún usuario con ese dato, o no tiene correo asociado.";
+            header("Location: ?ruta=recuperar-cuenta");
+            exit;
+        }
+    }
+    
+    public function mostrarIngresarCodigo() {
+        if (Auth::check()) {
+            header("Location: perfil");
+            exit;
+        }
+        $uid = $_GET['uid'] ?? '';
+        if (!$uid) {
+            header("Location: ?ruta=recuperar-cuenta");
+            exit;
+        }
+        
+        $error = $_SESSION['error_codigo'] ?? null;
+        unset($_SESSION['error_codigo']);
+        return ['error' => $error, 'uid' => $uid];
+    }
+
+    public function procesarCodigo() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+        
+        $uid = (int)($_POST['uid'] ?? 0);
+        $codigo = trim($_POST['codigo'] ?? '');
+        $password = trim($_POST['password'] ?? '');
+        $password_conf = trim($_POST['password_conf'] ?? '');
+        
+        if ($password !== $password_conf) {
+            $_SESSION['error_codigo'] = "Las contraseñas no coinciden.";
+            header("Location: ?ruta=ingresar-codigo&uid=" . $uid);
+            exit;
+        }
+        
+        if ($this->usuarioModel->verificarToken($uid, $codigo)) {
+            $hash = password_hash($password, PASSWORD_BCRYPT);
+            $this->usuarioModel->actualizarPassword($uid, $hash);
+            
+            $_SESSION['exito_registro'] = "Tu contraseña ha sido actualizada con éxito. Ya puedes iniciar sesión.";
+            header("Location: login");
+            exit;
+        } else {
+            $_SESSION['error_codigo'] = "El código de seguridad es inválido o ha expirado.";
+            header("Location: ?ruta=ingresar-codigo&uid=" . $uid);
+            exit;
+        }
     }
     
     

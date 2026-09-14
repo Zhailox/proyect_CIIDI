@@ -23,7 +23,7 @@
             <i class="ph-bold ph-arrow-left"></i> Volver a Líneas de Investigación
         </a>
 
-        <h1><?= htmlspecialchars(ucwords(strtolower($linea['nombre']))) ?></h1>
+        <h1><?= htmlspecialchars(mb_convert_case($linea['nombre'], MB_CASE_TITLE, 'UTF-8')) ?></h1>
 
         <?php if (!empty($linea['descripcion'])): ?>
         <p><?= htmlspecialchars($linea['descripcion']) ?></p>

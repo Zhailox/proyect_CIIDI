@@ -599,4 +599,231 @@
 
 .ve-btn-postular:hover {
     background-color: var(--ve-secundario);
+} 
+/* Estilos importados de Investigaciones para Cartelera */
+
+
+/* Estilos Kanban importados */
+.post-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+/* --- HERO CON IMAGEN Y OVERLAY INSTITUCIONAL --- */
+.post-hero {
+    position: relative;
+    text-align: center;
+    padding: 0; /* Eliminado todo el padding del contenedor base */
+    min-height: 400px; /* Altura forzada para que la imagen tenga un gran impacto */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    
+    /* Imagen de fondo desde la carpeta assets/img */
+    background: url('../../../Investigaciones/assets/img/hero-propuesta.png') center/cover no-repeat;
+    border-bottom: none;
+}
+
+/* La Magia: Filtro de Color Institucional sobre la Imagen */
+.post-hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    /* Usamos tu azul oscuro y azul gris con opacidad para teñir la foto */
+    background: linear-gradient(180deg, rgba(18, 26, 62, 0.85) 0%, rgba(80, 89, 132, 0.75) 100%);
+    z-index: 1;
+}
+
+/* Contenedor del texto por encima del filtro */
+.post-hero-content {
+    position: relative;
+    z-index: 2;
+    padding: 0 2rem; /* Margen de seguridad lateral para que el texto no toque los bordes */
+    width: 100%;
+}
+
+.post-hero h1 {
+    font-size: 3.2rem;
+    font-weight: 800;
+    color: #ffffff; /* Texto en blanco para contrastar con el fondo teñido */
+    text-transform: uppercase;
+    letter-spacing: -0.5px;
+    margin-bottom: 1rem;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3); /* Sombra sutil para legibilidad */
+}
+
+.post-hero p {
+    font-size: 1.15rem;
+    color: rgba(255, 255, 255, 0.85); /* Blanco ligeramente apagado */
+    max-width: 700px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* --- BARRA DE FILTROS EN PÍLDORA FLOTANTE --- */
+.post-filter-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: -2.2rem;
+    margin-bottom: 3rem;
+    position: relative;
+    z-index: 10;
+}
+
+.post-filter-pill-bar {
+    display: inline-flex;
+    background-color: #ffffff;
+    padding: 0.5rem;
+    border-radius: 100px;
+    box-shadow: 0 10px 30px rgba(18, 26, 62, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    gap: 0.3rem;
+}
+
+.post-filter-btn {
+    background: transparent;
+    border: none;
+    padding: 0.8rem 1.8rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--texto-silenciado);
+    cursor: pointer;
+    border-radius: 100px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all var(--transition-fast);
+}
+
+.post-filter-btn:hover, .post-filter-btn.active {
+    background-color: var(--color-terciario);
+    color: var(--texto-titulos);
+}
+
+/* --- TABLERO KANBAN DE VACANTES --- */
+.post-kanban-board {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+}
+
+.post-kanban-col {
+    flex: 1;
+    min-width: 340px;
+    background-color: #ebf0f7;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    border-radius: 0;
+    border-top: 4px solid var(--gris);
+}
+
+/* Paleta Institucional Estricta por Dificultad Académica */
+.post-kanban-col[data-nivel="t3"] { border-top-color: var(--texto-silenciado); }   /* Azul Claro */
+.post-kanban-col[data-nivel="t4"] { border-top-color: var(--texto-subtitulos); }  /* Azul Gris */
+.post-kanban-col[data-nivel="maestria"] { border-top-color: var(--texto-titulos); } /* Azul Oscuro */
+
+.post-col-header {
+    padding-bottom: 0.8rem;
+    border-bottom: 2px solid rgba(0,0,0,0.04);
+    margin-bottom: 0.3rem;
+}
+
+.post-col-header h3 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 0.2rem;
+}
+
+/* Aplicamos los colores institucionales a los títulos de las columnas */
+.post-kanban-col[data-nivel="t3"] .post-col-header h3 { color: var(--texto-silenciado); }
+.post-kanban-col[data-nivel="t4"] .post-col-header h3 { color: var(--texto-subtitulos); }
+.post-kanban-col[data-nivel="maestria"] .post-col-header h3 { color: var(--texto-titulos); }
+
+.post-col-header span {
+    font-size: 0.85rem;
+    color: var(--texto-silenciado);
+    font-weight: 600;
+}
+
+/* --- TARJETAS DEL TABLERO --- */
+.post-card {
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 0;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    cursor: pointer;
+    transition: transform var(--transition-fast);
+}
+
+.post-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--color-terciario);
+}
+
+.post-card-linea {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-secundario);
+    letter-spacing: 0.5px;
+}
+
+.post-card h4 {
+    color: var(--color-principal);
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.post-card p {
+    color: var(--texto-silenciado);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.post-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.8rem;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.post-vacancies {
+    color: #10b981;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+/* El botón asume el color principal por defecto */
+.post-btn-apply {
+    background-color: transparent;
+    color: var(--color-principal);
+    border: 2px solid var(--color-principal);
+    padding: 0.4rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 0;
+    transition: all var(--transition-fast);
+}
+
+.post-btn-apply:hover {
+    background-color: var(--color-principal);
+    color: #ffffff;
 }

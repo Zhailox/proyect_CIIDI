@@ -7,7 +7,13 @@
                 Seleccione su método de validación. Enviaremos un token de seguridad para restaurar su acceso.
             </p>
 
-            <form action="#" method="POST" class="recovery-flat-form">
+            <?php if (isset($error) && $error): ?>
+                <div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 0.9rem;">
+                    <?= htmlspecialchars($error) ?>
+                </div>
+            <?php endif; ?>
+
+            <form action="?ruta=procesar-recuperacion" method="POST" class="recovery-flat-form">
                 
                 <div class="recovery-flat-group">
                     <label for="metodo_recuperacion">Método de Recuperación:</label>
@@ -22,7 +28,7 @@
                     <input type="number" id="dato_recuperacion" name="dato_recuperacion" class="recovery-flat-input" placeholder="EJ: V-12345678" required autocomplete="off">
                 </div>
 
-                <button type="submit" class="recovery-btn-submit">Enviar Token</button>
+                <button type="submit" class="recovery-btn-submit">Enviar código</button>
 
                 <div class="recovery-flat-footer">
                     <a href="login">¿Recordó su contraseña? Volver al inicio</a>
@@ -42,3 +48,23 @@
     </div>
 
 </div>
+
+<script>
+function actualizarMetodo() {
+    const metodo = document.getElementById('metodo_recuperacion').value;
+    const label = document.getElementById('label_dinamico');
+    const input = document.getElementById('dato_recuperacion');
+    
+    if (metodo === 'cedula') {
+        label.innerText = 'Cédula del Usuario:';
+        input.type = 'number';
+        input.placeholder = 'EJ: 12345678';
+    } else {
+        label.innerText = 'Correo Electrónico:';
+        input.type = 'email';
+        input.placeholder = 'ejemplo@correo.com';
+    }
+    input.value = '';
+    input.focus();
+}
+</script>

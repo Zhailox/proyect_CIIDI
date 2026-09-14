@@ -54,6 +54,24 @@ public function getRutas(): array {
                 'titulo'           => 'Recuperación de Credenciales',
                 'css'              => ['autenticacion.css']
             ],
+            'procesar-recuperacion' => [
+                'controlador_path' => __DIR__ . '/controllers/LoginController.php',
+                'controlador'      => 'LoginController',
+                'metodo'           => 'procesarRecuperacion'
+            ],
+            'ingresar-codigo' => [
+                'controlador_path' => __DIR__ . '/controllers/LoginController.php',
+                'controlador'      => 'LoginController',
+                'metodo'           => 'mostrarIngresarCodigo',
+                'vista'            => __DIR__ . '/views/ingresar_codigo.php', 
+                'titulo'           => 'Verificar Código',
+                'css'              => ['autenticacion.css']
+            ],
+            'procesar-codigo' => [
+                'controlador_path' => __DIR__ . '/controllers/LoginController.php',
+                'controlador'      => 'LoginController',
+                'metodo'           => 'procesarCodigo'
+            ],
             // Pantalla de Registro
             'registro' => [
                 'controlador_path' => __DIR__ . '/controllers/LoginController.php',

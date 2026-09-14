@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // modules/LineasInvestigacion/index.php
 
 require_once CORE_PATH . 'Interfaces/ModuleContract.php';
@@ -78,8 +78,7 @@ class LineasInvestigacionModule implements ModuleContract {
                 'subitems'    => [
                     ['ruta' => 'lineas-investigacion',  'titulo' => 'Explorar Líneas'],
                     ['ruta' => 'analitica',             'titulo' => 'Analítica IA'],
-                    ['ruta' => 'gestionar-lineas',      'titulo' => 'Gestionar Líneas'],
-                    ['ruta' => 'gestionar-dimensiones', 'titulo' => 'Gestionar Dimensiones'],
+                    ['ruta' => 'gestionar-lineas',      'titulo' => 'Líneas y Dimensiones'],
                 ]
             ]
         ];
