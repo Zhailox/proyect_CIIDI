@@ -1,12 +1,19 @@
 <?php
 // modules/RepositorioPST/controllers/ConfiguracionController.php
 require_once __DIR__ . '/../services/ConfigService.php';
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
 
 class ConfiguracionController {
-
+    private int $nivelAdmin;
+    private int $nivelPublico;
+    
+    public function __construct() {
+        $this->nivelAdmin   = SystemConfigService::get('accesos_modulos.pst.admin', 1);
+        $this->nivelPublico = SystemConfigService::get('accesos_modulos.pst.publico', 10);
+    }
     public function index(): array {
         require_once CORE_PATH . 'Security/Auth.php';
-        Auth::requierePrivilegioMinimo(0);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin);
 
         if (session_status() === PHP_SESSION_NONE) {
             @session_start();
@@ -15,8 +22,10 @@ class ConfiguracionController {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         }
 
-        $mensaje = null;
-        $error = null;
+        // 1. Consumimos mensajes de sesión y limpiamos
+        $mensaje = $_SESSION['mensaje_exito'] ?? null;
+        $error = $_SESSION['mensaje_error'] ?? null;
+        unset($_SESSION['mensaje_exito'], $_SESSION['mensaje_error']);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
@@ -43,7 +52,6 @@ class ConfiguracionController {
                     }
                 }
 
-                // Si se agrega un nuevo estilo de cita desde la UI
                 if (!empty($_POST['nuevo_estilo_slug']) && !empty($_POST['nuevo_estilo_nombre'])) {
                     $slugNew = preg_replace('/[^a-z0-9_]/', '', strtolower(trim($_POST['nuevo_estilo_slug'])));
                     if (!empty($slugNew)) {
@@ -56,22 +64,16 @@ class ConfiguracionController {
                 }
 
                 // 2. Paginación
-                if (isset($_POST['limite_catalogo'])) {
-                    $actual['paginacion']['limite_catalogo'] = max(1, (int)$_POST['limite_catalogo']);
-                }
-                if (isset($_POST['limite_buscador'])) {
-                    $actual['paginacion']['limite_buscador'] = max(1, (int)$_POST['limite_buscador']);
-                }
-                if (isset($_POST['max_proyectos_similares'])) {
-                    $actual['paginacion']['max_proyectos_similares'] = max(1, (int)$_POST['max_proyectos_similares']);
-                }
+                if (isset($_POST['modo_carga'])) $actual['paginacion']['modo_carga'] = trim($_POST['modo_carga']);
+                if (isset($_POST['limite_catalogo'])) $actual['paginacion']['limite_catalogo'] = max(1, (int)$_POST['limite_catalogo']);
+                if (isset($_POST['limite_buscador'])) $actual['paginacion']['limite_buscador'] = max(1, (int)$_POST['limite_buscador']);
+                if (isset($_POST['max_proyectos_similares'])) $actual['paginacion']['max_proyectos_similares'] = max(1, (int)$_POST['max_proyectos_similares']);
+                
                 if (!empty($_POST['opciones_selector_raw'])) {
                     $opts = array_map('intval', explode(',', $_POST['opciones_selector_raw']));
                     $opts = array_values(array_filter($opts, fn($n) => $n > 0));
                     sort($opts);
-                    if (!empty($opts)) {
-                        $actual['paginacion']['opciones_selector'] = $opts;
-                    }
+                    if (!empty($opts)) $actual['paginacion']['opciones_selector'] = $opts;
                 }
 
                 // 3. Recursos
@@ -81,12 +83,9 @@ class ConfiguracionController {
                 $actual['recursos']['mostrar_nivel_academico'] = isset($_POST['mostrar_nivel_academico']) && $_POST['mostrar_nivel_academico'] === '1';
 
                 // 4. Buscador
-                if (isset($_POST['anio_minimo_histograma'])) {
-                    $actual['buscador']['anio_minimo_histograma'] = (int)$_POST['anio_minimo_histograma'];
-                }
-                if (isset($_POST['orden_predeterminado'])) {
-                    $actual['buscador']['orden_predeterminado'] = trim($_POST['orden_predeterminado']);
-                }
+                if (isset($_POST['anio_minimo_histograma'])) $actual['buscador']['anio_minimo_histograma'] = (int)$_POST['anio_minimo_histograma'];
+                if (isset($_POST['orden_predeterminado'])) $actual['buscador']['orden_predeterminado'] = trim($_POST['orden_predeterminado']);
+                
                 $actual['buscador']['resaltar_coincidencias'] = isset($_POST['resaltar_coincidencias']) && $_POST['resaltar_coincidencias'] === '1';
                 $actual['buscador']['permitir_filtro_carrera'] = isset($_POST['permitir_filtro_carrera']) && $_POST['permitir_filtro_carrera'] === '1';
 
@@ -95,24 +94,22 @@ class ConfiguracionController {
                 $actual['visor_pdf']['permitir_descarga'] = isset($_POST['permitir_descarga']) && $_POST['permitir_descarga'] === '1';
 
                 // 6. Archivos y Carga Documental
-                if (isset($_POST['max_size_mb'])) {
-                    $actual['archivos']['max_size_mb'] = max(1, (int)$_POST['max_size_mb']);
-                }
-                if (isset($_POST['max_autores'])) {
-                    $actual['limites_equipo']['max_autores'] = max(1, (int)$_POST['max_autores']);
-                }
-                if (isset($_POST['max_tutores'])) {
-                    $actual['limites_equipo']['max_tutores'] = max(1, (int)$_POST['max_tutores']);
-                }
+                if (isset($_POST['max_size_mb'])) $actual['archivos']['max_size_mb'] = max(1, (int)$_POST['max_size_mb']);
+                if (isset($_POST['max_autores'])) $actual['limites_equipo']['max_autores'] = max(1, (int)$_POST['max_autores']);
+                if (isset($_POST['max_tutores'])) $actual['limites_equipo']['max_tutores'] = max(1, (int)$_POST['max_tutores']);
 
                 if (ConfigService::save($actual)) {
-                    $mensaje = "¡Configuración del Repositorio guardada exitosamente!";
+                    $_SESSION['mensaje_exito'] = "¡Configuración del Repositorio guardada exitosamente!";
                 } else {
-                    $error = "No se pudo escribir en el archivo de configuración JSON.";
+                    $_SESSION['mensaje_error'] = "No se pudo escribir en el archivo de configuración JSON.";
                 }
             } catch (Exception $e) {
-                $error = "Error al procesar la configuración: " . $e->getMessage();
+                $_SESSION['mensaje_error'] = "Error al procesar la configuración: " . $e->getMessage();
             }
+            
+            // 2. Redirección para limpiar POST y activar JS en la recarga
+            header('Location: configuracion-pst');
+            exit;
         }
 
         $config = ConfigService::get();

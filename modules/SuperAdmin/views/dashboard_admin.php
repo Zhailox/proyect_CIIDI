@@ -84,6 +84,15 @@
             <p style="margin:3px 0 0 0; font-size: 0.78rem; color: var(--texto-silenciado);">Histórico de eventos, trazabilidad y descargas PDF/CSV.</p>
         </div>
     </a>
+    <a href="configuracion-sistema" class="sa-quick-card glass-card hover-glow" style="border-radius: var(--radius-sm); text-decoration: none;">
+        <div class="sa-quick-icon" style="background: rgba(24, 105, 116, 0.15); color: var(--color-secundario);">
+            <i class="ph-bold ph-gear"></i>
+        </div>
+        <div>
+            <h4 style="margin:0; font-size: 0.95rem; font-weight: 700; color: var(--texto-titulos);">Variables de Entorno y Sistema</h4>
+            <p style="margin:3px 0 0 0; font-size: 0.78rem; color: var(--texto-silenciado);">Configuración y parámetros del entorno de ejecución.</p>
+        </div>
+    </a>
 </div>
 
 <!-- TELEMETRÍA TÉCNICA DEL SERVIDOR & CONSUMO DE RECURSOS -->

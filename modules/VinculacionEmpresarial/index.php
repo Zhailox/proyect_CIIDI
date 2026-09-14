@@ -2,6 +2,7 @@
 // modules/VinculacionEmpresarial/index.php
 
 require_once CORE_PATH . 'Interfaces/ModuleContract.php';
+require_once __DIR__ . '/../SuperAdmin/services/SystemConfigService.php';
 
 class VinculacionEmpresarialModule implements ModuleContract {
     
@@ -60,6 +61,8 @@ class VinculacionEmpresarialModule implements ModuleContract {
     }
 
     public function getMenuConfig(): array {
+        $nivelAdmin = SystemConfigService::get('accesos_modulos.vinculacion_empresarial.admin', 0);
+        $nivelPublico = SystemConfigService::get('accesos_modulos.vinculacion_empresarial.publico', 999);
         return [
             [
                 'tipo'        => 'parent',
@@ -67,12 +70,12 @@ class VinculacionEmpresarialModule implements ModuleContract {
                 'icono'       => 'ph-fill ph-buildings',
                 'enlace'      => 'empresas-inicio',
                 'activadores' => ['empresas-inicio', 'seguimiento-empresa', 'cartelera-oportunidades', 'banco-propuestas'], 
-                'privilegio_minimo' => 999,
+                'privilegio_minimo' => $nivelPublico,
                 'subitems'    => [
-                    ['ruta' => 'empresas-inicio', 'titulo' => 'Conócenos', 'privilegio_minimo' => 999],
-                    ['ruta' => 'seguimiento-empresa', 'titulo' => 'Seguimiento', 'privilegio_minimo' => 999],
-                    ['ruta' => 'cartelera-oportunidades', 'titulo' => 'Estudiantes', 'privilegio_minimo' => 999],
-                    ['ruta' => 'banco-propuestas', 'titulo' => 'Evaluación de Propuestas', 'privilegio_minimo' => 1]
+                    ['ruta' => 'empresas-inicio', 'titulo' => 'Conócenos', 'privilegio_minimo' => $nivelPublico],
+                    ['ruta' => 'seguimiento-empresa', 'titulo' => 'Seguimiento', 'privilegio_minimo' => $nivelPublico],
+                    ['ruta' => 'cartelera-oportunidades', 'titulo' => 'Estudiantes', 'privilegio_minimo' => $nivelPublico],
+                    ['ruta' => 'banco-propuestas', 'titulo' => 'Evaluación de Propuestas', 'privilegio_minimo' => $nivelAdmin]
                 ]
             ]
         ];

@@ -177,11 +177,23 @@
 
                     <div class="config-grid-2">
                         <div class="config-field">
+                            <label>Modo de Carga del Catálogo:</label>
+                            <?php $modoCargaActualConfig = $config['paginacion']['modo_carga'] ?? 'paginador'; ?>
+                            <select name="modo_carga" class="config-input" style="font-weight: 700;">
+                                <option value="paginador" <?= $modoCargaActualConfig === 'paginador' ? 'selected' : '' ?>>Paginación Numérica Tradicional</option>
+                                <option value="lazy_loading" <?= $modoCargaActualConfig === 'lazy_loading' ? 'selected' : '' ?>>Carga Progresiva Infinta (Lazy Loading)</option>
+                            </select>
+                            <p class="field-hint">Alterna el comportamiento de navegación en la vista general del repositorio.</p>
+                        </div>
+
+                        <div class="config-field">
                             <label>Registros por página en Catálogo Principal:</label>
                             <input type="number" name="limite_catalogo" value="<?= (int)($config['paginacion']['limite_catalogo'] ?? 10) ?>" min="1" max="100" class="config-input">
                             <p class="field-hint">Cantidad predeterminada de proyectos por vista en la lista general.</p>
                         </div>
+                    </div>
 
+                    <div class="config-grid-2">
                         <div class="config-field">
                             <label>Registros por página en Buscador Unificado:</label>
                             <input type="number" name="limite_buscador" value="<?= (int)($config['paginacion']['limite_buscador'] ?? 5) ?>" min="1" max="100" class="config-input">
@@ -462,6 +474,9 @@ function switchConfigTab(tabId, btn) {
     
     document.getElementById(tabId).classList.add('active');
     btn.classList.add('active');
+    
+    // Guardar la pestaña activa en la memoria del navegador
+    sessionStorage.setItem('configPstTabActiva', tabId);
 }
 
 function insertarVariableEnInput(inputId, variableText) {
@@ -645,4 +660,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+document.addEventListener('DOMContentLoaded', () => {
+    const tabGuardada = sessionStorage.getItem('configPstTabActiva') || 'tabCitas';
+    const boton = document.querySelector(`.pst-config-nav-tabs button[onclick*="'${tabGuardada}'"]`);
+    if (boton) {
+        switchConfigTab(tabGuardada, boton);
+    }
+});
+if (window.history.replaceState) {
+    window.history.replaceState(null, null, window.location.href);
+}
 </script>

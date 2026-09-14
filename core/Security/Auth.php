@@ -37,36 +37,53 @@ class Auth {
 
     /**
      * Verifica si el usuario actual cumple con el nivel mínimo exigido o permiso dinámico RBAC.
-     * Nivel 0 = Estudiante | Nivel 1 = Profesor | Nivel 2 = Bibliotecario | Nivel 3 = Admin
+     * Nivel 0 = Administrador Supremo (nivelDios) | Nivel 1+ = Profesores, Bibliotecarios, Admins
+     * Si $redirect403 es true, redirige a 403 / login. Si es false, devuelve simplemente un booleano (true/false).
      */
-    public static function requierePrivilegioMinimo(int $nivelExigido, ?string $permisoRuta = null, ?string $moduloRuta = null) {
-        if (!self::check()) { header("Location: login"); exit; }
+    public static function requierePrivilegioMinimo(int $nivelExigido, ?string $permisoRuta = null, ?string $moduloRuta = null, bool $redirect403 = true): bool {
+        if (!self::check()) {
+            if ($redirect403) { header("Location: login"); exit; }
+            return false;
+        }
 
         $nivelUsuario = (int)($_SESSION['nivel_privilegio'] ?? 999);
         $nivelDios = 0;
 
-        if ($nivelUsuario > $nivelExigido && $nivelUsuario !== $nivelDios) {
-            self::render403();
+        // El nivel 0 (Administrador Supremo / nivelDios) siempre tiene acceso total absoluto
+        if ($nivelUsuario === $nivelDios) {
+            return true;
         }
 
-        if ($permisoRuta !== null && $moduloRuta !== null && $nivelUsuario !== $nivelDios) {
+        $autorizado = true;
+
+        if ($nivelUsuario > $nivelExigido) {
+            $autorizado = false;
+        }
+
+        if ($autorizado && $permisoRuta !== null && $moduloRuta !== null) {
             $archivo_rbac = CORE_PATH . '../storage/rbac_matrix.json';
             
             if (file_exists($archivo_rbac)) {
                 $matrix = json_decode(file_get_contents($archivo_rbac), true) ?: [];
-                
-                // Si el permiso no está marcado como 'true' en la matriz para este nivel y módulo, se bloquea.
                 if (empty($matrix[$nivelUsuario][$moduloRuta][$permisoRuta])) {
-                    self::render403();
+                    $autorizado = false;
                 }
             } else {
-                // Si el archivo JSON no existe pero se exige un permiso, se deniega por seguridad (Fail-Safe)
+                $autorizado = false;
+            }
+        }
+
+        if (!$autorizado) {
+            if ($redirect403) {
                 self::render403();
             }
+            return false;
         }
 
         return true;
     }
+
+
 
     private static function render403() {
         http_response_code(403);

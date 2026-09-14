@@ -980,3 +980,12 @@ body {
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
     background: var(--blanco);
 }
+
+/* Estilo global de resaltado de texto (Mark Tag / Search Match) en Azul Claro */
+mark, .highlight-match {
+    background-color: rgba(112, 144, 203, 0.25) !important;
+    color: var(--color-secundario, #334155) !important;
+    border-radius: 4px;
+    padding: 1px 4px;
+    font-weight: 700;
+}

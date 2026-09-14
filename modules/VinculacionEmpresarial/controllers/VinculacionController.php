@@ -2,13 +2,18 @@
 // modules/VinculacionEmpresarial/controllers/VinculacionController.php
 
 require_once __DIR__ . '/../models/PropuestaEmpresaModel.php';
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
 
 class VinculacionController {
 
     private $modelo;
-
+    private int $nivelAdmin;
+    private int $nivelPublico;
+    
     public function __construct() {
-        $this->modelo = new PropuestaEmpresaModel();
+        $this->modelo = new PropuestaEmpresaModel(); 
+        $this->nivelAdmin   = SystemConfigService::get('accesos_modulos.pst.admin', 1);
+        $this->nivelPublico = SystemConfigService::get('accesos_modulos.pst.publico', 10);
     }
 
     public function guardarPropuesta() {

@@ -151,7 +151,7 @@
                 Control de Tareas Programadas & Cron Jobs
             </h1>
             <p style="margin: 0.3rem 0 0 0; color: #64748b !important; font-size: 0.9rem;">
-                Administración de procesos automáticos, limpiezas de temporales y backups periódicos de medianoche.
+                Administración de procesos automáticos, limpiezas de temporales, scripts (.sh, .bat, .ps1, .py, .php, .sql) y comandos CLI.
             </p>
         </div>
         <div style="display: flex; gap: 0.5rem;">
@@ -193,14 +193,20 @@
     </p>
 
     <div style="background: #0f172a; color: #38bdf8; padding: 12px 16px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; overflow-x: auto; display: flex; justify-content: space-between; align-items: center; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);">
-        <span><?= htmlspecialchars($diagnostico['comando_sugerido_linux']) ?></span>
-        <span style="font-size: 0.75rem; background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 3px 10px; border-radius: 6px; font-weight: 700;">Sintaxis Linux Crontab</span>
+        <span><?= htmlspecialchars($diagnostico['es_windows'] ? $diagnostico['comando_sugerido_windows'] : $diagnostico['comando_sugerido_linux']) ?></span>
+        <span style="font-size: 0.75rem; background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 3px 10px; border-radius: 6px; font-weight: 700;"><?= $diagnostico['es_windows'] ? 'Task Scheduler Windows' : 'Sintaxis Linux Crontab' ?></span>
     </div>
 </div>
 
 <!-- TARJETAS DE TAREAS PROGRAMADAS -->
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem;" class="mb-2">
     <?php foreach ($tareas as $id => $tarea): ?>
+        <?php 
+            $tipoEj = $tarea['tipo_ejecucion'] ?? 'metodo_interno';
+            $badgeTipo = 'Método Core';
+            if ($tipoEj === 'script_archivo') $badgeTipo = 'Script Archivo (' . htmlspecialchars($tarea['archivo_script'] ?? '') . ')';
+            if ($tipoEj === 'comando_cli') $badgeTipo = 'Comando Shell / CLI';
+        ?>
         <div class="ag-scheduler-card">
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
@@ -218,8 +224,9 @@
                 <p style="margin: 0; font-size: 0.83rem; color: #64748b; line-height: 1.4;">
                     <?= htmlspecialchars($tarea['descripcion']) ?>
                 </p>
-                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 6px; font-family: monospace;">
-                    Script ejecutor: <b><?= htmlspecialchars($tarea['script']) ?></b>
+                
+                <div style="font-size: 0.75rem; color: #64748b; margin-top: 8px; font-family: monospace; background: rgba(241, 245, 249, 0.7); padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                    <i class="ph-bold ph-terminal-window"></i> <b>Modo:</b> <?= $badgeTipo ?>
                 </div>
             </div>
 
@@ -233,8 +240,12 @@
 
                 <div style="display: flex; gap: 0.4rem; justify-content: space-between; align-items: center; flex-wrap: wrap;">
                     <div style="display: flex; gap: 0.35rem; align-items: center;">
-                        <button type="button" onclick='editarTarea(<?= json_encode($tarea) ?>)' class="ag-btn-icon" title="Editar Expresión Cron">
+                        <button type="button" onclick='editarTarea(<?= json_encode($tarea) ?>)' class="ag-btn-icon" title="Editar Configuración">
                             <i class="ph-bold ph-pencil"></i>
+                        </button>
+
+                        <button type="button" onclick="verLogConsola('<?= htmlspecialchars($id) ?>', '<?= htmlspecialchars($tarea['nombre'], ENT_QUOTES) ?>')" class="ag-btn-icon" title="Ver Histórico stdout/stderr">
+                            <i class="ph-bold ph-code-block"></i>
                         </button>
 
                         <form action="alternar-estado-tarea" method="POST" style="margin:0;">
@@ -267,9 +278,9 @@
     <?php endforeach; ?>
 </div>
 
-<!-- MODAL CREAR / EDITAR TAREA PROGRAMADA CON GLASSMORPHISM Y TRANSICIONES CUIDADAS -->
+<!-- MODAL CREAR / EDITAR TAREA PROGRAMADA MULTI-ENGINE -->
 <div id="modalTareaScheduler" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 9999; justify-content: center; align-items: center; padding: 1rem; transition: all 0.3s ease;">
-    <div style="background: rgba(255, 255, 255, 0.98); border-radius: 16px; max-width: 520px; width: 100%; padding: 2rem; box-shadow: 0 24px 48px rgba(18, 26, 62, 0.18); border: 1px solid rgba(80, 89, 132, 0.2);">
+    <div style="background: rgba(255, 255, 255, 0.98); border-radius: 16px; max-width: 580px; width: 100%; padding: 2rem; box-shadow: 0 24px 48px rgba(18, 26, 62, 0.18); border: 1px solid rgba(80, 89, 132, 0.2); max-height: 90vh; overflow-y: auto;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
             <h3 id="modalTareaTitulo" style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #121a3e;">
                 Programar Tarea / Editar Horario
@@ -279,46 +290,100 @@
             </button>
         </div>
         
-        <form action="guardar-tarea-programada" method="POST">
+        <form action="guardar-tarea-programada" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="tarea_id" id="form_tarea_id" value="">
 
             <div style="margin-bottom: 1.1rem;">
                 <label class="ag-form-label">Nombre de la Tarea</label>
-                <input type="text" name="nombre" id="form_tarea_nombre" class="ag-form-input" placeholder="Ej: Respaldo Semanal..." required>
+                <input type="text" name="nombre" id="form_tarea_nombre" class="ag-form-input" placeholder="Ej: Respaldo Semanal / Script de Mantenimiento..." required>
             </div>
 
             <div style="margin-bottom: 1.1rem;">
                 <label class="ag-form-label">Expresión Cron (Frecuencia de Ejecución)</label>
                 <input type="text" name="expresion_cron" id="form_tarea_cron" class="ag-form-input" style="font-family: monospace; font-weight: 700; color: #0284c7;" placeholder="Ej: 0 0 * * *" required>
                 <div style="font-size: 0.74rem; color: #64748b; margin-top: 6px; line-height: 1.3;">
-                    Sintaxis Cron: <code>minuto hora día-mes mes día-semana</code> (Ej: <code>0 0 * * *</code> = Medianoche).
+                    Sintaxis Cron: <code>minuto hora día-mes mes día-semana</code> (Ej: <code>*/15 * * * *</code> = Cada 15 min).
                 </div>
             </div>
 
             <div style="margin-bottom: 1.1rem;">
-                <label class="ag-form-label">Método Script Ejecutor (SchedulerService)</label>
-                <select name="script" id="form_tarea_script" class="ag-form-input" style="appearance: auto;" required>
+                <label class="ag-form-label">Tipo de Ejecución & Motor</label>
+                <select name="tipo_ejecucion" id="form_tipo_ejecucion" class="ag-form-input" style="appearance: auto;" onchange="cambiarTipoEjecucion(this.value)" required>
+                    <option value="metodo_interno">Método Interno de PHP (SchedulerService)</option>
+                    <option value="script_archivo">Subir / Ejecutar Archivo Script (.sh, .bat, .ps1, .py, .php, .sql)</option>
+                    <option value="comando_cli">Comando Personalizado CLI / Shell</option>
+                </select>
+            </div>
+
+            <!-- SECCIÓN A: MÉTODO INTERNO -->
+            <div id="sec_metodo_interno" style="margin-bottom: 1.1rem;">
+                <label class="ag-form-label">Seleccionar Método Core</label>
+                <select name="script" id="form_tarea_script" class="ag-form-input" style="appearance: auto;">
                     <option value="limpiarTemporales">limpiarTemporales (Archivos temporales/caché)</option>
                     <option value="ejecutarBackupAutomatico">ejecutarBackupAutomatico (PostgreSQL Dump .sql.gz)</option>
                     <option value="purgarLogs">purgarLogs (Rotación de auditoría activa)</option>
                 </select>
             </div>
 
+            <!-- SECCIÓN B: SCRIPT ARCHIVO -->
+            <div id="sec_script_archivo" style="margin-bottom: 1.1rem; display: none; background: rgba(248, 250, 252, 0.9); padding: 1rem; border-radius: 10px; border: 1px dashed rgba(80, 89, 132, 0.3);">
+                <label class="ag-form-label">Cargar Archivo de Script (.sh, .bat, .ps1, .php, .py, .sql)</label>
+                <input type="file" name="archivo_script" id="form_archivo_script" class="ag-form-input" accept=".sh,.bat,.ps1,.php,.py,.sql">
+                <div id="info_script_actual" style="font-size: 0.76rem; color: #0284c7; margin-top: 6px; font-weight: 600;"></div>
+                <div style="font-size: 0.74rem; color: #64748b; margin-top: 4px; line-height: 1.3;">
+                    El servidor ejecutará automáticamente el binario adecuado según la plataforma (Bash, PowerShell, Cmd, Python3, PHP CLI, psql).
+                </div>
+            </div>
+
+            <!-- SECCIÓN C: COMANDO CLI -->
+            <div id="sec_comando_cli" style="margin-bottom: 1.1rem; display: none;">
+                <label class="ag-form-label">Comando de Consola / Shell CLI</label>
+                <textarea name="comando_custom" id="form_comando_custom" class="ag-form-input" style="height: 70px; font-family: monospace; font-size: 0.82rem; color: #0f172a;" placeholder="Ej: php /var/www/script.php o pg_dumpall -U postgres"></textarea>
+            </div>
+
             <div style="margin-bottom: 1.5rem;">
-                <label class="ag-form-label">Descripción</label>
-                <textarea name="descripcion" id="form_tarea_descripcion" class="ag-form-input" style="height: 70px; resize: vertical;" placeholder="Descripción orientativa del propósito de la tarea..."></textarea>
+                <label class="ag-form-label">Descripción de la Tarea</label>
+                <textarea name="descripcion" id="form_tarea_descripcion" class="ag-form-input" style="height: 65px; resize: vertical;" placeholder="Propósito o anotaciones de esta automatización..."></textarea>
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
                 <button type="button" onclick="cerrarModalTarea()" class="ag-btn-standard ag-btn-secondary">Cancelar</button>
-                <button type="submit" class="ag-btn-standard ag-btn-primary">Guardar Cambios</button>
+                <button type="submit" class="ag-btn-standard ag-btn-primary">Guardar Configuración</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- MODAL PERSONALIZADO DE CONFIRMACIÓN DE ACCIONES (ANTIGRAVITY DESIGN SYSTEM) -->
-<div id="modalConfirmacionGenerico" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 10000; justify-content: center; align-items: center; padding: 1rem;">
+<!-- MODAL VISOR DE LOGS DE CONSOLA (STDOUT / STDERR) -->
+<div id="modalVisorLog" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 10000; justify-content: center; align-items: center; padding: 1rem;">
+    <div style="background: #ffffff; border-radius: 16px; max-width: 720px; width: 100%; padding: 1.75rem; box-shadow: 0 24px 48px rgba(18, 26, 62, 0.2); border: 1px solid rgba(80, 89, 132, 0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div>
+                <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: #121a3e; display: flex; align-items: center; gap: 8px;">
+                    <i class="ph-bold ph-terminal" style="color: var(--color-secundario);"></i>
+                    Consola Output Log (stdout/stderr)
+                </h3>
+                <span id="logModalNombreTarea" style="font-size: 0.8rem; color: #64748b; font-weight: 600;"></span>
+            </div>
+            <button type="button" onclick="cerrarModalLog()" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer; padding: 4px;">
+                <i class="ph-bold ph-x"></i>
+            </button>
+        </div>
+        
+        <div id="logContentBox" style="background: #0f172a; color: #38bdf8; padding: 1.25rem; border-radius: 10px; font-family: monospace; font-size: 0.82rem; height: 340px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);">
+            Cargando historial de salida...
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 1.25rem;">
+            <button type="button" onclick="cerrarModalLog()" class="ag-btn-standard ag-btn-secondary">
+                Cerrar Visor
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CONFIRMACIÓN DE ELIMINACIÓN -->
+<div id="modalConfirmacionGenerico" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 10001; justify-content: center; align-items: center; padding: 1rem;">
     <div style="background: #ffffff; border-radius: 16px; max-width: 440px; width: 100%; padding: 1.75rem; box-shadow: 0 24px 48px rgba(18, 26, 62, 0.2); border: 1px solid rgba(80, 89, 132, 0.2); text-align: center;">
         <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(239, 68, 68, 0.12); color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 1rem auto;">
             <i class="ph-bold ph-warning"></i>
@@ -346,27 +411,68 @@
 <script>
 let formTargetParaEliminar = null;
 
+function cambiarTipoEjecucion(tipo) {
+    document.getElementById('sec_metodo_interno').style.display = tipo === 'metodo_interno' ? 'block' : 'none';
+    document.getElementById('sec_script_archivo').style.display = tipo === 'script_archivo' ? 'block' : 'none';
+    document.getElementById('sec_comando_cli').style.display = tipo === 'comando_cli' ? 'block' : 'none';
+}
+
 function abrirModalTarea() {
     document.getElementById('modalTareaTitulo').innerText = 'Crear Nueva Tarea Programada';
     document.getElementById('form_tarea_id').value = '';
     document.getElementById('form_tarea_nombre').value = '';
     document.getElementById('form_tarea_cron').value = '0 0 * * *';
+    document.getElementById('form_tipo_ejecucion').value = 'metodo_interno';
+    cambiarTipoEjecucion('metodo_interno');
     document.getElementById('form_tarea_descripcion').value = '';
+    document.getElementById('form_comando_custom').value = '';
+    document.getElementById('info_script_actual').innerText = '';
     document.getElementById('modalTareaScheduler').style.display = 'flex';
 }
 
 function editarTarea(tarea) {
-    document.getElementById('modalTareaTitulo').innerText = 'Editar Frecuencia & Tarea';
-    document.getElementById('form_tarea_id').value = tarea.id;
-    document.getElementById('form_tarea_nombre').value = tarea.nombre;
-    document.getElementById('form_tarea_cron').value = tarea.expresion_cron;
-    document.getElementById('form_tarea_script').value = tarea.script;
-    document.getElementById('form_tarea_descripcion').value = tarea.descripcion;
+    document.getElementById('modalTareaTitulo').innerText = 'Editar Tarea Programada';
+    document.getElementById('form_tarea_id').value = tarea.id || '';
+    document.getElementById('form_tarea_nombre').value = tarea.nombre || '';
+    document.getElementById('form_tarea_cron').value = tarea.expresion_cron || '0 0 * * *';
+    
+    const tipo = tarea.tipo_ejecucion || 'metodo_interno';
+    document.getElementById('form_tipo_ejecucion').value = tipo;
+    cambiarTipoEjecucion(tipo);
+
+    if (tarea.script) document.getElementById('form_tarea_script').value = tarea.script;
+    if (tarea.comando_custom) document.getElementById('form_comando_custom').value = tarea.comando_custom;
+    if (tarea.archivo_script) {
+        document.getElementById('info_script_actual').innerText = 'Archivo actual cargado: ' + tarea.archivo_script;
+    } else {
+        document.getElementById('info_script_actual').innerText = '';
+    }
+
+    document.getElementById('form_tarea_descripcion').value = tarea.descripcion || '';
     document.getElementById('modalTareaScheduler').style.display = 'flex';
 }
 
 function cerrarModalTarea() {
     document.getElementById('modalTareaScheduler').style.display = 'none';
+}
+
+function verLogConsola(idTarea, nombreTarea) {
+    document.getElementById('logModalNombreTarea').innerText = 'Tarea: ' + nombreTarea;
+    document.getElementById('logContentBox').innerText = 'Cargando registro de salida desde el servidor...';
+    document.getElementById('modalVisorLog').style.display = 'flex';
+
+    fetch('ver-log-tarea?id=' + encodeURIComponent(idTarea))
+        .then(response => response.text())
+        .then(text => {
+            document.getElementById('logContentBox').innerText = text;
+        })
+        .catch(err => {
+            document.getElementById('logContentBox').innerText = 'Error al recuperar el archivo de log: ' + err;
+        });
+}
+
+function cerrarModalLog() {
+    document.getElementById('modalVisorLog').style.display = 'none';
 }
 
 function pedirConfirmacionEliminar(formId, nombreTarea) {

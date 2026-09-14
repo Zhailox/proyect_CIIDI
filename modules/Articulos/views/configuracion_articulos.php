@@ -1,6 +1,29 @@
-<div class="gestor-art-container">
+<?php
+// 1. EVALUACIÓN SILENCIOSA DE PERMISOS DE EDICIÓN Y ELIMINACIÓN
+$nivelUsuario = (int)($_SESSION['nivel_privilegio'] ?? 999);
+$puedeEditar = false;
+$puedeEliminar = false;
 
-    
+if ($nivelUsuario === 0) {
+    $puedeEditar = true;
+    $puedeEliminar = true;
+} else {
+    $archivo_rbac = CORE_PATH . '../storage/rbac_matrix.json';
+    if (file_exists($archivo_rbac)) {
+        $matrix = json_decode(file_get_contents($archivo_rbac), true) ?: [];
+        $puedeEditar = !empty($matrix[$nivelUsuario]['Articulos']['editar']);
+        $puedeEliminar = !empty($matrix[$nivelUsuario]['Articulos']['eliminar']);
+    }
+}
+
+// 2. CONSUMIR Y DESTRUIR MENSAJES DE SESIÓN (Para evitar bucles al recargar)
+$mensajeExito = $_SESSION['mensaje_exito'] ?? ($mensaje ?? '');
+$mensajeError = $_SESSION['mensaje_error'] ?? ($error ?? '');
+
+if (!empty($_SESSION['mensaje_exito'])) unset($_SESSION['mensaje_exito']);
+if (!empty($_SESSION['mensaje_error'])) unset($_SESSION['mensaje_error']);
+?>
+<div class="gestor-art-container">
     <div class="gestor-art-header">
         <div class="gestor-art-title-box">
             <h1><i class="ph-bold ph-sliders"></i> Ajustes de la Revista Digital</h1>
@@ -11,12 +34,7 @@
         </a>
     </div>
 
-    <?php if (!empty($mensaje)): ?>
-        <div class="alert-success"><i class="ph-bold ph-check-circle"></i> <?= htmlspecialchars($mensaje) ?></div>
-    <?php endif; ?>
-    <?php if (!empty($error)): ?>
-        <div class="alert-error"><i class="ph-bold ph-warning-circle"></i> <?= htmlspecialchars($error) ?></div>
-    <?php endif; ?>
+    <!-- Se eliminaron las alertas estáticas viejas. Ahora todo se muestra con modales JS. -->
 
     <form action="" method="POST" id="configRevistaForm">
         <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
@@ -37,8 +55,6 @@
         </div>
 
         <!-- TAB CITAS -->
-
-
         <div id="tabCitas" class="config-tab-pane active" style="display:block;">
             <div class="pst-config-card mb-2">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 0.8rem;">
@@ -54,31 +70,34 @@
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.8rem; flex-wrap:wrap; gap:0.5rem;">
                                 <div style="display:flex; align-items:center; gap:0.6rem;">
                                     <span style="background:var(--color-secundario); color:white; font-size:0.75rem; padding:0.2rem 0.5rem; border-radius:4px; font-weight:bold; text-transform:uppercase;"><?= htmlspecialchars($slug) ?></span>
-                                    <input type="text" name="citas_estilos[<?= htmlspecialchars($slug) ?>][nombre]" value="<?= htmlspecialchars($estilo['nombre']) ?>" class="login-flat-input p-input" style="font-weight:bold; min-width:200px;" required>
+                                    <input type="text" name="citas_estilos[<?= htmlspecialchars($slug) ?>][nombre]" value="<?= htmlspecialchars($estilo['nombre']) ?>" class="login-flat-input p-input" style="font-weight:bold; min-width:200px;" required <?= !$puedeEditar ? 'readonly' : '' ?>>
                                 </div>
                                 
                                 <div style="display:flex; gap:1.2rem; align-items:center;">
                                     <label class="checkbox-label" style="font-weight:600; font-size:0.9rem;">
-                                        <input type="checkbox" name="citas_estilos[<?= htmlspecialchars($slug) ?>][activo]" value="1" <?= !empty($estilo['activo']) ? 'checked' : '' ?>> Activo
+                                        <input type="checkbox" name="citas_estilos[<?= htmlspecialchars($slug) ?>][activo]" value="1" <?= !empty($estilo['activo']) ? 'checked' : '' ?> <?= !$puedeEditar ? 'disabled' : '' ?>> Activo
                                     </label>
+                                    <?php if ($puedeEditar): ?>
                                     <button type="button" class="btn-icon btn-delete" title="Eliminar estilo" onclick="eliminarFormatoCita('<?= htmlspecialchars($slug) ?>')">
                                         <i class="ph-bold ph-trash"></i>
                                     </button>
+                                    <?php endif; ?>
                                 </div>
                             </div>
 
                             <div style="margin-bottom: 0.6rem; display:flex; gap:0.4rem; flex-wrap:wrap; align-items:center;">
                                 <small class="font-bold" style="color:var(--color-secundario);">Insertar variable:</small>
                                 <?php foreach(['{autores}','{anio}','{titulo}','{editorial}','{volumen}','{numero}','{issn}'] as $var): ?>
-                                    <span class="var-badge" onclick="insertarVar('input_tpl_<?= htmlspecialchars($slug) ?>', '<?= $var ?>')"><?= $var ?></span>
+                                    <span class="var-badge" <?= $puedeEditar ? "onclick=\"insertarVar('input_tpl_" . htmlspecialchars($slug) . "', '$var')\"" : "style='opacity:0.6; cursor:not-allowed;'" ?>><?= $var ?></span>
                                 <?php endforeach; ?>
                             </div>
-                            <input type="text" id="input_tpl_<?= htmlspecialchars($slug) ?>" name="citas_estilos[<?= htmlspecialchars($slug) ?>][plantilla]" value="<?= htmlspecialchars($estilo['plantilla']) ?>" class="login-flat-input w-100 p-input" style="font-family:monospace; font-size:0.85rem;">
+                            <input type="text" id="input_tpl_<?= htmlspecialchars($slug) ?>" name="citas_estilos[<?= htmlspecialchars($slug) ?>][plantilla]" value="<?= htmlspecialchars($estilo['plantilla']) ?>" class="login-flat-input w-100 p-input" style="font-family:monospace; font-size:0.85rem;" <?= !$puedeEditar ? 'readonly' : '' ?>>
                         </div>
                     <?php endforeach; ?>
                 </div>
 
-                <!-- Nueva Cita -->
+                <!-- Nueva Cita (OCULTO SI NO PUEDE EDITAR) -->
+                <?php if ($puedeEditar): ?>
                 <div class="mt-1-5" style="border-top: 1px dashed rgba(0,0,0,0.12); padding-top: 1.5rem;">
                     <h4 class="text-tertiary" style="margin-bottom:0.8rem;"><i class="ph-bold ph-plus-circle"></i> Agregar Nuevo Formato de Cita</h4>
                     <div class="grid-2-cols">
@@ -96,6 +115,7 @@
                         <input type="text" id="nuevo_tpl" name="nuevo_estilo_plantilla" placeholder="Ej. {autores} ({anio}). {titulo}. Editorial {editorial}." class="login-flat-input w-100 p-input" style="font-family:monospace; font-size:0.85rem;">
                     </div>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -108,28 +128,23 @@
                 <div class="grid-2-cols">
                     <div class="form-group mb-1">
                         <label class="font-bold">Artículos en Catálogo Público (Grid Revista)</label>
-                        <input type="number" name="limite_catalogo" value="<?= (int)($config['paginacion']['limite_catalogo'] ?? 16) ?>" min="1" class="login-flat-input w-100 p-input">
-                        <small class="text-muted">Cantidad de artículos por página en la vitrina pública.</small>
+                        <input type="number" name="limite_catalogo" value="<?= (int)($config['paginacion']['limite_catalogo'] ?? 16) ?>" min="1" class="login-flat-input w-100 p-input" <?= !$puedeEditar ? 'readonly' : '' ?>>
                     </div>
                     <div class="form-group mb-1">
                         <label class="font-bold">Artículos en Gestor Administrativo (Tabla)</label>
-                        <input type="number" name="limite_gestor" value="<?= (int)($config['paginacion']['limite_gestor'] ?? 15) ?>" min="1" class="login-flat-input w-100 p-input">
-                        <small class="text-muted">Cantidad de filas a listar por página en la tabla del gestor.</small>
+                        <input type="number" name="limite_gestor" value="<?= (int)($config['paginacion']['limite_gestor'] ?? 15) ?>" min="1" class="login-flat-input w-100 p-input" <?= !$puedeEditar ? 'readonly' : '' ?>>
                     </div>
                     <div class="form-group mt-1">
                         <label class="font-bold">Máximo de Artículos Recomendados</label>
-                        <input type="number" name="max_recomendados" value="<?= (int)($config['paginacion']['max_recomendados'] ?? 3) ?>" min="0" class="login-flat-input w-100 p-input">
-                        <small class="text-muted">Artículos sugeridos en la barra lateral del lector.</small>
+                        <input type="number" name="max_recomendados" value="<?= (int)($config['paginacion']['max_recomendados'] ?? 3) ?>" min="0" class="login-flat-input w-100 p-input" <?= !$puedeEditar ? 'readonly' : '' ?>>
                     </div>
                     <div class="form-group mt-1">
                         <label class="font-bold">Año Mínimo en Filtro del Catálogo</label>
-                        <input type="number" name="anio_minimo" value="<?= (int)($config['buscador']['anio_minimo'] ?? 2020) ?>" class="login-flat-input w-100 p-input">
-                        <small class="text-muted">Límite inferior para el menú selector de años.</small>
+                        <input type="number" name="anio_minimo" value="<?= (int)($config['buscador']['anio_minimo'] ?? 2020) ?>" class="login-flat-input w-100 p-input" <?= !$puedeEditar ? 'readonly' : '' ?>>
                     </div>
                     <div class="form-group mb-1">
                         <label class="font-bold">Elementos en Gestor de Catálogos</label>
-                        <input type="number" name="limite_gestor_catalogos" value="<?= (int)($config['paginacion']['limite_gestor_catalogos'] ?? 15) ?>" min="1" class="login-flat-input w-100 p-input">
-                        <small class="text-muted">Cantidad de etiquetas/categorías a mostrar por pestaña.</small>
+                        <input type="number" name="limite_gestor_catalogos" value="<?= (int)($config['paginacion']['limite_gestor_catalogos'] ?? 15) ?>" min="1" class="login-flat-input w-100 p-input" <?= !$puedeEditar ? 'readonly' : '' ?>>
                     </div>
                 </div>
             </div>
@@ -142,24 +157,24 @@
                 <p class="text-muted mb-2" style="font-size:0.85rem;">Active o desactive los distintivos informativos que se muestran en el catálogo e impresiones de artículos.</p>
                 
                 <div style="display:flex; flex-direction:column; gap:1rem;">
-                    <label class="checkbox-label p-1 box-outlined" style="border-radius:8px; display:flex; align-items:center; gap:0.75rem; cursor:pointer;">
-                        <input type="checkbox" name="mostrar_editorial" value="1" <?= !empty($config['recursos']['mostrar_editorial']) ? 'checked' : '' ?> style="transform:scale(1.2);">
+                    <label class="checkbox-label p-1 box-outlined" style="border-radius:8px; display:flex; align-items:center; gap:0.75rem; <?= !$puedeEditar ? 'cursor:not-allowed; opacity:0.7;' : 'cursor:pointer;' ?>">
+                        <input type="checkbox" name="mostrar_editorial" value="1" <?= !empty($config['recursos']['mostrar_editorial']) ? 'checked' : '' ?> style="transform:scale(1.2);" <?= !$puedeEditar ? 'disabled' : '' ?>>
                         <div>
                             <strong>Mostrar Editorial / Repositorio Institucional</strong>
                             <p class="text-muted" style="margin:0.1rem 0 0 0; font-size:0.8rem;">Muestra la fuente o la casa editorial que avala la investigación.</p>
                         </div>
                     </label>
 
-                    <label class="checkbox-label p-1 box-outlined" style="border-radius:8px; display:flex; align-items:center; gap:0.75rem; cursor:pointer;">
-                        <input type="checkbox" name="mostrar_volumen" value="1" <?= !empty($config['recursos']['mostrar_volumen']) ? 'checked' : '' ?> style="transform:scale(1.2);">
+                    <label class="checkbox-label p-1 box-outlined" style="border-radius:8px; display:flex; align-items:center; gap:0.75rem; <?= !$puedeEditar ? 'cursor:not-allowed; opacity:0.7;' : 'cursor:pointer;' ?>">
+                        <input type="checkbox" name="mostrar_volumen" value="1" <?= !empty($config['recursos']['mostrar_volumen']) ? 'checked' : '' ?> style="transform:scale(1.2);" <?= !$puedeEditar ? 'disabled' : '' ?>>
                         <div>
                             <strong>Mostrar Volumen y Número de Edición</strong>
                             <p class="text-muted" style="margin:0.1rem 0 0 0; font-size:0.8rem;">Imprime el distintivo del volumen (ej. Vol. 5 - Núm. 2) en cada tarjeta.</p>
                         </div>
                     </label>
 
-                    <label class="checkbox-label p-1 box-outlined" style="border-radius:8px; display:flex; align-items:center; gap:0.75rem; cursor:pointer;">
-                        <input type="checkbox" name="mostrar_issn" value="1" <?= !empty($config['recursos']['mostrar_issn']) ? 'checked' : '' ?> style="transform:scale(1.2);">
+                    <label class="checkbox-label p-1 box-outlined" style="border-radius:8px; display:flex; align-items:center; gap:0.75rem; <?= !$puedeEditar ? 'cursor:not-allowed; opacity:0.7;' : 'cursor:pointer;' ?>">
+                        <input type="checkbox" name="mostrar_issn" value="1" <?= !empty($config['recursos']['mostrar_issn']) ? 'checked' : '' ?> style="transform:scale(1.2);" <?= !$puedeEditar ? 'disabled' : '' ?>>
                         <div>
                             <strong>Mostrar Código de Registro ISSN</strong>
                             <p class="text-muted" style="margin:0.1rem 0 0 0; font-size:0.8rem;">Habilita la impresión del identificador estándar internacional.</p>
@@ -178,16 +193,14 @@
                 <div class="grid-2-cols">
                     <div class="form-group">
                         <label class="font-bold">Peso Máximo por Imagen (MB)</label>
-                        <input type="number" name="max_size_mb" value="<?= (int)($config['archivos']['max_size_mb'] ?? 5) ?>" min="1" class="login-flat-input w-100 p-input">
-                        <small class="text-muted">Límite por portada subida en los formularios.</small>
+                        <input type="number" name="max_size_mb" value="<?= (int)($config['archivos']['max_size_mb'] ?? 5) ?>" min="1" class="login-flat-input w-100 p-input" <?= !$puedeEditar ? 'readonly' : '' ?>>
                     </div>
                     <div class="form-group">
                         <label class="font-bold">Extensiones Permitidas (separadas por coma)</label>
                         <?php 
                         $extRaw = implode(', ', $config['archivos']['extensiones_permitidas'] ?? ['.jpg', '.jpeg', '.png', '.webp']);
                         ?>
-                        <input type="text" name="extensiones_permitidas_raw" value="<?= htmlspecialchars($extRaw) ?>" class="login-flat-input w-100 p-input">
-                        <small class="text-muted">Ejemplo: .jpg, .png, .webp</small>
+                        <input type="text" name="extensiones_permitidas_raw" value="<?= htmlspecialchars($extRaw) ?>" class="login-flat-input w-100 p-input" <?= !$puedeEditar ? 'readonly' : '' ?>>
                     </div>
                 </div>
             </div>
@@ -219,24 +232,23 @@
         </div>
 
         <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
-            <button type="submit" class="btn btn-primary btn-large" style="border-radius: 6px; padding: 0.6rem 1.5rem; font-size: 0.85rem; box-shadow: 0 6px 16px rgba(80, 89, 132, 0.22); display: inline-flex; align-items: center; gap: 0.5rem;">
+            <button type="submit" class="btn btn-primary btn-large" <?= !$puedeEditar ? 'disabled style="opacity: 0.5; cursor: not-allowed; border-radius: 6px; padding: 0.6rem 1.5rem;"' : 'style="border-radius: 6px; padding: 0.6rem 1.5rem; font-size: 0.85rem; box-shadow: 0 6px 16px rgba(80, 89, 132, 0.22); display: inline-flex; align-items: center; gap: 0.5rem;"' ?>>
                 <i class="ph-bold ph-floppy-disk"></i> Guardar Ajustes de la Revista
             </button>
         </div>
     </form>
 </div>
 
-
-
-
 <!-- MODAL VISOR DE IMAGEN (IN-SITU) -->
 <div id="modalVisorImagenStorage" class="art-modal-overlay" style="display: none; z-index: 99999;">
-    <div class="art-modal-box" style="max-width: 650px; text-align: center; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(16px); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.7);">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 0.6rem; margin-bottom: 1rem;">
-            <h4 id="modalVisorTitulo" style="margin: 0; font-size: 0.95rem; color: var(--texto-titulos); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 85%;">
+    <div class="art-modal-box" style="max-width: 650px; width: 90%; text-align: center; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(16px); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.7); display: flex; flex-direction: column;">
+        
+        <!-- Contenedor Flex corregido (max-width en el título para truncar con ellipsis) -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 0.6rem; margin-bottom: 1rem; width: 100%; box-sizing: border-box;">
+            <h4 id="modalVisorTitulo" style="margin: 0; font-size: 0.95rem; color: var(--texto-titulos); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: calc(100% - 40px); text-align: left;">
                 Vista Previa de Imagen
             </h4>
-            <button type="button" onclick="cerrarModalVisorImagen()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--texto-silenciado);">&times;</button>
+            <button type="button" onclick="cerrarModalVisorImagen()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--texto-silenciado); flex-shrink: 0;">&times;</button>
         </div>
         
         <div style="width: 100%; max-height: 420px; overflow: hidden; border-radius: 8px; background: #0f172a; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
@@ -255,6 +267,7 @@
 </div>
 
 <script>
+// Manejo de pestañas con persistencia
 function switchConfigTab(tabId, btn) {
     document.querySelectorAll('.config-tab-pane').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.pst-config-nav-tabs button').forEach(b => {
@@ -263,7 +276,19 @@ function switchConfigTab(tabId, btn) {
     
     document.getElementById(tabId).style.display = 'block';
     btn.classList.add('active');
+    
+    sessionStorage.setItem('configArticulosTabActiva', tabId);
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const tabGuardada = sessionStorage.getItem('configArticulosTabActiva') || 'tabCitas';
+    const boton = document.querySelector(`.pst-config-nav-tabs button[onclick*="'${tabGuardada}'"]`);
+    if (boton) {
+        switchConfigTab(tabGuardada, boton);
+    }
+    
+    renderizarGaleriaStorage(1);
+});
 
 function insertarVar(inputId, text) {
     const input = document.getElementById(inputId);
@@ -272,52 +297,48 @@ function insertarVar(inputId, text) {
 }
 
 function eliminarFormatoCita(slug) {
-    if(confirm('¿Eliminar formato de cita? Se aplicará al guardar.')){
-        const box = document.getElementById('citation_box_' + slug);
-        box.style.opacity = '0.3';
-        box.style.transform = 'scale(0.98)';
+    mostrarModalSistema('warning', 'Eliminar formato', '¿Está seguro de eliminar este formato de cita? Esta acción se procesará inmediatamente.', true, () => {
+        // Ejecución inmediata del formulario al confirmar el modal
         const h = document.createElement('input');
-        h.type = 'hidden'; h.name = 'eliminar_estilo'; h.value = slug;
-        document.getElementById('configRevistaForm').appendChild(h);
-    }
+        h.type = 'hidden'; 
+        h.name = 'eliminar_estilo'; 
+        h.value = slug;
+        
+        const form = document.getElementById('configRevistaForm');
+        form.appendChild(h);
+        form.submit(); 
+    });
 }
 
-async function eliminarImagenStorage(nombre, cardId) {
-    if (!confirm(`¿Está seguro de eliminar la imágen "${nombre}" del almacenamiento del servidor? Esta acción no se puede deshacer.`)) {
-        return;
-    }
+function eliminarImagenStorage(nombre, cardId) {
+    mostrarModalSistema('warning', 'Eliminar Imagen del Servidor', `¿Está seguro de eliminar la imágen "${nombre}"? Esta acción borrará el archivo físico y no se puede deshacer.`, true, async () => {
+        const card = document.getElementById(cardId);
+        if (card) card.style.opacity = '0.4';
 
-    const card = document.getElementById(cardId);
-    if (card) card.style.opacity = '0.4';
+        try {
+            const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+            const res = await fetch('api-eliminar-imagen-articulos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ csrf_token: csrfToken, nombre: nombre })
+            });
 
-    try {
-        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
-        const res = await fetch('api-eliminar-imagen-articulos', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                csrf_token: csrfToken,
-                nombre: nombre
-            })
-        });
-
-        const data = await res.json();
-        if (data.success) {
-            if (card) {
-                card.style.transform = 'scale(0.8)';
-                card.style.opacity = '0';
-                setTimeout(() => card.remove(), 300);
+            const data = await res.json();
+            if (data.success) {
+                if (card) {
+                    card.style.transform = 'scale(0.8)';
+                    card.style.opacity = '0';
+                    setTimeout(() => card.remove(), 300);
+                }
+            } else {
+                mostrarModalSistema('error', 'Error al Eliminar', data.error || 'Error desconocido del servidor.');
+                if (card) card.style.opacity = '1';
             }
-        } else {
-            alert('No se pudo eliminar la imagen: ' + (data.error || 'Error desconocido'));
+        } catch (e) {
+            mostrarModalSistema('error', 'Error de Conexión', 'Ocurrió un error de red al intentar comunicarse con el servidor.');
             if (card) card.style.opacity = '1';
         }
-    } catch (e) {
-        alert('Ocurrió un error de red al intentar eliminar la imagen.');
-        if (card) card.style.opacity = '1';
-    }
+    });
 }
 
 function abrirModalVisorImagen(url, nombre) {
@@ -332,7 +353,48 @@ function cerrarModalVisorImagen() {
     document.getElementById('modalVisorImgSrc').src = '';
 }
 
-// Paginación JavaScript del Gestor de Almacenamiento
+// --- SISTEMA DE MODALES ELEGANTES ---
+function mostrarModalSistema(tipo, titulo, mensaje, isConfirm = false, onConfirm = null) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,34,68,0.8); z-index:99999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);';
+    
+    let icon = tipo === 'success' ? '<i class="ph-bold ph-check-circle" style="color: #16a34a;"></i>' : '<i class="ph-bold ph-warning-circle" style="color: #dc2626;"></i>';
+    let btnHtml = isConfirm 
+        ? `<button type="button" class="btn btn-secondary" onclick="this.closest('div').parentElement.parentElement.remove()" style="margin-right:0.5rem; padding: 0.5rem 1rem; border-radius:6px; font-weight:600;">Cancelar</button>
+           <button type="button" class="btn btn-primary" id="btn-confirm-modal" style="background:#ef4444; color:white; border:none; padding: 0.5rem 1rem; border-radius:6px; font-weight:600;">Sí, proceder</button>`
+        : `<button type="button" class="btn btn-primary w-100 justify-center" onclick="this.closest('div').parentElement.parentElement.remove()" style="padding: 0.5rem 1rem; border-radius:6px; font-weight:600;">Entendido</button>`;
+
+    overlay.innerHTML = `
+        <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+            <div style="font-size: 3.5rem; margin-bottom: 1rem;">${icon}</div>
+            <h3 style="margin: 0 0 0.5rem 0; color: #0f172a; font-size:1.2rem;">${titulo}</h3>
+            <!-- AQUI SE AÑADIÓ overflow-wrap y word-break PARA EVITAR EL DESBORDAMIENTO -->
+            <p style="color: #475569; font-size: 0.9rem; margin-bottom: 1.5rem; line-height:1.5; overflow-wrap: break-word; word-break: break-word;">${mensaje}</p>
+            <div style="display:flex; justify-content:center;">${btnHtml}</div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+
+    if (isConfirm && onConfirm) {
+        document.getElementById('btn-confirm-modal').addEventListener('click', () => {
+            overlay.remove();
+            onConfirm();
+        });
+    }
+}
+
+// Inyectar alertas PHP en los modales visuales (Con variables limpias que ya no reaparecen)
+<?php if (!empty($mensajeExito)): ?>
+    mostrarModalSistema('success', 'Operación Exitosa', '<?= htmlspecialchars($mensajeExito, ENT_QUOTES) ?>');
+<?php endif; ?>
+
+<?php if (!empty($mensajeError)): ?>
+    mostrarModalSistema('error', 'No se pudo completar', '<?= htmlspecialchars($mensajeError, ENT_QUOTES) ?>');
+<?php endif; ?>
+
+// Control JS de eliminación por RBAC
+const puedeEliminarStorage = <?= $puedeEliminar ? 'true' : 'false' ?>;
 const imagenesDataStorage = <?= json_encode($imagenesStorage ?? [], JSON_UNESCAPED_UNICODE) ?>;
 const itemsPorPaginaStorage = 8;
 let paginaActualStorage = 1;
@@ -357,7 +419,10 @@ function renderizarGaleriaStorage(pagina) {
                 : '<span style="background: #f59e0b; color: white; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; box-shadow:0 2px 4px rgba(0,0,0,0.15);">Sin uso</span>');
 
         const btnBorrar = (!img.en_uso && !img.es_default)
-            ? `<button type="button" class="btn-icon btn-delete" style="padding: 0.3rem 0.5rem;" title="Eliminar imagen huérfana" onclick="eliminarImagenStorage('${img.nombre}', 'card_img_${md5JS(img.nombre)}')"><i class="ph-bold ph-trash"></i></button>`
+            ? ( puedeEliminarStorage 
+                ? `<button type="button" class="btn-icon btn-delete" style="padding: 0.3rem 0.5rem;" title="Eliminar imagen huérfana" onclick="eliminarImagenStorage('${img.nombre}', 'card_img_${md5JS(img.nombre)}')"><i class="ph-bold ph-trash"></i></button>`
+                : `<button type="button" class="btn-icon" style="padding: 0.3rem 0.5rem; opacity: 0.3; cursor: not-allowed;" title="Sin permisos para eliminar" disabled><i class="ph-bold ph-trash"></i></button>`
+              )
             : `<button type="button" class="btn-icon" style="padding: 0.3rem 0.5rem; opacity: 0.3; cursor: not-allowed;" title="${img.es_default ? 'Imagen predeterminada' : 'Pertenece a un artículo'}" disabled><i class="ph-bold ph-lock"></i></button>`;
 
         const btnArticulo = img.articulo_id 
@@ -384,7 +449,6 @@ function renderizarGaleriaStorage(pagina) {
     });
     container.innerHTML = html;
 
-    // Renderizado de Controles de Paginación
     if (controls && totalPaginas > 1) {
         let phtml = '';
         if (paginaActualStorage > 1) {
@@ -411,9 +475,8 @@ function md5JS(string) {
     }
     return Math.abs(hash).toString(16);
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    renderizarGaleriaStorage(1);
-});
+if (window.history.replaceState) {
+    window.history.replaceState(null, null, window.location.href);
+}
 </script>
 <script src="../modules/Articulos/assets/js/lazy_loading.js"></script>

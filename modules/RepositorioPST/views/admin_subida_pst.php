@@ -72,9 +72,8 @@ if (typeof window.mammoth === 'undefined') {
                                     <label for="nivel_academico">Nivel Académico *</label>
                                     <select id="nivel_academico" name="nivel_academico" class="upload-input" onchange="toggleTrayectoByNivel()" required>
                                         <?php 
-                                        $modelSubida = new DocumentoModel();
-                                        $nivelesAcademicosDB = $modelSubida->getNivelesAcademicos();
-                                        $trayectosDB = $modelSubida->getTrayectos();
+                                        $nivelesAcademicosDB = $nivelesAcademicos ?? ['Pregrado', 'Especialización', 'Maestría', 'Doctorado'];
+                                        $trayectosDB = $trayectosList ?? ['Trayecto I', 'Trayecto II', 'Trayecto III', 'Trayecto IV'];
                                         $currNivel = $_POST['nivel_academico'] ?? $documento['nivel_academico'] ?? ($nivelesAcademicosDB[0] ?? 'Pregrado');
                                         foreach ($nivelesAcademicosDB as $nivelItem):
                                         ?>
@@ -416,7 +415,7 @@ if (typeof window.mammoth === 'undefined') {
                                                      <i class="ph ph-pencil-simple"></i> Editar
                                                  </a>
 
-                                                 <?php if ($nivelUsuario >= 2): ?>
+                                                 <?php if (Auth::requierePrivilegioMinimo(2, 'eliminar', 'RepositorioPST', false)): ?>
                                                      <a href="javascript:void(0)" class="btn-action-delete" title="Eliminar Registro Definitivo" onclick="confirmarEliminacionModal('?ruta=agregar-documento&accion=eliminar&id=<?= $doc['id'] ?>')">
                                                          <i class="ph ph-trash"></i> Eliminar
                                                      </a>

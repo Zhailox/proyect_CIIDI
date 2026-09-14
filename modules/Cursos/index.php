@@ -2,6 +2,7 @@
 // modules/Cursos/index.php
 
 require_once CORE_PATH . 'Interfaces/ModuleContract.php';
+require_once __DIR__ . '/../SuperAdmin/services/SystemConfigService.php';
 
 class CursosModule implements ModuleContract {
 
@@ -87,6 +88,8 @@ class CursosModule implements ModuleContract {
     }
 
     public function getMenuConfig(): array {
+        $nivelAdmin = SystemConfigService::get('accesos_modulos.cursos.admin', 0);
+        $nivelPublico = SystemConfigService::get('accesos_modulos.cursos.publico', 10);
         return [
             [
                 'tipo'        => 'parent',
@@ -94,11 +97,11 @@ class CursosModule implements ModuleContract {
                 'icono'       => 'ph-fill ph-graduation-cap',
                 'enlace'      => 'cursos',
                 'activadores' => ['cursos', 'cursos-crear', 'cursos-editar', 'cursos-config'],
-                'privilegio_minimo' => 999,
+                'privilegio_minimo' => $nivelPublico,
                 'subitems'    => [
-                    ['ruta' => 'cursos',        'titulo' => 'Oferta Formativa'],
-                    ['ruta' => 'cursos-crear',  'titulo' => 'Registrar Curso', 'privilegio_minimo' => 2],
-                    ['ruta' => 'cursos-config', 'titulo' => 'Configuración', 'privilegio_minimo' => 0],
+                    ['ruta' => 'cursos',        'titulo' => 'Oferta Formativa', 'privilegio_minimo' => $nivelPublico],
+                    ['ruta' => 'cursos-crear',  'titulo' => 'Registrar Curso', 'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'cursos-config', 'titulo' => 'Configuración', 'privilegio_minimo' => $nivelAdmin],
                 ],
             ],
         ];

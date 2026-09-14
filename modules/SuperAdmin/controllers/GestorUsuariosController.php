@@ -12,12 +12,7 @@ class GestorUsuariosController {
     }
 
     public function index() {
-        Auth::requierePrivilegioMinimo(2);
-
-        // Auto-purga de registros de nivel_privilegio duplicados huérfanos
-        try {
-            $this->adminModel->purgarDuplicadosPrivilegios();
-        } catch (Throwable $e) {}
+        Auth::requierePrivilegioMinimo(0);
 
         $cedulaBusqueda = trim($_GET['cedula'] ?? '');
         $resultadoBusqueda = null;
@@ -220,7 +215,7 @@ class GestorUsuariosController {
 
     // Carga la vista de edición con los datos del usuario
     public function mostrarEdicion() {
-        Auth::requierePrivilegioMinimo(2);
+        Auth::requierePrivilegioMinimo(0);
         
         $cedula = $_GET['cedula'] ?? '';
         $usuario = $this->adminModel->buscarPorCedula($cedula);
@@ -246,7 +241,7 @@ class GestorUsuariosController {
 
     // Recibe los datos del formulario de edición y los guarda
     public function procesarEdicion() {
-        Auth::requierePrivilegioMinimo(2);
+        Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return false;
 
@@ -288,7 +283,7 @@ class GestorUsuariosController {
 
     // Enciende o apaga la cuenta
     public function alternarEstado() {
-        Auth::requierePrivilegioMinimo(2);
+        Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = (int) $_POST['usuario_id'];

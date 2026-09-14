@@ -2,16 +2,21 @@
 require_once CORE_PATH . 'Security/Auth.php';
 require_once __DIR__ . '/../models/ArticuloModel.php';
 require_once __DIR__ . '/../services/ConfigService.php';
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
+
 
 class ArticulosController {
     
     private $articuloModel;
+    private int $nivelAdmin;
 
     public function __construct() {
         $this->articuloModel = new ArticuloModel();
+        $this->nivelAdmin   = SystemConfigService::get('accesos_modulos.articulos.admin', 1);
     }
 
     public function index() {
+        
         $filtros = [
             'q' => trim($_GET['q'] ?? ''),
             'year' => !empty($_GET['year']) ? (int) $_GET['year'] : '',
@@ -47,7 +52,7 @@ class ArticulosController {
     }
 
     public function gestor() {
-        Auth::requierePrivilegioMinimo(2, 'auditar', 'Articulos');
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'Articulos');
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         $filtros = [
@@ -67,7 +72,7 @@ class ArticulosController {
     }
     public function nuevo() {
         // Candado: Solo administradores o bibliotecarios con permiso crear
-        Auth::requierePrivilegioMinimo(2, 'crear', 'Articulos');
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'Articulos');
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
@@ -83,7 +88,7 @@ class ArticulosController {
         ];
     }
     public function procesar() {
-        Auth::requierePrivilegioMinimo(2, 'crear', 'Articulos');
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'Articulos');
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
             $_SESSION['mensaje_error'] = "Petición rechazada por seguridad (Token CSRF inválido o expirado).";
@@ -257,7 +262,7 @@ class ArticulosController {
         }
     }
     public function eliminar() {
-        Auth::requierePrivilegioMinimo(2, 'eliminar', 'Articulos');
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'Articulos');
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
             $_SESSION['mensaje_error'] = "Petición rechazada por seguridad (Token CSRF inválido o expirado).";
@@ -287,7 +292,7 @@ class ArticulosController {
         exit;
     }
     public function editar() {
-        Auth::requierePrivilegioMinimo(2, 'editar', 'Articulos');
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Articulos');
         if (session_status() === PHP_SESSION_NONE) session_start();
             if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
@@ -314,7 +319,7 @@ class ArticulosController {
     }
 
     public function actualizar() {
-        Auth::requierePrivilegioMinimo(2, 'editar', 'Articulos');
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Articulos');
         if (session_status() === PHP_SESSION_NONE) session_start();
             if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
                 $_SESSION['mensaje_error'] = "Petición rechazada por seguridad (Token CSRF inválido o expirado).";
@@ -459,7 +464,7 @@ class ArticulosController {
         }
     }
     public function gestorCatalogos() {
-        Auth::requierePrivilegioMinimo(2);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'Articulos');
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (session_status() === PHP_SESSION_NONE) session_start();
@@ -471,6 +476,14 @@ class ArticulosController {
 
             $accion = $_POST['accion'] ?? '';
             $nombre = trim($_POST['nombre'] ?? '');
+
+            if (strpos($accion, 'crear_') === 0) {
+                Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'Articulos');
+            } elseif (strpos($accion, 'actualizar_') === 0) {
+                Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Articulos');
+            } elseif (strpos($accion, 'eliminar_') === 0) {
+                Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'Articulos');
+            }
 
             try {
                 if ($accion === 'crear_categoria' && $nombre !== '') {
@@ -574,7 +587,7 @@ class ArticulosController {
         exit;
     }
     public function toggleEstado() {
-        Auth::requierePrivilegioMinimo(2);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Articulos');
         $id = (int)($_GET['id'] ?? 0);
         try {
             $this->articuloModel->cambiarEstado($id);

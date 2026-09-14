@@ -2,13 +2,18 @@
 // modules/Investigaciones/controllers/InvestigacionController.php
 require_once __DIR__ . '/../models/InvestigacionModel.php';
 require_once CORE_PATH . 'Security/Auth.php';
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
 
 class InvestigacionController {
 
     private InvestigacionModel $model;
+    private int $nivelAdmin;
+    private int $nivelPublico;
 
     public function __construct() {
         $this->model = new InvestigacionModel();
+        $this->nivelAdmin   = SystemConfigService::get('accesos_modulos.investigacion.admin', 1);
+        $this->nivelPublico = SystemConfigService::get('accesos_modulos.investigacion.publico', 10);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -36,7 +41,7 @@ class InvestigacionController {
     }
 
     public function mostrarPanelPostulaciones(): array {
-        Auth::requierePrivilegioMinimo(5);
+        Auth::requierePrivilegioMinimo($this->nivelPublico);
         $user = Auth::usuario();
 
         $lineas = $this->model->obtenerLineas();
@@ -68,7 +73,7 @@ class InvestigacionController {
     }
 
     public function procesarPostulacion() {
-        Auth::requierePrivilegioMinimo(5);
+        Auth::requierePrivilegioMinimo($this->nivelPublico);
         $user = Auth::usuario();
         
         $id_inv = (int)($_POST['id_investigacion'] ?? 0);
@@ -107,14 +112,14 @@ class InvestigacionController {
     // ──────────────────────────────────────────────────────────────────────────
 
     public function mostrarMisInvestigaciones(): array {
-        Auth::requierePrivilegioMinimo(1, 'auditar', 'Investigaciones');
+        Auth::requierePrivilegioMinimo($this->nivelAdmin);
         $user = Auth::usuario();
         $investigaciones = $this->model->obtenerMisInvestigaciones((int)$user['id']);
         return compact('investigaciones');
     }
 
     public function mostrarFormCrear(): array {
-        Auth::requierePrivilegioMinimo(1, 'crear', 'Investigaciones');
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'Investigaciones');
         $lineas = $this->model->obtenerLineas();
         // Variables por defecto para el formulario
         $investigacion = [
@@ -126,7 +131,7 @@ class InvestigacionController {
     }
 
     public function mostrarFormEditar(): array {
-        Auth::requierePrivilegioMinimo(1, 'editar', 'Investigaciones');
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Investigaciones');
         $user = Auth::usuario();
         $id = (int)($_GET['id'] ?? 0);
         
@@ -144,7 +149,7 @@ class InvestigacionController {
     }
 
     public function guardarInvestigacion() {
-        Auth::requierePrivilegioMinimo(1);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin);
         $user = Auth::usuario();
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
@@ -192,7 +197,7 @@ class InvestigacionController {
     }
 
     public function actualizarInvestigacion() {
-        Auth::requierePrivilegioMinimo(1);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin);
         $user = Auth::usuario();
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
@@ -234,7 +239,7 @@ class InvestigacionController {
     }
 
     public function eliminarInvestigacion() {
-        Auth::requierePrivilegioMinimo(1);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin);
         $user = Auth::usuario();
         $id = (int)($_POST['id'] ?? 0);
         
@@ -252,14 +257,14 @@ class InvestigacionController {
     }
 
     public function mostrarMisPostulantes(): array {
-        Auth::requierePrivilegioMinimo(1);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin);
         $user = Auth::usuario();
         $postulaciones = $this->model->obtenerPostulantesDeMiProyecto((int)$user['id']);
         return compact('postulaciones');
     }
 
     public function responderPostulacion() {
-        Auth::requierePrivilegioMinimo(1);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin);
         $user = Auth::usuario();
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
@@ -286,7 +291,7 @@ class InvestigacionController {
     // ──────────────────────────────────────────────────────────────────────────
 
     public function mostrarPanelAdmin(): array {
-        Auth::requierePrivilegioMinimo(1);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'Investigaciones');
         
         $investigaciones = $this->model->obtenerTodasAdmin();
         $postulaciones = $this->model->obtenerPostulacionesAdmin();
@@ -296,7 +301,7 @@ class InvestigacionController {
     }
 
     public function cambiarEstado() {
-        Auth::requierePrivilegioMinimo(1);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin);
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
         
         $id = (int)($_POST['id'] ?? 0);

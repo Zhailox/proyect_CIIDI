@@ -19,6 +19,7 @@
         }
     },
     "paginacion": {
+        "modo_carga": "paginador",
         "limite_catalogo": 10,
         "limite_buscador": 6,
         "opciones_selector": [
@@ -32,7 +33,7 @@
     },
     "recursos": {
         "sufijo_tipo_recurso": "PST \/ Proyecto Socio-Tecnológico",
-        "mostrar_url_git": true,
+        "mostrar_url_git": false,
         "mostrar_comunidad": true,
         "mostrar_nivel_academico": true
     },

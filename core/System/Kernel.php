@@ -9,7 +9,10 @@ class Kernel {
     private $menuGlobal = []; // NUEVO: Aquí guardaremos el menú de todos los módulos
 
     public function __construct() {
-        $this->cargarModulos();
+        $archivo_candado = __DIR__ . '/../../storage/installed.lock';
+        if (file_exists($archivo_candado)) {
+            $this->cargarModulos();
+        }
     }
 
     private function cargarModulos() {
@@ -61,11 +64,42 @@ class Kernel {
         }
     }
 
-public function run() {
+    public function run() {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         $ruta = isset($_GET['ruta']) ? $_GET['ruta'] : 'inicio';
+
+        // --- DISPARADOR DEL ASISTENTE DE INSTALACIÓN AUTÓNOMA (CORE INSTALLER HOOK) ---
+        $archivo_candado = __DIR__ . '/../../storage/installed.lock';
+        $rutasInstalador = ['install', 'installer-test-db', 'installer-create-db', 'installer-run'];
+
+        if (!file_exists($archivo_candado)) {
+            // Si el sistema no está instalado, redirigir cualquier petición al Wizard de instalación
+            require_once CORE_PATH . 'Installer/InstallerController.php';
+            $installerController = new InstallerController();
+
+            if ($ruta === 'installer-test-db') {
+                $installerController->testConnectionAjax();
+                exit;
+            } elseif ($ruta === 'installer-create-db') {
+                $installerController->createDbAjax();
+                exit;
+            } elseif ($ruta === 'installer-run') {
+                $installerController->installSystemAjax();
+                exit;
+            } else {
+                $datosVista = $installerController->index();
+                extract($datosVista);
+                require_once CORE_PATH . 'Installer/views/wizard.php';
+                exit;
+            }
+        } elseif (in_array($ruta, $rutasInstalador)) {
+            // Si la aplicación ya está instalada y alguien intenta acceder a /install, bloquear
+            header("Location: login");
+            exit;
+        }
+
         $archivo_mantenimiento = __DIR__ . '/../../storage/maintenance.json';
         if (file_exists($archivo_mantenimiento)) {
             $dataMantenimiento = json_decode(file_get_contents($archivo_mantenimiento), true) ?: [];

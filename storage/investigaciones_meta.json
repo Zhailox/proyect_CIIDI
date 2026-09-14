@@ -5,5 +5,12 @@
         "tag_que": "Proyecto",
         "tag_sobre": "Innovacion",
         "trayecto": "maestria"
+    },
+    "2": {
+        "imagen": "uploads\/investigaciones\/inv_6aa70a2b9b233_IsotipoDenkKraft.png",
+        "tag_quien": "Equipo CIIDI",
+        "tag_que": "Proyecto",
+        "tag_sobre": "Innovacion",
+        "trayecto": "t4"
     }
 }

@@ -122,11 +122,28 @@ class ModulosController {
             $config['modulos'][$carpeta] = ['estado' => $nuevoEstado];
             $this->guardarConfiguracion($config);
 
+            // Obtener rutas del módulo para informar al frontend en AJAX
+            $rutasModulo = [];
+            $ruta_index_mod = MODULES_PATH . $carpeta . '/index.php';
+            if (file_exists($ruta_index_mod)) {
+                $claseMod = $carpeta . 'Module';
+                $modInst = class_exists($claseMod) ? new $claseMod() : require_once $ruta_index_mod;
+                if ($modInst instanceof ModuleContract) {
+                    $rutasModulo = array_keys($modInst->getRutas());
+                }
+            }
+
             AuditLogger::registrar('WARNING', 'SuperAdmin', 'Alternar Estado Módulo', "Módulo {$carpeta} cambiado a estado: {$nuevoEstado}");
 
             if ($esAjax) {
                 header('Content-Type: application/json');
-                echo json_encode(['status' => 'success', 'nuevo_estado' => $nuevoEstado, 'modulo' => $carpeta, 'message' => "Módulo '{$carpeta}' invertido a {$nuevoEstado}"]);
+                echo json_encode([
+                    'status' => 'success',
+                    'nuevo_estado' => $nuevoEstado,
+                    'modulo' => $carpeta,
+                    'rutas' => $rutasModulo,
+                    'message' => "Módulo '{$carpeta}' invertido a {$nuevoEstado}"
+                ]);
                 exit;
             }
 

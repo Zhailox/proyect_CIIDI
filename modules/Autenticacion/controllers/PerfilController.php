@@ -5,8 +5,8 @@ require_once CORE_PATH . 'Security/Auth.php';
 class PerfilController {
 
     public function mostrarDashboard() {
-        // 1. EL GUARDIÁN: Validamos seguridad ANTES de imprimir HTML
-        Auth::requierePrivilegioMinimo(10);
+        // 1. Pide privilegios solo superiores al del público general (que es 999)
+        Auth::requierePrivilegioMinimo(998);
         
         // 2. Extraemos los datos del usuario activo
         $usuario = Auth::usuario();

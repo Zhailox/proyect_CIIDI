@@ -1,25 +1,48 @@
 <?php
 // storage/cron_runner.php
-// Script ejecutor CLI para Linux Crontab o Windows Task Scheduler
+// Micro-Runner CLI para Cron Job de Linux / Task Scheduler de Windows
 
-define('CORE_PATH', __DIR__ . '/../core/');
-define('STORAGE_PATH', __DIR__ . '/');
+define('BASE_PATH', dirname(__DIR__));
+define('CORE_PATH', BASE_PATH . '/core/');
+define('STORAGE_PATH', BASE_PATH . '/storage/');
 
 require_once CORE_PATH . 'Security/Auth.php';
-require_once __DIR__ . '/../modules/SuperAdmin/services/SchedulerService.php';
+require_once BASE_PATH . '/modules/SuperAdmin/services/SchedulerService.php';
 
-echo "[CIIDI Scheduler Runner] Iniciando comprobación de tareas en segundo plano (" . date('Y-m-d H:i:s') . ")...\n";
+$termoColor = (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN');
+
+function logCli($msg, $color = '0') {
+    global $termoColor;
+    if ($termoColor) {
+        echo "\033[{$color}m[" . date('Y-m-d H:i:s') . "] {$msg}\033[0m\n";
+    } else {
+        echo "[" . date('Y-m-d H:i:s') . "] {$msg}\n";
+    }
+}
+
+logCli("Iniciando Runner de Tareas Programadas CIIDI...", "32");
 
 $tareas = SchedulerService::obtenerTareas();
 $ejecutadas = 0;
 
 foreach ($tareas as $id => $t) {
-    if ($t['estado'] === 'activo') {
-        echo " -> Ejecutando tarea '{$t['nombre']}'...\n";
+    if (($t['estado'] ?? 'activo') !== 'activo') {
+        continue;
+    }
+
+    $cronExpr = $t['expresion_cron'] ?? '* * * * *';
+    $ultima = $t['ultima_ejecucion'] ?? null;
+
+    if (SchedulerService::correspondeEjecutar($cronExpr, $ultima)) {
+        logCli("Ejecutando tarea: {$t['nombre']} (ID: {$id})...", "33");
         $res = SchedulerService::ejecutarTareaManual($id);
-        echo "    Resultado: " . ($res['exito'] ? 'OK' : 'ERROR') . " - {$res['mensaje']}\n";
+        if ($res['exito']) {
+            logCli("ÉXITO ({$res['duracion']}ms): {$res['mensaje']}", "32");
+        } else {
+            logCli("ERROR ({$res['duracion']}ms): {$res['mensaje']}", "31");
+        }
         $ejecutadas++;
     }
 }
 
-echo "[CIIDI Scheduler Runner] Proceso finalizado. Total tareas procesadas: {$ejecutadas}.\n";
+logCli("Proceso finalizado. Total tareas procesadas en este ciclo: {$ejecutadas}", "36");

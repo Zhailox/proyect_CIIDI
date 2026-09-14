@@ -4,13 +4,15 @@ require_once __DIR__ . '/../models/CursoModel.php';
 require_once __DIR__ . '/../services/CsrfService.php';
 require_once __DIR__ . '/../services/ImagenService.php';
 require_once CORE_PATH . 'Security/Auth.php';
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
 
 class PromoController {
-
+    private int $nivelAdmin;
     private CursoModel $model;
     private array $cfg;
 
     public function __construct() {
+        $this->nivelAdmin   = SystemConfigService::get('accesos_modulos.cursos.admin', 1);
         $this->model = new CursoModel();
         $this->cfg   = $this->model->cargarConfig();
     }

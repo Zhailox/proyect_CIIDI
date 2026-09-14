@@ -67,26 +67,47 @@ class SchedulerController {
         Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $id = trim($_POST['tarea_id'] ?? '');
-            $nombre = trim($_POST['nombre'] ?? '');
-            $descripcion = trim($_POST['descripcion'] ?? '');
-            $cron = trim($_POST['expresion_cron'] ?? '0 0 * * *');
-            $script = trim($_POST['script'] ?? '');
+            $datos = [
+                'id'               => trim($_POST['tarea_id'] ?? ''),
+                'nombre'           => trim($_POST['nombre'] ?? ''),
+                'descripcion'      => trim($_POST['descripcion'] ?? ''),
+                'expresion_cron'   => trim($_POST['expresion_cron'] ?? '0 0 * * *'),
+                'tipo_ejecucion'   => trim($_POST['tipo_ejecucion'] ?? 'metodo_interno'),
+                'script'           => trim($_POST['script'] ?? ''),
+                'comando_custom'   => trim($_POST['comando_custom'] ?? ''),
+                'timeout_segundos' => (int)($_POST['timeout_segundos'] ?? 60),
+                'estado'           => trim($_POST['estado'] ?? 'activo')
+            ];
 
-            if (empty($id)) {
-                $id = 'tarea_' . time();
-            }
+            $archivoSubido = $_FILES['archivo_script'] ?? null;
 
-            if (!empty($nombre) && !empty($script)) {
-                SchedulerService::guardarTareaCustom($id, $nombre, $descripcion, $cron, $script);
+            if (!empty($datos['nombre'])) {
+                $res = SchedulerService::guardarTareaCompleta($datos, $archivoSubido);
                 if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['mensaje_admin_exito'] = "Tarea programada '{$nombre}' guardada correctamente.";
+                if ($res['exito']) {
+                    $_SESSION['mensaje_admin_exito'] = $res['mensaje'];
+                } else {
+                    $_SESSION['mensaje_admin_error'] = $res['mensaje'];
+                }
             } else {
                 if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['mensaje_admin_error'] = "Debe especificar un nombre y el método script ejecutor.";
+                $_SESSION['mensaje_admin_error'] = "Debe especificar un nombre para la tarea programada.";
             }
         }
         header("Location: gestor-scheduler");
+        exit;
+    }
+
+    public function verLog() {
+        Auth::requierePrivilegioMinimo(0);
+
+        $idTarea = trim($_GET['id'] ?? '');
+        header('Content-Type: text/plain; charset=utf-8');
+        if (!empty($idTarea)) {
+            echo SchedulerService::obtenerLogTarea($idTarea);
+        } else {
+            echo "ID de tarea no especificado.";
+        }
         exit;
     }
 
