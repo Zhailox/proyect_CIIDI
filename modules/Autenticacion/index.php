@@ -60,6 +60,24 @@ public function getRutas(): array {
                 'controlador'      => 'LoginController',
                 'metodo'           => 'procesarRecuperacion'
             ],
+            'restablecer-clave' => [
+                'controlador_path' => __DIR__ . '/controllers/LoginController.php',
+                'controlador'      => 'LoginController',
+                'metodo'           => 'mostrarRestablecerClave',
+                'vista'            => __DIR__ . '/views/restablecer_clave.php',
+                'titulo'           => 'Restablecer Contraseña - CIIDI UPTTMBI',
+                'css'              => ['autenticacion.css']
+            ],
+            'procesar-restablecer-clave' => [
+                'controlador_path' => __DIR__ . '/controllers/LoginController.php',
+                'controlador'      => 'LoginController',
+                'metodo'           => 'procesarRestablecerClave'
+            ],
+            'activar-cuenta' => [
+                'controlador_path' => __DIR__ . '/controllers/LoginController.php',
+                'controlador'      => 'LoginController',
+                'metodo'           => 'activarCuenta'
+            ],
             'ingresar-codigo' => [
                 'controlador_path' => __DIR__ . '/controllers/LoginController.php',
                 'controlador'      => 'LoginController',

@@ -1,0 +1,57 @@
+{
+    "autenticacion.recuperar_clave": {
+        "modulo": "Autenticación",
+        "nombre": "Restablecimiento de Contraseña",
+        "descripcion": "Notificación enviada cuando un usuario solicita recuperar su clave mediante enlace seguro.",
+        "asunto": "Restablecer Contraseña - Sistema CIIDI UPTTMBI",
+        "activo": true,
+        "variables": [
+            "NOMBRE_USUARIO",
+            "ENLACE_ACCION",
+            "TIEMPO_EXPIRACION"
+        ],
+        "cuerpo_html": "<h2 style=\"color:#121a3e; margin-top:0;\">Solicitud de Restablecimiento de Clave<\/h2>\r\n<p>Estimado(a) <strong>{NOMBRE_USUARIO}<\/strong>,<\/p>\r\n<p>Hemos recibido una solicitud para restablecer la contraseña de su cuenta institucional en el sistema CIIDI.<\/p>\r\n<p style=\"text-align: center; margin: 30px 0;\">\r\n    <a href=\"{ENLACE_ACCION}\" style=\"background-color:#121a3e; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:6px; font-weight:bold; display:inline-block;\">\r\n        Restablecer Mi Contraseña\r\n    <\/a>\r\n<\/p>\r\n<p style=\"font-size:0.85rem; color:#64748b;\">Si el botón no funciona, copie y pegue el siguiente enlace en su navegador:<\/p>\r\n<p style=\"font-size:0.8rem; word-break:break-all; color:#2563eb;\">{ENLACE_ACCION}<\/p>\r\n<p style=\"color:#dc2626; font-size:0.85rem; font-weight:bold;\">⚠ Este enlace es de uso único y expirará en {TIEMPO_EXPIRACION}.<\/p>\r\n<p style=\"font-size:0.85rem; color:#64748b;\">Si usted no realizó esta solicitud, puede ignorar este mensaje de forma segura.<\/p>",
+        "plantilla_completa": false
+    },
+    "autenticacion.bienvenida": {
+        "modulo": "Autenticación",
+        "nombre": "Mensaje de Bienvenida (Registro Exitoso)",
+        "descripcion": "Notificación enviada al usuario tras crear su cuenta satisfactoriamente.",
+        "asunto": "¡Bienvenido a la Plataforma CIIDI UPTTMBI!",
+        "activo": true,
+        "variables": [
+            "NOMBRE_USUARIO",
+            "CEDULA_USUARIO",
+            "ENLACE_ACCESO"
+        ],
+        "cuerpo_html": "<h2 style=\"color:#121a3e; margin-top:0;\">¡Bienvenido(a) a la Plataforma CIIDI!<\/h2>\n<p>Hola <strong>{NOMBRE_USUARIO}<\/strong>,<\/p>\n<p>Tu cuenta institucional ha sido registrada exitosamente en nuestro sistema integral de investigación y desarrollo.<\/p>\n<div style=\"background-color:#f8fafc; border-left:4px solid #2563eb; padding:15px; margin:20px 0; border-radius:4px;\">\n    <p style=\"margin:0 0 5px 0;\"><strong>Cédula \/ Usuario:<\/strong> {CEDULA_USUARIO}<\/p>\n    <p style=\"margin:0;\"><strong>Estado de la cuenta:<\/strong> Activa y lista para usar.<\/p>\n<\/div>\n<p>Ya puedes acceder a la plataforma utilizando tus credenciales de acceso:<\/p>\n<p style=\"text-align: center; margin: 25px 0;\">\n    <a href=\"{ENLACE_ACCESO}\" style=\"background-color:#121a3e; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:6px; font-weight:bold; display:inline-block;\">\n        Iniciar Sesión Ahora\n    <\/a>\n<\/p>\n<p style=\"font-size:0.85rem; color:#64748b;\">Si el botón no funciona, copie y pegue el siguiente enlace en su navegador:<\/p>\n<p style=\"font-size:0.8rem; word-break:break-all; color:#2563eb;\">{ENLACE_ACCESO}<\/p>"
+    },
+    "seguridad.cuenta_bloqueada": {
+        "modulo": "Seguridad & WAF",
+        "nombre": "Alerta de Cuenta Suspendida \/ Bloqueada",
+        "descripcion": "Notificación enviada cuando el sistema detecta intentos fallidos repetidos o suspensión administrativa.",
+        "asunto": "Alerta de Seguridad: Su cuenta ha sido bloqueada temporalmente",
+        "activo": true,
+        "variables": [
+            "NOMBRE_USUARIO",
+            "MOTIVO",
+            "IP_ORIGEN",
+            "FECHA_HORA",
+            "ENLACE_SOPORTE"
+        ],
+        "cuerpo_html": "<h2 style=\"color:#b91c1c; margin-top:0;\">⚠ Alerta de Seguridad de Acceso<\/h2>\n<p>Estimado(a) <strong>{NOMBRE_USUARIO}<\/strong>,<\/p>\n<p>Le informamos que su cuenta institucional ha sido suspendida\/bloqueada temporalmente por razones de seguridad.<\/p>\n<div style=\"background-color:#fef2f2; border-left:4px solid #ef4444; padding:15px; margin:20px 0; border-radius:4px;\">\n    <p style=\"margin:0 0 5px 0;\"><strong>Motivo:<\/strong> {MOTIVO}<\/p>\n    <p style=\"margin:0 0 5px 0;\"><strong>Dirección IP:<\/strong> {IP_ORIGEN}<\/p>\n    <p style=\"margin:0;\"><strong>Fecha y Hora:<\/strong> {FECHA_HORA}<\/p>\n<\/div>\n<p>Si requiere ayuda para restaurar su cuenta, por favor utilice el siguiente enlace o contacte a administración:<\/p>\n<p style=\"text-align: center; margin: 25px 0;\">\n    <a href=\"{ENLACE_SOPORTE}\" style=\"background-color:#121a3e; color:#ffffff; padding:10px 20px; text-decoration:none; border-radius:6px; font-weight:bold; display:inline-block;\">\n        Solicitar Desbloqueo \/ Soporte\n    <\/a>\n<\/p>"
+    },
+    "vinculacion.nueva_solicitud": {
+        "modulo": "Vinculación Empresarial",
+        "nombre": "Confirmación de Solicitud de Empresa",
+        "descripcion": "Enviado a las empresas del sector productivo al proponer un problema técnico\/PST.",
+        "asunto": "Recepción de Solicitud de Proyecto PST - UPTTMBI",
+        "activo": true,
+        "variables": [
+            "NOMBRE_EMPRESA",
+            "TITULO_PROBLEMATICA",
+            "CODIGO_SEGUIMIENTO"
+        ],
+        "cuerpo_html": "<h2 style=\"color:#121a3e; margin-top:0;\">Confirmación de Propuesta Técnica<\/h2>\n<p>Estimados representantes de <strong>{NOMBRE_EMPRESA}<\/strong>,<\/p>\n<p>Hemos recibido satisfactoriamente su propuesta de problemática sociotecnológica titulada:<\/p>\n<blockquote style=\"background:#f8fafc; border-left:4px solid #f59e0b; padding:12px; font-style:italic;\">{TITULO_PROBLEMATICA}<\/blockquote>\n<p>Su código único de seguimiento es: <strong>{CODIGO_SEGUIMIENTO}<\/strong><\/p>\n<p>El comité académico revisará la propuesta para asignarla al plantel docente y estudiantes investigadores del PNF en Informática.<\/p>"
+    }
+}

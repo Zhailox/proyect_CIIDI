@@ -42,9 +42,6 @@
         <button type="button" class="sa-tab-btn" onclick="switchConfigTab('tabSeguridad', this)">
             <i class="ph-bold ph-shield-check"></i> Seguridad Base
         </button>
-        <button type="button" class="sa-tab-btn" onclick="switchConfigTab('tabSmtp', this)">
-            <i class="ph-bold ph-envelope-simple"></i> Servidor SMTP
-        </button>
         <button type="button" class="sa-tab-btn" onclick="switchConfigTab('tabAccesos', this)">
             <i class="ph-bold ph-lock-key"></i> Accesos por Módulo
         </button>
@@ -100,40 +97,6 @@
         </div>
     </div>
 
-    <!-- TAB SMTP -->
-    <div id="tabSmtp" class="sa-tab-content" style="display:none;">
-        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-sm);">
-            <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem; font-weight: 700; color: var(--texto-titulos); display: flex; align-items: center; gap: 6px;">
-                <i class="ph-bold ph-envelope-simple" style="color: var(--color-terciario);"></i> Servidor de Correos (Notificaciones)
-            </h4>
-            <p style="font-size: 0.85rem; color: var(--texto-silenciado); margin-bottom: 1.25rem;">
-                Credenciales del servidor para el envío de notificaciones automáticas y recuperación de contraseñas.
-            </p>
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
-                <div>
-                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 6px;">Servidor Host (SMTP)</label>
-                    <input type="text" name="smtp_host" value="<?= htmlspecialchars($config['smtp']['host'] ?? '') ?>" placeholder="smtp.gmail.com" class="sa-filter-input" style="width: 100%;">
-                </div>
-                <div>
-                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 6px;">Puerto TLS/SSL</label>
-                    <input type="number" name="smtp_port" value="<?= (int)($config['smtp']['port'] ?? 587) ?>" class="sa-filter-input" style="width: 100%;">
-                </div>
-                <div>
-                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 6px;">Usuario de Correo</label>
-                    <input type="email" name="smtp_user" value="<?= htmlspecialchars($config['smtp']['user'] ?? '') ?>" class="sa-filter-input" style="width: 100%;">
-                </div>
-                <div>
-                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 6px;">Contraseña de Aplicación</label>
-                    <input type="password" name="smtp_pass" placeholder="Dejar vacío para conservar actual" class="sa-filter-input" style="width: 100%;">
-                </div>
-                <div style="grid-column: 1 / -1;">
-                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 6px;">Email Remitente Público (From)</label>
-                    <input type="email" name="smtp_from" value="<?= htmlspecialchars($config['smtp']['from_email'] ?? '') ?>" class="sa-filter-input" style="width: 100%;">
-                </div>
-            </div>
-        </div>
-    </div>
     <!-- TAB ACCESOS POR MÓDULO -->
     <div id="tabAccesos" class="sa-tab-content" style="display:none;">
         <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-sm);">

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict ZLPF2mOubepSbbFCfMceHUgAdVYFwBZw8sns8B6izLIQKccFRFd8ul2LL9sboOP
+\restrict dBfH3fBryngx1ruD9KXyVTehIOqSPudxBhzvEHuBfh52GTkb09pTEVjhQDJXP30
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -30,7 +30,6 @@ ALTER TABLE ONLY public.recurso_autores DROP CONSTRAINT recurso_autores_id_autor
 ALTER TABLE ONLY public.proyecto_tutores DROP CONSTRAINT proyecto_tutores_tipo_tutor_id_fkey;
 ALTER TABLE ONLY public.proyecto_tutores DROP CONSTRAINT proyecto_tutores_id_tutor_fkey;
 ALTER TABLE ONLY public.proyecto_tutores DROP CONSTRAINT proyecto_tutores_id_recurso_fkey;
-ALTER TABLE ONLY public.roles DROP CONSTRAINT privilegio_fk;
 ALTER TABLE ONLY public.preferencias_usuario DROP CONSTRAINT preferencias_usuario_id_usuario_fkey;
 ALTER TABLE ONLY public.notificaciones DROP CONSTRAINT notificaciones_id_usuario_fkey;
 ALTER TABLE ONLY public.lineas_investigacion DROP CONSTRAINT lineas_investigacion_id_carrera_fkey;
@@ -70,6 +69,7 @@ ALTER TABLE ONLY public.usuarios DROP CONSTRAINT usuarios_pkey;
 ALTER TABLE ONLY public.usuarios DROP CONSTRAINT usuarios_email_key;
 ALTER TABLE ONLY public.usuarios DROP CONSTRAINT usuarios_cedula_key;
 ALTER TABLE ONLY public.postulaciones_estudiantes DROP CONSTRAINT unique_postulacion;
+ALTER TABLE ONLY public.privilegios DROP CONSTRAINT unique_nivel_privilegio;
 ALTER TABLE ONLY public.tutores DROP CONSTRAINT tutores_pkey;
 ALTER TABLE ONLY public.tutores DROP CONSTRAINT tutores_cedula_key;
 ALTER TABLE ONLY public.tipo_tutor DROP CONSTRAINT tipo_tutor_pkey;
@@ -86,7 +86,6 @@ ALTER TABLE ONLY public.recurso_categorias DROP CONSTRAINT recurso_categorias_pk
 ALTER TABLE ONLY public.recurso_autores DROP CONSTRAINT recurso_autores_pkey;
 ALTER TABLE ONLY public.proyecto_tutores DROP CONSTRAINT proyecto_tutores_pkey;
 ALTER TABLE ONLY public.propuestas_empresa DROP CONSTRAINT propuestas_empresa_pkey;
-ALTER TABLE ONLY public.privilegios DROP CONSTRAINT privilegios_pkey;
 ALTER TABLE ONLY public.preferencias_usuario DROP CONSTRAINT preferencias_usuario_pkey;
 ALTER TABLE ONLY public.postulaciones_estudiantes DROP CONSTRAINT postulaciones_estudiantes_pkey;
 ALTER TABLE ONLY public.notificaciones DROP CONSTRAINT notificaciones_pkey;
@@ -1007,6 +1006,7 @@ CREATE TABLE public.postulaciones_estudiantes (
     estado character varying(20) DEFAULT 'Pendiente'::character varying,
     fecha_postulacion timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     fecha_respuesta timestamp without time zone,
+    equipo_extra json,
     CONSTRAINT postulaciones_estudiantes_estado_check CHECK (((estado)::text = ANY (ARRAY[('Pendiente'::character varying)::text, ('Aceptado'::character varying)::text, ('Rechazado'::character varying)::text])))
 );
 
@@ -1417,11 +1417,43 @@ CREATE TABLE public.usuarios (
     cedula character varying(20),
     contrasena character varying(255),
     id_rol integer,
-    activo boolean DEFAULT true
+    activo boolean DEFAULT true,
+    reset_token character varying(255) DEFAULT NULL::character varying,
+    reset_expires timestamp without time zone,
+    telefono character varying(50) DEFAULT NULL::character varying,
+    email_verified boolean DEFAULT false,
+    activation_token character varying(255) DEFAULT NULL::character varying
 );
 
-
 ALTER TABLE public.usuarios OWNER TO postgres;
+
+--
+-- Name: password_resets; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.password_resets (
+    id integer NOT NULL,
+    email character varying(100) NOT NULL,
+    token_hash character varying(255) NOT NULL,
+    expiracion timestamp without time zone NOT NULL,
+    utilizado boolean DEFAULT false,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE public.password_resets OWNER TO postgres;
+
+CREATE SEQUENCE public.password_resets_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE public.password_resets_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.password_resets_id_seq OWNED BY public.password_resets.id;
+ALTER TABLE ONLY public.password_resets ALTER COLUMN id SET DEFAULT nextval('public.password_resets_id_seq'::regclass);
+ALTER TABLE ONLY public.password_resets ADD CONSTRAINT password_resets_pkey PRIMARY KEY (id);
 
 --
 -- Name: usuarios_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1919,6 +1951,7 @@ INSERT INTO public.auditoria VALUES (298, 'usuarios', 13, 'UPDATE', NULL, NULL, 
 INSERT INTO public.auditoria VALUES (299, 'usuarios', 13, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 3, "nombre": "Cepillíno"}', '{"activo": true, "id_rol": 3, "nombre": "Cepillíno"}', '2026-09-11 22:50:11.080621');
 INSERT INTO public.auditoria VALUES (300, 'usuarios', 13, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 3, "nombre": "Cepillíno"}', '{"activo": false, "id_rol": 3, "nombre": "Cepillíno"}', '2026-09-11 22:50:16.912961');
 INSERT INTO public.auditoria VALUES (301, 'usuarios', 13, 'UPDATE', NULL, NULL, '{"activo": false, "id_rol": 3, "nombre": "Cepillíno"}', '{"activo": true, "id_rol": 3, "nombre": "Cepillíno"}', '2026-09-11 22:50:18.90332');
+INSERT INTO public.auditoria VALUES (303, 'usuarios', 15, 'INSERT', NULL, NULL, NULL, '{"email": "DIOS@gmail.com", "id_rol": 1, "nombre": "DIOS"}', '2026-09-13 23:57:20.408394');
 
 
 --
@@ -2226,7 +2259,7 @@ INSERT INTO public.notificaciones VALUES (6, 5, 'Actualización Moderada de Cuen
 -- Data for Name: postulaciones_estudiantes; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.postulaciones_estudiantes VALUES (1, 1, 7, 'asdasdasd', 'Pendiente', '2026-09-09 23:16:44.679115', NULL);
+INSERT INTO public.postulaciones_estudiantes VALUES (1, 1, 7, 'asdasdasd', 'Pendiente', '2026-09-09 23:16:44.679115', NULL, NULL);
 
 
 --
@@ -2729,20 +2762,21 @@ INSERT INTO public.tutores VALUES (40, 'KarinAI', 'Karina');
 -- Data for Name: usuarios; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.usuarios VALUES (2, 'lando', 'lando@gmail.com', '22222222', '$2y$10$o0Uk8V6gzXNSW/EZBWvd1OoC7O6UzrU3LRbDMIqxYDou2KJGRXdUa', 2, true);
-INSERT INTO public.usuarios VALUES (3, 'miki', 'miki@gmail.com', '33333333', '$2y$10$o0Uk8V6gzXNSW/EZBWvd1OoC7O6UzrU3LRbDMIqxYDou2KJGRXdUa', 3, true);
-INSERT INTO public.usuarios VALUES (4, 'ale', 'ale@yaju.com', '44444444', '$2y$10$o0Uk8V6gzXNSW/EZBWvd1OoC7O6UzrU3LRbDMIqxYDou2KJGRXdUa', 3, true);
-INSERT INTO public.usuarios VALUES (5, 'bibi', 'bibi@gmail.com', '4444111', NULL, 3, true);
-INSERT INTO public.usuarios VALUES (8, 'Yisu Monte', 'yisu@gmail.com', '30866991', '$2y$10$jOukhIGIbdJCmpHdS.MqWusufmhQgHf.O9UByeqN.NFue38kT47xa', 3, true);
-INSERT INTO public.usuarios VALUES (9, 'Pedro Perez', 'iaiaia@gmail.com', '4123123', '$2y$10$xOgs5kJnv17wwzjNtnNUguWc7pxdYv.lMZGFejPOz7fIgLNEybLgC', 3, true);
-INSERT INTO public.usuarios VALUES (11, 'Juan', '123@gmail.com', '1234', '$2y$10$HBPGRak0eIYzElwfC.bGuOvgFOfK.GbG40ct2e7X9CS7OgMARJRcC', 3, true);
-INSERT INTO public.usuarios VALUES (7, 'Miguel González', 'erwazaaaa@gmail.com', '32621284', '$2y$10$tqm17pwan91BnMUfmCAB/O01faShLfeK3jo0jYVwpQcBpGr5iLiE.', 1, true);
-INSERT INTO public.usuarios VALUES (6, 'Piñin Piña', 'pina@hotmail.com', '1', '$2y$10$wqwwyjK8T7ccki5IeOK4ueZRlW8K3g2xC42ZyOG01kDru0CNhba/a', 4, false);
-INSERT INTO public.usuarios VALUES (10, 'Wazaaaa', 'wazaaa@gmail.com', '123', '$2y$10$G7tnCsgxNo7nFV93A4H7Ie86N2RYtbppgkB6iEPg.STWF4wn2qn7O', 4, true);
-INSERT INTO public.usuarios VALUES (1, 'Adrus', 'andru@gmail.com', '11111111', '$2y$10$1sBy413YpJ9MQGlRt/g6y.OGkfno7aRuKxShONKSeWrvhQNS53YDO', 1, true);
-INSERT INTO public.usuarios VALUES (14, 'Sixsevenaldo González', '676767@gmail.com', '67', '$2y$10$XIdtQdP6d.bZSGCINdEbIuTtuqee9E3EEKYp5Ogbm/I2JW5XQbP/O', 3, true);
-INSERT INTO public.usuarios VALUES (12, 'ANDRUS', 'andrusramirez2020@gmail.com', '30469331', '$2y$10$ZbFA.4WVMGxSx4yd2xWVgOHanaXCjTwoUFAtJdo12k6Nf52S.fV0G', 3, true);
-INSERT INTO public.usuarios VALUES (13, 'Cepillíno', 'cepillin@gmail.com', '80', '$2y$10$ML6M4RYmR0f2yCoxOpRvaONIE/nUvwOmcsmGySeBOOBGjy9xUmbk6', 3, true);
+INSERT INTO public.usuarios VALUES (2, 'lando', 'lando@gmail.com', '22222222', '$2y$10$o0Uk8V6gzXNSW/EZBWvd1OoC7O6UzrU3LRbDMIqxYDou2KJGRXdUa', 2, true, NULL, NULL, NULL);
+INSERT INTO public.usuarios VALUES (3, 'miki', 'miki@gmail.com', '33333333', '$2y$10$o0Uk8V6gzXNSW/EZBWvd1OoC7O6UzrU3LRbDMIqxYDou2KJGRXdUa', 3, true, NULL, NULL, NULL);
+INSERT INTO public.usuarios VALUES (4, 'ale', 'ale@yaju.com', '44444444', '$2y$10$o0Uk8V6gzXNSW/EZBWvd1OoC7O6UzrU3LRbDMIqxYDou2KJGRXdUa', 3, true, NULL, NULL, NULL);
+INSERT INTO public.usuarios VALUES (5, 'bibi', 'bibi@gmail.com', '4444111', NULL, 3, true, NULL, NULL, NULL);
+INSERT INTO public.usuarios VALUES (8, 'Yisu Monte', 'yisu@gmail.com', '30866991', '$2y$10$jOukhIGIbdJCmpHdS.MqWusufmhQgHf.O9UByeqN.NFue38kT47xa', 3, true, NULL, NULL, NULL);
+INSERT INTO public.usuarios VALUES (9, 'Pedro Perez', 'iaiaia@gmail.com', '4123123', '$2y$10$xOgs5kJnv17wwzjNtnNUguWc7pxdYv.lMZGFejPOz7fIgLNEybLgC', 3, true, NULL, NULL, NULL);
+INSERT INTO public.usuarios VALUES (11, 'Juan', '123@gmail.com', '1234', '$2y$10$HBPGRak0eIYzElwfC.bGuOvgFOfK.GbG40ct2e7X9CS7OgMARJRcC', 3, true, NULL, NULL, NULL);
+INSERT INTO public.usuarios VALUES (7, 'Miguel González', 'erwazaaaa@gmail.com', '32621284', '$2y$10$tqm17pwan91BnMUfmCAB/O01faShLfeK3jo0jYVwpQcBpGr5iLiE.', 1, true, NULL, NULL, NULL);
+INSERT INTO public.usuarios VALUES (6, 'Piñin Piña', 'pina@hotmail.com', '1', '$2y$10$wqwwyjK8T7ccki5IeOK4ueZRlW8K3g2xC42ZyOG01kDru0CNhba/a', 4, false, NULL, NULL, NULL);
+INSERT INTO public.usuarios VALUES (10, 'Wazaaaa', 'wazaaa@gmail.com', '123', '$2y$10$G7tnCsgxNo7nFV93A4H7Ie86N2RYtbppgkB6iEPg.STWF4wn2qn7O', 4, true, NULL, NULL, NULL);
+INSERT INTO public.usuarios VALUES (1, 'Adrus', 'andru@gmail.com', '11111111', '$2y$10$1sBy413YpJ9MQGlRt/g6y.OGkfno7aRuKxShONKSeWrvhQNS53YDO', 1, true, NULL, NULL, NULL);
+INSERT INTO public.usuarios VALUES (14, 'Sixsevenaldo González', '676767@gmail.com', '67', '$2y$10$XIdtQdP6d.bZSGCINdEbIuTtuqee9E3EEKYp5Ogbm/I2JW5XQbP/O', 3, true, NULL, NULL, NULL);
+INSERT INTO public.usuarios VALUES (12, 'ANDRUS', 'andrusramirez2020@gmail.com', '30469331', '$2y$10$ZbFA.4WVMGxSx4yd2xWVgOHanaXCjTwoUFAtJdo12k6Nf52S.fV0G', 3, true, NULL, NULL, NULL);
+INSERT INTO public.usuarios VALUES (13, 'Cepillíno', 'cepillin@gmail.com', '80', '$2y$10$ML6M4RYmR0f2yCoxOpRvaONIE/nUvwOmcsmGySeBOOBGjy9xUmbk6', 3, true, NULL, NULL, NULL);
+INSERT INTO public.usuarios VALUES (15, 'DIOS', 'DIOS@gmail.com', '12000000', '$2y$12$UYjWng5QxllkWu3dz7JiJO8sHhxW10GiMc7SYRVgCpTLmRN82FCr6', 1, true, NULL, NULL, NULL);
 
 
 --
@@ -2762,7 +2796,7 @@ SELECT pg_catalog.setval('public.accesos_recursos_id_seq', 1, false);
 -- Name: auditoria_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.auditoria_id_seq', 302, true);
+SELECT pg_catalog.setval('public.auditoria_id_seq', 303, true);
 
 
 --
@@ -2909,7 +2943,7 @@ SELECT pg_catalog.setval('public.tutores_id_seq', 40, true);
 -- Name: usuarios_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.usuarios_id_seq', 14, true);
+SELECT pg_catalog.setval('public.usuarios_id_seq', 15, true);
 
 
 --
@@ -3096,14 +3130,6 @@ ALTER TABLE ONLY public.preferencias_usuario
 
 
 --
--- Name: privilegios privilegios_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.privilegios
-    ADD CONSTRAINT privilegios_pkey PRIMARY KEY (privilegio_id);
-
-
---
 -- Name: propuestas_empresa propuestas_empresa_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -3229,6 +3255,14 @@ ALTER TABLE ONLY public.tutores
 
 ALTER TABLE ONLY public.tutores
     ADD CONSTRAINT tutores_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: privilegios unique_nivel_privilegio; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.privilegios
+    ADD CONSTRAINT unique_nivel_privilegio UNIQUE (nivel_privilegio);
 
 
 --
@@ -3536,14 +3570,6 @@ ALTER TABLE ONLY public.preferencias_usuario
 
 
 --
--- Name: roles privilegio_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.roles
-    ADD CONSTRAINT privilegio_fk FOREIGN KEY (privilegio_id) REFERENCES public.privilegios(privilegio_id) NOT VALID;
-
-
---
 -- Name: proyecto_tutores proyecto_tutores_id_recurso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -3635,5 +3661,5 @@ ALTER TABLE ONLY public.usuarios
 -- PostgreSQL database dump complete
 --
 
-\unrestrict ZLPF2mOubepSbbFCfMceHUgAdVYFwBZw8sns8B6izLIQKccFRFd8ul2LL9sboOP
+\unrestrict dBfH3fBryngx1ruD9KXyVTehIOqSPudxBhzvEHuBfh52GTkb09pTEVjhQDJXP30
 

@@ -325,6 +325,29 @@ class SuperAdminModule implements ModuleContract {
                 'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
                 'controlador'      => 'ConfiguracionController',
                 'metodo'           => 'guardar'
+            ],
+            'gestor-correos' => [
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'controlador'      => 'ConfiguracionController',
+                'metodo'           => 'gestorCorreos',
+                'vista'            => __DIR__ . '/views/gestor_correos.php',
+                'titulo'           => 'Gestión de Correos y Plantillas SMTP - SuperAdmin',
+                'css'              => ['SuperAdmin.css', 'gestor.css']
+            ],
+            'probar-smtp' => [
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'controlador'      => 'ConfiguracionController',
+                'metodo'           => 'probarSmtp'
+            ],
+            'guardar-plantilla-correo' => [
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'controlador'      => 'ConfiguracionController',
+                'metodo'           => 'guardarPlantillaCorreo'
+            ],
+            'guardar-layout-correo' => [
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'controlador'      => 'ConfiguracionController',
+                'metodo'           => 'guardarLayoutCorreo'
             ]
         ];
     }
@@ -338,11 +361,12 @@ class SuperAdminModule implements ModuleContract {
                 'privilegio_minimo' => 0,
                 'enlace'      => 'sudoadmin',
                 // Rutas que mantienen iluminado y desplegado el panel administrativo en el Sidebar
-                'activadores' => ['sudoadmin', 'gestor-modulos', 'detalle-modulo', 'gestor-mantenimiento', 'visor-logs', 'gestor-usuarios', 'gestor-scheduler', 'visor-seguridad', 'configuracion-sistema'], 
+                'activadores' => ['sudoadmin', 'gestor-modulos', 'detalle-modulo', 'gestor-mantenimiento', 'visor-logs', 'gestor-usuarios', 'gestor-scheduler', 'visor-seguridad', 'configuracion-sistema', 'gestor-correos'], 
                 'subitems'    => [
                     ['ruta' => 'sudoadmin', 'titulo' => 'Panel de Control', 'privilegio_minimo' => 0],
                     ['ruta' => 'gestor-usuarios', 'titulo' => 'Gestión de Usuarios', 'privilegio_minimo' => 0],
                     ['ruta' => 'gestor-modulos', 'titulo' => 'Gestor de Módulos', 'privilegio_minimo' => 0],
+                    ['ruta' => 'gestor-correos', 'titulo' => 'Gestión de Correos SMTP', 'privilegio_minimo' => 0],
                     ['ruta' => 'configuracion-sistema', 'titulo' => 'Variables de Entorno', 'privilegio_minimo' => 0],
                     ['ruta' => 'gestor-mantenimiento', 'titulo' => 'Mantenimiento & BD', 'privilegio_minimo' => 0],
                     ['ruta' => 'gestor-scheduler', 'titulo' => 'Tareas Programadas', 'privilegio_minimo' => 0],
