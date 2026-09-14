@@ -308,6 +308,9 @@ class DetallePSTController {
         } else {
             Auth::requierePrivilegioMinimo($this->nivelAdmin);
         }
+        if ($accion === 'crear') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'RepositorioPST');
+        if ($accion === 'editar') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'RepositorioPST');
+        if ($accion === 'eliminar') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'RepositorioPST');
 
         $model = new DocumentoModel();
         

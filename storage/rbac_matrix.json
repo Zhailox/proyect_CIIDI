@@ -25,10 +25,10 @@
             "auditar": false
         },
         "RepositorioPST": {
-            "crear": false,
-            "editar": false,
-            "eliminar": false,
-            "auditar": false
+            "crear": true,
+            "editar": true,
+            "eliminar": true,
+            "auditar": true
         },
         "VinculacionEmpresarial": {
             "crear": false,

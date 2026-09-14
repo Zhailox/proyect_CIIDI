@@ -1,5 +1,53 @@
 [
     {
+        "id": "log_6aa79d6fb35c9",
+        "fecha_hora": "2026-09-14 07:08:31",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Matriz RBAC",
+        "detalles": "Se actualizaron los permisos granulares por Módulo y Nivel.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "abb643710f9450a6926301becac6ce77b7f218fef9f26ac966b3c2a66d90211f",
+        "hash_integridad": "4276232343d0687511eb48d72ad62d16a1b7104974e34658596dab80d6e38b2e"
+    },
+    {
+        "id": "log_6aa79d5dafb48",
+        "fecha_hora": "2026-09-14 07:08:13",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Matriz RBAC",
+        "detalles": "Se actualizaron los permisos granulares por Módulo y Nivel.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "b7458409c3b7d1ba207b9d6d8718b31042bb9248eb996332b7f30410263448f8",
+        "hash_integridad": "abb643710f9450a6926301becac6ce77b7f218fef9f26ac966b3c2a66d90211f"
+    },
+    {
+        "id": "log_6aa79d4bcfa4d",
+        "fecha_hora": "2026-09-14 07:07:55",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Matriz RBAC",
+        "detalles": "Se actualizaron los permisos granulares por Módulo y Nivel.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "0dd8d023c52f5a6ebd4c1a02e54ef80a72406bdee5d87ffad35cd5e3d29850a2",
+        "hash_integridad": "b7458409c3b7d1ba207b9d6d8718b31042bb9248eb996332b7f30410263448f8"
+    },
+    {
+        "id": "log_6aa79cb00691b",
+        "fecha_hora": "2026-09-14 07:05:20",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Matriz RBAC",
+        "detalles": "Se actualizaron los permisos granulares por Módulo y Nivel.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "e82e2839cfba0932ebc0bf932a40e43ccb61a49c425f7555d5604e61f07f10a7",
+        "hash_integridad": "0dd8d023c52f5a6ebd4c1a02e54ef80a72406bdee5d87ffad35cd5e3d29850a2"
+    },
+    {
         "id": "log_6aa798a98fd79",
         "fecha_hora": "2026-09-14 06:48:09",
         "nivel": "WARNING",
