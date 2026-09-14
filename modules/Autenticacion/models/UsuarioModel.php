@@ -66,4 +66,38 @@ class UsuarioModel {
         $stmt->execute([$cedula, $nombre, $email, $hash]);
         return $stmt->fetch() !== false;
     }
+
+    public function findByCedula(string $cedula) {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("SELECT id, nombre_completo, email FROM usuarios WHERE cedula = ? AND activo = true");
+        $stmt->execute([$cedula]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    
+    public function findByEmail(string $email) {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("SELECT id, nombre_completo, email FROM usuarios WHERE email = ? AND activo = true");
+        $stmt->execute([$email]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    
+    public function guardarTokenRecuperacion(int $id, string $token) {
+        $db = Connection::getInstance();
+        // Expira en 15 minutos
+        $stmt = $db->prepare("UPDATE usuarios SET reset_token = ?, reset_expires = CURRENT_TIMESTAMP + INTERVAL '15 minutes' WHERE id = ?");
+        $stmt->execute([$token, $id]);
+    }
+    
+    public function verificarToken(int $id, string $token) {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("SELECT id FROM usuarios WHERE id = ? AND reset_token = ? AND reset_expires >= CURRENT_TIMESTAMP AND activo = true");
+        $stmt->execute([$id, $token]);
+        return $stmt->fetch() !== false;
+    }
+    
+    public function actualizarPassword(int $id, string $hash) {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("UPDATE usuarios SET contrasena = ?, reset_token = NULL, reset_expires = NULL WHERE id = ?");
+        $stmt->execute([$hash, $id]);
+    }
 }

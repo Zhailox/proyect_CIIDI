@@ -27,7 +27,7 @@
                 
                 <div class="login-flat-group">
                     <label for="cedula">Cédula:</label>
-                    <input type="number" id="cedula" name="cedula" min="1" class="login-flat-input" required autocomplete="off" onkeydown="if(event.key==='-'||event.key==='e') event.preventDefault();">
+                    <input type="number" id="cedula" name="cedula" class="login-flat-input" required autocomplete="off">
                 </div>
 
                 <div class="login-flat-group">

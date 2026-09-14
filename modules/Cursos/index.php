@@ -2,7 +2,6 @@
 // modules/Cursos/index.php
 
 require_once CORE_PATH . 'Interfaces/ModuleContract.php';
-require_once __DIR__ . '/../SuperAdmin/services/SystemConfigService.php';
 
 class CursosModule implements ModuleContract {
 
@@ -70,6 +69,16 @@ class CursosModule implements ModuleContract {
                 'css'              => ['cursos.css'],
             ],
 
+            // ── Gestión de Cursos (Profesores/Admin) ──────────────
+            'cursos-gestion' => [
+                'controlador_path' => $ctrl,
+                'controlador'      => 'PromoController',
+                'metodo'           => 'mostrarGestion',
+                'vista'            => __DIR__ . '/views/gestion_cursos.php',
+                'titulo'           => 'Gestión de Cursos',
+                'css'              => ['cursos.css'],
+            ],
+
             // ── Configuración del módulo (SuperAdmin) ─────────────
             'cursos-config' => [
                 'controlador_path' => $ctrl,
@@ -88,20 +97,17 @@ class CursosModule implements ModuleContract {
     }
 
     public function getMenuConfig(): array {
-        $nivelAdmin = SystemConfigService::get('accesos_modulos.cursos.admin', 0);
-        $nivelPublico = SystemConfigService::get('accesos_modulos.cursos.publico', 10);
         return [
             [
                 'tipo'        => 'parent',
                 'titulo'      => 'Cursos',
                 'icono'       => 'ph-fill ph-graduation-cap',
                 'enlace'      => 'cursos',
-                'activadores' => ['cursos', 'cursos-crear', 'cursos-editar', 'cursos-config'],
-                'privilegio_minimo' => $nivelPublico,
+                'activadores' => ['cursos', 'cursos-gestion', 'cursos-crear', 'cursos-editar', 'cursos-config'],
                 'subitems'    => [
-                    ['ruta' => 'cursos',        'titulo' => 'Oferta Formativa', 'privilegio_minimo' => $nivelPublico],
-                    ['ruta' => 'cursos-crear',  'titulo' => 'Registrar Curso', 'privilegio_minimo' => $nivelAdmin],
-                    ['ruta' => 'cursos-config', 'titulo' => 'Configuración', 'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'cursos',         'titulo' => 'Oferta Formativa',    'privilegio_minimo' => 0],
+                    ['ruta' => 'cursos-gestion', 'titulo' => 'Gestión de Cursos',   'privilegio_minimo' => 1],
+                    ['ruta' => 'cursos-config',  'titulo' => 'Configuración',        'privilegio_minimo' => 3],
                 ],
             ],
         ];

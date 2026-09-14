@@ -3,7 +3,6 @@
 
 // Nos aseguramos de traer el contrato
 require_once CORE_PATH . 'Interfaces/ModuleContract.php';
-require_once __DIR__ . '/../SuperAdmin/services/SystemConfigService.php';
 
 // Nombre de clase único para este módulo
 class AutenticacionModule implements ModuleContract {
@@ -38,11 +37,6 @@ public function getRutas(): array {
                 'controlador'      => 'LoginController',
                 'metodo'           => 'cerrarSesion'
             ],
-            'logout' => [
-                'controlador_path' => __DIR__ . '/controllers/LoginController.php',
-                'controlador'      => 'LoginController',
-                'metodo'           => 'cerrarSesion'
-            ],
             // Pantalla del Dashboard (Protegida)
             'perfil' => [
                 'controlador_path' => __DIR__ . '/controllers/PerfilController.php',
@@ -59,6 +53,24 @@ public function getRutas(): array {
                 'vista'            => __DIR__ . '/views/recuperar_cuenta.php', 
                 'titulo'           => 'Recuperación de Credenciales',
                 'css'              => ['autenticacion.css']
+            ],
+            'procesar-recuperacion' => [
+                'controlador_path' => __DIR__ . '/controllers/LoginController.php',
+                'controlador'      => 'LoginController',
+                'metodo'           => 'procesarRecuperacion'
+            ],
+            'ingresar-codigo' => [
+                'controlador_path' => __DIR__ . '/controllers/LoginController.php',
+                'controlador'      => 'LoginController',
+                'metodo'           => 'mostrarIngresarCodigo',
+                'vista'            => __DIR__ . '/views/ingresar_codigo.php', 
+                'titulo'           => 'Verificar Código',
+                'css'              => ['autenticacion.css']
+            ],
+            'procesar-codigo' => [
+                'controlador_path' => __DIR__ . '/controllers/LoginController.php',
+                'controlador'      => 'LoginController',
+                'metodo'           => 'procesarCodigo'
             ],
             // Pantalla de Registro
             'registro' => [
@@ -83,17 +95,16 @@ public function getRutas(): array {
     }
 
     public function getMenuConfig(): array {
-        $nivelPublico = SystemConfigService::get('accesos_modulos.autenticacion.publico', 998);
         return [
             [
                 'tipo'        => 'parent',
                 'titulo'      => 'Perfil',
                 'icono'       => 'ph-fill ph-user-circle',
                 'enlace'      => 'perfil',
-                'privilegio_minimo' => $nivelPublico,
                 // Estas rutas mantendrán encendido el contenedor padre en el sidebar
-                'activadores' => ['perfil'], 
+                'activadores' => ['perfil', 'recuperar-cuenta', 'login'], 
                 'subitems'    => [
+                    
                 ]
             ]
         ];
@@ -111,44 +122,40 @@ public function getRutas(): array {
     public function getHeaderConfig(): array {
         require_once CORE_PATH . 'Security/Auth.php';
 
-        $controles = [];
-        $widgetMantenimiento = [
-            'tipo'       => 'custom_view',
-            'ruta_vista' => MODULES_PATH . 'SuperAdmin/views/header_mantenimiento_widget.php',
-            'orden'      => 70 // Se muestra antes del buscador y del perfil
-        ];
-        $controles[] = $widgetMantenimiento;
-
         // Si el usuario ESTÁ LOGUEADO
         if (Auth::check()) {
-            $controles[] = [
-                'tipo'       => 'custom_view',
-                'ruta_vista' => __DIR__ . '/views/perfil_header.php',
-                'css'        => 'perfil_header.css',
-                'orden'      => 90
-            ];
-            $controles[] = [
-                'tipo'   => 'button',
-                'texto'  => 'Salir',
-                'icono'  => 'ph-bold ph-sign-out',
-                'enlace' => 'cerrar-sesion',
-                'clase'  => 'btn btn-outline',
-                'orden'      => 100
+            return [
+                // 1. Inyectamos el widget del perfil con su foto
+                [
+                    'tipo'       => 'custom_view',
+                    'ruta_vista' => __DIR__ . '/views/perfil_header.php',
+                    'css'        => 'perfil_header.css',
+                    'orden'      => 90
+                ],
+                // 2. Inyectamos el botón de Salir
+                [
+                    'tipo'   => 'button',
+                    'texto'  => 'Salir',
+                    'icono'  => 'ph-bold ph-sign-out',
+                    'enlace' => 'cerrar-sesion',
+                    'clase'  => 'btn btn-outline',
+                    'orden'      => 100
+                ]
             ];
         } 
         // Si el usuario es un VISITANTE
         else {
-            $controles[] = [
-                'tipo'   => 'button',
-                'texto'  => 'Acceder',
-                'icono'  => 'ph-bold ph-sign-in',
-                'enlace' => 'login',
-                'clase'  => 'btn btn-outline',
-                'orden'      => 100
+            return [
+                [
+                    'tipo'   => 'button',
+                    'texto'  => 'Acceder',
+                    'icono'  => 'ph-bold ph-sign-in',
+                    'enlace' => 'login',
+                    'clase'  => 'btn btn-outline',
+                    'orden'      => 100
+                ]
             ];
         }
-
-        return $controles;
     }
 }
 

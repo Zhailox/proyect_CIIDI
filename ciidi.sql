@@ -3620,3 +3620,22 @@ ALTER TABLE ONLY public.usuarios
 
 \unrestrict k6XBzXeygDEpoZkPJVHBSCxjaciW3YcEcxWNmF7yLtZFqsGrpek32GNjEV20Ng9
 
+-- =================================================================
+-- NORMAS / ACTUALIZACIONES RECIENTES DEL SISTEMA CIIDI
+-- =================================================================
+-- 1. Añadir campos para recuperación de contraseña y contacto en tabla usuarios
+ALTER TABLE public.usuarios 
+ADD COLUMN IF NOT EXISTS reset_token VARCHAR(255) DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS reset_expires TIMESTAMP DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS telefono VARCHAR(50) DEFAULT NULL;
+
+-- 2. Añadir campo JSON para manejar múltiples integrantes en postulaciones de estudiantes
+ALTER TABLE public.postulaciones_estudiantes 
+ADD COLUMN IF NOT EXISTS equipo_extra JSON DEFAULT NULL;
+
+-- 3. Actualizaciones complementarias de módulos (Revistas y Vinculación)
+ALTER TABLE public.detalles_articulos ADD COLUMN IF NOT EXISTS id_categoria INTEGER;
+ALTER TABLE public.investigaciones_ofertadas ADD COLUMN IF NOT EXISTS id_propuesta_empresa INTEGER;
+ALTER TABLE public.propuestas_empresa ADD COLUMN IF NOT EXISTS motivo_rechazo TEXT;
+ALTER TABLE public.propuestas_empresa ADD COLUMN IF NOT EXISTS codigo_seguimiento VARCHAR(255);
+

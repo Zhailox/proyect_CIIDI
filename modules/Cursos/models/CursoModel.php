@@ -169,6 +169,11 @@ class CursoModel {
             }
         }
 
+        if (!empty($filtros['id_docente'])) {
+            $condiciones[] = "c.id_docente = ?";
+            $parametros[]  = (int)$filtros['id_docente'];
+        }
+
         if (!empty($filtros['busqueda'])) {
             $condiciones[] = "(c.titulo ILIKE ? OR c.descripcion ILIKE ?)";
             $term          = '%' . $filtros['busqueda'] . '%';

@@ -135,18 +135,6 @@
                 <h4 style="color: var(--ve-secundario); margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 0.5rem;">Paso 2: Diagnóstico del Problema</h4>
 
                 <div class="ve-form-group">
-                    <label class="ve-form-label" for="area_afectada">¿A qué área afecta principalmente este problema?</label>
-                    <select id="area_afectada" name="area_afectada" class="ve-input" required>
-                        <option value="" disabled selected>Selecciona un área...</option>
-                        <option value="inventario">Control de Inventario / Almacén</option>
-                        <option value="facturacion">Ventas / Facturación / Administración</option>
-                        <option value="redes">Infraestructura de Redes / Internet / Servidores</option>
-                        <option value="datos">Gestión de Datos / Registros de Personal</option>
-                        <option value="otro">Otro (Especifique en la descripción)</option>
-                    </select>
-                </div>
-
-                <div class="ve-form-group">
                     <label class="ve-form-label" for="descripcion_problema">Explica el problema y la solución que buscas de forma detallada:</label>
                     <textarea id="descripcion_problema" name="descripcion_problema" class="ve-textarea" placeholder="Ej. Actualmente llevamos el inventario en un cuaderno y perdemos mucho tiempo cuadrando caja. Necesitamos un sistema de escritorio rápido que nos permita registrar entradas y salidas con reportes en PDF..." required></textarea>
                 </div>

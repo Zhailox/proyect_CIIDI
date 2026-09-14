@@ -21,10 +21,15 @@ class PropuestaEmpresaModel {
     }
     
     public function getAceptadas() {
-        return $this->qb->tabla('propuestas_empresa')
-            ->where('estado', '=', 'aceptada')
-            ->orderBy('fecha_creacion', 'DESC')
-            ->get();
+        require_once CORE_PATH . 'Database/Connection.php';
+        $pdo = Connection::getInstance();
+        $sql = "SELECT p.*, i.id as id_investigacion, i.cupos_disponibles, l.nombre as linea_investigacion, l.id as id_linea
+                FROM propuestas_empresa p
+                JOIN investigaciones_ofertadas i ON i.id_propuesta_empresa = p.id
+                LEFT JOIN lineas_investigacion l ON i.id_linea = l.id
+                WHERE p.estado = 'aceptada' AND i.estado = 'Abierta'
+                ORDER BY p.fecha_creacion DESC";
+        return $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getPendientes() {
@@ -47,28 +52,29 @@ class PropuestaEmpresaModel {
             ->update($datos);
     }
 
-    public function crearPostulacion($id_investigacion, $id_estudiante, $motivacion) {
+    public function crearPostulacion($id_investigacion, $id_estudiante, $motivacion, $equipo_extra = null) {
         return $this->qb->tabla('postulaciones_estudiantes')->insert([
             'id_investigacion' => $id_investigacion,
             'id_estudiante' => $id_estudiante,
             'mensaje_motivacion' => $motivacion,
-            'estado' => 'Pendiente'
+            'estado' => 'Pendiente',
+            'equipo_extra' => $equipo_extra
         ]);
     }
 
     public function getPostulacionesEmpresariales() {
         require_once CORE_PATH . 'Database/Connection.php';
         $pdo = Connection::getInstance();
-        $sql = "SELECT p.id as id_postulacion, p.mensaje_motivacion, p.fecha_postulacion,
-                       u.nombre_completo as estudiante, u.correo,
-                       i.titulo, i.id as id_investigacion, i.id_propuesta_empresa,
-                       e.nombre_empresa, e.codigo_seguimiento
+        $sql = "SELECT p.id as id_postulacion, p.mensaje_motivacion, p.fecha_postulacion, p.equipo_extra, p.estado,
+                       u.nombre_completo as estudiante, u.email as correo, u.cedula,
+                       i.titulo, i.id as id_investigacion, i.id_propuesta_empresa, i.cupos_disponibles,
+                       e.nombre_empresa, e.codigo_seguimiento, e.nivel_trayecto,
+                       e.area_afectada, e.descripcion_problema, e.persona_contacto, e.telefono_contacto, e.correo_contacto
                 FROM postulaciones_estudiantes p
                 JOIN usuarios u ON p.id_estudiante = u.id
                 JOIN investigaciones_ofertadas i ON p.id_investigacion = i.id
                 JOIN propuestas_empresa e ON i.id_propuesta_empresa = e.id
-                WHERE p.estado = 'Pendiente'
-                ORDER BY p.fecha_postulacion ASC";
+                ORDER BY p.fecha_postulacion DESC";
         return $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
