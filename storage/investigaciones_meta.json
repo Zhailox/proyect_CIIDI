@@ -7,10 +7,17 @@
         "trayecto": "maestria"
     },
     "2": {
-        "imagen": "uploads\/investigaciones\/inv_6aa70a2b9b233_IsotipoDenkKraft.png",
+        "imagen": "uploads\/investigaciones\/inv_6aa7952766353_nawf99wpispc1.png",
         "tag_quien": "Equipo CIIDI",
         "tag_que": "Proyecto",
         "tag_sobre": "Innovacion",
         "trayecto": "t4"
+    },
+    "3": {
+        "imagen": "uploads\/investigaciones\/inv_6aa795d19d2be_403c8f6946aac6fc6d23e9ca8561ead5.jpg",
+        "tag_quien": "Equipo CIIDI",
+        "tag_que": "Proyecto",
+        "tag_sobre": "Innovacion",
+        "trayecto": "t2"
     }
 }

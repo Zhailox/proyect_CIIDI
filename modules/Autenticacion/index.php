@@ -3,6 +3,7 @@
 
 // Nos aseguramos de traer el contrato
 require_once CORE_PATH . 'Interfaces/ModuleContract.php';
+require_once __DIR__ . '/../SuperAdmin/services/SystemConfigService.php';
 
 // Nombre de clase único para este módulo
 class AutenticacionModule implements ModuleContract {
@@ -95,12 +96,14 @@ public function getRutas(): array {
     }
 
     public function getMenuConfig(): array {
+        $nivelPublico = SystemConfigService::get('accesos_modulos.autenticacion.publico', 998);
         return [
             [
                 'tipo'        => 'parent',
                 'titulo'      => 'Perfil',
                 'icono'       => 'ph-fill ph-user-circle',
                 'enlace'      => 'perfil',
+                'privilegio_minimo' => $nivelPublico,
                 // Estas rutas mantendrán encendido el contenedor padre en el sidebar
                 'activadores' => ['perfil', 'recuperar-cuenta', 'login'], 
                 'subitems'    => [

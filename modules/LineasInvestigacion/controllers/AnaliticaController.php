@@ -14,8 +14,8 @@ class AnaliticaController {
     public function __construct() {
         // Ruta dinámica al script de python para analítica (funciona en cualquier PC)
         $this->pythonScriptPath = realpath(__DIR__ . '/../../../storage/modelos_ia/ml_pipeline.py');
-        $this->nivelAdmin   = SystemConfigService::get('accesos_modulos.lineas.admin', 1);
-        $this->nivelPublico = SystemConfigService::get('accesos_modulos.lineas.publico', 10);
+        $this->nivelAdmin   = SystemConfigService::get('accesos_modulos.lineas_investigacion.admin', 1);
+        $this->nivelPublico = SystemConfigService::get('accesos_modulos.lineas_investigacion.publico', 10);
         
         // Detección automática del sistema operativo para el ejecutable de Python
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {

@@ -84,7 +84,7 @@ $m_cupo     = (int)($meta['cupo_maximo'] ?? 0);
                     <div style="position:relative;">
                         <i class="ph-bold ph-chalkboard-teacher" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
                         <?php
-                            $nombre_docente_actual = $usuario_actual['nombre'] . ' ' . $usuario_actual['apellido'];
+                            $nombre_docente_actual = $usuario_actual['nombre'];
                             if ($es_editar) {
                                 foreach ($docentes as $doc) {
                                     if ($doc['id'] == $f_docente) {

@@ -69,8 +69,8 @@ class LineasInvestigacionModule implements ModuleContract {
     }
 
     public function getMenuConfig(): array {
-        $nivelAdmin = SystemConfigService::get('accesos_modulos.lineas.admin', 0);
-        $nivelPublico = SystemConfigService::get('accesos_modulos.lineas.publico', 999);
+        $nivelAdmin = SystemConfigService::get('accesos_modulos.lineas_investigacion.admin', 0);
+        $nivelPublico = SystemConfigService::get('accesos_modulos.lineas_investigacion.publico', 999);
         return [
             [
                 'tipo'        => 'parent',

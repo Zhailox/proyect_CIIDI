@@ -415,7 +415,7 @@ if (typeof window.mammoth === 'undefined') {
                                                      <i class="ph ph-pencil-simple"></i> Editar
                                                  </a>
 
-                                                 <?php if (Auth::requierePrivilegioMinimo(2, 'eliminar', 'RepositorioPST', false)): ?>
+                                                 <?php if (Auth::requierePrivilegioMinimo(0, 'eliminar', 'RepositorioPST', false)): ?>
                                                      <a href="javascript:void(0)" class="btn-action-delete" title="Eliminar Registro Definitivo" onclick="confirmarEliminacionModal('?ruta=agregar-documento&accion=eliminar&id=<?= $doc['id'] ?>')">
                                                          <i class="ph ph-trash"></i> Eliminar
                                                      </a>

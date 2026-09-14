@@ -5,7 +5,7 @@
         "docentes": 5
     },
     "seguridad": {
-        "timeout_minutos": 151,
+        "timeout_minutos": 150,
         "intentos_login": 5
     },
     "smtp": {
@@ -16,33 +16,32 @@
         "from_email": "ciidi@upttmbi.edu"
     },
     "accesos_modulos": {
-        "cursos": {
-            "publico": 10,
-            "admin": 1
-        },
         "articulos": {
             "publico": 999,
             "admin": 1
         },
-        "pst": {
-            "publico": 999,
-            "admin": 1
-        },
-        "lineas": {
-            "publico": 999,
-            "admin": 1
-        },
-        "investigacion": {
+        "cursos": {
             "publico": 10,
             "admin": 1
         },
-        "autenticacion": {
-            "publico": 998,
-            "admin": 0
+        "investigaciones": {
+            "publico": 10,
+            "admin": 1
+        },
+        "lineas_investigacion": {
+            "publico": 999,
+            "admin": 1
+        },
+        "repositorio_pst": {
+            "publico": 999,
+            "admin": 1
         },
         "vinculacion_empresarial": {
             "publico": 999,
             "admin": 1
+        },
+        "autenticacion": {
+            "publico": 998
         }
     }
 }
