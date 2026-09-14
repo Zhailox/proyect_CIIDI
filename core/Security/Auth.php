@@ -54,26 +54,30 @@ class Auth {
             return true;
         }
 
-        $autorizado = true;
-
-        if ($nivelUsuario > $nivelExigido) {
-            $autorizado = false;
-        }
-
-        if ($autorizado && $permisoRuta !== null && $moduloRuta !== null) {
+        // 1. Si se especifican módulo y permiso, la matriz RBAC tiene prioridad absoluta
+        if ($permisoRuta !== null && $moduloRuta !== null) {
             $archivo_rbac = CORE_PATH . '../storage/rbac_matrix.json';
-            
+            $autorizado = false;
+
             if (file_exists($archivo_rbac)) {
                 $matrix = json_decode(file_get_contents($archivo_rbac), true) ?: [];
-                if (empty($matrix[$nivelUsuario][$moduloRuta][$permisoRuta])) {
-                    $autorizado = false;
+                if (!empty($matrix[$nivelUsuario][$moduloRuta][$permisoRuta])) {
+                    $autorizado = true;
                 }
-            } else {
-                $autorizado = false;
             }
+
+            if (!$autorizado) {
+                if ($redirect403) {
+                    self::render403();
+                }
+                return false;
+            }
+
+            return true;
         }
 
-        if (!$autorizado) {
+        // 2. Fallback: Verificación de nivel numérico cuando no se especifica módulo/permiso
+        if ($nivelUsuario > $nivelExigido) {
             if ($redirect403) {
                 self::render403();
             }
