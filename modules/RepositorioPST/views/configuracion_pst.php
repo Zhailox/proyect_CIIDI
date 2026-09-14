@@ -199,6 +199,7 @@
                             <input type="number" name="limite_buscador" value="<?= (int)($config['paginacion']['limite_buscador'] ?? 5) ?>" min="1" max="100" class="config-input">
                             <p class="field-hint">Cantidad de resultados a retornar en las búsquedas.</p>
                         </div>
+                    </div>
 
                     <div class="config-grid-2">
                         <div class="config-field">
@@ -473,6 +474,9 @@ function switchConfigTab(tabId, btn) {
     
     document.getElementById(tabId).classList.add('active');
     btn.classList.add('active');
+    
+    // Guardar la pestaña activa en la memoria del navegador
+    sessionStorage.setItem('configPstTabActiva', tabId);
 }
 
 function insertarVariableEnInput(inputId, variableText) {
@@ -656,4 +660,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+document.addEventListener('DOMContentLoaded', () => {
+    const tabGuardada = sessionStorage.getItem('configPstTabActiva') || 'tabCitas';
+    const boton = document.querySelector(`.pst-config-nav-tabs button[onclick*="'${tabGuardada}'"]`);
+    if (boton) {
+        switchConfigTab(tabGuardada, boton);
+    }
+});
+if (window.history.replaceState) {
+    window.history.replaceState(null, null, window.location.href);
+}
 </script>

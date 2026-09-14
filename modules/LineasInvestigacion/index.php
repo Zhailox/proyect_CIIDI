@@ -2,6 +2,7 @@
 // modules/LineasInvestigacion/index.php
 
 require_once CORE_PATH . 'Interfaces/ModuleContract.php';
+require_once __DIR__ . '/../SuperAdmin/services/SystemConfigService.php';
 
 class LineasInvestigacionModule implements ModuleContract {
 
@@ -68,6 +69,8 @@ class LineasInvestigacionModule implements ModuleContract {
     }
 
     public function getMenuConfig(): array {
+        $nivelAdmin = SystemConfigService::get('accesos_modulos.lineas.admin', 0);
+        $nivelPublico = SystemConfigService::get('accesos_modulos.lineas.publico', 999);
         return [
             [
                 'tipo'        => 'parent',
@@ -75,12 +78,12 @@ class LineasInvestigacionModule implements ModuleContract {
                 'icono'       => 'ph-fill ph-graph',
                 'enlace'      => 'lineas-investigacion',
                 'activadores' => ['lineas-investigacion', 'detalle-linea', 'gestionar-lineas', 'gestionar-dimensiones', 'analitica'],
-                'privilegio_minimo' => 999,
+                'privilegio_minimo' => $nivelPublico,
                 'subitems'    => [
-                    ['ruta' => 'lineas-investigacion',  'titulo' => 'Explorar Líneas', 'privilegio_minimo' => 999],
-                    ['ruta' => 'analitica',             'titulo' => 'Analítica IA', 'privilegio_minimo' => 2],
-                    ['ruta' => 'gestionar-lineas',      'titulo' => 'Gestionar Líneas', 'privilegio_minimo' => 1],
-                    ['ruta' => 'gestionar-dimensiones', 'titulo' => 'Gestionar Dimensiones', 'privilegio_minimo' => 1],
+                    ['ruta' => 'lineas-investigacion',  'titulo' => 'Explorar Líneas', 'privilegio_minimo' => $nivelPublico],
+                    ['ruta' => 'analitica',             'titulo' => 'Analítica IA', 'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'gestionar-lineas',      'titulo' => 'Gestionar Líneas', 'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'gestionar-dimensiones', 'titulo' => 'Gestionar Dimensiones', 'privilegio_minimo' => $nivelAdmin],
                 ]
             ]
         ];

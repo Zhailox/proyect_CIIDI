@@ -2,12 +2,19 @@
 // modules/Articulos/controllers/ConfiguracionController.php
 require_once CORE_PATH . 'Database/QueryBuilder.php';
 require_once __DIR__ . '/../services/ConfigService.php';
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
 
 class ConfiguracionController {
 
+    private int $nivelAdmin;
+
+    public function __construct() {
+        $this->nivelAdmin = SystemConfigService::get('accesos_modulos.articulos.admin', 1);
+    }
+
     public function index(): array {
         require_once CORE_PATH . 'Security/Auth.php';
-        Auth::requierePrivilegioMinimo(2); 
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'Articulos'); 
 
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -139,7 +146,7 @@ class ConfiguracionController {
 
     public function eliminarImagen() {
         require_once CORE_PATH . 'Security/Auth.php';
-        Auth::requierePrivilegioMinimo(2);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'Articulos');
 
         if (session_status() === PHP_SESSION_NONE) session_start();
         header('Content-Type: application/json; charset=utf-8');

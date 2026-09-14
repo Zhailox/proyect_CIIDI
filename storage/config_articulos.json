@@ -7,14 +7,14 @@
                 "plantilla": "{autores} ({anio}). {titulo}. {editorial}. Vol {volumen}({numero}). ISSN: {issn}"
             },
             "yisu": {
-                "nombre": "Yisu",
+                "nombre": "Yisus",
                 "activo": true,
-                "plantilla": "{autores} Yo Yisus declaro a esta gente, indigente {anio}. WAZAAAA"
+                "plantilla": "{autores} Yo Yisus declaro a esta gente, indigente {anio}. WAZAAAAe"
             }
         }
     },
     "paginacion": {
-        "limite_catalogo": 50,
+        "limite_catalogo": 51,
         "limite_gestor": 20,
         "max_recomendados": 4,
         "limite_gestor_catalogos": 16

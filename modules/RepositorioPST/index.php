@@ -1,6 +1,7 @@
 <?php
 // modules/RepositorioPST/index.php
 require_once CORE_PATH . 'Interfaces/ModuleContract.php';
+require_once __DIR__ . '/../SuperAdmin/services/SystemConfigService.php';
 
 class RepositorioPSTModule implements ModuleContract {
     
@@ -69,19 +70,21 @@ class RepositorioPSTModule implements ModuleContract {
 
     // NUEVO: El plano visual del menú para este módulo
     public function getMenuConfig(): array {
+        $nivelAdmin = SystemConfigService::get('accesos_modulos.pst.admin', 0);
+        $nivelPublico = SystemConfigService::get('accesos_modulos.pst.publico', 999);
         return [
             [
                 'tipo'        => 'parent',
                 'titulo'      => 'Repositorio',
                 'icono'       => 'ph-fill ph-book-open-text',
-                'privilegio_minimo' => 999,
+                'privilegio_minimo' => $nivelPublico,
                 'enlace'      => 'repositorio',
                 'activadores' => ['repositorio', 'detalles-pst', 'agregar-documento', 'buscador', 'configuracion-pst'],
                 'subitems'    => [
-                    ['ruta' => 'repositorio', 'titulo' => 'Explorar Proyectos', 'privilegio_minimo' => 999],
-                    ['ruta' => 'buscador', 'titulo' => 'Buscador Unificado', 'privilegio_minimo' => 999],
-                    ['ruta' => 'agregar-documento', 'titulo' => 'Gestión Documental', 'privilegio_minimo' => 2],
-                    ['ruta' => 'configuracion-pst', 'titulo' => 'Configuración Repositorio', 'privilegio_minimo' => 2]
+                    ['ruta' => 'repositorio', 'titulo' => 'Explorar Proyectos', 'privilegio_minimo' => $nivelPublico],
+                    ['ruta' => 'buscador', 'titulo' => 'Buscador Unificado', 'privilegio_minimo' => $nivelPublico],
+                    ['ruta' => 'agregar-documento', 'titulo' => 'Gestión Documental', 'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'configuracion-pst', 'titulo' => 'Configuración Repositorio', 'privilegio_minimo' => $nivelAdmin]
                 ]
             ]
         ];

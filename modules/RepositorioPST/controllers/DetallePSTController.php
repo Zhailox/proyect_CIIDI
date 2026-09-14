@@ -2,9 +2,16 @@
 // modules/RepositorioPST/controllers/DetallePSTController.php
 require_once __DIR__ . '/../models/DocumentoModel.php';
 require_once __DIR__ . '/../services/ConfigService.php';
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
 
 class DetallePSTController {
+    private int $nivelAdmin;
+    private int $nivelPublico;
     
+    public function __construct() {
+        $this->nivelAdmin   = SystemConfigService::get('accesos_modulos.pst.admin', 1);
+        $this->nivelPublico = SystemConfigService::get('accesos_modulos.pst.publico', 10);
+    }
     public function index(): array {
         $model = new DocumentoModel();
         
@@ -163,7 +170,7 @@ class DetallePSTController {
                 die("Proyecto no encontrado en el sistema.");
             }
 
-            if (isset($doc['activo']) && !$doc['activo'] && (int)($_SESSION['nivel_privilegio'] ?? -1) < 1) {
+            if (isset($doc['activo']) && !$doc['activo'] && (int)($_SESSION['nivel_privilegio'] ?? 999) < 0) {
                 http_response_code(403);
                 die("Acceso denegado: Este proyecto se encuentra desactivado o no disponible.");
             }
@@ -279,7 +286,7 @@ class DetallePSTController {
 
         // Si es petición AJAX, responder con JSON si no se tienen permisos en lugar de 302 redirect
         if (in_array($accion, ['extraer', 'crear_ajax', 'simular_extraccion'])) {
-            if (!Auth::requierePrivilegioMinimo(1, null, null, false)) {
+            if (!Auth::requierePrivilegioMinimo($this->$nivelAdmin, 'crear', 'RepositorioPST')) {
                 header('Content-Type: application/json; charset=utf-8');
                 echo json_encode([
                     'status' => 'error',
@@ -300,7 +307,7 @@ class DetallePSTController {
                 }
             }
         } else {
-            Auth::requierePrivilegioMinimo(2);
+            Auth::requierePrivilegioMinimo($this->nivelAdmin);
         }
 
         $model = new DocumentoModel();
@@ -533,7 +540,7 @@ class DetallePSTController {
 
         // 0.3 Procesar Acción: ALTERNAR ESTADO (Activar / Ocultar - Soft Delete)
         if ($accion === 'toggle_estado' && $id) {
-            Auth::requierePrivilegioMinimo(2, 'editar', 'RepositorioPST');
+            Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'RepositorioPST');
             try {
                 $docActual = $model->getPSTDocumentoById($id);
                 if ($docActual) {
@@ -554,7 +561,7 @@ class DetallePSTController {
         
         // 1. Procesar Acción: ELIMINAR
         if ($accion === 'eliminar' && $id) {
-            Auth::requierePrivilegioMinimo(2, 'eliminar', 'RepositorioPST');
+            Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'RepositorioPST');
             try {
                 $model->eliminarPST($id);
                 

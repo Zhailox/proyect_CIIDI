@@ -45,6 +45,9 @@
         <button type="button" class="sa-tab-btn" onclick="switchConfigTab('tabSmtp', this)">
             <i class="ph-bold ph-envelope-simple"></i> Servidor SMTP
         </button>
+        <button type="button" class="sa-tab-btn" onclick="switchConfigTab('tabAccesos', this)">
+            <i class="ph-bold ph-lock-key"></i> Accesos por Módulo
+        </button>
     </div>
 
     <!-- TAB PAGINACIÓN -->
@@ -128,6 +131,60 @@
                     <label style="font-size: 0.8rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 6px;">Email Remitente Público (From)</label>
                     <input type="email" name="smtp_from" value="<?= htmlspecialchars($config['smtp']['from_email'] ?? '') ?>" class="sa-filter-input" style="width: 100%;">
                 </div>
+            </div>
+        </div>
+    </div>
+    <!-- TAB ACCESOS POR MÓDULO -->
+    <div id="tabAccesos" class="sa-tab-content" style="display:none;">
+        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-sm);">
+            <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem; font-weight: 700; color: var(--texto-titulos); display: flex; align-items: center; gap: 6px;">
+                <i class="ph-bold ph-lock-key" style="color: var(--color-terciario);"></i> Niveles de Privilegio por Módulo
+            </h4>
+            <p style="font-size: 0.85rem; color: var(--texto-silenciado); margin-bottom: 1.25rem;">
+                Define el nivel numérico mínimo requerido para visualizar (Público) y administrar (Admin) cada sección. Nivel 0 = Máximo Poder, 999 = Acceso Libre.
+            </p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                
+                <?php 
+                $modulosUi = [
+                    'cursos' => 'Módulo de Cursos', 
+                    'articulos' => 'Módulo de Artículos', 
+                    'pst' => 'Repositorio PST', 
+                    'lineas' => 'Líneas de Investigación', 
+                    'investigacion' => 'Investigaciones',
+                    'vinculacion_empresarial' => 'Vinculación Empresarial'
+                ];
+                foreach ($modulosUi as $key => $titulo): 
+                    $valPub = $config['accesos_modulos'][$key]['publico'] ?? 999;
+                    $valAdm = $config['accesos_modulos'][$key]['admin'] ?? 0;
+                ?>
+                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <h5 style="margin: 0 0 10px 0; color: var(--negro); font-size: 0.9rem;"><i class="ph-bold ph-plugs-connected"></i> <?= $titulo ?></h5>
+                    <div style="display: flex; gap: 1rem;">
+                        <div style="flex: 1;">
+                            <label style="font-size: 0.75rem; font-weight: 700; color: var(--texto-silenciado);">Nivel Público (Ver)</label>
+                            <input type="number" name="acceso_<?= $key ?>_publico" value="<?= $valPub ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="font-size: 0.75rem; font-weight: 700; color: var(--texto-silenciado);">Nivel Admin (Gestionar)</label>
+                            <input type="number" name="acceso_<?= $key ?>_admin" value="<?= $valAdm ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+
+                <!-- Módulos Especiales -->
+                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <h5 style="margin: 0 0 10px 0; color: #10b981; font-size: 0.9rem;"><i class="ph-bold ph-sign-in"></i> Autenticación</h5>
+                    <div style="display: flex; gap: 1rem;">
+                        <div style="flex: 1;">
+                            <label style="font-size: 0.75rem; font-weight: 700; color: var(--texto-silenciado);">Nivel Login/Registro</label>
+                            <input type="number" max="998" name="acceso_autenticacion_publico" value="<?= $config['accesos_modulos']['autenticacion']['publico'] ?? 999 ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
