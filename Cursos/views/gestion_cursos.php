@@ -14,11 +14,6 @@ $total_paginas = (int)$pag['total_paginas'];
 ?>
 <div class="cur-wrapper">
     
-    <?php if ($mensaje_exito): ?>
-        <div class="cur-flash cur-flash-success" style="border-radius:12px;">
-            <i class="ph-fill ph-check-circle"></i> <?= htmlspecialchars($mensaje_exito) ?>
-        </div>
-    <?php endif; ?>
     <?php if ($mensaje_error): ?>
         <div class="cur-flash cur-flash-error" style="border-radius:12px;">
             <i class="ph-fill ph-warning-circle"></i> <?= htmlspecialchars($mensaje_error) ?>
@@ -164,4 +159,30 @@ function abrirModal(id, titulo) {
 function cerrarModal() {
     document.getElementById('modal-eliminar').style.display = 'none';
 }
+// Cerrar modal al hacer clic fuera
+document.getElementById('modal-eliminar').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModal();
+});
 </script>
+
+<!-- Modal de Éxito -->
+<?php if ($mensaje_exito): ?>
+<div id="modal-exito-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.65); z-index:99999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div style="background: white; padding: 2.5rem 2rem; border-radius: 16px; max-width: 420px; width: 90%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.2); animation: modalPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+        <div style="width:80px; height:80px; background:#DCFCE7; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
+            <i class="ph-fill ph-check-circle" style="font-size:3rem; color:#16A34A;"></i>
+        </div>
+        <h3 style="font-size:1.3rem; font-weight:700; color:#0F172A; margin:0 0 0.75rem;">¡Operación Exitosa!</h3>
+        <p style="color:#64748B; font-size:0.95rem; margin-bottom:2rem; line-height:1.5;"><?= htmlspecialchars($mensaje_exito) ?></p>
+        <button onclick="document.getElementById('modal-exito-overlay').remove()" style="background: linear-gradient(135deg, rgba(80,89,132,0.95), rgba(112,144,203,0.9)); color:white; border:none; border-radius:50px; padding:0.8rem 2rem; font-weight:700; font-size:1rem; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
+            <i class="ph-bold ph-check"></i> Entendido
+        </button>
+    </div>
+</div>
+<script>
+// Auto-cerrar el modal de éxito al hacer clic fuera
+document.getElementById('modal-exito-overlay').addEventListener('click', function(e) {
+    if (e.target === this) this.remove();
+});
+</script>
+<?php endif; ?>

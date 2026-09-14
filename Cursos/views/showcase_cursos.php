@@ -11,7 +11,7 @@ $total_paginas = (int)$pag['total_paginas'];
 $total_cursos  = (int)$pag['total'];
 ?>
 <div class="cur-wrapper">
-    <section class="landing-hero-modern" style="margin-bottom: 4rem; border-radius: 32px; overflow: hidden; box-shadow: 0 20px 40px rgba(29, 78, 216, 0.2); background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); border: none;">
+    <section class="landing-hero-modern" style="margin-bottom: 4rem; border-radius: 32px; overflow: hidden; box-shadow: 0 20px 40px rgba(80,89,132,0.25); background: linear-gradient(135deg, rgba(80,89,132,0.97) 0%, rgba(112,144,203,0.93) 100%); border: none;">
         <canvas id="landingCanvasBg" class="landing-hero-canvas"></canvas>
 
         <div class="hero-text-content">
@@ -24,7 +24,7 @@ $total_cursos  = (int)$pag['total'];
             <form method="GET" action="" class="cur-search-bar" style="background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255,255,255,0.25); border-radius: 50px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width:100%; max-width: 500px; display:flex; align-items:center; padding: 0.5rem 0.5rem 0.5rem 1.5rem;">
                 <input type="hidden" name="ruta" value="cursos">
                 <input type="search" name="busqueda" value="<?= $busqueda ?>" placeholder="Buscar diplomados, cursos o temas..." autocomplete="off" style="background:transparent; border:none; color:white; flex:1; outline:none; font-size:1.1rem;">
-                <button type="submit" style="background: white; color: #1D4ED8; border: none; border-radius: 50px; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;"><i class="ph-bold ph-magnifying-glass"></i></button>
+                <button type="submit" style="background: white; color: #505984; border: none; border-radius: 50px; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;"><i class="ph-bold ph-magnifying-glass"></i></button>
             </form>
         </div>
 

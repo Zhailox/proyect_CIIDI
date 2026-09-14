@@ -105,9 +105,9 @@ class CursosModule implements ModuleContract {
                 'enlace'      => 'cursos',
                 'activadores' => ['cursos', 'cursos-gestion', 'cursos-crear', 'cursos-editar', 'cursos-config'],
                 'subitems'    => [
-                    ['ruta' => 'cursos',         'titulo' => 'Oferta Formativa'],
-                    ['ruta' => 'cursos-gestion', 'titulo' => 'Gestión de Cursos', 'nivel_minimo' => 1],
-                    ['ruta' => 'cursos-config',  'titulo' => 'Configuración',     'nivel_minimo' => 3],
+                    ['ruta' => 'cursos',         'titulo' => 'Oferta Formativa',    'privilegio_minimo' => 0],
+                    ['ruta' => 'cursos-gestion', 'titulo' => 'Gestión de Cursos',   'privilegio_minimo' => 1],
+                    ['ruta' => 'cursos-config',  'titulo' => 'Configuración',        'privilegio_minimo' => 3],
                 ],
             ],
         ];

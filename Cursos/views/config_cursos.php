@@ -26,7 +26,7 @@ $c = $config_actual;
         <!-- Nota: La protección CSRF ahora está siempre activa a nivel de código y no se puede desactivar por interfaz. -->
         <input type="hidden" name="csrf_activo" value="1">
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
             
             <!-- TARJETA: Paginación -->
             <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04);">
@@ -66,8 +66,8 @@ $c = $config_actual;
                 </div>
             </div>
             
-            <!-- TARJETA: Gestión de Imágenes -->
-            <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04); display: flex; flex-direction: column;">
+            <!-- TARJETA: Gestión de Imágenes (ancho completo) -->
+            <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04); display: flex; flex-direction: column; grid-column: 1 / 2;">
                 <div style="display:flex; align-items:center; gap:0.8rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--cur-border); padding-bottom:1rem;">
                     <div style="width:40px; height:40px; border-radius:10px; background:#DCFCE7; color:#166534; display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
                         <i class="ph-fill ph-image"></i>
@@ -104,8 +104,8 @@ $c = $config_actual;
                 </div>
             </div>
 
-            <!-- TARJETA: Referencia de Roles -->
-            <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04); display: flex; flex-direction: column;">
+            <!-- TARJETA: Referencia de Roles (columna derecha, misma fila que Imágenes) -->
+            <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04); display: flex; flex-direction: column; grid-column: 2 / 3;">
                 <div style="display:flex; align-items:center; gap:0.8rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--cur-border); padding-bottom:1rem;">
                     <div style="width:40px; height:40px; border-radius:10px; background:#F1F5F9; color:#475569; display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
                         <i class="ph-fill ph-users"></i>
@@ -141,10 +141,11 @@ $c = $config_actual;
             </div>
         </div>
 
+
         <div style="display:flex; justify-content:flex-end; padding-top:1rem; padding-bottom:3rem;">
             <!-- BOTÓN GUARDAR HERMOSO -->
             <button type="submit" style="
-                background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); 
+                background: linear-gradient(135deg, rgba(80,89,132,0.95) 0%, rgba(112,144,203,0.9) 100%); 
                 color: white; 
                 border: none; 
                 padding: 1rem 2.5rem; 
@@ -154,10 +155,10 @@ $c = $config_actual;
                 display:flex; 
                 align-items:center; 
                 gap: 0.8rem;
-                box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+                box-shadow: 0 10px 25px rgba(80, 89, 132, 0.35);
                 cursor: pointer;
                 transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
-            " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 15px 35px rgba(37, 99, 235, 0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 25px rgba(37, 99, 235, 0.4)';">
+            " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 15px 35px rgba(80, 89, 132, 0.45)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 25px rgba(80, 89, 132, 0.35)';">
                 <i class="ph-bold ph-sparkle" style="font-size: 1.4rem;"></i> Aplicar y Guardar Cambios
             </button>
         </div>

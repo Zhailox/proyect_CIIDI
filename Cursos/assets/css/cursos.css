@@ -1,11 +1,11 @@
 /* modules/Cursos/assets/css/cursos.css */
-/* DISEÑO MODERNO Y ELEGANTE 2026 */
+/* DISEÑO INSTITUCIONAL CIIDI — Alineado con módulo Artículos */
 
 :root {
-    --cur-primary: #4F46E5;
-    --cur-primary-hover: #4338CA;
-    --cur-primary-light: #EEF2FF;
-    --cur-accent: #EC4899;
+    --cur-primary: #505984;
+    --cur-primary-hover: #3d456a;
+    --cur-primary-light: #eef0f8;
+    --cur-accent: #7090CB;
     --cur-success: #10B981;
     --cur-warning: #F59E0B;
     --cur-danger: #EF4444;
@@ -25,7 +25,7 @@
     --cur-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
     --cur-shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.1), 0 2px 4px -1px rgba(15, 23, 42, 0.06);
     --cur-shadow-lg: 0 10px 25px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -2px rgba(15, 23, 42, 0.05);
-    --cur-shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    --cur-shadow-glass: 0 8px 32px 0 rgba(80, 89, 132, 0.07);
     
     --cur-glass-bg: rgba(255, 255, 255, 0.75);
     --cur-glass-blur: blur(12px);
@@ -46,14 +46,14 @@
    HERO / CABECERA CATÁLOGO
    ═══════════════════════════════════════════════════ */
 .cur-hero {
-    background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+    background: linear-gradient(135deg, rgba(80,89,132,0.95) 0%, rgba(112,144,203,0.9) 100%);
     border-radius: var(--cur-radius-xl);
     padding: 4rem 3rem;
     color: white;
     position: relative;
     overflow: hidden;
     margin-bottom: 3rem;
-    box-shadow: var(--cur-shadow-lg);
+    box-shadow: 0 20px 40px rgba(80,89,132,0.2);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -63,7 +63,7 @@
     content: '';
     position: absolute;
     top: -50%; left: -20%; width: 600px; height: 600px;
-    background: radial-gradient(circle, #60A5FA 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(112,144,203,0.5) 0%, transparent 70%);
     opacity: 0.15; filter: blur(40px); border-radius: 50%;
 }
 .cur-hero h1 {
@@ -71,11 +71,11 @@
     letter-spacing: -0.05em; line-height: 1.1; z-index: 1;
 }
 .cur-hero h1 span {
-    background: linear-gradient(to right, #93C5FD, #E0E7FF);
+    background: linear-gradient(to right, #c7d2f0, #e8ecf8);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
 .cur-hero p {
-    font-size: 1.15rem; color: #DBEAFE; max-width: 600px; margin-bottom: 2.5rem; z-index: 1;
+    font-size: 1.15rem; color: rgba(240,243,255,0.9); max-width: 600px; margin-bottom: 2.5rem; z-index: 1;
 }
 .cur-search-bar {
     display: flex; background: rgba(255, 255, 255, 0.15); backdrop-filter: var(--cur-glass-blur);
@@ -91,10 +91,10 @@
 }
 .cur-search-bar input::placeholder { color: rgba(255, 255, 255, 0.7); }
 .cur-search-bar button {
-    background: white; color: #1D4ED8; border: none; border-radius: 50px;
+    background: white; color: var(--cur-primary); border: none; border-radius: 50px;
     width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s, color 0.2s;
 }
-.cur-search-bar button:hover { background: #DBEAFE; }
+.cur-search-bar button:hover { background: #e8ecf8; }
 
 /* ═══════════════════════════════════════════════════
    GRID Y TARJETAS DE CURSOS
@@ -107,17 +107,17 @@
     box-shadow: var(--cur-shadow-glass); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
     display: flex; flex-direction: column; text-decoration: none; color: inherit; position: relative;
     border: 1px solid var(--cur-border);
-    height: 100%; /* Asegurar misma altura */
+    height: 100%;
 }
 .cur-card:hover {
-    transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+    transform: translateY(-8px); box-shadow: 0 20px 40px rgba(80,89,132,0.12);
 }
 .cur-card-img-wrap { position: relative; height: 180px; overflow: hidden; flex-shrink: 0; }
 .cur-card-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
 .cur-card:hover .cur-card-img-wrap img { transform: scale(1.08); }
 
 .cur-badge {
-    position: absolute; top: 1rem; left: 1rem; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px);
+    position: absolute; top: 1rem; left: 1rem; background: rgba(80, 89, 132, 0.85); backdrop-filter: blur(4px);
     color: white; padding: 0.4rem 1rem; border-radius: 30px; font-size: 0.75rem; font-weight: 600;
     letter-spacing: 0.5px; text-transform: uppercase; display: flex; align-items: center; gap: 0.4rem; z-index: 2;
 }
@@ -125,16 +125,16 @@
 .cur-card-title { 
     font-size: 1.15rem; font-weight: 700; line-height: 1.4; margin-bottom: 0.8rem; color: var(--cur-dark);
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-    height: 3.22rem; /* Fuerza altura de 2 líneas */
+    height: 3.22rem;
 }
 .cur-card-desc { 
     color: var(--cur-muted); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem;
     display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
-    height: 4.05rem; /* Fuerza altura de 3 líneas */
+    height: 4.05rem;
 }
 .cur-card-footer {
     display: flex; justify-content: space-between; align-items: center; padding-top: 1.2rem; border-top: 1px solid var(--cur-border);
-    margin-top: auto; /* Empuja el footer siempre al fondo */
+    margin-top: auto;
 }
 .cur-docente { display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; font-weight: 500; color: var(--cur-dark); }
 .cur-docente i { color: var(--cur-primary); font-size: 1.2rem; }
@@ -150,7 +150,7 @@
     color: var(--cur-muted); font-weight: 600; text-decoration: none; transition: all 0.2s;
 }
 .cur-pag-btn:hover { background: var(--cur-primary-light); color: var(--cur-primary); }
-.cur-pag-btn--active { background: var(--cur-primary); color: white; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
+.cur-pag-btn--active { background: var(--cur-primary); color: white; box-shadow: 0 4px 10px rgba(80, 89, 132, 0.3); }
 
 /* ═══════════════════════════════════════════════════
    VISTA GESTIÓN (MIS CURSOS)
@@ -158,11 +158,12 @@
 .cur-header-gestion { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
 .cur-header-gestion h1 { font-size: 2rem; font-weight: 800; color: var(--cur-dark); }
 .cur-btn-crear {
-    background: var(--cur-primary); color: white; padding: 0.8rem 1.5rem; border-radius: var(--cur-radius-sm);
+    background: linear-gradient(135deg, rgba(80,89,132,0.95), rgba(112,144,203,0.9));
+    color: white; padding: 0.8rem 1.5rem; border-radius: var(--cur-radius-sm);
     font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;
-    box-shadow: var(--cur-shadow-md); transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 12px rgba(80,89,132,0.25); transition: transform 0.2s, box-shadow 0.2s;
 }
-.cur-btn-crear:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(79, 70, 229, 0.25); color: white; }
+.cur-btn-crear:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(80, 89, 132, 0.35); color: white; }
 .cur-table-container { background: var(--cur-white); border-radius: var(--cur-radius-md); box-shadow: var(--cur-shadow-sm); overflow-x: auto; }
 .cur-table { width: 100%; border-collapse: collapse; }
 .cur-table th { background: #F8FAFC; padding: 1rem 1.5rem; text-align: left; font-weight: 600; color: var(--cur-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--cur-border); }
@@ -181,13 +182,13 @@
     text-decoration: none; border: none; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
     font-size: 1.15rem;
 }
-.cur-action-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25); background: var(--cur-primary); color: white; }
+.cur-action-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(80, 89, 132, 0.25); background: var(--cur-primary); color: white; }
 .cur-action-btn.del { color: var(--cur-danger); background: #FEE2E2; }
 .cur-action-btn.del:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(239, 68, 68, 0.25); background: var(--cur-danger); color: white; }
 
 /* Modales y Alertas */
 .cur-modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-.cur-modal { background: white; border-radius: var(--cur-radius-md); padding: 2rem; width: 100%; max-width: 400px; box-shadow: var(--cur-shadow-lg); text-align: center; animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.cur-modal { background: white; border-radius: var(--cur-radius-md); padding: 2rem; width: 100%; max-width: 420px; box-shadow: var(--cur-shadow-lg); text-align: center; animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 @keyframes modalPop { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 .cur-modal-icon { font-size: 3rem; color: var(--cur-danger); margin-bottom: 1rem; }
 .cur-modal h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
@@ -207,14 +208,15 @@
 .cur-empty-icon { font-size: 4rem; color: var(--cur-border); margin-bottom: 1rem; }
 .cur-empty h3 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
 .cur-empty p { color: var(--cur-muted); }
-/* Estilos Adicionales para Formulario y Detalle */
+
+/* Formulario y Detalle */
 .cur-form-section { background: white; border-radius: var(--cur-radius-md); padding: 2rem; margin-bottom: 2rem; box-shadow: var(--cur-shadow-sm); border: 1px solid var(--cur-border); }
 .cur-form-section-title { margin-bottom: 1.5rem; border-bottom: 1px solid var(--cur-border); padding-bottom: 1rem; display: flex; align-items: center; }
 .cur-form-section-num { color: var(--cur-primary); font-weight: 800; font-size: 1.5rem; margin-right: 0.8rem; background: var(--cur-primary-light); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
 .cur-field-group { margin-bottom: 1.5rem; }
 .cur-field-label { display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--cur-dark); }
 .cur-field-input, .cur-field-select, .cur-field-textarea { width: 100%; padding: 0.8rem 1rem; padding-left: 2.5rem; border: 1px solid var(--cur-border); border-radius: var(--cur-radius-sm); font-family: inherit; font-size: 1rem; background: #F8FAFC; transition: all 0.2s; }
-.cur-field-input:focus, .cur-field-select:focus, .cur-field-textarea:focus { border-color: var(--cur-primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); background: white; outline: none; }
+.cur-field-input:focus, .cur-field-select:focus, .cur-field-textarea:focus { border-color: var(--cur-primary); box-shadow: 0 0 0 3px rgba(80, 89, 132, 0.15); background: white; outline: none; }
 .cur-field-input-wrap { position: relative; }
 .cur-field-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--cur-muted); pointer-events: none; }
 .cur-field-textarea + .cur-field-icon { top: 1.5rem; transform: none; }
@@ -224,12 +226,19 @@
 .cur-btn-secondary:hover { background: #F8FAFC; }
 
 /* Detalle Curso */
-.cur-detail-hero { background: var(--cur-dark); color: white; border-radius: var(--cur-radius-lg); padding: 3rem; margin-bottom: 2rem; display: flex; gap: 3rem; position: relative; overflow: hidden; box-shadow: var(--cur-shadow-lg); }
+.cur-detail-hero { background: linear-gradient(135deg, rgba(80,89,132,0.95) 0%, rgba(112,144,203,0.9) 100%); color: white; border-radius: var(--cur-radius-lg); padding: 3rem; margin-bottom: 2rem; display: flex; gap: 3rem; position: relative; overflow: hidden; box-shadow: 0 20px 40px rgba(80,89,132,0.25); }
 .cur-detail-img { width: 350px; height: 250px; border-radius: var(--cur-radius-md); object-fit: cover; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 1; }
 .cur-detail-info { z-index: 1; flex: 1; display: flex; flex-direction: column; justify-content: center;}
 .cur-detail-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; line-height: 1.2; }
 .cur-detail-meta { display: flex; gap: 1.5rem; color: #94A3B8; margin-bottom: 1.5rem; flex-wrap: wrap;}
 .cur-detail-meta span { display: flex; align-items: center; gap: 0.4rem; }
 .cur-detail-desc { background: white; padding: 2.5rem; border-radius: var(--cur-radius-lg); box-shadow: var(--cur-shadow-sm); border: 1px solid var(--cur-border); line-height: 1.7; font-size: 1.05rem; color: #334155; white-space: pre-line;}
-.cur-detail-btn { display: inline-flex; align-items: center; gap: 0.8rem; background: var(--cur-primary); color: white; padding: 1rem 2rem; border-radius: 50px; font-weight: 600; font-size: 1.1rem; text-decoration: none; margin-top: auto; align-self: flex-start; transition: transform 0.2s, box-shadow 0.2s;}
-.cur-detail-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3); }
+.cur-detail-btn { display: inline-flex; align-items: center; gap: 0.8rem; background: linear-gradient(135deg, rgba(80,89,132,0.95), rgba(112,144,203,0.9)); color: white; padding: 1rem 2rem; border-radius: 50px; font-weight: 600; font-size: 1.1rem; text-decoration: none; margin-top: auto; align-self: flex-start; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 14px rgba(80,89,132,0.3);}
+.cur-detail-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(80, 89, 132, 0.4); }
+
+/* Landing Hero (showcase) override */
+.landing-hero-modern {
+    background: linear-gradient(135deg, rgba(80,89,132,0.95) 0%, rgba(112,144,203,0.9) 100%) !important;
+    box-shadow: 0 20px 40px rgba(80,89,132,0.2) !important;
+    border: none !important;
+}
