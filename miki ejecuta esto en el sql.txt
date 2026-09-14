@@ -1,5 +1,8 @@
--- miki debe ejecutar esto en su base de datos:
-ALTER TABLE detalles_articulos ADD COLUMN id_categoria INTEGER;
-ALTER TABLE investigaciones_ofertadas ADD COLUMN id_propuesta_empresa INTEGER;
-ALTER TABLE propuestas_empresa ADD COLUMN motivo_rechazo TEXT;
-ALTER TABLE propuestas_empresa ADD COLUMN codigo_seguimiento VARCHAR(255);
+-- 1. Añadir campos para recuperación de contraseña y contacto en tabla usuarios
+ALTER TABLE usuarios 
+ADD COLUMN IF NOT EXISTS reset_token VARCHAR(255) DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS reset_expires TIMESTAMP DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS telefono VARCHAR(50) DEFAULT NULL;
+-- 2. Añadir campo JSON para manejar múltiples integrantes en postulaciones de estudiantes
+ALTER TABLE postulaciones_estudiantes 
+ADD COLUMN IF NOT EXISTS equipo_extra JSON DEFAULT NULL;
