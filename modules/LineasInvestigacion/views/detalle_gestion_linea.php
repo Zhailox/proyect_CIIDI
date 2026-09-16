@@ -3,7 +3,7 @@
 ?>
 <style>
 .ag-header-banner {
-    background: linear-gradient(135deg, var(--color-primario, #1e293b) 0%, #0f172a 100%) !important;
+    background: linear-gradient(135deg, rgba(80, 89, 132, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%) !important;
     color: #ffffff;
     border-radius: 14px;
     padding: 2.5rem 3rem;
@@ -194,6 +194,7 @@
 
     <!-- ENCABEZADO -->
     <div class="ag-header-banner">
+        <canvas id="li-nodes-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.6;"></canvas>
         <div style="display: flex; gap: 1.8rem; align-items: flex-start; position: relative; z-index: 1;">
             <div style="width: 72px; height: 72px; border-radius: 16px; background: rgba(255,255,255, 0.1); border: 1px solid rgba(255,255,255, 0.2); display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: #ffffff; flex-shrink: 0; backdrop-filter: blur(4px);">
                 <i class="ph-bold ph-graph"></i>
@@ -431,3 +432,70 @@ function abrirModalEditarDimension(dim) {
     });
 }
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('li-nodes-canvas');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = canvas.offsetWidth;
+        let height = canvas.height = canvas.offsetHeight;
+        
+        window.addEventListener('resize', () => {
+            if (!canvas) return;
+            width = canvas.width = canvas.offsetWidth;
+            height = canvas.height = canvas.offsetHeight;
+        });
+
+        const particles = [];
+        const numParticles = 40;
+
+        for (let i = 0; i < numParticles; i++) {
+            particles.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                radius: Math.random() * 2 + 1.2
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            for (let i = 0; i < numParticles; i++) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0 || p.x > width) p.vx *= -1;
+                if (p.y < 0 || p.y > height) p.vy *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(112, 144, 203, 0.75)';
+                ctx.fill();
+
+                for (let j = i + 1; j < numParticles; j++) {
+                    const p2 = particles[j];
+                    const dx = p.x - p2.x;
+                    const dy = p.y - p2.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < 100) {
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.strokeStyle = `rgba(112, 144, 203, ${0.4 - dist/250})`;
+                        ctx.lineWidth = 0.8;
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+    }
+});
+</script>
+</body>
