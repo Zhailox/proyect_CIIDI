@@ -1,0 +1,182 @@
+[
+    {
+        "id": "mail_6aaa27280abb3",
+        "fecha": "2026-09-16 05:20:40",
+        "destino_email": "andrusramirez2020@gmail.com",
+        "destino_nombre": "andru",
+        "asunto": "asda",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aaa223832344",
+        "fecha": "2026-09-16 04:59:36",
+        "destino_email": "andrusramirez2020@gmail.com",
+        "destino_nombre": "Destinatario Directo",
+        "asunto": "hola",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aaa21c3532f5",
+        "fecha": "2026-09-16 04:57:39",
+        "destino_email": "andru@gmail.com",
+        "destino_nombre": "Adrus",
+        "asunto": "hola",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aaa21c1620d9",
+        "fecha": "2026-09-16 04:57:37",
+        "destino_email": "lando@gmail.com",
+        "destino_nombre": "lando",
+        "asunto": "hola",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aaa21bfb447c",
+        "fecha": "2026-09-16 04:57:35",
+        "destino_email": "miki@gmail.com",
+        "destino_nombre": "miki",
+        "asunto": "hola",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aaa21bdd58f3",
+        "fecha": "2026-09-16 04:57:33",
+        "destino_email": "ale@yaju.com",
+        "destino_nombre": "ale",
+        "asunto": "hola",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aaa21bc2230f",
+        "fecha": "2026-09-16 04:57:32",
+        "destino_email": "bibi@gmail.com",
+        "destino_nombre": "bibi",
+        "asunto": "hola",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aaa21ba59f85",
+        "fecha": "2026-09-16 04:57:30",
+        "destino_email": "pina@hotmail.com",
+        "destino_nombre": "Piñin Piña",
+        "asunto": "hola",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aaa21b8696c8",
+        "fecha": "2026-09-16 04:57:28",
+        "destino_email": "erwazaaaa@gmail.com",
+        "destino_nombre": "Miguel González",
+        "asunto": "hola",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aaa21b6aa1e2",
+        "fecha": "2026-09-16 04:57:26",
+        "destino_email": "yisu@gmail.com",
+        "destino_nombre": "Yisu Monte",
+        "asunto": "hola",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aaa21b4d4300",
+        "fecha": "2026-09-16 04:57:24",
+        "destino_email": "iaiaia@gmail.com",
+        "destino_nombre": "Pedro Perez",
+        "asunto": "hola",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aaa21b330932",
+        "fecha": "2026-09-16 04:57:23",
+        "destino_email": "wazaaa@gmail.com",
+        "destino_nombre": "Wazaaaa",
+        "asunto": "hola",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aaa21b19c91a",
+        "fecha": "2026-09-16 04:57:21",
+        "destino_email": "123@gmail.com",
+        "destino_nombre": "Juan",
+        "asunto": "hola",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aaa21b010913",
+        "fecha": "2026-09-16 04:57:20",
+        "destino_email": "cepillin@gmail.com",
+        "destino_nombre": "Cepillíno",
+        "asunto": "hola",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aaa21ae2482e",
+        "fecha": "2026-09-16 04:57:18",
+        "destino_email": "676767@gmail.com",
+        "destino_nombre": "Sixsevenaldo González",
+        "asunto": "hola",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aaa21ac92d80",
+        "fecha": "2026-09-16 04:57:16",
+        "destino_email": "DIOS@gmail.com",
+        "destino_nombre": "DIOS",
+        "asunto": "hola",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aaa21aab758b",
+        "fecha": "2026-09-16 04:57:14",
+        "destino_email": "jesus.montillaolm2803@gmail.com",
+        "destino_nombre": "yisu",
+        "asunto": "hola",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aaa21a8ca9b1",
+        "fecha": "2026-09-16 04:57:12",
+        "destino_email": "andrusramirez2020@gmail.com",
+        "destino_nombre": "andru",
+        "asunto": "hola",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    }
+]

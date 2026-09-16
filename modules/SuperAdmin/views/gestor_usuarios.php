@@ -149,14 +149,6 @@ if (isset($privilegios)) {
                                             <i class="ph-bold ph-pencil-simple"></i> Editar
                                         </button>
 
-                                        <!-- CLAVE -->
-                                        <form action="resetear-clave-usuario" method="POST" style="margin:0;">
-                                            <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
-                                            <input type="hidden" name="cedula" value="<?= htmlspecialchars($usr['cedula']) ?>">
-                                            <button type="button" class="btn" title="Restablecer Clave" style="background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 8px; font-size: 0.78rem; border-radius: 4px; cursor: pointer; font-weight: 600;" onclick="mostrarConfirmacionUsuarios(this.form, 'Restablecer Contraseña', '¿Restablecer contraseña a Temporal2026!?', 'ph-key', '#d97706')">
-                                                <i class="ph-bold ph-key"></i> Clave
-                                            </button>
-                                        </form>
 
                                         <!-- REVOCAR -->
                                         <form action="revocar-sesion" method="POST" style="margin:0;">
@@ -390,10 +382,10 @@ if (isset($privilegios)) {
 <div id="modalCrearUsuario" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center;">
     <div style="background: #ffffff; width: 100%; max-width: 480px; border-radius: 12px; padding: 1.75rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(226, 232, 240, 0.8);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--color-principal); display: flex; align-items: center; gap: 8px;">
-                <i class="ph-bold ph-user-plus" style="color: var(--color-secundario);"></i> Registrar Nuevo Usuario
+            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: flex; align-items: center; gap: 8px;">
+                <i class="ph-bold ph-user-plus" style="color: var(--color-secundario, #2563eb);"></i> Registrar Nuevo Usuario
             </h3>
-            <button onclick="toggleModalCrearUsuario(false)" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b;">✕</button>
+            <button type="button" onclick="toggleModalCrearUsuario(false)" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b;">✕</button>
         </div>
 
         <form action="crear-usuario" method="POST" style="display: flex; flex-direction: column; gap: 0.85rem;">
@@ -426,9 +418,9 @@ if (isset($privilegios)) {
                 <input type="password" name="password" class="sa-filter-input" placeholder="••••••••" required style="width: 100%; box-sizing: border-box;">
             </div>
 
-            <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.75rem;">
-                <button type="button" onclick="toggleModalCrearUsuario(false)" class="btn btn-outline" style="border-color: #cbd5e1; color: #64748b; padding: 0.65rem 1rem; border-radius: 6px; font-size: 0.85rem;">Cancelar</button>
-                <button type="submit" class="btn btn-solid" style="background: var(--color-secundario) !important; color: #ffffff !important; border: none; padding: 0.65rem 1.25rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700;">Guardar Usuario</button>
+            <div style="display: flex; flex-direction: row; gap: 0.75rem; justify-content: flex-end; align-items: center; margin-top: 1.25rem;">
+                <button type="button" onclick="toggleModalCrearUsuario(false)" style="flex: 1; border: 1px solid #cbd5e1; background: #ffffff; color: #64748b; padding: 0 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700; height: 40px; line-height: 40px; text-align: center; cursor: pointer; box-sizing: border-box; margin: 0; outline: none; display: block;">Cancelar</button>
+                <button type="submit" style="flex: 1; background: var(--color-secundario, #2563eb) !important; color: #ffffff !important; border: none; padding: 0 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700; height: 40px; line-height: 40px; text-align: center; cursor: pointer; box-sizing: border-box; margin: 0; outline: none; display: block;">Guardar Usuario</button>
             </div>
         </form>
     </div>
