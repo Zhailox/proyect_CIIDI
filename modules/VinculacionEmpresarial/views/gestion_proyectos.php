@@ -1,7 +1,9 @@
 <?php
 // modules/VinculacionEmpresarial/views/gestion_proyectos.php
 require_once __DIR__ . '/../../../core/Security/Auth.php';
-Auth::requierePrivilegioMinimo(2); // Comite en adelante
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
+$nivelAdmin = SystemConfigService::get('accesos_modulos.vinculacion_empresarial.admin', 1);
+Auth::requierePrivilegioMinimo($nivelAdmin, 'auditar', 'VinculacionEmpresarial');
 
 $tab = $_GET['tab'] ?? 'propuestas'; // 'propuestas' o 'equipos'
 
