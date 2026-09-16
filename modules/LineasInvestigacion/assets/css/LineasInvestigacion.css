@@ -34,6 +34,7 @@
 
 /* ─── WRAPPER GENERAL ────────────────────────────────────────────────────── */
 .li-wrapper {
+    padding: 0 1.5rem;
     display: flex;
     flex-direction: column;
     gap: 2rem;
@@ -295,7 +296,7 @@
     gap: 0.5rem;
     width: 100%;
     padding: 0.65rem 1.25rem;
-    background: var(--li-text-title);
+    background: #505984;
     color: var(--text-white);
     border: none;
     border-radius: var(--li-card-radius);
@@ -308,7 +309,7 @@
 }
 
 .li-btn-ver:hover {
-    background: var(--color-secundario);
+    background: #3C456A;
     transform: translateY(-1px);
     color: var(--text-white);
     text-decoration: none;
@@ -316,13 +317,14 @@
 
 /* ─── VISTA DE DETALLE ────────────────────────────────────────────────────── */
 .li-detail-wrapper {
+    padding: 0 1.5rem;
     display: flex;
     flex-direction: column;
     gap: 2rem;
 }
 
 .li-detail-hero {
-    background: linear-gradient(135deg, #0a0f24 0%, #121A3E 55%, #1e2d5a 100%);
+    background: linear-gradient(135deg, rgba(80, 89, 132, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%);
     border-radius: var(--li-card-radius);
     padding: 2.5rem;
     color: #fff;
@@ -386,13 +388,14 @@
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 50px;
     padding: 0.3rem 0.85rem;
     font-size: 0.78rem;
     font-weight: 600;
-    color: #c4b5fd;
+    color: #ffffff;
+    backdrop-filter: blur(4px);
 }
 
 /* Layout de 2 columnas en detalle */
@@ -521,7 +524,7 @@
 }
 
 .li-sidebar-header {
-    background: var(--bg-banner);
+    background: #505984;
     padding: 1rem 1.25rem;
     color: var(--text-white);
 }
@@ -594,6 +597,7 @@
 
 /* ─── PANEL DE GESTIÓN (ADMIN) ───────────────────────────────────────────── */
 .li-gestor-wrapper {
+    padding: 0 1.5rem;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
@@ -601,7 +605,7 @@
 
 /* Banner del gestor */
 .li-gestor-banner {
-    background: linear-gradient(135deg, #0a0f24 0%, #121A3E 55%, #1e2d5a 100%);
+    background: linear-gradient(135deg, rgba(80, 89, 132, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%);
     border-radius: var(--li-card-radius);
     padding: 2rem 2.5rem;
     color: #fff;
@@ -939,3 +943,17 @@
 .li-card:nth-child(4) { animation: li-cardIn 0.7s ease both; }
 .li-card:nth-child(5) { animation: li-cardIn 0.8s ease both; }
 .li-card:nth-child(6) { animation: li-cardIn 0.9s ease both; }
+
+.li-sidebar-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.li-sidebar-scroll::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+.li-sidebar-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+.li-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

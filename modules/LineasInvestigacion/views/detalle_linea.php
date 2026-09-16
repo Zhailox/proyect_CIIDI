@@ -18,12 +18,14 @@
 <?php else: ?>
 
     <!-- ╔══ HERO DE DETALLE ════════════════════════════════════════════════╗ -->
-    <div class="li-detail-hero">
+    <div class="li-detail-hero" style="position: relative; overflow: hidden;">
+        <canvas id="li-nodes-canvas-3" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.6;"></canvas>
+        <div style="position: relative; z-index: 1;">
         <a href="index.php?ruta=lineas-investigacion" class="li-back-link">
             <i class="ph-bold ph-arrow-left"></i> Volver a Líneas de Investigación
         </a>
 
-        <h1><?= htmlspecialchars(ucwords(strtolower($linea['nombre']))) ?></h1>
+        <h1><?= htmlspecialchars(mb_convert_case($linea['nombre'], MB_CASE_TITLE, 'UTF-8')) ?></h1>
 
         <?php if (!empty($linea['descripcion'])): ?>
         <p><?= htmlspecialchars($linea['descripcion']) ?></p>
@@ -51,6 +53,7 @@
             </span>
             <?php endif; ?>
         </div>
+    </div>
     </div>
 
     <!-- ╔══ LAYOUT PRINCIPAL ══════════════════════════════════════════════╗ -->
@@ -143,6 +146,7 @@
                     <h3><i class="ph-bold ph-flask" style="margin-right:0.4rem;"></i>Investigaciones Ofertadas</h3>
                 </div>
 
+                <div class="li-sidebar-scroll" style="max-height: 480px; overflow-y: auto;">
                 <?php if (empty($investigaciones)): ?>
                     <div class="li-empty-state" style="padding:2rem;">
                         <i class="ph-bold ph-flask"></i>
@@ -170,6 +174,7 @@
                     </div>
                     <?php endforeach; ?>
                 <?php endif; ?>
+                </div>
             </div>
 
             <!-- Link al gestor (solo orientativo, la auth lo protegerá) -->
@@ -188,3 +193,69 @@
 <?php endif; ?>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('li-nodes-canvas-3');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = canvas.offsetWidth;
+        let height = canvas.height = canvas.offsetHeight;
+        
+        window.addEventListener('resize', () => {
+            if (!canvas) return;
+            width = canvas.width = canvas.offsetWidth;
+            height = canvas.height = canvas.offsetHeight;
+        });
+
+        const particles = [];
+        const numParticles = 40;
+
+        for (let i = 0; i < numParticles; i++) {
+            particles.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                radius: Math.random() * 2 + 1.2
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            for (let i = 0; i < numParticles; i++) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0 || p.x > width) p.vx *= -1;
+                if (p.y < 0 || p.y > height) p.vy *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(112, 144, 203, 0.75)';
+                ctx.fill();
+
+                for (let j = i + 1; j < numParticles; j++) {
+                    const p2 = particles[j];
+                    const dx = p.x - p2.x;
+                    const dy = p.y - p2.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < 100) {
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.strokeStyle = `rgba(112, 144, 203, ${0.4 - dist/250})`;
+                        ctx.lineWidth = 0.8;
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+    }
+});
+</script>

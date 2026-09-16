@@ -2,6 +2,7 @@
 // modules/LineasInvestigacion/controllers/AnaliticaController.php
 require_once __DIR__ . '/../../../core/Database/Connection.php';
 require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
+require_once __DIR__ . '/../../../core/Security/Auth.php';
 
 class AnaliticaController {
     
@@ -32,6 +33,7 @@ class AnaliticaController {
      * Endpoint para mostrar el Dashboard Analítico (Vista UI)
      */
     public function index() {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'LineasInvestigacion');
         return [];
     }
 
@@ -39,6 +41,7 @@ class AnaliticaController {
      * Endpoint para Proyección de Volumen y Tendencias
      */
     public function proyectarTendencias() {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'LineasInvestigacion');
         header('Content-Type: application/json');
         
         // =========================================================================

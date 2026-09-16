@@ -1,11 +1,63 @@
 <!-- modules/LineasInvestigacion/views/dashboard_analitica.php -->
 <div class="li-gestor-wrapper animate-fade-in">
 
-    <div class="li-gestor-banner">
-        <div>
-            <h1><i class="ph-bold ph-brain" style="margin-right:0.5rem;"></i>Dashboard Analítico Predictivo (IA)</h1>
-            <p>Proyección trimestral de volumen mediante Machine Learning.</p>
+    <style>
+.ag-header-banner {
+    background: linear-gradient(135deg, rgba(80, 89, 132, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%) !important;
+    color: #ffffff;
+    border-radius: 14px;
+    padding: 2.5rem 3rem;
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.15);
+    margin-bottom: 2.5rem;
+    position: relative;
+    overflow: hidden;
+}
+.ag-header-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%; right: -10%;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 60%);
+    border-radius: 50%;
+}
+.ag-header-subtitle {
+    display: inline-flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    color: #94a3b8; 
+    font-weight: 800; 
+    font-size: 0.8rem; 
+    text-transform: uppercase; 
+    letter-spacing: 1.5px; 
+    margin-bottom: 0.5rem;
+}
+.ag-header-title {
+    font-size: 2.2rem; 
+    font-weight: 800; 
+    margin: 0 0 0.8rem 0; 
+    color: #ffffff;
+    letter-spacing: -0.5px;
+}
+.ag-header-desc {
+    margin: 0; 
+    color: #cbd5e1; 
+    font-size: 1.05rem;
+    max-width: 800px;
+    line-height: 1.6;
+}
+</style>
+
+<div class="ag-header-banner">
+    <canvas id="li-nodes-canvas-1" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.6;"></canvas>
+    <div style="position: relative; z-index: 1;">
+        <div class="ag-header-subtitle">
+            <i class="ph-bold ph-brain"></i> SISTEMA INTEGRAL
         </div>
+        <h1 class="ag-header-title">Dashboard Analítico Predictivo (IA)</h1>
+        <p class="ag-header-desc">Proyección trimestral de volumen mediante Machine Learning.</p>
+    </div>
+</div>
+
         <!-- Controles movidos a la barra de configuración abajo -->
     </div>
 
@@ -41,7 +93,7 @@
                         <option value="9">9 Trimestres (3 Años Académicos)</option>
                         <option value="12">12 Trimestres (4 Años Académicos)</option>
                     </select>
-                    <button id="btn-proyectar" style="background: #121a3e; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-weight: 700; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(18, 26, 62, 0.3); transition: all 0.2s ease;">
+                    <button id="btn-proyectar" style="background: #505984; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-weight: 700; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(80, 89, 132, 0.3); transition: all 0.2s ease; transition: all 0.2s ease;" onmouseover="this.style.background=\'#3C456A\'; this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.background=\'#505984\'; this.style.transform=\'translateY(0)\'">
                         <i class="ph-bold ph-magic-wand" style="font-size: 1.1rem;"></i> Actualizar Modelo
                     </button>
                 </div>
@@ -94,3 +146,69 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- Cargar el script que maneja la UI analítica -->
 <script src="../modules/LineasInvestigacion/assets/analitica_ui.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('li-nodes-canvas-1');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = canvas.offsetWidth;
+        let height = canvas.height = canvas.offsetHeight;
+        
+        window.addEventListener('resize', () => {
+            if (!canvas) return;
+            width = canvas.width = canvas.offsetWidth;
+            height = canvas.height = canvas.offsetHeight;
+        });
+
+        const particles = [];
+        const numParticles = 40;
+
+        for (let i = 0; i < numParticles; i++) {
+            particles.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                radius: Math.random() * 2 + 1.2
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            for (let i = 0; i < numParticles; i++) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0 || p.x > width) p.vx *= -1;
+                if (p.y < 0 || p.y > height) p.vy *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(112, 144, 203, 0.75)';
+                ctx.fill();
+
+                for (let j = i + 1; j < numParticles; j++) {
+                    const p2 = particles[j];
+                    const dx = p.x - p2.x;
+                    const dy = p.y - p2.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < 100) {
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.strokeStyle = `rgba(112, 144, 203, ${0.4 - dist/250})`;
+                        ctx.lineWidth = 0.8;
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+    }
+});
+</script>
