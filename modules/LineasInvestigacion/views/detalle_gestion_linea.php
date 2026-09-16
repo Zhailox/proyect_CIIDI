@@ -315,7 +315,7 @@ function abrirModalEditarLinea(linea) {
                     </div>
                     <div>
                         <label class="ag-modal-label">Descripción</label>
-                        <textarea name="descripcion" class="ag-modal-input" style="height:160px; resize:vertical;" required>${linea.descripcion}</textarea>
+                        <textarea name="descripcion" class="ag-modal-input" style="height:220px; resize:vertical;" required>${linea.descripcion}</textarea>
                     </div>
                 </form>
             </div>
@@ -372,7 +372,7 @@ function abrirModalCrearDimension(idLinea) {
                     </div>
                     <div>
                         <label class="ag-modal-label">Descripción</label>
-                        <textarea name="descripcion" class="ag-modal-input" style="height:160px; resize:vertical;" required placeholder="Detalla el enfoque de la dimensión..."></textarea>
+                        <textarea name="descripcion" class="ag-modal-input" style="height:220px; resize:vertical;" required placeholder="Detalla el enfoque de la dimensión..."></textarea>
                     </div>
                 </form>
             </div>
@@ -411,7 +411,7 @@ function abrirModalEditarDimension(dim) {
                     </div>
                     <div>
                         <label class="ag-modal-label">Descripción</label>
-                        <textarea name="descripcion" class="ag-modal-input" style="height:160px; resize:vertical;" required>${dim.descripcion}</textarea>
+                        <textarea name="descripcion" class="ag-modal-input" style="height:220px; resize:vertical;" required>${dim.descripcion}</textarea>
                     </div>
                 </form>
             </div>

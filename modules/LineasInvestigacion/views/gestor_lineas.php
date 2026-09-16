@@ -322,7 +322,7 @@ function abrirModalCrearLinea() {
 
     Swal.fire({
         title: 'Nueva Línea de Investigación',
-        width: '650px',
+        width: '800px',
         customClass: { popup: 'ag-swal-popup' },
         html: `
             <div style="text-align: left; margin-top: 1rem;">
@@ -343,7 +343,7 @@ function abrirModalCrearLinea() {
 
                     <div>
                         <label class="ag-modal-label">Descripción</label>
-                        <textarea name="descripcion" class="ag-modal-input" style="height:160px; resize:vertical;" required placeholder="Breve descripción de la línea..."></textarea>
+                        <textarea name="descripcion" class="ag-modal-input" style="height:220px; resize:vertical;" required placeholder="Breve descripción de la línea..."></textarea>
                     </div>
                 </form>
             </div>
