@@ -9,23 +9,41 @@ class Kernel {
     private $menuGlobal = []; // NUEVO: Aquí guardaremos el menú de todos los módulos
 
     public function __construct() {
-        $this->cargarModulos();
+        $archivo_candado = __DIR__ . '/../../storage/installed.lock';
+        if (file_exists($archivo_candado)) {
+            $this->cargarModulos();
+        }
     }
 
     private function cargarModulos() {
         $carpetas = array_diff(scandir(MODULES_PATH), array('.', '..'));
         
-        // 1. Leemos el archivo de estados (Si no existe, asumimos que todos están online)
-        $archivo_estados = __DIR__ . '/../../storage/modules.json';
-        $estados = file_exists($archivo_estados) ? json_decode(file_get_contents($archivo_estados), true) : [];
+        // 1. Leemos el archivo de configuración y estados del sistema
+        // Soporta la transición retrocompatible desde modules.json a config_system.json
+        $archivo_config = __DIR__ . '/../../storage/config_system.json';
+        $archivo_legacy = __DIR__ . '/../../storage/modules.json';
+        
+        $config = [];
+        if (file_exists($archivo_config)) {
+            $config = json_decode(file_get_contents($archivo_config), true) ?: [];
+        } elseif (file_exists($archivo_legacy)) {
+            $legacy = json_decode(file_get_contents($archivo_legacy), true) ?: [];
+            $config = ['modulos' => [], 'rutas' => []];
+            foreach ($legacy as $mod => $est) {
+                $config['modulos'][$mod] = ['estado' => $est];
+            }
+        }
+        
+        $estadosModulos = $config['modulos'] ?? [];
         
         foreach ($carpetas as $carpeta) {
             // 2. Verificamos el estado del módulo (Autenticacion y SuperAdmin nunca se apagan)
-            $estadoActual = $estados[$carpeta] ?? 'online';
+            $modConfig = $estadosModulos[$carpeta] ?? ['estado' => 'online'];
+            $estadoActual = is_array($modConfig) ? ($modConfig['estado'] ?? 'online') : $modConfig;
             $esCore = in_array($carpeta, ['Autenticacion', 'SuperAdmin']);
             
             if ($estadoActual === 'offline' && !$esCore) {
-                continue; // MAGIA: El Kernel ignora la carpeta. El módulo deja de existir.
+                continue; // El Kernel ignora la carpeta si el módulo está totalmente desactivado
             }
 
             $ruta_index_modulo = MODULES_PATH . $carpeta . '/index.php';
@@ -46,32 +64,152 @@ class Kernel {
         }
     }
 
-public function run() {
+    public function run() {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         $ruta = isset($_GET['ruta']) ? $_GET['ruta'] : 'inicio';
+
+        // --- DISPARADOR DEL ASISTENTE DE INSTALACIÓN AUTÓNOMA (CORE INSTALLER HOOK) ---
+        $archivo_candado = __DIR__ . '/../../storage/installed.lock';
+        $rutasInstalador = ['install', 'installer-test-db', 'installer-create-db', 'installer-run'];
+
+        if (!file_exists($archivo_candado)) {
+            // Si el sistema no está instalado, redirigir cualquier petición al Wizard de instalación
+            require_once CORE_PATH . 'Installer/InstallerController.php';
+            $installerController = new InstallerController();
+
+            if ($ruta === 'installer-test-db') {
+                $installerController->testConnectionAjax();
+                exit;
+            } elseif ($ruta === 'installer-create-db') {
+                $installerController->createDbAjax();
+                exit;
+            } elseif ($ruta === 'installer-run') {
+                $installerController->installSystemAjax();
+                exit;
+            } else {
+                $datosVista = $installerController->index();
+                extract($datosVista);
+                require_once CORE_PATH . 'Installer/views/wizard.php';
+                exit;
+            }
+        } elseif (in_array($ruta, $rutasInstalador)) {
+            // Si la aplicación ya está instalada y alguien intenta acceder a /install, bloquear
+            header("Location: login");
+            exit;
+        }
+
         $archivo_mantenimiento = __DIR__ . '/../../storage/maintenance.json';
         if (file_exists($archivo_mantenimiento)) {
-            $dataMantenimiento = json_decode(file_get_contents($archivo_mantenimiento), true);
-            
+            $dataMantenimiento = json_decode(file_get_contents($archivo_mantenimiento), true) ?: [];
+            $ahora = time();
+            $cambioArchivo = false;
+
+            // 1. Revisar la agenda para auto-activar o sincronizar la ventana más cercana
+            $agenda = $dataMantenimiento['agenda'] ?? [];
+            $mantMasCercano = null;
+            $hayActivoEnAgenda = false;
+
+            foreach ($agenda as &$item) {
+                $inicioTs = strtotime($item['fecha_inicio'] ?? '');
+                $finTs = strtotime($item['fecha_fin'] ?? '');
+
+                if ($inicioTs && $finTs) {
+                    if ($inicioTs <= $ahora && $finTs > $ahora) {
+                        $item['activo'] = true;
+                        $item['programado'] = false;
+                        $hayActivoEnAgenda = true;
+                        $mantMasCercano = $item;
+                    } elseif ($inicioTs > $ahora) {
+                        $item['activo'] = false;
+                        $item['programado'] = true;
+                        if ($mantMasCercano === null || $inicioTs < strtotime($mantMasCercano['fecha_inicio'])) {
+                            $mantMasCercano = $item;
+                        }
+                    } else {
+                        $item['activo'] = false;
+                        $item['programado'] = false;
+                    }
+                }
+            }
+
+            // Sincronizar estado principal si proviene de una ventana agendada
+            if ($hayActivoEnAgenda && empty($dataMantenimiento['activo'])) {
+                $dataMantenimiento['activo'] = true;
+                $dataMantenimiento['fecha_inicio'] = $mantMasCercano['fecha_inicio'];
+                $dataMantenimiento['fecha_fin'] = $mantMasCercano['fecha_fin'];
+                $dataMantenimiento['mensaje'] = $mantMasCercano['mensaje'];
+                $cambioArchivo = true;
+            } elseif (!$hayActivoEnAgenda && !empty($dataMantenimiento['activo']) && !empty($dataMantenimiento['fecha_fin']) && strtotime($dataMantenimiento['fecha_fin']) <= $ahora) {
+                $dataMantenimiento['activo'] = false;
+                $cambioArchivo = true;
+            }
+
+            if (!empty($mantMasCercano) && empty($dataMantenimiento['activo'])) {
+                if (($dataMantenimiento['fecha_inicio'] ?? '') !== $mantMasCercano['fecha_inicio']) {
+                    $dataMantenimiento['fecha_inicio'] = $mantMasCercano['fecha_inicio'];
+                    $dataMantenimiento['fecha_fin'] = $mantMasCercano['fecha_fin'];
+                    $dataMantenimiento['mensaje'] = $mantMasCercano['mensaje'];
+                    $cambioArchivo = true;
+                }
+            }
+
+            if ($cambioArchivo) {
+                $dataMantenimiento['agenda'] = $agenda;
+                file_put_contents($archivo_mantenimiento, json_encode($dataMantenimiento, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            }
+
             if (isset($dataMantenimiento['activo']) && $dataMantenimiento['activo'] === true) {
-                $esAdmin = isset($_SESSION['nivel_privilegio']) && $_SESSION['nivel_privilegio'] >= 3;
+                $esAdmin = isset($_SESSION['nivel_privilegio']) && (int)$_SESSION['nivel_privilegio'] >= 3;
                 $rutasPermitidas = ['login', 'procesar-login', 'cerrar-sesion'];
                 
                 if (!$esAdmin && !in_array($ruta, $rutasPermitidas)) {
-                    
-                    // Extraemos el mensaje para que la vista lo consuma
                     $mensajeCustom = !empty($dataMantenimiento['mensaje']) ? $dataMantenimiento['mensaje'] : "Estamos realizando labores de optimización. Vuelve en un momento.";
+                    $fechaFinMantenimiento = $dataMantenimiento['fecha_fin'] ?? null;
                     
                     http_response_code(503);
-                    // Cargamos la vista oficial de forma limpia y detenemos el Kernel
                     require_once CORE_VIEWS . 'mantenimiento.php';
                     exit;
                 }
             }
         }
-        //Aquí si no está en mantenimiento
+        
+        // --- MIDDLEWARE: CONTROL GRANULAR DE RUTAS Y MÓDULOS (Feature Flags) ---
+        $esSuperAdmin = isset($_SESSION['nivel_privilegio']) && (int)$_SESSION['nivel_privilegio'] >= 3;
+        
+        // Excluimos del chequeo del middleware las rutas esenciales del sistema y del SuperAdmin
+        $rutasEsenciales = ['login', 'procesar-login', 'cerrar-sesion', 'sudoadmin', 'gestor-modulos', 'alternar-modulo', 'alternar-estado-ruta', 'gestor-usuarios', 'visor-logs'];
+
+        if ($ruta !== 'inicio' && !in_array($ruta, $rutasEsenciales)) {
+            $archivo_config = __DIR__ . '/../../storage/config_system.json';
+            if (file_exists($archivo_config)) {
+                $configSistema = json_decode(file_get_contents($archivo_config), true) ?: [];
+                $rutasConfig = $configSistema['rutas'] ?? [];
+                
+                if (isset($rutasConfig[$ruta])) {
+                    $estadoRuta = $rutasConfig[$ruta]['estado'] ?? 'online'; // online | offline | solo_lectura
+                    $mensajeRutaDeshabilitada = $rutasConfig[$ruta]['mensaje'] ?? 'Esta funcionalidad se encuentra temporalmente deshabilitada por el administrador.';
+                    
+                    // 1. Ruta Desactivada por Completo
+                    if ($estadoRuta === 'offline') {
+                        $modoRuta = 'desactivado';
+                        require_once CORE_VIEWS . 'deshabilitado.php';
+                        exit;
+                    }
+                    
+                    // 2. Ruta en Modo Solo Lectura (Desactiva métodos de modificación POST/PUT/DELETE)
+                    if ($estadoRuta === 'solo_lectura' && $_SERVER['REQUEST_METHOD'] !== 'GET') {
+                        $modoRuta = 'solo_lectura';
+                        $mensajeRutaDeshabilitada = !empty($rutasConfig[$ruta]['mensaje']) 
+                            ? $rutasConfig[$ruta]['mensaje'] 
+                            : 'El sistema se encuentra en modo Solo Lectura para esta función. No se permiten modificaciones en este momento.';
+                        require_once CORE_VIEWS . 'deshabilitado.php';
+                        exit;
+                    }
+                }
+            }
+        }
         
         $css_modulo = []; 
         $titulo_pagina = 'CIIDI';
@@ -116,6 +254,17 @@ public function run() {
                 foreach ($this->modulosInstalados as $nombre_carpeta => $instancia) {
                     if (array_key_exists($ruta, $instancia->getRutas())) {
                         $css_modulo[] = '../modules/' . $nombre_carpeta . '/assets/css/' . $archivo_css;
+                        break;
+                    }
+                }
+            }
+
+            $js_modulo = [];
+            $js_declarados = $configRuta['js'] ?? [];
+            foreach ($js_declarados as $archivo_js) {
+                foreach ($this->modulosInstalados as $nombre_carpeta => $instancia) {
+                    if (array_key_exists($ruta, $instancia->getRutas())) {
+                        $js_modulo[] = '../modules/' . $nombre_carpeta . '/assets/js/' . $archivo_js;
                         break;
                     }
                 }

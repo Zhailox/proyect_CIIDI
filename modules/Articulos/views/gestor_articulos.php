@@ -20,20 +20,21 @@ $buildUrl = function($page) use ($busquedaActual) {
             <p>Administración del catálogo, volúmenes y portadas de la revista digital.</p>
         </div>
        
-        <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
-            <form action="gestor-articulos" method="GET" style="display: flex; gap: 0.5rem; margin: 0;">
-                <input type="text" name="q" class="login-flat-input p-input" placeholder="Buscar por título o autor..." value="<?= htmlspecialchars($filtros['q'] ?? '') ?>" style="padding: 0.6rem; min-width: 250px;">
-                <button type="submit" class="btn btn-secondary">Buscar</button>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center;">
+            <form action="gestor-articulos" method="GET" style="display: flex; gap: 0.4rem; margin: 0;">
+                <input type="text" name="q" class="login-flat-input p-input" placeholder="Buscar por título o autor..." value="<?= htmlspecialchars($filtros['q'] ?? '') ?>" style="padding: 0.45rem 0.75rem; min-width: 220px; font-size: 0.85rem; border-radius: 6px;">
+                <button type="submit" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.85rem; border-radius: 6px;">Buscar</button>
             </form>
 
-            <a href="gestor-catalogos" class="btn btn-secondary">
+            <a href="gestor-catalogos" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.85rem; border-radius: 6px;">
                 <i class="ph-bold ph-tags"></i> Catálogos
             </a>
-            <a href="nuevo-articulo" class="btn btn-primary gestor-art-btn-new">
+            <a href="nuevo-articulo" class="btn btn-primary gestor-art-btn-new" style="padding: 0.45rem 0.85rem; font-size: 0.85rem; border-radius: 6px;">
                 <i class="ph-bold ph-plus"></i> Registrar Artículo
             </a>
         </div>
     </div>
+
 
     
 
@@ -65,9 +66,9 @@ $buildUrl = function($page) use ($busquedaActual) {
                                         // Verificamos si es una URL externa o un archivo local
                                         $rutaImg = (strpos($imgPortada, 'http') === 0) 
                                             ? htmlspecialchars($imgPortada) 
-                                            : '../public/uploads/articulos/' . htmlspecialchars($imgPortada);
+                                            : '../storage/uploads/articulos/' . htmlspecialchars($imgPortada);
                                     ?>
-                                    <img src="<?= $rutaImg ?>" loading="lazy" alt="Miniatura" class="art-mini-thumbnail" style="object-fit: cover; width: 45px; height: 60px; border-radius: 4px;">
+                                    <img data-src="<?= $rutaImg ?>" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 60'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f9'/%3E%3C/svg%3E" alt="Miniatura" class="art-mini-thumbnail" style="object-fit: cover; width: 45px; height: 60px; border-radius: 4px;">
                                 </td>
                                 <td class="art-title-col">
                                     <div style="margin-bottom: 0.3rem;">
@@ -179,3 +180,4 @@ function confirmarEliminacion(idArticulo) {
     <?php unset($_SESSION['mensaje_error']); ?>
 <?php endif; ?>
 </script>
+<script src="../modules/Articulos/assets/js/lazy_loading.js"></script>

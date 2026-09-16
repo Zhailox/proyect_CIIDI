@@ -6,6 +6,7 @@ define('BASE_PATH', dirname(__DIR__));
 define('CORE_PATH', BASE_PATH . '/core/');
 define('CORE_VIEWS', CORE_PATH . 'Views/');
 define('MODULES_PATH', BASE_PATH . '/modules/');
+define('STORAGE_PATH', BASE_PATH . '/storage/');
 
 // 1.5. Cargar el autoloader de Composer si existe
 if (file_exists(BASE_PATH . '/vendor/autoload.php')) {

@@ -1,7 +1,8 @@
 <?php
 require_once CORE_PATH . 'Security/Auth.php';
 require_once __DIR__ . '/../services/ConfigService.php';
-$nivelUsuario = Auth::check() ? (int)Auth::usuario()['nivel'] : -1;
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
+$nivelAdminPst = SystemConfigService::get('accesos_modulos.repositorio_pst.admin', 1);
 ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script>
@@ -27,11 +28,13 @@ if (typeof window.mammoth === 'undefined') {
         </header>
 
         <?php if ($accion === 'listar'): ?>
+            <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'crear', 'RepositorioPST', false)): ?>
             <div style="margin-bottom: 1rem; display: flex; justify-content: flex-start;">
                 <a href="?ruta=agregar-documento&accion=crear" class="btn-create-new">
                     <i class="ph ph-plus-circle" style="font-size: 1rem;"></i> Agregar Nuevo Proyecto
                 </a>
             </div>
+            <?php endif; ?>
         <?php endif; ?>
 
         <!-- VISTA 1: FORMULARIO (CREAR O EDITAR) -->
@@ -72,24 +75,24 @@ if (typeof window.mammoth === 'undefined') {
                                     <label for="nivel_academico">Nivel Académico *</label>
                                     <select id="nivel_academico" name="nivel_academico" class="upload-input" onchange="toggleTrayectoByNivel()" required>
                                         <?php 
-                                        $currNivel = $_POST['nivel_academico'] ?? $documento['nivel_academico'] ?? 'Pregrado';
+                                        $nivelesAcademicosDB = $nivelesAcademicos ?? ['Pregrado', 'Especialización', 'Maestría', 'Doctorado'];
+                                        $trayectosDB = $trayectosList ?? ['Trayecto I', 'Trayecto II', 'Trayecto III', 'Trayecto IV'];
+                                        $currNivel = $_POST['nivel_academico'] ?? $documento['nivel_academico'] ?? ($nivelesAcademicosDB[0] ?? 'Pregrado');
+                                        foreach ($nivelesAcademicosDB as $nivelItem):
                                         ?>
-                                        <option value="Pregrado" <?= ($currNivel === 'Pregrado') ? 'selected' : '' ?>>Pregrado </option>
-                                        <option value="Especialización" <?= ($currNivel === 'Especialización') ? 'selected' : '' ?>>Especialización</option>
-                                        <option value="Maestría" <?= ($currNivel === 'Maestría') ? 'selected' : '' ?>>Maestría</option>
-                                        <option value="Doctorado" <?= ($currNivel === 'Doctorado') ? 'selected' : '' ?>>Doctorado</option>
+                                            <option value="<?= htmlspecialchars($nivelItem) ?>" <?= ($currNivel === $nivelItem) ? 'selected' : '' ?>><?= htmlspecialchars($nivelItem) ?></option>
+                                        <?php endforeach; ?>
                                     </select>
                                 </div>
                                 <div class="upload-input-group" id="container_trayecto" style="<?= ($currNivel === 'Pregrado') ? 'display: block;' : 'display: none;' ?>">
                                     <label for="trayecto">Trayecto del PNF *</label>
                                     <select id="trayecto" name="trayecto" class="upload-input">
                                         <?php 
-                                        $currTrayecto = $_POST['trayecto'] ?? $documento['trayecto'] ?? 'Trayecto I';
+                                        $currTrayecto = $_POST['trayecto'] ?? $documento['trayecto'] ?? ($trayectosDB[0] ?? 'Trayecto I');
+                                        foreach ($trayectosDB as $trItem):
                                         ?>
-                                        <option value="Trayecto I" <?= ($currTrayecto === 'Trayecto I') ? 'selected' : '' ?>>Trayecto I </option>
-                                        <option value="Trayecto II" <?= ($currTrayecto === 'Trayecto II') ? 'selected' : '' ?>>Trayecto II </option>
-                                        <option value="Trayecto III" <?= ($currTrayecto === 'Trayecto III') ? 'selected' : '' ?>>Trayecto III </option>
-                                        <option value="Trayecto IV" <?= ($currTrayecto === 'Trayecto IV') ? 'selected' : '' ?>>Trayecto IV </option>
+                                            <option value="<?= htmlspecialchars($trItem) ?>" <?= ($currTrayecto === $trItem) ? 'selected' : '' ?>><?= htmlspecialchars($trItem) ?></option>
+                                        <?php endforeach; ?>
                                     </select>
                                 </div>
                             </div>
@@ -407,15 +410,18 @@ if (typeof window.mammoth === 'undefined') {
                                                  <?php endif; ?>
 
                                                  <!-- Opción 1: Activar / Desactivar (Soft Delete) -->
-                                                 <a href="?ruta=agregar-documento&accion=toggle_estado&id=<?= $doc['id'] ?>" class="btn-action-edit" style="background: <?= ($doc['activo'] ?? true) ? '#fef3c7; color: #92400e; border: 1px solid #fde68a;' : '#dcfce7; color: #15803d; border: 1px solid #86efac;' ?>" title="<?= ($doc['activo'] ?? true) ? 'Ocultar del catálogo público' : 'Hacer visible en el catálogo público' ?>">
-                                                     <i class="ph ph-eye-slash"></i> <?= ($doc['activo'] ?? true) ? 'Ocultar' : 'Activar' ?>
-                                                 </a>
+                                                 <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'editar', 'RepositorioPST', false)): ?>
+                                                     <a href="?ruta=agregar-documento&accion=toggle_estado&id=<?= $doc['id'] ?>" class="btn-action-edit" style="background: <?= ($doc['activo'] ?? true) ? '#fef3c7; color: #92400e; border: 1px solid #fde68a;' : '#dcfce7; color: #15803d; border: 1px solid #86efac;' ?>" title="<?= ($doc['activo'] ?? true) ? 'Ocultar del catálogo público' : 'Hacer visible en el catálogo público' ?>">
+                                                         <i class="ph ph-eye-slash"></i> <?= ($doc['activo'] ?? true) ? 'Ocultar' : 'Activar' ?>
+                                                     </a>
 
-                                                 <a href="?ruta=agregar-documento&accion=editar&id=<?= $doc['id'] ?>" class="btn-action-edit" title="Modificar Metadatos">
-                                                     <i class="ph ph-pencil-simple"></i> Editar
-                                                 </a>
+                                                     <!-- Opción Editar -->
+                                                     <a href="?ruta=agregar-documento&accion=editar&id=<?= $doc['id'] ?>" class="btn-action-edit" title="Modificar Metadatos">
+                                                         <i class="ph ph-pencil-simple"></i> Editar
+                                                     </a>
+                                                 <?php endif; ?>
 
-                                                 <?php if ($nivelUsuario >= 2): ?>
+                                                 <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'eliminar', 'RepositorioPST', false)): ?>
                                                      <a href="javascript:void(0)" class="btn-action-delete" title="Eliminar Registro Definitivo" onclick="confirmarEliminacionModal('?ruta=agregar-documento&accion=eliminar&id=<?= $doc['id'] ?>')">
                                                          <i class="ph ph-trash"></i> Eliminar
                                                      </a>

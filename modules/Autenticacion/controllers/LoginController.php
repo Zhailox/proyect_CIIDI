@@ -2,13 +2,7 @@
 // modules/Autenticacion/controllers/LoginController.php
 require_once __DIR__ . '/../models/UsuarioModel.php';
 require_once CORE_PATH . 'Security/Auth.php';
-require_once CORE_PATH . 'Helpers/PHPMailer/Exception.php';
-require_once CORE_PATH . 'Helpers/PHPMailer/PHPMailer.php';
-require_once CORE_PATH . 'Helpers/PHPMailer/SMTP.php';
-
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-use PHPMailer\PHPMailer\SMTP;
+require_once CORE_PATH . 'Services/MailService.php';
 
 class LoginController {
     
@@ -18,9 +12,6 @@ class LoginController {
         $this->usuarioModel = new UsuarioModel();
     }
 
-    // Prepara los datos (si hubiera) y permite que el Kernel cargue la vista
-    // ... parte superior del controlador intacta ...
-
     public function mostrarFormulario() {
         if (Auth::check()) {
             header("Location: perfil");
@@ -28,13 +19,13 @@ class LoginController {
         }
         
         $error = $_SESSION['error_login'] ?? null;
-        $exito = $_SESSION['exito_registro'] ?? null; // NUEVA LÍNEA
+        $exito = $_SESSION['exito_registro'] ?? null;
         
         unset($_SESSION['error_login'], $_SESSION['exito_registro']);
         
-        return ['error' => $error, 'exito' => $exito]; // NUEVA LÍNEA
+        return ['error' => $error, 'exito' => $exito];
     }
-    // Método para la pantalla de recuperar contraseña
+
     public function mostrarRecuperar() {
         if (Auth::check()) {
             header("Location: perfil");
@@ -60,62 +51,126 @@ class LoginController {
         }
         
         if ($usuario && !empty($usuario['email'])) {
-            $codigo = sprintf("%06d", mt_rand(1, 999999));
-            $this->usuarioModel->guardarTokenRecuperacion($usuario['id'], $codigo);
-            
-            $mail = new PHPMailer(true);
-            try {
-                // CONFIGURACIÓN SMTP
-                $mail->isSMTP();
-                $mail->Host       = 'smtp.gmail.com'; 
-                $mail->SMTPAuth   = true;
-                $mail->Username   = 'orlando5711666@gmail.com'; 
-                $mail->Password   = 'hkwtkytxrqxslngb'; 
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                $mail->Port       = 587;
-                $mail->CharSet    = 'UTF-8';
+            // Generar Token Firmado Criptográficamente (SHA-256) con expiración de 15 minutos
+            $rawToken = bin2hex(random_bytes(32));
+            $tokenHash = hash('sha256', $rawToken);
 
-                $mail->setFrom('no-reply@ciidi.edu.ve', 'Sistema CIIDI');
-                $mail->addAddress($usuario['email'], $usuario['nombre_completo']);
+            $this->usuarioModel->guardarTokenRecuperacionSHA256($usuario['email'], $tokenHash);
 
-                $mail->isHTML(true);
-                $mail->Subject = 'Código de Recuperación de Acceso - CIIDI';
-                $mail->Body    = "
-                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;'>
-                        <div style='background-color: #121a3e; padding: 20px; text-align: center; color: white;'>
-                            <h2 style='margin: 0;'>Recuperación de Contraseña</h2>
-                        </div>
-                        <div style='padding: 20px; background-color: #ffffff; color: #333333;'>
-                            <p>Hola <b>{$usuario['nombre_completo']}</b>,</p>
-                            <p>Hemos recibido una solicitud para restablecer el acceso a tu cuenta en el sistema CIIDI.</p>
-                            <p>Tu código de seguridad de 6 dígitos es:</p>
-                            <div style='text-align: center; margin: 20px 0;'>
-                                <span style='font-size: 32px; font-weight: bold; color: #121a3e; letter-spacing: 5px; background: #f1f5f9; padding: 10px 20px; border-radius: 8px; border: 1px dashed #94a3b8;'>$codigo</span>
-                            </div>
-                            <p style='color: #ef4444; font-size: 0.9em;'>⚠ Este código expirará en 15 minutos.</p>
-                            <p>Si no solicitaste este cambio, puedes ignorar este correo de forma segura.</p>
-                        </div>
-                        <div style='background-color: #f8fafc; padding: 15px; text-align: center; font-size: 0.8em; color: #64748b;'>
-                            &copy; " . date('Y') . " Sistema CIIDI - Todos los derechos reservados.
-                        </div>
-                    </div>
-                ";
-                $mail->AltBody = "Hola {$usuario['nombre_completo']},\n\nTu código de recuperación es: $codigo\n\nEste código expirará en 15 minutos.";
+            $protocolo = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $baseDir = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/\\');
+            $baseUrl = "{$protocolo}://{$host}" . ($baseDir && $baseDir !== '/' ? $baseDir : '');
+            $enlaceSeguro = "{$baseUrl}/restablecer-clave?token={$rawToken}";
 
-                $mail->send();
-                $_SESSION['exito_recuperar'] = "Hemos enviado un código a tu correo: {$usuario['email']}. Revisa tu bandeja de entrada o la carpeta de Spam.";
-            } catch (Exception $e) {
-                // Fallback para pruebas locales si falla el SMTP por no estar configurado aún
-                $_SESSION['exito_recuperar'] = "Código generado (SMTP aún no configurado). Para continuar tus pruebas locales el código es: $codigo";
+            $resMail = MailService::enviarEvento('autenticacion.recuperar_clave', $usuario['email'], [
+                'NOMBRE_USUARIO'    => $usuario['nombre_completo'],
+                'ENLACE_ACCION'     => $enlaceSeguro,
+                'TIEMPO_EXPIRACION' => '15 minutos'
+            ], $usuario['nombre_completo']);
+
+            if ($resMail['exito']) {
+                $_SESSION['exito_recuperar'] = "Hemos enviado las instrucciones y el enlace seguro a su correo: {$usuario['email']}. Revisa tu bandeja de entrada o Spam.";
+            } else {
+                $_SESSION['exito_recuperar'] = "Se generó el enlace de recuperación (Servidor SMTP desconfigurado o error): {$enlaceSeguro}";
             }
-            
-            header("Location: ?ruta=ingresar-codigo&uid=" . $usuario['id']);
+
+            header("Location: recuperar-cuenta");
             exit;
         } else {
             $_SESSION['error_recuperar'] = "No se encontró ningún usuario con ese dato, o no tiene correo asociado.";
-            header("Location: ?ruta=recuperar-cuenta");
+            header("Location: recuperar-cuenta");
             exit;
         }
+    }
+
+    public function mostrarRestablecerClave() {
+        if (Auth::check()) {
+            header("Location: perfil");
+            exit;
+        }
+
+        $rawToken = trim($_GET['token'] ?? '');
+        if (empty($rawToken)) {
+            $_SESSION['error_recuperar'] = "El token de recuperación no fue proporcionado.";
+            header("Location: recuperar-cuenta");
+            exit;
+        }
+
+        $tokenHash = hash('sha256', $rawToken);
+        $tokenValido = $this->usuarioModel->obtenerTokenRecuperacionValido($tokenHash);
+
+        if (!$tokenValido) {
+            $_SESSION['error_recuperar'] = "El enlace de recuperación es inválido, ya fue utilizado o ha expirado (límite 15 minutos).";
+            header("Location: recuperar-cuenta");
+            exit;
+        }
+
+        $error = $_SESSION['error_restablecer'] ?? null;
+        unset($_SESSION['error_restablecer']);
+
+        return [
+            'token' => $rawToken,
+            'nombreUsuario' => $tokenValido['nombre_completo'],
+            'error' => $error
+        ];
+    }
+
+    public function procesarRestablecerClave() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+
+        $rawToken = trim($_POST['token'] ?? '');
+        $password = trim($_POST['password'] ?? '');
+        $passwordConfirm = trim($_POST['password_confirm'] ?? '');
+
+        if (empty($rawToken) || empty($password)) {
+            $_SESSION['error_restablecer'] = "Todos los campos son obligatorios.";
+            header("Location: restablecer-clave?token=" . urlencode($rawToken));
+            exit;
+        }
+
+        if (strlen($password) < 8) {
+            $_SESSION['error_restablecer'] = "La nueva contraseña debe tener al menos 8 caracteres.";
+            header("Location: restablecer-clave?token=" . urlencode($rawToken));
+            exit;
+        }
+
+        if ($password !== $passwordConfirm) {
+            $_SESSION['error_restablecer'] = "Las contraseñas no coinciden.";
+            header("Location: restablecer-clave?token=" . urlencode($rawToken));
+            exit;
+        }
+
+        $tokenHash = hash('sha256', $rawToken);
+        $hashNueva = password_hash($password, PASSWORD_BCRYPT);
+
+        if ($this->usuarioModel->restablecerPasswordConToken($tokenHash, $hashNueva)) {
+            $_SESSION['exito_registro'] = "Su contraseña se ha actualizado correctamente. Ya puede acceder con sus nuevas credenciales.";
+            header("Location: login");
+            exit;
+        } else {
+            $_SESSION['error_recuperar'] = "No se pudo actualizar la contraseña. El enlace de token ha expirado o ya fue utilizado.";
+            header("Location: recuperar-cuenta");
+            exit;
+        }
+    }
+
+    public function activarCuenta() {
+        $tokenActivacion = trim($_GET['token'] ?? '');
+        if (empty($tokenActivacion)) {
+            $_SESSION['error_login'] = "Código de activación no proporcionado.";
+            header("Location: login");
+            exit;
+        }
+
+        if ($this->usuarioModel->activarCuentaPorToken($tokenActivacion)) {
+            $_SESSION['exito_registro'] = "¡Su cuenta ha sido activada exitosamente! Ya puede iniciar sesión.";
+        } else {
+            $_SESSION['error_login'] = "El enlace de activación es inválido o su cuenta ya fue activada previamente.";
+        }
+
+        header("Location: login");
+        exit;
     }
     
     public function mostrarIngresarCodigo() {
@@ -302,11 +357,25 @@ class LoginController {
             ];
         }
 
-        // 4. Encriptar contraseña y guardar
+        // 4. Registrar usuario directamente activo y encriptar contraseña
         $hashSeguro = password_hash($password, PASSWORD_BCRYPT);
-        $creado = $this->usuarioModel->registrarUsuario($cedula, $nombre, $email, $hashSeguro);
+        $creado = $this->usuarioModel->registrarUsuario($cedula, $nombre, $email, $hashSeguro, null);
 
         if ($creado) {
+            $protocolo = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $baseDir = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/\\');
+            $baseUrl = "{$protocolo}://{$host}" . ($baseDir && $baseDir !== '/' ? $baseDir : '');
+            $enlaceAcceso = "{$baseUrl}/login";
+
+            MailService::enviarEvento('autenticacion.bienvenida', $email, [
+                'NOMBRE_USUARIO' => $nombre,
+                'CEDULA_USUARIO' => $cedula,
+                'ENLACE_ACCESO'  => $enlaceAcceso
+            ], $nombre);
+
+            $_SESSION['exito_registro'] = "¡Cuenta creada con éxito! Se ha enviado un mensaje de bienvenida a su correo. Ya puede iniciar sesión.";
+
             // ÉXITO: Mandamos los datos para la pantalla de bienvenida y lo enviamos al login
             return [
                 'es_error'       => false,

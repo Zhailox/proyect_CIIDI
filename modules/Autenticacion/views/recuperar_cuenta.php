@@ -13,7 +13,7 @@
                 </div>
             <?php endif; ?>
 
-            <form action="?ruta=procesar-recuperacion" method="POST" class="recovery-flat-form">
+            <form action="procesar-recuperacion" method="POST" class="recovery-flat-form">
                 
                 <div class="recovery-flat-group">
                     <label for="metodo_recuperacion">Método de Recuperación:</label>

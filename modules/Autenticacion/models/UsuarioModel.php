@@ -53,18 +53,26 @@ class UsuarioModel {
     }
 
     /**
-     * Inserta un nuevo usuario en la base de datos (Rol 3 = Estudiante por defecto)
+     * Inserta un nuevo usuario en la base de datos con token de activación (Double Opt-in)
      */
-    public function registrarUsuario(string $cedula, string $nombre, string $email, string $hash) {
+    public function registrarUsuario(string $cedula, string $nombre, string $email, string $hash, ?string $tokenActivacion = null) {
         $db = Connection::getInstance();
+        $emailVerificado = ($tokenActivacion === null);
         $sql = "
-            INSERT INTO usuarios (cedula, nombre_completo, email, contrasena, id_rol, activo) 
-            VALUES (?, ?, ?, ?, 3, true) 
+            INSERT INTO usuarios (cedula, nombre_completo, email, contrasena, id_rol, activo, email_verified, activation_token) 
+            VALUES (?, ?, ?, ?, 3, true, ?, ?) 
             RETURNING id
         ";
         $stmt = $db->prepare($sql);
-        $stmt->execute([$cedula, $nombre, $email, $hash]);
+        $stmt->execute([$cedula, $nombre, $email, $hash, $emailVerificado ? 1 : 0, $tokenActivacion]);
         return $stmt->fetch() !== false;
+    }
+
+    public function activarCuentaPorToken(string $tokenActivacion): bool {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("UPDATE usuarios SET email_verified = true, activation_token = NULL WHERE activation_token = ?");
+        $stmt->execute([$tokenActivacion]);
+        return $stmt->rowCount() > 0;
     }
 
     public function findByCedula(string $cedula) {
@@ -81,9 +89,66 @@ class UsuarioModel {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
     
+    /**
+     * Registra un token de recuperación firmado SHA-256 con expiración de 15 minutos en password_resets
+     */
+    public function guardarTokenRecuperacionSHA256(string $email, string $tokenHash) {
+        $db = Connection::getInstance();
+        // Invalida tokens anteriores no utilizados para este email
+        $stmtCancel = $db->prepare("UPDATE password_resets SET utilizado = true WHERE email = ? AND utilizado = false");
+        $stmtCancel->execute([$email]);
+
+        $sql = "INSERT INTO password_resets (email, token_hash, expiracion, utilizado) VALUES (?, ?, CURRENT_TIMESTAMP + INTERVAL '15 minutes', false)";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$email, $tokenHash]);
+    }
+    
+    /**
+     * Verifica la validez de un token SHA-256
+     */
+    public function obtenerTokenRecuperacionValido(string $tokenHash) {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("
+            SELECT pr.id, pr.email, u.id AS usuario_id, u.nombre_completo 
+            FROM password_resets pr
+            JOIN usuarios u ON u.email = pr.email
+            WHERE pr.token_hash = ? AND pr.utilizado = false AND pr.expiracion >= CURRENT_TIMESTAMP AND u.activo = true
+        ");
+        $stmt->execute([$tokenHash]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Actualiza la contraseña mediante token seguro y marca el token como utilizado
+     */
+    public function restablecerPasswordConToken(string $tokenHash, string $nuevaPasswordHash): bool {
+        $tokenData = $this->obtenerTokenRecuperacionValido($tokenHash);
+        if (!$tokenData) {
+            return false;
+        }
+
+        $db = Connection::getInstance();
+        $db->beginTransaction();
+
+        try {
+            // 1. Actualizar clave del usuario
+            $stmtUser = $db->prepare("UPDATE usuarios SET contrasena = ? WHERE id = ?");
+            $stmtUser->execute([$nuevaPasswordHash, $tokenData['usuario_id']]);
+
+            // 2. Marcar token como utilizado
+            $stmtToken = $db->prepare("UPDATE password_resets SET utilizado = true WHERE id = ?");
+            $stmtToken->execute([$tokenData['id']]);
+
+            $db->commit();
+            return true;
+        } catch (Exception $e) {
+            $db->rollBack();
+            return false;
+        }
+    }
+
     public function guardarTokenRecuperacion(int $id, string $token) {
         $db = Connection::getInstance();
-        // Expira en 15 minutos
         $stmt = $db->prepare("UPDATE usuarios SET reset_token = ?, reset_expires = CURRENT_TIMESTAMP + INTERVAL '15 minutes' WHERE id = ?");
         $stmt->execute([$token, $id]);
     }

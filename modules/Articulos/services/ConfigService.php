@@ -6,7 +6,7 @@ class ConfigService {
 
     private static function getPath(): string {
         if (self::$configPath === null) {
-            self::$configPath = __DIR__ . '/../config_articulos.json';
+            self::$configPath = __DIR__ . '/../../../storage/config_articulos.json';
         }
         // Si no existe, creamos uno por defecto
         if (!file_exists(self::$configPath)) {

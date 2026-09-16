@@ -2,6 +2,9 @@
 // modules/Articulos/index.php
 
 require_once CORE_PATH . 'Interfaces/ModuleContract.php';
+require_once __DIR__ . '/../SuperAdmin/services/SystemConfigService.php';
+
+
 
 class ArticulosModule implements ModuleContract {
     
@@ -93,12 +96,19 @@ public function getRutas(): array {
                 'controlador_path' => __DIR__ . '/controllers/ArticulosController.php',
                 'controlador'      => 'ArticulosController',
                 'metodo'           => 'toggleEstado',
+            ],
+            'api-eliminar-imagen-articulos' => [
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'controlador'      => 'ConfiguracionController',
+                'metodo'           => 'eliminarImagen',
             ]
             
         ];
     }
 
     public function getMenuConfig(): array {
+        $nivelAdmin = SystemConfigService::get('accesos_modulos.articulos.admin', 0);
+        $nivelPublico = SystemConfigService::get('accesos_modulos.articulos.publico', 999);
         return [
             [
                 'tipo'        => 'parent',
@@ -106,12 +116,12 @@ public function getRutas(): array {
                 'icono'       => 'ph-fill ph-newspaper',
                 'enlace'      => 'articulos',
                 'activadores' => ['articulos', 'leer-articulo', 'gestor-articulos', 'nuevo-articulo', 'procesar-articulo', 'editar-articulo', 'actualizar-articulo', 'eliminar-articulo', 'gestor-catalogos', 'configuracion-articulos'],
-                'privilegio_minimo' => 0, // El menú padre lo ven todos
+                'privilegio_minimo' => $nivelPublico, // El menú padre lo ven todos
                 'subitems'    => [
-                    ['ruta' => 'articulos', 'titulo' => 'Revista Digital', 'privilegio_minimo' => 0],
-                    // Este sub-ítem solo lo verán los administradores/bibliotecarios
-                    ['ruta' => 'gestor-articulos', 'titulo' => 'Gestor Interno', 'privilegio_minimo' => 2],
-                    ['ruta' => 'configuracion-articulos', 'titulo' => 'Ajustes de Revista', 'privilegio_minimo' => 2]
+                    ['ruta' => 'articulos', 'titulo' => 'Revista Digital', 'privilegio_minimo' => $nivelPublico],
+                    ['ruta' => 'gestor-articulos', 'titulo' => 'Gestor Interno', 'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'gestor-catalogos', 'titulo' => 'Gestor Catalogos', 'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'configuracion-articulos', 'titulo' => 'Ajustes de Revista', 'privilegio_minimo' => $nivelAdmin]
                 ]
             ]
         ];

@@ -16,15 +16,9 @@
     <link rel="stylesheet" href="assets/css/style.css">
     
     <?php 
-    $cssGlobalesComponentes = $this->getGlobalCss();
+    $cssGlobalesComponentes = (isset($this) && method_exists($this, 'getGlobalCss')) ? $this->getGlobalCss() : [];
     foreach ($cssGlobalesComponentes as $estilo_componente) {
         echo '<link rel="stylesheet" href="' . htmlspecialchars($estilo_componente) . '">';
-    }
-    ?>
-    <?php 
-    $cssModulos = $this->getGlobalCss();
-    foreach ($cssModulos as $archivoCss) {
-        echo '<link rel="stylesheet" href="' . $archivoCss . '">';
     }
     ?>
     <?php if (!empty($css_modulo)): ?>
@@ -59,6 +53,12 @@
 
     <?php if ($layout_config['footer'] ?? true): ?>
         <?php include CORE_VIEWS . 'footer.php'; ?>
+    <?php endif; ?>
+
+    <?php if (!empty($js_modulo)): ?>
+        <?php foreach ($js_modulo as $script_vista): ?>
+            <script src="<?php echo htmlspecialchars($script_vista); ?>"></script>
+        <?php endforeach; ?>
     <?php endif; ?>
 
 </body>

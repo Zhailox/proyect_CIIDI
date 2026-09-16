@@ -147,11 +147,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
         
         // Unimos el "V-" o "E-" con los números que escribió el usuario
-        const cedulaCompleta = nacionalidad + cedulaNum;
-        
+       let cedulaCompleta = null;
+        if (cedulaNum !== '') {
+            cedulaCompleta = nacionalidad + cedulaNum;
+        }
         const pseudoId = 'nuevo_' + Date.now();
         
-        // 1. Lo guardamos en la lista general con la cédula armada
+        // 1. Lo guardamos en la lista general con la cédula armada (o nula)
         listaAutores.push({id: pseudoId, nombre_completo: nombre, cedula: cedulaCompleta});
         
         // 2. Lo guardamos en el diccionario de nuevos autores

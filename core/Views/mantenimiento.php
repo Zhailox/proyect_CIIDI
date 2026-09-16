@@ -89,6 +89,47 @@ $mensajeCustom = !empty($mensajeCustom) ? $mensajeCustom : "Estamos realizando l
             <p class="mantenimiento-msg"><?= htmlspecialchars($mensajeCustom) ?></p>
         <?php endif; ?>
 
+        <?php if (!empty($fechaFinMantenimiento)): ?>
+            <div style="margin-top: 1.25rem; background: #fef3c7; border: 1px solid #fde68a; border-radius: 12px; padding: 1rem; max-width: 500px; margin-left: auto; margin-right: auto;">
+                <span style="font-weight: 600; color: #92400e; font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">
+                    <i class="ph-bold ph-timer"></i> Tiempo Estimado de Apertura:
+                </span>
+                <div id="countdown-timer" style="font-size: 1.6rem; font-weight: 700; color: #78350f; font-family: monospace; letter-spacing: 2px;">
+                    Calculando...
+                </div>
+            </div>
+
+            <script>
+                (function() {
+                    var targetDate = new Date("<?= date('c', strtotime($fechaFinMantenimiento)) ?>").getTime();
+                    var timerElem = document.getElementById("countdown-timer");
+
+                    function updateTimer() {
+                        var now = new Date().getTime();
+                        var diff = targetDate - now;
+
+                        if (diff <= 0) {
+                            timerElem.innerHTML = "¡Reapertura en proceso...!";
+                            setTimeout(function() { window.location.reload(); }, 3000);
+                            return;
+                        }
+
+                        var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                        var seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                        timerElem.innerHTML = 
+                            (hours < 10 ? "0" + hours : hours) + "h : " +
+                            (minutes < 10 ? "0" + minutes : minutes) + "m : " +
+                            (seconds < 10 ? "0" + seconds : seconds) + "s";
+                    }
+
+                    updateTimer();
+                    setInterval(updateTimer, 1000);
+                })();
+            </script>
+        <?php endif; ?>
+
         <div class="mantenimiento-actions">
             <a href="login" class="btn-admin">
                 <i class="ph ph-lock-key" style="font-size: 1.2rem;"></i> Acceso Administrativo

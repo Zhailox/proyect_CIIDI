@@ -19,7 +19,7 @@
                 </div>
             <?php endif; ?>
 
-            <form action="?ruta=procesar-codigo" method="POST" class="recovery-flat-form">
+            <form action="procesar-codigo" method="POST" class="recovery-flat-form">
                 <input type="hidden" name="uid" value="<?= htmlspecialchars($uid) ?>">
                 
                 <div class="recovery-flat-group">

@@ -109,6 +109,7 @@ body {
   border-right: 1px solid rgba(var(--blanco-puro-rgb), 0.05);
   z-index: 90;
   transition: width var(--transition-smooth); 
+  will-change: width;
 }
 
 .sidebar:hover {
@@ -148,10 +149,10 @@ body {
 .nav-item {
   display: flex;
   align-items: center;
-  padding: 0.85rem;
+  padding: 0.60rem;
   color: var(--texto-inactivo);
   text-decoration: none;
-  font-size: 0.95rem;
+  font-size: 0.90rem;
   font-weight: 500;
   border-radius: var(--radius-sm);
   transition: all var(--transition-fast);
@@ -214,7 +215,7 @@ body {
 
 .sub-nav-item {
   display: block;
-  padding: 0.6rem 1rem 0.6rem 2.5rem; 
+  padding: 0.5rem 1rem 0.5rem 2.5rem; 
   color: var(--texto-inactivo);
   text-decoration: none;
   font-size: 0.85rem; 
@@ -237,12 +238,13 @@ body {
 /* --- Main Content --- */
 .main-content {
   flex-grow: 1;
-  padding: 1rem;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
+  gap: 1.5rem;
   min-width: 0;
 }
+
 
 
 
@@ -423,7 +425,7 @@ body {
 }
 
 .footer-text {
-  color: var(--texto-inactivo);
+  color: var(--texto-silenciado);
   font-size: 0.9rem;
   line-height: 1.7;
   margin-bottom: 1rem;
@@ -439,7 +441,7 @@ body {
 }
 
 .footer-links a {
-  color: var(--texto-inactivo);
+  color: var(--texto-silenciado);
   text-decoration: none;
   font-size: 0.9rem;
   transition: all var(--transition-fast);
@@ -449,18 +451,18 @@ body {
 }
 
 .footer-links a:hover {
-  color: var(--texto-negro);
+  color: var(--color-secundario);
   transform: translateX(4px); 
 }
 
 /* Barra inferior */
 .footer-bottom {
-  background-color: rgba(var(--negro-rgb), 0.25); 
+  background-color: rgba(var(--color-secundario-rgb), 0.05); 
   text-align: center;
   padding: 1.25rem 2.5rem;
   font-size: 0.85rem;
-  color: var(--texto-inactivo);
-  border-top: 1px solid rgba(var(--negro-rgb), 0.05);
+  color: var(--texto-silenciado);
+  border-top: 1px solid rgba(var(--color-secundario-rgb), 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -977,4 +979,13 @@ body {
     transform: translateY(-3px);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
     background: var(--blanco);
+}
+
+/* Estilo global de resaltado de texto (Mark Tag / Search Match) en Azul Claro */
+mark, .highlight-match {
+    background-color: rgba(112, 144, 203, 0.25) !important;
+    color: var(--color-secundario, #334155) !important;
+    border-radius: 4px;
+    padding: 1px 4px;
+    font-weight: 700;
 }

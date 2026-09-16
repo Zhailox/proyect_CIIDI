@@ -1,6 +1,7 @@
 <?php
 // modules/RepositorioPST/index.php
 require_once CORE_PATH . 'Interfaces/ModuleContract.php';
+require_once __DIR__ . '/../SuperAdmin/services/SystemConfigService.php';
 
 class RepositorioPSTModule implements ModuleContract {
     
@@ -10,14 +11,23 @@ class RepositorioPSTModule implements ModuleContract {
 
     public function getRutas(): array {
         return [
+            'inicio-pst' => [
+                'vista'  => __DIR__ . '/views/inicio_repositorio.php',
+                'controlador' => 'InicioRepositorioController',
+                'controlador_path' => __DIR__ . '/controllers/InicioRepositorioController.php',
+                'metodo' => 'index',
+                'titulo' => 'Inicio Repositorio PST',
+                'css'    => ['RepositorioPST.css']
+            ],
             'repositorio' => [
-                'vista'  => __DIR__ . '/views/detalle_pst.php',
-                'controlador' => 'DetallePSTController',
-                'controlador_path' => __DIR__ . '/controllers/DetallePSTController.php',
+                'vista'  => __DIR__ . '/views/inicio_repositorio.php',
+                'controlador' => 'InicioRepositorioController',
+                'controlador_path' => __DIR__ . '/controllers/InicioRepositorioController.php',
                 'metodo' => 'index',
                 'titulo' => 'Explorar Repositorio',
                 'css'    => ['RepositorioPST.css']
             ],
+
             'agregar-documento' => [
                 'vista'  => __DIR__ . '/views/admin_subida_pst.php',
                 'controlador' => 'DetallePSTController',
@@ -60,19 +70,21 @@ class RepositorioPSTModule implements ModuleContract {
 
     // NUEVO: El plano visual del menú para este módulo
     public function getMenuConfig(): array {
+        $nivelAdmin = SystemConfigService::get('accesos_modulos.repositorio_pst.admin', 0);
+        $nivelPublico = SystemConfigService::get('accesos_modulos.repositorio_pst.publico', 999);
         return [
             [
                 'tipo'        => 'parent',
                 'titulo'      => 'Repositorio',
                 'icono'       => 'ph-fill ph-book-open-text',
-                'privilegio_minimo' => -1,
+                'privilegio_minimo' => $nivelPublico,
                 'enlace'      => 'repositorio',
                 'activadores' => ['repositorio', 'detalles-pst', 'agregar-documento', 'buscador', 'configuracion-pst'],
                 'subitems'    => [
-                    ['ruta' => 'repositorio', 'titulo' => 'Explorar Proyectos', 'privilegio_minimo' => -1],
-                    ['ruta' => 'buscador', 'titulo' => 'Buscador Unificado', 'privilegio_minimo' => -1],
-                    ['ruta' => 'agregar-documento', 'titulo' => 'Gestión Documental', 'privilegio_minimo' => 1],
-                    ['ruta' => 'configuracion-pst', 'titulo' => 'Configuración Repositorio', 'privilegio_minimo' => 1]
+                    ['ruta' => 'repositorio', 'titulo' => 'Explorar Proyectos', 'privilegio_minimo' => $nivelPublico],
+                    ['ruta' => 'buscador', 'titulo' => 'Buscador Unificado', 'privilegio_minimo' => $nivelPublico],
+                    ['ruta' => 'agregar-documento', 'titulo' => 'Gestión Documental', 'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'configuracion-pst', 'titulo' => 'Configuración Repositorio', 'privilegio_minimo' => $nivelAdmin]
                 ]
             ]
         ];

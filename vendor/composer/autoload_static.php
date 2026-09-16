@@ -20,6 +20,7 @@ class ComposerStaticInit3ffbe28fb745b145fa2fcd19500ebf5e
             'Phpml\\' => 6,
             'PhpOffice\\PhpWord\\' => 18,
             'PhpOffice\\Math\\' => 15,
+            'PHPMailer\\PHPMailer\\' => 20,
         ),
     );
 
@@ -39,6 +40,10 @@ class ComposerStaticInit3ffbe28fb745b145fa2fcd19500ebf5e
         'PhpOffice\\Math\\' =>
         array (
             0 => __DIR__ . '/..' . '/phpoffice/math/src/Math',
+        ),
+        'PHPMailer\\PHPMailer\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/phpmailer/phpmailer/src',
         ),
     );
 

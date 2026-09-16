@@ -7,28 +7,22 @@ class DocumentoModel {
 
     /**
      * Traducción de caracteres corruptos de codificación DOS CP850 a UTF-8.
+    /**
+     * Normalización de caracteres y conversión de codificación CP850/ISO a UTF-8.
      */
     private function cleanCP850(?string $str): string {
-        if ($str === null) return '';
+        if ($str === null || $str === '') return '';
+        
+        if (!mb_check_encoding($str, 'UTF-8')) {
+            $converted = @mb_convert_encoding($str, 'UTF-8', 'CP850, ISO-8859-1, Windows-1252');
+            if ($converted !== false && $converted !== '') {
+                $str = $converted;
+            }
+        }
         
         $map = [
-            '¢' => 'ó',
-            '¤' => 'ñ',
-            '¡' => 'í',
-            '£' => 'ú',
-            '¥' => 'Ñ',
-            '‚' => 'é',
-            ' ' => 'á', // Non-breaking space U+00A0
-            "\xC2\xA0" => 'á', // UTF-8 non-breaking space
-            "\xA0" => 'á',
-            '¢n' => 'ón',
-            '¢s' => 'ós',
-            '¡a' => 'ía',
-            '¡n' => 'ín',
-            '¡s' => 'ís',
-            '£a' => 'úa',
-            '£n' => 'ún',
-            '£s' => 'ús'
+            '¢' => 'ó', '¤' => 'ñ', '¡' => 'í', '£' => 'ú', '¥' => 'Ñ', '‚' => 'é',
+            "\xC2\xA0" => ' ', "\xA0" => ' '
         ];
         
         return strtr($str, $map);
@@ -82,10 +76,14 @@ class DocumentoModel {
                 LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
                 LEFT JOIN public.dimensiones_operativas dims ON rc.id_dimension_operativa = dims.id
                 LEFT JOIN public.carreras c ON COALESCE(dp.id_carrera, li.id_carrera) = c.id
-                WHERE r.id_tipo_recurso = 1
-                  AND COALESCE(dp.id_carrera, li.id_carrera) = 1"; 
+                WHERE r.id_tipo_recurso = 1"; 
                 
         $execParams = [];
+
+        if (!empty($filtros['carrera_id'])) {
+            $sql .= " AND COALESCE(dp.id_carrera, li.id_carrera) = ?";
+            $execParams[] = (int)$filtros['carrera_id'];
+        }
 
         if (isset($filtros['activo'])) {
             if ($filtros['activo'] !== 'todos') {
@@ -133,7 +131,11 @@ class DocumentoModel {
             $execParams[] = (int)$filtros['anio'];
         }
         
-        $sql .= " ORDER BY r.id DESC LIMIT ? OFFSET ?";
+        if (!empty($filtros['orden']) && $filtros['orden'] === 'asc') {
+            $sql .= " ORDER BY r.anio_publicacion ASC, r.id ASC LIMIT ? OFFSET ?";
+        } else {
+            $sql .= " ORDER BY r.anio_publicacion DESC, r.id DESC LIMIT ? OFFSET ?";
+        }
         
         $execParams[] = $limit;
         $execParams[] = $offset;
@@ -240,10 +242,13 @@ class DocumentoModel {
                 LEFT JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
                 LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
                 LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
-                WHERE r.id_tipo_recurso = 1
-                  AND COALESCE(dp.id_carrera, li.id_carrera) = 1";
+                WHERE r.id_tipo_recurso = 1";
         
         $params = [];
+        if (!empty($filtros['carrera_id'])) {
+            $sql .= " AND COALESCE(dp.id_carrera, li.id_carrera) = ?";
+            $params[] = (int)$filtros['carrera_id'];
+        }
         if (!empty($filtros['linea_id'])) {
             $sql .= " AND rc.id_linea_investigacion = ?";
             $params[] = (int)$filtros['linea_id'];
@@ -394,19 +399,17 @@ class DocumentoModel {
         return $this->cleanArray($qb->tabla('carreras')->orderBy('nombre', 'ASC')->get());
     }
 
-    public function getLineasInvestigacion(): array {
-        if (!empty(self::$cacheLineas)) {
-            return self::$cacheLineas;
-        }
-        if (isset($_SESSION['pst_cache_lineas']) && is_array($_SESSION['pst_cache_lineas'])) {
-            self::$cacheLineas = $_SESSION['pst_cache_lineas'];
-            return self::$cacheLineas;
-        }
+    public function getLineasInvestigacion(?int $carreraId = null): array {
         $qb = new QueryBuilder();
-        $res = $this->cleanArray($qb->tabla('lineas_investigacion')->orderBy('nombre', 'ASC')->get());
-        self::$cacheLineas = $res;
-        if (session_status() === PHP_SESSION_ACTIVE) {
-            $_SESSION['pst_cache_lineas'] = $res;
+        $qb->tabla('lineas_investigacion');
+        if ($carreraId !== null && $carreraId > 0) {
+            $qb->where('id_carrera', '=', $carreraId);
+        } elseif (!empty(self::$cacheLineas)) {
+            return self::$cacheLineas;
+        }
+        $res = $this->cleanArray($qb->orderBy('nombre', 'ASC')->get());
+        if ($carreraId === null || $carreraId <= 0) {
+            self::$cacheLineas = $res;
         }
         return $res;
     }
@@ -431,6 +434,92 @@ class DocumentoModel {
     public function getTiposRecurso(): array {
         $qb = new QueryBuilder();
         return $this->cleanArray($qb->tabla('tipo_recurso')->orderBy('nombre', 'ASC')->get());
+    }
+
+    public function getNivelesAcademicos(): array {
+        $db = Connection::getInstance();
+        $sql = "SELECT DISTINCT nivel_academico::text AS nivel_academico 
+                FROM public.detalles_proyectos 
+                WHERE nivel_academico IS NOT NULL AND TRIM(nivel_academico::text) != '' 
+                ORDER BY nivel_academico::text ASC";
+        $stmt = $db->query($sql);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $niveles = [];
+        foreach ($rows as $row) {
+            $clean = $this->cleanCP850($row['nivel_academico']);
+            if (!empty($clean) && !in_array($clean, $niveles)) {
+                $niveles[] = $clean;
+            }
+        }
+        return !empty($niveles) ? $niveles : ['Pregrado', 'Especialización', 'Maestría', 'Doctorado'];
+    }
+
+    public function getTrayectos(): array {
+        $db = Connection::getInstance();
+        $sql = "SELECT DISTINCT trayecto::text AS trayecto 
+                FROM public.detalles_proyectos 
+                WHERE trayecto IS NOT NULL AND TRIM(trayecto::text) != '' 
+                ORDER BY trayecto::text ASC";
+        $stmt = $db->query($sql);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $trayectos = [];
+        foreach ($rows as $row) {
+            $clean = $this->cleanCP850($row['trayecto']);
+            if (!empty($clean) && !in_array($clean, $trayectos)) {
+                $trayectos[] = $clean;
+            }
+        }
+        return !empty($trayectos) ? $trayectos : ['Trayecto I', 'Trayecto II', 'Trayecto III', 'Trayecto IV'];
+    }
+
+    public function getPSTCountByLinea(): array {
+        $db = Connection::getInstance();
+        $sql = "SELECT li.id, li.nombre, li.descripcion, COUNT(DISTINCT r.id) AS total
+                FROM public.lineas_investigacion li
+                LEFT JOIN public.recurso_clasificaciones rc ON li.id = rc.id_linea_investigacion
+                LEFT JOIN public.recursos r ON rc.id_recurso = r.id AND r.id_tipo_recurso = 1
+                GROUP BY li.id, li.nombre, li.descripcion
+                ORDER BY li.id ASC";
+        $stmt = $db->query($sql);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $res = [];
+        foreach ($rows as $r) {
+            $res[] = [
+                'id'          => (int)$r['id'],
+                'nombre'      => $this->cleanCP850($r['nombre']),
+                'descripcion' => $this->cleanCP850($r['descripcion'] ?? ''),
+                'total'       => (int)$r['total']
+            ];
+        }
+        return $res;
+    }
+
+    public function getPSTCountByTrayecto(): array {
+        $db = Connection::getInstance();
+        $sql = "SELECT dp.trayecto::text AS trayecto, COUNT(DISTINCT r.id) AS total
+                FROM public.recursos r
+                JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
+                WHERE r.id_tipo_recurso = 1 
+                  AND dp.trayecto IS NOT NULL 
+                  AND TRIM(dp.trayecto::text) != ''
+                GROUP BY dp.trayecto::text
+                ORDER BY total DESC";
+        $stmt = $db->query($sql);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $res = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
+        $romanMap = ['I' => 1, 'II' => 2, 'III' => 3, 'IV' => 4, '1' => 1, '2' => 2, '3' => 3, '4' => 4];
+
+        foreach ($rows as $r) {
+            $val = trim($this->cleanCP850($r['trayecto']));
+            $cleanVal = strtoupper(str_replace(['Trayecto', 'TRAYECTO', ' '], '', $val));
+            if (isset($romanMap[$cleanVal])) {
+                $res[$romanMap[$cleanVal]] += (int)$r['total'];
+            } elseif (is_numeric($cleanVal) && isset($res[(int)$cleanVal])) {
+                $res[(int)$cleanVal] += (int)$r['total'];
+            }
+        }
+        return $res;
     }
 
     /**
@@ -822,6 +911,11 @@ class DocumentoModel {
     public function eliminarPST(int $id): bool {
         $db = Connection::getInstance();
         try {
+            // Obtener el archivo adjunto para borrarlo físicamente
+            $stmtFile = $db->prepare("SELECT archivo_pdf FROM public.recursos WHERE id = ?");
+            $stmtFile->execute([$id]);
+            $archivoPath = $stmtFile->fetchColumn();
+
             $db->beginTransaction();
             
             $stmt = $db->prepare("DELETE FROM public.proyecto_tutores WHERE id_recurso = ?");
@@ -840,9 +934,20 @@ class DocumentoModel {
             $stmt->execute([$id]);
             
             $db->commit();
+
+            // Limpieza del archivo físico en el servidor
+            if (!empty($archivoPath)) {
+                $fullPath = ROOT_PATH . '/' . ltrim($archivoPath, '/\\');
+                if (file_exists($fullPath) && is_file($fullPath)) {
+                    @unlink($fullPath);
+                }
+            }
+
             return true;
         } catch (Exception $e) {
-            $db->rollBack();
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
             error_log("Error al eliminar PST: " . $e->getMessage());
             throw $e;
         }
@@ -942,6 +1047,10 @@ class DocumentoModel {
             }
         }
         
+        if (!empty($filtros['carrera_id'])) {
+            $qb->whereRaw("COALESCE(dp.id_carrera, li.id_carrera) = ?", [(int)$filtros['carrera_id']]);
+        }
+        
         if (!empty($filtros['anio'])) {
             $qb->where('r.anio_publicacion', '=', (int)$filtros['anio']);
         }
@@ -967,6 +1076,7 @@ class DocumentoModel {
         $qb->tabla('public.recursos r')
            ->join('public.detalles_proyectos dp', 'r.id = dp.id_recurso', 'LEFT')
            ->join('public.recurso_clasificaciones rc', 'r.id = rc.id_recurso', 'LEFT')
+           ->join('public.lineas_investigacion li', 'rc.id_linea_investigacion = li.id', 'LEFT')
            ->where('r.id_tipo_recurso', '=', 1);
            
         if (!empty($query)) {
@@ -985,6 +1095,10 @@ class DocumentoModel {
                 }
                 $qb->whereRaw("(" . implode(" OR ", $conditions) . ")", $params);
             }
+        }
+        
+        if (!empty($filtros['carrera_id'])) {
+            $qb->whereRaw("COALESCE(dp.id_carrera, li.id_carrera) = ?", [(int)$filtros['carrera_id']]);
         }
         
         if (!empty($filtros['anio'])) {

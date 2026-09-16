@@ -1,0 +1,50 @@
+{
+    "paginacion": {
+        "logs": 50,
+        "usuarios": 15,
+        "docentes": 15
+    },
+    "seguridad": {
+        "timeout_minutos": 120,
+        "intentos_login": 5
+    },
+    "smtp": {
+        "host": "smtp.gmail.com",
+        "port": 587,
+        "user": "orlando5711666@gmail.com",
+        "pass": "hkwtkytxrqxslngb",
+        "from_email": "orlando5711666@gmail.com"
+    },
+    "accesos_modulos": {
+        "articulos": {
+            "publico": 999,
+            "admin": 1
+        },
+        "cursos": {
+            "publico": 10,
+            "admin": 1
+        },
+        "investigaciones": {
+            "publico": 10,
+            "admin": 1
+        },
+        "lineas_investigacion": {
+            "publico": 999,
+            "admin": 1
+        },
+        "repositorio_pst": {
+            "publico": 999,
+            "admin": 1
+        },
+        "vinculacion_empresarial": {
+            "publico": 999,
+            "admin": 1
+        },
+        "autenticacion": {
+            "publico": 998
+        }
+    },
+    "email_layout": {
+        "html_wrapper": "<!DOCTYPE html>\r\n<html lang='es'>\r\n<head>\r\n    <meta charset='UTF-8'>\r\n    <meta name='viewport' content='width=device-width, initial-scale=1.0'>\r\n    <title>{TITULO}<\/title>\r\n<\/head>\r\n<body style='margin:0; padding:0; background-color:#f4f7fb; font-family: Arial, Helvetica, sans-serif; color:#334155;'>\r\n    <table role='presentation' width='100%' cellspacing='0' cellpadding='0' style='background-color:#f4f7fb; padding: 20px 0;'>\r\n        <tr>\r\n            <td align='center'>\r\n                <table role='presentation' width='100%' style='max-width: 600px; background-color:#ffffff; border-radius: 12px; overflow:hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;'>\r\n                    \r\n                    <!-- HEADER INSTITUCIONAL -->\r\n                    <tr>\r\n                        <td style='background: linear-gradient(135deg, #121a3e 0%, #1e293b 100%); padding: 30px 20px; text-align: center; color: #ffffff;'>\r\n                            <div style='font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #f59e0b; margin-bottom: 6px;'>\r\n                                UPTTMBI\r\n                            <\/div>\r\n                            <h1 style='margin:0; font-size: 22px; font-weight: 800; letter-spacing: 0.5px; color: #ffffff;'>\r\n                                SISTEMA INTEGRAL CIIDI\r\n                            <\/h1>\r\n                        <\/td>\r\n                    <\/tr>\r\n\r\n                    <!-- CONTENIDO -->\r\n                    <tr>\r\n                        <td style='padding: 35px 30px; background-color: #ffffff;'>\r\n                            {CUERPO}\r\n                        <\/td>\r\n                    <\/tr>\r\n\r\n                    <!-- FOOTER INSTITUCIONAL -->\r\n                    <tr>\r\n                        <td style='background-color: #f8fafc; padding: 20px 30px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b;'>\r\n                            <p style='margin: 0 0 6px 0; font-weight: 600; color: #475569;'>\r\n                                Universidad Politécnica Territorial del Estado Trujillo \"Mario Briceño Iragorry\"\r\n                            <\/p>\r\n                            <p style='margin: 0;'>\r\n                                &copy; {YEAR} CIIDI. Todos los derechos reservados.\r\n                            <\/p>\r\n                        <\/td>\r\n                    <\/tr>\r\n\r\n                <\/table>\r\n            <\/td>\r\n        <\/tr>\r\n    <\/table>\r\n<\/body>\r\n<\/html>"
+    }
+}

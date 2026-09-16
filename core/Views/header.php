@@ -1,6 +1,6 @@
 <?php
 // Se obtienen las configuraciones del header recolectadas por el Kernel
-$elementosCabecera = $this->getControlesHeader();
+$elementosCabecera = (isset($this) && method_exists($this, 'getControlesHeader')) ? $this->getControlesHeader() : [];
 ?>
 
 <header class="main-header">
@@ -29,6 +29,7 @@ $elementosCabecera = $this->getControlesHeader();
         <?php elseif ($control['tipo'] === 'custom_view'): ?>
             <?php 
                 if (file_exists($control['ruta_vista'])) {
+                    $controlData = $control;
                     include $control['ruta_vista'];
                 }
             ?>

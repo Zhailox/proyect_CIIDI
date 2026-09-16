@@ -2,9 +2,16 @@
 // modules/RepositorioPST/controllers/DetallePSTController.php
 require_once __DIR__ . '/../models/DocumentoModel.php';
 require_once __DIR__ . '/../services/ConfigService.php';
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
 
 class DetallePSTController {
+    private int $nivelAdmin;
+    private int $nivelPublico;
     
+    public function __construct() {
+        $this->nivelAdmin   = SystemConfigService::get('accesos_modulos.repositorio_pst.admin', 1);
+        $this->nivelPublico = SystemConfigService::get('accesos_modulos.repositorio_pst.publico', 10);
+    }
     public function index(): array {
         $model = new DocumentoModel();
         
@@ -14,8 +21,18 @@ class DetallePSTController {
         $page = !empty($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
         $offset = ($page - 1) * $limit;
         
+        // Configuración de filtro dinámico de carrera
+        $permitirFiltroCarrera = (bool)ConfigService::get('buscador.permitir_filtro_carrera', true);
+        $carreraId = null;
+        if (!empty($_GET['carrera_id'])) {
+            $carreraId = (int)$_GET['carrera_id'];
+        } elseif (!$permitirFiltroCarrera) {
+            $carreraId = 1;
+        }
+
         // Capturar parámetros GET para el filtrado dinámico
         $filtros = [
+            'carrera_id'      => $carreraId,
             'linea_id'        => !empty($_GET['linea_id']) ? (int)$_GET['linea_id'] : null,
             'dimension_id'    => !empty($_GET['dimension_id']) ? (int)$_GET['dimension_id'] : null,
             'nivel_academico' => !empty($_GET['nivel_academico']) ? trim($_GET['nivel_academico']) : null,
@@ -30,19 +47,46 @@ class DetallePSTController {
         $totalPages = ceil($totalDocs / $limit);
         
         // Obtener líneas, dimensiones, comunidades beneficiadas reales y conteo por año
-        $lineas = $model->getLineasInvestigacion();
+        $lineas = $model->getLineasInvestigacion($carreraId);
         $dimensiones = $model->getDimensionesOperativas();
         $comunidades = $model->getComunidadesBeneficiadas();
         $anioCounts = $model->getPSTCountByYear();
         
+        // Conteo rápido agregado por SQL para optimizar rendimiento
+        $conteoLineas = $model->getPSTCountByLinea();
+        $conteoTrayectos = $model->getPSTCountByTrayecto();
+        $totalPSTGeneral = $totalDocs;
+        
+        $pstPorLinea = [];
+        foreach ($documentos as $doc) {
+            $lineaNombre = !empty($doc['linea_nombre']) ? trim($doc['linea_nombre']) : 'General';
+            if (!isset($pstPorLinea[$lineaNombre])) {
+                $pstPorLinea[$lineaNombre] = [];
+            }
+            if (count($pstPorLinea[$lineaNombre]) < 6) {
+                $pstPorLinea[$lineaNombre][] = $doc;
+            }
+        }
+        
+        $carreras = $model->getCarreras();
+        $nivelesAcademicos = $model->getNivelesAcademicos();
+        $trayectosList = $model->getTrayectos();
+        
         return [
-            'documentos'  => $documentos,
-            'lineas'      => $lineas,
-            'dimensiones' => $dimensiones,
-            'comunidades' => $comunidades,
-            'anioCounts'  => $anioCounts,
-            'filtros'     => $filtros,
-            'pagination'  => [
+            'documentos'        => $documentos,
+            'lineas'            => $lineas,
+            'dimensiones'       => $dimensiones,
+            'comunidades'       => $comunidades,
+            'carreras'          => $carreras,
+            'nivelesAcademicos' => $nivelesAcademicos,
+            'trayectosList'     => $trayectosList,
+            'anioCounts'        => $anioCounts,
+            'filtros'           => $filtros,
+            'totalPSTGeneral'   => $totalPSTGeneral,
+            'conteoLineas'      => $conteoLineas,
+            'conteoTrayectos'   => $conteoTrayectos,
+            'pstPorLinea'       => $pstPorLinea,
+            'pagination'        => [
                 'current_page' => $page,
                 'total_pages'  => $totalPages,
                 'total_items'  => $totalDocs,
@@ -126,9 +170,8 @@ class DetallePSTController {
                 die("Proyecto no encontrado en el sistema.");
             }
 
-            if (isset($doc['activo']) && !$doc['activo'] && (int)($_SESSION['nivel_privilegio'] ?? -1) < 1) {
-                http_response_code(403);
-                die("Acceso denegado: Este proyecto se encuentra desactivado o no disponible.");
+            if (isset($doc['activo']) && !$doc['activo']) {
+                Auth::requierePrivilegioMinimo($this->nivelAdmin);
             }
             
             $dbPath = !empty($doc['archivo_pdf']) ? $doc['archivo_pdf'] : '';
@@ -242,7 +285,7 @@ class DetallePSTController {
 
         // Si es petición AJAX, responder con JSON si no se tienen permisos en lugar de 302 redirect
         if (in_array($accion, ['extraer', 'crear_ajax', 'simular_extraccion'])) {
-            if (!Auth::check() || (int)($_SESSION['nivel_privilegio'] ?? -1) < 1) {
+            if (!Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'RepositorioPST')) {
                 header('Content-Type: application/json; charset=utf-8');
                 echo json_encode([
                     'status' => 'error',
@@ -263,8 +306,11 @@ class DetallePSTController {
                 }
             }
         } else {
-            Auth::requierePrivilegioMinimo(1);
+            Auth::requierePrivilegioMinimo($this->nivelAdmin);
         }
+        if ($accion === 'crear') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'RepositorioPST');
+        if ($accion === 'editar') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'RepositorioPST');
+        if ($accion === 'eliminar') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'RepositorioPST');
 
         $model = new DocumentoModel();
         
@@ -496,14 +542,17 @@ class DetallePSTController {
 
         // 0.3 Procesar Acción: ALTERNAR ESTADO (Activar / Ocultar - Soft Delete)
         if ($accion === 'toggle_estado' && $id) {
-            Auth::requierePrivilegioMinimo(1);
+            Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'RepositorioPST');
             try {
                 $docActual = $model->getPSTDocumentoById($id);
                 if ($docActual) {
                     $nuevoEstado = !($docActual['activo'] ?? true);
                     $model->cambiarEstadoPST($id, $nuevoEstado);
+                    
+                    $estTxt = $nuevoEstado ? 'Visible' : 'Oculto';
+                    AuditLogger::registrar('INFO', 'RepositorioPST', 'Alternar Visibilidad Proyecto', "Proyecto ID #{$id} cambiado a estado: {$estTxt}.");
+
                     header("Location: ?ruta=agregar-documento&msg=status_changed");
-                    echo "<script>window.location.href='?ruta=agregar-documento&msg=status_changed';</script>";
                     exit;
                 }
             } catch (Exception $e) {
@@ -512,13 +561,15 @@ class DetallePSTController {
             }
         }
         
-        // 1. Procesar Acción: ELIMINAR (Requiere Bibliotecario / Admin = Nivel 2+)
+        // 1. Procesar Acción: ELIMINAR
         if ($accion === 'eliminar' && $id) {
-            Auth::requierePrivilegioMinimo(2);
+            Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'RepositorioPST');
             try {
                 $model->eliminarPST($id);
+                
+                AuditLogger::registrar('WARNING', 'RepositorioPST', 'Eliminar Proyecto', "Proyecto PST ID #{$id} eliminado del repositorio.");
+
                 header("Location: ?ruta=agregar-documento&msg=deleted");
-                echo "<script>window.location.href='?ruta=agregar-documento&msg=deleted';</script>";
                 exit;
             } catch (Exception $e) {
                 $error = "Error al intentar eliminar el recurso: " . $e->getMessage();
@@ -593,6 +644,7 @@ class DetallePSTController {
                 try {
                     $nuevoId = (int)$model->crearPST($datos);
                     if ($nuevoId > 0) {
+                        AuditLogger::registrar('INFO', 'RepositorioPST', 'Registrar Proyecto', "Proyecto PST registrado exitosamente: '{$datos['titulo']}' (ID: #{$nuevoId}).");
                         header("Location: ?ruta=agregar-documento&accion=crear&msg=created");
                         exit;
                     } else {
@@ -760,19 +812,23 @@ class DetallePSTController {
 
         $lineas = $model->getLineasInvestigacion();
         $dimensiones = $model->getDimensionesOperativas();
+        $nivelesAcademicos = $model->getNivelesAcademicos();
+        $trayectosList = $model->getTrayectos();
         
         return [
-            'accion'      => $accion,
-            'documentos'  => $documentos,
-            'documento'   => $documento,
-            'autores'     => $autores,
-            'tutores'     => $tutores,
-            'lineas'      => $lineas,
-            'dimensiones' => $dimensiones,
-            'pagination'  => $pagination,
-            'q'           => $q,
-            'error'       => $error,
-            'success'     => $success
+            'accion'            => $accion,
+            'documentos'        => $documentos,
+            'documento'         => $documento,
+            'autores'           => $autores,
+            'tutores'           => $tutores,
+            'lineas'            => $lineas,
+            'dimensiones'       => $dimensiones,
+            'nivelesAcademicos' => $nivelesAcademicos,
+            'trayectosList'     => $trayectosList,
+            'pagination'        => $pagination,
+            'q'                 => $q,
+            'error'             => $error,
+            'success'           => $success
         ];
     }
 }

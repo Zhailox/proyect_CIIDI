@@ -4,11 +4,11 @@
 // Requerimos la interfaz base
 require_once CORE_PATH . 'Interfaces/ModuleContract.php';
 
-// Clase única para el módulo del Dios del Sistema
+// Clase para el módulo de Super Administración
 class SuperAdminModule implements ModuleContract {
     
     public function getNombre(): string {
-        return 'Módulo de Super Administración (Sudoadmin)';
+        return 'Módulo de Super Administración';
     }
 
     public function getRutas(): array {
@@ -22,6 +22,21 @@ class SuperAdminModule implements ModuleContract {
                 'vista'            => __DIR__ . '/views/gestor_usuarios.php', 
                 'titulo'           => 'Gestión de Usuarios - UPTTMBI',
                 'css'              => ['SuperAdmin.css', 'gestor.css']
+            ],
+            'guardar-matriz-rbac' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'guardarMatrizRBAC'
+            ],
+            'actualizar-rol' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'actualizarRol'
+            ],
+            'revocar-sesion' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'revocarSesion'
             ],
             'editar-usuario' => [
                 'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
@@ -37,19 +52,40 @@ class SuperAdminModule implements ModuleContract {
                 'controlador'      => 'GestorUsuariosController',
                 'metodo'           => 'procesarEdicion'
             ],
+            'crear-rol' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'crearRolAction'
+            ],
             // Endpoint para alternar el estado (Suspender/Restaurar)
             'alternar-estado-usuario' => [
                 'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
                 'controlador'      => 'GestorUsuariosController',
                 'metodo'           => 'alternarEstado'
             ],
+            'crear-usuario' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'crearUsuarioAction'
+            ],
+            'resetear-clave-usuario' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'resetClaveRapido'
+            ],
             'sudoadmin' => [
                 'controlador_path' => __DIR__ . '/controllers/AdminController.php',
                 'controlador'      => 'AdminController',
                 'metodo'           => 'mostrarPanelAdministrativo',
                 'vista'            => __DIR__ . '/views/dashboard_admin.php', 
-                'titulo'           => 'Panel de Control - Sudoadmin',
-                'css'              => ['SuperAdmin.css']
+                'titulo'           => 'Panel de Control - SuperAdmin',
+                'css'              => ['SuperAdmin.css'],
+                'js'               => ['chart.min.js']
+            ],
+            'testear-core' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'testearCore'
             ],
             // Ruta para gestionar los módulos encendidos/apagados
             'gestor-modulos' => [
@@ -68,6 +104,53 @@ class SuperAdminModule implements ModuleContract {
                 'titulo'           => 'Gestión de Módulos - Configuración',
                 'css'              => ['SuperAdmin.css']
             ],
+            'alternar-estado-ruta' => [
+                'controlador_path' => __DIR__ . '/controllers/ModulosController.php',
+                'controlador'      => 'ModulosController',
+                'metodo'           => 'alternarEstadoRuta'
+            ],
+            'detalle-modulo' => [
+                'controlador_path' => __DIR__ . '/controllers/ModulosController.php',
+                'controlador'      => 'ModulosController',
+                'metodo'           => 'detalleModulo',
+                'vista'            => __DIR__ . '/views/detalle_modulo.php', 
+                'titulo'           => 'Gestión Individual de Módulo - SuperAdmin',
+                'css'              => ['SuperAdmin.css']
+            ],
+            'guardar-config-modulo' => [
+                'controlador_path' => __DIR__ . '/controllers/ModulosController.php',
+                'controlador'      => 'ModulosController',
+                'metodo'           => 'guardarConfiguracionEspecifica'
+            ],
+            'testear-ruta' => [
+                'controlador_path' => __DIR__ . '/controllers/ModulosController.php',
+                'controlador'      => 'ModulosController',
+                'metodo'           => 'testearRuta'
+            ],
+            'purgar-cache-modulo' => [
+                'controlador_path' => __DIR__ . '/controllers/ModulosController.php',
+                'controlador'      => 'ModulosController',
+                'metodo'           => 'purgarCacheModulo'
+            ],
+            'exportar-config-sistema' => [
+                'controlador_path' => __DIR__ . '/controllers/ModulosController.php',
+                'controlador'      => 'ModulosController',
+                'metodo'           => 'exportarConfiguracion'
+            ],
+            'importar-config-sistema' => [
+                'controlador_path' => __DIR__ . '/controllers/ModulosController.php',
+                'controlador'      => 'ModulosController',
+                'metodo'           => 'importarConfiguracion'
+            ],
+            // Ruta para gestionar Mantenimiento & Respaldos BD
+            'gestor-mantenimiento' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'mostrarMantenimiento', 
+                'vista'            => __DIR__ . '/views/gestor_mantenimiento.php', 
+                'titulo'           => 'Mantenimiento & Respaldos BD - SuperAdmin',
+                'css'              => ['SuperAdmin.css']
+            ],
             // Ruta para ver los logs de errores y accesos
             'visor-logs' => [
                 'controlador_path' => __DIR__ . '/controllers/LogsController.php',
@@ -76,6 +159,16 @@ class SuperAdminModule implements ModuleContract {
                 'vista'            => __DIR__ . '/views/visor_logs.php', 
                 'titulo'           => 'Visor de Logs - Auditoría del Sistema',
                 'css'              => ['SuperAdmin.css','logs.css']
+            ],
+            'exportar-logs' => [
+                'controlador_path' => __DIR__ . '/controllers/LogsController.php',
+                'controlador'      => 'LogsController',
+                'metodo'           => 'exportarLogs'
+            ],
+            'limpiar-logs' => [
+                'controlador_path' => __DIR__ . '/controllers/LogsController.php',
+                'controlador'      => 'LogsController',
+                'metodo'           => 'limpiarLogs'
             ],
             'generar-backup' => [
                 'controlador_path' => __DIR__ . '/controllers/AdminController.php',
@@ -92,16 +185,170 @@ class SuperAdminModule implements ModuleContract {
                 'controlador'      => 'AdminController',
                 'metodo'           => 'generarBackupTabla'
             ],
+            'descargar-backup' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'descargarBackup'
+            ],
+            'eliminar-backup' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'eliminarBackup'
+            ],
+            'verificar-respaldo' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'verificarRespaldo'
+            ],
+            'limpiar-respaldos-antiguos' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'ejecutarLimpiezaRespaldos'
+            ],
+            'optimizar-bd' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'optimizarBaseDatos'
+            ],
             'alternar-mantenimiento' => [
                 'controlador_path' => __DIR__ . '/controllers/AdminController.php',
                 'controlador'      => 'AdminController',
                 'metodo'           => 'alternarMantenimiento'
+            ],
+            'programar-mantenimiento' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'programarMantenimiento'
+            ],
+            'cancelar-mantenimiento' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'cancelarMantenimiento'
             ],
             'restaurar-backup' => [
                 'controlador_path' => __DIR__ . '/controllers/AdminController.php',
                 'controlador'      => 'AdminController',
                 'metodo'           => 'restaurarBackup'
             ],
+            'crear-nivel-privilegio' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'crearNivelPrivilegioAction'
+            ],
+            'eliminar-rol' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'eliminarRolAction'
+            ],
+            'eliminar-nivel-privilegio' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'eliminarNivelPrivilegioAction'
+            ],
+            // Rutas para Tareas Programadas / System Scheduler
+            'gestor-scheduler' => [
+                'controlador_path' => __DIR__ . '/controllers/SchedulerController.php',
+                'controlador'      => 'SchedulerController',
+                'metodo'           => 'index',
+                'vista'            => __DIR__ . '/views/gestor_scheduler.php',
+                'titulo'           => 'Tareas Programadas & Cron - SuperAdmin',
+                'css'              => ['SuperAdmin.css']
+            ],
+            'alternar-estado-tarea' => [
+                'controlador_path' => __DIR__ . '/controllers/SchedulerController.php',
+                'controlador'      => 'SchedulerController',
+                'metodo'           => 'alternarEstado'
+            ],
+            'ejecutar-tarea-manual' => [
+                'controlador_path' => __DIR__ . '/controllers/SchedulerController.php',
+                'controlador'      => 'SchedulerController',
+                'metodo'           => 'ejecutarManual'
+            ],
+            'guardar-tarea-programada' => [
+                'controlador_path' => __DIR__ . '/controllers/SchedulerController.php',
+                'controlador'      => 'SchedulerController',
+                'metodo'           => 'guardarTarea'
+            ],
+            'eliminar-tarea-programada' => [
+                'controlador_path' => __DIR__ . '/controllers/SchedulerController.php',
+                'controlador'      => 'SchedulerController',
+                'metodo'           => 'eliminarTarea'
+            ],
+            'ver-log-tarea' => [
+                'controlador_path' => __DIR__ . '/controllers/SchedulerController.php',
+                'controlador'      => 'SchedulerController',
+                'metodo'           => 'verLog'
+            ],
+            // Rutas para WAF & Monitor de Seguridad
+            'visor-seguridad' => [
+                'controlador_path' => __DIR__ . '/controllers/SecurityMonitorController.php',
+                'controlador'      => 'SecurityMonitorController',
+                'metodo'           => 'index',
+                'vista'            => __DIR__ . '/views/visor_seguridad.php',
+                'titulo'           => 'Monitor WAF & Seguridad - SuperAdmin',
+                'css'              => ['SuperAdmin.css']
+            ],
+            'desbloquear-ip' => [
+                'controlador_path' => __DIR__ . '/controllers/SecurityMonitorController.php',
+                'controlador'      => 'SecurityMonitorController',
+                'metodo'           => 'desbloquearIP'
+            ],
+            'bloquear-ip-lista-negra' => [
+                'controlador_path' => __DIR__ . '/controllers/SecurityMonitorController.php',
+                'controlador'      => 'SecurityMonitorController',
+                'metodo'           => 'bloquearListaNegra'
+            ],
+            'agregar-lista-blanca' => [
+                'controlador_path' => __DIR__ . '/controllers/SecurityMonitorController.php',
+                'controlador'      => 'SecurityMonitorController',
+                'metodo'           => 'agregarListaBlanca'
+            ],
+            'configuracion-sistema' => [
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'controlador'      => 'ConfiguracionController',
+                'metodo'           => 'index',
+                'vista'            => __DIR__ . '/views/configuracion_sistema.php', 
+                'titulo'           => 'Configuración Global - SuperAdmin',
+                'css'              => ['SuperAdmin.css', 'gestor.css']
+            ],
+            'guardar-configuracion-bd' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'guardarConfiguracionBD'
+            ],
+            'guardar-cuenta-emergencia' => [
+                'controlador_path' => __DIR__ . '/controllers/AdminController.php',
+                'controlador'      => 'AdminController',
+                'metodo'           => 'guardarCuentaEmergencia'
+            ],
+            'guardar-configuracion-sistema' => [
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'controlador'      => 'ConfiguracionController',
+                'metodo'           => 'guardar'
+            ],
+            'gestor-correos' => [
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'controlador'      => 'ConfiguracionController',
+                'metodo'           => 'gestorCorreos',
+                'vista'            => __DIR__ . '/views/gestor_correos.php',
+                'titulo'           => 'Gestión de Correos y Plantillas SMTP - SuperAdmin',
+                'css'              => ['SuperAdmin.css', 'gestor.css']
+            ],
+            'probar-smtp' => [
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'controlador'      => 'ConfiguracionController',
+                'metodo'           => 'probarSmtp'
+            ],
+            'guardar-plantilla-correo' => [
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'controlador'      => 'ConfiguracionController',
+                'metodo'           => 'guardarPlantillaCorreo'
+            ],
+            'guardar-layout-correo' => [
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'controlador'      => 'ConfiguracionController',
+                'metodo'           => 'guardarLayoutCorreo'
+            ]
         ];
     }
 
@@ -111,15 +358,20 @@ class SuperAdminModule implements ModuleContract {
                 'tipo'        => 'parent',
                 'titulo'      => 'SuperAdmin',
                 'icono'       => 'ph-fill ph-terminal-window',
-                'privilegio_minimo' => 2,
+                'privilegio_minimo' => 0,
                 'enlace'      => 'sudoadmin',
-                // Rutas que mantienen iluminado el panel administrativo
-                'activadores' => ['sudoadmin', 'gestor-modulos', 'visor-logs', 'gestor-usuarios'], 
+                // Rutas que mantienen iluminado y desplegado el panel administrativo en el Sidebar
+                'activadores' => ['sudoadmin', 'gestor-modulos', 'detalle-modulo', 'gestor-mantenimiento', 'visor-logs', 'gestor-usuarios', 'gestor-scheduler', 'visor-seguridad', 'configuracion-sistema', 'gestor-correos'], 
                 'subitems'    => [
-                    ['ruta' => 'sudoadmin', 'titulo' => 'Panel de Control'],
-                    ['ruta' => 'gestor-usuarios', 'titulo' => 'Gestión de Usuarios'], // BOTÓN NUEVO
-                    ['ruta' => 'gestor-modulos', 'titulo' => 'Gestor de Módulos'],
-                    ['ruta' => 'visor-logs', 'titulo' => 'Visor de Logs']
+                    ['ruta' => 'sudoadmin', 'titulo' => 'Panel de Control', 'privilegio_minimo' => 0],
+                    ['ruta' => 'gestor-usuarios', 'titulo' => 'Gestión de Usuarios', 'privilegio_minimo' => 0],
+                    ['ruta' => 'gestor-modulos', 'titulo' => 'Gestor de Módulos', 'privilegio_minimo' => 0],
+                    ['ruta' => 'gestor-correos', 'titulo' => 'Gestión de Correos SMTP', 'privilegio_minimo' => 0],
+                    ['ruta' => 'configuracion-sistema', 'titulo' => 'Variables de Entorno', 'privilegio_minimo' => 0],
+                    ['ruta' => 'gestor-mantenimiento', 'titulo' => 'Mantenimiento & BD', 'privilegio_minimo' => 0],
+                    ['ruta' => 'gestor-scheduler', 'titulo' => 'Tareas Programadas', 'privilegio_minimo' => 0],
+                    ['ruta' => 'visor-seguridad', 'titulo' => 'Monitor WAF & IPs', 'privilegio_minimo' => 0],
+                    ['ruta' => 'visor-logs', 'titulo' => 'Visor de Logs', 'privilegio_minimo' => 0]
                 ]
             ]
         ];
@@ -134,8 +386,12 @@ class SuperAdminModule implements ModuleContract {
         // Módulo de infraestructura. No requiere tarjeta pública.
         return [];
     }
-     public function getHeaderConfig(): array {
-        return [];
+    public function getHeaderConfig(): array {
+        return [
+            'tipo'       => 'custom_view',
+            'ruta_vista' => __DIR__ . '/views/header_mantenimiento_widget.php',
+            'orden'      => 85 // Se ubica justo al lado del perfil de usuario y buscador
+        ];
     }
 }
 

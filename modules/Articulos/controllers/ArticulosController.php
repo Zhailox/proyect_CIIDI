@@ -2,16 +2,21 @@
 require_once CORE_PATH . 'Security/Auth.php';
 require_once __DIR__ . '/../models/ArticuloModel.php';
 require_once __DIR__ . '/../services/ConfigService.php';
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
+
 
 class ArticulosController {
     
     private $articuloModel;
+    private int $nivelAdmin;
 
     public function __construct() {
         $this->articuloModel = new ArticuloModel();
+        $this->nivelAdmin   = SystemConfigService::get('accesos_modulos.articulos.admin', 1);
     }
 
     public function index() {
+        
         $filtros = [
             'q' => trim($_GET['q'] ?? ''),
             'year' => !empty($_GET['year']) ? (int) $_GET['year'] : '',
@@ -47,7 +52,7 @@ class ArticulosController {
     }
 
     public function gestor() {
-        Auth::requierePrivilegioMinimo(2);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'Articulos');
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         $filtros = [
@@ -66,8 +71,8 @@ class ArticulosController {
         ];
     }
     public function nuevo() {
-        // Candado: Solo administradores o bibliotecarios
-        Auth::requierePrivilegioMinimo(2);
+        // Candado: Solo administradores o bibliotecarios con permiso crear
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'Articulos');
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
@@ -83,7 +88,7 @@ class ArticulosController {
         ];
     }
     public function procesar() {
-        Auth::requierePrivilegioMinimo(2);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'Articulos');
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
             $_SESSION['mensaje_error'] = "Petición rechazada por seguridad (Token CSRF inválido o expirado).";
@@ -118,13 +123,30 @@ class ArticulosController {
         
         $archivo_pdf = filter_var(trim($_POST['archivo_pdf'] ?? ''), FILTER_SANITIZE_URL);
         $url_imagen = filter_var(trim($_POST['url_imagen'] ?? ''), FILTER_SANITIZE_URL);
-        
+
+        // Validar esquema HTTP/HTTPS estricto para evitar SSRF o esquemas peligrosos
+        $esUrlSegura = function($url) {
+            if (empty($url)) return true;
+            $scheme = parse_url($url, PHP_URL_SCHEME);
+            $host = parse_url($url, PHP_URL_HOST);
+            if (!in_array(strtolower((string)$scheme), ['http', 'https'])) return false;
+            if (in_array(strtolower((string)$host), ['localhost', '127.0.0.1', '::1'])) return false;
+            return true;
+        };
+
+        if (!$esUrlSegura($archivo_pdf) || !$esUrlSegura($url_imagen)) {
+            $_SESSION['mensaje_error'] = "URL no válida o esquema no permitido. Asegúrese de usar enlaces web válidos (http:// o https://).";
+            header('Location: nuevo-articulo');
+            exit;
+        }
+
         $autores = $_POST['autores'] ?? [];
         $autores_nuevos = $_POST['autores_nuevos'] ?? [];
         $etiquetas = $_POST['etiquetas'] ?? [];
 
         // 2. Manejar la imagen de portada
         $nombreImagen = 'default_article.jpg';
+        $imagenFisicaCreada = null;
         
         // A. Si escribieron una URL externa, la tomamos primero
         if (!empty($url_imagen)) {
@@ -146,7 +168,6 @@ class ArticulosController {
             // Si llegó bien a PHP, validamos según nuestro JSON y de una le verificamos el MIME
             if ($_FILES['imagen_portada']['error'] === UPLOAD_ERR_OK) {
                 $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                //MIME cosa
                 $mimeType = finfo_file($finfo, $_FILES['imagen_portada']['tmp_name']);
                 finfo_close($finfo);
 
@@ -183,34 +204,19 @@ class ArticulosController {
                     exit;
                 }
 
-               $nombreImagen = 'art_' . time() . '_' . uniqid() . '.webp';
-                $destino = __DIR__ . '/../../../public/uploads/articulos/';
+                $tmpPath = $_FILES['imagen_portada']['tmp_name'];
+                $nombreImagen = 'art_' . time() . '_' . uniqid() . '.webp';
+                $destino = __DIR__ . '/../../../storage/uploads/articulos/';
                 if (!is_dir($destino)) mkdir($destino, 0777, true);
                 
                 $rutaDestino = $destino . $nombreImagen;
-                $tmpPath = $_FILES['imagen_portada']['tmp_name'];
-                $imagenOriginal = null;
-
-                // Crear instancia de imagen según su MIME real
-                if ($mimeType === 'image/jpeg') {
-                    $imagenOriginal = imagecreatefromjpeg($tmpPath);
-                } elseif ($mimeType === 'image/png') {
-                    $imagenOriginal = imagecreatefrompng($tmpPath);
-                    // Preservar transparencia en PNGs
-                    imagepalettetotruecolor($imagenOriginal);
-                    imagealphablending($imagenOriginal, true);
-                    imagesavealpha($imagenOriginal, true);
-                } elseif ($mimeType === 'image/webp') {
-                    $imagenOriginal = imagecreatefromwebp($tmpPath);
-                }
-
-                // Generar y guardar como WebP con 85% de calidad (balance peso/calidad)
-                if ($imagenOriginal) {
-                    imagewebp($imagenOriginal, $rutaDestino, 85);
-                    imagedestroy($imagenOriginal);
+                $procesadoExitoso = $this->optimizarImagenPortada($tmpPath, $mimeType, $rutaDestino);
+                
+                if ($procesadoExitoso) {
+                    $imagenFisicaCreada = $rutaDestino;
                 } else {
-                    // Fallback de seguridad por si falla la librería GD
                     move_uploaded_file($tmpPath, $rutaDestino);
+                    $imagenFisicaCreada = $rutaDestino;
                 }
             }
         }
@@ -233,21 +239,30 @@ class ArticulosController {
                 $autores,
                 $autores_nuevos,
                 $etiquetas
-                        );
+            );
+
+            AuditLogger::registrar('INFO', 'RevistaDigital', 'Publicar Artículo', "Nuevo artículo publicado: '{$titulo}' ({$anio_publicacion}).");
 
             $_SESSION['mensaje_exito'] = "El artículo fue publicado correctamente en la vitrina.";
             header('Location: gestor-articulos');
             exit;
 
         } catch (Exception $e) {
-            // Si hubo un error (ej. cédula de autor repetida)
-            $_SESSION['mensaje_error'] = "Error de base de datos: " . $e->getMessage();
+            if ($imagenFisicaCreada && file_exists($imagenFisicaCreada)) {
+                @unlink($imagenFisicaCreada);
+            }
+            $msgOriginal = $e->getMessage();
+            if (strpos($msgOriginal, '23505') !== false || strpos(strtolower($msgOriginal), 'duplicate') !== false || strpos(strtolower($msgOriginal), 'ya existe') !== false) {
+                $_SESSION['mensaje_error'] = "No se pudo registrar el artículo porque la cédula de un autor o un dato único ya existe registrado en el sistema.";
+            } else {
+                $_SESSION['mensaje_error'] = "Ocurrió un problema al procesar la información del artículo. Por favor verifique los campos e intente nuevamente.";
+            }
             header('Location: nuevo-articulo');
             exit;
         }
     }
     public function eliminar() {
-        Auth::requierePrivilegioMinimo(2);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'Articulos');
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
             $_SESSION['mensaje_error'] = "Petición rechazada por seguridad (Token CSRF inválido o expirado).";
@@ -261,12 +276,14 @@ class ArticulosController {
             try {
                 $this->articuloModel->eliminarArticulo($id_articulo);
                 
+                AuditLogger::registrar('WARNING', 'RevistaDigital', 'Eliminar Artículo', "Artículo ID #{$id_articulo} eliminado del catálogo.");
+
                 if (session_status() === PHP_SESSION_NONE) session_start();
                 $_SESSION['mensaje_exito'] = "El artículo ha sido eliminado del catálogo y sus archivos liberados.";
                 
             } catch (Exception $e) {
                 if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['mensaje_error'] = "No se pudo eliminar el artículo: " . $e->getMessage();
+                $_SESSION['mensaje_error'] = "No fue posible eliminar el artículo debido a que está asociado a otros registros activos.";
             }
         }
         
@@ -275,7 +292,7 @@ class ArticulosController {
         exit;
     }
     public function editar() {
-        Auth::requierePrivilegioMinimo(2);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Articulos');
         if (session_status() === PHP_SESSION_NONE) session_start();
             if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
@@ -302,7 +319,7 @@ class ArticulosController {
     }
 
     public function actualizar() {
-        Auth::requierePrivilegioMinimo(2);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Articulos');
         if (session_status() === PHP_SESSION_NONE) session_start();
             if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
                 $_SESSION['mensaje_error'] = "Petición rechazada por seguridad (Token CSRF inválido o expirado).";
@@ -400,32 +417,13 @@ class ArticulosController {
                     }
 
                     $nombreImagen = 'art_' . time() . '_' . uniqid() . '.webp';
-                    $destino = __DIR__ . '/../../../public/uploads/articulos/';
+                    $destino = __DIR__ . '/../../../storage/uploads/articulos/';
                     if (!is_dir($destino)) mkdir($destino, 0777, true); 
                     
                     $rutaDestino = $destino . $nombreImagen;
                     $tmpPath = $_FILES['imagen_portada']['tmp_name'];
-                    $imagenOriginal = null;
-
-                    // Crear instancia de imagen según su MIME real
-                    if ($mimeType === 'image/jpeg') {
-                        $imagenOriginal = imagecreatefromjpeg($tmpPath);
-                    } elseif ($mimeType === 'image/png') {
-                        $imagenOriginal = imagecreatefrompng($tmpPath);
-                        // Preservar transparencia en PNGs
-                        imagepalettetotruecolor($imagenOriginal);
-                        imagealphablending($imagenOriginal, true);
-                        imagesavealpha($imagenOriginal, true);
-                    } elseif ($mimeType === 'image/webp') {
-                        $imagenOriginal = imagecreatefromwebp($tmpPath);
-                    }
-
-                    // Generar y guardar como WebP con 85% de calidad (balance peso/calidad)
-                    if ($imagenOriginal) {
-                        imagewebp($imagenOriginal, $rutaDestino, 85);
-                        imagedestroy($imagenOriginal);
-                    } else {
-                        // Fallback de seguridad por si falla la librería GD
+                    $procesadoExitoso = $this->optimizarImagenPortada($tmpPath, $mimeType, $rutaDestino);
+                    if (!$procesadoExitoso) {
                         move_uploaded_file($tmpPath, $rutaDestino);
                     }
                 }
@@ -455,19 +453,37 @@ class ArticulosController {
             exit;
         } catch (Exception $e) {
             if (session_status() === PHP_SESSION_NONE) session_start();
-            $_SESSION['mensaje_error'] = 'No se pudo actualizar el artículo: ' . $e->getMessage();
+            $msg = $e->getMessage();
+            if (strpos($msg, '23505') !== false || strpos(strtolower($msg), 'duplicate') !== false) {
+                $_SESSION['mensaje_error'] = 'No se pudo actualizar el artículo porque contiene un dato (como la cédula de un autor) que ya pertenece a otro registro.';
+            } else {
+                $_SESSION['mensaje_error'] = 'No se pudo actualizar la información del artículo. Verifique los datos e intente nuevamente.';
+            }
             header('Location: editar-articulo?id=' . $id);
             exit;
         }
     }
     public function gestorCatalogos() {
-        Auth::requierePrivilegioMinimo(2);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'Articulos');
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (session_status() === PHP_SESSION_NONE) session_start();
+            if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+                $_SESSION['mensaje_error'] = "Petición rechazada por seguridad (Token CSRF inválido o expirado).";
+                header('Location: gestor-catalogos');
+                exit;
+            }
 
             $accion = $_POST['accion'] ?? '';
             $nombre = trim($_POST['nombre'] ?? '');
+
+            if (strpos($accion, 'crear_') === 0) {
+                Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'Articulos');
+            } elseif (strpos($accion, 'actualizar_') === 0) {
+                Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Articulos');
+            } elseif (strpos($accion, 'eliminar_') === 0) {
+                Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'Articulos');
+            }
 
             try {
                 if ($accion === 'crear_categoria' && $nombre !== '') {
@@ -506,13 +522,25 @@ class ArticulosController {
                         $this->articuloModel->actualizarAutor((int)($_POST['id'] ?? 0), $nombre_autor, $cedula_autor);
                         $_SESSION['mensaje_exito'] = 'Datos del autor actualizados correctamente.';
                     }
+                } elseif ($accion === 'eliminar_autor') {
+                    $this->articuloModel->eliminarAutor((int)($_POST['id'] ?? 0));
+                    $_SESSION['mensaje_exito'] = 'Autor eliminado correctamente.';
                 }
             } catch (Exception $e) {
-                $_SESSION['mensaje_error'] = 'Error: ' . $e->getMessage();
+                $msg = $e->getMessage();
+                if (strpos($msg, '23505') !== false || strpos(strtolower($msg), 'duplicate') !== false) {
+                    $_SESSION['mensaje_error'] = 'Ya existe un elemento registrado con este mismo nombre o cédula.';
+                } elseif (strpos($msg, '23503') !== false || strpos(strtolower($msg), 'foreign key') !== false) {
+                    $_SESSION['mensaje_error'] = 'No se puede eliminar el registro porque está siendo utilizado por uno o más artículos.';
+                } else {
+                    $_SESSION['mensaje_error'] = 'No se pudo completar la operación en el catálogo. Intente de nuevo.';
+                }
             }
 
-            header('Location: gestor-catalogos');
+            $tabRedirect = $_POST['tab'] ?? 'cat';
+            header('Location: gestor-catalogos?tab=' . urlencode($tabRedirect));
             exit;
+
         }
 
         $q_cat = trim($_GET['q_cat'] ?? '');
@@ -525,23 +553,28 @@ class ArticulosController {
             $p_edit = max(1, (int)($_GET['p_edit'] ?? 1));
 
             $q_aut = trim($_GET['q_aut'] ?? ''); // Búsqueda de autores
+            $p_aut = max(1, (int)($_GET['p_aut'] ?? 1));
 
-            // 2. Ejecutamos las consultas paginadas
-            $categorias = $this->articuloModel->obtenerCatalogoPaginado('categorias', $q_cat, $p_cat, 5);
-            $etiquetas = $this->articuloModel->obtenerCatalogoPaginado('etiquetas', $q_tag, $p_tag, 5);
-            $editoriales = $this->articuloModel->obtenerCatalogoPaginado('editoriales', $q_edit, $p_edit, 5);
-            $autores = $this->articuloModel->buscarAutoresGestor($q_aut);
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
-            return [
-                'categorias' => $categorias,
-                'etiquetas' => $etiquetas,
-                'editoriales' => $editoriales,
-                'autores' => $autores,
-                'busquedas' => [
-                    'q_cat' => $q_cat, 'q_tag' => $q_tag, 'q_edit' => $q_edit, 'q_aut' => $q_aut
-                ]
-            ];
-        }
+        // 2. Ejecutamos las consultas paginadas
+            $limiteCatalogos = ConfigService::get('paginacion.limite_gestor_catalogos', 15);
+            $categorias = $this->articuloModel->obtenerCatalogoPaginado('categorias', $q_cat, $p_cat, $limiteCatalogos);
+        $etiquetas = $this->articuloModel->obtenerCatalogoPaginado('etiquetas', $q_tag, $p_tag, $limiteCatalogos);
+        $editoriales = $this->articuloModel->obtenerCatalogoPaginado('editoriales', $q_edit, $p_edit, $limiteCatalogos);
+        $autores = $this->articuloModel->buscarAutoresGestor($q_aut, $p_aut, $limiteCatalogos);
+
+        return [
+            'categorias' => $categorias,
+            'etiquetas' => $etiquetas,
+            'editoriales' => $editoriales,
+            'autores' => $autores,
+            'busquedas' => [
+                'q_cat' => $q_cat, 'q_tag' => $q_tag, 'q_edit' => $q_edit, 'q_aut' => $q_aut
+            ]
+        ];
+    }
     public function apiCatalogos() {
         if (session_status() === PHP_SESSION_NONE) session_start();
         header('Content-Type: application/json; charset=utf-8');
@@ -554,7 +587,7 @@ class ArticulosController {
         exit;
     }
     public function toggleEstado() {
-        Auth::requierePrivilegioMinimo(2);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Articulos');
         $id = (int)($_GET['id'] ?? 0);
         try {
             $this->articuloModel->cambiarEstado($id);
@@ -562,9 +595,70 @@ class ArticulosController {
             $_SESSION['mensaje_exito'] = "El estado de visibilidad del artículo ha sido actualizado.";
         } catch (Exception $e) {
             if (session_status() === PHP_SESSION_NONE) session_start();
-            $_SESSION['mensaje_error'] = "No se pudo cambiar el estado: " . $e->getMessage();
+            $_SESSION['mensaje_error'] = "No se pudo cambiar la visibilidad del artículo seleccionado.";
         }
         header('Location: gestor-articulos');
         exit;
     }
+
+    /**
+     * Optimiza y comprime la imagen de portada.
+     * Redimensiona (máximo 1200px de ancho) preservando la relación de aspecto y exporta en formato WebP con calidad 80.
+     */
+    private function optimizarImagenPortada($tmpPath, $mimeType, $rutaDestino) {
+        if (!extension_loaded('gd')) {
+            return false;
+        }
+
+        $srcImg = null;
+        switch ($mimeType) {
+            case 'image/jpeg':
+            case 'image/jpg':
+                $srcImg = @imagecreatefromjpeg($tmpPath);
+                break;
+            case 'image/png':
+                $srcImg = @imagecreatefrompng($tmpPath);
+                break;
+            case 'image/webp':
+                $srcImg = @imagecreatefromwebp($tmpPath);
+                break;
+        }
+
+        if (!$srcImg) {
+            return false;
+        }
+
+        $anchoOrig = imagesx($srcImg);
+        $altoOrig = imagesy($srcImg);
+
+        if ($anchoOrig <= 0 || $altoOrig <= 0) {
+            imagedestroy($srcImg);
+            return false;
+        }
+
+        $maxAncho = 1200;
+        if ($anchoOrig > $maxAncho) {
+            $nuevoAncho = $maxAncho;
+            $nuevoAlto = (int)round(($altoOrig * $maxAncho) / $anchoOrig);
+        } else {
+            $nuevoAncho = $anchoOrig;
+            $nuevoAlto = $altoOrig;
+        }
+
+        $destImg = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
+
+        // Preservar transparencia para PNG o WebP transparentes
+        imagealphablending($destImg, false);
+        imagesavealpha($destImg, true);
+
+        imagecopyresampled($destImg, $srcImg, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $anchoOrig, $altoOrig);
+
+        $exito = @imagewebp($destImg, $rutaDestino, 80);
+
+        imagedestroy($srcImg);
+        imagedestroy($destImg);
+
+        return $exito;
+    }
 }
+
