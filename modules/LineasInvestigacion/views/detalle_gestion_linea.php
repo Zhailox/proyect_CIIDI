@@ -170,7 +170,7 @@
 .ag-modal-input {
     width: 100%;
     box-sizing: border-box;
-    padding: 0.75rem 1rem;
+    padding: 1rem 1.25rem;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
     font-family: inherit;
@@ -186,7 +186,7 @@
 }
 .ag-swal-popup {
     border-radius: 16px !important;
-    padding: 1.5rem !important;
+    padding: 2rem !important;
 }
 </style>
 
@@ -315,7 +315,7 @@ function abrirModalEditarLinea(linea) {
                     </div>
                     <div>
                         <label class="ag-modal-label">Descripción</label>
-                        <textarea name="descripcion" class="ag-modal-input" style="height:120px; resize:none;" required>${linea.descripcion}</textarea>
+                        <textarea name="descripcion" class="ag-modal-input" style="height:160px; resize:vertical;" required>${linea.descripcion}</textarea>
                     </div>
                 </form>
             </div>
@@ -372,7 +372,7 @@ function abrirModalCrearDimension(idLinea) {
                     </div>
                     <div>
                         <label class="ag-modal-label">Descripción</label>
-                        <textarea name="descripcion" class="ag-modal-input" style="height:120px; resize:none;" required placeholder="Detalla el enfoque de la dimensión..."></textarea>
+                        <textarea name="descripcion" class="ag-modal-input" style="height:160px; resize:vertical;" required placeholder="Detalla el enfoque de la dimensión..."></textarea>
                     </div>
                 </form>
             </div>
@@ -411,7 +411,7 @@ function abrirModalEditarDimension(dim) {
                     </div>
                     <div>
                         <label class="ag-modal-label">Descripción</label>
-                        <textarea name="descripcion" class="ag-modal-input" style="height:120px; resize:none;" required>${dim.descripcion}</textarea>
+                        <textarea name="descripcion" class="ag-modal-input" style="height:160px; resize:vertical;" required>${dim.descripcion}</textarea>
                     </div>
                 </form>
             </div>

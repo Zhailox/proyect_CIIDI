@@ -34,6 +34,7 @@
 
 /* ─── WRAPPER GENERAL ────────────────────────────────────────────────────── */
 .li-wrapper {
+    padding: 0 1.5rem;
     display: flex;
     flex-direction: column;
     gap: 2rem;
@@ -316,6 +317,7 @@
 
 /* ─── VISTA DE DETALLE ────────────────────────────────────────────────────── */
 .li-detail-wrapper {
+    padding: 0 1.5rem;
     display: flex;
     flex-direction: column;
     gap: 2rem;
@@ -594,6 +596,7 @@
 
 /* ─── PANEL DE GESTIÓN (ADMIN) ───────────────────────────────────────────── */
 .li-gestor-wrapper {
+    padding: 0 1.5rem;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;

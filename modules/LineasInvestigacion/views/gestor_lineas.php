@@ -182,7 +182,7 @@
 .ag-modal-input {
     width: 100%;
     box-sizing: border-box;
-    padding: 0.75rem 1rem;
+    padding: 1rem 1.25rem;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
     font-family: inherit;
@@ -198,7 +198,7 @@
 }
 .ag-swal-popup {
     border-radius: 16px !important;
-    padding: 1.5rem !important;
+    padding: 2rem !important;
 }
 </style>
 
@@ -322,6 +322,7 @@ function abrirModalCrearLinea() {
 
     Swal.fire({
         title: 'Nueva Línea de Investigación',
+        width: '650px',
         customClass: { popup: 'ag-swal-popup' },
         html: `
             <div style="text-align: left; margin-top: 1rem;">
@@ -342,7 +343,7 @@ function abrirModalCrearLinea() {
 
                     <div>
                         <label class="ag-modal-label">Descripción</label>
-                        <textarea name="descripcion" class="ag-modal-input" style="height:100px; resize:none;" required placeholder="Breve descripción de la línea..."></textarea>
+                        <textarea name="descripcion" class="ag-modal-input" style="height:160px; resize:vertical;" required placeholder="Breve descripción de la línea..."></textarea>
                     </div>
                 </form>
             </div>
