@@ -1,6 +1,36 @@
 <?php
 // modules/LineasInvestigacion/views/gestor_lineas.php
 ?>
+
+<style>
+/* CLASES PARA VISTA TIPO LISTA */
+.ag-view-list {
+    grid-template-columns: 1fr !important;
+}
+.ag-view-list .ag-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 1.5rem 2rem;
+}
+.ag-view-list .ag-card > div:first-child {
+    flex: 1;
+}
+.ag-view-list .ag-card > div:last-child {
+    border-top: none !important;
+    padding-top: 0 !important;
+    border-left: 1px solid rgba(80, 89, 132, 0.1);
+    padding-left: 1.5rem;
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+}
+.ag-view-list .ag-btn-manage {
+    width: auto !important;
+}
+</style>
+
 <style>
 .ag-header-banner {
     background: linear-gradient(135deg, rgba(80, 89, 132, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%) !important;
@@ -197,7 +227,16 @@
     <?php endif; ?>
 
     <!-- GRID DE TARJETAS DE LÍNEAS -->
-    <div class="ag-modules-grid">
+    
+    <!-- BARRA DE CONTROLES (VISTA) -->
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
+        <div style="background: #e2e8f0; padding: 4px; border-radius: 8px; display: inline-flex; gap: 4px;">
+            <button type="button" id="btnViewGrid" title="Vista Cuadrícula" onclick="setLineaViewMode('grid')" style="border:none; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.85rem; transition: 0.2s; background: #ffffff; color: #1e293b; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><i class="ph-bold ph-squares-four" style="font-size: 1.1rem;"></i></button>
+            <button type="button" id="btnViewList" title="Vista Lista" onclick="setLineaViewMode('list')" style="border:none; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.85rem; transition: 0.2s; background: transparent; color: #64748b;"><i class="ph-bold ph-list" style="font-size: 1.1rem;"></i></button>
+        </div>
+    </div>
+
+<div class="ag-modules-grid">
         <?php foreach($lineas as $li): ?>
             <div class="ag-card">
                 <!-- Info de la Linea -->

@@ -65,7 +65,13 @@ class GestorLineasController {
                         $this->redirigir('gestionar-lineas', 'error', 'Acción no reconocida.');
                 }
             } catch (Exception $e) {
-                $this->redirigir('gestionar-lineas', 'error', 'Error en la base de datos: ' . $e->getMessage());
+                $msg = $e->getMessage();
+                if (strpos($msg, '23000') !== false || strpos($msg, '23503') !== false) {
+                    $msg = 'No se puede eliminar porque tiene registros asociados dependientes (ej. proyectos o investigaciones).';
+                } else {
+                    $msg = 'Error en la base de datos: ' . $msg;
+                }
+                $this->redirigir('gestionar-lineas', 'error', $msg);
             }
 
             return false; // Siempre redirecciona en POST
