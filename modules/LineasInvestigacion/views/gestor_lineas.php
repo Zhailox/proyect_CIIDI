@@ -117,10 +117,10 @@
                 </p>
             </div>
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <button type="button" onclick="abrirModalCrearLinea()" class="btn btn-outline" style="border-color: #059669; color: #059669; background: #ffffff; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.83rem; display: inline-flex; align-items: center; gap: 6px; cursor:pointer;">
+                <button type="button" onclick="abrirModalCrearLinea()" style="border: 1px solid #059669; color: #059669; background: #ffffff; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.83rem; display: inline-flex; align-items: center; gap: 6px; cursor:pointer; transition: 0.2s;" onmouseover="this.style.background='#059669'; this.style.color='#fff'" onmouseout="this.style.background='#ffffff'; this.style.color='#059669'">
                     <i class="ph-bold ph-plus-circle"></i> Nueva Línea
                 </button>
-                <a href="index.php?ruta=lineas-investigacion" class="btn btn-outline" style="border-color: var(--color-secundario); color: var(--color-secundario); background: #ffffff; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; transition: all 0.2s ease;">
+                <a href="index.php?ruta=lineas-investigacion" style="border: 1px solid var(--color-secundario); color: var(--color-secundario); background: #ffffff; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; transition: all 0.2s ease; cursor:pointer;" onmouseover="this.style.background='var(--color-secundario)'; this.style.color='#fff'" onmouseout="this.style.background='#ffffff'; this.style.color='var(--color-secundario)'">
                     <i class="ph-bold ph-eye"></i> Vista Pública
                 </a>
             </div>
@@ -176,7 +176,7 @@
 
 <!-- Formularios Ocultos para Eliminación -->
 <form id="formEliminarLinea" method="POST" action="index.php?ruta=gestionar-lineas" style="display:none;">
-    <input type="hidden" name="accion" value="delete">
+    <input type="hidden" name="accion" value="eliminar">
     <input type="hidden" name="id" id="deleteLineaId" value="">
 </form>
 

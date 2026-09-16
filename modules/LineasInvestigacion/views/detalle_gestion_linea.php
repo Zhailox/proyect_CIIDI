@@ -141,10 +141,10 @@
                 </p>
                 
                 <div style="display: flex; align-items: center; gap: 12px; margin-top: 1.2rem;">
-                    <button type="button" onclick="abrirModalEditarLinea(<?= htmlspecialchars(json_encode($linea)) ?>)" class="btn btn-outline" style="border-color: #059669; color: #059669; background: rgba(5, 150, 105, 0.1); text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; border:none;">
+                    <button type="button" onclick="abrirModalEditarLinea(<?= htmlspecialchars(json_encode($linea)) ?>)" style="border: 1px solid #059669; color: #059669; background: rgba(5, 150, 105, 0.1); text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; transition: 0.2s; cursor: pointer;" onmouseover="this.style.background='#059669'; this.style.color='#fff'" onmouseout="this.style.background='rgba(5, 150, 105, 0.1)'; this.style.color='#059669'">
                         <i class="ph-bold ph-pencil-simple"></i> Editar Línea
                     </button>
-                    <a href="index.php?ruta=gestionar-lineas" class="btn btn-outline" style="border-color: var(--color-secundario); color: var(--color-secundario); background: #ffffff; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; transition: all 0.2s ease;">
+                    <a href="index.php?ruta=gestionar-lineas" style="border: 1px solid var(--color-secundario); color: var(--color-secundario); background: #ffffff; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; transition: all 0.2s ease; cursor: pointer;" onmouseover="this.style.background='var(--color-secundario)'; this.style.color='#fff'" onmouseout="this.style.background='#ffffff'; this.style.color='var(--color-secundario)'">
                         <i class="ph-bold ph-arrow-left"></i> Volver a Líneas
                     </a>
                 </div>
@@ -182,7 +182,7 @@
                 <h2 style="margin:0; font-size:1.3rem; color:var(--texto-titulos);"><i class="ph-bold ph-squares-four"></i> Dimensiones Operativas (Componentes)</h2>
                 <p style="margin:0.2rem 0 0 0; font-size:0.9rem; color:var(--texto-silenciado);">Gestione las dimensiones asociadas a esta línea de investigación.</p>
             </div>
-            <button type="button" onclick="abrirModalCrearDimension(<?= htmlspecialchars($linea['id']) ?>)" class="btn btn-outline" style="background: var(--color-primario); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer;">
+            <button type="button" onclick="abrirModalCrearDimension(<?= htmlspecialchars($linea['id']) ?>)" style="background: var(--color-primario); color: #ffffff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
                 <i class="ph-bold ph-plus"></i> Añadir Dimensión
             </button>
         </div>
@@ -218,7 +218,7 @@
 
 <!-- Formularios Ocultos -->
 <form id="formEliminarDimension" method="POST" action="index.php?ruta=gestionar-dimensiones" style="display:none;">
-    <input type="hidden" name="accion" value="delete">
+    <input type="hidden" name="accion" value="eliminar">
     <input type="hidden" name="id" id="deleteDimensionId" value="">
     <input type="hidden" name="redirect_to" value="detalle-gestion-linea&id=<?= $linea['id'] ?>">
 </form>
@@ -291,7 +291,7 @@ function abrirModalCrearDimension(idLinea) {
         html: `
             <div style="text-align: left;">
                 <form id="form-create-dim" method="POST" action="index.php?ruta=gestionar-dimensiones">
-                    <input type="hidden" name="accion" value="create">
+                    <input type="hidden" name="accion" value="crear">
                     <input type="hidden" name="id_linea" value="${idLinea}">
                     <input type="hidden" name="redirect_to" value="detalle-gestion-linea&id=${idLinea}">
                     
@@ -326,7 +326,7 @@ function abrirModalEditarDimension(dim) {
         html: `
             <div style="text-align: left;">
                 <form id="form-edit-dim" method="POST" action="index.php?ruta=gestionar-dimensiones">
-                    <input type="hidden" name="accion" value="edit">
+                    <input type="hidden" name="accion" value="editar">
                     <input type="hidden" name="id" value="${dim.id}">
                     <input type="hidden" name="id_linea" value="${dim.id_linea}">
                     <input type="hidden" name="redirect_to" value="detalle-gestion-linea&id=${dim.id_linea}">
