@@ -130,7 +130,6 @@ class InvestigacionesModule implements ModuleContract {
                 ],
                 'subitems' => [
                     ['ruta' => 'investigaciones',             'titulo' => 'Cartelera I+D'],
-                    ['ruta' => 'postulaciones-investigacion', 'titulo' => 'Panel Postulaciones'],
                     ['ruta' => 'investigadores',              'titulo' => 'Investigadores'],
                     ['ruta' => 'mis-investigaciones',         'titulo' => 'Mis Investigaciones',  'privilegio_minimo' => 1],
                     ['ruta' => 'mis-postulantes',             'titulo' => 'Mis Postulantes',       'privilegio_minimo' => 1],

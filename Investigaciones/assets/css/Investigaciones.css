@@ -102,11 +102,11 @@
 .inv-header-gestion { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
 .inv-header-gestion h1 { font-size: 2.2rem; font-weight: 800; color: var(--inv-dark); margin:0; }
 .inv-btn-primary {
-    background: var(--color-secundario, #0b1a30); color: white; padding: 0.8rem 1.5rem; border-radius: 50px; 
+    background: linear-gradient(135deg, #0369A1 0%, #0077BE 100%); color: white; padding: 0.8rem 1.5rem; border-radius: 50px; 
     font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; border: none;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 10px rgba(11, 26, 48, 0.2); cursor: pointer; font-size: 1rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(3, 105, 161, 0.3); cursor: pointer; font-size: 1rem;
 }
-.inv-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(112, 144, 203, 0.3); background: var(--color-terciario, #7090cb); color: white; }
+.inv-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(3, 105, 161, 0.45); background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%); color: white; }
 .inv-btn-secondary {
     background: white; color: var(--inv-dark); padding: 0.8rem 1.5rem; border-radius: 50px; border: 1px solid var(--inv-border);
     font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;
