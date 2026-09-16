@@ -182,7 +182,7 @@
                 <h2 style="margin:0; font-size:1.3rem; color:var(--texto-titulos);"><i class="ph-bold ph-squares-four"></i> Dimensiones Operativas (Componentes)</h2>
                 <p style="margin:0.2rem 0 0 0; font-size:0.9rem; color:var(--texto-silenciado);">Gestione las dimensiones asociadas a esta línea de investigación.</p>
             </div>
-            <button type="button" onclick="abrirModalCrearDimension(<?= htmlspecialchars($linea['id']) ?>)" style="background: var(--color-primario); color: #ffffff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+            <button type="button" onclick="abrirModalCrearDimension(<?= htmlspecialchars($linea['id']) ?>)" style="background: #2563eb; color: #ffffff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px -1px rgba(37,99,235,0.2);" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
                 <i class="ph-bold ph-plus"></i> Añadir Dimensión
             </button>
         </div>
