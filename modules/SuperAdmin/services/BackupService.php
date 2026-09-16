@@ -36,7 +36,7 @@ class BackupService {
         $rutaCompleta = $backupDir . $nombreArchivo;
         $tempSqlPath = $comprimir ? $backupDir . "temp_{$fecha}.sql" : $rutaCompleta;
 
-        $flags = $soloEsquema ? "-F p -s" : "-F p --clean --if-exists --inserts";
+        $flags = $soloEsquema ? "-F p -s --clean --if-exists" : "-F p --clean --if-exists --inserts";
         if ($tabla) {
             $flags .= " -t " . escapeshellarg($tabla);
         }

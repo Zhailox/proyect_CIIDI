@@ -11,6 +11,7 @@ use PHPMailer\PHPMailer\SMTP;
 class MailService {
 
     private static string $templatesPath = __DIR__ . '/../../storage/email_templates.json';
+    private static string $customTemplatesPath = __DIR__ . '/../../storage/custom_templates.json';
 
     /**
      * Devuelve todas las plantillas registradas en el sistema.
@@ -18,6 +19,76 @@ class MailService {
     public static function obtenerPlantillas(): array {
         if (file_exists(self::$templatesPath)) {
             return json_decode(file_get_contents(self::$templatesPath), true) ?: [];
+        }
+        return [];
+    }
+
+    /**
+     * Devuelve las plantillas de usuario personalizadas reutilizables.
+     */
+    public static function obtenerPlantillasPersonalizadas(): array {
+        if (file_exists(self::$customTemplatesPath)) {
+            return json_decode(file_get_contents(self::$customTemplatesPath), true) ?: [];
+        }
+        return [];
+    }
+
+    /**
+     * Guarda una plantilla personalizada en storage/custom_templates.json
+     */
+    public static function guardarPlantillaPersonalizada(string $nombre, string $asunto, string $cuerpoHtml): bool {
+        $plantillas = self::obtenerPlantillasPersonalizadas();
+        $key = 'custom_' . time() . '_' . rand(100,999);
+        
+        $plantillas[$key] = [
+            'key' => $key,
+            'nombre' => $nombre,
+            'asunto' => $asunto,
+            'cuerpo_html' => $cuerpoHtml,
+            'fecha' => date('Y-m-d H:i:s')
+        ];
+
+        return @file_put_contents(self::$customTemplatesPath, json_encode($plantillas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) !== false;
+    }
+
+    private static string $logsPath = __DIR__ . '/../../storage/mail_logs.json';
+
+    /**
+     * Registra un correo enviado en el historial de logs (storage/mail_logs.json).
+     */
+    public static function registrarLog(string $destinoEmail, string $destinoNombre, string $asunto, bool $exito, string $detalle = '', string $tipo = 'Directo'): void {
+        $logs = [];
+        if (file_exists(self::$logsPath)) {
+            $logs = json_decode(file_get_contents(self::$logsPath), true) ?: [];
+        }
+
+        $nuevoLog = [
+            'id' => uniqid('mail_'),
+            'fecha' => date('Y-m-d H:i:s'),
+            'destino_email' => $destinoEmail,
+            'destino_nombre' => $destinoNombre,
+            'asunto' => $asunto,
+            'exito' => $exito,
+            'tipo' => $tipo,
+            'detalle' => $detalle
+        ];
+
+        array_unshift($logs, $nuevoLog); // El más reciente primero
+
+        // Mantener como máximo los últimos 200 registros de envío
+        if (count($logs) > 200) {
+            $logs = array_slice($logs, 0, 200);
+        }
+
+        @file_put_contents(self::$logsPath, json_encode($logs, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    }
+
+    /**
+     * Obtiene los logs de historial de envíos de correo.
+     */
+    public static function obtenerLogs(): array {
+        if (file_exists(self::$logsPath)) {
+            return json_decode(file_get_contents(self::$logsPath), true) ?: [];
         }
         return [];
     }
@@ -101,8 +172,10 @@ class MailService {
             $mail->AltBody = !empty($textoPlano) ? $textoPlano : strip_tags($contenidoHtml);
 
             $mail->send();
+            self::registrarLog($destinoEmail, $destinoNombre, $asunto, true, 'Enviado correctamente vía SMTP');
             return ['exito' => true, 'mensaje' => 'Correo enviado exitosamente a ' . htmlspecialchars($destinoEmail)];
         } catch (Exception $e) {
+            self::registrarLog($destinoEmail, $destinoNombre, $asunto, false, $mail->ErrorInfo);
             return ['exito' => false, 'mensaje' => 'Error al enviar correo vía SMTP: ' . $mail->ErrorInfo];
         }
     }

@@ -79,9 +79,16 @@ class ConfiguracionController {
         Auth::requierePrivilegioMinimo(0);
 
         require_once CORE_PATH . 'Services/MailService.php';
+        require_once __DIR__ . '/../models/AdminUsuarioModel.php';
 
         $config = SystemConfigService::get();
         $plantillas = MailService::obtenerPlantillas();
+        $plantillasPersonalizadas = MailService::obtenerPlantillasPersonalizadas();
+        $mailLogs = MailService::obtenerLogs();
+
+        $usuarioModel = new AdminUsuarioModel();
+        $usuarios = $usuarioModel->obtenerTodosLosUsuarios();
+        $roles = $usuarioModel->obtenerRoles();
 
         $mensajeExito = $_SESSION['mensaje_mail_exito'] ?? '';
         $mensajeError = $_SESSION['mensaje_mail_error'] ?? '';
@@ -90,9 +97,166 @@ class ConfiguracionController {
         return [
             'config' => $config,
             'plantillas' => $plantillas,
+            'plantillasPersonalizadas' => $plantillasPersonalizadas,
+            'mailLogs' => $mailLogs,
+            'usuarios' => $usuarios,
+            'roles' => $roles,
             'mensajeExito' => $mensajeExito,
             'mensajeError' => $mensajeError
         ];
+    }
+
+    public function guardarPlantillaPersonalizadaAction() {
+        Auth::requierePrivilegioMinimo(0);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once CORE_PATH . 'Services/MailService.php';
+
+            $nombre = trim($_POST['nombre'] ?? '');
+            $asunto = trim($_POST['asunto'] ?? '');
+            $cuerpoHtml = trim($_POST['cuerpo_html'] ?? '');
+
+            if (empty($nombre) || empty($cuerpoHtml)) {
+                $_SESSION['mensaje_mail_error'] = "Debe proporcionar un nombre y contenido para la plantilla personalizada.";
+                header("Location: gestor-correos");
+                exit;
+            }
+
+            if (MailService::guardarPlantillaPersonalizada($nombre, $asunto, $cuerpoHtml)) {
+                AuditLogger::registrar('INFO', 'SuperAdmin', 'Guardar Plantilla Personalizada', "Se creó la plantilla personalizada: {$nombre}");
+                $_SESSION['mensaje_mail_exito'] = "Plantilla '{$nombre}' guardada exitosamente en su catálogo reusable.";
+            } else {
+                $_SESSION['mensaje_mail_error'] = "Error al guardar la plantilla personalizada.";
+            }
+
+            header("Location: gestor-correos");
+            exit;
+        }
+    }
+
+    public function enviarCorreoDirecto() {
+        Auth::requierePrivilegioMinimo(0);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once CORE_PATH . 'Services/MailService.php';
+            require_once __DIR__ . '/../models/AdminUsuarioModel.php';
+
+            $modoDestino = trim($_POST['modo_destino'] ?? 'individual');
+            $asunto = trim($_POST['asunto'] ?? '');
+            $mensaje = trim($_POST['mensaje'] ?? '');
+            $usarLayout = isset($_POST['usar_layout']) && ($_POST['usar_layout'] === '1' || $_POST['usar_layout'] === 'on');
+
+            if (empty($asunto) || empty($mensaje)) {
+                $_SESSION['mensaje_mail_error'] = "Debe completar el asunto y el mensaje del correo.";
+                header("Location: gestor-correos");
+                exit;
+            }
+
+            // Si el cliente envió HTML formateado (editor enriquecido / builder), lo conservamos; de lo contrario nl2br
+            if (preg_match('/<[a-z][\s\S]*>/i', $mensaje)) {
+                $cuerpoHtml = $mensaje;
+            } else {
+                $cuerpoHtml = nl2br(htmlspecialchars($mensaje));
+            }
+
+            $usuarioModel = new AdminUsuarioModel();
+            $destinatarios = [];
+
+            if ($modoDestino === 'individual') {
+                $usuariosIds = $_POST['usuario_ids'] ?? [];
+                if (!is_array($usuariosIds) && !empty($_POST['usuario_id'])) {
+                    $usuariosIds = [$_POST['usuario_id']];
+                }
+                
+                $emailLibreRaw = trim($_POST['email_libre'] ?? '');
+                
+                // Si colocó correos libres separados por coma o espacio
+                if (!empty($emailLibreRaw)) {
+                    $listaCorreos = preg_split('/[\s,;]+/', $emailLibreRaw);
+                    foreach ($listaCorreos as $em) {
+                        $emClean = filter_var(trim($em), FILTER_SANITIZE_EMAIL);
+                        if (!empty($emClean) && filter_var($emClean, FILTER_VALIDATE_EMAIL)) {
+                            // Evitar duplicados por email
+                            $alreadyIn = false;
+                            foreach ($destinatarios as $d) {
+                                if (strtolower($d['email']) === strtolower($emClean)) {
+                                    $alreadyIn = true;
+                                    break;
+                                }
+                            }
+                            if (!$alreadyIn) {
+                                $destinatarios[] = ['email' => $emClean, 'nombre' => 'Destinatario Directo'];
+                            }
+                        }
+                    }
+                }
+
+                if (!empty($usuariosIds)) {
+                    $todos = $usuarioModel->obtenerTodosLosUsuarios();
+                    $mapaUsuarios = [];
+                    foreach ($todos as $u) {
+                        $mapaUsuarios[(int)$u['id']] = $u;
+                    }
+
+                    foreach ($usuariosIds as $uId) {
+                        $uId = (int)$uId;
+                        if (isset($mapaUsuarios[$uId]) && !empty($mapaUsuarios[$uId]['email'])) {
+                            // Evitar duplicados por email
+                            $alreadyIn = false;
+                            foreach ($destinatarios as $d) {
+                                if (strtolower($d['email']) === strtolower($mapaUsuarios[$uId]['email'])) {
+                                    $alreadyIn = true;
+                                    break;
+                                }
+                            }
+                            if (!$alreadyIn) {
+                                $destinatarios[] = ['email' => $mapaUsuarios[$uId]['email'], 'nombre' => $mapaUsuarios[$uId]['nombre_completo']];
+                            }
+                        }
+                    }
+                }
+            } elseif ($modoDestino === 'rol') {
+                $rolId = (int)($_POST['rol_id'] ?? 0);
+                $todos = $usuarioModel->obtenerTodosLosUsuarios();
+                foreach ($todos as $u) {
+                    if (!empty($u['email'])) {
+                        // Si se seleccionó rol específico o todos
+                        if ($rolId === 0 || (isset($u['id_rol']) && (int)$u['id_rol'] === $rolId)) {
+                            $destinatarios[] = ['email' => $u['email'], 'nombre' => $u['nombre_completo']];
+                        }
+                    }
+                }
+            }
+
+            if (empty($destinatarios)) {
+                $_SESSION['mensaje_mail_error'] = "No se encontraron destinatarios válidos para la selección actual. Por favor verifique el correo o usuario seleccionado.";
+                header("Location: gestor-correos");
+                exit;
+            }
+
+            $enviados = 0;
+            $fallidos = 0;
+
+            foreach ($destinatarios as $dest) {
+                $res = MailService::enviar($dest['email'], $dest['nombre'], $asunto, $cuerpoHtml, strip_tags($mensaje), !$usarLayout);
+                if ($res['exito']) {
+                    $enviados++;
+                } else {
+                    $fallidos++;
+                }
+            }
+
+            AuditLogger::registrar('INFO', 'SuperAdmin', 'Envío Directo de Correo', "Se enviaron {$enviados} correos exitosamente ({$fallidos} fallidos). Asunto: {$asunto}");
+
+            if ($fallidos === 0) {
+                $_SESSION['mensaje_mail_exito'] = "Correo enviado exitosamente a {$enviados} destinatario(s).";
+            } else {
+                $_SESSION['mensaje_mail_exito'] = "Proceso completado: {$enviados} enviados correctamente, {$fallidos} con fallas.";
+            }
+
+            header("Location: gestor-correos");
+            exit;
+        }
     }
 
     public function probarSmtp() {

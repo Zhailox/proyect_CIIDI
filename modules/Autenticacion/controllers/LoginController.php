@@ -2,6 +2,7 @@
 // modules/Autenticacion/controllers/LoginController.php
 require_once __DIR__ . '/../models/UsuarioModel.php';
 require_once CORE_PATH . 'Security/Auth.php';
+require_once CORE_PATH . 'Security/CaptchaService.php';
 require_once CORE_PATH . 'Services/MailService.php';
 
 class LoginController {
@@ -10,6 +11,11 @@ class LoginController {
 
     public function __construct() {
         $this->usuarioModel = new UsuarioModel();
+    }
+
+    public function generarCaptchaImagen() {
+        CaptchaService::renderImagenCaptcha();
+        return false;
     }
 
     public function mostrarFormulario() {
@@ -42,6 +48,14 @@ class LoginController {
         
         $metodo = $_POST['metodo_recuperacion'] ?? '';
         $dato = trim($_POST['dato_recuperacion'] ?? '');
+        
+        // Validación de captcha
+        $verifCaptcha = CaptchaService::validarPeticion($_POST);
+        if (!$verifCaptcha['valido']) {
+            $_SESSION['error_recuperar'] = $verifCaptcha['mensaje'];
+            header("Location: recuperar-cuenta");
+            exit;
+        }
         
         $usuario = null;
         if ($metodo === 'cedula') {
@@ -221,6 +235,12 @@ class LoginController {
     public function procesar() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return false;
 
+        // Validación de seguridad Anti-Bot (Honeypot + Tiempo Humano + Captcha)
+        $verifCaptcha = CaptchaService::validarPeticion($_POST);
+        if (!$verifCaptcha['valido']) {
+            return ['es_error' => true, 'mensaje' => $verifCaptcha['mensaje'], 'destino' => 'login'];
+        }
+
         $cedula = trim($_POST['cedula'] ?? '');
         $password = trim($_POST['password'] ?? '');
 
@@ -324,6 +344,12 @@ class LoginController {
     public function procesarRegistro() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return false;
 
+        // Validación de seguridad Anti-Bot (Honeypot + Tiempo Humano + Captcha)
+        $verifCaptcha = CaptchaService::validarPeticion($_POST);
+        if (!$verifCaptcha['valido']) {
+            return ['es_error' => true, 'mensaje' => $verifCaptcha['mensaje'], 'destino' => 'registro'];
+        }
+
         $cedula = trim($_POST['cedula'] ?? '');
         $nombre = trim($_POST['nombre'] ?? '');
         $email = filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL);
@@ -344,6 +370,20 @@ class LoginController {
             return [
                 'es_error' => true,
                 'mensaje'  => 'Las contraseñas no coinciden. Verifique e intente nuevamente.',
+                'destino'  => 'registro'
+            ];
+        }
+
+        // 2.1. Validar fortaleza de la contraseña en el backend (mínimo 8 caracteres, 1 mayúscula, 1 número y 1 especial)
+        $hasLength  = strlen($password) >= 8;
+        $hasUpper   = preg_match('/[A-Z]/', $password);
+        $hasNumber  = preg_match('/[0-9]/', $password);
+        $hasSpecial = preg_match('/[@$!%*?&._\-\#\^\(\)\{\}\[\]]/', $password);
+
+        if (!$hasLength || !$hasUpper || !$hasNumber || !$hasSpecial) {
+            return [
+                'es_error' => true,
+                'mensaje'  => 'La contraseña no cumple con los requisitos mínimos de seguridad (8+ caracteres, 1 mayúscula, 1 número y 1 carácter especial).',
                 'destino'  => 'registro'
             ];
         }

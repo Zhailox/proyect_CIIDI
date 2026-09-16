@@ -17,12 +17,22 @@
                 
                 <div class="recovery-flat-group">
                     <label for="password">Nueva Contraseña:</label>
-                    <input type="password" id="password" name="password" class="recovery-flat-input" placeholder="Mínimo 8 caracteres" required autocomplete="new-password">
+                    <div class="password-field-wrapper">
+                        <input type="password" id="password" name="password" class="recovery-flat-input" placeholder="Mínimo 8 caracteres" required autocomplete="new-password">
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('password', this)" title="Mostrar / Ocultar Contraseña" aria-label="Mostrar / Ocultar Contraseña">
+                            <i class="ph-bold ph-eye"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="recovery-flat-group">
                     <label for="password_confirm">Confirmar Contraseña:</label>
-                    <input type="password" id="password_confirm" name="password_confirm" class="recovery-flat-input" placeholder="Repita la contraseña" required autocomplete="new-password">
+                    <div class="password-field-wrapper">
+                        <input type="password" id="password_confirm" name="password_confirm" class="recovery-flat-input" placeholder="Repita la contraseña" required autocomplete="new-password">
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('password_confirm', this)" title="Mostrar / Ocultar Contraseña" aria-label="Mostrar / Ocultar Contraseña">
+                            <i class="ph-bold ph-eye"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <button type="submit" class="recovery-btn-submit">Guardar Nueva Contraseña</button>
@@ -44,3 +54,19 @@
         </div>
     </div>
 </div>
+
+<script>
+function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    if (!input || !icon) return;
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'ph-bold ph-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'ph-bold ph-eye';
+    }
+}
+</script>

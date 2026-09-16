@@ -329,10 +329,27 @@
 <?php endif; ?>
 
 <?php if (isset($_SESSION['mensaje_admin_error'])): ?>
-    <div style="background: rgba(239,68,68,0.1); color: #b91c1c; border: 1px solid rgba(239,68,68,0.25); padding: 0.9rem 1.25rem; border-radius: 10px; margin-bottom: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 10px;">
-        <i class="ph-bold ph-warning-circle" style="font-size: 1.3rem; color: #ef4444;"></i>
-        <?= htmlspecialchars($_SESSION['mensaje_admin_error']) ?>
-        <?php unset($_SESSION['mensaje_admin_error']); ?>
+    <?php 
+    $errRaw = $_SESSION['mensaje_admin_error'];
+    unset($_SESSION['mensaje_admin_error']);
+    $partesErr = explode(' | ', $errRaw);
+    ?>
+    <div style="background: rgba(239,68,68,0.08); color: #991b1b; border: 1px solid rgba(239,68,68,0.25); padding: 1rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: flex-start; gap: 10px; font-weight: 700;">
+            <i class="ph-bold ph-warning-circle" style="font-size: 1.4rem; color: #ef4444; flex-shrink: 0; margin-top: 2px;"></i>
+            <div style="flex-grow: 1;">
+                <div style="font-size: 0.95rem; font-weight: 800; color: #991b1b; margin-bottom: 4px;">
+                    <?= htmlspecialchars($partesErr[0]) ?>
+                </div>
+                <?php if (count($partesErr) > 1): ?>
+                    <ul style="margin: 6px 0 0 0; padding-left: 1.2rem; font-size: 0.85rem; font-weight: 600; color: #7f1d1d; line-height: 1.4;">
+                        <?php foreach (array_slice($partesErr, 1) as $subErr): ?>
+                            <li><?= htmlspecialchars($subErr) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
 <?php endif; ?>
 

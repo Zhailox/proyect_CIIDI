@@ -24,6 +24,11 @@ public function getRutas(): array {
                 'layout'           => ['header' => true, 'sidebar' => true, 'footer' => true],
                 'css'              => ['autenticacion.css']
             ],
+            'captcha-imagen' => [
+                'controlador_path' => __DIR__ . '/controllers/LoginController.php',
+                'controlador'      => 'LoginController',
+                'metodo'           => 'generarCaptchaImagen'
+            ],
             // Endpoint invisible que procesa el formulario
             'procesar-login' => [
                 'controlador_path' => __DIR__ . '/controllers/LoginController.php',

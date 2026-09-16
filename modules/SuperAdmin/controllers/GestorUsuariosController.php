@@ -274,7 +274,16 @@ class GestorUsuariosController {
         // Pasamos el hashSeguro al modelo (será null si no se llenaron los campos)
         $this->adminModel->actualizarUsuario($id, $cedula, $nombre, $email, $id_rol, $hashSeguro);
         
-        $detallesEdicion = "Datos actualizados para el Usuario C.I. {$cedula} ({$nombre})." . ($hashSeguro ? " Se forzó cambio de contraseña." : "");
+        // Revocación remota de sesión automática para que los datos en caché y sesión del usuario se reseteen al instante
+        $miUsuarioId = (int)($_SESSION['usuario_id'] ?? 0);
+        if ($id > 0 && $id !== $miUsuarioId) {
+            $archivoSesiones = CORE_PATH . '../storage/revoked_sessions.json';
+            $revogadas = file_exists($archivoSesiones) ? (json_decode(file_get_contents($archivoSesiones), true) ?: []) : [];
+            $revogadas[(string)$id] = true;
+            file_put_contents($archivoSesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
+        }
+
+        $detallesEdicion = "Datos actualizados para el Usuario C.I. {$cedula} ({$nombre})." . ($hashSeguro ? " Se forzó cambio de contraseña." : "") . " Sesión remota revocada.";
         AuditLogger::registrar('INFO', 'SuperAdmin', 'Editar Usuario', $detallesEdicion);
 
         header("Location: gestor-usuarios?cedula=" . urlencode($cedula));
