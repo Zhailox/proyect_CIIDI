@@ -57,7 +57,7 @@
     border-radius: 14px;
     padding: 1.5rem 2rem;
     border: 1px solid rgba(80, 89, 132, 0.15);
-    border-left: 5px solid var(--color-primario, #3b82f6);
+    border-left: 5px solid #505984;
     box-shadow: 0 8px 24px rgba(18, 26, 62, 0.04);
     min-width: 200px;
     flex: 1;
@@ -180,9 +180,9 @@
 }
 .ag-modal-input:focus {
     outline: none;
-    border-color: var(--color-primario, #3b82f6);
+    border-color: #505984;
     background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 0 3px rgba(80, 89, 132, 0.2);
 }
 .ag-swal-popup {
     border-radius: 16px !important;

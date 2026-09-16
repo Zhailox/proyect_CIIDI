@@ -54,7 +54,7 @@
 .ag-card {
     background: #ffffff;
     border: 1px solid rgba(80, 89, 132, 0.15);
-    border-top: 4px solid var(--color-primario, #3b82f6);
+    border-top: 4px solid #505984;
     border-radius: 12px;
     padding: 1.8rem;
     box-shadow: 0 10px 25px rgba(18, 26, 62, 0.03);
@@ -79,7 +79,7 @@
     align-items: center;
     justify-content: center;
     font-size: 1.8rem;
-    color: var(--color-primario, #3b82f6);
+    color: #505984;
 }
 .ag-btn-manage {
     background: #505984;
@@ -152,9 +152,9 @@
 }
 .ag-modal-input:focus {
     outline: none;
-    border-color: var(--color-primario, #3b82f6);
+    border-color: #505984;
     background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 0 3px rgba(80, 89, 132, 0.2);
 }
 .ag-swal-popup {
     border-radius: 16px !important;
