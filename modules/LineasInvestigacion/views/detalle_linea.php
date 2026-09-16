@@ -146,6 +146,7 @@
                     <h3><i class="ph-bold ph-flask" style="margin-right:0.4rem;"></i>Investigaciones Ofertadas</h3>
                 </div>
 
+                <div class="li-sidebar-scroll" style="max-height: 480px; overflow-y: auto;">
                 <?php if (empty($investigaciones)): ?>
                     <div class="li-empty-state" style="padding:2rem;">
                         <i class="ph-bold ph-flask"></i>
@@ -173,6 +174,7 @@
                     </div>
                     <?php endforeach; ?>
                 <?php endif; ?>
+                </div>
             </div>
 
             <!-- Link al gestor (solo orientativo, la auth lo protegerá) -->

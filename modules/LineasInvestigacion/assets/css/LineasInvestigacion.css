@@ -388,13 +388,14 @@
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 50px;
     padding: 0.3rem 0.85rem;
     font-size: 0.78rem;
     font-weight: 600;
-    color: #c4b5fd;
+    color: #ffffff;
+    backdrop-filter: blur(4px);
 }
 
 /* Layout de 2 columnas en detalle */
@@ -523,7 +524,7 @@
 }
 
 .li-sidebar-header {
-    background: var(--bg-banner);
+    background: #505984;
     padding: 1rem 1.25rem;
     color: var(--text-white);
 }
@@ -942,3 +943,17 @@
 .li-card:nth-child(4) { animation: li-cardIn 0.7s ease both; }
 .li-card:nth-child(5) { animation: li-cardIn 0.8s ease both; }
 .li-card:nth-child(6) { animation: li-cardIn 0.9s ease both; }
+
+.li-sidebar-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.li-sidebar-scroll::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+.li-sidebar-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+.li-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
