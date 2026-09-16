@@ -13,7 +13,7 @@ class Connection {
     private $port = '5432'; // Puerto por defecto de PostgreSQL
     private $db   = 'ciidi'; // Reemplaza esto
     private $user = 'miki';
-    private $pass = '1234'; // Unificado con la rama main
+    private $pass = '1234'; // Reemplaza esto
 
     private static function getConfigPath(): string {
         return defined('STORAGE_PATH') ? STORAGE_PATH . 'db_config.json' : __DIR__ . '/../../storage/db_config.json';
@@ -47,9 +47,6 @@ class Connection {
 
             $this->pdo = new PDO($dsn, $this->user, $this->pass, $options);
             
-            // Forzar codificación UTF-8 para evitar caracteres extraños en la vista
-            $this->pdo->exec("SET NAMES 'UTF8'");
-
         } catch (PDOException $e) {
             if ($silencioso) {
                 return;
@@ -74,30 +71,78 @@ class Connection {
             $vista_modulo_path = defined('CORE_VIEWS') ? CORE_VIEWS . '500.php' : __DIR__ . '/../Views/500.php';
 
             if (file_exists($vista_modulo_path)) {
-                require_once $vista_modulo_path;
+                include $vista_modulo_path;
             } else {
-                echo "<h1>Error Crítico del Sistema (500)</h1>";
-                echo "<p>Imposible conectar a la base de datos. Por favor, verifique sus credenciales.</p>";
-                echo "<p><em>Detalle: " . htmlspecialchars($e->getMessage()) . "</em></p>";
+                die("Error 500: Fallo Crítico del Kernel - Imposible conectar a la base de datos: " . $e->getMessage());
             }
             exit;
         }
     }
 
-    // Método estático para obtener la instancia única
-    public static function getInstance(bool $silencioso = false) {
+    // Método estático para obtener la conexión
+    public static function getInstance(): PDO {
         if (self::$instance === null) {
-            self::$instance = new Connection($silencioso);
+            self::$instance = new Connection();
         }
         return self::$instance->pdo;
     }
 
     // Prevenir la clonación del objeto
     private function __clone() {}
-
+    
     // Prevenir la deserialización del objeto
     public function __wakeup() {
-        throw new Exception("No se puede deserializar una conexión a la base de datos.");
+        throw new Exception("No se puede deserializar una conexión a base de datos.");
+    }
+
+    /**
+     * Devuelve las credenciales de PostgreSQL centralizadas del Core sin forzar error 500 si falla la BD.
+     */
+    public static function getCredentials(): array {
+        $conn = new self(true); // Pasar flag silencioso
+        return [
+            'host' => $conn->host,
+            'port' => $conn->port,
+            'db'   => $conn->db,
+            'user' => $conn->user,
+            'pass' => $conn->pass,
+        ];
+    }
+
+    /**
+     * Guarda las credenciales de la base de datos en storage/db_config.json
+     */
+    public static function saveCredentials(string $host, string $port, string $db, string $user, string $pass): bool {
+        $file = self::getConfigPath();
+        $dir = dirname($file);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+        }
+        $data = [
+            'host' => trim($host),
+            'port' => trim($port),
+            'db'   => trim($db),
+            'user' => trim($user),
+            'pass' => $pass,
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        return file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) !== false;
+    }
+
+    /**
+     * Retorna la ruta ejecutable de pg_dump / psql según el SO (Linux / Windows)
+     */
+    public static function getPgDumpPath(): string {
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            return '"C:\\Program Files\\PostgreSQL\\18\\bin\\pg_dump.exe"';
+        }
+        return 'pg_dump';
+    }
+
+    public static function getPsqlPath(): string {
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            return '"C:\\Program Files\\PostgreSQL\\18\\bin\\psql.exe"';
+        }
+        return 'psql';
     }
 }
-?>
