@@ -1,5 +1,29 @@
 [
     {
+        "id": "log_6aaa1eebd87e2",
+        "fecha_hora": "2026-09-16 04:45:31",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Restaurar BD",
+        "detalles": "Base de datos restaurada exitosamente.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "14586d0146aad85196247ca7a673caaa9376610050894256c80e7a37f4b9472c",
+        "hash_integridad": "08e0d7f0748384fb115080247ede72ccf5a2a92ffb8a964b44dbc7f40e853cab"
+    },
+    {
+        "id": "log_6aaa1eea78cc9",
+        "fecha_hora": "2026-09-16 04:45:30",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Crear Backup",
+        "detalles": "Respaldo pre_restore_checkpoint_2026-09-16_04-45-29.sql.gz generado exitosamente. Respaldos antiguos purgados: 0",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "8fa02a5c00e0ddb984cb3f2b1eb990ce42646799c551e3de7770fe8deae73ce1",
+        "hash_integridad": "14586d0146aad85196247ca7a673caaa9376610050894256c80e7a37f4b9472c"
+    },
+    {
         "id": "log_6aaa1d4a47f1f",
         "fecha_hora": "2026-09-16 04:38:34",
         "nivel": "CRITICAL",
