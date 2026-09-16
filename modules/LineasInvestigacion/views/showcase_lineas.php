@@ -7,40 +7,81 @@
 <div class="li-wrapper">
 
     <!-- ╔══ HERO ══════════════════════════════════════════════════════════╗ -->
-    <div class="li-hero">
-        <div class="li-hero-content">
-            <div class="li-hero-badge">
-                <i class="ph-bold ph-graph"></i> CIIDI · UPTTMBI
+    <style>
+.ag-header-banner {
+    background: linear-gradient(135deg, rgba(80, 89, 132, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%) !important;
+    color: #ffffff;
+    border-radius: 14px;
+    padding: 2.5rem 3rem;
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.15);
+    margin-bottom: 2.5rem;
+    position: relative;
+    overflow: hidden;
+}
+.ag-header-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%; right: -10%;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 60%);
+    border-radius: 50%;
+}
+.ag-header-subtitle {
+    display: inline-flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    color: #94a3b8; 
+    font-weight: 800; 
+    font-size: 0.8rem; 
+    text-transform: uppercase; 
+    letter-spacing: 1.5px; 
+    margin-bottom: 0.5rem;
+}
+.ag-header-title {
+    font-size: 2.2rem; 
+    font-weight: 800; 
+    margin: 0 0 0.8rem 0; 
+    color: #ffffff;
+    letter-spacing: -0.5px;
+}
+.ag-header-desc {
+    margin: 0; 
+    color: #cbd5e1; 
+    font-size: 1.05rem;
+    max-width: 800px;
+    line-height: 1.6;
+}
+</style>
+
+<div class="ag-header-banner" style="margin-bottom: 3rem;">
+    <canvas id="li-nodes-canvas-2" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.6;"></canvas>
+    <div style="position: relative; z-index: 1; display:flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 20px;">
+        <div style="flex: 1; min-width: 300px;">
+            <div class="ag-header-subtitle">
+                <i class="ph-bold ph-graph"></i> CIIDI • UPTTMBI
             </div>
-            <h1>Líneas de Investigación</h1>
-            <p>
-                Ejes estratégicos que articulan el conocimiento científico-tecnológico del
-                PNF en Informática. Explora las dimensiones operativas, proyectos clasificados
-                e investigaciones disponibles para postulación.
+            <h1 class="ag-header-title">Líneas de Investigación</h1>
+            <p class="ag-header-desc">
+                Ejes estratégicos que articulan el conocimiento científico-tecnológico del PNF en Informática. Explora las dimensiones operativas, proyectos clasificados e investigaciones disponibles para postulación.
             </p>
         </div>
-
-        <div class="li-hero-stats">
-            <div class="li-hero-stat">
-                <span class="li-hero-stat-num"><?= count($lineas) ?></span>
-                <span>Líneas</span>
+        <div style="display:flex; gap: 15px; flex-wrap: wrap; flex-shrink: 0;">
+            <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 15px 25px; text-align: center; min-width: 100px;">
+                <div style="font-size: 2.2rem; font-weight: 800; line-height: 1; margin-bottom: 5px;"><?= count($lineas) ?></div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: #cbd5e1; text-transform: uppercase;">Líneas</div>
             </div>
-            <div class="li-hero-stat">
-                <span class="li-hero-stat-num"><?= (int)$total_dimensiones ?></span>
-                <span>Dimensiones</span>
+            <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 15px 25px; text-align: center; min-width: 100px;">
+                <div style="font-size: 2.2rem; font-weight: 800; line-height: 1; margin-bottom: 5px;"><?= (int)$total_dimensiones ?></div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: #cbd5e1; text-transform: uppercase;">Dimensiones</div>
             </div>
-            <div class="li-hero-stat">
-                <span class="li-hero-stat-num"><?= (int)$total_proyectos ?></span>
-                <span>Proyectos</span>
+            <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 15px 25px; text-align: center; min-width: 100px;">
+                <div style="font-size: 2.2rem; font-weight: 800; line-height: 1; margin-bottom: 5px; color: #34d399;"><?= (int)$total_proyectos ?></div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: #cbd5e1; text-transform: uppercase;">Proyectos</div>
             </div>
-            <?php if ($total_invest > 0): ?>
-            <div class="li-hero-stat">
-                <span class="li-hero-stat-num"><?= (int)$total_invest ?></span>
-                <span>Ofertadas</span>
-            </div>
-            <?php endif; ?>
         </div>
     </div>
+</div>
+
 
     <!-- ╔══ GRID DE LÍNEAS ═════════════════════════════════════════════════╗ -->
     <?php if (empty($lineas)): ?>
@@ -124,3 +165,69 @@
     <?php endif; ?>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('li-nodes-canvas-2');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = canvas.offsetWidth;
+        let height = canvas.height = canvas.offsetHeight;
+        
+        window.addEventListener('resize', () => {
+            if (!canvas) return;
+            width = canvas.width = canvas.offsetWidth;
+            height = canvas.height = canvas.offsetHeight;
+        });
+
+        const particles = [];
+        const numParticles = 40;
+
+        for (let i = 0; i < numParticles; i++) {
+            particles.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                radius: Math.random() * 2 + 1.2
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            for (let i = 0; i < numParticles; i++) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0 || p.x > width) p.vx *= -1;
+                if (p.y < 0 || p.y > height) p.vy *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(112, 144, 203, 0.75)';
+                ctx.fill();
+
+                for (let j = i + 1; j < numParticles; j++) {
+                    const p2 = particles[j];
+                    const dx = p.x - p2.x;
+                    const dy = p.y - p2.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < 100) {
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.strokeStyle = `rgba(112, 144, 203, ${0.4 - dist/250})`;
+                        ctx.lineWidth = 0.8;
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+    }
+});
+</script>
