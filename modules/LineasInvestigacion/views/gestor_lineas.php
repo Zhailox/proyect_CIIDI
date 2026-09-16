@@ -2,8 +2,11 @@
 // modules/LineasInvestigacion/views/gestor_lineas.php
 ?>
 
+
+
 <style>
-/* CLASES PARA VISTA TIPO LISTA */
+
+/* CLASES PARA VISTA TIPO LISTA (REAL) */
 .ag-view-list {
     grid-template-columns: 1fr !important;
 }
@@ -12,26 +15,33 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    gap: 2rem;
     padding: 1.5rem 2rem;
+    gap: 2rem;
 }
-.ag-view-list .ag-card > div:first-child {
+.ag-view-list .ag-card-content {
     flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
 }
-.ag-view-list .ag-card > div:last-child {
+.ag-view-list .ag-card-icon {
+    margin-bottom: 0 !important;
+}
+.ag-view-list .ag-card-actions {
     border-top: none !important;
     padding-top: 0 !important;
     border-left: 1px solid rgba(80, 89, 132, 0.1);
-    padding-left: 1.5rem;
-    flex-direction: row-reverse;
-    justify-content: flex-start;
+    padding-left: 2rem;
+    margin-left: 1rem;
+    min-width: max-content;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
 }
-.ag-view-list .ag-btn-manage {
+.ag-view-list .ag-card-actions .ag-btn-manage {
     width: auto !important;
 }
-</style>
 
-<style>
 .ag-header-banner {
     background: linear-gradient(135deg, rgba(80, 89, 132, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%) !important;
     color: #ffffff;
@@ -240,7 +250,7 @@
         <?php foreach($lineas as $li): ?>
             <div class="ag-card">
                 <!-- Info de la Linea -->
-                <div style="display: flex; gap: 1.1rem; align-items: flex-start;">
+                <div class="ag-card-content" style="display: flex; gap: 1.1rem; align-items: flex-start;">
                     <div class="ag-card-icon">
                         <i class="ph-fill ph-graph"></i>
                     </div>
@@ -251,14 +261,14 @@
                         <p style="color: var(--texto-silenciado, #64748b); font-size: 0.9rem; margin: 0 0 1rem 0; line-height: 1.5;">
                             <?= htmlspecialchars(mb_substr($li['descripcion'], 0, 100)) ?>...
                         </p>
-                        <span style="background: rgba(80, 89, 132, 0.08); padding: 5px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; color: var(--color-primario, #1e293b);">
+                        <span style="background: rgba(80, 89, 132, 0.08); padding: 5px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; color: #505984;">
                             PNF EN <?= htmlspecialchars(mb_convert_case($li['carrera_nombre'] ?? 'Sin Asignar', MB_CASE_UPPER, 'UTF-8')) ?>
                         </span>
                     </div>
                 </div>
 
                 <!-- Botones Inferiores -->
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-top: 1px solid rgba(80, 89, 132, 0.1); padding-top: 1.2rem;">
+                <div class="ag-card-actions" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-top: 1px solid rgba(80, 89, 132, 0.1); padding-top: 1.2rem;">
                     
                     <button type="button" class="ag-btn-delete" title="Eliminar Línea" onclick="eliminarLinea(<?= htmlspecialchars($li['id']) ?>, '<?= htmlspecialchars(addslashes($li['nombre'])) ?>')">
                         <i class="ph-bold ph-trash"></i>

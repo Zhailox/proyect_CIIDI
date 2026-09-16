@@ -7,52 +7,7 @@
 <div class="li-wrapper">
 
     <!-- ╔══ HERO ══════════════════════════════════════════════════════════╗ -->
-    
-<style>
-/* CLASES PARA VISTA TIPO LISTA SHOWCASE */
-.li-view-list {
-    grid-template-columns: 1fr !important;
-}
-.li-view-list .li-card {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    padding: 0;
-}
-.li-view-list .li-card-accent {
-    width: 6px;
-    height: 100%;
-    min-height: 120px;
-}
-.li-view-list .li-card-body {
-    flex: 1;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 2rem;
-    padding: 1.5rem 2rem;
-}
-.li-view-list .li-card-header-row {
-    flex: 1;
-}
-.li-view-list .li-card-desc {
-    display: none; /* Hide description in list to save horizontal space or keep it flex */
-}
-.li-view-list .li-card-stats {
-    flex: 1;
-    margin-top: 0;
-    justify-content: flex-end;
-}
-.li-view-list .li-card-footer {
-    border-top: none;
-    border-left: 1px solid rgba(80, 89, 132, 0.1);
-    padding: 1.5rem 2rem;
-    display: flex;
-    align-items: center;
-}
-</style>
-
-<style>
+    <style>
 .ag-header-banner {
     background: linear-gradient(135deg, rgba(80, 89, 132, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%) !important;
     color: #ffffff;
@@ -137,16 +92,7 @@
         </div>
     <?php else: ?>
 
-    
-    <!-- BARRA DE CONTROLES (VISTA) -->
-    <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
-        <div style="background: #e2e8f0; padding: 4px; border-radius: 8px; display: inline-flex; gap: 4px;">
-            <button type="button" id="btnViewGridShowcase" title="Vista Cuadrícula" onclick="setLineaShowcaseViewMode('grid')" style="border:none; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.85rem; transition: 0.2s; background: #ffffff; color: #1e293b; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><i class="ph-bold ph-squares-four" style="font-size: 1.1rem;"></i></button>
-            <button type="button" id="btnViewListShowcase" title="Vista Lista" onclick="setLineaShowcaseViewMode('list')" style="border:none; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.85rem; transition: 0.2s; background: transparent; color: #64748b;"><i class="ph-bold ph-list" style="font-size: 1.1rem;"></i></button>
-        </div>
-    </div>
-
-<div class="li-grid">
+    <div class="li-grid">
         <?php foreach ($lineas as $idx => $linea):
             $accentIdx = $idx % 6;
         ?>
