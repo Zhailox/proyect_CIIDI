@@ -3,15 +3,48 @@
 ?>
 <style>
 .ag-header-banner {
-    background: rgba(255, 255, 255, 0.92) !important;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(80, 89, 132, 0.16) !important;
+    background: linear-gradient(135deg, var(--color-primario, #1e293b) 0%, #0f172a 100%) !important;
+    color: #ffffff;
     border-radius: 14px;
-    padding: 1.6rem 2rem;
-    box-shadow: 0 16px 36px rgba(18, 26, 62, 0.05);
+    padding: 2rem 2.5rem;
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.15);
     margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
 }
+.ag-header-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%; right: -10%;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+}
+.ag-header-subtitle {
+    display: inline-flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    color: #94a3b8; 
+    font-weight: 800; 
+    font-size: 0.8rem; 
+    text-transform: uppercase; 
+    letter-spacing: 1.5px; 
+    margin-bottom: 0.5rem;
+}
+.ag-header-title {
+    font-size: 2rem; 
+    font-weight: 800; 
+    margin: 0; 
+    color: #ffffff;
+    letter-spacing: -0.5px;
+}
+.ag-header-desc {
+    margin: 0.5rem 0 0 0; 
+    color: #cbd5e1; 
+    font-size: 1rem;
+    max-width: 600px;
+}
+
 .ag-modules-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
@@ -19,44 +52,43 @@
     margin-bottom: 2rem;
 }
 .ag-card {
-    background: rgba(255, 255, 255, 0.95) !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(80, 89, 132, 0.15) !important;
-    border-radius: 14px !important;
-    padding: 1.6rem !important;
-    box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04);
+    background: #ffffff;
+    border: 1px solid rgba(80, 89, 132, 0.15);
+    border-top: 4px solid var(--color-primario, #3b82f6);
+    border-radius: 12px;
+    padding: 1.8rem;
+    box-shadow: 0 10px 25px rgba(18, 26, 62, 0.03);
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 1.25rem;
+    gap: 1.5rem;
 }
 .ag-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 42px rgba(18, 26, 62, 0.08);
-    border-color: rgba(80, 89, 132, 0.28) !important;
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(18, 26, 62, 0.08);
+    border-color: rgba(80, 89, 132, 0.25);
 }
 .ag-card-icon {
-    width: 52px;
-    height: 52px;
+    width: 56px;
+    height: 56px;
     border-radius: 12px;
     background: rgba(80, 89, 132, 0.08);
-    border: 1px solid rgba(80, 89, 132, 0.15);
+    border: 1px solid rgba(80, 89, 132, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.6rem;
-    color: var(--color-primario);
+    font-size: 1.8rem;
+    color: var(--color-primario, #3b82f6);
 }
 .ag-btn-manage {
-    background: rgba(80, 89, 132, 0.06);
-    color: var(--color-primario);
+    background: rgba(80, 89, 132, 0.05);
+    color: var(--color-primario, #1e293b);
     border: 1px solid rgba(80, 89, 132, 0.15);
     border-radius: 8px;
-    padding: 8px 14px;
+    padding: 10px 16px;
     font-weight: 700;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -67,7 +99,7 @@
     width: 100%;
 }
 .ag-btn-manage:hover {
-    background: var(--color-primario);
+    background: var(--color-primario, #1e293b);
     color: white;
     box-shadow: 0 4px 12px rgba(18, 26, 62, 0.15);
 }
@@ -75,12 +107,11 @@
     color: #ef4444;
     background: rgba(239, 68, 68, 0.1);
     border: none;
-    padding: 6px 12px;
-    border-radius: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
     cursor: pointer;
     transition: 0.2s;
     font-weight: bold;
-    font-size: 0.8rem;
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -98,29 +129,57 @@
 }
 .li-alert.exito { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
 .li-alert.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+/* Custom Modal Styles */
+.ag-modal-label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    color: #475569;
+    font-size: 0.9rem;
+}
+.ag-modal-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.75rem 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    background: #f8fafc;
+}
+.ag-modal-input:focus {
+    outline: none;
+    border-color: var(--color-primario, #3b82f6);
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+.ag-swal-popup {
+    border-radius: 16px !important;
+    padding: 1.5rem !important;
+}
 </style>
 
 <div class="li-gestor-wrapper">
 
-    <!-- ENCABEZADO PRINCIPAL GLASSMORPHIC -->
+    <!-- ENCABEZADO PRINCIPAL (COLORES DEL CORE) -->
     <div class="ag-header-banner">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.2rem; position:relative; z-index: 1;">
             <div>
-                <div style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--color-terciario); font-weight: 800; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 0.3rem;">
+                <div class="ag-header-subtitle">
                     <i class="ph-bold ph-squares-four"></i> SUBSISTEMAS DEL SISTEMA INTEGRAL
                 </div>
-                <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--texto-titulos, #0f172a); margin: 0;">
-                    Gestor de Líneas de Investigación
-                </h1>
-                <p style="margin: 0.3rem 0 0 0; color: var(--texto-silenciado, #64748b); font-size: 0.9rem;">
-                    Seleccione una línea para gestionar sus dimensiones operativas y configuraciones específicas.
+                <h1 class="ag-header-title">Gestor de Líneas de Investigación</h1>
+                <p class="ag-header-desc">
+                    Gestione las líneas, asocie dimensiones operativas internamente y controle su configuración.
                 </p>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <button type="button" onclick="abrirModalCrearLinea()" style="border: 1px solid #059669; color: #059669; background: #ffffff; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.83rem; display: inline-flex; align-items: center; gap: 6px; cursor:pointer; transition: 0.2s;" onmouseover="this.style.background='#059669'; this.style.color='#fff'" onmouseout="this.style.background='#ffffff'; this.style.color='#059669'">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <button type="button" onclick="abrirModalCrearLinea()" style="border: none; color: #1e293b; background: #ffffff; padding: 10px 18px; border-radius: 8px; font-weight: 800; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
                     <i class="ph-bold ph-plus-circle"></i> Nueva Línea
                 </button>
-                <a href="index.php?ruta=lineas-investigacion" style="border: 1px solid var(--color-secundario); color: var(--color-secundario); background: #ffffff; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; transition: all 0.2s ease; cursor:pointer;" onmouseover="this.style.background='var(--color-secundario)'; this.style.color='#fff'" onmouseout="this.style.background='#ffffff'; this.style.color='var(--color-secundario)'">
+                <a href="index.php?ruta=lineas-investigacion" style="border: 1px solid rgba(255,255,255,0.3); color: #ffffff; background: rgba(255,255,255,0.1); text-decoration: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
                     <i class="ph-bold ph-eye"></i> Vista Pública
                 </a>
             </div>
@@ -145,20 +204,20 @@
                         <i class="ph-fill ph-graph"></i>
                     </div>
                     <div style="flex: 1;">
-                        <h3 style="color: var(--texto-titulos, #0f172a); font-weight: 800; font-size: 1.1rem; margin: 0 0 0.3rem 0; line-height: 1.3;">
+                        <h3 style="color: var(--texto-titulos, #0f172a); font-weight: 800; font-size: 1.15rem; margin: 0 0 0.4rem 0; line-height: 1.3;">
                             <?= htmlspecialchars(mb_convert_case($li['nombre'], MB_CASE_TITLE, 'UTF-8')) ?>
                         </h3>
-                        <p style="color: var(--texto-silenciado, #64748b); font-size: 0.85rem; margin: 0 0 0.8rem 0; line-height: 1.45;">
-                            <?= htmlspecialchars(mb_substr($li['descripcion'], 0, 90)) ?>...
+                        <p style="color: var(--texto-silenciado, #64748b); font-size: 0.9rem; margin: 0 0 1rem 0; line-height: 1.5;">
+                            <?= htmlspecialchars(mb_substr($li['descripcion'], 0, 100)) ?>...
                         </p>
-                        <span style="background: rgba(80, 89, 132, 0.08); padding: 4px 10px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; color: var(--color-primario);">
+                        <span style="background: rgba(80, 89, 132, 0.08); padding: 5px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; color: var(--color-primario, #1e293b);">
                             PNF EN <?= htmlspecialchars(mb_convert_case($li['carrera_nombre'] ?? 'Sin Asignar', MB_CASE_UPPER, 'UTF-8')) ?>
                         </span>
                     </div>
                 </div>
 
-                <!-- Botón de Expandir Dimensiones -->
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-top: 1px solid rgba(80, 89, 132, 0.1); padding-top: 1rem;">
+                <!-- Botones Inferiores -->
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-top: 1px solid rgba(80, 89, 132, 0.1); padding-top: 1.2rem;">
                     
                     <button type="button" class="ag-btn-delete" title="Eliminar Línea" onclick="eliminarLinea(<?= htmlspecialchars($li['id']) ?>, '<?= htmlspecialchars(addslashes($li['nombre'])) ?>')">
                         <i class="ph-bold ph-trash"></i>
@@ -174,7 +233,7 @@
 
 </div>
 
-<!-- Formularios Ocultos para Eliminación -->
+<!-- Formularios Ocultos -->
 <form id="formEliminarLinea" method="POST" action="index.php?ruta=gestionar-lineas" style="display:none;">
     <input type="hidden" name="accion" value="eliminar">
     <input type="hidden" name="id" id="deleteLineaId" value="">
@@ -182,7 +241,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-// Obtener el JSON de carreras para el select
 const carrerasList = <?= json_encode($carreras) ?>;
 
 function eliminarLinea(id, nombre) {
@@ -194,7 +252,8 @@ function eliminarLinea(id, nombre) {
         confirmButtonColor: '#ef4444',
         cancelButtonColor: '#64748b',
         confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
+        cancelButtonText: 'Cancelar',
+        customClass: { popup: 'ag-swal-popup' }
     }).then((result) => {
         if (result.isConfirmed) {
             document.getElementById('deleteLineaId').value = id;
@@ -211,26 +270,27 @@ function abrirModalCrearLinea() {
 
     Swal.fire({
         title: 'Nueva Línea de Investigación',
+        customClass: { popup: 'ag-swal-popup' },
         html: `
-            <div style="text-align: left;">
+            <div style="text-align: left; margin-top: 1rem;">
                 <form id="form-create-linea" method="POST" action="index.php?ruta=gestionar-lineas">
                     <input type="hidden" name="accion" value="crear">
                     
-                    <div style="margin-bottom:1rem;">
-                        <label style="display:block; font-weight:bold; margin-bottom:0.3rem;">Nombre de la Línea</label>
-                        <input type="text" name="nombre" class="swal2-input" style="width:90%; margin:0;" required placeholder="Ej: Redes y Telecomunicaciones">
+                    <div style="margin-bottom:1.2rem;">
+                        <label class="ag-modal-label">Nombre de la Línea</label>
+                        <input type="text" name="nombre" class="ag-modal-input" required placeholder="Ej: Redes y Telecomunicaciones">
                     </div>
                     
-                    <div style="margin-bottom:1rem;">
-                        <label style="display:block; font-weight:bold; margin-bottom:0.3rem;">Programa de Formación</label>
-                        <select name="id_carrera" class="swal2-select" style="width:90%; margin:0; padding:10px; border-radius:8px;" required>
+                    <div style="margin-bottom:1.2rem;">
+                        <label class="ag-modal-label">Programa de Formación</label>
+                        <select name="id_carrera" class="ag-modal-input" required>
                             ${selectOptions}
                         </select>
                     </div>
 
                     <div>
-                        <label style="display:block; font-weight:bold; margin-bottom:0.3rem;">Descripción</label>
-                        <textarea name="descripcion" class="swal2-textarea" style="width:90%; margin:0; height:80px;" required placeholder="Breve descripción de la línea..."></textarea>
+                        <label class="ag-modal-label">Descripción</label>
+                        <textarea name="descripcion" class="ag-modal-input" style="height:100px; resize:none;" required placeholder="Breve descripción de la línea..."></textarea>
                     </div>
                 </form>
             </div>
@@ -238,6 +298,8 @@ function abrirModalCrearLinea() {
         showCancelButton: true,
         confirmButtonText: '<i class="ph-bold ph-floppy-disk"></i> Registrar Línea',
         cancelButtonText: 'Cancelar',
+        confirmButtonColor: 'var(--color-primario, #1e293b)',
+        cancelButtonColor: '#94a3b8',
         preConfirm: () => {
             const form = document.getElementById('form-create-linea');
             if (!form.nombre.value || !form.id_carrera.value || !form.descripcion.value) {

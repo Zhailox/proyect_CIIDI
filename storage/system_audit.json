@@ -1,5 +1,17 @@
 [
     {
+        "id": "log_6aaa040a8023f",
+        "fecha_hora": "2026-09-16 02:50:50",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Test Respuesta Core",
+        "detalles": "Diagnóstico del Core ejecutado en 47.29ms. Memoria: 2 MB. Estado: SALUDABLE",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "f3c1e52bc3075baed939e5e9ae028499079f759304d80cb6004263b7483505fa",
+        "hash_integridad": "1b324ea3c338bb915f5cd43ed7b617f83a3bc4f4db0365a6096560a40c8334f1"
+    },
+    {
         "id": "log_6aa87f8fa693c",
         "fecha_hora": "2026-09-14 23:13:19",
         "nivel": "INFO",

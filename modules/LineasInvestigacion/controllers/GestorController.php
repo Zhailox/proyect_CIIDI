@@ -223,6 +223,9 @@ class GestorLineasController {
      * Redirige a una ruta con un mensaje de estado y detiene la ejecución.
      */
     private function redirigir(string $ruta, string $tipo, string $msg): void {
+        if (!empty($_POST['redirect_to'])) {
+            $ruta = $_POST['redirect_to'];
+        }
         $url = 'index.php?ruta=' . $ruta
              . '&tipo=' . urlencode($tipo)
              . '&msg='  . urlencode($msg);

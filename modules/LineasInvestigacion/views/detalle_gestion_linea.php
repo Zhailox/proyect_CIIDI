@@ -3,104 +3,143 @@
 ?>
 <style>
 .ag-header-banner {
-    background: rgba(255, 255, 255, 0.92) !important;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(80, 89, 132, 0.16) !important;
+    background: linear-gradient(135deg, var(--color-primario, #1e293b) 0%, #0f172a 100%) !important;
+    color: #ffffff;
     border-radius: 14px;
-    padding: 1.6rem 2rem;
-    box-shadow: 0 16px 36px rgba(18, 26, 62, 0.05);
-    margin-bottom: 2rem;
+    padding: 2.5rem 3rem;
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.15);
+    margin-bottom: 2.5rem;
+    position: relative;
+    overflow: hidden;
 }
+.ag-header-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%; right: -10%;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 60%);
+    border-radius: 50%;
+}
+.ag-header-subtitle {
+    display: inline-flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    color: #94a3b8; 
+    font-weight: 800; 
+    font-size: 0.8rem; 
+    text-transform: uppercase; 
+    letter-spacing: 1.5px; 
+    margin-bottom: 0.5rem;
+}
+.ag-header-title {
+    font-size: 2.2rem; 
+    font-weight: 800; 
+    margin: 0 0 0.8rem 0; 
+    color: #ffffff;
+    letter-spacing: -0.5px;
+}
+.ag-header-desc {
+    margin: 0; 
+    color: #cbd5e1; 
+    font-size: 1.05rem;
+    max-width: 800px;
+    line-height: 1.6;
+}
+
 .ag-kpi-grid {
     display: flex;
     gap: 1.5rem;
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
     flex-wrap: wrap;
 }
 .ag-kpi-card {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 12px;
-    padding: 1.25rem 2rem;
-    border: 1px solid rgba(80, 89, 132, 0.14);
-    box-shadow: 0 8px 24px rgba(18, 26, 62, 0.03);
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 1.5rem 2rem;
+    border: 1px solid rgba(80, 89, 132, 0.15);
+    border-left: 5px solid var(--color-primario, #3b82f6);
+    box-shadow: 0 8px 24px rgba(18, 26, 62, 0.04);
     min-width: 200px;
     flex: 1;
 }
 .ag-kpi-label {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 800;
-    color: var(--texto-silenciado);
+    color: var(--texto-silenciado, #64748b);
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-bottom: 0.5rem;
 }
 .ag-kpi-value {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
     font-weight: 800;
-    color: var(--texto-titulos);
+    color: var(--texto-titulos, #0f172a);
     line-height: 1;
 }
 
 .ag-list-container {
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(80, 89, 132, 0.14);
-    border-radius: 14px;
-    padding: 2rem;
-    box-shadow: 0 8px 24px rgba(18, 26, 62, 0.03);
+    background: #ffffff;
+    border: 1px solid rgba(80, 89, 132, 0.15);
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: 0 10px 30px rgba(18, 26, 62, 0.05);
 }
 
 .ag-dim-item {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
+    border-left: 4px solid var(--color-secundario, #059669);
     border-radius: 10px;
-    padding: 1.25rem;
-    margin-bottom: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 1.2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     transition: 0.2s;
 }
 .ag-dim-item:hover {
-    background: #fff;
+    background: #ffffff;
     border-color: #cbd5e1;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+    transform: translateX(4px);
 }
 .ag-dim-title {
     font-weight: 800;
-    color: var(--texto-titulos);
-    font-size: 1.1rem;
-    margin-bottom: 0.3rem;
+    color: var(--texto-titulos, #0f172a);
+    font-size: 1.2rem;
+    margin-bottom: 0.4rem;
 }
 .ag-dim-desc {
-    color: var(--texto-silenciado);
-    font-size: 0.9rem;
+    color: var(--texto-silenciado, #475569);
+    font-size: 0.95rem;
+    line-height: 1.5;
 }
 
 .ag-btn-edit {
-    color: #f59e0b;
+    color: #d97706;
     background: rgba(245, 158, 11, 0.1);
-    border: none;
-    padding: 8px 14px;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    padding: 8px 16px;
     border-radius: 8px;
     cursor: pointer;
     font-weight: bold;
+    font-size: 0.85rem;
     transition: 0.2s;
     display: inline-flex;
     align-items: center;
     gap: 6px;
 }
-.ag-btn-edit:hover { background: #f59e0b; color: #fff; }
+.ag-btn-edit:hover { background: #d97706; color: #fff; }
 
 .ag-btn-delete {
     color: #ef4444;
     background: rgba(239, 68, 68, 0.1);
-    border: none;
-    padding: 8px 14px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    padding: 8px 16px;
     border-radius: 8px;
     cursor: pointer;
     font-weight: bold;
+    font-size: 0.85rem;
     transition: 0.2s;
     display: inline-flex;
     align-items: center;
@@ -111,7 +150,7 @@
 .li-alert {
     padding: 1rem 1.25rem;
     border-radius: 8px;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
     font-weight: 600;
     display: flex;
     align-items: center;
@@ -119,32 +158,62 @@
 }
 .li-alert.exito { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
 .li-alert.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+/* Custom Modal Styles */
+.ag-modal-label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    color: #475569;
+    font-size: 0.9rem;
+}
+.ag-modal-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.75rem 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    background: #f8fafc;
+}
+.ag-modal-input:focus {
+    outline: none;
+    border-color: var(--color-primario, #3b82f6);
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+.ag-swal-popup {
+    border-radius: 16px !important;
+    padding: 1.5rem !important;
+}
 </style>
 
 <div class="li-gestor-wrapper">
 
     <!-- ENCABEZADO -->
     <div class="ag-header-banner">
-        <div style="display: flex; gap: 1.5rem; align-items: flex-start;">
-            <div style="width: 64px; height: 64px; border-radius: 14px; background: rgba(80, 89, 132, 0.08); border: 1px solid rgba(80, 89, 132, 0.15); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--color-primario); flex-shrink: 0;">
+        <div style="display: flex; gap: 1.8rem; align-items: flex-start; position: relative; z-index: 1;">
+            <div style="width: 72px; height: 72px; border-radius: 16px; background: rgba(255,255,255, 0.1); border: 1px solid rgba(255,255,255, 0.2); display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: #ffffff; flex-shrink: 0; backdrop-filter: blur(4px);">
                 <i class="ph-bold ph-graph"></i>
             </div>
             <div style="flex: 1;">
-                <div style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--color-terciario); font-weight: 800; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.3rem;">
+                <div class="ag-header-subtitle">
                     GESTOR DEDICADO DE LÍNEA • PNF EN <?= htmlspecialchars(mb_convert_case($linea['carrera_nombre'] ?? 'Sin Asignar', MB_CASE_UPPER, 'UTF-8')) ?>
                 </div>
-                <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--texto-titulos, #0f172a); margin: 0 0 0.4rem 0;">
+                <h1 class="ag-header-title">
                     <?= htmlspecialchars(mb_convert_case($linea['nombre'], MB_CASE_TITLE, 'UTF-8')) ?>
                 </h1>
-                <p style="margin: 0; color: var(--texto-silenciado, #64748b); font-size: 0.95rem; max-width: 800px; line-height: 1.5;">
+                <p class="ag-header-desc">
                     <?= htmlspecialchars($linea['descripcion']) ?>
                 </p>
                 
-                <div style="display: flex; align-items: center; gap: 12px; margin-top: 1.2rem;">
-                    <button type="button" onclick="abrirModalEditarLinea(<?= htmlspecialchars(json_encode($linea)) ?>)" style="border: 1px solid #059669; color: #059669; background: rgba(5, 150, 105, 0.1); text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; transition: 0.2s; cursor: pointer;" onmouseover="this.style.background='#059669'; this.style.color='#fff'" onmouseout="this.style.background='rgba(5, 150, 105, 0.1)'; this.style.color='#059669'">
+                <div style="display: flex; align-items: center; gap: 12px; margin-top: 1.5rem;">
+                    <button type="button" onclick="abrirModalEditarLinea(<?= htmlspecialchars(json_encode($linea)) ?>)" style="background: rgba(255,255,255,0.15); color: #ffffff; border: 1px solid rgba(255,255,255,0.3); padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
                         <i class="ph-bold ph-pencil-simple"></i> Editar Línea
                     </button>
-                    <a href="index.php?ruta=gestionar-lineas" style="border: 1px solid var(--color-secundario); color: var(--color-secundario); background: #ffffff; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; transition: all 0.2s ease; cursor: pointer;" onmouseover="this.style.background='var(--color-secundario)'; this.style.color='#fff'" onmouseout="this.style.background='#ffffff'; this.style.color='var(--color-secundario)'">
+                    <a href="index.php?ruta=gestionar-lineas" style="background: transparent; color: #cbd5e1; border: 1px solid transparent; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; text-decoration: none; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px;" onmouseover="this.style.color='#ffffff'; this.style.borderColor='rgba(255,255,255,0.3)'" onmouseout="this.style.color='#cbd5e1'; this.style.borderColor='transparent'">
                         <i class="ph-bold ph-arrow-left"></i> Volver a Líneas
                     </a>
                 </div>
@@ -166,9 +235,9 @@
             <div class="ag-kpi-label">Total Dimensiones</div>
             <div class="ag-kpi-value"><?= count($dimensiones) ?></div>
         </div>
-        <div class="ag-kpi-card">
+        <div class="ag-kpi-card" style="border-left-color: var(--color-secundario, #059669);">
             <div class="ag-kpi-label">Proyectos Vinculados</div>
-            <div class="ag-kpi-value" style="color:#059669;">
+            <div class="ag-kpi-value" style="color:var(--color-secundario, #059669);">
                 <?= htmlspecialchars($linea['total_proyectos'] ?? 0) ?>
             </div>
         </div>
@@ -177,12 +246,12 @@
     <!-- LISTA DE DIMENSIONES -->
     <div class="ag-list-container">
         
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #e2e8f0; padding-bottom:1rem; margin-bottom:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #e2e8f0; padding-bottom:1.2rem; margin-bottom:1.8rem;">
             <div>
-                <h2 style="margin:0; font-size:1.3rem; color:var(--texto-titulos);"><i class="ph-bold ph-squares-four"></i> Dimensiones Operativas (Componentes)</h2>
-                <p style="margin:0.2rem 0 0 0; font-size:0.9rem; color:var(--texto-silenciado);">Gestione las dimensiones asociadas a esta línea de investigación.</p>
+                <h2 style="margin:0 0 0.3rem 0; font-size:1.4rem; color:var(--texto-titulos, #0f172a); font-weight: 800;"><i class="ph-bold ph-squares-four"></i> Dimensiones Operativas (Componentes)</h2>
+                <p style="margin:0; font-size:0.95rem; color:var(--texto-silenciado, #64748b);">Gestione las dimensiones asociadas a esta línea de investigación.</p>
             </div>
-            <button type="button" onclick="abrirModalCrearDimension(<?= htmlspecialchars($linea['id']) ?>)" style="background: #2563eb; color: #ffffff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px -1px rgba(37,99,235,0.2);" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
+            <button type="button" onclick="abrirModalCrearDimension(<?= htmlspecialchars($linea['id']) ?>)" style="background: var(--color-primario, #1e293b); color: #ffffff; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
                 <i class="ph-bold ph-plus"></i> Añadir Dimensión
             </button>
         </div>
@@ -194,7 +263,7 @@
                         <div class="ag-dim-title"><?= htmlspecialchars(mb_convert_case($dim['nombre'], MB_CASE_TITLE, 'UTF-8')) ?></div>
                         <div class="ag-dim-desc"><?= htmlspecialchars($dim['descripcion']) ?></div>
                     </div>
-                    <div style="display:flex; gap:8px; margin-left:1.5rem;">
+                    <div style="display:flex; gap:10px; margin-left:2rem;">
                         <button type="button" class="ag-btn-edit" onclick="abrirModalEditarDimension(<?= htmlspecialchars(json_encode($dim)) ?>)">
                             <i class="ph-bold ph-pencil-simple"></i> Editar
                         </button>
@@ -205,10 +274,12 @@
                 </div>
             <?php endforeach; ?>
         <?php else: ?>
-            <div style="text-align:center; padding: 3rem 0;">
-                <i class="ph-bold ph-ghost" style="font-size:3rem; color:#cbd5e1; margin-bottom:1rem;"></i>
-                <h3 style="color:#64748b; margin:0;">No hay dimensiones operativas</h3>
-                <p style="color:#94a3b8; font-size:0.9rem;">Comience añadiendo la primera dimensión operativa para esta línea.</p>
+            <div style="text-align:center; padding: 4rem 0;">
+                <div style="width: 80px; height: 80px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto;">
+                    <i class="ph-bold ph-ghost" style="font-size:2.5rem; color:#94a3b8;"></i>
+                </div>
+                <h3 style="color:#475569; margin:0 0 0.5rem 0; font-size: 1.2rem;">No hay dimensiones operativas</h3>
+                <p style="color:#64748b; font-size:0.95rem;">Comience añadiendo la primera dimensión operativa para esta línea.</p>
             </div>
         <?php endif; ?>
 
@@ -226,36 +297,33 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 function abrirModalEditarLinea(linea) {
-    // We don't have the full carreras list here natively, but we can just use a simple form for name/desc if needed,
-    // or fetch it. Actually, GestorController returns $carreras for `index`, but not for `detalleGestionLinea`.
-    // We can just keep it simple or do a form post to redirect back to gestor-lineas.
-    // For now, let's just let them edit Name and Description, or we can send an AJAX request.
-    // Wait, the user can just edit Name and Description here!
-    
     Swal.fire({
         title: 'Editar Línea de Investigación',
+        customClass: { popup: 'ag-swal-popup' },
         html: `
-            <div style="text-align: left;">
+            <div style="text-align: left; margin-top: 1rem;">
                 <form id="form-edit-linea" method="POST" action="index.php?ruta=gestionar-lineas">
                     <input type="hidden" name="accion" value="editar">
                     <input type="hidden" name="id" value="${linea.id}">
                     <input type="hidden" name="id_carrera" value="${linea.id_carrera}">
                     <input type="hidden" name="redirect_to" value="detalle-gestion-linea&id=${linea.id}">
                     
-                    <div style="margin-bottom:1rem;">
-                        <label style="display:block; font-weight:bold; margin-bottom:0.3rem;">Nombre</label>
-                        <input type="text" name="nombre" class="swal2-input" style="width:90%; margin:0;" required value="${linea.nombre.replace(/"/g, '&quot;')}">
+                    <div style="margin-bottom:1.2rem;">
+                        <label class="ag-modal-label">Nombre</label>
+                        <input type="text" name="nombre" class="ag-modal-input" required value="${linea.nombre.replace(/"/g, '&quot;')}">
                     </div>
                     <div>
-                        <label style="display:block; font-weight:bold; margin-bottom:0.3rem;">Descripción</label>
-                        <textarea name="descripcion" class="swal2-textarea" style="width:90%; margin:0; height:100px;" required>${linea.descripcion}</textarea>
+                        <label class="ag-modal-label">Descripción</label>
+                        <textarea name="descripcion" class="ag-modal-input" style="height:120px; resize:none;" required>${linea.descripcion}</textarea>
                     </div>
                 </form>
             </div>
         `,
         showCancelButton: true,
-        confirmButtonText: '<i class="ph-bold ph-floppy-disk"></i> Guardar',
+        confirmButtonText: '<i class="ph-bold ph-floppy-disk"></i> Guardar Cambios',
         cancelButtonText: 'Cancelar',
+        confirmButtonColor: 'var(--color-primario, #1e293b)',
+        cancelButtonColor: '#94a3b8',
         preConfirm: () => {
             const form = document.getElementById('form-edit-linea');
             if (!form.nombre.value || !form.descripcion.value) {
@@ -270,13 +338,14 @@ function abrirModalEditarLinea(linea) {
 function eliminarDimension(id, nombre) {
     Swal.fire({
         title: '¿Eliminar Dimensión?',
-        html: `Estás a punto de eliminar <strong>${nombre}</strong>. ¿Confirmas?`,
+        html: `Estás a punto de eliminar <strong>${nombre}</strong>. ¿Confirmas esta acción?`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#64748b',
+        cancelButtonColor: '#94a3b8',
         confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
+        cancelButtonText: 'Cancelar',
+        customClass: { popup: 'ag-swal-popup' }
     }).then((result) => {
         if (result.isConfirmed) {
             document.getElementById('deleteDimensionId').value = id;
@@ -288,20 +357,21 @@ function eliminarDimension(id, nombre) {
 function abrirModalCrearDimension(idLinea) {
     Swal.fire({
         title: 'Añadir Dimensión',
+        customClass: { popup: 'ag-swal-popup' },
         html: `
-            <div style="text-align: left;">
+            <div style="text-align: left; margin-top: 1rem;">
                 <form id="form-create-dim" method="POST" action="index.php?ruta=gestionar-dimensiones">
                     <input type="hidden" name="accion" value="crear">
                     <input type="hidden" name="id_linea" value="${idLinea}">
                     <input type="hidden" name="redirect_to" value="detalle-gestion-linea&id=${idLinea}">
                     
-                    <div style="margin-bottom:1rem;">
-                        <label style="display:block; font-weight:bold; margin-bottom:0.3rem;">Nombre</label>
-                        <input type="text" name="nombre" class="swal2-input" style="width:90%; margin:0;" required placeholder="Nombre de la dimensión...">
+                    <div style="margin-bottom:1.2rem;">
+                        <label class="ag-modal-label">Nombre de la Dimensión</label>
+                        <input type="text" name="nombre" class="ag-modal-input" required placeholder="Ej: Infraestructura Tecnológica">
                     </div>
                     <div>
-                        <label style="display:block; font-weight:bold; margin-bottom:0.3rem;">Descripción</label>
-                        <textarea name="descripcion" class="swal2-textarea" style="width:90%; margin:0; height:100px;" required placeholder="Descripción..."></textarea>
+                        <label class="ag-modal-label">Descripción</label>
+                        <textarea name="descripcion" class="ag-modal-input" style="height:120px; resize:none;" required placeholder="Detalla el enfoque de la dimensión..."></textarea>
                     </div>
                 </form>
             </div>
@@ -309,6 +379,8 @@ function abrirModalCrearDimension(idLinea) {
         showCancelButton: true,
         confirmButtonText: '<i class="ph-bold ph-floppy-disk"></i> Guardar',
         cancelButtonText: 'Cancelar',
+        confirmButtonColor: 'var(--color-primario, #1e293b)',
+        cancelButtonColor: '#94a3b8',
         preConfirm: () => {
             const form = document.getElementById('form-create-dim');
             if (!form.nombre.value || !form.descripcion.value) {
@@ -323,21 +395,22 @@ function abrirModalCrearDimension(idLinea) {
 function abrirModalEditarDimension(dim) {
     Swal.fire({
         title: 'Editar Dimensión',
+        customClass: { popup: 'ag-swal-popup' },
         html: `
-            <div style="text-align: left;">
+            <div style="text-align: left; margin-top: 1rem;">
                 <form id="form-edit-dim" method="POST" action="index.php?ruta=gestionar-dimensiones">
                     <input type="hidden" name="accion" value="editar">
                     <input type="hidden" name="id" value="${dim.id}">
                     <input type="hidden" name="id_linea" value="${dim.id_linea}">
                     <input type="hidden" name="redirect_to" value="detalle-gestion-linea&id=${dim.id_linea}">
                     
-                    <div style="margin-bottom:1rem;">
-                        <label style="display:block; font-weight:bold; margin-bottom:0.3rem;">Nombre</label>
-                        <input type="text" name="nombre" class="swal2-input" style="width:90%; margin:0;" required value="${dim.nombre.replace(/"/g, '&quot;')}">
+                    <div style="margin-bottom:1.2rem;">
+                        <label class="ag-modal-label">Nombre</label>
+                        <input type="text" name="nombre" class="ag-modal-input" required value="${dim.nombre.replace(/"/g, '&quot;')}">
                     </div>
                     <div>
-                        <label style="display:block; font-weight:bold; margin-bottom:0.3rem;">Descripción</label>
-                        <textarea name="descripcion" class="swal2-textarea" style="width:90%; margin:0; height:100px;" required>${dim.descripcion}</textarea>
+                        <label class="ag-modal-label">Descripción</label>
+                        <textarea name="descripcion" class="ag-modal-input" style="height:120px; resize:none;" required>${dim.descripcion}</textarea>
                     </div>
                 </form>
             </div>
@@ -345,6 +418,8 @@ function abrirModalEditarDimension(dim) {
         showCancelButton: true,
         confirmButtonText: '<i class="ph-bold ph-floppy-disk"></i> Guardar Cambios',
         cancelButtonText: 'Cancelar',
+        confirmButtonColor: 'var(--color-primario, #1e293b)',
+        cancelButtonColor: '#94a3b8',
         preConfirm: () => {
             const form = document.getElementById('form-edit-dim');
             if (!form.nombre.value || !form.descripcion.value) {
