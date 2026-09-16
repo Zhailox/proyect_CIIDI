@@ -109,6 +109,35 @@ class GestorLineasController {
     //  GESTIÓN DE DIMENSIONES OPERATIVAS
     // =========================================================
 
+
+    public function detalleGestionLinea() {
+        $id = (int)($_GET['id'] ?? 0);
+        if (!$id) {
+            header("Location: index.php?ruta=gestionar-lineas");
+            exit;
+        }
+
+        $lineasModel = new LineasModel();
+        $linea = $lineasModel->getLineaConCarrera($id);
+        if (!$linea) {
+            header("Location: index.php?ruta=gestionar-lineas");
+            exit;
+        }
+
+        $dimModel = new DimensionesModel();
+        $dimensiones = $dimModel->getPorLinea($id);
+
+        $mensaje = htmlspecialchars($_GET['msg'] ?? '');
+        $tipo_mensaje = htmlspecialchars($_GET['tipo'] ?? '');
+
+        return [
+            'linea'        => $linea,
+            'dimensiones'  => $dimensiones,
+            'mensaje'      => $mensaje,
+            'tipo_mensaje' => $tipo_mensaje
+        ];
+    }
+
     public function dimensiones() {
         $dimModel    = new DimensionesModel();
         $lineasModel = new LineasModel();

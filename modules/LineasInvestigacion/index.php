@@ -56,6 +56,14 @@ class LineasInvestigacionModule implements ModuleContract {
                 'controlador_path' => __DIR__ . '/controllers/GestorController.php',
                 'metodo'           => 'index'
             ],
+            'detalle-gestion-linea' => [
+                'vista'            => __DIR__ . '/views/detalle_gestion_linea.php',
+                'titulo'           => 'Detalle y Dimensiones',
+                'css'              => ['LineasInvestigacion.css'],
+                'controlador'      => 'GestorLineasController',
+                'controlador_path' => __DIR__ . '/controllers/GestorController.php',
+                'metodo'           => 'detalleGestionLinea'
+            ],
             // Panel Admin: Gestión CRUD de dimensiones operativas
             'gestionar-dimensiones' => [
                 'vista'            => __DIR__ . '/views/gestor_dimensiones.php',
@@ -81,6 +89,9 @@ class LineasInvestigacionModule implements ModuleContract {
                 'privilegio_minimo' => $nivelPublico,
                 'subitems'    => [
                     ['ruta' => 'lineas-investigacion',  'titulo' => 'Explorar Líneas', 'privilegio_minimo' => $nivelPublico],
+                    ['ruta' => 'analitica',             'titulo' => 'Analítica IA', 'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'gestionar-lineas',      'titulo' => 'Gestor de Líneas', 'privilegio_minimo' => $nivelAdmin],
+                ],
                     ['ruta' => 'analitica',             'titulo' => 'Analítica IA', 'privilegio_minimo' => $nivelAdmin],
                     ['ruta' => 'gestionar-lineas',      'titulo' => 'Gestionar Líneas', 'privilegio_minimo' => $nivelAdmin],
                     ['ruta' => 'gestionar-dimensiones', 'titulo' => 'Gestionar Dimensiones', 'privilegio_minimo' => $nivelAdmin],

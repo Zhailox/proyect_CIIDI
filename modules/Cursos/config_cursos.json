@@ -1,6 +1,6 @@
 {
     "paginacion": {
-        "limite_catalogo": 16,
+        "limite_catalogo": 2,
         "opciones_selector": [
             6,
             9,
