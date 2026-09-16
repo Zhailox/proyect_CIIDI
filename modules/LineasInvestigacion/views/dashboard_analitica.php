@@ -93,7 +93,7 @@
                         <option value="9">9 Trimestres (3 Años Académicos)</option>
                         <option value="12">12 Trimestres (4 Años Académicos)</option>
                     </select>
-                    <button id="btn-proyectar" style="background: #121a3e; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-weight: 700; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(18, 26, 62, 0.3); transition: all 0.2s ease;">
+                    <button id="btn-proyectar" style="background: #505984; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-weight: 700; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(80, 89, 132, 0.3); transition: all 0.2s ease; transition: all 0.2s ease;" onmouseover="this.style.background=\'#3C456A\'; this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.background=\'#505984\'; this.style.transform=\'translateY(0)\'">
                         <i class="ph-bold ph-magic-wand" style="font-size: 1.1rem;"></i> Actualizar Modelo
                     </button>
                 </div>

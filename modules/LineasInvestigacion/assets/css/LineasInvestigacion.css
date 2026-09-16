@@ -295,7 +295,7 @@
     gap: 0.5rem;
     width: 100%;
     padding: 0.65rem 1.25rem;
-    background: var(--li-text-title);
+    background: #505984;
     color: var(--text-white);
     border: none;
     border-radius: var(--li-card-radius);
@@ -308,7 +308,7 @@
 }
 
 .li-btn-ver:hover {
-    background: var(--color-secundario);
+    background: #3C456A;
     transform: translateY(-1px);
     color: var(--text-white);
     text-decoration: none;
@@ -322,7 +322,7 @@
 }
 
 .li-detail-hero {
-    background: linear-gradient(135deg, #0a0f24 0%, #121A3E 55%, #1e2d5a 100%);
+    background: linear-gradient(135deg, rgba(80, 89, 132, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%);
     border-radius: var(--li-card-radius);
     padding: 2.5rem;
     color: #fff;
@@ -601,7 +601,7 @@
 
 /* Banner del gestor */
 .li-gestor-banner {
-    background: linear-gradient(135deg, #0a0f24 0%, #121A3E 55%, #1e2d5a 100%);
+    background: linear-gradient(135deg, rgba(80, 89, 132, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%);
     border-radius: var(--li-card-radius);
     padding: 2rem 2.5rem;
     color: #fff;

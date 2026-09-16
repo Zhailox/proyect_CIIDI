@@ -252,7 +252,7 @@
                 <h2 style="margin:0 0 0.3rem 0; font-size:1.4rem; color:var(--texto-titulos, #0f172a); font-weight: 800;"><i class="ph-bold ph-squares-four"></i> Dimensiones Operativas (Componentes)</h2>
                 <p style="margin:0; font-size:0.95rem; color:var(--texto-silenciado, #64748b);">Gestione las dimensiones asociadas a esta línea de investigación.</p>
             </div>
-            <button type="button" onclick="abrirModalCrearDimension(<?= htmlspecialchars($linea['id']) ?>)" style="background: var(--color-primario, #1e293b); color: #ffffff; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+            <button type="button" onclick="abrirModalCrearDimension(<?= htmlspecialchars($linea['id']) ?>)" style="background: #505984; color: #ffffff; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(80,89,132,0.3);" onmouseover="this.style.background='#3C456A'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#505984'; this.style.transform='translateY(0)'">
                 <i class="ph-bold ph-plus"></i> Añadir Dimensión
             </button>
         </div>
@@ -323,7 +323,7 @@ function abrirModalEditarLinea(linea) {
         showCancelButton: true,
         confirmButtonText: '<i class="ph-bold ph-floppy-disk"></i> Guardar Cambios',
         cancelButtonText: 'Cancelar',
-        confirmButtonColor: 'var(--color-primario, #1e293b)',
+        confirmButtonColor: '#505984',
         cancelButtonColor: '#94a3b8',
         preConfirm: () => {
             const form = document.getElementById('form-edit-linea');
@@ -380,7 +380,7 @@ function abrirModalCrearDimension(idLinea) {
         showCancelButton: true,
         confirmButtonText: '<i class="ph-bold ph-floppy-disk"></i> Guardar',
         cancelButtonText: 'Cancelar',
-        confirmButtonColor: 'var(--color-primario, #1e293b)',
+        confirmButtonColor: '#505984',
         cancelButtonColor: '#94a3b8',
         preConfirm: () => {
             const form = document.getElementById('form-create-dim');
@@ -419,7 +419,7 @@ function abrirModalEditarDimension(dim) {
         showCancelButton: true,
         confirmButtonText: '<i class="ph-bold ph-floppy-disk"></i> Guardar Cambios',
         cancelButtonText: 'Cancelar',
-        confirmButtonColor: 'var(--color-primario, #1e293b)',
+        confirmButtonColor: '#505984',
         cancelButtonColor: '#94a3b8',
         preConfirm: () => {
             const form = document.getElementById('form-edit-dim');

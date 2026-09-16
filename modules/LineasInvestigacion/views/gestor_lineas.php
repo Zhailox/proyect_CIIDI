@@ -82,9 +82,9 @@
     color: var(--color-primario, #3b82f6);
 }
 .ag-btn-manage {
-    background: rgba(80, 89, 132, 0.05);
-    color: var(--color-primario, #1e293b);
-    border: 1px solid rgba(80, 89, 132, 0.15);
+    background: #505984;
+    color: #ffffff;
+    border: none;
     border-radius: 8px;
     padding: 10px 16px;
     font-weight: 700;
@@ -99,9 +99,10 @@
     width: 100%;
 }
 .ag-btn-manage:hover {
-    background: var(--color-primario, #1e293b);
+    background: #3C456A;
     color: white;
-    box-shadow: 0 4px 12px rgba(18, 26, 62, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(80, 89, 132, 0.3);
 }
 .ag-btn-delete {
     color: #ef4444;
@@ -177,7 +178,7 @@
                 </p>
             </div>
             <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                <button type="button" onclick="abrirModalCrearLinea()" style="border: none; color: #1e293b; background: #ffffff; padding: 10px 18px; border-radius: 8px; font-weight: 800; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                <button type="button" onclick="abrirModalCrearLinea()" style="border: none; color: #1e293b; background: #505984; padding: 10px 18px; border-radius: 8px; font-weight: 800; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: 0.2s;" onmouseover="this.style.background='#3C456A'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#505984'; this.style.transform='translateY(0)'">
                     <i class="ph-bold ph-plus-circle"></i> Nueva Línea
                 </button>
                 <a href="index.php?ruta=lineas-investigacion" style="border: 1px solid rgba(255,255,255,0.3); color: #ffffff; background: rgba(255,255,255,0.1); text-decoration: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
@@ -299,7 +300,7 @@ function abrirModalCrearLinea() {
         showCancelButton: true,
         confirmButtonText: '<i class="ph-bold ph-floppy-disk"></i> Registrar Línea',
         cancelButtonText: 'Cancelar',
-        confirmButtonColor: 'var(--color-primario, #1e293b)',
+        confirmButtonColor: '#505984',
         cancelButtonColor: '#94a3b8',
         preConfirm: () => {
             const form = document.getElementById('form-create-linea');
