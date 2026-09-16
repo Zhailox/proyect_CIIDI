@@ -217,14 +217,21 @@
                     Gestione las líneas, asocie dimensiones operativas internamente y controle su configuración.
                 </p>
             </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 12px; z-index: 1;">
             <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                <button type="button" onclick="abrirModalCrearLinea()" style="background: #ffffff; color: #0f172a; padding: 10px 18px; border: none; border-radius: 8px; font-weight: 800; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: 0.2s;" onmouseover="this.style.background=\'#f1f5f9\'; this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.background=\'#ffffff\'; this.style.transform=\'translateY(0)\'">
+                <button type="button" onclick="abrirModalCrearLinea()" style="background: #ffffff; color: #0f172a; padding: 10px 18px; border: none; border-radius: 8px; font-weight: 800; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: 0.2s;" onmouseover="this.style.background='#f1f5f9'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'">
                     <i class="ph-bold ph-plus-circle"></i> Nueva Línea
                 </button>
                 <a href="index.php?ruta=lineas-investigacion" style="border: 1px solid rgba(255,255,255,0.3); color: #ffffff; background: rgba(255,255,255,0.1); text-decoration: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
                     <i class="ph-bold ph-eye"></i> Vista Pública
                 </a>
             </div>
+            
+            <div style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); padding: 4px; border-radius: 8px; display: inline-flex; gap: 4px;">
+                <button type="button" id="btnViewGrid" title="Vista Cuadrícula" onclick="setLineaViewMode('grid')" style="border:none; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 600; transition: 0.2s; background: rgba(255,255,255,0.2); color: #ffffff;"><i class="ph-bold ph-squares-four" style="font-size: 1.1rem;"></i></button>
+                <button type="button" id="btnViewList" title="Vista Lista" onclick="setLineaViewMode('list')" style="border:none; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 600; transition: 0.2s; background: transparent; color: rgba(255,255,255,0.6);"><i class="ph-bold ph-list" style="font-size: 1.1rem;"></i></button>
+            </div>
+        </div>
         </div>
     </div>
 
@@ -238,13 +245,7 @@
 
     <!-- GRID DE TARJETAS DE LÍNEAS -->
     
-    <!-- BARRA DE CONTROLES (VISTA) -->
-    <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; margin-top: -15px;">
-        <div style="background: #e2e8f0; padding: 4px; border-radius: 8px; display: inline-flex; gap: 4px;">
-            <button type="button" id="btnViewGrid" title="Vista Cuadrícula" onclick="setLineaViewMode('grid')" style="border:none; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.85rem; transition: 0.2s; background: #ffffff; color: #1e293b; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><i class="ph-bold ph-squares-four" style="font-size: 1.1rem;"></i></button>
-            <button type="button" id="btnViewList" title="Vista Lista" onclick="setLineaViewMode('list')" style="border:none; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.85rem; transition: 0.2s; background: transparent; color: #64748b;"><i class="ph-bold ph-list" style="font-size: 1.1rem;"></i></button>
-        </div>
-    </div>
+    
 
 <div class="ag-modules-grid">
         <?php foreach($lineas as $li): ?>
@@ -439,16 +440,16 @@ function setLineaViewMode(mode) {
     if (!gridEl) return;
     
     // reset styles
-    btnGrid.style.background = 'transparent'; btnGrid.style.color = '#64748b'; btnGrid.style.boxShadow = 'none';
-    btnList.style.background = 'transparent'; btnList.style.color = '#64748b'; btnList.style.boxShadow = 'none';
+    btnGrid.style.background = 'transparent'; btnGrid.style.color = 'rgba(255,255,255,0.6)';
+    btnList.style.background = 'transparent'; btnList.style.color = 'rgba(255,255,255,0.6)';
 
     if (mode === 'list') {
         gridEl.classList.add('ag-view-list');
-        btnList.style.background = '#ffffff'; btnList.style.color = '#1e293b'; btnList.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        btnList.style.background = 'rgba(255,255,255,0.2)'; btnList.style.color = '#ffffff';
         localStorage.setItem('lineas_view_mode', 'list');
     } else {
         gridEl.classList.remove('ag-view-list');
-        btnGrid.style.background = '#ffffff'; btnGrid.style.color = '#1e293b'; btnGrid.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        btnGrid.style.background = 'rgba(255,255,255,0.2)'; btnGrid.style.color = '#ffffff';
         localStorage.setItem('lineas_view_mode', 'grid');
     }
 }
