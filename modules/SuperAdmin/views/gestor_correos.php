@@ -32,7 +32,7 @@
 <?php endif; ?>
 
 <!-- TABS SUPERADMIN DE CORREOS -->
-<div class="sa-tabs-header glass-panel mb-2" style="background: #ffffff; padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(80,89,132,0.15); display: flex; flex-wrap: wrap; gap: 4px;">
+<div class="sa-tabs-header glass-panel mb-2" style="background: #ffffff; padding: 6px 8px; border-radius: var(--radius-sm); border: 1px solid rgba(80,89,132,0.15); display: flex; flex-wrap: wrap; gap: 6px; box-shadow: 0 2px 8px rgba(18, 26, 62, 0.04);">
     <button type="button" class="sa-tab-btn tab-active" onclick="switchMailTab('tabCorreoDirecto', this)">
         <i class="ph-bold ph-paper-plane-tilt"></i> Enviar Correo Directo
     </button>
@@ -40,199 +40,233 @@
         <i class="ph-bold ph-clock-counter-clockwise"></i> Historial de Envíos
     </button>
     <button type="button" class="sa-tab-btn" onclick="switchMailTab('tabConexionSmtp', this)">
-        <i class="ph-bold ph-envelope-simple"></i> Conexión & Credenciales SMTP
-    </button>
-    <button type="button" class="sa-tab-btn" onclick="switchMailTab('tabPruebaLive', this)">
-        <i class="ph-bold ph-paper-plane-right"></i> Diagnóstico / Correo de Prueba
+        <i class="ph-bold ph-gear"></i> Credenciales & Diagnóstico SMTP
     </button>
     <button type="button" class="sa-tab-btn" onclick="switchMailTab('tabLayoutBase', this)">
-        <i class="ph-bold ph-paint-brush"></i> Layout Institucional Base
+        <i class="ph-bold ph-paint-brush"></i> Layout Base Institucional
     </button>
     <button type="button" class="sa-tab-btn" onclick="switchMailTab('tabPlantillas', this)">
         <i class="ph-bold ph-layout"></i> Catálogo de Plantillas
     </button>
 </div>
 
-<!-- TAB 0: ENVIAR CORREO DIRECTO / COMUNICADO (SIMPLIFICADO Y MULTI-DESTINATARIO) -->
+<!-- TAB 0: ENVIAR CORREO DIRECTO / COMUNICADO (LAYOUT 2 COLUMNAS CON SIDEBAR DE PLANTILLAS REUTILIZABLES) -->
 <div id="tabCorreoDirecto" class="sa-tab-content active">
-    <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-sm); background:#ffffff;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
-            <div>
+    <div style="display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start;">
+        
+        <!-- COLUMNA IZQUIERDA: FORMULARIO PRINCIPAL DE COMPOSICIÓN -->
+        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-sm); background:#ffffff;">
+            <div style="margin-bottom: 1.25rem;">
                 <h4 style="margin: 0 0 0.3rem 0; font-size: 1.1rem; font-weight: 800; color: #121a3e; display: flex; align-items: center; gap: 6px;">
-                    <i class="ph-bold ph-paper-plane-tilt" style="color: var(--color-terciario);"></i> Componer y Enviar Correo Directo
+                    <i class="ph-bold ph-paper-plane-tilt" style="color: var(--color-secundario);"></i> Componer y Enviar Correo Directo
                 </h4>
                 <p style="font-size: 0.85rem; color: #64748b; margin: 0;">
                     Redacte comunicados o mensajes personalizados agregando múltiples destinatarios fácilmente.
                 </p>
             </div>
-            
-            <!-- SELECTOR DE PLANTILLAS REUTILIZABLES ALMACENADAS -->
-            <div style="display: flex; gap: 8px; align-items: center;">
-                <label style="font-size: 0.8rem; font-weight: 700; color: #334155; white-space: nowrap;"><i class="ph-bold ph-bookmark-simple" style="color: #2563eb;"></i> Cargar Plantilla:</label>
-                <select id="select_cargar_plantilla_custom" class="sa-filter-input" style="font-size: 0.8rem; padding: 6px 12px; max-width: 250px;" onchange="cargarPlantillaEnEditor(this.value)">
-                    <option value="">-- Seleccionar Plantilla --</option>
-                    <?php if (!empty($plantillasPersonalizadas)): ?>
-                        <?php foreach ($plantillasPersonalizadas as $pKey => $pData): ?>
-                            <option value="<?= htmlspecialchars($pKey) ?>"><?= htmlspecialchars($pData['nombre']) ?></option>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </select>
-            </div>
+
+            <form action="enviar-correo-directo" method="POST" id="formCorreoDirecto" onsubmit="sincronizarCuerpoOculto();">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+
+                <!-- SELECCIÓN DE TIPO DE DESTINATARIO -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem;">
+                    <label style="font-size: 0.85rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 10px;">
+                        ¿A quién va dirigido este correo?
+                    </label>
+                    <div style="display: flex; gap: 1.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                        <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #334155; cursor: pointer;">
+                            <input type="radio" name="modo_destino" value="individual" checked onclick="toggleModoDestino('individual')" style="width: 16px; height: 16px;">
+                            Selección Interactiva / Multi-Destinatario
+                        </label>
+                        <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #334155; cursor: pointer;">
+                            <input type="radio" name="modo_destino" value="rol" onclick="toggleModoDestino('rol')" style="width: 16px; height: 16px;">
+                            Grupo / Rol Completo de Usuarios
+                        </label>
+                    </div>
+
+                    <!-- CAMPO INDIVIDUAL INTERACTIVO (BÚSQUEDA AJAX AUTOCOMPLETE + CHIPS) -->
+                    <div id="campo-destino-individual">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                            <!-- BUSCADOR CON SUGERENCIAS DESPLEGABLES -->
+                            <div style="position: relative;">
+                                <label style="font-size: 0.8rem; font-weight: 700; color: #475569; display: block; margin-bottom: 6px;">
+                                    <i class="ph-bold ph-magnifying-glass"></i> Buscar Usuario (Nombre, Cédula o Correo):
+                                </label>
+                                <input type="text" id="input_buscar_usuario_ajax" oninput="buscarUsuariosLive(this.value)" placeholder="Escriba para buscar usuario..." class="sa-filter-input" style="width: 100%; font-size: 0.85rem;" autocomplete="off">
+                                
+                                <!-- MENU DE SUGERENCIAS FLOTANTE -->
+                                <div id="dropdown_sugerencias_usuarios" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; max-height: 220px; overflow-y: auto; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 900; margin-top: 4px;">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label style="font-size: 0.8rem; font-weight: 700; color: #475569; display: block; margin-bottom: 6px;">
+                                    <i class="ph-bold ph-envelope-simple"></i> O añadir correo directo (presione Enter o coma):
+                                </label>
+                                <div style="display: flex; gap: 6px;">
+                                    <input type="email" id="input_email_libre" placeholder="ejemplo@upttmbi.edu.ve" class="sa-filter-input" style="width: 100%;" onkeydown="if(event.key==='Enter'||event.key===','){ event.preventDefault(); agregarCorreoDirectoManual(); }">
+                                    <button type="button" onclick="agregarCorreoDirectoManual()" class="btn" style="background: var(--color-secundario); color: #ffffff !important; border:none; padding: 0 14px; border-radius: 6px; font-weight: 700; cursor: pointer; white-space: nowrap;">
+                                        <i class="ph-bold ph-plus"></i> Añadir
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CHIPS DE DESTINATARIOS -->
+                        <div>
+                            <label style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
+                                Destinatarios Seleccionados (<span id="count-destinatarios">0</span>):
+                            </label>
+                            <div id="contenedor-chips-destinatarios" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; min-height: 48px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+                                <span id="placeholder-chips" style="color: #94a3b8; font-size: 0.8rem; font-style: italic;">Empiece a escribir en el buscador superior para seleccionar destinatarios.</span>
+                            </div>
+                            <div id="inputs-ocultos-destinatarios"></div>
+                        </div>
+                    </div>
+
+                    <!-- CAMPO ROL -->
+                    <div id="campo-destino-rol" style="display: none;">
+                        <label style="font-size: 0.8rem; font-weight: 700; color: #475569; display: block; margin-bottom: 6px;">Seleccionar Grupo de Usuarios:</label>
+                        <select name="rol_id" class="sa-filter-input" style="width: 100%; max-width: 400px;">
+                            <option value="0">-- Enviar a TODOS los Usuarios Registrados --</option>
+                            <?php foreach ($roles as $r): ?>
+                                <option value="<?= $r['id'] ?>">Enviar solo a Rol: <?= htmlspecialchars($r['nombre']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ASUNTO DEL MENSAJE -->
+                <div style="margin-bottom: 1.25rem;">
+                    <label style="font-size: 0.85rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">
+                        Asunto del Mensaje:
+                    </label>
+                    <input type="text" name="asunto" required placeholder="Ej: Comunicado Urgente sobre Inicio de Clases" class="sa-filter-input" style="width: 100%; font-size: 0.95rem; padding: 10px 14px;">
+                </div>
+
+                <!-- CONSTRUCTOR DE BLOQUES PRECONSTRUIDOS Y EDITOR DE FORMATO ENRIQUECIDO -->
+                <div style="margin-bottom: 1.25rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+                        <label style="font-size: 0.85rem; font-weight: 700; color: #1e293b; margin: 0;">
+                            Cuerpo del Correo y Diseño Estructurado:
+                        </label>
+                        
+                        <!-- BOTONES PARA INSERTAR SECCIONES / BLOQUES PRECONSTRUIDOS -->
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; align-self: center;">+ Insertar Sección:</span>
+                            <button type="button" onclick="insertarBloqueSeccion('titulo')" style="background: #eff6ff; color: var(--color-secundario) !important; border: 1px solid #bfdbfe; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.15s;">
+                                <i class="ph-bold ph-text-h-two" style="color: var(--color-secundario) !important;"></i> <span style="color: var(--color-secundario) !important;">Título de Sección</span>
+                            </button>
+                            <button type="button" onclick="insertarBloqueSeccion('destacado')" style="background: #eff6ff; color: var(--color-secundario) !important; border: 1px solid #bfdbfe; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.15s;">
+                                <i class="ph-bold ph-star" style="color: var(--color-secundario) !important;"></i> <span style="color: var(--color-secundario) !important;">Caja Destacada</span>
+                            </button>
+                            <button type="button" onclick="insertarBloqueSeccion('boton')" style="background: #eff6ff; color: var(--color-secundario) !important; border: 1px solid #bfdbfe; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.15s;">
+                                <i class="ph-bold ph-cursor-click" style="color: var(--color-secundario) !important;"></i> <span style="color: var(--color-secundario) !important;">Botón con Enlace</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- BARRA DE HERRAMIENTAS DE FORMATO (EDITOR ENRIQUECIDO) -->
+                    <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-bottom: none; border-radius: 6px 6px 0 0; padding: 6px 10px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                        <button type="button" onclick="ejecutarComandoEditor('bold')" title="Negrita" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-weight: bold; cursor: pointer;">B</button>
+                        <button type="button" onclick="ejecutarComandoEditor('italic')" title="Cursiva" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-style: italic; cursor: pointer;">I</button>
+                        <button type="button" onclick="ejecutarComandoEditor('underline')" title="Subrayado" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; text-decoration: underline; cursor: pointer;">U</button>
+                        <div style="width: 1px; height: 18px; background: #cbd5e1; margin: 0 4px;"></div>
+                        
+                        <select onchange="ejecutarComandoEditor('fontSize', this.value)" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 3px 6px; font-size: 0.75rem; cursor: pointer;">
+                            <option value="3">Tamaño Normal</option>
+                            <option value="1">Pequeño</option>
+                            <option value="4">Mediano</option>
+                            <option value="6">Grande Encabezado</option>
+                        </select>
+
+                        <input type="color" onchange="ejecutarComandoEditor('foreColor', this.value)" title="Color del Texto" style="width: 28px; height: 26px; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer; padding: 1px; background: #ffffff;">
+
+                        <div style="width: 1px; height: 18px; background: #cbd5e1; margin: 0 4px;"></div>
+
+                        <button type="button" onclick="ejecutarComandoEditor('insertUnorderedList')" title="Lista de Viñetas" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; cursor: pointer;"><i class="ph-bold ph-list-bullets"></i></button>
+                        <button type="button" onclick="ejecutarComandoEditor('insertOrderedList')" title="Lista Numerada" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; cursor: pointer;"><i class="ph-bold ph-list-numbers"></i></button>
+                    </div>
+
+                    <!-- CANVAS / AREA EDICION WYSIWYG -->
+                    <div id="editor-cuerpo-wysiwyg" contenteditable="true" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 0 0 6px 6px; min-height: 250px; padding: 16px; font-family: Arial, sans-serif; font-size: 0.95rem; line-height: 1.6; outline: none;" oninput="sincronizarCuerpoOculto()">
+                        <p>Redacte su mensaje aquí o use los botones superiores para insertar secciones estructuradas...</p>
+                    </div>
+
+                    <!-- TEXTAREA OCULTO QUE SE ENVIA CON EL FORMULARIO POST -->
+                    <textarea name="mensaje" id="input_mensaje_oculto" style="display: none;" required></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 16px; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; color: #334155; cursor: pointer;">
+                        <input type="checkbox" name="usar_layout" value="1" checked style="width: 16px; height: 16px;">
+                        Envolver en el Encabezado y Pie de Página Institucional UPTTMBI
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                    <button type="submit" class="btn" style="background-color: var(--color-secundario) !important; color: #ffffff !important; border:none; padding: 12px 28px; border-radius: 6px; font-weight: 700; font-size: 0.9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                        <i class="ph-bold ph-paper-plane-tilt" style="color: #ffffff !important;"></i> <span style="color: #ffffff !important;">Enviar Correo Ahora</span>
+                    </button>
+
+                    <button type="button" onclick="previsualizarCorreoDirecto()" class="btn" style="background: #ffffff; color: #1e293b !important; border: 1px solid #cbd5e1; padding: 12px 20px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                        <i class="ph-bold ph-eye" style="color: #1e293b !important;"></i> <span style="color: #1e293b !important;">Vista Previa del Mensaje</span>
+                    </button>
+
+                    <button type="button" onclick="abrirModalGuardarPlantilla()" class="btn" style="background: #f1f5f9; color: #334155 !important; border: 1px solid #cbd5e1; padding: 12px 20px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                        <i class="ph-bold ph-floppy-disk" style="color: #334155 !important;"></i> <span style="color: #334155 !important;">Guardar como Plantilla</span>
+                    </button>
+                </div>
+            </form>
         </div>
 
-        <form action="enviar-correo-directo" method="POST" style="max-width: 900px;" id="formCorreoDirecto">
-            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+        <!-- COLUMNA DERECHA: SECCIÓN LATERAL DE PLANTILLAS REUTILIZABLES DE USUARIO -->
+        <div class="glass-panel" style="padding: 1.25rem; border-radius: var(--radius-sm); background:#ffffff;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">
+                <h5 style="margin: 0; font-size: 0.95rem; font-weight: 800; color: #121a3e; display: flex; align-items: center; gap: 6px;">
+                    <i class="ph-bold ph-bookmark-simple" style="color: var(--color-terciario);"></i> Plantillas Reutilizables
+                </h5>
+                <span style="font-size: 0.7rem; font-weight: 800; color: var(--color-secundario); background: #eff6ff; padding: 2px 8px; border-radius: 12px;">
+                    <?= count($plantillasPersonalizadas ?? []) ?>
+                </span>
+            </div>
+            <p style="font-size: 0.78rem; color: #64748b; margin: 0 0 1rem 0;">
+                Haga clic en cualquiera de sus plantillas guardadas para cargar su contenido en el editor.
+            </p>
 
-            <!-- SELECCIÓN DE TIPO DE DESTINATARIO -->
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem;">
-                <label style="font-size: 0.85rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 10px;">
-                    ¿A quién va dirigido este correo?
-                </label>
-                <div style="display: flex; gap: 1.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
-                    <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #334155; cursor: pointer;">
-                        <input type="radio" name="modo_destino" value="individual" checked onclick="toggleModoDestino('individual')" style="width: 16px; height: 16px;">
-                        Selección Interactiva / Multi-Destinatario
-                    </label>
-                    <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #334155; cursor: pointer;">
-                        <input type="radio" name="modo_destino" value="rol" onclick="toggleModoDestino('rol')" style="width: 16px; height: 16px;">
-                        Grupo / Rol Completo de Usuarios
-                    </label>
+            <?php if (empty($plantillasPersonalizadas)): ?>
+                <div style="text-align: center; padding: 2rem 0.5rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; color: #64748b;">
+                    <i class="ph-bold ph-floppy-disk-back" style="font-size: 2rem; color: #cbd5e1; margin-bottom: 0.5rem; display: block;"></i>
+                    <p style="margin: 0; font-size: 0.8rem; font-weight: 600;">Sin plantillas guardadas aún.</p>
+                    <span style="font-size: 0.75rem; color: #94a3b8; display: block; margin-top: 4px;">Use "Guardar como Plantilla" en el editor.</span>
                 </div>
-
-                <!-- CAMPO INDIVIDUAL INTERACTIVO (BÚSQUEDA AJAX AUTOCOMPLETE + CHIPS) -->
-                <div id="campo-destino-individual">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
-                        <!-- BUSCADOR CON SUGERENCIAS DESPLEGABLES -->
-                        <div style="position: relative;">
-                            <label style="font-size: 0.8rem; font-weight: 700; color: #475569; display: block; margin-bottom: 6px;">
-                                <i class="ph-bold ph-magnifying-glass"></i> Buscar Usuario (Nombre, Cédula o Correo):
-                            </label>
-                            <input type="text" id="input_buscar_usuario_ajax" oninput="buscarUsuariosLive(this.value)" placeholder="Escriba para buscar usuario..." class="sa-filter-input" style="width: 100%; font-size: 0.85rem;" autocomplete="off">
-                            
-                            <!-- MENU DE SUGERENCIAS FLOTANTE -->
-                            <div id="dropdown_sugerencias_usuarios" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; max-height: 220px; overflow-y: auto; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 900; margin-top: 4px;">
+            <?php else: ?>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 520px; overflow-y: auto; padding-right: 4px;">
+                    <?php foreach ($plantillasPersonalizadas as $pKey => $pData): ?>
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; transition: all 0.2s; position: relative;" onmouseover="this.style.borderColor='var(--color-secundario)'; this.style.background='#ffffff';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='#f8fafc';">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <span style="font-size: 0.68rem; font-weight: 800; color: var(--color-secundario); text-transform: uppercase;">
+                                    REUTILIZABLE
+                                </span>
+                                <span style="font-size: 0.7rem; color: #94a3b8;">
+                                    <?= isset($pData['fecha']) ? date('d/m/Y', strtotime($pData['fecha'])) : '' ?>
+                                </span>
                             </div>
+                            <h5 style="margin: 0 0 4px 0; font-size: 0.88rem; font-weight: 800; color: #1e293b;">
+                                <?= htmlspecialchars($pData['nombre']) ?>
+                            </h5>
+                            <p style="margin: 0 0 10px 0; font-size: 0.78rem; color: #64748b; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35;">
+                                <strong>Asunto:</strong> <?= htmlspecialchars($pData['asunto'] ?? 'Sin Asunto') ?>
+                            </p>
+                            <button type="button" onclick="cargarPlantillaEnEditor('<?= htmlspecialchars($pKey) ?>')" style="background: var(--color-secundario); color: #ffffff !important; border: none; padding: 6px 10px; border-radius: 5px; font-weight: 700; font-size: 0.75rem; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 4px; transition: background 0.15s;">
+                                <i class="ph-bold ph-download-simple" style="color: #ffffff !important;"></i> Cargar en Editor
+                            </button>
                         </div>
-
-                        <div>
-                            <label style="font-size: 0.8rem; font-weight: 700; color: #475569; display: block; margin-bottom: 6px;">
-                                <i class="ph-bold ph-envelope-simple"></i> O añadir correo directo (presione Enter o coma):
-                            </label>
-                            <div style="display: flex; gap: 6px;">
-                                <input type="email" id="input_email_libre" placeholder="ejemplo@upttmbi.edu.ve" class="sa-filter-input" style="width: 100%;" onkeydown="if(event.key==='Enter'||event.key===','){ event.preventDefault(); agregarCorreoDirectoManual(); }">
-                                <button type="button" onclick="agregarCorreoDirectoManual()" class="btn" style="background: #10b981; color: #ffffff !important; border:none; padding: 0 14px; border-radius: 6px; font-weight: 700; cursor: pointer; white-space: nowrap;">
-                                    <i class="ph-bold ph-plus"></i> Añadir
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- CHIPS DE DESTINATARIOS -->
-                    <div>
-                        <label style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
-                            Destinatarios Seleccionados (<span id="count-destinatarios">0</span>):
-                        </label>
-                        <div id="contenedor-chips-destinatarios" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; min-height: 48px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
-                            <span id="placeholder-chips" style="color: #94a3b8; font-size: 0.8rem; font-style: italic;">Empiece a escribir en el buscador superior para seleccionar destinatarios.</span>
-                        </div>
-                        <div id="inputs-ocultos-destinatarios"></div>
-                    </div>
+                    <?php endforeach; ?>
                 </div>
+            <?php endif; ?>
+        </div>
 
-                <!-- CAMPO ROL -->
-                <div id="campo-destino-rol" style="display: none;">
-                    <label style="font-size: 0.8rem; font-weight: 700; color: #475569; display: block; margin-bottom: 6px;">Seleccionar Grupo de Usuarios:</label>
-                    <select name="rol_id" class="sa-filter-input" style="width: 100%; max-width: 400px;">
-                        <option value="0">-- Enviar a TODOS los Usuarios Registrados --</option>
-                        <?php foreach ($roles as $r): ?>
-                            <option value="<?= $r['id'] ?>">Enviar solo a Rol: <?= htmlspecialchars($r['nombre']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
-
-            <!-- ASUNTO DEL MENSAJE -->
-            <div style="margin-bottom: 1.25rem;">
-                <label style="font-size: 0.85rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">
-                    Asunto del Mensaje:
-                </label>
-                <input type="text" name="asunto" required placeholder="Ej: Comunicado Urgente sobre Inicio de Clases" class="sa-filter-input" style="width: 100%; font-size: 0.95rem; padding: 10px 14px;">
-            </div>
-
-            <!-- CONSTRUCTOR DE BLOQUES PRECONSTRUIDOS Y EDITOR DE FORMATO ENRIQUECIDO -->
-            <div style="margin-bottom: 1.25rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
-                    <label style="font-size: 0.85rem; font-weight: 700; color: #1e293b; margin: 0;">
-                        Cuerpo del Correo y Diseño Estructurado:
-                    </label>
-                    
-                    <!-- BOTONES PARA INSERTAR SECCIONES / BLOQUES PRECONSTRUIDOS -->
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                        <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; align-self: center;">+ Insertar Sección:</span>
-                        <button type="button" onclick="insertarBloqueSeccion('titulo')" style="background: #eff6ff; color: #1d4ed8 !important; border: 1px solid #bfdbfe; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.15s;">
-                            <i class="ph-bold ph-text-h-two" style="color: #1d4ed8 !important;"></i> <span style="color: #1d4ed8 !important;">Título de Sección</span>
-                        </button>
-                        <button type="button" onclick="insertarBloqueSeccion('destacado')" style="background: #eff6ff; color: #1d4ed8 !important; border: 1px solid #bfdbfe; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.15s;">
-                            <i class="ph-bold ph-star" style="color: #1d4ed8 !important;"></i> <span style="color: #1d4ed8 !important;">Caja Destacada</span>
-                        </button>
-                        <button type="button" onclick="insertarBloqueSeccion('boton')" style="background: #eff6ff; color: #1d4ed8 !important; border: 1px solid #bfdbfe; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.15s;">
-                            <i class="ph-bold ph-cursor-click" style="color: #1d4ed8 !important;"></i> <span style="color: #1d4ed8 !important;">Botón con Enlace</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- BARRA DE HERRAMIENTAS DE FORMATO (EDITOR ENRIQUECIDO) -->
-                <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-bottom: none; border-radius: 6px 6px 0 0; padding: 6px 10px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
-                    <button type="button" onclick="ejecutarComandoEditor('bold')" title="Negrita" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-weight: bold; cursor: pointer;">B</button>
-                    <button type="button" onclick="ejecutarComandoEditor('italic')" title="Cursiva" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-style: italic; cursor: pointer;">I</button>
-                    <button type="button" onclick="ejecutarComandoEditor('underline')" title="Subrayado" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; text-decoration: underline; cursor: pointer;">U</button>
-                    <div style="width: 1px; height: 18px; background: #cbd5e1; margin: 0 4px;"></div>
-                    
-                    <select onchange="ejecutarComandoEditor('fontSize', this.value)" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 3px 6px; font-size: 0.75rem; cursor: pointer;">
-                        <option value="3">Tamaño Normal</option>
-                        <option value="1">Pequeño</option>
-                        <option value="4">Mediano</option>
-                        <option value="6">Grande Encabezado</option>
-                    </select>
-
-                    <input type="color" onchange="ejecutarComandoEditor('foreColor', this.value)" title="Color del Texto" style="width: 28px; height: 26px; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer; padding: 1px; background: #ffffff;">
-
-                    <div style="width: 1px; height: 18px; background: #cbd5e1; margin: 0 4px;"></div>
-
-                    <button type="button" onclick="ejecutarComandoEditor('insertUnorderedList')" title="Lista de Viñetas" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; cursor: pointer;"><i class="ph-bold ph-list-bullets"></i></button>
-                    <button type="button" onclick="ejecutarComandoEditor('insertOrderedList')" title="Lista Numerada" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; cursor: pointer;"><i class="ph-bold ph-list-numbers"></i></button>
-                </div>
-
-                <!-- CANVAS / AREA EDICION WYSIWYG -->
-                <div id="editor-cuerpo-wysiwyg" contenteditable="true" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 0 0 6px 6px; min-height: 250px; padding: 16px; font-family: Arial, sans-serif; font-size: 0.95rem; line-height: 1.6; outline: none;" oninput="sincronizarCuerpoOculto()">
-                    <p>Redacte su mensaje aquí o use los botones superiores para insertar secciones estructuradas...</p>
-                </div>
-
-                <!-- TEXTAREA OCULTO QUE SE ENVIA CON EL FORMULARIO POST -->
-                <textarea name="mensaje" id="input_mensaje_oculto" style="display: none;" required></textarea>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 16px; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; color: #334155; cursor: pointer;">
-                    <input type="checkbox" name="usar_layout" value="1" checked style="width: 16px; height: 16px;">
-                    Envolver en el Encabezado y Pie de Página Institucional UPTTMBI
-                </label>
-            </div>
-
-            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-                <button type="submit" class="btn" style="background-color: #2563eb !important; color: #ffffff !important; border:none; padding: 12px 28px; border-radius: 6px; font-weight: 700; font-size: 0.9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
-                    <i class="ph-bold ph-paper-plane-tilt" style="color: #ffffff !important;"></i> <span style="color: #ffffff !important;">Enviar Correo Ahora</span>
-                </button>
-
-                <button type="button" onclick="previsualizarCorreoDirecto()" class="btn" style="background: #ffffff; color: #1e293b !important; border: 1px solid #cbd5e1; padding: 12px 20px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
-                    <i class="ph-bold ph-eye" style="color: #1e293b !important;"></i> <span style="color: #1e293b !important;">Vista Previa del Mensaje</span>
-                </button>
-
-                <button type="button" onclick="abrirModalGuardarPlantilla()" class="btn" style="background: #f1f5f9; color: #334155 !important; border: 1px solid #cbd5e1; padding: 12px 20px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
-                    <i class="ph-bold ph-floppy-disk" style="color: #334155 !important;"></i> <span style="color: #334155 !important;">Guardar como Plantilla</span>
-                </button>
-            </div>
-        </form>
     </div>
 </div>
 
@@ -321,79 +355,90 @@
     </div>
 </div>
 
-<!-- TAB 1: CONEXIÓN & CREDENCIALES SMTP -->
+<!-- TAB 1: CONEXIÓN & CREDENCIALES + DIAGNÓSTICO EN VIVO (UNIFICADO) -->
 <div id="tabConexionSmtp" class="sa-tab-content" style="display:none;">
-    <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-sm); background:#ffffff;">
-        <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem; font-weight: 700; color: var(--texto-titulos); display: flex; align-items: center; gap: 6px;">
-            <i class="ph-bold ph-gear" style="color: var(--color-terciario);"></i> Ajustes del Servidor SMTP Institucional
-        </h4>
-        <p style="font-size: 0.85rem; color: var(--texto-silenciado); margin-bottom: 1.25rem;">
-            Credenciales utilizadas para el envío masivo e individual de notificaciones en la plataforma.
-        </p>
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         
-        <form action="guardar-configuracion-sistema" method="POST">
-            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+        <!-- SECCIÓN SUPERIOR: CONFIGURACIÓN DE CREDENCIALES -->
+        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-sm); background:#ffffff;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+                <div>
+                    <h4 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #121a3e; display: flex; align-items: center; gap: 8px;">
+                        <i class="ph-bold ph-gear" style="color: var(--color-terciario);"></i> Ajustes de Conexión del Servidor SMTP Institucional
+                    </h4>
+                    <p style="font-size: 0.85rem; color: #64748b; margin: 4px 0 0 0;">
+                        Credenciales utilizadas para la autenticación y transmisión masiva e individual de notificaciones.
+                    </p>
+                </div>
+            </div>
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
-                <div>
-                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 6px;">Servidor Host (SMTP)</label>
-                    <input type="text" name="smtp_host" value="<?= htmlspecialchars($config['smtp']['host'] ?? '') ?>" placeholder="smtp.gmail.com / smtp.office365.com" class="sa-filter-input" style="width: 100%;">
+            <form action="guardar-configuracion-sistema" method="POST">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Servidor Host (SMTP)</label>
+                        <input type="text" name="smtp_host" value="<?= htmlspecialchars($config['smtp']['host'] ?? '') ?>" placeholder="smtp.gmail.com / smtp.office365.com" class="sa-filter-input" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Puerto (TLS / SSL)</label>
+                        <input type="number" name="smtp_port" value="<?= (int)($config['smtp']['port'] ?? 587) ?>" class="sa-filter-input" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Usuario Authenticated Email</label>
+                        <input type="email" name="smtp_user" value="<?= htmlspecialchars($config['smtp']['user'] ?? '') ?>" placeholder="ciidi@upttmbi.edu.ve" class="sa-filter-input" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Contraseña de Aplicación</label>
+                        <input type="password" name="smtp_pass" placeholder="Dejar vacío para conservar actual" class="sa-filter-input" style="width: 100%;">
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Email Remitente Público (Header From)</label>
+                        <input type="email" name="smtp_from" value="<?= htmlspecialchars($config['smtp']['from_email'] ?? '') ?>" placeholder="no-reply@upttmbi.edu.ve" class="sa-filter-input" style="width: 100%;">
+                    </div>
                 </div>
-                <div>
-                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 6px;">Puerto (TLS / SSL)</label>
-                    <input type="number" name="smtp_port" value="<?= (int)($config['smtp']['port'] ?? 587) ?>" class="sa-filter-input" style="width: 100%;">
-                </div>
-                <div>
-                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 6px;">Usuario Authenticated Email</label>
-                    <input type="email" name="smtp_user" value="<?= htmlspecialchars($config['smtp']['user'] ?? '') ?>" placeholder="ciidi@upttmbi.edu.ve" class="sa-filter-input" style="width: 100%;">
-                </div>
-                <div>
-                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 6px;">Contraseña de Aplicación</label>
-                    <input type="password" name="smtp_pass" placeholder="Dejar vacío para conservar actual" class="sa-filter-input" style="width: 100%;">
-                </div>
-                <div style="grid-column: 1 / -1;">
-                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 6px;">Email Remitente Público (Header From)</label>
-                    <input type="email" name="smtp_from" value="<?= htmlspecialchars($config['smtp']['from_email'] ?? '') ?>" placeholder="no-reply@upttmbi.edu.ve" class="sa-filter-input" style="width: 100%;">
-                </div>
+
+                <button type="submit" class="btn" style="background-color: var(--color-secundario) !important; color: #ffffff !important; border:none; padding: 10px 22px; border-radius: 6px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="ph-bold ph-floppy-disk" style="color: #ffffff !important;"></i> <span style="color: #ffffff !important;">Guardar Credenciales SMTP</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- SECCIÓN INFERIOR: DIAGNÓSTICO EN VIVO Y CORREO DE PRUEBA -->
+        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-sm); background: #f8fafc; border: 1px solid #cbd5e1;">
+            <div style="margin-bottom: 1rem;">
+                <h4 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--texto-titulos); display: flex; align-items: center; gap: 8px;">
+                    <i class="ph-bold ph-paper-plane-right" style="color: var(--color-terciario);"></i> Diagnóstico & Prueba de Conectividad en Tiempo Real
+                </h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin: 4px 0 0 0;">
+                    Envíe un mensaje instantáneo de prueba para comprobar el apretón de manos SMTP, autenticación y la renderización en bandeja.
+                </p>
             </div>
 
-            <button type="submit" class="btn" style="background-color: #2563eb !important; color: #ffffff !important; border:none; padding: 12px 24px; border-radius: 6px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
-                <i class="ph-bold ph-floppy-disk" style="color: #ffffff !important;"></i> <span style="color: #ffffff !important;">Guardar Credenciales SMTP</span>
-            </button>
-        </form>
-    </div>
-</div>
+            <form action="probar-smtp" method="POST" style="max-width: 650px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">Seleccionar Tipo de Mensaje:</label>
+                        <select name="template_key" class="sa-filter-input" style="width: 100%;">
+                            <option value="">-- Correo Genérico de Diagnóstico (Prueba Estándar) --</option>
+                            <?php foreach ($plantillas as $key => $tpl): ?>
+                                <option value="<?= htmlspecialchars($key) ?>">Probar Plantilla: <?= htmlspecialchars($tpl['nombre']) ?> (<?= htmlspecialchars($key) ?>)</option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
 
-<!-- TAB 2: DIAGNÓSTICO EN VIVO / CORREO DE PRUEBA -->
-<div id="tabPruebaLive" class="sa-tab-content" style="display:none;">
-    <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-sm); background:#ffffff;">
-        <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem; font-weight: 700; color: var(--texto-titulos); display: flex; align-items: center; gap: 6px;">
-            <i class="ph-bold ph-paper-plane-right" style="color: var(--color-terciario);"></i> Probar Enlace SMTP en Tiempo Real
-        </h4>
-        <p style="font-size: 0.85rem; color: var(--texto-silenciado); margin-bottom: 1.25rem;">
-            Envía una notificación de diagnóstico o prueba una plantilla específica para comprobar conectividad y maquetación.
-        </p>
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">Correo Destino de Prueba:</label>
+                        <input type="email" name="email_prueba" required placeholder="tu_correo@ejemplo.com" class="sa-filter-input" style="width: 100%;">
+                    </div>
+                </div>
 
-        <form action="probar-smtp" method="POST" style="max-width: 550px;">
-            <div style="margin-bottom: 1.25rem;">
-                <label style="font-size: 0.8rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 6px;">Seleccionar Tipo de Prueba:</label>
-                <select name="template_key" class="sa-filter-input" style="width: 100%;">
-                    <option value="">-- Correo Genérico de Diagnóstico (Prueba Estándar) --</option>
-                    <?php foreach ($plantillas as $key => $tpl): ?>
-                        <option value="<?= htmlspecialchars($key) ?>">Probar Plantilla: <?= htmlspecialchars($tpl['nombre']) ?> (<?= htmlspecialchars($key) ?>)</option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
+                <button type="submit" class="btn" style="background-color: var(--color-secundario) !important; color: #ffffff !important; border:none; padding: 10px 22px; border-radius: 6px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="ph-bold ph-paper-plane" style="color: #ffffff !important;"></i> <span style="color: #ffffff !important;">Ejecutar Prueba de Conexión</span>
+                </button>
+            </form>
+        </div>
 
-            <div style="margin-bottom: 1.25rem;">
-                <label style="font-size: 0.8rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 6px;">Correo Destino de Prueba:</label>
-                <input type="email" name="email_prueba" required placeholder="tu_correo@ejemplo.com" class="sa-filter-input" style="width: 100%;">
-            </div>
-
-            <button type="submit" class="btn" style="background-color: #2563eb !important; color: #ffffff !important; border:none; padding: 12px 24px; border-radius: 6px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
-                <i class="ph-bold ph-paper-plane" style="color: #ffffff !important;"></i> <span style="color: #ffffff !important;">Enviar Correo de Diagnóstico</span>
-            </button>
-        </form>
     </div>
 </div>
 
@@ -424,9 +469,9 @@
                     
                     <!-- HEADER INSTITUCIONAL -->
                     <tr>
-                        <td style='background: linear-gradient(135deg, #121a3e 0%, #1e293b 100%); padding: 30px 20px; text-align: center; color: #ffffff;'>
-                            <div style='font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #f59e0b; margin-bottom: 6px;'>
-                                UPTTMBI - VALERA, TRUJILLO
+                        <td style='background: linear-gradient(135deg, rgb(80, 89, 132) 0%, rgb(112, 144, 203) 100%); padding: 30px 20px; text-align: center; color: #ffffff;'>
+                            <div style='font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #ffffff; opacity: 0.9; margin-bottom: 6px;'>
+                                UPTTMBI &bull; VALERA, TRUJILLO
                             </div>
                             <h1 style='margin:0; font-size: 22px; font-weight: 800; letter-spacing: 0.5px; color: #ffffff;'>
                                 SISTEMA INTEGRAL CIIDI
@@ -445,7 +490,7 @@
                     <tr>
                         <td style='background-color: #f8fafc; padding: 20px 30px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b;'>
                             <p style='margin: 0 0 6px 0; font-weight: 600; color: #475569;'>
-                                Universidad Politécnica Territorial del Estado Trujillo \"Mario Briceño Iragorry\"
+                                Universidad Politécnica Territorial del Estado Trujillo &quot;Mario Briceño Iragorry&quot;
                             </p>
                             <p style='margin: 0;'>
                                 &copy; {YEAR} CIIDI. Todos los derechos reservados.
@@ -461,25 +506,67 @@
 </html>";
         ?>
 
-        <form action="guardar-layout-correo" method="POST">
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 1.25rem;">
-                <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
-                    Variables del Contenedor (Haz clic para insertar):
-                </label>
-                <div style="display: flex; gap: 8px;">
-                    <button type="button" onclick="insertarVariable('area-html-wrapper', '{TITULO}')" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-weight: 700; color: #2563eb !important; font-family: monospace; cursor: pointer;">+{TITULO}</button>
-                    <button type="button" onclick="insertarVariable('area-html-wrapper', '{CUERPO}')" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-weight: 700; color: #2563eb !important; font-family: monospace; cursor: pointer;">+{CUERPO}</button>
-                    <button type="button" onclick="insertarVariable('area-html-wrapper', '{YEAR}')" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-weight: 700; color: #2563eb !important; font-family: monospace; cursor: pointer;">+{YEAR}</button>
+        <form action="guardar-layout-correo" method="POST" onsubmit="sincronizarLayoutFinal()">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Variables del Contenedor (Haz clic para insertar):
+                    </label>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button type="button" onclick="insertarVariable('area-html-wrapper', '{TITULO}')" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-weight: 700; color: var(--color-secundario) !important; font-family: monospace; cursor: pointer;">+{TITULO}</button>
+                        <button type="button" onclick="insertarVariable('area-html-wrapper', '{CUERPO}')" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-weight: 700; color: var(--color-secundario) !important; font-family: monospace; cursor: pointer;">+{CUERPO}</button>
+                        <button type="button" onclick="insertarVariable('area-html-wrapper', '{YEAR}')" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-weight: 700; color: var(--color-secundario) !important; font-family: monospace; cursor: pointer;">+{YEAR}</button>
+                    </div>
+                </div>
+
+                <!-- CONMUTADOR DUAL VISUAL / CÓDIGO PARA LAYOUT -->
+                <div style="display: flex; background: #e2e8f0; border-radius: 6px; padding: 2px; gap: 2px;">
+                    <button type="button" onclick="alternarModoEditorLayout('visual')" id="btn-mode-layout-visual" style="background: var(--color-secundario); color: #ffffff !important; border: none; padding: 4px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.15s;">
+                        <i class="ph-bold ph-eye" style="color: #ffffff !important;"></i> Modo Visual (WYSIWYG)
+                    </button>
+                    <button type="button" onclick="alternarModoEditorLayout('codigo')" id="btn-mode-layout-code" style="background: transparent; color: #475569 !important; border: none; padding: 4px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.15s;">
+                        <i class="ph-bold ph-code" style="color: #475569 !important;"></i> Código HTML
+                    </button>
                 </div>
             </div>
 
+            <!-- MODO DUAL: EDITOR VISUAL DEL ENVOLTORIO VS CÓDIGO HTML -->
             <div style="margin-bottom: 1.5rem;">
                 <label style="font-size: 0.8rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 6px;">Estructura HTML del Envoltorio Institucional:</label>
-                <textarea id="area-html-wrapper" name="html_wrapper" rows="18" required class="sa-filter-input" style="width: 100%; font-family: monospace; font-size: 0.85rem; line-height: 1.5; padding: 12px;"><?= htmlspecialchars($layoutActual) ?></textarea>
+
+                <!-- CONTENEDOR MODO VISUAL LAYOUT -->
+                <div id="wrapper-wysiwyg-layout">
+                    <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-bottom: none; border-radius: 6px 6px 0 0; padding: 6px 10px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                        <button type="button" onclick="ejecutarComandoEditorLayout('bold')" title="Negrita" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-weight: bold; cursor: pointer;">B</button>
+                        <button type="button" onclick="ejecutarComandoEditorLayout('italic')" title="Cursiva" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-style: italic; cursor: pointer;">I</button>
+                        <button type="button" onclick="ejecutarComandoEditorLayout('underline')" title="Subrayado" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; text-decoration: underline; cursor: pointer;">U</button>
+                        <input type="color" onchange="ejecutarComandoEditorLayout('foreColor', this.value)" title="Color del Texto" style="width: 28px; height: 26px; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer; padding: 1px; background: #ffffff;">
+                        <div style="width: 1px; height: 18px; background: #cbd5e1; margin: 0 4px;"></div>
+                        
+                        <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; align-self: center;">+ Bloque:</span>
+                        <button type="button" onclick="insertarBloqueSeccionContexto('wysiwyg-layout', 'titulo')" style="background: rgba(80, 89, 132, 0.08); color: var(--color-secundario) !important; border: 1px solid rgba(80, 89, 132, 0.2); border-radius: 4px; padding: 3px 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">
+                            <i class="ph-bold ph-text-h-two" style="color: var(--color-secundario) !important;"></i> Título
+                        </button>
+                        <button type="button" onclick="insertarBloqueSeccionContexto('wysiwyg-layout', 'destacado')" style="background: rgba(80, 89, 132, 0.08); color: var(--color-secundario) !important; border: 1px solid rgba(80, 89, 132, 0.2); border-radius: 4px; padding: 3px 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">
+                            <i class="ph-bold ph-star" style="color: var(--color-secundario) !important;"></i> Destacado
+                        </button>
+                        <button type="button" onclick="insertarBloqueSeccionContexto('wysiwyg-layout', 'boton')" style="background: rgba(80, 89, 132, 0.08); color: var(--color-secundario) !important; border: 1px solid rgba(80, 89, 132, 0.2); border-radius: 4px; padding: 3px 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">
+                            <i class="ph-bold ph-cursor-click" style="color: var(--color-secundario) !important;"></i> Botón
+                        </button>
+                    </div>
+                    <div id="wysiwyg-layout" contenteditable="true" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 0 0 6px 6px; min-height: 320px; padding: 16px; font-family: Arial, sans-serif; font-size: 0.9rem; line-height: 1.5; outline: none;" oninput="sincronizarCodigoDesdeWysiwygLayout()">
+                        <?= $layoutActual ?>
+                    </div>
+                </div>
+
+                <!-- CONTENEDOR MODO CÓDIGO LAYOUT (OCULTO INICIALMENTE) -->
+                <div id="wrapper-code-layout" style="display: none;">
+                    <textarea id="area-html-wrapper" name="html_wrapper" rows="18" required class="sa-filter-input" style="width: 100%; font-family: monospace; font-size: 0.85rem; line-height: 1.5; padding: 12px;" oninput="sincronizarWysiwygDesdeCodigoLayout()"><?= htmlspecialchars($layoutActual) ?></textarea>
+                </div>
             </div>
 
             <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-                <button type="submit" class="btn" style="background-color: #2563eb !important; color: #ffffff !important; border:none; padding: 12px 24px; border-radius: 6px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                <button type="submit" class="btn" style="background-color: var(--color-secundario) !important; color: #ffffff !important; border:none; padding: 12px 24px; border-radius: 6px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
                     <i class="ph-bold ph-floppy-disk" style="color: #ffffff !important;"></i> <span style="color: #ffffff !important;">Guardar Layout Institucional</span>
                 </button>
 
@@ -591,12 +678,54 @@
                             <input type="text" name="asunto" value="<?= htmlspecialchars($tpl['asunto']) ?>" required class="sa-filter-input" style="width: 100%;">
                         </div>
 
+                        <!-- MODO DUAL: EDITOR VISUAL WYSIWYG VS CÓDIGO HTML -->
                         <div style="margin-bottom: 1.5rem;">
-                            <label style="font-size: 0.8rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 6px;">Código HTML de la Plantilla:</label>
-                            <textarea id="area-tpl-<?= str_replace('.', '-', $key) ?>" name="cuerpo_html" rows="14" required class="sa-filter-input" style="width: 100%; font-family: monospace; font-size: 0.85rem; line-height: 1.5; padding: 12px;"><?= htmlspecialchars($tpl['cuerpo_html']) ?></textarea>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                                <label style="font-size: 0.8rem; font-weight: 700; color: var(--texto-titulos); margin: 0;">Contenido de la Plantilla:</label>
+                                
+                                <div style="display: flex; background: #e2e8f0; border-radius: 6px; padding: 2px; gap: 2px;">
+                                    <button type="button" onclick="alternarModoEditorTpl('<?= str_replace('.', '-', $key) ?>', 'visual')" id="btn-mode-visual-<?= str_replace('.', '-', $key) ?>" style="background: var(--color-secundario); color: #ffffff !important; border: none; padding: 4px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.15s;">
+                                        <i class="ph-bold ph-eye" style="color: #ffffff !important;"></i> Modo Visual (WYSIWYG)
+                                    </button>
+                                    <button type="button" onclick="alternarModoEditorTpl('<?= str_replace('.', '-', $key) ?>', 'codigo')" id="btn-mode-code-<?= str_replace('.', '-', $key) ?>" style="background: transparent; color: #475569 !important; border: none; padding: 4px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.15s;">
+                                        <i class="ph-bold ph-code" style="color: #475569 !important;"></i> Código HTML
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- CONTENEDOR MODO VISUAL -->
+                            <div id="wrapper-wysiwyg-tpl-<?= str_replace('.', '-', $key) ?>">
+                                <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-bottom: none; border-radius: 6px 6px 0 0; padding: 6px 10px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                                    <button type="button" onclick="ejecutarComandoEditorTpl('<?= str_replace('.', '-', $key) ?>', 'bold')" title="Negrita" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-weight: bold; cursor: pointer;">B</button>
+                                    <button type="button" onclick="ejecutarComandoEditorTpl('<?= str_replace('.', '-', $key) ?>', 'italic')" title="Cursiva" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-style: italic; cursor: pointer;">I</button>
+                                    <button type="button" onclick="ejecutarComandoEditorTpl('<?= str_replace('.', '-', $key) ?>', 'underline')" title="Subrayado" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; text-decoration: underline; cursor: pointer;">U</button>
+                                    <div style="width: 1px; height: 18px; background: #cbd5e1; margin: 0 4px;"></div>
+                                    <button type="button" onclick="ejecutarComandoEditorTpl('<?= str_replace('.', '-', $key) ?>', 'insertUnorderedList')" title="Lista de Viñetas" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; cursor: pointer;"><i class="ph-bold ph-list-bullets"></i></button>
+                                    <button type="button" onclick="ejecutarComandoEditorTpl('<?= str_replace('.', '-', $key) ?>', 'insertOrderedList')" title="Lista Numerada" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; cursor: pointer;"><i class="ph-bold ph-list-numbers"></i></button>
+                                    <div style="width: 1px; height: 18px; background: #cbd5e1; margin: 0 4px;"></div>
+                                    <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; align-self: center;">+ Bloque:</span>
+                                    <button type="button" onclick="insertarBloqueSeccionContexto('wysiwyg-tpl-<?= str_replace('.', '-', $key) ?>', 'titulo')" style="background: rgba(80, 89, 132, 0.08); color: var(--color-secundario) !important; border: 1px solid rgba(80, 89, 132, 0.2); border-radius: 4px; padding: 3px 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">
+                                        <i class="ph-bold ph-text-h-two" style="color: var(--color-secundario) !important;"></i> Título
+                                    </button>
+                                    <button type="button" onclick="insertarBloqueSeccionContexto('wysiwyg-tpl-<?= str_replace('.', '-', $key) ?>', 'destacado')" style="background: rgba(80, 89, 132, 0.08); color: var(--color-secundario) !important; border: 1px solid rgba(80, 89, 132, 0.2); border-radius: 4px; padding: 3px 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">
+                                        <i class="ph-bold ph-star" style="color: var(--color-secundario) !important;"></i> Destacado
+                                    </button>
+                                    <button type="button" onclick="insertarBloqueSeccionContexto('wysiwyg-tpl-<?= str_replace('.', '-', $key) ?>', 'boton')" style="background: rgba(80, 89, 132, 0.08); color: var(--color-secundario) !important; border: 1px solid rgba(80, 89, 132, 0.2); border-radius: 4px; padding: 3px 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">
+                                        <i class="ph-bold ph-cursor-click" style="color: var(--color-secundario) !important;"></i> Botón
+                                    </button>
+                                </div>
+                                <div id="wysiwyg-tpl-<?= str_replace('.', '-', $key) ?>" contenteditable="true" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 0 0 6px 6px; min-height: 220px; padding: 16px; font-family: Arial, sans-serif; font-size: 0.95rem; line-height: 1.6; outline: none;" oninput="sincronizarCodigoDesdeWysiwyg('<?= str_replace('.', '-', $key) ?>')">
+                                    <?= $tpl['cuerpo_html'] ?>
+                                </div>
+                            </div>
+
+                            <!-- CONTENEDOR MODO CÓDIGO HTML (OCULTO INICIALMENTE) -->
+                            <div id="wrapper-code-tpl-<?= str_replace('.', '-', $key) ?>" style="display: none;">
+                                <textarea id="area-tpl-<?= str_replace('.', '-', $key) ?>" name="cuerpo_html" rows="14" required class="sa-filter-input" style="width: 100%; font-family: monospace; font-size: 0.85rem; line-height: 1.5; padding: 12px;" oninput="sincronizarWysiwygDesdeCodigo('<?= str_replace('.', '-', $key) ?>')"><?= htmlspecialchars($tpl['cuerpo_html']) ?></textarea>
+                            </div>
                         </div>
 
-                        <button type="submit" class="btn" style="background-color: #2563eb !important; color: #ffffff !important; border:none; padding: 12px 24px; border-radius: 6px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                        <button type="submit" onclick="sincronizarFinalPlantilla('<?= str_replace('.', '-', $key) ?>')" class="btn" style="background-color: var(--color-secundario) !important; color: #ffffff !important; border:none; padding: 12px 24px; border-radius: 6px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
                             <i class="ph-bold ph-floppy-disk" style="color: #ffffff !important;"></i> <span style="color: #ffffff !important;">Guardar Cambios en Plantilla</span>
                         </button>
                     </form>
@@ -611,7 +740,7 @@
 <!-- MODAL VISTA PREVIA VIRTUAL HORMIGÓN/RESPONSIVE -->
 <div id="modalPreviewCorreo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18,26,62,0.6); backdrop-filter: blur(6px); z-index: 9999; justify-content: center; align-items: center;">
     <div style="background: #ffffff; width: 90%; max-width: 700px; max-height: 90vh; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
-        <div style="background: #121a3e; color: #ffffff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="background: var(--color-secundario); color: #ffffff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;">
             <div style="font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
                 <i class="ph-bold ph-eye"></i> Vista Previa de Renderizado Institucional
             </div>
@@ -626,12 +755,12 @@
 <!-- MODAL GENÉRICO DE AVISO Y NOTIFICACIÓN (REEMPLAZO DE ALERT) -->
 <div id="modalAvisoAlert" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18,26,62,0.6); backdrop-filter: blur(6px); z-index: 10000; justify-content: center; align-items: center;">
     <div style="background: #ffffff; width: 90%; max-width: 440px; border-radius: 12px; padding: 1.5rem; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
-        <div id="modalAvisoIcono" style="font-size: 2.5rem; margin-bottom: 0.5rem; color: #3b82f6;">
+        <div id="modalAvisoIcono" style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--color-terciario);">
             <i class="ph-bold ph-info"></i>
         </div>
-        <h3 id="modalAvisoTitulo" style="margin: 0 0 0.5rem 0; font-size: 1.15rem; font-weight: 800; color: #121a3e;">Notificación</h3>
+        <h3 id="modalAvisoTitulo" style="margin: 0 0 0.5rem 0; font-size: 1.15rem; font-weight: 800; color: var(--texto-titulos);">Notificación</h3>
         <p id="modalAvisoMensaje" style="margin: 0 0 1.25rem 0; font-size: 0.9rem; color: #475569; line-height: 1.5;"></p>
-        <button type="button" onclick="cerrarModalAviso()" class="btn" style="background-color: #2563eb !important; color: #ffffff !important; border:none; padding: 10px 24px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+        <button type="button" onclick="cerrarModalAviso()" class="btn" style="background-color: var(--color-secundario) !important; color: #ffffff !important; border:none; padding: 10px 24px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
             Aceptar
         </button>
     </div>
@@ -641,8 +770,8 @@
 <div id="modalConfigBoton" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18,26,62,0.6); backdrop-filter: blur(6px); z-index: 10000; justify-content: center; align-items: center;">
     <div style="background: #ffffff; width: 90%; max-width: 480px; border-radius: 12px; padding: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
-            <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #121a3e; display: flex; align-items: center; gap: 8px;">
-                <i class="ph-bold ph-cursor-click" style="color: #2563eb;"></i> Configurar Botón de Acción
+            <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--texto-titulos); display: flex; align-items: center; gap: 8px;">
+                <i class="ph-bold ph-cursor-click" style="color: var(--color-terciario);"></i> Configurar Botón de Acción
             </h3>
             <button type="button" onclick="cerrarModalConfigBoton()" style="background: none; border: none; color: #64748b; font-size: 1.3rem; cursor: pointer;">&times;</button>
         </div>
@@ -661,7 +790,7 @@
             <button type="button" onclick="cerrarModalConfigBoton()" class="btn" style="background: #ffffff; color: #64748b !important; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
                 Cancelar
             </button>
-            <button type="button" onclick="confirmarInsertarBoton()" class="btn" style="background-color: #2563eb !important; color: #ffffff !important; border:none; padding: 8px 18px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+            <button type="button" onclick="confirmarInsertarBoton()" class="btn" style="background-color: var(--color-secundario) !important; color: #ffffff !important; border:none; padding: 8px 18px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
                 Insertar Botón
             </button>
         </div>
@@ -677,22 +806,22 @@
             <input type="hidden" name="asunto" id="input_modal_asunto">
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
-                <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #121a3e; display: flex; align-items: center; gap: 8px;">
-                    <i class="ph-bold ph-floppy-disk" style="color: #2563eb;"></i> Guardar como Plantilla Reusable
+                <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--texto-titulos); display: flex; align-items: center; gap: 8px;">
+                    <i class="ph-bold ph-floppy-disk" style="color: var(--color-terciario);"></i> Guardar como Plantilla Reusable
                 </h3>
                 <button type="button" onclick="cerrarModalGuardarPlantilla()" style="background: none; border: none; color: #64748b; font-size: 1.3rem; cursor: pointer;">&times;</button>
             </div>
             
             <div style="margin-bottom: 1.25rem;">
-                <label style="font-size: 0.8rem; font-weight: 700; color: #475569; display: block; margin-bottom: 6px;">Nombre de la Plantilla:</label>
-                <input type="text" name="nombre" required placeholder="Ej: Plantilla de Bienvenida o Convocatoria" class="sa-filter-input" style="width: 100%;">
+                <label style="font-size: 0.8rem; font-weight: 700; color: #475569; display: block; margin-bottom: 6px;">Nombre Identificador de la Plantilla:</label>
+                <input type="text" name="nombre" required placeholder="Ej. Invitación a Conferencia 2026" class="sa-filter-input" style="width: 100%;">
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 8px;">
                 <button type="button" onclick="cerrarModalGuardarPlantilla()" class="btn" style="background: #ffffff; color: #64748b !important; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
                     Cancelar
                 </button>
-                <button type="submit" class="btn" style="background-color: #2563eb !important; color: #ffffff !important; border:none; padding: 8px 18px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                <button type="submit" class="btn" style="background-color: var(--color-secundario) !important; color: #ffffff !important; border:none; padding: 8px 18px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
                     Guardar Plantilla
                 </button>
             </div>
@@ -700,12 +829,35 @@
     </div>
 </div>
 
+
+
 <script>
 function switchMailTab(tabId, btn) {
-    document.querySelectorAll('#tabCorreoDirecto, #tabHistorialLogs, #tabConexionSmtp, #tabPruebaLive, #tabLayoutBase, #tabPlantillas').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('#tabCorreoDirecto, #tabHistorialLogs, #tabConexionSmtp, #tabLayoutBase, #tabPlantillas').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.sa-tab-btn').forEach(b => b.classList.remove('tab-active'));
-    document.getElementById(tabId).style.display = 'block';
-    btn.classList.add('tab-active');
+    const target = document.getElementById(tabId);
+    if (target) target.style.display = 'block';
+    if (btn) btn.classList.add('tab-active');
+}
+
+function switchSubCatalogo(catId, btn) {
+    document.getElementById('subcat-mis-plantillas').style.display = 'none';
+    document.getElementById('subcat-plantillas-sistema').style.display = 'none';
+    
+    document.querySelectorAll('.btn-subcatalogo').forEach(b => {
+        b.style.background = 'transparent';
+        b.style.color = '#64748b';
+        b.style.borderColor = 'transparent';
+    });
+
+    const target = document.getElementById('subcat-' + catId);
+    if (target) target.style.display = 'block';
+
+    if (btn) {
+        btn.style.background = '#ffffff';
+        btn.style.color = 'var(--color-secundario)';
+        btn.style.borderColor = '#cbd5e1';
+    }
 }
 
 function toggleModoDestino(modo) {
@@ -737,7 +889,7 @@ function mostrarAvisoModal(mensaje, titulo = 'Notificación', tipo = 'info') {
     } else if (tipo === 'warning') {
         elemIcono.innerHTML = '<i class="ph-bold ph-warning" style="color: #f59e0b;"></i>';
     } else {
-        elemIcono.innerHTML = '<i class="ph-bold ph-info" style="color: #3b82f6;"></i>';
+        elemIcono.innerHTML = '<i class="ph-bold ph-info" style="color: var(--color-terciario);"></i>';
     }
 
     modal.style.display = 'flex';
@@ -753,6 +905,22 @@ function abrirModalConfigBoton() {
 
 function cerrarModalConfigBoton() {
     document.getElementById('modalConfigBoton').style.display = 'none';
+}
+
+function sincronizarCuerpoOculto() {
+    const editor = document.getElementById('editor-cuerpo-wysiwyg');
+    const oculto = document.getElementById('input_mensaje_oculto');
+    if (editor && oculto) {
+        oculto.value = editor.innerHTML;
+    }
+}
+
+function ejecutarComandoEditor(comando, val = null) {
+    const editor = document.getElementById('editor-cuerpo-wysiwyg');
+    if (!editor) return;
+    editor.focus();
+    document.execCommand(comando, false, val);
+    sincronizarCuerpoOculto();
 }
 
 // --- GESTIÓN DE PLANTILLAS PERSONALIZADAS ---
@@ -778,6 +946,34 @@ function cerrarModalGuardarPlantilla() {
     document.getElementById('modalGuardarPlantilla').style.display = 'none';
 }
 
+const plantillasSistemaJS = <?= json_encode($plantillas ?? []) ?>;
+
+function abrirModalCatalogoPlantillas() {
+    document.getElementById('modalCatalogoPlantillas').style.display = 'flex';
+}
+
+function cerrarModalCatalogoPlantillas() {
+    document.getElementById('modalCatalogoPlantillas').style.display = 'none';
+}
+
+function cargarPlantillaSistemaEnEditor(key) {
+    if (!key || !plantillasSistemaJS[key]) return;
+    const tpl = plantillasSistemaJS[key];
+    const editor = document.getElementById('editor-cuerpo-wysiwyg');
+    const asuntoInput = document.querySelector('#formCorreoDirecto input[name="asunto"]');
+
+    if (asuntoInput && tpl.asunto) {
+        asuntoInput.value = tpl.asunto;
+    }
+
+    if (editor && tpl.cuerpo_html) {
+        editor.innerHTML = tpl.cuerpo_html;
+        sincronizarCuerpoOculto();
+    }
+    cerrarModalCatalogoPlantillas();
+    mostrarAvisoModal(`Se ha cargado la plantilla '${tpl.nombre}' en el editor.`, 'Plantilla Cargada', 'info');
+}
+
 function cargarPlantillaEnEditor(key) {
     if (!key || !plantillasCustomJS[key]) return;
 
@@ -793,6 +989,19 @@ function cargarPlantillaEnEditor(key) {
         editor.innerHTML = tpl.cuerpo_html;
         sincronizarCuerpoOculto();
     }
+    cerrarModalCatalogoPlantillas();
+    mostrarAvisoModal(`Se ha cargado la plantilla personalizada '${tpl.nombre}' en el editor.`, 'Plantilla Cargada', 'info');
+}
+
+let targetWysiwygBotonId = 'editor-cuerpo-wysiwyg';
+
+function abrirModalConfigBoton(targetId = 'editor-cuerpo-wysiwyg') {
+    targetWysiwygBotonId = targetId;
+    document.getElementById('modalConfigBoton').style.display = 'flex';
+}
+
+function cerrarModalConfigBoton() {
+    document.getElementById('modalConfigBoton').style.display = 'none';
 }
 
 function confirmarInsertarBoton() {
@@ -804,13 +1013,13 @@ function confirmarInsertarBoton() {
         return;
     }
 
-    const htmlBloque = `<div style="text-align:center; margin:24px 0;"><a href="${url}" target="_blank" style="background-color:#2563eb; color:#ffffff !important; padding:12px 26px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:0.9rem; display:inline-block; border:none;">${txt}</a></div>`;
+    const htmlBloque = `<div style="text-align:center; margin:24px 0;"><a href="${url}" target="_blank" style="background-color:rgb(80, 89, 132); color:#ffffff !important; padding:12px 26px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:0.9rem; display:inline-block; border:none;">${txt}</a></div>`;
     
-    const editor = document.getElementById('editor-cuerpo-wysiwyg');
+    const editor = document.getElementById(targetWysiwygBotonId);
     if (editor) {
         editor.focus();
         document.execCommand('insertHTML', false, htmlBloque);
-        sincronizarCuerpoOculto();
+        sincronizarEditorPorId(targetWysiwygBotonId);
     }
     cerrarModalConfigBoton();
 }
@@ -836,7 +1045,7 @@ function previsualizarCorreoDirecto() {
     if (usarLayout && wrapperArea && wrapperArea.value) {
         htmlCompleto = wrapperArea.value
             .replace(/{TITULO}/g, asunto)
-            .replace(/{CUERPO}/g, `<h3 style="color:#121a3e; margin-top:0; font-weight:800; font-size:1.1rem;">${asunto}</h3><div style="line-height:1.6; color:#334155;">${mensajeHtml}</div>`)
+            .replace(/{CUERPO}/g, `<h3 style="color:#1E293B; margin-top:0; font-weight:800; font-size:1.1rem;">${asunto}</h3><div style="line-height:1.6; color:#334155;">${mensajeHtml}</div>`)
             .replace(/{YEAR}/g, new Date().getFullYear());
     } else {
         htmlCompleto = `
@@ -844,7 +1053,7 @@ function previsualizarCorreoDirecto() {
             <html>
             <head><meta charset="utf-8"><title>${asunto}</title></head>
             <body style="font-family: Arial, sans-serif; padding:20px; color:#334155;">
-                <h2 style="color:#121a3e;">${asunto}</h2>
+                <h2 style="color:#1E293B;">${asunto}</h2>
                 <div style="line-height:1.6;">${mensajeHtml}</div>
             </body>
             </html>
@@ -876,25 +1085,40 @@ function previsualizarCorreoDirecto() {
     }, 100);
 }
 
+function sincronizarEditorPorId(editorId) {
+    if (editorId === 'editor-cuerpo-wysiwyg') {
+        sincronizarCuerpoOculto();
+    } else if (editorId === 'wysiwyg-layout') {
+        sincronizarCodigoDesdeWysiwygLayout();
+    } else if (editorId.startsWith('wysiwyg-tpl-')) {
+        const safeKey = editorId.replace('wysiwyg-tpl-', '');
+        sincronizarCodigoDesdeWysiwyg(safeKey);
+    }
+}
+
 function insertarBloqueSeccion(tipo) {
-    const editor = document.getElementById('editor-cuerpo-wysiwyg');
+    insertarBloqueSeccionContexto('editor-cuerpo-wysiwyg', tipo);
+}
+
+function insertarBloqueSeccionContexto(targetId, tipo) {
+    const editor = document.getElementById(targetId);
     if (!editor) return;
 
     let htmlBloque = '';
 
     if (tipo === 'titulo') {
-        htmlBloque = `<h3 style="color:#121a3e; font-size:1.2rem; font-weight:800; margin:18px 0 8px 0;">TITULO DE SECCIÓN</h3><p>Escriba aquí los detalles correspondientes a esta sección...</p>`;
+        htmlBloque = `<h3 style="color:#1E293B; font-size:1.2rem; font-weight:800; margin:18px 0 8px 0;">TITULO DE SECCIÓN</h3><p>Escriba aquí los detalles correspondientes a esta sección...</p>`;
     } else if (tipo === 'destacado') {
-        htmlBloque = `<div style="background-color:#eff6ff; border-left:4px solid #2563eb; padding:14px; border-radius:6px; margin:16px 0; color:#1e40af; font-size:0.9rem;"><strong>Información Importante:</strong> Inserte aquí los aspectos resaltantes o avisos prioritarios para el usuario.</div>`;
+        htmlBloque = `<div style="background-color:rgba(80, 89, 132, 0.08); border-left:4px solid rgb(80, 89, 132); padding:14px; border-radius:6px; margin:16px 0; color:#1E293B; font-size:0.9rem;"><strong>Información Importante:</strong> Inserte aquí los aspectos resaltantes o avisos prioritarios para el usuario.</div>`;
     } else if (tipo === 'boton') {
-        abrirModalConfigBoton();
+        abrirModalConfigBoton(targetId);
         return;
     }
 
     if (htmlBloque) {
         editor.focus();
         document.execCommand('insertHTML', false, htmlBloque);
-        sincronizarCuerpoOculto();
+        sincronizarEditorPorId(targetId);
     }
 }
 
@@ -926,15 +1150,156 @@ function seleccionarPlantilla(key) {
     if (targetBtn) targetBtn.style.background = '#e2e8f0';
 }
 
+function alternarModoEditorTpl(safeKey, modo) {
+    const wrapWysiwyg = document.getElementById('wrapper-wysiwyg-tpl-' + safeKey);
+    const wrapCode = document.getElementById('wrapper-code-tpl-' + safeKey);
+    const btnVisual = document.getElementById('btn-mode-visual-' + safeKey);
+    const btnCode = document.getElementById('btn-mode-code-' + safeKey);
+
+    if (modo === 'visual') {
+        sincronizarWysiwygDesdeCodigo(safeKey);
+        if (wrapWysiwyg) wrapWysiwyg.style.display = 'block';
+        if (wrapCode) wrapCode.style.display = 'none';
+        if (btnVisual) {
+            btnVisual.style.background = 'var(--color-secundario)';
+            btnVisual.style.setProperty('color', '#ffffff', 'important');
+        }
+        if (btnCode) {
+            btnCode.style.background = 'transparent';
+            btnCode.style.setProperty('color', '#475569', 'important');
+        }
+    } else {
+        sincronizarCodigoDesdeWysiwyg(safeKey);
+        if (wrapWysiwyg) wrapWysiwyg.style.display = 'none';
+        if (wrapCode) wrapCode.style.display = 'block';
+        if (btnCode) {
+            btnCode.style.background = 'var(--color-secundario)';
+            btnCode.style.setProperty('color', '#ffffff', 'important');
+        }
+        if (btnVisual) {
+            btnVisual.style.background = 'transparent';
+            btnVisual.style.setProperty('color', '#475569', 'important');
+        }
+    }
+}
+
+// --- DUAL EDITOR DE LAYOUT INSTITUCIONAL BASE (TAB 3) ---
+function alternarModoEditorLayout(modo) {
+    const wrapWysiwyg = document.getElementById('wrapper-wysiwyg-layout');
+    const wrapCode = document.getElementById('wrapper-code-layout');
+    const btnVisual = document.getElementById('btn-mode-layout-visual');
+    const btnCode = document.getElementById('btn-mode-layout-code');
+
+    if (modo === 'visual') {
+        sincronizarWysiwygDesdeCodigoLayout();
+        if (wrapWysiwyg) wrapWysiwyg.style.display = 'block';
+        if (wrapCode) wrapCode.style.display = 'none';
+        if (btnVisual) {
+            btnVisual.style.background = 'var(--color-secundario)';
+            btnVisual.style.setProperty('color', '#ffffff', 'important');
+        }
+        if (btnCode) {
+            btnCode.style.background = 'transparent';
+            btnCode.style.setProperty('color', '#475569', 'important');
+        }
+    } else {
+        sincronizarCodigoDesdeWysiwygLayout();
+        if (wrapWysiwyg) wrapWysiwyg.style.display = 'none';
+        if (wrapCode) wrapCode.style.display = 'block';
+        if (btnCode) {
+            btnCode.style.background = 'var(--color-secundario)';
+            btnCode.style.setProperty('color', '#ffffff', 'important');
+        }
+        if (btnVisual) {
+            btnVisual.style.background = 'transparent';
+            btnVisual.style.setProperty('color', '#475569', 'important');
+        }
+    }
+}
+
+function sincronizarCodigoDesdeWysiwygLayout() {
+    const wysiwyg = document.getElementById('wysiwyg-layout');
+    const area = document.getElementById('area-html-wrapper');
+    if (wysiwyg && area) {
+        area.value = wysiwyg.innerHTML;
+    }
+}
+
+function sincronizarWysiwygDesdeCodigoLayout() {
+    const wysiwyg = document.getElementById('wysiwyg-layout');
+    const area = document.getElementById('area-html-wrapper');
+    if (wysiwyg && area) {
+        wysiwyg.innerHTML = area.value;
+    }
+}
+
+function sincronizarLayoutFinal() {
+    sincronizarCodigoDesdeWysiwygLayout();
+}
+
+function ejecutarComandoEditorLayout(comando, val = null) {
+    const wysiwyg = document.getElementById('wysiwyg-layout');
+    if (!wysiwyg) return;
+    wysiwyg.focus();
+    document.execCommand(comando, false, val);
+    sincronizarCodigoDesdeWysiwygLayout();
+}
+
+function sincronizarCodigoDesdeWysiwyg(safeKey) {
+    const wysiwyg = document.getElementById('wysiwyg-tpl-' + safeKey);
+    const area = document.getElementById('area-tpl-' + safeKey);
+    if (wysiwyg && area) {
+        area.value = wysiwyg.innerHTML;
+    }
+}
+
+function sincronizarWysiwygDesdeCodigo(safeKey) {
+    const wysiwyg = document.getElementById('wysiwyg-tpl-' + safeKey);
+    const area = document.getElementById('area-tpl-' + safeKey);
+    if (wysiwyg && area) {
+        wysiwyg.innerHTML = area.value;
+    }
+}
+
+function sincronizarFinalPlantilla(safeKey) {
+    sincronizarCodigoDesdeWysiwyg(safeKey);
+}
+
+function ejecutarComandoEditorTpl(safeKey, comando, val = null) {
+    const wysiwyg = document.getElementById('wysiwyg-tpl-' + safeKey);
+    if (!wysiwyg) return;
+    wysiwyg.focus();
+    document.execCommand(comando, false, val);
+    sincronizarCodigoDesdeWysiwyg(safeKey);
+}
+
 function insertarVariable(textareaId, variableStr) {
     const area = document.getElementById(textareaId);
-    if (!area) return;
-    const start = area.selectionStart;
-    const end = area.selectionEnd;
-    const text = area.value;
-    area.value = text.substring(0, start) + variableStr + text.substring(end);
-    area.selectionStart = area.selectionEnd = start + variableStr.length;
-    area.focus();
+    if (area) {
+        const start = area.selectionStart || 0;
+        const end = area.selectionEnd || 0;
+        const text = area.value || '';
+        area.value = text.substring(0, start) + variableStr + text.substring(end);
+        area.selectionStart = area.selectionEnd = start + variableStr.length;
+        area.focus();
+    }
+
+    if (textareaId === 'area-html-wrapper') {
+        const wysiwygLayout = document.getElementById('wysiwyg-layout');
+        if (wysiwygLayout) {
+            wysiwygLayout.focus();
+            document.execCommand('insertText', false, variableStr);
+            sincronizarCodigoDesdeWysiwygLayout();
+        }
+    } else {
+        const safeKey = textareaId.replace('area-tpl-', '');
+        const wysiwyg = document.getElementById('wysiwyg-tpl-' + safeKey);
+        if (wysiwyg) {
+            wysiwyg.focus();
+            document.execCommand('insertText', false, variableStr);
+            sincronizarCodigoDesdeWysiwyg(safeKey);
+        }
+    }
 }
 
 function abrirModalPreviewLayout() {
@@ -943,9 +1308,9 @@ function abrirModalPreviewLayout() {
 
     let layoutWrapper = areaWrapper.value;
     const sampleBody = `
-        <h3 style="color:#121a3e; margin-top:0; font-weight:800; font-size: 1.1rem;">Ejemplo de Notificación Institucional</h3>
+        <h3 style="color:#1E293B; margin-top:0; font-weight:800; font-size: 1.1rem;">Ejemplo de Notificación Institucional</h3>
         <p style="color:#475569; line-height:1.6; font-size: 0.9rem;">Este es un mensaje de prueba para verificar el renderizado del Envoltorio Base Institucional (encabezado, cuerpo, footer y estilos CSS).</p>
-        <div style="background-color:#eff6ff; border-left:4px solid #2563eb; padding:14px; border-radius:6px; margin:16px 0; color:#1e40af; font-size:0.85rem;">
+        <div style="background-color:rgba(80, 89, 132, 0.08); border-left:4px solid rgb(80, 89, 132); padding:14px; border-radius:6px; margin:16px 0; color:#1E293B; font-size:0.85rem;">
             <strong>Demostración:</strong> El contenido enviado por cualquier módulo del sistema CIIDI se renderizará automáticamente en este espacio.
         </div>
         <p style="color:#64748b; font-size:0.8rem; margin-bottom: 0;">Atentamente,<br><strong>Equipo de Desarrollo CIIDI UPTTMBI</strong></p>
@@ -1189,7 +1554,6 @@ function renderizarChipsDestinatarios() {
         inputsDiv.appendChild(hidden);
     }
 }
-}
 
 // Ocultar desplegable al hacer clic fuera
 document.addEventListener('click', (e) => {
@@ -1271,7 +1635,7 @@ function renderizarPaginacionLogs() {
             btnNum.type = 'button';
             btnNum.textContent = i;
             if (i === paginaActualLogs) {
-                btnNum.style.cssText = 'background:#2563eb; color:#ffffff !important; border:1px solid #2563eb; padding:4px 10px; border-radius:4px; font-weight:700; font-size:0.8rem;';
+                btnNum.style.cssText = 'background:var(--color-secundario); color:#ffffff !important; border:1px solid var(--color-secundario); padding:4px 10px; border-radius:4px; font-weight:700; font-size:0.8rem;';
             } else {
                 btnNum.style.cssText = 'background:#ffffff; color:#334155 !important; border:1px solid #cbd5e1; padding:4px 10px; border-radius:4px; font-weight:700; cursor:pointer; font-size:0.8rem;';
                 btnNum.onclick = () => { paginaActualLogs = i; renderizarPaginacionLogs(); };

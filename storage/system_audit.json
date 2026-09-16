@@ -1,5 +1,53 @@
 [
     {
+        "id": "log_6aaafaaa67c9d",
+        "fecha_hora": "2026-09-16 20:23:06",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Prueba SMTP Exitosa",
+        "detalles": "Correo enviado a andrusramirez2020@gmail.com",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "4589da0d41fa4df2141842539b69180b9fcb27c97dd927d9a31b0ad18e13d3a5",
+        "hash_integridad": "dfcda1570cff50024db905f49cb1c37b4963b96ad28b09e6e0e530edd84d69a8"
+    },
+    {
+        "id": "log_6aaaf9afc2401",
+        "fecha_hora": "2026-09-16 20:18:55",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Prueba SMTP Exitosa",
+        "detalles": "Correo enviado a andrusramirez2020@gmail.com",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "de6b5b365b0e6b9edf8272abaefbebc6b473ff8ec897014b5c5c6c77e4228552",
+        "hash_integridad": "4589da0d41fa4df2141842539b69180b9fcb27c97dd927d9a31b0ad18e13d3a5"
+    },
+    {
+        "id": "log_6aaaf6e364441",
+        "fecha_hora": "2026-09-16 20:06:59",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Envío Directo de Correo",
+        "detalles": "Se enviaron 1 correos exitosamente (0 fallidos). Asunto: aviso importante",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "34c927c631c394374356290cb6165435b43d1fc7e9d76d9e94043a4246e81ac8",
+        "hash_integridad": "de6b5b365b0e6b9edf8272abaefbebc6b473ff8ec897014b5c5c6c77e4228552"
+    },
+    {
+        "id": "log_6aaaf6ce9afc3",
+        "fecha_hora": "2026-09-16 20:06:38",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Guardar Plantilla Personalizada",
+        "detalles": "Se creó la plantilla personalizada: basica para avisos",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "08e0d7f0748384fb115080247ede72ccf5a2a92ffb8a964b44dbc7f40e853cab",
+        "hash_integridad": "34c927c631c394374356290cb6165435b43d1fc7e9d76d9e94043a4246e81ac8"
+    },
+    {
         "id": "log_6aaa1eebd87e2",
         "fecha_hora": "2026-09-16 04:45:31",
         "nivel": "WARNING",

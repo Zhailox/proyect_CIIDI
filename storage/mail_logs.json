@@ -1,5 +1,35 @@
 [
     {
+        "id": "mail_6aaafaaa6705d",
+        "fecha": "2026-09-16 20:23:06",
+        "destino_email": "andrusramirez2020@gmail.com",
+        "destino_nombre": "Administrador de Prueba",
+        "asunto": "Prueba de Conexión SMTP - CIIDI UPTTMBI",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aaaf9afc1512",
+        "fecha": "2026-09-16 20:18:55",
+        "destino_email": "andrusramirez2020@gmail.com",
+        "destino_nombre": "Usuario de Prueba",
+        "asunto": "Restablecer Contraseña - Sistema CIIDI UPTTMBI",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aaaf6e3637a5",
+        "fecha": "2026-09-16 20:06:59",
+        "destino_email": "andrusramirez2020@gmail.com",
+        "destino_nombre": "andru",
+        "asunto": "aviso importante",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
         "id": "mail_6aaa27280abb3",
         "fecha": "2026-09-16 05:20:40",
         "destino_email": "andrusramirez2020@gmail.com",

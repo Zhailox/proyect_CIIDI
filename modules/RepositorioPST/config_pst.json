@@ -41,7 +41,7 @@
         "anio_minimo_histograma": 2018,
         "orden_predeterminado": "anio_desc",
         "resaltar_coincidencias": true,
-        "permitir_filtro_carrera": true
+        "permitir_filtro_carrera": false
     },
     "visor_pdf": {
         "mostrar_toolbar": false,

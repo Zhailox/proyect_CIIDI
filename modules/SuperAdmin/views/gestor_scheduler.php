@@ -72,8 +72,8 @@
 
 .ag-btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.32);
-    background: #1d4ed8 !important;
+    box-shadow: 0 6px 18px rgba(80, 89, 132, 0.32);
+    background: var(--color-secundario-dark, rgb(60, 68, 105)) !important;
 }
 
 .ag-btn-secondary {
@@ -126,9 +126,9 @@
 
 .ag-form-input:focus {
     outline: none;
-    border-color: #2563eb;
+    border-color: var(--color-secundario);
     background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    box-shadow: 0 0 0 4px rgba(80, 89, 132, 0.12);
 }
 
 .ag-form-label {

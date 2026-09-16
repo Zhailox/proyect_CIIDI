@@ -13,7 +13,7 @@
         </div>
 
         <div>
-            <button type="button" onclick="ejecutarTestCore()" class="btn btn-primary" style="background: #2563eb !important; border: none !important; color: #ffffff !important; font-weight: 700; padding: 10px 18px; border-radius: 8px; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(37,99,235,0.25); cursor: pointer; transition: all 0.25s ease;">
+            <button type="button" onclick="ejecutarTestCore()" class="btn btn-primary" style="background: var(--color-secundario) !important; border: none !important; color: #ffffff !important; font-weight: 700; padding: 10px 18px; border-radius: 8px; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(80,89,132,0.25); cursor: pointer; transition: all 0.25s ease;">
                 <i class="ph-bold ph-heartbeat"></i> Testear Respuesta del Core
             </button>
         </div>
@@ -343,7 +343,7 @@ if (typeof Chart === 'undefined') {
 
         <div id="ag-core-health-body" style="padding: 1.6rem; max-height: 480px; overflow-y: auto;">
             <div style="text-align: center; padding: 2rem 0; color: #64748b;">
-                <i class="ph-bold ph-spinner spin" style="font-size: 2.2rem; color: #2563eb;"></i>
+                <i class="ph-bold ph-spinner spin" style="font-size: 2.2rem; color: var(--color-secundario);"></i>
                 <p style="margin-top: 0.8rem; font-weight: 700;">Ejecutando pings sintéticos al Kernel, BD y Módulos Core...</p>
             </div>
         </div>
@@ -365,7 +365,7 @@ function ejecutarTestCore() {
     modal.style.display = 'flex';
     body.innerHTML = `
         <div style="text-align: center; padding: 2.5rem 0; color: #64748b;">
-            <i class="ph-bold ph-spinner spin" style="font-size: 2.5rem; color: #2563eb;"></i>
+            <i class="ph-bold ph-spinner spin" style="font-size: 2.5rem; color: var(--color-secundario);"></i>
             <p style="margin-top: 1rem; font-weight: 800; color: #0f172a; font-size: 1rem;">Diagnosticando Respuesta del Core...</p>
             <p style="font-size: 0.82rem; color: #64748b; margin-top: 0.2rem;">Evaluando latencia de BD, constantes de Kernel y permisos de storage.</p>
         </div>

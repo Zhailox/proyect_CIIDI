@@ -42,13 +42,13 @@
 }
 
 .ag-tab-btn:hover {
-    color: var(--color-secundario, #2563eb);
-    background: rgba(37, 99, 235, 0.05);
+    color: var(--color-secundario);
+    background: rgba(80, 89, 132, 0.08);
 }
 
 .ag-tab-btn.active {
     background: #ffffff;
-    color: var(--color-secundario, #2563eb);
+    color: var(--color-secundario);
     box-shadow: 0 4px 14px rgba(18, 26, 62, 0.08);
 }
 
@@ -91,7 +91,7 @@
     border-radius: 8px !important;
     font-weight: 700 !important;
     font-size: 0.85rem !important;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    box-shadow: 0 4px 12px rgba(80, 89, 132, 0.2);
     transition: all 0.25s ease !important;
     text-decoration: none !important;
     display: inline-flex;
@@ -101,9 +101,9 @@
 }
 
 .ag-btn-flat:hover {
-    background: #1d4ed8 !important;
+    background: var(--color-secundario-dark, rgb(60, 68, 105)) !important;
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.32);
+    box-shadow: 0 6px 16px rgba(80, 89, 132, 0.32);
     color: #ffffff !important;
 }
 
@@ -454,7 +454,7 @@
                         <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: var(--texto-silenciado, #64748b);">Reclama espacio muerto y actualiza estadísticas de consulta</p>
                     </div>
                     <form action="optimizar-bd" method="POST" style="margin:0;">
-                        <button type="submit" class="ag-btn-flat" style="background: #059669 !important; padding: 7px 14px !important; font-size: 0.82rem !important;" title="Ejecutar VACUUM ANALYZE">
+                        <button type="submit" class="ag-btn-flat" style="background: var(--color-secundario) !important; padding: 7px 14px !important; font-size: 0.82rem !important;" title="Ejecutar VACUUM ANALYZE">
                             <i class="ph-bold ph-sparkle"></i> Optimizar BD Ahora
                         </button>
                     </form>
@@ -565,7 +565,7 @@
                                                 <!-- BOTÓN RESTAURAR DIRECTO -->
                                                 <form action="restaurar-backup" method="POST" style="margin:0;">
                                                     <input type="hidden" name="archivo_guardado" value="<?= htmlspecialchars($nB) ?>">
-                                                    <button type="button" class="ag-btn-flat" style="padding: 5px 10px !important; font-size: 0.78rem !important; background: #2563eb !important;" onclick="confirmarRestauracionDirecta(this.form, '<?= htmlspecialchars($nB) ?>')" title="Restaurar este respaldo">
+                                                    <button type="button" class="ag-btn-flat" style="padding: 5px 10px !important; font-size: 0.78rem !important; background: var(--color-secundario) !important;" onclick="confirmarRestauracionDirecta(this.form, '<?= htmlspecialchars($nB) ?>')" title="Restaurar este respaldo">
                                                         <i class="ph-bold ph-arrows-counter-clockwise"></i> Restaurar
                                                     </button>
                                                 </form>

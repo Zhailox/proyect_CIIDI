@@ -203,25 +203,28 @@ class MailService {
             <meta name='viewport' content='width=device-width, initial-scale=1.0'>
             <title>{$titulo}</title>
         </head>
-        <body style='margin:0; padding:0; background-color:#f4f7fb; font-family: Arial, Helvetica, sans-serif; color:#334155;'>
-            <table role='presentation' width='100%' cellspacing='0' cellpadding='0' style='background-color:#f4f7fb; padding: 20px 0;'>
+        <body style='margin:0; padding:0; background-color:#f8fafc; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; color:#334155; -webkit-font-smoothing: antialiased;'>
+            <table role='presentation' width='100%' cellspacing='0' cellpadding='0' style='background-color:#f8fafc; padding: 30px 15px;'>
                 <tr>
                     <td align='center'>
-                        <table role='presentation' width='100%' style='max-width: 600px; background-color:#ffffff; border-radius: 12px; overflow:hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;'>
+                        <table role='presentation' width='100%' style='max-width: 600px; background-color:#ffffff; border-radius: 12px; overflow:hidden; box-shadow: 0 10px 25px -5px rgba(18, 26, 62, 0.08); border: 1px solid #e2e8f0;'>
                             
-                            <!-- HEADER INSTITUCIONAL -->
+                            <!-- HEADER INSTITUCIONAL CIIDI -->
                             <tr>
-                                <td style='background: linear-gradient(135deg, #121a3e 0%, #1e293b 100%); padding: 30px 20px; text-align: center; color: #ffffff;'>
-                                    <div style='font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #f59e0b; margin-bottom: 6px;'>
-                                        UPTTMBI - VALERA, TRUJILLO
+                                <td style='background: linear-gradient(135deg, rgb(80, 89, 132) 0%, rgb(112, 144, 203) 100%); padding: 32px 25px; text-align: center; color: #ffffff;'>
+                                    <div style='font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #ffffff; opacity: 0.9; margin-bottom: 8px;'>
+                                        UPTTMBI &bull; VALERA, TRUJILLO
                                     </div>
-                                    <h1 style='margin:0; font-size: 22px; font-weight: 800; letter-spacing: 0.5px; color: #ffffff;'>
+                                    <h1 style='margin:0; font-size: 24px; font-weight: 800; letter-spacing: 0.5px; color: #ffffff; text-transform: uppercase;'>
                                         SISTEMA INTEGRAL CIIDI
                                     </h1>
+                                    <div style='font-size: 12px; color: #ffffff; opacity: 0.85; margin-top: 4px; font-weight: 500;'>
+                                        Centro de Investigación, Innovación y Desarrollo Informático
+                                    </div>
                                 </td>
                             </tr>
 
-                            <!-- CONTENIDO -->
+                            <!-- CUERPO DE NOTIFICACIÓN -->
                             <tr>
                                 <td style='padding: 35px 30px; background-color: #ffffff;'>
                                     {$cuerpo}
@@ -230,11 +233,11 @@ class MailService {
 
                             <!-- FOOTER INSTITUCIONAL -->
                             <tr>
-                                <td style='background-color: #f8fafc; padding: 20px 30px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b;'>
-                                    <p style='margin: 0 0 6px 0; font-weight: 600; color: #475569;'>
-                                        Universidad Politécnica Territorial del Estado Trujillo \"Mario Briceño Iragorry\"
+                                <td style='background-color: #f8fafc; padding: 24px 30px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b;'>
+                                    <p style='margin: 0 0 6px 0; font-weight: 700; color: #121a3e;'>
+                                        Universidad Politécnica Territorial del Estado Trujillo &quot;Mario Briceño Iragorry&quot;
                                     </p>
-                                    <p style='margin: 0;'>
+                                    <p style='margin: 0; color: #64748b;'>
                                         &copy; {$year} CIIDI. Todos los derechos reservados.
                                     </p>
                                 </td>

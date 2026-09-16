@@ -560,7 +560,7 @@ if (isset($privilegios)) {
 
             <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.75rem;">
                 <button type="button" onclick="toggleModalCrearRol(false)" class="btn btn-outline" style="border-color: #cbd5e1; color: #64748b; padding: 0.65rem 1rem; border-radius: 6px; font-size: 0.85rem;">Cancelar</button>
-                <button type="submit" class="btn btn-solid" style="background: #10b981 !important; color: #ffffff !important; border: none; padding: 0.65rem 1.25rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700;">Crear Rol</button>
+                <button type="submit" class="btn btn-solid" style="background: var(--color-secundario) !important; color: #ffffff !important; border: none; padding: 0.65rem 1.25rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700;">Crear Rol</button>
             </div>
         </form>
     </div>

@@ -544,11 +544,13 @@
 
 /* Columna de Filtros (Sidebar) */
 .search-sidebar-column {
-    background-color: var(--bg-card, #ffffff);
-    border: 1px solid rgba(169, 168, 166, 0.2);
+    background: rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(112, 144, 203, 0.25);
     border-radius: var(--radius-lg, 12px);
     padding: 1.5rem;
-    box-shadow: 0 4px 15px rgba(18, 26, 62, 0.04);
+    box-shadow: 0 4px 20px rgba(18, 26, 62, 0.02);
 }
 
 .filter-group-card {
@@ -714,8 +716,8 @@
 
 .minimal-input-wrapper select {
     width: 100%;
-    background: rgba(244, 244, 244, 0.5);
-    border: 1px solid rgba(169, 168, 166, 0.2);
+    background: rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(112, 144, 203, 0.2);
     border-radius: var(--radius-md, 6px);
     padding: 0.55rem 2rem 0.55rem 0.75rem;
     font-size: 0.85rem;
@@ -724,20 +726,21 @@
     appearance: none;
     cursor: pointer;
     transition: all var(--transition-fast);
+    backdrop-filter: blur(4px);
 }
 
 .minimal-input-wrapper select:hover {
-    background: rgba(112, 144, 203, 0.05);
+    background: rgba(112, 144, 203, 0.12);
 }
 
 .minimal-input-wrapper select:focus {
-    background: var(--blanco);
+    background: rgba(255, 255, 255, 0.8);
     border-color: var(--color-terciario);
     box-shadow: 0 0 0 3px rgba(112, 144, 203, 0.1);
 }
 
 .minimal-input-wrapper select:disabled {
-    background-color: #f3f4f6;
+    background-color: rgba(243, 244, 246, 0.4);
     color: #9ca3af;
     cursor: not-allowed;
     border-color: #e5e7eb;
@@ -797,11 +800,13 @@
 }
 
 .search-bar-panel {
-    background-color: var(--bg-card);
-    border: 1px solid rgba(169, 168, 166, 0.2);
+    background: rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(112, 144, 203, 0.25);
     border-radius: var(--radius-lg, 12px);
     padding: 1.5rem;
-    box-shadow: 0 4px 15px rgba(18, 26, 62, 0.04);
+    box-shadow: 0 4px 20px rgba(18, 26, 62, 0.02);
 }
 
 .search-mode-selector {
@@ -881,21 +886,25 @@
     padding: 0.8rem 3.5rem 0.8rem 3rem;
     font-size: 1.05rem;
     border-radius: 6px;
-    border: 1px solid rgba(169, 168, 166, 0.4);
-    background-color: var(--blanco);
+    border: 1px solid rgba(112, 144, 203, 0.25);
+    background-color: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     outline: none;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
     transition: all var(--transition-fast);
 }
 
 .google-search-bar input:hover {
-    box-shadow: 0 4px 10px rgba(18, 26, 62, 0.06);
-    border-color: rgba(169, 168, 166, 0.5);
+    box-shadow: 0 4px 10px rgba(18, 26, 62, 0.05);
+    border-color: rgba(112, 144, 203, 0.4);
+    background-color: rgba(255, 255, 255, 0.5);
 }
 
 .google-search-bar input:focus {
-    box-shadow: 0 4px 12px rgba(112, 144, 203, 0.12);
+    box-shadow: 0 4px 12px rgba(112, 144, 203, 0.15);
     border-color: var(--color-terciario);
+    background-color: rgba(255, 255, 255, 0.85);
 }
 
 .google-search-icon {
@@ -973,9 +982,12 @@
 .search-welcome-state {
     text-align: center;
     padding: 3.5rem 2rem;
-    background-color: var(--bg-card);
-    border: 1px dashed rgba(169, 168, 166, 0.35);
+    background: rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px dashed rgba(112, 144, 203, 0.3);
     border-radius: var(--radius-lg, 12px);
+    box-shadow: 0 4px 20px rgba(18, 26, 62, 0.02);
 }
 
 .search-welcome-state h2 {
@@ -992,12 +1004,15 @@
 }
 
 .no-results-card {
-    background-color: var(--bg-card);
-    border: 1px solid rgba(169, 168, 166, 0.2);
+    background: rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(112, 144, 203, 0.25);
     border-radius: var(--radius-lg, 12px);
     padding: 2.5rem;
     text-align: center;
     color: var(--texto-silenciado);
+    box-shadow: 0 4px 20px rgba(18, 26, 62, 0.02);
 }
 
 .no-results-card i {
@@ -1013,17 +1028,27 @@
 }
 
 .result-card {
-    background-color: var(--bg-card);
-    border: 1px solid rgba(169, 168, 166, 0.2);
+    background: rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(112, 144, 203, 0.25);
     border-radius: var(--radius-lg, 12px);
     padding: 1.25rem;
-    box-shadow: 0 2px 8px rgba(18, 26, 62, 0.02);
-    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    box-shadow: 0 4px 20px rgba(18, 26, 62, 0.02);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast);
 }
 
 .result-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(18, 26, 62, 0.05);
+    background: rgba(255, 255, 255, 0.35) !important;
+    box-shadow: 0 6px 20px rgba(18, 26, 62, 0.06);
+    border-color: rgba(112, 144, 203, 0.4);
+}
+
+.result-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(18, 26, 62, 0.08);
+    border-color: rgba(80, 89, 132, 0.35);
 }
 
 .result-card.ia-result-card {
