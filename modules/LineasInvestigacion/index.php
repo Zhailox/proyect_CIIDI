@@ -85,16 +85,12 @@ class LineasInvestigacionModule implements ModuleContract {
                 'titulo'      => 'Líneas I+D',
                 'icono'       => 'ph-fill ph-graph',
                 'enlace'      => 'lineas-investigacion',
-                'activadores' => ['lineas-investigacion', 'detalle-linea', 'gestionar-lineas', 'gestionar-dimensiones', 'analitica'],
+                'activadores' => ['lineas-investigacion', 'detalle-linea', 'gestionar-lineas', 'detalle-gestion-linea', 'gestionar-dimensiones', 'analitica'],
                 'privilegio_minimo' => $nivelPublico,
                 'subitems'    => [
                     ['ruta' => 'lineas-investigacion',  'titulo' => 'Explorar Líneas', 'privilegio_minimo' => $nivelPublico],
                     ['ruta' => 'analitica',             'titulo' => 'Analítica IA', 'privilegio_minimo' => $nivelAdmin],
-                    ['ruta' => 'gestionar-lineas',      'titulo' => 'Gestor de Líneas', 'privilegio_minimo' => $nivelAdmin],
-                ],
-                    ['ruta' => 'analitica',             'titulo' => 'Analítica IA', 'privilegio_minimo' => $nivelAdmin],
-                    ['ruta' => 'gestionar-lineas',      'titulo' => 'Gestionar Líneas', 'privilegio_minimo' => $nivelAdmin],
-                    ['ruta' => 'gestionar-dimensiones', 'titulo' => 'Gestionar Dimensiones', 'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'gestionar-lineas',      'titulo' => 'Gestor de Líneas', 'privilegio_minimo' => $nivelAdmin]
                 ]
             ]
         ];
@@ -110,18 +106,11 @@ class LineasInvestigacionModule implements ModuleContract {
 
     public function getHomeConfig(): array {
         return [
-            'icono'       => 'ph-fill ph-graph',
-            'titulo'      => 'Líneas de Investigación',
-            'descripcion' => 'Explora los ejes estratégicos que articulan el conocimiento del PNF en Informática. Descubre dimensiones operativas, proyectos clasificados e investigaciones ofertadas.',
-            'enlace'      => 'lineas-investigacion',
-            'texto_boton' => 'EXPLORAR LÍNEAS',
-            'destacado'   => false
+            'icono' => 'ph-fill ph-graph',
+            'titulo' => 'Líneas I+D',
+            'descripcion' => 'Explorar y gestionar líneas de investigación.',
+            'ruta' => 'lineas-investigacion',
+            'orden' => 3
         ];
     }
-
-    public function getHeaderConfig(): array {
-        return [];
-    }
 }
-
-return new LineasInvestigacionModule();
