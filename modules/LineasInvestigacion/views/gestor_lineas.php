@@ -239,7 +239,7 @@
     <!-- GRID DE TARJETAS DE LÍNEAS -->
     
     <!-- BARRA DE CONTROLES (VISTA) -->
-    <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; margin-top: -15px;">
         <div style="background: #e2e8f0; padding: 4px; border-radius: 8px; display: inline-flex; gap: 4px;">
             <button type="button" id="btnViewGrid" title="Vista Cuadrícula" onclick="setLineaViewMode('grid')" style="border:none; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.85rem; transition: 0.2s; background: #ffffff; color: #1e293b; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><i class="ph-bold ph-squares-four" style="font-size: 1.1rem;"></i></button>
             <button type="button" id="btnViewList" title="Vista Lista" onclick="setLineaViewMode('list')" style="border:none; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.85rem; transition: 0.2s; background: transparent; color: #64748b;"><i class="ph-bold ph-list" style="font-size: 1.1rem;"></i></button>
@@ -429,3 +429,32 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 </body>
+
+<script>
+function setLineaViewMode(mode) {
+    const gridEl = document.querySelector('.ag-modules-grid');
+    const btnGrid = document.getElementById('btnViewGrid');
+    const btnList = document.getElementById('btnViewList');
+    
+    if (!gridEl) return;
+    
+    // reset styles
+    btnGrid.style.background = 'transparent'; btnGrid.style.color = '#64748b'; btnGrid.style.boxShadow = 'none';
+    btnList.style.background = 'transparent'; btnList.style.color = '#64748b'; btnList.style.boxShadow = 'none';
+
+    if (mode === 'list') {
+        gridEl.classList.add('ag-view-list');
+        btnList.style.background = '#ffffff'; btnList.style.color = '#1e293b'; btnList.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        localStorage.setItem('lineas_view_mode', 'list');
+    } else {
+        gridEl.classList.remove('ag-view-list');
+        btnGrid.style.background = '#ffffff'; btnGrid.style.color = '#1e293b'; btnGrid.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        localStorage.setItem('lineas_view_mode', 'grid');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const savedMode = localStorage.getItem('lineas_view_mode') || 'grid';
+    setLineaViewMode(savedMode);
+});
+</script>
