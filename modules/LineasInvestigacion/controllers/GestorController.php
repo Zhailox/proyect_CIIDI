@@ -1,6 +1,8 @@
 <?php
 // modules/LineasInvestigacion/controllers/GestorController.php
 
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
+require_once __DIR__ . '/../../../core/Security/Auth.php';
 require_once __DIR__ . '/../models/LineasModel.php';
 require_once __DIR__ . '/../models/DimensionesModel.php';
 
@@ -11,16 +13,26 @@ require_once __DIR__ . '/../models/DimensionesModel.php';
  */
 class GestorLineasController {
 
+    private int $nivelAdmin;
+
+    public function __construct() {
+        $this->nivelAdmin = SystemConfigService::get('accesos_modulos.lineas_investigacion.admin', 1);
+    }
+
     // =========================================================
     //  GESTIÓN DE LÍNEAS DE INVESTIGACIÓN
     // =========================================================
 
     public function index() {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'LineasInvestigacion');
         $lineasModel = new LineasModel();
 
         // --- Procesar operaciones POST (CRUD) ---
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $accion = trim($_POST['accion'] ?? '');
+            if ($accion === 'crear') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'LineasInvestigacion');
+            if ($accion === 'editar') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'LineasInvestigacion');
+            if ($accion === 'eliminar') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'LineasInvestigacion');
 
             try {
                 switch ($accion) {
@@ -117,6 +129,7 @@ class GestorLineasController {
 
 
     public function detalleGestionLinea() {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'LineasInvestigacion');
         $id = (int)($_GET['id'] ?? 0);
         if (!$id) {
             header("Location: index.php?ruta=gestionar-lineas");
@@ -145,11 +158,15 @@ class GestorLineasController {
     }
 
     public function dimensiones() {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'LineasInvestigacion');
         $dimModel    = new DimensionesModel();
         $lineasModel = new LineasModel();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $accion = trim($_POST['accion'] ?? '');
+            if ($accion === 'crear') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'LineasInvestigacion');
+            if ($accion === 'editar') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'LineasInvestigacion');
+            if ($accion === 'eliminar') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'LineasInvestigacion');
 
             try {
                 switch ($accion) {
