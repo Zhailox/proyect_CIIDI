@@ -636,7 +636,6 @@ class AdminController {
                     putenv("PGPASSWORD={$creds['pass']}");
                     $comando = "{$psqlPath} -h {$creds['host']} -p {$creds['port']} "
                     . "-U {$creds['user']} -d {$creds['db']} "
-                    . "--set=ON_ERROR_STOP=1 --single-transaction "
                     . "-f \"{$rutaParaPsql}\" 2>&1";
 
                     $salida = [];
