@@ -388,6 +388,33 @@ class VinculacionController
         
         $oportunidades = $this->modelo->getAceptadas();
         
+        // Agrupar y extraer datos unicos para los filtros de la vista
+        $lineasUnicas = [];
+        $cuposUnicos = [];
+        $oportunidadesPorTrayecto = [];
+
+        foreach ($oportunidades as $op) {
+            $linea = $op['linea_investigacion'] ?? 'General';
+            if (!in_array($linea, $lineasUnicas)) {
+                $lineasUnicas[] = $linea;
+            }
+
+            $cupos = (int)($op['cupos_disponibles'] ?? 1);
+            if (!in_array($cupos, $cuposUnicos)) {
+                $cuposUnicos[] = $cupos;
+            }
+
+            $trayecto = $op['nivel_trayecto'] ?? 'Sin Asignar';
+            if (!isset($oportunidadesPorTrayecto[$trayecto])) {
+                $oportunidadesPorTrayecto[$trayecto] = [];
+            }
+            $oportunidadesPorTrayecto[$trayecto][] = $op;
+        }
+
+        sort($lineasUnicas);
+        sort($cuposUnicos);
+        ksort($oportunidadesPorTrayecto); 
+        
         $userData = [];
         if (Auth::check()) {
             $pdo = \Connection::getInstance();
@@ -398,9 +425,13 @@ class VinculacionController
         
         return [
             'oportunidades' => $oportunidades,
-            'userData' => $userData
+            'userData' => $userData,
+            'lineasUnicas' => $lineasUnicas,
+            'cuposUnicos' => $cuposUnicos,
+            'oportunidadesPorTrayecto' => $oportunidadesPorTrayecto
         ];
     }
+
     
     public function gestionProyectos(): array {
         Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'VinculacionEmpresarial');
