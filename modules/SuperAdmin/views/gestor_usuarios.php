@@ -11,7 +11,10 @@
                 Control centralizado de usuarios, registro directo, matriz de privilegios y reseteo de claves.
             </p>
         </div>
-        <div style="display: flex; gap: 0.5rem;">
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button onclick="toggleModalInvitarProfesor(true)" class="btn sa-btn-primary" style="background: #121a3e !important; color: #ffffff !important; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border: none;">
+                <i class="ph-bold ph-envelope-simple-open"></i> + Invitar Profesor
+            </button>
             <button onclick="toggleModalCrearUsuario(true)" class="btn sa-btn-primary" style="background: var(--color-secundario) !important; color: #ffffff !important; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border: none;">
                 <i class="ph-bold ph-user-plus"></i> + Crear Usuario
             </button>
@@ -748,4 +751,49 @@ function confirmarEliminacionNivel(nivel) {
     const form = document.getElementById('formEliminarNivel');
     mostrarConfirmacionUsuarios(form, 'Eliminar Nivel', `¿Seguro que deseas eliminar el nivel de privilegio ${nivel}? Esta acción fallará por seguridad si aún existen roles asignados a esta jerarquía.`, 'ph-trash', '#ef4444');
 }
+function toggleModalInvitarProfesor(show) {
+    const modal = document.getElementById('modalInvitarProfesor');
+    if (modal) {
+        modal.style.display = show ? 'flex' : 'none';
+    }
+}
 </script>
+
+<!-- MODAL: INVITAR PROFESOR POR CORREO -->
+<div id="modalInvitarProfesor" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18, 26, 62, 0.6); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center; padding: 1rem;">
+    <div class="glass-panel" style="background: #ffffff; width: 100%; max-width: 500px; border-radius: 12px; padding: 1.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(80,89,132,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+            <h3 style="margin: 0; font-size: 1.1rem; color: #121a3e; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                <i class="ph-bold ph-envelope-simple-open" style="color: #7090cb;"></i> Invitar Nuevo Docente / Profesor
+            </h3>
+            <button type="button" onclick="toggleModalInvitarProfesor(false)" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer;">&times;</button>
+        </div>
+        <p style="font-size: 0.85rem; color: #64748b; margin-top: 0; margin-bottom: 1.25rem;">
+            Emita un token de invitación firmado enviado al correo institucional del docente para que defina su propia contraseña y active su cuenta.
+        </p>
+
+        <form action="invitar-profesor" method="POST">
+            <div style="margin-bottom: 1rem;">
+                <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 4px;">Cédula de Identidad (*):</label>
+                <input type="text" name="cedula" required class="sa-filter-input" style="width: 100%;" placeholder="Ej: V-12345678">
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 4px;">Nombre Completo (*):</label>
+                <input type="text" name="nombre" required class="sa-filter-input" style="width: 100%;" placeholder="Ej: Prof. María Pérez">
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+                <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 4px;">Correo Institucional (*):</label>
+                <input type="email" name="email" required class="sa-filter-input" style="width: 100%;" placeholder="docente@upttmbi.edu.ve">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+                <button type="button" onclick="toggleModalInvitarProfesor(false)" style="background: #e2e8f0; color: #475569; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer;">Cancelar</button>
+                <button type="submit" style="background: #121a3e; color: #ffffff; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="ph-bold ph-paper-plane-tilt"></i> Emitir Invitación
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

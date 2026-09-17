@@ -1,5 +1,53 @@
 [
     {
+        "id": "log_6aab684b74308",
+        "fecha_hora": "2026-09-17 04:10:51",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Invitar Profesor",
+        "detalles": "Invitación emitida para el profesor asdasdas (C.I: 12312345, Correo: miguelalejandroomega2005@gmail.com)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "51e286457b1c2a3124b063d777339267bd1394f5cfecdcccf263d91cd875d923",
+        "hash_integridad": "daab14060bef07410b06a6a845d15105a727df98e48f98f52bb625237312efb4"
+    },
+    {
+        "id": "log_6aab67f37ee3f",
+        "fecha_hora": "2026-09-17 04:09:23",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Invitar Profesor",
+        "detalles": "Invitación emitida para el profesor mikisida (C.I: 12312312, Correo: miguelalejandrooomega2005@gmail.com)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "d4b8c5f3c6fb3bcac55207396f1f3c95e6b500e68fbc7d59dceb06995a474198",
+        "hash_integridad": "51e286457b1c2a3124b063d777339267bd1394f5cfecdcccf263d91cd875d923"
+    },
+    {
+        "id": "log_6aab60ed177ae",
+        "fecha_hora": "2026-09-17 03:39:25",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Restaurar Cuenta Usuario",
+        "detalles": "Estado de la cuenta del Usuario C.I. 30469331 cambiado a: Activo",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "8d2af0a8bad6e60c75ac3b4a9cc15e48eccb3cc722b05e2034e38253a163e9f3",
+        "hash_integridad": "d4b8c5f3c6fb3bcac55207396f1f3c95e6b500e68fbc7d59dceb06995a474198"
+    },
+    {
+        "id": "log_6aab604a95a66",
+        "fecha_hora": "2026-09-17 03:36:42",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Suspender Cuenta Usuario",
+        "detalles": "Estado de la cuenta del Usuario C.I. 30469331 cambiado a: Suspendido",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "dfcda1570cff50024db905f49cb1c37b4963b96ad28b09e6e0e530edd84d69a8",
+        "hash_integridad": "8d2af0a8bad6e60c75ac3b4a9cc15e48eccb3cc722b05e2034e38253a163e9f3"
+    },
+    {
         "id": "log_6aaafaaa67c9d",
         "fecha_hora": "2026-09-16 20:23:06",
         "nivel": "INFO",

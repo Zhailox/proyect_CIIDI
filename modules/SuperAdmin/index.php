@@ -23,6 +23,11 @@ class SuperAdminModule implements ModuleContract {
                 'titulo'           => 'Gestión de Usuarios - UPTTMBI',
                 'css'              => ['SuperAdmin.css', 'gestor.css']
             ],
+            'invitar-profesor' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'invitarProfesorAction'
+            ],
             'guardar-matriz-rbac' => [
                 'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
                 'controlador'      => 'GestorUsuariosController',

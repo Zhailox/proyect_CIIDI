@@ -1,5 +1,35 @@
 [
     {
+        "id": "mail_6aab684b73dca",
+        "fecha": "2026-09-17 04:10:51",
+        "destino_email": "miguelalejandroomega2005@gmail.com",
+        "destino_nombre": "asdasdas",
+        "asunto": "Invitación Oficial - Registro de Cuenta Docente CIIDI",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aab67f37d107",
+        "fecha": "2026-09-17 04:09:23",
+        "destino_email": "miguelalejandrooomega2005@gmail.com",
+        "destino_nombre": "mikisida",
+        "asunto": "Invitación Oficial - Registro de Cuenta Docente CIIDI",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aab60ed16f81",
+        "fecha": "2026-09-17 03:39:25",
+        "destino_email": "andrusramirez2020@gmail.com",
+        "destino_nombre": "andru",
+        "asunto": "Su cuenta institucional ha sido Reactivada - CIIDI",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
         "id": "mail_6aaafaaa6705d",
         "fecha": "2026-09-16 20:23:06",
         "destino_email": "andrusramirez2020@gmail.com",
