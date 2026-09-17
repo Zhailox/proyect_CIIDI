@@ -1,4 +1,16 @@
-<?php // Logica movida al Controlador ?>
+<?php
+// Lógica movida al Controlador. Función helper de vista restaurada:
+if (!function_exists('getAttrNivel')) {
+    function getAttrNivel($trayecto) {
+        $trayectoLower = strtolower(trim($trayecto));
+        if (strpos($trayectoLower, 'trayecto i') === 0 && strpos($trayectoLower, 'ii') === false && strpos($trayectoLower, 'iv') === false) return 't1';
+        if (strpos($trayectoLower, 'trayecto ii') === 0 && strpos($trayectoLower, 'iii') === false) return 't2';
+        if (strpos($trayectoLower, 'trayecto iii') !== false) return 't3';
+        if (strpos($trayectoLower, 'trayecto iv') !== false) return 't4';
+        return 'maestria';
+    }
+}
+?>
 
 <style>
 /* Forzar la paleta azul para los botones y elementos Kanban de esta vista */
