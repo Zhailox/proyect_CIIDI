@@ -24,17 +24,26 @@ class VinculacionEmpresarialModule implements ModuleContract {
             'gestion-proyectos' => [
                 'vista'  => __DIR__ . '/views/gestion_proyectos.php', 
                 'titulo' => 'Gestión de Solicitudes',
-                'css'    => $css_modulo
+                'css'    => $css_modulo,
+                'controlador' => 'VinculacionController',
+                'controlador_path' => __DIR__ . '/controllers/VinculacionController.php',
+                'metodo' => 'gestionProyectos'
             ],
             'banco-propuestas' => [
                 'vista'  => __DIR__ . '/views/gestion_proyectos.php', 
                 'titulo' => 'Gestión de Solicitudes',
-                'css'    => $css_modulo
+                'css'    => $css_modulo,
+                'controlador' => 'VinculacionController',
+                'controlador_path' => __DIR__ . '/controllers/VinculacionController.php',
+                'metodo' => 'gestionProyectos'
             ],
             'gestion-equipos' => [
                 'vista'  => __DIR__ . '/views/gestion_proyectos.php', 
                 'titulo' => 'Gestión de Solicitudes',
-                'css'    => $css_modulo
+                'css'    => $css_modulo,
+                'controlador' => 'VinculacionController',
+                'controlador_path' => __DIR__ . '/controllers/VinculacionController.php',
+                'metodo' => 'gestionProyectos'
             ],
             'guardar-propuesta' => [
                 'vista' => __DIR__ . '/controllers/VinculacionController.php',
@@ -54,7 +63,10 @@ class VinculacionEmpresarialModule implements ModuleContract {
             'cartelera-oportunidades' => [
                 'vista'  => __DIR__ . '/views/cartelera_oportunidades.php', 
                 'titulo' => 'Cartelera de Oportunidades',
-                'css'    => $css_modulo
+                'css'    => $css_modulo,
+                'controlador' => 'VinculacionController',
+                'controlador_path' => __DIR__ . '/controllers/VinculacionController.php',
+                'metodo' => 'carteleraOportunidades'
             ],
             'postular-oportunidad' => [
                 'vista' => __DIR__ . '/controllers/VinculacionController.php',

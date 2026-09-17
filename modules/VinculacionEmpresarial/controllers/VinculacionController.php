@@ -5,19 +5,26 @@ require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
 require_once __DIR__ . '/../../../core/Security/Auth.php';
 require_once __DIR__ . '/../models/PropuestaEmpresaModel.php';
 
-class VinculacionController {
+class VinculacionController
+{
 
     private int $nivelAdmin;
+    private int $nivelLogueado;
+    private int $nivelPublico;
 
 
     private $modelo;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->modelo = new PropuestaEmpresaModel();
         $this->nivelAdmin = SystemConfigService::get('accesos_modulos.vinculacion_empresarial.admin', 1);
+        $this->nivelPublico = SystemConfigService::get('accesos_modulos.vinculacion_empresarial.publico', 999);
+        $this->nivelLogueado = SystemConfigService::get('accesos_modulos.autenticacion.publico', 999);
     }
 
-    public function guardarPropuesta() {
+    public function guardarPropuesta()
+    {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $datos = [
                 'nombre_empresa' => $_POST['nombre_empresa'] ?? '',
@@ -28,7 +35,7 @@ class VinculacionController {
                 'area_afectada' => 'Por evaluar (Se definirá al aprobar)',
                 'descripcion_problema' => $_POST['descripcion_problema'] ?? ''
             ];
-            
+
             // Generar código de seguimiento único
             $codigo_seguimiento = 'CIIDI-' . date('Y') . '-' . strtoupper(substr(md5(uniqid(rand(), true)), 0, 5));
             $datos['codigo_seguimiento'] = $codigo_seguimiento;
@@ -45,62 +52,63 @@ class VinculacionController {
         }
     }
 
-    public function procesarPropuesta() {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'VinculacionEmpresarial');
+    public function procesarPropuesta()
+    {
+        Auth::requierePrivilegioMinimo($this->nivelPublico);
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_propuesta'], $_POST['accion'])) {
-            $roles_permitidos = ['Profesor', 'Super Administrador', 'Comite'];
+            $roles_permitidos = ['Profesor', 'Super Administrador', 'Comite',];
             if (!isset($_SESSION['rol_nombre']) || !in_array($_SESSION['rol_nombre'], $roles_permitidos)) {
                 die("Acceso denegado");
             }
-            
+
             $id = $_POST['id_propuesta'];
             $accion = $_POST['accion'];
-            
+
             if ($accion === 'aprobar') {
                 $nivel = $_POST['nivel_trayecto'] ?? 'Trayecto I';
                 $id_linea = $_POST['id_linea'] ?? null;
                 $id_dimension = $_POST['id_dimension'] ?? null;
                 $area_afectada = $_POST['area_afectada'] ?? null;
-                $cupos = isset($_POST['cupos_disponibles']) ? (int)$_POST['cupos_disponibles'] : 3;
-                
+                $cupos = isset($_POST['cupos_disponibles']) ? (int) $_POST['cupos_disponibles'] : 3;
+
                 $pdo = Connection::getInstance();
-                
+
                 // Si el comité definió un área afectada, actualizarla
                 if (!empty($area_afectada)) {
                     $stmt_area = $pdo->prepare("UPDATE propuestas_empresa SET area_afectada = ? WHERE id = ?");
                     $stmt_area->execute([$area_afectada, $id]);
                 }
-                
+
                 // Actualizar estatus en la bolsa de propuestas
                 $this->modelo->actualizarEstado($id, 'aceptada', $nivel);
-                
+
                 // Si seleccionaron una línea, inyectarlo directo a las ofertas!
                 if ($id_linea) {
                     // Buscamos los datos originales de la propuesta para crear la oferta
                     $stmt = $pdo->prepare("SELECT area_afectada, descripcion_problema, nombre_empresa, persona_contacto, correo_contacto, codigo_seguimiento FROM propuestas_empresa WHERE id = ?");
                     $stmt->execute([$id]);
                     $prop = $stmt->fetch();
-                    
+
                     if ($prop) {
                         $titulo_oferta = "Requerimiento: " . $prop['area_afectada'];
                         $desc_oferta = $prop['descripcion_problema'] . "\n\n(Nivel Requerido: $nivel)";
-                        
+
                         $sql_insert = "INSERT INTO investigaciones_ofertadas 
                                        (id_profesor, id_linea, id_dimension, titulo, planteamiento_problema, objetivo_general, estado, id_propuesta_empresa, cupos_disponibles) 
                                        VALUES (?, ?, ?, ?, ?, ?, 'Abierta', ?, ?)";
                         $stmt_in = $pdo->prepare($sql_insert);
                         // Usamos el ID del profesor/comité actual
                         $stmt_in->execute([
-                            $_SESSION['usuario_id'], 
+                            $_SESSION['usuario_id'],
                             $id_linea,
                             $id_dimension,
-                            $titulo_oferta, 
-                            $desc_oferta, 
+                            $titulo_oferta,
+                            $desc_oferta,
                             "Dar respuesta y solución tecnológica a los requerimientos de " . $prop['nombre_empresa'],
                             $id,
                             $cupos
                         ]);
-                        
+
                         // ENVIAR CORREO A LA EMPRESA (PROPUESTA APROBADA)
                         if (!empty($prop['correo_contacto'])) {
                             $asunto = 'Propuesta Tecnológica Aprobada - CIIDI';
@@ -126,24 +134,24 @@ class VinculacionController {
                         }
                     }
                 }
-                
+
                 $_SESSION['flash_success'] = "La propuesta ha sido aceptada y publicada en la cartelera.";
 
             } elseif ($accion === 'rechazar') {
                 $motivo = trim($_POST['motivo_rechazo'] ?? '');
-                
+
                 if (empty($motivo)) {
                     $motivo = "Su problemática no cuenta con los requerimientos académicos o el alcance necesario para ser abordada como proyecto en este periodo.";
                 }
-                
+
                 $this->modelo->actualizarEstado($id, 'rechazada', null, $motivo);
-                
+
                 // Enviar correo de rechazo a la empresa
                 $pdo = Connection::getInstance();
                 $stmt = $pdo->prepare("SELECT nombre_empresa, persona_contacto, correo_contacto FROM propuestas_empresa WHERE id = ?");
                 $stmt->execute([$id]);
                 $prop = $stmt->fetch();
-                
+
                 if ($prop && !empty($prop['correo_contacto'])) {
                     $asunto = 'Actualización sobre su Propuesta Tecnológica - CIIDI';
                     $cuerpo = "
@@ -164,16 +172,17 @@ class VinculacionController {
                     </div>";
                     $this->enviarCorreoNotificacion($prop['correo_contacto'], $prop['persona_contacto'], $asunto, $cuerpo);
                 }
-                
+
                 $_SESSION['flash_success'] = "La propuesta ha sido rechazada y se notificó a la empresa.";
             }
-            
+
             echo "<script>window.location.href='?ruta=gestion-proyectos&tab=propuestas';</script>";
             exit;
         }
     }
 
-    public function postularOportunidad() {
+    public function postularOportunidad()
+    {
         Auth::requierePrivilegioMinimo(0);
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             require_once CORE_PATH . 'Security/Auth.php';
@@ -183,7 +192,7 @@ class VinculacionController {
                 exit;
             }
             $user = Auth::usuario();
-            $id_investigacion = (int)$_POST['id_investigacion'];
+            $id_investigacion = (int) $_POST['id_investigacion'];
             $motivacion = trim($_POST['motivacion']);
             $equipo_extra = $_POST['equipo_extra'] ?? null;
 
@@ -205,15 +214,16 @@ class VinculacionController {
         }
     }
 
-    public function procesarAsignacion() {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'VinculacionEmpresarial');
+    public function procesarAsignacion()
+    {
+        Auth::requierePrivilegioMinimo($this->nivelPublico);
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $id_postulacion = (int)$_POST['id_postulacion'];
-            $id_investigacion = (int)$_POST['id_investigacion'];
+            $id_postulacion = (int) $_POST['id_postulacion'];
+            $id_investigacion = (int) $_POST['id_investigacion'];
             $estado = $_POST['estado']; // 'Aceptado' o 'Rechazado'
 
             if ($this->modelo->procesarAsignacion($id_postulacion, $estado, $id_investigacion)) {
-                
+
                 // LÓGICA DE CORREOS
                 if ($estado === 'Aceptado') {
                     $_SESSION['flash_success'] = "El equipo ha sido asignado al proyecto y ambas partes fueron notificadas.";
@@ -229,7 +239,7 @@ class VinculacionController {
                     $stmt = $pdo->prepare($sql);
                     $stmt->execute([$id_postulacion]);
                     $info = $stmt->fetch();
-                    
+
                     if ($info) {
                         // Generar lista de estudiantes
                         $listaEstudiantes = "<ul>";
@@ -268,7 +278,7 @@ class VinculacionController {
                             </div>";
                             $this->enviarCorreoNotificacion($info['lider_email'], $info['lider_nombre'], $asuntoEst, $cuerpoEst);
                         }
-                        
+
                         // 2. Correo a la Empresa
                         if (!empty($info['correo_contacto'])) {
                             $asuntoEmp = '¡Equipo Asignado a tu Requerimiento! - CIIDI';
@@ -305,7 +315,7 @@ class VinculacionController {
                     $stmt = $pdo->prepare($sql);
                     $stmt->execute([$id_postulacion]);
                     $info = $stmt->fetch();
-                    
+
                     if ($info && !empty($info['lider_email'])) {
                         $motivo = "Lamentablemente, el comité de proyectos ha determinado que tu perfil o equipo no cumple con los requerimientos técnicos actuales para abordar esta problemática.";
                         $asuntoEst = 'Actualización sobre su Postulación - CIIDI';
@@ -338,28 +348,29 @@ class VinculacionController {
         }
     }
 
-    private function enviarCorreoNotificacion($destinatarioEmail, $destinatarioNombre, $asunto, $cuerpoHtml) {
+    private function enviarCorreoNotificacion($destinatarioEmail, $destinatarioNombre, $asunto, $cuerpoHtml)
+    {
         require_once CORE_PATH . 'Helpers/PHPMailer/Exception.php';
         require_once CORE_PATH . 'Helpers/PHPMailer/PHPMailer.php';
         require_once CORE_PATH . 'Helpers/PHPMailer/SMTP.php';
-        
+
         $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
         try {
             $mail->isSMTP();
-            $mail->Host       = 'smtp.gmail.com'; 
-            $mail->SMTPAuth   = true;
-            $mail->Username   = 'orlando5711666@gmail.com'; 
-            $mail->Password   = 'hkwtkytxrqxslngb'; 
+            $mail->Host = 'smtp.gmail.com';
+            $mail->SMTPAuth = true;
+            $mail->Username = 'orlando5711666@gmail.com';
+            $mail->Password = 'hkwtkytxrqxslngb';
             $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = 587;
-            $mail->CharSet    = 'UTF-8';
+            $mail->Port = 587;
+            $mail->CharSet = 'UTF-8';
 
             $mail->setFrom('no-reply@ciidi.edu.ve', 'Sistema CIIDI');
             $mail->addAddress($destinatarioEmail, $destinatarioNombre);
 
             $mail->isHTML(true);
             $mail->Subject = $asunto;
-            $mail->Body    = $cuerpoHtml;
+            $mail->Body = $cuerpoHtml;
 
             $mail->send();
             return true;
@@ -367,6 +378,36 @@ class VinculacionController {
             error_log("Error enviando correo a $destinatarioEmail: " . $mail->ErrorInfo);
             return false;
         }
+    }
+
+    // --- METODOS DE VISTAS FRONTEND ---
+    
+    public function carteleraOportunidades(): array {
+        $nivelPublico = SystemConfigService::get('accesos_modulos.vinculacion_empresarial.publico', 999);
+        Auth::requierePrivilegioMinimo($nivelPublico); // 999 permite a cualquier usuario autenticado
+        
+        $oportunidades = $this->modelo->getAceptadas();
+        
+        $userData = [];
+        if (Auth::check()) {
+            $pdo = \Connection::getInstance();
+            $stmt = $pdo->prepare("SELECT nombre_completo, cedula, email, telefono FROM usuarios WHERE id = ?");
+            $stmt->execute([$_SESSION['usuario_id']]);
+            $userData = $stmt->fetch(\PDO::FETCH_ASSOC) ?: [];
+        }
+        
+        return [
+            'oportunidades' => $oportunidades,
+            'userData' => $userData
+        ];
+    }
+    
+    public function gestionProyectos(): array {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'VinculacionEmpresarial');
+        $tab = $_GET['tab'] ?? 'propuestas';
+        return [
+            'tab' => $tab
+        ];
     }
 }
 
