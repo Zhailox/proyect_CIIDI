@@ -15,29 +15,21 @@ class PromoController {
         $this->cfg   = $this->model->cargarConfig();
     }
 
-    // ─────────────────────────────────────────────────────────
-    //  HELPERS PRIVADOS
-    // ─────────────────────────────────────────────────────────
-
-    /** Purifica un campo de texto: strip_tags + htmlspecialchars + filter_var */
-    private function limpiarTexto(string $valor, int $maxLen = 500): string {
-        $valor = strip_tags($valor);
-        $valor = filter_var($valor, FILTER_SANITIZE_SPECIAL_CHARS);
-        $valor = htmlspecialchars_decode($valor, ENT_QUOTES); // volver a texto plano limpio
-        return mb_substr(trim($valor), 0, $maxLen);
+    private function limpiarTexto(string $valor, int $maxLen = 5000): string {
+        // Solo limpiamos espacios y truncamos. htmlspecialchars se aplica en la vista.
+        $valor = trim($valor);
+        return mb_substr($valor, 0, $maxLen);
     }
 
-    /** Valida y limpia una URL. Devuelve URL segura o cadena vacía. */
     private function limpiarUrl(string $valor): string {
         $valor = trim($valor);
         if (empty($valor)) return '';
         $url = filter_var($valor, FILTER_VALIDATE_URL);
-        return $url !== false ? $url : '';
+        if ($url === false) return '';
+        $scheme = parse_url($url, PHP_URL_SCHEME);
+        if (!in_array(strtolower($scheme ?? ''), ['http', 'https'])) return '';
+        return $url;
     }
-
-    // ─────────────────────────────────────────────────────────
-    //  CATÁLOGO — Vista principal pública
-    // ─────────────────────────────────────────────────────────
 
     public function mostrarCatalogo(): array {
         $usuario_actual  = Auth::usuario();
@@ -46,18 +38,21 @@ class PromoController {
         $pagina   = max(1, (int)($_GET['pagina'] ?? 1));
         $porPagina = (int)($_GET['por_pagina'] ?? $this->cfg['paginacion']['limite_catalogo']);
 
-        // Sanitizar porPagina para que sea uno de las opciones válidas
         $opciones  = $this->cfg['paginacion']['opciones_selector'];
         if (!in_array($porPagina, $opciones)) {
             $porPagina = $this->cfg['paginacion']['limite_catalogo'];
         }
 
-        // Catálogo público: SIEMPRE solo los publicados
         $filtros['estado'] = 'publicado';
 
-        // Búsqueda de texto purificada
         if (!empty($_GET['busqueda'])) {
             $filtros['busqueda'] = $this->limpiarTexto($_GET['busqueda'], 200);
+        }
+        if (!empty($_GET['modalidad'])) {
+            $filtros['modalidad'] = $this->limpiarTexto($_GET['modalidad'], 50);
+        }
+        if (!empty($_GET['nivel'])) {
+            $filtros['nivel'] = $this->limpiarTexto($_GET['nivel'], 50);
         }
 
         $resultado    = $this->model->listarCursos($filtros, $pagina, $porPagina);
@@ -65,7 +60,6 @@ class PromoController {
         $total        = $resultado['total'];
         $estadisticas = $this->model->obtenerEstadisticas();
 
-        // Calcular paginación
         $total_paginas = (int)ceil($total / $porPagina);
         $paginacion    = [
             'pagina_actual' => $pagina,
@@ -87,10 +81,6 @@ class PromoController {
         );
     }
 
-    // ─────────────────────────────────────────────────────────
-    //  GESTIÓN DE CURSOS (Mis Cursos / Admin)
-    // ─────────────────────────────────────────────────────────
-
     public function mostrarGestion(): array {
         $nivel_requerido = $this->cfg['roles']['nivel_crear_curso'] ?? 1;
         Auth::requierePrivilegioMinimo($nivel_requerido);
@@ -101,7 +91,7 @@ class PromoController {
         
         $filtros  = [];
         $pagina   = max(1, (int)($_GET['pagina'] ?? 1));
-        $porPagina = 12;
+        $porPagina = 10;
 
         if (!empty($_GET['estado'])) {
             $estados_validos = ['publicado', 'borrador', 'archivado'];
@@ -114,7 +104,6 @@ class PromoController {
             $filtros['busqueda'] = $this->limpiarTexto($_GET['busqueda'], 200);
         }
 
-        // Si es profesor (nivel 1), limitar a "Mis Cursos"
         $nivel_admin = $this->cfg['roles']['nivel_eliminar_curso'] ?? 2;
         if ($nivel < $nivel_admin) {
             $filtros['id_docente'] = $id_usuario;
@@ -144,10 +133,6 @@ class PromoController {
         );
     }
 
-    // ─────────────────────────────────────────────────────────
-    //  CREAR CURSO
-    // ─────────────────────────────────────────────────────────
-
     public function mostrarFormularioCrear(): array {
         Auth::requierePrivilegioMinimo($this->cfg['roles']['nivel_crear_curso']);
 
@@ -172,15 +157,13 @@ class PromoController {
             header('Location: ?ruta=cursos-gestion'); exit;
         }
 
-        // Verificar CSRF si está activo
         if ($this->cfg['seguridad']['csrf_activo']) {
             CursosCsrfService::verificarOFallar('cursos-crear');
         }
 
-        // Purificar inputs de texto
-        $titulo     = $this->limpiarTexto($_POST['titulo']      ?? '', 255);
-        $descripcion= $this->limpiarTexto($_POST['descripcion'] ?? '', 5000);
-        $duracion   = $this->limpiarTexto($_POST['duracion']    ?? '', 80);
+        $titulo      = $this->limpiarTexto($_POST['titulo']      ?? '', 255);
+        $descripcion = $this->limpiarTexto($_POST['descripcion'] ?? '', 5000);
+        $duracion    = $this->limpiarTexto($_POST['duracion']    ?? '', 80);
 
         if (empty($titulo)) {
             $_SESSION['cur_form_error'] = 'El título del curso es obligatorio.';
@@ -190,32 +173,27 @@ class PromoController {
         $usuario_actual = Auth::usuario();
         $nivel_usuario = (int)($usuario_actual['nivel'] ?? -1);
 
-        // Solo Admin/SuperAdmin (nivel 3+) pueden asignar otro docente
-        if ($nivel_usuario >= 3) {
+        $nivel_admin = $this->cfg['roles']['nivel_ver_config'] ?? 3; // admin configurado
+        if ($nivel_usuario >= $nivel_admin) {
             $id_docente = (int)($_POST['id_docente'] ?? 0);
             if ($id_docente <= 0) {
                 $_SESSION['cur_form_error'] = 'Debe seleccionar un docente responsable.';
                 header('Location: ?ruta=cursos-crear'); exit;
             }
         } else {
-            // Se asigna automáticamente al usuario que lo crea
             $id_docente = (int)($usuario_actual['id'] ?? 0);
         }
 
-        // Estado validado contra enum permitido
         $estados_validos = ['borrador', 'publicado', 'archivado'];
         $estado = in_array($_POST['estado'] ?? '', $estados_validos) ? $_POST['estado'] : 'borrador';
 
-        // ── Imagen de portada ────────────────────────────────
         $imagen_portada = '';
-
-        // Archivo subido (campo correcto: imagen_portada_file)
         if (isset($_FILES['imagen_portada_file']) && $_FILES['imagen_portada_file']['error'] !== UPLOAD_ERR_NO_FILE) {
             if ($_FILES['imagen_portada_file']['error'] !== UPLOAD_ERR_OK) {
-                $_SESSION['cur_form_error'] = 'Error al subir la imagen. Es posible que el archivo sea demasiado grande (límite del servidor).';
+                $_SESSION['cur_form_error'] = 'Error al subir la imagen (Código PHP: ' . $_FILES['imagen_portada_file']['error'] . '). Verifica que no exceda el límite del servidor (upload_max_filesize).';
                 header('Location: ?ruta=cursos-crear'); exit;
             }
-            
+
             $carpeta = dirname(__DIR__, 3) . '/' . $this->cfg['imagenes']['carpeta_uploads'];
             $nombre  = CursosImagenService::procesarImagen(
                 $_FILES['imagen_portada_file'],
@@ -225,23 +203,30 @@ class PromoController {
             if ($nombre) {
                 $imagen_portada = $this->cfg['imagenes']['carpeta_uploads'] . $nombre;
             } else {
-                $_SESSION['cur_form_error'] = 'La imagen no pudo procesarse. Solo se aceptan archivos PNG válidos (máx. ' . $this->cfg['imagenes']['max_size_mb'] . ' MB).';
+                $_SESSION['cur_form_error'] = 'La imagen no pudo procesarse. Formato no válido o tamaño excedido.';
                 header('Location: ?ruta=cursos-crear'); exit;
             }
+        } elseif (!empty($_POST['imagen_portada_url'])) {
+            // Alternativa: URL externa de imagen
+            $imagen_portada = $this->limpiarUrl($_POST['imagen_portada_url'] ?? '');
         }
 
-        // ── URL de Moodle ────────────────────────────────────
+
         $url_moodle = $this->limpiarUrl($_POST['url_moodle'] ?? '');
         if (empty($url_moodle)) {
             $url_moodle = $this->cfg['moodle']['url_fallback'];
         }
 
-        // Modalidad y nivel validados contra lista blanca
         $modalidades_validas = ['Virtual', 'Presencial', 'Híbrido'];
         $niveles_validos     = ['Básico', 'Intermedio', 'Avanzado', 'Todos los niveles'];
         $modalidad = in_array($_POST['modalidad'] ?? '', $modalidades_validas) ? $_POST['modalidad'] : 'Virtual';
         $nivel_c   = in_array($_POST['nivel']     ?? '', $niveles_validos)     ? $_POST['nivel']     : 'Básico';
         $cupo      = max(0, (int)($_POST['cupo_maximo'] ?? 0));
+        $nota_minima_aprobacion = (float)($_POST['nota_minima_aprobacion'] ?? 70.00);
+        $fecha_inicio = empty($_POST['fecha_inicio']) ? null : $_POST['fecha_inicio'];
+        $fecha_fin = empty($_POST['fecha_fin']) ? null : $_POST['fecha_fin'];
+        $url_video_preview = $this->limpiarUrl($_POST['url_video_preview'] ?? '');
+        $estado_inscripcion = $this->limpiarTexto($_POST['estado_inscripcion'] ?? 'Abierta', 50);
 
         $datos = [
             'id_docente'     => $id_docente,
@@ -249,32 +234,32 @@ class PromoController {
             'descripcion'    => $descripcion,
             'imagen_portada' => $imagen_portada,
             'estado'         => $estado,
+            'nota_minima_aprobacion' => $nota_minima_aprobacion,
+            'url_moodle' => $url_moodle,
+            'modalidad' => $modalidad,
+            'nivel' => $nivel_c,
+            'duracion' => $duracion,
+            'cupo_maximo' => $cupo,
+            'fecha_inicio' => $fecha_inicio,
+            'fecha_fin' => $fecha_fin,
+            'url_video_preview' => $url_video_preview,
+            'estado_inscripcion' => $estado_inscripcion,
         ];
 
         try {
             $nuevo_id = $this->model->crearCurso($datos);
             if ($nuevo_id) {
-                $this->model->guardarMetaCurso($nuevo_id, [
-                    'url_moodle' => $url_moodle,
-                    'modalidad'  => $modalidad,
-                    'nivel'      => $nivel_c,
-                    'duracion'   => $duracion,
-                    'cupo_maximo'=> $cupo,
-                ]);
-                $_SESSION['cur_exito'] = 'Curso «' . htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') . '» creado exitosamente.';
+                $_SESSION['cur_exito'] = 'Curso creado exitosamente.';
             } else {
                 $_SESSION['cur_error'] = 'No se pudo crear el curso. Intente nuevamente.';
             }
         } catch (Exception $e) {
-            $_SESSION['cur_error'] = 'Error en la base de datos: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+            error_log('Error DB crear curso: ' . $e->getMessage());
+            $_SESSION['cur_error'] = 'Ocurrió un error en la base de datos al procesar la solicitud.';
         }
 
         header('Location: ?ruta=cursos-gestion'); exit;
     }
-
-    // ─────────────────────────────────────────────────────────
-    //  EDITAR CURSO
-    // ─────────────────────────────────────────────────────────
 
     public function mostrarFormularioEditar(): array {
         Auth::requierePrivilegioMinimo($this->cfg['roles']['nivel_crear_curso']);
@@ -288,14 +273,21 @@ class PromoController {
             header('Location: ?ruta=cursos-gestion'); exit;
         }
 
+        $usuario_actual = Auth::usuario();
+        $nivel_usuario = (int)($usuario_actual['nivel'] ?? -1);
+        $nivel_admin = $this->cfg['roles']['nivel_eliminar_curso'] ?? 2;
+        if ($nivel_usuario < $nivel_admin && $curso['id_docente'] != $usuario_actual['id']) {
+            $_SESSION['cur_error'] = 'No tienes permiso para editar este curso.';
+            header('Location: ?ruta=cursos-gestion'); exit;
+        }
+
         $docentes     = $this->model->listarDocentes();
-        $meta         = $this->model->obtenerMetaCurso($id);
+        $meta         = $curso; // Ya vienen en el curso
         $modo         = 'editar';
         $titulo_form  = 'Editar Curso';
         $error        = $_SESSION['cur_form_error'] ?? null;
         $csrf_token   = CursosCsrfService::campoHidden();
         $config_vista = $this->cfg;
-        $usuario_actual = Auth::usuario();
         unset($_SESSION['cur_form_error']);
 
         return compact('docentes', 'curso', 'meta', 'modo', 'titulo_form', 'error', 'csrf_token', 'config_vista', 'usuario_actual');
@@ -315,7 +307,22 @@ class PromoController {
             CursosCsrfService::verificarOFallar("cursos-editar?id={$id}");
         }
 
-        // Purificar inputs
+        $curso_actual = $this->model->obtenerPorId($id);
+        if (!$curso_actual) {
+            $_SESSION['cur_error'] = 'Curso no encontrado.';
+            header('Location: ?ruta=cursos-gestion'); exit;
+        }
+
+        $usuario_actual = Auth::usuario();
+        $nivel_usuario = (int)($usuario_actual['nivel'] ?? -1);
+        $nivel_admin_edit = $this->cfg['roles']['nivel_eliminar_curso'] ?? 2;
+        
+        // AUDITORIA: PREVENCIÓN IDOR
+        if ($nivel_usuario < $nivel_admin_edit && $curso_actual['id_docente'] != $usuario_actual['id']) {
+            $_SESSION['cur_error'] = 'Acceso denegado: No puedes editar un curso que no te pertenece.';
+            header('Location: ?ruta=cursos-gestion'); exit;
+        }
+
         $titulo      = $this->limpiarTexto($_POST['titulo']      ?? '', 255);
         $descripcion = $this->limpiarTexto($_POST['descripcion'] ?? '', 5000);
         $duracion    = $this->limpiarTexto($_POST['duracion']    ?? '', 80);
@@ -325,37 +332,27 @@ class PromoController {
             header("Location: ?ruta=cursos-editar&id={$id}"); exit;
         }
 
-        $usuario_actual = Auth::usuario();
-        $nivel_usuario = (int)($usuario_actual['nivel'] ?? -1);
-
-        // Obtener datos actuales del curso como fallback
-        $curso_actual = $this->model->obtenerPorId($id);
-
-        if ($nivel_usuario >= 3) {
+        $nivel_admin_docente = $this->cfg['roles']['nivel_ver_config'] ?? 3;
+        if ($nivel_usuario >= $nivel_admin_docente) {
             $id_docente = (int)($_POST['id_docente'] ?? 0);
             if ($id_docente <= 0) {
                 $_SESSION['cur_form_error'] = 'Debe seleccionar un docente responsable.';
                 header("Location: ?ruta=cursos-editar&id={$id}"); exit;
             }
         } else {
-            // Si no es admin, no puede cambiar el docente asignado (se mantiene el que estaba, o él mismo si estaba vacío)
             $id_docente = (int)($curso_actual['id_docente'] ?? $usuario_actual['id']);
         }
 
         $estados_validos = ['borrador', 'publicado', 'archivado'];
         $estado = in_array($_POST['estado'] ?? '', $estados_validos) ? $_POST['estado'] : 'borrador';
 
-        // ── Imagen ──────────────────────────────────────────
-        // Obtener imagen existente como fallback
-        $curso_actual   = $this->model->obtenerPorId($id);
-        $imagen_portada = $curso_actual['imagen_portada'] ?? '';
-
+        $imagen_portada = '';
         if (isset($_FILES['imagen_portada_file']) && $_FILES['imagen_portada_file']['error'] !== UPLOAD_ERR_NO_FILE) {
             if ($_FILES['imagen_portada_file']['error'] !== UPLOAD_ERR_OK) {
-                $_SESSION['cur_form_error'] = 'Error al subir la imagen. Es posible que el archivo sea demasiado grande (límite del servidor).';
+                $_SESSION['cur_form_error'] = 'Error al subir la nueva imagen (Código PHP: ' . $_FILES['imagen_portada_file']['error'] . '). Verifica que no exceda el límite del servidor.';
                 header("Location: ?ruta=cursos-editar&id={$id}"); exit;
             }
-            
+
             $carpeta = dirname(__DIR__, 3) . '/' . $this->cfg['imagenes']['carpeta_uploads'];
             $nombre  = CursosImagenService::procesarImagen(
                 $_FILES['imagen_portada_file'],
@@ -364,11 +361,22 @@ class PromoController {
             );
             if ($nombre) {
                 $imagen_portada = $this->cfg['imagenes']['carpeta_uploads'] . $nombre;
+                // AUDITORIA: LIMPIAR ARCHIVO HUÉRFANO
+                if (!empty($curso_actual['imagen_portada']) && strpos($curso_actual['imagen_portada'], 'http') === false) {
+                    $old_path = dirname(__DIR__, 3) . '/' . $curso_actual['imagen_portada'];
+                    if (file_exists($old_path) && is_file($old_path)) {
+                        @unlink($old_path);
+                    }
+                }
             } else {
-                $_SESSION['cur_form_error'] = 'La imagen no pudo procesarse. Solo se aceptan archivos PNG válidos (máx. ' . $this->cfg['imagenes']['max_size_mb'] . ' MB).';
+                $_SESSION['cur_form_error'] = 'La imagen no pudo procesarse. Verifica el formato y tamaño.';
                 header("Location: ?ruta=cursos-editar&id={$id}"); exit;
             }
+        } elseif (!empty($_POST['imagen_portada_url'])) {
+            // Alternativa: URL externa de imagen
+            $imagen_portada = $this->limpiarUrl($_POST['imagen_portada_url'] ?? '');
         }
+
 
         $url_moodle = $this->limpiarUrl($_POST['url_moodle'] ?? '');
         if (empty($url_moodle)) {
@@ -380,6 +388,11 @@ class PromoController {
         $modalidad = in_array($_POST['modalidad'] ?? '', $modalidades_validas) ? $_POST['modalidad'] : 'Virtual';
         $nivel_c   = in_array($_POST['nivel']     ?? '', $niveles_validos)     ? $_POST['nivel']     : 'Básico';
         $cupo      = max(0, (int)($_POST['cupo_maximo'] ?? 0));
+        $nota_minima_aprobacion = (float)($_POST['nota_minima_aprobacion'] ?? 70.00);
+        $fecha_inicio = empty($_POST['fecha_inicio']) ? null : $_POST['fecha_inicio'];
+        $fecha_fin = empty($_POST['fecha_fin']) ? null : $_POST['fecha_fin'];
+        $url_video_preview = $this->limpiarUrl($_POST['url_video_preview'] ?? '');
+        $estado_inscripcion = $this->limpiarTexto($_POST['estado_inscripcion'] ?? 'Abierta', 50);
 
         $datos = [
             'id_docente'     => $id_docente,
@@ -387,35 +400,35 @@ class PromoController {
             'descripcion'    => $descripcion,
             'imagen_portada' => $imagen_portada,
             'estado'         => $estado,
+            'nota_minima_aprobacion' => $nota_minima_aprobacion,
+            'url_moodle' => $url_moodle,
+            'modalidad' => $modalidad,
+            'nivel' => $nivel_c,
+            'duracion' => $duracion,
+            'cupo_maximo' => $cupo,
+            'fecha_inicio' => $fecha_inicio,
+            'fecha_fin' => $fecha_fin,
+            'url_video_preview' => $url_video_preview,
+            'estado_inscripcion' => $estado_inscripcion,
         ];
 
         try {
             $ok = $this->model->editarCurso($id, $datos);
-            $this->model->guardarMetaCurso($id, [
-                'url_moodle'  => $url_moodle,
-                'modalidad'   => $modalidad,
-                'nivel'       => $nivel_c,
-                'duracion'    => $duracion,
-                'cupo_maximo' => $cupo,
-            ]);
             if ($ok !== false) {
-                $_SESSION['cur_exito'] = 'Curso «' . htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') . '» actualizado correctamente.';
+                $_SESSION['cur_exito'] = 'Curso actualizado correctamente.';
             } else {
                 $_SESSION['cur_error'] = 'No se encontraron cambios o el curso no existe.';
             }
         } catch (Exception $e) {
-            $_SESSION['cur_error'] = 'Error en la base de datos: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+            error_log('Error DB editar curso: ' . $e->getMessage());
+            $_SESSION['cur_error'] = 'Ocurrió un error interno al guardar los cambios.';
         }
 
         header('Location: ?ruta=cursos-gestion'); exit;
     }
 
-    // ─────────────────────────────────────────────────────────
-    //  ELIMINAR CURSO
-    // ─────────────────────────────────────────────────────────
-
     public function procesarEliminar(): void {
-        Auth::requierePrivilegioMinimo($this->cfg['roles']['nivel_eliminar_curso']);
+        Auth::requierePrivilegioMinimo($this->cfg['roles']['nivel_crear_curso']); // Permitimos nivel 1, luego validamos propiedad
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ?ruta=cursos-gestion'); exit;
@@ -431,35 +444,51 @@ class PromoController {
             header('Location: ?ruta=cursos-gestion'); exit;
         }
 
-        $curso          = $this->model->obtenerPorId($id);
-        $titulo_borrado = $curso ? htmlspecialchars($curso['titulo'], ENT_QUOTES, 'UTF-8') : "ID #{$id}";
+        $curso = $this->model->obtenerPorId($id);
+        if (!$curso) {
+            $_SESSION['cur_error'] = 'El curso no existe.';
+            header('Location: ?ruta=cursos-gestion'); exit;
+        }
+
+        // AUDITORIA: PREVENCIÓN IDOR
+        $usuario_actual = Auth::usuario();
+        $nivel_usuario = (int)($usuario_actual['nivel'] ?? -1);
+        $nivel_admin = $this->cfg['roles']['nivel_eliminar_curso'] ?? 2;
+        if ($nivel_usuario < $nivel_admin && $curso['id_docente'] != $usuario_actual['id']) {
+            $_SESSION['cur_error'] = 'Acceso denegado: No puedes eliminar este curso.';
+            header('Location: ?ruta=cursos-gestion'); exit;
+        }
 
         try {
             $ok = $this->model->eliminarCurso($id);
             if ($ok) {
-                $_SESSION['cur_exito'] = "Curso «{$titulo_borrado}» eliminado del sistema.";
+                // Limpiar archivo huérfano
+                if (!empty($curso['imagen_portada'])) {
+                    $old_path = dirname(__DIR__, 3) . '/' . $curso['imagen_portada'];
+                    if (file_exists($old_path) && is_file($old_path)) {
+                        @unlink($old_path);
+                    }
+                }
+                $_SESSION['cur_exito'] = "Curso eliminado del sistema.";
             } else {
-                $_SESSION['cur_error'] = 'No se pudo eliminar el curso. Puede que ya no exista.';
+                $_SESSION['cur_error'] = 'No se pudo eliminar el curso.';
             }
         } catch (Exception $e) {
-            $_SESSION['cur_error'] = 'Error al eliminar: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+            error_log('Error DB eliminar curso: ' . $e->getMessage());
+            $_SESSION['cur_error'] = 'Error interno al intentar eliminar el curso.';
         }
 
         header('Location: ?ruta=cursos-gestion'); exit;
     }
 
-    // ─────────────────────────────────────────────────────────
-    //  DETALLE DEL CURSO
-    // ─────────────────────────────────────────────────────────
-
     public function verDetalle(): array {
-        $id = (int)($_GET['id'] ?? 0);
-        if ($id <= 0) { header('Location: ?ruta=cursos'); exit; }
+        $slug = $_GET['slug'] ?? '';
+        if (empty($slug)) { header('Location: ?ruta=cursos'); exit; }
 
         $usuario_actual = Auth::usuario();
         $nivel          = $usuario_actual['nivel'] ?? -1;
 
-        $curso = $this->model->obtenerPorId($id);
+        $curso = $this->model->obtenerPorSlug($slug);
         if (!$curso) {
             $_SESSION['cur_error'] = 'El curso solicitado no fue encontrado.';
             header('Location: ?ruta=cursos'); exit;
@@ -470,7 +499,6 @@ class PromoController {
             header('Location: ?ruta=cursos'); exit;
         }
 
-        // Si url_moodle vacía, usar fallback
         if (empty($curso['url_moodle'])) {
             $curso['url_moodle'] = $this->cfg['moodle']['url_fallback'];
         }
@@ -479,69 +507,42 @@ class PromoController {
         return compact('curso', 'usuario_actual', 'config_vista');
     }
 
-    // ─────────────────────────────────────────────────────────
-    //  CONFIGURACIÓN DEL MÓDULO (solo SuperAdmin nivel >= 3)
-    // ─────────────────────────────────────────────────────────
-
     public function mostrarConfig(): array {
         Auth::requierePrivilegioMinimo($this->cfg['roles']['nivel_ver_config']);
-
         $config_actual = $this->model->cargarConfig();
         $csrf_token    = CursosCsrfService::campoHidden();
         $mensaje_exito = $_SESSION['cur_exito'] ?? null;
         $mensaje_error = $_SESSION['cur_error'] ?? null;
         unset($_SESSION['cur_exito'], $_SESSION['cur_error']);
-
         return compact('config_actual', 'csrf_token', 'mensaje_exito', 'mensaje_error');
     }
 
     public function guardarConfig(): void {
         Auth::requierePrivilegioMinimo($this->cfg['roles']['nivel_ver_config']);
-
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ?ruta=cursos-config'); exit;
         }
-
         if ($this->cfg['seguridad']['csrf_activo']) {
             CursosCsrfService::verificarOFallar('cursos-config');
         }
 
         $cfg = $this->model->cargarConfig();
-
-        // Actualizar paginación
-        $limite = max(1, min(50, (int)($_POST['limite_catalogo'] ?? 9)));
-        $cfg['paginacion']['limite_catalogo'] = $limite;
-
-        // Actualizar límite de imagen
-        $maxMb = max(1, min(20, (int)($_POST['max_size_mb'] ?? 5)));
-        $cfg['imagenes']['max_size_mb'] = $maxMb;
-
-        // Convertir a WebP
+        $cfg['paginacion']['limite_catalogo'] = max(1, min(50, (int)($_POST['limite_catalogo'] ?? 9)));
+        $cfg['imagenes']['max_size_mb'] = max(1, min(20, (int)($_POST['max_size_mb'] ?? 5)));
         $cfg['imagenes']['convertir_a_webp'] = isset($_POST['convertir_a_webp']);
-
-        // Lazy load
         $cfg['imagenes']['lazy_load'] = isset($_POST['lazy_load']);
-
-        // URL fallback de Moodle
         $fallback = $this->limpiarUrl($_POST['url_fallback'] ?? '');
-        if (!empty($fallback)) {
-            $cfg['moodle']['url_fallback'] = $fallback;
-        }
-
-        // CSRF activo
+        if (!empty($fallback)) $cfg['moodle']['url_fallback'] = $fallback;
         $cfg['seguridad']['csrf_activo'] = isset($_POST['csrf_activo']);
-
-        // Placeholder URL
         $placeholder = $this->limpiarUrl($_POST['placeholder_url'] ?? '');
-        if (!empty($placeholder)) {
-            $cfg['imagenes']['placeholder_url'] = $placeholder;
-        }
+        if (!empty($placeholder)) $cfg['imagenes']['placeholder_url'] = $placeholder;
 
         try {
             $this->model->guardarConfig($cfg);
             $_SESSION['cur_exito'] = 'Configuración del módulo guardada correctamente.';
         } catch (Exception $e) {
-            $_SESSION['cur_error'] = 'Error al guardar la configuración.';
+            error_log('Error guardar config: ' . $e->getMessage());
+            $_SESSION['cur_error'] = 'Error interno al guardar la configuración.';
         }
 
         header('Location: ?ruta=cursos-config'); exit;
