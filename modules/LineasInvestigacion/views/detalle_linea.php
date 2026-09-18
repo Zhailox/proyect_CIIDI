@@ -177,7 +177,7 @@
                         </div>
                         <?php if (strtolower($inv['estado'] ?? '') === 'abierta'): ?>
                             <div style="margin-top: 0.8rem;">
-                                <a href="?ruta=cartelera-oportunidades&id_investigacion=<?= $inv['id'] ?>" style="display:block; text-align:center; padding:6px; background:#f1f5f9; color:var(--li-indigo); border-radius:4px; font-size:0.75rem; font-weight:700; text-decoration:none; border: 1px solid #cbd5e1;"><i class="ph-bold ph-hand-pointing"></i> Postularse / Contactar</a>
+                                <a href="?ruta=postulaciones-investigacion" style="display:block; text-align:center; padding:6px; background:#f1f5f9; color:var(--li-indigo); border-radius:4px; font-size:0.75rem; font-weight:700; text-decoration:none; border: 1px solid #cbd5e1;"><i class="ph-bold ph-hand-pointing"></i> Postularse / Contactar</a>
                             </div>
                         <?php endif; ?>
                     </div>
