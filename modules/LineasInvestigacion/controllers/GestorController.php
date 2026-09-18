@@ -276,61 +276,9 @@ class GestorLineasController {
     }
     // =========================================================
     //  EXPORTACI"N Y REPORTES
-    // =========================================================
-
-    public function exportarCsv() {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'LineasInvestigacion');
-        $lineasModel = new LineasModel();
-        $lineas = $lineasModel->getTodasConEstadisticas();
-
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="Matriz_Lineas_Investigacion_' . date('Ymd') . '.csv"');
-        
-        $salida = fopen('php://output', 'w');
-        // UTF-8 BOM para Excel
-        fprintf($salida, chr(0xEF).chr(0xBB).chr(0xBF));
-        
-        fputcsv($salida, ['ID', 'Línea de Investigación', 'PNF / Carrera', 'Descripción', 'Total Proyectos', 'Total Investigaciones Ofertadas'], ';');
-        
-        foreach ($lineas as $l) {
-            fputcsv($salida, [
-                $l['id'],
-                $l['nombre'],
-                $l['carrera_nombre'] ?? 'General',
-                $l['descripcion'],
-                $l['total_proyectos'],
-                $l['total_investigaciones']
-            ], ';');
-        }
-        fclose($salida);
-        exit;
-    }
-
-    public function imprimirMatriz() {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'LineasInvestigacion');
-        $lineasModel = new LineasModel();
-        $lineas = $lineasModel->getTodasConEstadisticas();
-
-        // Esta vista imprime un HTML limpio pensado para ser convertido a PDF mediante window.print()
-        echo "<!DOCTYPE html><html><head><title>Matriz de Líneas de Investigación</title>";
-        echo "<style>body { font-family: Arial, sans-serif; padding: 20px; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #ccc; padding: 8px; text-align: left; } th { background: #f4f4f4; }</style>";
-        echo "</head><body onload='window.print()'>";
-        echo "<h2>Matriz de Líneas de Investigación e Innovación</h2>";
-        echo "<table><thead><tr><th>Línea</th><th>PNF</th><th>Proyectos</th><th>Ofertas</th></tr></thead><tbody>";
-        foreach ($lineas as $l) {
-            echo "<tr>";
-            echo "<td>" . htmlspecialchars($l['nombre']) . "</td>";
-            echo "<td>" . htmlspecialchars($l['carrera_nombre'] ?? 'General') . "</td>";
-            echo "<td>" . (int)$l['total_proyectos'] . "</td>";
-            echo "<td>" . (int)$l['total_investigaciones'] . "</td>";
-            echo "</tr>";
-        }
-        echo "</tbody></table></body></html>";
-        exit;
-    }
 
     // =========================================================
-    //  EXPORTACI"N Y REPORTES
+    //  EXPORTACION Y REPORTES
     // =========================================================
 
     public function exportarCsv() {

@@ -1420,3 +1420,48 @@
     border-radius: 16px !important;
     padding: 2rem !important;
 }
+
+/* =========================================================
+   LANDING PAGE STATS BAR
+========================================================= */
+.li-stats-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-bottom: 3rem;
+}
+.li-stat-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 240px;
+    box-shadow: 0 4px 6px rgba(18, 26, 62, 0.05);
+}
+.li-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+.li-stat-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--li-text-title);
+    line-height: 1.2;
+}
+.li-stat-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.ag-carrera-section {
+    animation: li-fadeInUp 0.6s ease both;
+}

@@ -33,7 +33,7 @@ foreach ($lineas as $l) {
     <!-- GLOBAL STATS -->
     <div class="li-stats-bar">
         <div class="li-stat-card">
-            <div class="li-stat-icon" style="background: rgba(18, 26, 62, 0.08); color: var(--li-indigo);">
+            <div class="li-stat-icon" style="background: rgba(18, 26, 62, 0.08); color: var(--li-text-title);">
                 <i class="ph-fill ph-git-merge"></i>
             </div>
             <div>
@@ -82,7 +82,7 @@ foreach ($lineas as $l) {
             <?php foreach ($lineasPorCarrera as $carrera => $grupo): ?>
                 <div class="ag-carrera-section" data-carrera="<?= htmlspecialchars(strtolower($carrera)) ?>">
                     <div style="border-bottom: 2px solid #e2e8f0; margin-bottom: 1.5rem; padding-bottom: 0.5rem; margin-top: 3rem;">
-                        <h2 style="font-size: 1.5rem; color: var(--li-indigo); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <h2 style="font-size: 1.5rem; color: var(--li-text-title); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
                             <i class="ph-bold ph-graduation-cap"></i> <?= htmlspecialchars($carrera) ?>
                         </h2>
                     </div>
@@ -101,7 +101,7 @@ foreach ($lineas as $l) {
                                         </div>
                                         <div>
                                             <h2 class="li-card-title">
-                                                <?= htmlspecialchars(mb_convert_case($linea['nombre'], MB_CASE_TITLE, 'UTF-8')) ?>
+                                                <?= htmlspecialchars($linea[\'nombre\']) ?>
                                             </h2>
                                         </div>
                                     </div>
