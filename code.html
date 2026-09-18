@@ -1,0 +1,2801 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CIIDI - Explorar Líneas de Investigación</title>
+<!-- Phosphor Icons -->
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<link href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css" rel="stylesheet" type="text/css"/>
+<link href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/thin/style.css" rel="stylesheet" type="text/css"/>
+<link href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/light/style.css" rel="stylesheet" type="text/css"/>
+<link href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/bold/style.css" rel="stylesheet" type="text/css"/>
+<link href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css" rel="stylesheet" type="text/css"/>
+<link href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/duotone/style.css" rel="stylesheet" type="text/css"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<style>
+    /* ==========================================================================
+       VARIABLES NATIVAS Y CONFIGURACIÓN DEL CORE CIIDI
+       ========================================================================== */
+    :root {
+      /* Paleta estricta del Core */
+      --color-principal: #121a3e;     /* Indigo oscuro institucional */
+      --color-secundario: #505984;    /* Violeta/Grisáceo de balance */
+      --color-terciario: #7090cb;     /* Cyan suave / Acanto */
+      --fondo-gris: #f8fafc;          /* Fondo general de la app */
+      --texto-titulos: #0f172a;       /* Gris muy oscuro encabezados */
+      --texto-comun: #334155;         /* Gris oscuro estándar legible */
+      --texto-silenciado: #64748b;    /* Gris claro para metadata */
+
+      /* Variantes semánticas derivadas y utilitarias */
+      --color-superficie: #ffffff;
+      --color-borde: #e2e8f0;
+      --color-borde-suave: #f1f5f9;
+      --color-exito: #0d9488;
+      --color-exito-fondo: #f0fdfa;
+      --color-alerta: #d97706;
+      --color-alerta-fondo: #fffbeb;
+      --color-info: #0284c7;
+      --color-info-fondo: #f0f9ff;
+
+      /* Sombras refinadas */
+      --sombra-sm: 0 1px 2px 0 rgba(18, 26, 62, 0.04);
+      --sombra-md: 0 4px 12px -2px rgba(18, 26, 62, 0.06), 0 2px 6px -1px rgba(18, 26, 62, 0.03);
+      --sombra-lg: 0 12px 28px -4px rgba(18, 26, 62, 0.08), 0 4px 12px -2px rgba(18, 26, 62, 0.04);
+      --sombra-hover: 0 14px 30px -6px rgba(18, 26, 62, 0.12);
+
+      /* Radios de borde */
+      --radio-sm: 6px;
+      --radio-md: 10px;
+      --radio-lg: 16px;
+      --radio-full: 9999px;
+
+      /* Transición estándar */
+      --transicion: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Reset global y tipografía */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--fondo-gris);
+      color: var(--texto-comun);
+      line-height: 1.5;
+      font-size: 0.9375rem;
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ==========================================================================
+       SIDEBAR FIJO (.ag-sidebar) - REGLA ARQUITECTÓNICA DEL CORE
+       ========================================================================== */
+    .ag-sidebar {
+      width: 260px;
+      background-color: var(--color-principal);
+      color: #ffffff;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      z-index: 50;
+      padding: 1.5rem 1rem;
+    }
+
+    .ag-sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0 0.5rem 1.5rem 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      margin-bottom: 1.5rem;
+    }
+
+    .ag-sidebar-logo {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, var(--color-terciario), var(--color-secundario));
+      border-radius: var(--radio-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: -0.05em;
+    }
+
+    .ag-sidebar-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+    }
+
+    .ag-sidebar-sub {
+      font-size: 0.7rem;
+      color: var(--color-terciario);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      display: block;
+    }
+
+    .ag-nav-group-title {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(255, 255, 255, 0.4);
+      padding: 0.5rem 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .ag-nav-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .ag-nav-item a {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 0.85rem;
+      color: rgba(255, 255, 255, 0.75);
+      text-decoration: none;
+      border-radius: var(--radio-sm);
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: var(--transicion);
+    }
+
+    .ag-nav-item a:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .ag-nav-item.active a {
+      background: var(--color-secundario);
+      color: #ffffff;
+      box-shadow: var(--sombra-sm);
+    }
+
+    .ag-nav-item i {
+      font-size: 1.15rem;
+    }
+
+    .ag-sidebar-footer {
+      margin-top: auto;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .ag-user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radio-full);
+      background: var(--color-secundario);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    .ag-user-info {
+      line-height: 1.2;
+    }
+
+    .ag-user-name {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .ag-user-role {
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* ==========================================================================
+       CONTENEDOR PRINCIPAL: .li-wrapper
+       ========================================================================== */
+    .li-wrapper {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--fondo-gris);
+    }
+
+    /* Barra de control para alternar entre Vista 1 y Vista 2 */
+    .li-view-switcher {
+      background: #ffffff;
+      padding: 0.6rem 2rem;
+      border-bottom: 1px solid var(--color-borde);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .li-view-switcher-info {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.8125rem;
+      color: var(--texto-silenciado);
+    }
+
+    .li-pill-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: var(--radio-full);
+      background-color: var(--color-exito-fondo);
+      color: var(--color-exito);
+      font-weight: 600;
+      font-size: 0.75rem;
+      border: 1px solid rgba(13, 148, 136, 0.2);
+    }
+
+    .li-pill-live::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--color-exito);
+    }
+
+    .li-tabs {
+      display: inline-flex;
+      background: var(--fondo-gris);
+      padding: 0.25rem;
+      border-radius: var(--radio-md);
+      gap: 0.25rem;
+      border: 1px solid var(--color-borde);
+    }
+
+    .li-tab-btn {
+      border: none;
+      background: transparent;
+      padding: 0.4rem 0.9rem;
+      border-radius: calc(var(--radio-md) - 2px);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--texto-silenciado);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: var(--transicion);
+    }
+
+    .li-tab-btn:hover {
+      color: var(--texto-titulos);
+    }
+
+    .li-tab-btn.active {
+      background: #ffffff;
+      color: var(--color-principal);
+      box-shadow: var(--sombra-sm);
+    }
+
+    /* Contenedor de vistas */
+    .view-container {
+      display: none;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    .view-container.active-view {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==========================================================================
+       VISTA 1: HERO SECTION INSPIRACIONAL Y BUSCADOR UNIVERSAL
+       ========================================================================== */
+    .li-hero {
+      background: linear-gradient(135deg, var(--color-principal) 0%, #1e2954 60%, var(--color-secundario) 100%);
+      color: #ffffff;
+      padding: 3.25rem 2.5rem 2.75rem 2.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .li-hero::after {
+      content: "";
+      position: absolute;
+      width: 520px;
+      height: 520px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(112, 144, 203, 0.18) 0%, rgba(18, 26, 62, 0) 70%);
+      top: -200px;
+      right: -100px;
+      pointer-events: none;
+    }
+
+    .li-hero-inner {
+      max-width: 980px;
+      margin: 0 auto;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .li-hero-tag-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      margin-bottom: 0.85rem;
+      flex-wrap: wrap;
+    }
+
+    .li-hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--color-terciario);
+      background: rgba(112, 144, 203, 0.12);
+      border: 1px solid rgba(112, 144, 203, 0.25);
+      padding: 0.3rem 0.85rem;
+      border-radius: var(--radio-full);
+    }
+
+    .li-hero-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #a7f3d0;
+      background: rgba(13, 148, 136, 0.25);
+      border: 1px solid rgba(13, 148, 136, 0.45);
+      padding: 0.3rem 0.75rem;
+      border-radius: var(--radio-full);
+    }
+
+    .li-hero-status-pill::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #34d399;
+      box-shadow: 0 0 8px #34d399;
+    }
+
+    .li-hero-title {
+      font-size: 2.35rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+      color: #ffffff;
+    }
+
+    .li-hero-subtitle {
+      font-size: 1.02rem;
+      color: rgba(255, 255, 255, 0.82);
+      max-width: 720px;
+      margin: 0 auto 2rem auto;
+      font-weight: 400;
+      line-height: 1.55;
+    }
+
+    /* Buscador Universal Grande */
+    .li-search-box {
+      background: #ffffff;
+      border-radius: var(--radio-lg);
+      padding: 0.45rem;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 16px 40px rgba(18, 26, 62, 0.25);
+      max-width: 860px;
+      margin: 0 auto 2.25rem auto;
+      border: 2px solid transparent;
+      transition: var(--transicion);
+    }
+
+    .li-search-box:focus-within {
+      border-color: var(--color-terciario);
+      box-shadow: 0 20px 45px rgba(18, 26, 62, 0.35);
+    }
+
+    .li-search-scope {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.65rem 1rem;
+      border-right: 1px solid var(--color-borde);
+      color: var(--color-principal);
+      font-size: 0.875rem;
+      font-weight: 600;
+      background: var(--fondo-gris);
+      border-radius: calc(var(--radio-lg) - 4px) 0 0 calc(var(--radio-lg) - 4px);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .li-search-input-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+      gap: 0.75rem;
+    }
+
+    .li-search-input-wrapper i {
+      font-size: 1.25rem;
+      color: var(--color-secundario);
+    }
+
+    .li-search-input {
+      width: 100%;
+      border: none;
+      outline: none;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: var(--texto-titulos);
+      background: transparent;
+    }
+
+    .li-search-input::placeholder {
+      color: var(--texto-silenciado);
+      font-weight: 400;
+    }
+
+    .li-search-action-btn {
+      background: var(--color-principal);
+      color: #ffffff;
+      border: none;
+      outline: none;
+      padding: 0.75rem 1.6rem;
+      border-radius: calc(var(--radio-lg) - 6px);
+      font-weight: 600;
+      font-size: 0.9375rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: var(--transicion);
+      white-space: nowrap;
+    }
+
+    .li-search-action-btn:hover {
+      background: #1c275a;
+      transform: translateY(-1px);
+    }
+
+    /* 4 KPIs / Estadísticas globales */
+    .li-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      max-width: 880px;
+      margin: 0 auto;
+    }
+
+    .li-kpi-card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radio-md);
+      padding: 0.9rem 1.1rem;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      transition: var(--transicion);
+    }
+
+    .li-kpi-card:hover {
+      background: rgba(255, 255, 255, 0.14);
+      transform: translateY(-2px);
+    }
+
+    .li-kpi-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radio-sm);
+      background: rgba(112, 144, 203, 0.25);
+      color: var(--color-terciario);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .li-kpi-value {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.1;
+    }
+
+    .li-kpi-label {
+      font-size: 0.72rem;
+      color: rgba(255, 255, 255, 0.75);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* ==========================================================================
+       VISTA 1: CONTENIDO PRINCIPAL, FILTROS Y VISTAS
+       ========================================================================== */
+    .li-main-content {
+      padding: 2.25rem 3rem 4rem 3rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Banner informativo de estado de PNF */
+    .li-stage-banner {
+      background: #ffffff;
+      border: 1px solid var(--color-borde);
+      border-left: 4px solid var(--color-exito);
+      border-radius: var(--radio-md);
+      padding: 1rem 1.4rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      box-shadow: var(--sombra-sm);
+    }
+
+    .li-stage-info {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .li-stage-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radio-full);
+      background: var(--color-exito-fondo);
+      color: var(--color-exito);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .li-stage-text h4 {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--texto-titulos);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .li-stage-text p {
+      font-size: 0.8rem;
+      color: var(--texto-silenciado);
+    }
+
+    .li-stage-badge-active {
+      background: var(--color-exito-fondo);
+      color: var(--color-exito);
+      border: 1px solid rgba(13, 148, 136, 0.3);
+      padding: 0.25rem 0.65rem;
+      border-radius: var(--radio-full);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .li-stage-badge-upcoming {
+      background: #f1f5f9;
+      color: var(--texto-silenciado);
+      border: 1px solid var(--color-borde);
+      padding: 0.25rem 0.65rem;
+      border-radius: var(--radio-full);
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    /* Barra Superior de Toolbar & Controles de Vista */
+    .li-section-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .li-toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .li-section-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--texto-titulos);
+      letter-spacing: -0.02em;
+    }
+
+    .li-badge-counter {
+      background: var(--color-borde);
+      color: var(--texto-comun);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.65rem;
+      border-radius: var(--radio-full);
+    }
+
+    .li-toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    /* Botón desplegable para Filtros Avanzados */
+    .li-btn-filter-toggle {
+      background: #ffffff;
+      border: 1px solid var(--color-borde);
+      padding: 0.45rem 0.95rem;
+      border-radius: var(--radio-md);
+      font-size: 0.825rem;
+      font-weight: 600;
+      color: var(--texto-comun);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      transition: var(--transicion);
+    }
+
+    .li-btn-filter-toggle:hover {
+      border-color: var(--color-terciario);
+      color: var(--color-principal);
+      background: var(--fondo-gris);
+    }
+
+    .li-btn-filter-toggle.active {
+      background: var(--color-principal);
+      color: #ffffff;
+      border-color: var(--color-principal);
+    }
+
+    .li-filter-count-badge {
+      background: var(--color-terciario);
+      color: #ffffff;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.68rem;
+      font-weight: 800;
+    }
+
+    /* Selector de Vistas: Cuadrícula / Lista (Requerimiento 3) */
+    .li-view-mode-selector {
+      display: inline-flex;
+      background: #ffffff;
+      border: 1px solid var(--color-borde);
+      border-radius: var(--radio-md);
+      padding: 0.2rem;
+      gap: 0.15rem;
+    }
+
+    .li-view-btn {
+      border: none;
+      background: transparent;
+      width: 32px;
+      height: 32px;
+      border-radius: calc(var(--radio-md) - 3px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--texto-silenciado);
+      cursor: pointer;
+      transition: var(--transicion);
+      font-size: 1.1rem;
+    }
+
+    .li-view-btn:hover {
+      color: var(--texto-titulos);
+    }
+
+    .li-view-btn.active {
+      background: var(--color-principal);
+      color: #ffffff;
+      box-shadow: var(--sombra-sm);
+    }
+
+    /* Filtros facetados de carreras (PNF) con estados activo / próximamente */
+    .li-facet-filters {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+
+    .li-facet-chip {
+      background: #ffffff;
+      border: 1px solid var(--color-borde);
+      color: var(--texto-comun);
+      padding: 0.45rem 0.95rem;
+      border-radius: var(--radio-full);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      transition: var(--transicion);
+    }
+
+    .li-facet-chip:hover:not(.disabled) {
+      border-color: var(--color-terciario);
+      color: var(--color-principal);
+    }
+
+    .li-facet-chip.active {
+      background: var(--color-principal);
+      color: #ffffff;
+      border-color: var(--color-principal);
+      box-shadow: var(--sombra-sm);
+    }
+
+    .li-facet-chip.disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      background: #f8fafc;
+      border-style: dashed;
+      color: var(--texto-silenciado);
+    }
+
+    .li-facet-status-tag {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.1rem 0.45rem;
+      border-radius: var(--radio-full);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .li-facet-status-tag.active-tag {
+      background: rgba(13, 148, 136, 0.15);
+      color: var(--color-exito);
+    }
+
+    .li-facet-chip.active .li-facet-status-tag.active-tag {
+      background: rgba(255, 255, 255, 0.22);
+      color: #ffffff;
+    }
+
+    .li-facet-status-tag.soon-tag {
+      background: #e2e8f0;
+      color: #64748b;
+    }
+
+    /* ==========================================================================
+       COMPONENTE: PANEL DE FILTROS AVANZADOS (REQUERIMIENTO 2)
+       ========================================================================== */
+    .li-advanced-filter-panel {
+      background: #ffffff;
+      border: 1px solid var(--color-borde);
+      border-radius: var(--radio-lg);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--sombra-sm);
+      display: none;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    .li-advanced-filter-panel.open {
+      display: block;
+    }
+
+    .li-af-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--color-borde-suave);
+    }
+
+    .li-af-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--texto-titulos);
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .li-af-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .li-af-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .li-af-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--texto-silenciado);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .li-af-select, .li-af-input {
+      width: 100%;
+      background: var(--fondo-gris);
+      border: 1px solid var(--color-borde);
+      border-radius: var(--radio-sm);
+      padding: 0.55rem 0.75rem;
+      font-size: 0.825rem;
+      color: var(--texto-titulos);
+      outline: none;
+      font-family: inherit;
+      transition: var(--transicion);
+    }
+
+    .li-af-select:focus, .li-af-input:focus {
+      border-color: var(--color-terciario);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(112, 144, 203, 0.15);
+    }
+
+    /* Barra de píldoras de filtros activos y acciones */
+    .li-af-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 1rem;
+      border-top: 1px solid var(--color-borde-suave);
+      flex-wrap: wrap;
+      gap: 0.85rem;
+    }
+
+    .li-af-active-pills {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+    }
+
+    .li-af-pill-removable {
+      background: var(--color-info-fondo);
+      border: 1px solid rgba(2, 132, 199, 0.25);
+      color: var(--color-info);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.2rem 0.55rem;
+      border-radius: var(--radio-full);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      cursor: pointer;
+    }
+
+    .li-af-pill-removable i {
+      font-size: 0.7rem;
+    }
+
+    .li-af-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .li-af-btn-clear {
+      background: transparent;
+      border: none;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--texto-silenciado);
+      cursor: pointer;
+      padding: 0.45rem 0.85rem;
+      border-radius: var(--radio-sm);
+      transition: var(--transicion);
+    }
+
+    .li-af-btn-clear:hover {
+      color: #dc2626;
+      background: #fef2f2;
+    }
+
+    .li-af-btn-apply {
+      background: var(--color-principal);
+      border: none;
+      color: #ffffff;
+      font-size: 0.825rem;
+      font-weight: 600;
+      padding: 0.45rem 1.1rem;
+      border-radius: var(--radio-sm);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: var(--transicion);
+    }
+
+    .li-af-btn-apply:hover {
+      background: #1c275a;
+    }
+
+    /* Grupos por PNF */
+    .li-pnf-group {
+      margin-bottom: 3.5rem;
+    }
+
+    .li-pnf-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      border-bottom: 1.5px solid var(--color-borde);
+      padding-bottom: 0.75rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .li-pnf-title-area {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .li-pnf-icon {
+      color: var(--color-terciario);
+      font-size: 1.4rem;
+    }
+
+    .li-pnf-name {
+      font-size: 1.18rem;
+      font-weight: 700;
+      color: var(--color-principal);
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .li-badge-operative {
+      background: var(--color-exito-fondo);
+      color: var(--color-exito);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.15rem 0.6rem;
+      border-radius: var(--radio-full);
+      border: 1px solid rgba(13, 148, 136, 0.25);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .li-badge-operative::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--color-exito);
+    }
+
+    .li-badge-upcoming-pnf {
+      background: #f1f5f9;
+      color: var(--texto-silenciado);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.15rem 0.6rem;
+      border-radius: var(--radio-full);
+      border: 1px dashed var(--color-borde);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .li-pnf-meta {
+      font-size: 0.8125rem;
+      color: var(--texto-silenciado);
+    }
+
+    /* ==========================================================================
+       SISTEMA DUAL: MODO CUADRÍCULA VS MODO LISTA (REQUERIMIENTO 3)
+       ========================================================================== */
+    
+    /* MODO CUADRÍCULA (Predeterminado) */
+    .li-items-container.grid-view {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .li-items-container.grid-view .li-card {
+      background: var(--color-superficie);
+      border: 1px solid var(--color-borde);
+      border-radius: var(--radio-lg);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: var(--sombra-sm);
+      transition: var(--transicion);
+      cursor: pointer;
+      position: relative;
+    }
+
+    .li-items-container.grid-view .li-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--sombra-hover);
+      border-color: rgba(112, 144, 203, 0.45);
+    }
+
+    .li-card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .li-card-icon-box {
+      width: 46px;
+      height: 46px;
+      border-radius: var(--radio-md);
+      background-color: var(--fondo-gris);
+      color: var(--color-principal);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      flex-shrink: 0;
+      border: 1px solid var(--color-borde);
+      transition: var(--transicion);
+    }
+
+    .li-card:hover .li-card-icon-box {
+      background: var(--color-principal);
+      color: #ffffff;
+      border-color: var(--color-principal);
+    }
+
+    .li-card-heading {
+      flex: 1;
+    }
+
+    .li-card-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--color-secundario);
+      display: block;
+      margin-bottom: 0.2rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .li-card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--texto-titulos);
+      line-height: 1.35;
+      letter-spacing: -0.015em;
+    }
+
+    .li-card-description {
+      font-size: 0.85rem;
+      color: var(--texto-comun);
+      line-height: 1.55;
+      margin-bottom: 1.25rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* REGLA CRÍTICA DE RETROALIMENTACIÓN: Metadatos con flex-wrap y gap */
+    .li-card-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .li-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: var(--fondo-gris);
+      border: 1px solid var(--color-borde);
+      border-radius: var(--radio-sm);
+      padding: 0.25rem 0.55rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--texto-comun);
+      white-space: nowrap;
+    }
+
+    .li-badge i {
+      color: var(--color-secundario);
+      font-size: 0.85rem;
+    }
+
+    .li-badge.has-offers {
+      background: var(--color-exito-fondo);
+      border-color: rgba(13, 148, 136, 0.2);
+      color: var(--color-exito);
+    }
+
+    .li-badge.has-offers i {
+      color: var(--color-exito);
+    }
+
+    .li-badge.trayecto-tag {
+      background: var(--color-info-fondo);
+      border-color: rgba(2, 132, 199, 0.2);
+      color: var(--color-info);
+    }
+
+    /* Mini barra de progreso visual (CSS) */
+    .li-progress-container {
+      margin-top: auto;
+      padding-top: 0.85rem;
+      border-top: 1px solid var(--color-borde-suave);
+    }
+
+    .li-progress-labels {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.72rem;
+      color: var(--texto-silenciado);
+      margin-bottom: 0.35rem;
+    }
+
+    .li-progress-percent {
+      font-weight: 700;
+      color: var(--color-principal);
+    }
+
+    .li-progress-track {
+      width: 100%;
+      height: 6px;
+      background-color: var(--color-borde);
+      border-radius: var(--radio-full);
+      overflow: hidden;
+    }
+
+    .li-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--color-terciario), var(--color-principal));
+      border-radius: var(--radio-full);
+      transition: width 0.4s ease;
+    }
+
+    .li-card-footer-action {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.35rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--color-secundario);
+      margin-top: 0.75rem;
+      transition: var(--transicion);
+    }
+
+    .li-card:hover .li-card-footer-action {
+      color: var(--color-principal);
+      transform: translateX(3px);
+    }
+
+    /* -------------------------------------------------------------
+       MODO LISTA (REQUERIMIENTO 3: Vista Fila Compacta y Estructurada)
+       ------------------------------------------------------------- */
+    .li-items-container.list-view {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .li-items-container.list-view .li-card {
+      background: var(--color-superficie);
+      border: 1px solid var(--color-borde);
+      border-radius: var(--radio-md);
+      padding: 1.15rem 1.4rem;
+      display: grid;
+      grid-template-columns: 2.2fr 1.6fr 1fr 140px;
+      align-items: center;
+      gap: 1.5rem;
+      box-shadow: var(--sombra-sm);
+      transition: var(--transicion);
+      cursor: pointer;
+    }
+
+    .li-items-container.list-view .li-card:hover {
+      border-color: var(--color-terciario);
+      box-shadow: var(--sombra-md);
+      transform: translateY(-2px);
+    }
+
+    .li-items-container.list-view .li-card-top {
+      margin-bottom: 0;
+      align-items: center;
+    }
+
+    .li-items-container.list-view .li-card-description {
+      display: none; /* En lista compacta se oculta la descripción larga para pulcritud */
+    }
+
+    .li-items-container.list-view .li-card-badges {
+      margin-bottom: 0;
+      justify-content: flex-start;
+    }
+
+    .li-items-container.list-view .li-progress-container {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+      min-width: 140px;
+    }
+
+    .li-items-container.list-view .li-card-footer-action {
+      margin-top: 0;
+      justify-content: flex-end;
+    }
+
+    .li-items-container.list-view .li-card-footer-action span {
+      display: inline-block;
+      background: var(--fondo-gris);
+      padding: 0.4rem 0.85rem;
+      border-radius: var(--radio-sm);
+      border: 1px solid var(--color-borde);
+      color: var(--color-principal);
+      font-weight: 600;
+    }
+
+    .li-items-container.list-view .li-card:hover .li-card-footer-action span {
+      background: var(--color-principal);
+      color: #ffffff;
+      border-color: var(--color-principal);
+    }
+
+    /* Tarjetas en estado 'Próximamente' o Deshabilitadas */
+    .li-card.card-upcoming {
+      opacity: 0.78;
+      background: #fafbfc;
+      border-style: dashed;
+    }
+
+    .li-card.card-upcoming:hover {
+      transform: none;
+      box-shadow: var(--sombra-sm);
+      border-color: var(--color-borde);
+    }
+
+    .li-card.card-upcoming .li-card-icon-box {
+      background: #f1f5f9;
+      color: var(--texto-silenciado);
+    }
+
+    .li-card.card-upcoming .li-progress-fill {
+      background: #cbd5e1;
+    }
+
+    .li-pill-upcoming-line {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--texto-silenciado);
+      background: #f1f5f9;
+      padding: 0.15rem 0.5rem;
+      border-radius: var(--radio-sm);
+      margin-bottom: 0.35rem;
+    }
+
+    /* ==========================================================================
+       VISTA 2: DETALLE DE LA LÍNEA Y SUBMÓDULOS (ROL CONECTOR)
+       ========================================================================== */
+    .li-detail-header-wrapper {
+      background: #ffffff;
+      border-bottom: 1px solid var(--color-borde);
+      padding: 2rem 3rem 2rem 3rem;
+    }
+
+    .li-detail-header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .li-breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      color: var(--texto-silenciado);
+      margin-bottom: 1.25rem;
+    }
+
+    .li-breadcrumbs a {
+      color: var(--color-secundario);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-weight: 500;
+      transition: var(--transicion);
+      cursor: pointer;
+    }
+
+    .li-breadcrumbs a:hover {
+      color: var(--color-principal);
+      text-decoration: underline;
+    }
+
+    .li-breadcrumbs-sep {
+      color: var(--color-borde);
+      font-size: 0.75rem;
+    }
+
+    .li-breadcrumbs-current {
+      color: var(--texto-titulos);
+      font-weight: 600;
+    }
+
+    .li-line-title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 2rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .li-line-title-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .li-code-badge {
+      background: var(--fondo-gris);
+      border: 1px solid var(--color-borde);
+      color: var(--color-principal);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: var(--radio-sm);
+    }
+
+    .li-pnf-tag {
+      font-size: 0.8rem;
+      color: var(--color-secundario);
+      font-weight: 600;
+    }
+
+    .li-line-title {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--texto-titulos);
+      letter-spacing: -0.025em;
+      line-height: 1.25;
+    }
+
+    .li-line-description {
+      font-size: 0.95rem;
+      color: var(--texto-comun);
+      max-width: 950px;
+      line-height: 1.65;
+    }
+
+    .li-header-stats-strip {
+      display: flex;
+      gap: 2rem;
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--color-borde-suave);
+      flex-wrap: wrap;
+    }
+
+    .li-strip-stat {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .li-strip-stat-icon {
+      color: var(--color-secundario);
+      font-size: 1.15rem;
+    }
+
+    .li-strip-stat-val {
+      font-weight: 700;
+      color: var(--texto-titulos);
+    }
+
+    .li-strip-stat-desc {
+      font-size: 0.8125rem;
+      color: var(--texto-silenciado);
+    }
+
+    /* Layout 70% - 30% de la vista Detalle */
+    .li-detail-layout {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2.5rem 3rem 4rem 3rem;
+      display: grid;
+      grid-template-columns: 7fr 3fr;
+      gap: 2.5rem;
+      align-items: start;
+    }
+
+    .li-col-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+
+    .li-dimensions-panel {
+      background: #ffffff;
+      border: 1px solid var(--color-borde);
+      border-radius: var(--radio-lg);
+      padding: 1.5rem;
+      box-shadow: var(--sombra-sm);
+    }
+
+    .li-panel-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--texto-titulos);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .li-panel-title i {
+      color: var(--color-terciario);
+      font-size: 1.2rem;
+    }
+
+    .li-panel-subtitle {
+      font-size: 0.8125rem;
+      color: var(--texto-silenciado);
+      margin-bottom: 1rem;
+    }
+
+    .li-dimension-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    .li-dimension-chip {
+      background: var(--fondo-gris);
+      border: 1px solid var(--color-borde);
+      border-radius: var(--radio-full);
+      padding: 0.45rem 0.95rem;
+      font-size: 0.8125rem;
+      color: var(--texto-comun);
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      transition: var(--transicion);
+      user-select: none;
+    }
+
+    .li-dimension-chip:hover {
+      background: #ffffff;
+      border-color: var(--color-terciario);
+      color: var(--color-principal);
+    }
+
+    .li-dimension-chip.active {
+      background: var(--color-principal);
+      border-color: var(--color-principal);
+      color: #ffffff;
+    }
+
+    .li-dimension-chip .chip-qty {
+      font-size: 0.72rem;
+      background: rgba(0, 0, 0, 0.07);
+      padding: 0.1rem 0.45rem;
+      border-radius: var(--radio-full);
+    }
+
+    .li-dimension-chip.active .chip-qty {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .li-projects-section {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .li-projects-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .li-projects-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--texto-titulos);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .li-projects-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .li-project-item {
+      background: #ffffff;
+      border: 1px solid var(--color-borde);
+      border-radius: var(--radio-md);
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      box-shadow: var(--sombra-sm);
+      transition: var(--transicion);
+    }
+
+    .li-project-item:hover {
+      border-color: var(--color-terciario);
+      box-shadow: var(--sombra-md);
+      transform: translateY(-2px);
+    }
+
+    .li-project-content {
+      flex: 1;
+    }
+
+    .li-project-dim-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      color: var(--color-secundario);
+      font-weight: 600;
+      background: var(--fondo-gris);
+      padding: 0.15rem 0.5rem;
+      border-radius: var(--radio-sm);
+      margin-bottom: 0.35rem;
+    }
+
+    .li-project-title {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--texto-titulos);
+      line-height: 1.35;
+      margin-bottom: 0.4rem;
+    }
+
+    .li-project-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.8125rem;
+      color: var(--texto-silenciado);
+      flex-wrap: wrap;
+    }
+
+    .li-project-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .li-project-meta-item i {
+      color: var(--color-secundario);
+    }
+
+    .li-project-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .li-btn-secondary {
+      background: #ffffff;
+      border: 1px solid var(--color-borde);
+      color: var(--texto-comun);
+      padding: 0.55rem 0.95rem;
+      border-radius: var(--radio-sm);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      transition: var(--transicion);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .li-btn-secondary:hover {
+      border-color: var(--color-principal);
+      color: var(--color-principal);
+      background: var(--fondo-gris);
+    }
+
+    .li-btn-secondary i {
+      color: #dc2626;
+      font-size: 1rem;
+    }
+
+    .li-btn-primary {
+      background: var(--color-principal);
+      color: #ffffff;
+      border: none;
+      padding: 0.65rem 1.35rem;
+      border-radius: var(--radio-md);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      transition: var(--transicion);
+      box-shadow: var(--sombra-sm);
+    }
+
+    .li-btn-primary:hover {
+      background: #1c275a;
+      transform: translateY(-1px);
+      box-shadow: var(--sombra-md);
+    }
+
+    .li-col-right {
+      position: sticky;
+      top: 5rem;
+    }
+
+    .li-offers-panel {
+      background: #ffffff;
+      border: 1px solid var(--color-borde);
+      border-radius: var(--radio-lg);
+      padding: 1.5rem;
+      box-shadow: var(--sombra-sm);
+    }
+
+    .li-offers-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--color-borde-suave);
+    }
+
+    .li-offers-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--texto-titulos);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .li-offers-badge {
+      background: var(--color-exito-fondo);
+      color: var(--color-exito);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.15rem 0.55rem;
+      border-radius: var(--radio-full);
+    }
+
+    .li-offers-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .li-offer-card {
+      border: 1px solid var(--color-borde);
+      border-radius: var(--radio-md);
+      padding: 1.15rem;
+      background: #ffffff;
+      transition: var(--transicion);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .li-offer-card:hover {
+      border-color: var(--color-terciario);
+      box-shadow: var(--sombra-sm);
+    }
+
+    .li-offer-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .li-offer-status {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.15rem 0.5rem;
+      border-radius: var(--radio-full);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .li-offer-status.open {
+      background: var(--color-exito-fondo);
+      color: var(--color-exito);
+    }
+
+    .li-offer-status.open::before {
+      content: "";
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--color-exito);
+    }
+
+    .li-offer-status.closed {
+      background: #f1f5f9;
+      color: var(--texto-silenciado);
+    }
+
+    .li-offer-slots {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--texto-silenciado);
+    }
+
+    .li-offer-title {
+      font-size: 0.925rem;
+      font-weight: 700;
+      color: var(--texto-titulos);
+      line-height: 1.35;
+    }
+
+    .li-offer-prof {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      color: var(--color-secundario);
+    }
+
+    .li-btn-apply {
+      background: #ffffff;
+      border: 1.5px solid var(--color-principal);
+      color: var(--color-principal);
+      font-size: 0.8125rem;
+      font-weight: 700;
+      padding: 0.5rem 0.85rem;
+      border-radius: var(--radio-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      transition: var(--transicion);
+      margin-top: 0.35rem;
+    }
+
+    .li-btn-apply:hover {
+      background: var(--color-principal);
+      color: #ffffff;
+    }
+
+    .li-btn-apply:disabled {
+      border-color: var(--color-borde);
+      color: var(--texto-silenciado);
+      cursor: not-allowed;
+      background: var(--fondo-gris);
+    }
+
+    /* Responsive y ajustes de layout */
+    @media (max-width: 1200px) {
+      .li-detail-layout {
+        grid-template-columns: 1fr;
+      }
+      .li-col-right {
+        position: static;
+      }
+      .li-af-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .li-items-container.list-view .li-card {
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+      }
+    }
+
+    @media (max-width: 900px) {
+      body {
+        flex-direction: column;
+      }
+      .ag-sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+      }
+      .li-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .li-hero {
+        padding: 2.5rem 1.5rem;
+      }
+      .li-main-content {
+        padding: 1.5rem;
+      }
+      .li-detail-layout {
+        padding: 1.5rem;
+      }
+      .li-af-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+<!-- ========================================================================
+       SIDEBAR IZQUIERDO FIJO (.ag-sidebar) - CORE CIIDI
+       ======================================================================== -->
+<aside class="ag-sidebar">
+<div class="ag-sidebar-brand">
+<div class="ag-sidebar-logo">C</div>
+<div>
+<div class="ag-sidebar-title">CIIDI Core</div>
+<span class="ag-sidebar-sub">Gestión Académica</span>
+</div>
+</div>
+<div class="ag-nav-group-title">Módulos de Investigación</div>
+<ul class="ag-nav-list">
+<li class="ag-nav-item active">
+<a href="#explorar" onclick="showView(1)">
+<i class="ph-bold ph-compass"></i>
+<span>Explorar Líneas</span>
+</a>
+</li>
+<li class="ag-nav-item">
+<a href="#proyectos">
+<i class="ph-bold ph-folder-open"></i>
+<span>Proyectos PST</span>
+</a>
+</li>
+<li class="ag-nav-item">
+<a href="#dimensiones">
+<i class="ph-bold ph-tree-structure"></i>
+<span>Dimensiones</span>
+</a>
+</li>
+<li class="ag-nav-item">
+<a href="#ofertas">
+<i class="ph-bold ph-chalkboard-teacher"></i>
+<span>Banco de Ofertas</span>
+</a>
+</li>
+</ul>
+<div class="ag-nav-group-title">Administración</div>
+<ul class="ag-nav-list">
+<li class="ag-nav-item">
+<a href="#reportes">
+<i class="ph-bold ph-chart-bar"></i>
+<span>Métricas y Reportes</span>
+</a>
+</li>
+<li class="ag-nav-item">
+<a href="#config">
+<i class="ph-bold ph-gear"></i>
+<span>Configuración Core</span>
+</a>
+</li>
+</ul>
+<div class="ag-sidebar-footer">
+<div class="ag-user-avatar">DR</div>
+<div class="ag-user-info">
+<div class="ag-user-name">Dr. Ricardo Silva</div>
+<div class="ag-user-role">Comité de Investigación</div>
+</div>
+</div>
+</aside>
+<!-- ========================================================================
+       CONTENIDO PRINCIPAL: .li-wrapper
+       ======================================================================== -->
+<div class="li-wrapper">
+<!-- Barra auxiliar de navegación e info de fase -->
+<header class="li-view-switcher">
+<div class="li-view-switcher-info">
+<span class="li-pill-live">Fase 1: PNF Informática Activo</span>
+<span>• Repositorio Científico y Conector Curricular PST</span>
+</div>
+<div class="li-tabs">
+<button class="li-tab-btn active" id="tab-v1" onclick="showView(1)">
+<i class="ph-bold ph-squares-four"></i>
+<span>Vista 1: Explorar Líneas (Landing)</span>
+</button>
+<button class="li-tab-btn" id="tab-v2" onclick="showView(2)">
+<i class="ph-bold ph-article"></i>
+<span>Vista 2: Detalle y Conector</span>
+</button>
+</div>
+</header>
+<!-- ======================================================================
+         VISTA 1: LANDING PAGE (EXPLORAR LÍNEAS)
+         ====================================================================== -->
+<div class="view-container active-view" id="vista-landing">
+<!-- Hero Section -->
+<section class="li-hero">
+<div class="li-hero-inner">
+<div class="li-hero-tag-row">
+<div class="li-hero-tag">
+<i class="ph-bold ph-flask"></i>
+              Ecosistema Científico Institucional
+            </div>
+<div class="li-hero-status-pill">
+<span>Fase 1: PNF Informática 100% Operativo</span>
+</div>
+</div>
+<h1 class="li-hero-title">Ecosistema de Investigación CIIDI</h1>
+<p class="li-hero-subtitle">
+            Catálogo unificado y articulador de líneas de investigación institucionales, dimensiones operativas y producción académica sociotecnológica.
+          </p>
+<!-- Buscador Universal Grande -->
+<div class="li-search-box">
+<div class="li-search-scope">
+<i class="ph-bold ph-funnel"></i>
+<span>PNF Informática (Activo)</span>
+</div>
+<div class="li-search-input-wrapper">
+<i class="ph-bold ph-magnifying-glass"></i>
+<input class="li-search-input" placeholder="Buscar por código, dimensión temática, tecnología (ej. GNU/Linux, REST API)..." type="text"/>
+</div>
+<button class="li-search-action-btn">
+<span>Consultar</span>
+<i class="ph-bold ph-arrow-right"></i>
+</button>
+</div>
+<!-- 4 KPIs / Estadísticas globales -->
+<div class="li-kpi-grid">
+<div class="li-kpi-card">
+<div class="li-kpi-icon">
+<i class="ph-bold ph-compass"></i>
+</div>
+<div>
+<div class="li-kpi-value">4</div>
+<div class="li-kpi-label">Líneas Activas (Informática)</div>
+</div>
+</div>
+<div class="li-kpi-card">
+<div class="li-kpi-icon">
+<i class="ph-bold ph-tree-structure"></i>
+</div>
+<div>
+<div class="li-kpi-value">18</div>
+<div class="li-kpi-label">Dimensiones Validadas</div>
+</div>
+</div>
+<div class="li-kpi-card">
+<div class="li-kpi-icon">
+<i class="ph-bold ph-folder-open"></i>
+</div>
+<div>
+<div class="li-kpi-value">118</div>
+<div class="li-kpi-label">Proyectos PST Informática</div>
+</div>
+</div>
+<div class="li-kpi-card">
+<div class="li-kpi-icon">
+<i class="ph-bold ph-chalkboard-teacher"></i>
+</div>
+<div>
+<div class="li-kpi-value">9</div>
+<div class="li-kpi-label">Ofertas Docentes Activas</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Contenido Principal -->
+<main class="li-main-content">
+<!-- Banner de Estado de PNF (Requerimiento 1) -->
+<div class="li-stage-banner">
+<div class="li-stage-info">
+<div class="li-stage-icon">
+<i class="ph-bold ph-check-circle"></i>
+</div>
+<div class="li-stage-text">
+<h4>
+<span>Programa Activo: PNF en Informática</span>
+<span class="li-stage-badge-active">100% Operativo</span>
+</h4>
+<p>Módulo de registro, vinculación de proyectos PST y banco de ofertas habilitado en producción para Informática. Los próximos PNF se integrarán progresivamente.</p>
+</div>
+</div>
+<div>
+<span class="li-stage-badge-upcoming">
+<i class="ph-bold ph-clock"></i> Fase 2 Planificada: 3 PNF
+            </span>
+</div>
+</div>
+<!-- Toolbar de Resultados y Controles de Vista (Requerimiento 3) -->
+<div class="li-section-toolbar">
+<div class="li-toolbar-left">
+<h2 class="li-section-title">Líneas de Investigación</h2>
+<span class="li-badge-counter">4 Activas en Informática</span>
+</div>
+<div class="li-toolbar-right">
+<!-- Botón para alternar Panel de Filtros Avanzados -->
+<button class="li-btn-filter-toggle" id="btn-toggle-filters" onclick="toggleAdvancedFilters()">
+<i class="ph-bold ph-sliders-horizontal"></i>
+<span>Filtros Avanzados</span>
+<span class="li-filter-count-badge">3</span>
+</button>
+<!-- Toggle Vista Cuadrícula / Vista Lista (Requerimiento 3) -->
+<div aria-label="Modo de visualización" class="li-view-mode-selector" role="group">
+<button class="li-view-btn active" id="btn-view-grid" onclick="setListingView('grid')" title="Vista Cuadrícula">
+<i class="ph-bold ph-squares-four"></i>
+</button>
+<button class="li-view-btn" id="btn-view-list" onclick="setListingView('list')" title="Vista Lista Compacta">
+<i class="ph-bold ph-list-dashes"></i>
+</button>
+</div>
+</div>
+</div>
+<!-- Píldoras de Filtros Facetados de Carreras con Estado Activo / Próximamente (Requerimiento 1) -->
+<div class="li-facet-filters">
+<button class="li-facet-chip active">
+<i class="ph-bold ph-laptop"></i>
+<span>PNF en Informática</span>
+<span class="li-facet-status-tag active-tag">100% Operativo</span>
+</button>
+<button class="li-facet-chip disabled" title="Próximamente disponible en Fase 2">
+<i class="ph-bold ph-briefcase"></i>
+<span>PNF en Administración</span>
+<span class="li-facet-status-tag soon-tag">Próximamente • Fase 2</span>
+</button>
+<button class="li-facet-chip disabled" title="Próximamente disponible en Fase 2">
+<i class="ph-bold ph-plant"></i>
+<span>PNF en Agroalimentación</span>
+<span class="li-facet-status-tag soon-tag">Próximamente • Fase 2</span>
+</button>
+<button class="li-facet-chip disabled" title="Próximamente disponible en Fase 2">
+<i class="ph-bold ph-lightning"></i>
+<span>PNF en Electricidad</span>
+<span class="li-facet-status-tag soon-tag">Próximamente • Fase 2</span>
+</button>
+</div>
+<!-- ====================================================================
+             PANEL DE FILTROS AVANZADOS EXPANDIBLE (REQUERIMIENTO 2)
+             ==================================================================== -->
+<section class="li-advanced-filter-panel" id="panel-filtros-avanzados">
+<div class="li-af-header">
+<div class="li-af-title">
+<i class="ph-bold ph-funnel" style="color: var(--color-secundario);"></i>
+<span>Criterios Avanzados de Búsqueda Académica</span>
+</div>
+<span style="font-size: 0.75rem; color: var(--texto-silenciado);">Repositorio Curricular PST</span>
+</div>
+<div class="li-af-grid">
+<!-- Criterio 1: Trayecto Formativo PST -->
+<div class="li-af-group">
+<label class="li-af-label">
+<i class="ph-bold ph-path"></i> Trayecto Formativo PST
+              </label>
+<select class="li-af-select">
+<option value="">Todos los Trayectos</option>
+<option value="T1">Trayecto I (Soporte Técnico y Redes)</option>
+<option value="T2">Trayecto II (Desarrollo y BD Básicas)</option>
+<option value="T3">Trayecto III (Sistemas Distribuidos y Web)</option>
+<option value="T4">Trayecto IV (Ingeniería e I+D Integral)</option>
+</select>
+</div>
+<!-- Criterio 2: Estatus / Nivel de Cobertura -->
+<div class="li-af-group">
+<label class="li-af-label">
+<i class="ph-bold ph-chart-donut"></i> Estatus / Cobertura
+              </label>
+<select class="li-af-select">
+<option value="">Cualquier Cobertura</option>
+<option selected="" value="proy">Con Proyectos Activos (&gt; 20)</option>
+<option value="ofertas">Con Ofertas Docentes Abiertas</option>
+<option value="form">En Fase de Formulación</option>
+<option value="alta">Alta Cobertura (&gt; 70%)</option>
+</select>
+</div>
+<!-- Criterio 3: Tipología de Dimensión / Área Tecnológica -->
+<div class="li-af-group">
+<label class="li-af-label">
+<i class="ph-bold ph-tree-structure"></i> Área Tecnológica
+              </label>
+<select class="li-af-select">
+<option value="">Todas las Áreas</option>
+<option value="sw-libre">Software Libre y Abierto</option>
+<option value="redes">Redes y Telecomunicaciones Comunitarias</option>
+<option value="ciber">Seguridad y Criptografía</option>
+<option value="iot">Internet de las Cosas (IoT) y Embebidos</option>
+</select>
+</div>
+<!-- Criterio 4: Período / Año Académico -->
+<div class="li-af-group">
+<label class="li-af-label">
+<i class="ph-bold ph-calendar-blank"></i> Año / Cohorte
+              </label>
+<select class="li-af-select">
+<option value="">Todos los Períodos</option>
+<option selected="" value="2024">Período Académico 2024</option>
+<option value="2023">Período Académico 2023</option>
+<option value="2022">Período Académico 2022</option>
+</select>
+</div>
+</div>
+<!-- Footer del Panel: Píldoras de Filtros Activos y Acciones -->
+<div class="li-af-footer">
+<div class="li-af-active-pills">
+<span style="font-size: 0.75rem; font-weight: 700; color: var(--texto-silenciado); margin-right: 0.25rem;">
+                Filtros aplicados:
+              </span>
+<span class="li-af-pill-removable" onclick="this.remove()">
+<span>PNF: Informática</span>
+<i class="ph-bold ph-x"></i>
+</span>
+<span class="li-af-pill-removable" onclick="this.remove()">
+<span>Cobertura: Con Proyectos</span>
+<i class="ph-bold ph-x"></i>
+</span>
+<span class="li-af-pill-removable" onclick="this.remove()">
+<span>Año: 2024</span>
+<i class="ph-bold ph-x"></i>
+</span>
+</div>
+<div class="li-af-actions">
+<button class="li-af-btn-clear" onclick="resetFilters()">
+<i class="ph-bold ph-arrow-counter-clockwise"></i> Limpiar Filtros
+              </button>
+<button class="li-af-btn-apply" onclick="applyFilters()">
+<i class="ph-bold ph-check"></i> Aplicar Filtros (4 Resultados)
+              </button>
+</div>
+</div>
+</section>
+<!-- ====================================================================
+             GRUPO DE LÍNEAS ACTIVAS: PNF EN INFORMÁTICA (100% OPERATIVO)
+             ==================================================================== -->
+<section class="li-pnf-group">
+<div class="li-pnf-header">
+<div class="li-pnf-title-area">
+<i class="ph-bold ph-laptop li-pnf-icon"></i>
+<div class="li-pnf-name">
+<span>PNF en Informática</span>
+<span class="li-badge-operative">100% Operativo</span>
+</div>
+</div>
+<span class="li-pnf-meta">4 Líneas de Investigación Homologadas • Trayectos I al IV</span>
+</div>
+<!-- Contenedor con soporte dinámico de clases: .grid-view / .list-view -->
+<div class="li-items-container grid-view" id="container-informatica">
+<!-- Línea 1 -->
+<article class="li-card" onclick="showView(2)">
+<div class="li-card-content-block">
+<div class="li-card-top">
+<div class="li-card-icon-box">
+<i class="ph-bold ph-code"></i>
+</div>
+<div class="li-card-heading">
+<span class="li-card-code">LIN-INF-01</span>
+<h4 class="li-card-title">Desarrollo de Software Libre y Soberanía Tecnológica</h4>
+</div>
+</div>
+<p class="li-card-description">
+                  Ingeniería de software orientada a la independencia tecnológica en instituciones públicas, organizaciones comunitarias y unidades socioproductivas.
+                </p>
+<!-- Metadatos con flex-wrap y gap -->
+<div class="li-card-badges">
+<span class="li-badge trayecto-tag"><i class="ph-bold ph-path"></i> Trayectos II, III y IV</span>
+<span class="li-badge"><i class="ph-bold ph-tree-structure"></i> 5 Dim.</span>
+<span class="li-badge"><i class="ph-bold ph-folder-notch"></i> 48 Proy.</span>
+<span class="li-badge has-offers"><i class="ph-bold ph-hand-pointing"></i> 3 Ofertas</span>
+</div>
+</div>
+<!-- Barra de progreso visual y acción -->
+<div class="li-progress-container">
+<div class="li-progress-labels">
+<span>Cobertura Curricular</span>
+<span class="li-progress-percent">86%</span>
+</div>
+<div class="li-progress-track">
+<div class="li-progress-fill" style="width: 86%;"></div>
+</div>
+<div class="li-card-footer-action">
+<span>Explorar submódulos</span>
+<i class="ph-bold ph-arrow-right"></i>
+</div>
+</div>
+</article>
+<!-- Línea 2 -->
+<article class="li-card" onclick="showView(2)">
+<div class="li-card-content-block">
+<div class="li-card-top">
+<div class="li-card-icon-box">
+<i class="ph-bold ph-broadcast"></i>
+</div>
+<div class="li-card-heading">
+<span class="li-card-code">LIN-INF-02</span>
+<h4 class="li-card-title">Infraestructura, Redes Comunitarias y Telecomunicaciones</h4>
+</div>
+</div>
+<p class="li-card-description">
+                  Despliegue de conectividad rural y suburbana, topologías inalámbricas de largo alcance y redes malladas comunitarias para acceso libre y soberano.
+                </p>
+<div class="li-card-badges">
+<span class="li-badge trayecto-tag"><i class="ph-bold ph-path"></i> Trayectos I y III</span>
+<span class="li-badge"><i class="ph-bold ph-tree-structure"></i> 4 Dim.</span>
+<span class="li-badge"><i class="ph-bold ph-folder-notch"></i> 32 Proy.</span>
+<span class="li-badge has-offers"><i class="ph-bold ph-hand-pointing"></i> 2 Ofertas</span>
+</div>
+</div>
+<div class="li-progress-container">
+<div class="li-progress-labels">
+<span>Cobertura Curricular</span>
+<span class="li-progress-percent">64%</span>
+</div>
+<div class="li-progress-track">
+<div class="li-progress-fill" style="width: 64%;"></div>
+</div>
+<div class="li-card-footer-action">
+<span>Explorar submódulos</span>
+<i class="ph-bold ph-arrow-right"></i>
+</div>
+</div>
+</article>
+<!-- Línea 3 -->
+<article class="li-card" onclick="showView(2)">
+<div class="li-card-content-block">
+<div class="li-card-top">
+<div class="li-card-icon-box">
+<i class="ph-bold ph-shield-check"></i>
+</div>
+<div class="li-card-heading">
+<span class="li-card-code">LIN-INF-03</span>
+<h4 class="li-card-title">Seguridad de la Información y Gestión de Datos</h4>
+</div>
+</div>
+<p class="li-card-description">
+                  Políticas de confidencialidad y planes de contingencia, análisis de vulnerabilidades, auditorías de código abierto y resguardo seguro comunal.
+                </p>
+<div class="li-card-badges">
+<span class="li-badge trayecto-tag"><i class="ph-bold ph-path"></i> Trayectos III y IV</span>
+<span class="li-badge"><i class="ph-bold ph-tree-structure"></i> 3 Dim.</span>
+<span class="li-badge"><i class="ph-bold ph-folder-notch"></i> 19 Proy.</span>
+<span class="li-badge has-offers"><i class="ph-bold ph-hand-pointing"></i> 1 Oferta</span>
+</div>
+</div>
+<div class="li-progress-container">
+<div class="li-progress-labels">
+<span>Cobertura Curricular</span>
+<span class="li-progress-percent">45%</span>
+</div>
+<div class="li-progress-track">
+<div class="li-progress-fill" style="width: 45%;"></div>
+</div>
+<div class="li-card-footer-action">
+<span>Explorar submódulos</span>
+<i class="ph-bold ph-arrow-right"></i>
+</div>
+</div>
+</article>
+<!-- Línea 4 -->
+<article class="li-card" onclick="showView(2)">
+<div class="li-card-content-block">
+<div class="li-card-top">
+<div class="li-card-icon-box">
+<i class="ph-bold ph-cpu"></i>
+</div>
+<div class="li-card-heading">
+<span class="li-card-code">LIN-INF-04</span>
+<h4 class="li-card-title">Hardware Libre, IoT y Sistemas Embebidos Socioproductivos</h4>
+</div>
+</div>
+<p class="li-card-description">
+                  Automatización de bajo coste para sectores socioproductivos locales utilizando microcontroladores abiertos, telemetría y sensores aplicados.
+                </p>
+<div class="li-card-badges">
+<span class="li-badge trayecto-tag"><i class="ph-bold ph-path"></i> Trayectos II y IV</span>
+<span class="li-badge"><i class="ph-bold ph-tree-structure"></i> 6 Dim.</span>
+<span class="li-badge"><i class="ph-bold ph-folder-notch"></i> 19 Proy.</span>
+<span class="li-badge has-offers"><i class="ph-bold ph-hand-pointing"></i> 3 Ofertas</span>
+</div>
+</div>
+<div class="li-progress-container">
+<div class="li-progress-labels">
+<span>Cobertura Curricular</span>
+<span class="li-progress-percent">52%</span>
+</div>
+<div class="li-progress-track">
+<div class="li-progress-fill" style="width: 52%;"></div>
+</div>
+<div class="li-card-footer-action">
+<span>Explorar submódulos</span>
+<i class="ph-bold ph-arrow-right"></i>
+</div>
+</div>
+</article>
+</div>
+</section>
+<!-- ====================================================================
+             PROGRAMAS PREVISTOS: PNF PLANIFICADOS (FASE 2)
+             ==================================================================== -->
+<section class="li-pnf-group">
+<div class="li-pnf-header">
+<div class="li-pnf-title-area">
+<i class="ph-bold ph-clock-countdown li-pnf-icon" style="color: var(--texto-silenciado);"></i>
+<div class="li-pnf-name" style="color: var(--texto-silenciado);">
+<span>Próximos Programas en Integración</span>
+<span class="li-badge-upcoming-pnf"><i class="ph-bold ph-calendar-plus"></i> Fase 2 • En Formulación</span>
+</div>
+</div>
+<span class="li-pnf-meta">Líneas en proceso de homologación por los comités curriculares</span>
+</div>
+<!-- Tarjetas en formato de vista previa deshabilitada -->
+<div class="li-items-container grid-view" id="container-proximos">
+<article class="li-card card-upcoming">
+<div>
+<span class="li-pill-upcoming-line"><i class="ph-bold ph-lock-key"></i> Fase 2 Prevista</span>
+<div class="li-card-top">
+<div class="li-card-icon-box">
+<i class="ph-bold ph-briefcase"></i>
+</div>
+<div class="li-card-heading">
+<span class="li-card-code">PNF EN ADMINISTRACIÓN</span>
+<h4 class="li-card-title">Gestión Financiera en Empresas de Propiedad Social</h4>
+</div>
+</div>
+<p class="li-card-description">
+                  Modelos contables simplificados y rendición transparente comunal. Apertura del registro proyectada para la siguiente convocatoria académica.
+                </p>
+<div class="li-card-badges">
+<span class="li-badge"><i class="ph-bold ph-hourglass-simple"></i> En revisión</span>
+<span class="li-badge"><i class="ph-bold ph-tree-structure"></i> 4 Dim. proyectadas</span>
+</div>
+</div>
+<div class="li-progress-container">
+<div class="li-progress-labels">
+<span>Estado de Homologación</span>
+<span class="li-progress-percent" style="color: var(--texto-silenciado);">70%</span>
+</div>
+<div class="li-progress-track">
+<div class="li-progress-fill" style="width: 70%;"></div>
+</div>
+<div class="li-card-footer-action" style="color: var(--texto-silenciado);">
+<span>Próximamente disponible</span>
+<i class="ph-bold ph-clock"></i>
+</div>
+</div>
+</article>
+<article class="li-card card-upcoming">
+<div>
+<span class="li-pill-upcoming-line"><i class="ph-bold ph-lock-key"></i> Fase 2 Prevista</span>
+<div class="li-card-top">
+<div class="li-card-icon-box">
+<i class="ph-bold ph-plant"></i>
+</div>
+<div class="li-card-heading">
+<span class="li-card-code">PNF EN AGROALIMENTACIÓN</span>
+<h4 class="li-card-title">Sistemas de Producción y Soberanía Agroalimentaria</h4>
+</div>
+</div>
+<p class="li-card-description">
+                  Técnicas de cultivo agroecológico, fertilizantes orgánicos y cadenas de suministro territorial en mesas técnicas comunitarias.
+                </p>
+<div class="li-card-badges">
+<span class="li-badge"><i class="ph-bold ph-hourglass-simple"></i> En revisión</span>
+<span class="li-badge"><i class="ph-bold ph-tree-structure"></i> 5 Dim. proyectadas</span>
+</div>
+</div>
+<div class="li-progress-container">
+<div class="li-progress-labels">
+<span>Estado de Homologación</span>
+<span class="li-progress-percent" style="color: var(--texto-silenciado);">50%</span>
+</div>
+<div class="li-progress-track">
+<div class="li-progress-fill" style="width: 50%;"></div>
+</div>
+<div class="li-card-footer-action" style="color: var(--texto-silenciado);">
+<span>Próximamente disponible</span>
+<i class="ph-bold ph-clock"></i>
+</div>
+</div>
+</article>
+</div>
+</section>
+</main>
+</div>
+<!-- ======================================================================
+         VISTA 2: DETALLE DE LA LÍNEA Y SUBMÓDULOS (ROL CONECTOR)
+         ====================================================================== -->
+<div class="view-container" id="vista-detalle">
+<!-- Cabecera de la Línea y Breadcrumbs -->
+<section class="li-detail-header-wrapper">
+<div class="li-detail-header-inner">
+<!-- Migas de pan -->
+<nav class="li-breadcrumbs">
+<a onclick="showView(1)">
+<i class="ph-bold ph-arrow-left"></i>
+<span>Explorar Líneas</span>
+</a>
+<i class="ph-bold ph-caret-right li-breadcrumbs-sep"></i>
+<span>PNF en Informática (Activo)</span>
+<i class="ph-bold ph-caret-right li-breadcrumbs-sep"></i>
+<span class="li-breadcrumbs-current">LIN-INF-01</span>
+</nav>
+<div class="li-line-title-row">
+<div>
+<div class="li-line-title-meta">
+<span class="li-code-badge">LIN-INF-01</span>
+<span class="li-pnf-tag">Programa Nacional de Formación en Informática</span>
+<span class="li-badge-operative">100% Operativo</span>
+</div>
+<h1 class="li-line-title">Desarrollo de Software Libre y Soberanía Tecnológica</h1>
+</div>
+<button class="li-btn-primary" onclick="alert('Formulario de vinculación de Proyecto PST abierto');">
+<i class="ph-bold ph-plus-circle"></i>
+<span>Vincular Proyecto PST</span>
+</button>
+</div>
+<p class="li-line-description">
+            Articulación sistemática para el diseño, despliegue y auditoría de soluciones informáticas basadas en estándares abiertos y software libre. Promueve la independencia y seguridad tecnológica en la gestión pública, consejos comunales y cadenas productivas territoriales mediante metodologías ágiles participativas.
+          </p>
+<div class="li-header-stats-strip">
+<div class="li-strip-stat">
+<i class="ph-bold ph-tree-structure li-strip-stat-icon"></i>
+<div>
+<span class="li-strip-stat-val">5</span>
+<span class="li-strip-stat-desc">Dimensiones Operativas</span>
+</div>
+</div>
+<div class="li-strip-stat">
+<i class="ph-bold ph-folder-notch li-strip-stat-icon"></i>
+<div>
+<span class="li-strip-stat-val">48</span>
+<span class="li-strip-stat-desc">Proyectos Vinculados</span>
+</div>
+</div>
+<div class="li-strip-stat">
+<i class="ph-bold ph-chalkboard-teacher li-strip-stat-icon"></i>
+<div>
+<span class="li-strip-stat-val">3</span>
+<span class="li-strip-stat-desc">Ofertas Docentes Activas</span>
+</div>
+</div>
+<div class="li-strip-stat">
+<i class="ph-bold ph-check-circle li-strip-stat-icon"></i>
+<div>
+<span class="li-strip-stat-val">86%</span>
+<span class="li-strip-stat-desc">Tasa de Cobertura Curricular</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Layout de 2 Columnas (70% - 30%) -->
+<div class="li-detail-layout">
+<!-- Columna Izquierda (70%) - Proyectos y Dimensiones -->
+<div class="li-col-left">
+<!-- Panel de Dimensiones Operativas (Etiquetas Clickeables) -->
+<section class="li-dimensions-panel">
+<h3 class="li-panel-title">
+<i class="ph-bold ph-tag"></i>
+              Dimensiones Operativas de la Línea
+            </h3>
+<p class="li-panel-subtitle">
+              Filtra los proyectos sociotecnológicos según la dimensión temática de aplicación:
+            </p>
+<div class="li-dimension-tags">
+<button class="li-dimension-chip active">
+<span>Todas las Dimensiones</span>
+<span class="chip-qty">48</span>
+</button>
+<button class="li-dimension-chip">
+<span>Sistemas de Gestión Comunal</span>
+<span class="chip-qty">16</span>
+</button>
+<button class="li-dimension-chip">
+<span>Interoperabilidad y APIs Abiertas</span>
+<span class="chip-qty">12</span>
+</button>
+<button class="li-dimension-chip">
+<span>Seguridad y Criptografía Libre</span>
+<span class="chip-qty">8</span>
+</button>
+<button class="li-dimension-chip">
+<span>Migración a GNU/Linux</span>
+<span class="chip-qty">7</span>
+</button>
+<button class="li-dimension-chip">
+<span>Bases de Datos Distribuidas</span>
+<span class="chip-qty">5</span>
+</button>
+</div>
+</section>
+<!-- Listado de Proyectos Desarrollados -->
+<section class="li-projects-section">
+<div class="li-projects-header">
+<h3 class="li-projects-title">
+<i class="ph-bold ph-file-text"></i>
+                Proyectos Desarrollados Recientes
+              </h3>
+<span class="li-badge-counter">4 de 48 registrados</span>
+</div>
+<div class="li-projects-list">
+<!-- Proyecto 1 -->
+<article class="li-project-item">
+<div class="li-project-content">
+<span class="li-project-dim-badge">Sistemas de Gestión Comunal • Trayecto III</span>
+<h4 class="li-project-title">Sistema Integral Abierto para Distribución de Insumos Socioproductivos "La Candelaria"</h4>
+<div class="li-project-meta-row">
+<span class="li-project-meta-item">
+<i class="ph-bold ph-users"></i>
+                      M. Briceño, C. Mendoza, Y. Pérez
+                    </span>
+<span class="li-project-meta-item">
+<i class="ph-bold ph-calendar"></i>
+                      Julio 2024
+                    </span>
+<span class="li-project-meta-item">
+<i class="ph-bold ph-medal"></i>
+                      Mención Honorífica
+                    </span>
+</div>
+</div>
+<div class="li-project-actions">
+<a class="li-btn-secondary" href="#doc-pdf" title="Descargar documento de investigación">
+<i class="ph-bold ph-file-pdf"></i>
+<span>Ver Documento</span>
+</a>
+</div>
+</article>
+<!-- Proyecto 2 -->
+<article class="li-project-item">
+<div class="li-project-content">
+<span class="li-project-dim-badge">Interoperabilidad y APIs Abiertas • Trayecto IV</span>
+<h4 class="li-project-title">Plataforma API RESTful para Integración de Catálogos de Bienes Comunitarios</h4>
+<div class="li-project-meta-row">
+<span class="li-project-meta-item">
+<i class="ph-bold ph-users"></i>
+                      A. Salazar, J. Rivas
+                    </span>
+<span class="li-project-meta-item">
+<i class="ph-bold ph-calendar"></i>
+                      Mayo 2024
+                    </span>
+<span class="li-project-meta-item">
+<i class="ph-bold ph-check"></i>
+                      Aprobado con Distinción
+                    </span>
+</div>
+</div>
+<div class="li-project-actions">
+<a class="li-btn-secondary" href="#doc-pdf">
+<i class="ph-bold ph-file-pdf"></i>
+<span>Ver Documento</span>
+</a>
+</div>
+</article>
+<!-- Proyecto 3 -->
+<article class="li-project-item">
+<div class="li-project-content">
+<span class="li-project-dim-badge">Migración a GNU/Linux • Trayecto II</span>
+<h4 class="li-project-title">Protocolo de Auditoría y Transición a Estaciones de Trabajo Canaima en Centros de Salud</h4>
+<div class="li-project-meta-row">
+<span class="li-project-meta-item">
+<i class="ph-bold ph-users"></i>
+                      E. Valera, G. Márquez
+                    </span>
+<span class="li-project-meta-item">
+<i class="ph-bold ph-calendar"></i>
+                      Noviembre 2023
+                    </span>
+<span class="li-project-meta-item">
+<i class="ph-bold ph-check"></i>
+                      Aprobado
+                    </span>
+</div>
+</div>
+<div class="li-project-actions">
+<a class="li-btn-secondary" href="#doc-pdf">
+<i class="ph-bold ph-file-pdf"></i>
+<span>Ver Documento</span>
+</a>
+</div>
+</article>
+</div>
+</section>
+</div>
+<!-- Columna Derecha (30%) - Investigaciones Ofertadas -->
+<aside class="li-col-right">
+<div class="li-offers-panel">
+<div class="li-offers-header">
+<h3 class="li-offers-title">
+<i class="ph-bold ph-chalkboard-teacher" style="color: var(--color-secundario);"></i>
+<span>Investigaciones Ofertadas</span>
+</h3>
+<span class="li-offers-badge">3 Activas</span>
+</div>
+<div class="li-offers-list">
+<!-- Oferta 1 -->
+<div class="li-offer-card">
+<div class="li-offer-top">
+<span class="li-offer-status open">Abierta</span>
+<span class="li-offer-slots"><i class="ph-bold ph-user-check"></i> 2 cupos disp.</span>
+</div>
+<h4 class="li-offer-title">Desarrollo de Módulo de Trazabilidad Criptográfica para Almacenes Comunales</h4>
+<div class="li-offer-prof">
+<i class="ph-bold ph-graduation-cap"></i>
+<span>Prof. Ramón A. Salazar (PhD)</span>
+</div>
+<button class="li-btn-apply" onclick="alert('Postulación enviada al Prof. Ramón Salazar');">
+<i class="ph-bold ph-hand-pointing"></i>
+<span>Postularse / Contactar</span>
+</button>
+</div>
+<!-- Oferta 2 -->
+<div class="li-offer-card">
+<div class="li-offer-top">
+<span class="li-offer-status open">Abierta</span>
+<span class="li-offer-slots"><i class="ph-bold ph-user-check"></i> 1 cupo disp.</span>
+</div>
+<h4 class="li-offer-title">Migración y Benchmark de Arquitecturas Microservicios en PHP 8.3 + PostgreSQL</h4>
+<div class="li-offer-prof">
+<i class="ph-bold ph-graduation-cap"></i>
+<span>Profª. Dra. Beatriz Quintero</span>
+</div>
+<button class="li-btn-apply" onclick="alert('Postulación enviada a la Dra. Beatriz Quintero');">
+<i class="ph-bold ph-hand-pointing"></i>
+<span>Postularse / Contactar</span>
+</button>
+</div>
+<!-- Oferta 3 (Cerrada) -->
+<div class="li-offer-card">
+<div class="li-offer-top">
+<span class="li-offer-status closed">Cerrada</span>
+<span class="li-offer-slots"><i class="ph-bold ph-users"></i> Cupo Completo</span>
+</div>
+<h4 class="li-offer-title">Estudio Comparativo de Rendimiento en Redes Inalámbricas 802.11ax con OpenWrt</h4>
+<div class="li-offer-prof">
+<i class="ph-bold ph-graduation-cap"></i>
+<span>Ing. Morilu V. Cárdenas</span>
+</div>
+<button class="li-btn-apply" disabled="">
+<i class="ph-bold ph-lock-key"></i>
+<span>Convocatoria Cerrada</span>
+</button>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</div>
+</div>
+<!-- ========================================================================
+       SCRIPTS VANILLA JS: NAVEGACIÓN, FILTROS Y VISTAS GRID / LIST
+       ======================================================================== -->
+<script>
+    // 1. Navegación entre Vista 1 (Landing) y Vista 2 (Detalle)
+    function showView(viewNumber) {
+      const v1 = document.getElementById('vista-landing');
+      const v2 = document.getElementById('vista-detalle');
+      const tab1 = document.getElementById('tab-v1');
+      const tab2 = document.getElementById('tab-v2');
+
+      if (viewNumber === 1) {
+        v1.classList.add('active-view');
+        v2.classList.remove('active-view');
+        tab1.classList.add('active');
+        tab2.classList.remove('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        v1.classList.remove('active-view');
+        v2.classList.add('active-view');
+        tab1.classList.remove('active');
+        tab2.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    // 2. Control de Apertura/Cierre del Panel de Filtros Avanzados
+    function toggleAdvancedFilters() {
+      const panel = document.getElementById('panel-filtros-avanzados');
+      const btn = document.getElementById('btn-toggle-filters');
+      panel.classList.toggle('open');
+      btn.classList.toggle('active');
+    }
+
+    function resetFilters() {
+      const selects = document.querySelectorAll('#panel-filtros-avanzados select');
+      selects.forEach(sel => sel.selectedIndex = 0);
+    }
+
+    function applyFilters() {
+      const panel = document.getElementById('panel-filtros-avanzados');
+      panel.classList.remove('open');
+      document.getElementById('btn-toggle-filters').classList.remove('active');
+    }
+
+    // 3. Soporte para Transformar Tarjetas en Listas (Toggle Grid / List View)
+    function setListingView(mode) {
+      const cont1 = document.getElementById('container-informatica');
+      const cont2 = document.getElementById('container-proximos');
+      const btnGrid = document.getElementById('btn-view-grid');
+      const btnList = document.getElementById('btn-view-list');
+
+      if (mode === 'list') {
+        cont1.classList.remove('grid-view');
+        cont1.classList.add('list-view');
+        cont2.classList.remove('grid-view');
+        cont2.classList.add('list-view');
+        btnList.classList.add('active');
+        btnGrid.classList.remove('active');
+      } else {
+        cont1.classList.remove('list-view');
+        cont1.classList.add('grid-view');
+        cont2.classList.remove('list-view');
+        cont2.classList.add('grid-view');
+        btnGrid.classList.add('active');
+        btnList.classList.remove('active');
+      }
+    }
+  </script>
+</body></html>

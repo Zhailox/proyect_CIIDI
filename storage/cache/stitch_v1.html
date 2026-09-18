@@ -1,0 +1,487 @@
+<div class="view-container active-view" id="vista-landing">
+<!-- Hero Section -->
+<section class="li-hero">
+<div class="li-hero-inner">
+<div class="li-hero-tag-row">
+<div class="li-hero-tag">
+<i class="ph-bold ph-flask"></i>
+              Ecosistema Científico Institucional
+            </div>
+<div class="li-hero-status-pill">
+<span>Fase 1: PNF Informática 100% Operativo</span>
+</div>
+</div>
+<h1 class="li-hero-title">Ecosistema de Investigación CIIDI</h1>
+<p class="li-hero-subtitle">
+            Catálogo unificado y articulador de líneas de investigación institucionales, dimensiones operativas y producción académica sociotecnológica.
+          </p>
+<!-- Buscador Universal Grande -->
+<div class="li-search-box">
+<div class="li-search-scope">
+<i class="ph-bold ph-funnel"></i>
+<span>PNF Informática (Activo)</span>
+</div>
+<div class="li-search-input-wrapper">
+<i class="ph-bold ph-magnifying-glass"></i>
+<input class="li-search-input" placeholder="Buscar por código, dimensión temática, tecnología (ej. GNU/Linux, REST API)..." type="text"/>
+</div>
+<button class="li-search-action-btn">
+<span>Consultar</span>
+<i class="ph-bold ph-arrow-right"></i>
+</button>
+</div>
+<!-- 4 KPIs / Estadísticas globales -->
+<div class="li-kpi-grid">
+<div class="li-kpi-card">
+<div class="li-kpi-icon">
+<i class="ph-bold ph-compass"></i>
+</div>
+<div>
+<div class="li-kpi-value">4</div>
+<div class="li-kpi-label">Líneas Activas (Informática)</div>
+</div>
+</div>
+<div class="li-kpi-card">
+<div class="li-kpi-icon">
+<i class="ph-bold ph-tree-structure"></i>
+</div>
+<div>
+<div class="li-kpi-value">18</div>
+<div class="li-kpi-label">Dimensiones Validadas</div>
+</div>
+</div>
+<div class="li-kpi-card">
+<div class="li-kpi-icon">
+<i class="ph-bold ph-folder-open"></i>
+</div>
+<div>
+<div class="li-kpi-value">118</div>
+<div class="li-kpi-label">Proyectos PST Informática</div>
+</div>
+</div>
+<div class="li-kpi-card">
+<div class="li-kpi-icon">
+<i class="ph-bold ph-chalkboard-teacher"></i>
+</div>
+<div>
+<div class="li-kpi-value">9</div>
+<div class="li-kpi-label">Ofertas Docentes Activas</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Contenido Principal -->
+<main class="li-main-content">
+<!-- Banner de Estado de PNF (Requerimiento 1) -->
+<div class="li-stage-banner">
+<div class="li-stage-info">
+<div class="li-stage-icon">
+<i class="ph-bold ph-check-circle"></i>
+</div>
+<div class="li-stage-text">
+<h4>
+<span>Programa Activo: PNF en Informática</span>
+<span class="li-stage-badge-active">100% Operativo</span>
+</h4>
+<p>Módulo de registro, vinculación de proyectos PST y banco de ofertas habilitado en producción para Informática. Los próximos PNF se integrarán progresivamente.</p>
+</div>
+</div>
+<div>
+<span class="li-stage-badge-upcoming">
+<i class="ph-bold ph-clock"></i> Fase 2 Planificada: 3 PNF
+            </span>
+</div>
+</div>
+<!-- Toolbar de Resultados y Controles de Vista (Requerimiento 3) -->
+<div class="li-section-toolbar">
+<div class="li-toolbar-left">
+<h2 class="li-section-title">Líneas de Investigación</h2>
+<span class="li-badge-counter">4 Activas en Informática</span>
+</div>
+<div class="li-toolbar-right">
+<!-- Botón para alternar Panel de Filtros Avanzados -->
+<button class="li-btn-filter-toggle" id="btn-toggle-filters" onclick="toggleAdvancedFilters()">
+<i class="ph-bold ph-sliders-horizontal"></i>
+<span>Filtros Avanzados</span>
+<span class="li-filter-count-badge">3</span>
+</button>
+<!-- Toggle Vista Cuadrícula / Vista Lista (Requerimiento 3) -->
+<div aria-label="Modo de visualización" class="li-view-mode-selector" role="group">
+<button class="li-view-btn active" id="btn-view-grid" onclick="setListingView('grid')" title="Vista Cuadrícula">
+<i class="ph-bold ph-squares-four"></i>
+</button>
+<button class="li-view-btn" id="btn-view-list" onclick="setListingView('list')" title="Vista Lista Compacta">
+<i class="ph-bold ph-list-dashes"></i>
+</button>
+</div>
+</div>
+</div>
+<!-- Píldoras de Filtros Facetados de Carreras con Estado Activo / Próximamente (Requerimiento 1) -->
+<div class="li-facet-filters">
+<button class="li-facet-chip active">
+<i class="ph-bold ph-laptop"></i>
+<span>PNF en Informática</span>
+<span class="li-facet-status-tag active-tag">100% Operativo</span>
+</button>
+<button class="li-facet-chip disabled" title="Próximamente disponible en Fase 2">
+<i class="ph-bold ph-briefcase"></i>
+<span>PNF en Administración</span>
+<span class="li-facet-status-tag soon-tag">Próximamente • Fase 2</span>
+</button>
+<button class="li-facet-chip disabled" title="Próximamente disponible en Fase 2">
+<i class="ph-bold ph-plant"></i>
+<span>PNF en Agroalimentación</span>
+<span class="li-facet-status-tag soon-tag">Próximamente • Fase 2</span>
+</button>
+<button class="li-facet-chip disabled" title="Próximamente disponible en Fase 2">
+<i class="ph-bold ph-lightning"></i>
+<span>PNF en Electricidad</span>
+<span class="li-facet-status-tag soon-tag">Próximamente • Fase 2</span>
+</button>
+</div>
+<!-- ====================================================================
+             PANEL DE FILTROS AVANZADOS EXPANDIBLE (REQUERIMIENTO 2)
+             ==================================================================== -->
+<section class="li-advanced-filter-panel" id="panel-filtros-avanzados">
+<div class="li-af-header">
+<div class="li-af-title">
+<i class="ph-bold ph-funnel" style="color: var(--color-secundario);"></i>
+<span>Criterios Avanzados de Búsqueda Académica</span>
+</div>
+<span style="font-size: 0.75rem; color: var(--texto-silenciado);">Repositorio Curricular PST</span>
+</div>
+<div class="li-af-grid">
+<!-- Criterio 1: Trayecto Formativo PST -->
+<div class="li-af-group">
+<label class="li-af-label">
+<i class="ph-bold ph-path"></i> Trayecto Formativo PST
+              </label>
+<select class="li-af-select">
+<option value="">Todos los Trayectos</option>
+<option value="T1">Trayecto I (Soporte Técnico y Redes)</option>
+<option value="T2">Trayecto II (Desarrollo y BD Básicas)</option>
+<option value="T3">Trayecto III (Sistemas Distribuidos y Web)</option>
+<option value="T4">Trayecto IV (Ingeniería e I+D Integral)</option>
+</select>
+</div>
+<!-- Criterio 2: Estatus / Nivel de Cobertura -->
+<div class="li-af-group">
+<label class="li-af-label">
+<i class="ph-bold ph-chart-donut"></i> Estatus / Cobertura
+              </label>
+<select class="li-af-select">
+<option value="">Cualquier Cobertura</option>
+<option selected="" value="proy">Con Proyectos Activos (&gt; 20)</option>
+<option value="ofertas">Con Ofertas Docentes Abiertas</option>
+<option value="form">En Fase de Formulación</option>
+<option value="alta">Alta Cobertura (&gt; 70%)</option>
+</select>
+</div>
+<!-- Criterio 3: Tipología de Dimensión / Área Tecnológica -->
+<div class="li-af-group">
+<label class="li-af-label">
+<i class="ph-bold ph-tree-structure"></i> Área Tecnológica
+              </label>
+<select class="li-af-select">
+<option value="">Todas las Áreas</option>
+<option value="sw-libre">Software Libre y Abierto</option>
+<option value="redes">Redes y Telecomunicaciones Comunitarias</option>
+<option value="ciber">Seguridad y Criptografía</option>
+<option value="iot">Internet de las Cosas (IoT) y Embebidos</option>
+</select>
+</div>
+<!-- Criterio 4: Período / Año Académico -->
+<div class="li-af-group">
+<label class="li-af-label">
+<i class="ph-bold ph-calendar-blank"></i> Año / Cohorte
+              </label>
+<select class="li-af-select">
+<option value="">Todos los Períodos</option>
+<option selected="" value="2024">Período Académico 2024</option>
+<option value="2023">Período Académico 2023</option>
+<option value="2022">Período Académico 2022</option>
+</select>
+</div>
+</div>
+<!-- Footer del Panel: Píldoras de Filtros Activos y Acciones -->
+<div class="li-af-footer">
+<div class="li-af-active-pills">
+<span style="font-size: 0.75rem; font-weight: 700; color: var(--texto-silenciado); margin-right: 0.25rem;">
+                Filtros aplicados:
+              </span>
+<span class="li-af-pill-removable" onclick="this.remove()">
+<span>PNF: Informática</span>
+<i class="ph-bold ph-x"></i>
+</span>
+<span class="li-af-pill-removable" onclick="this.remove()">
+<span>Cobertura: Con Proyectos</span>
+<i class="ph-bold ph-x"></i>
+</span>
+<span class="li-af-pill-removable" onclick="this.remove()">
+<span>Año: 2024</span>
+<i class="ph-bold ph-x"></i>
+</span>
+</div>
+<div class="li-af-actions">
+<button class="li-af-btn-clear" onclick="resetFilters()">
+<i class="ph-bold ph-arrow-counter-clockwise"></i> Limpiar Filtros
+              </button>
+<button class="li-af-btn-apply" onclick="applyFilters()">
+<i class="ph-bold ph-check"></i> Aplicar Filtros (4 Resultados)
+              </button>
+</div>
+</div>
+</section>
+<!-- ====================================================================
+             GRUPO DE LÍNEAS ACTIVAS: PNF EN INFORMÁTICA (100% OPERATIVO)
+             ==================================================================== -->
+<section class="li-pnf-group">
+<div class="li-pnf-header">
+<div class="li-pnf-title-area">
+<i class="ph-bold ph-laptop li-pnf-icon"></i>
+<div class="li-pnf-name">
+<span>PNF en Informática</span>
+<span class="li-badge-operative">100% Operativo</span>
+</div>
+</div>
+<span class="li-pnf-meta">4 Líneas de Investigación Homologadas • Trayectos I al IV</span>
+</div>
+<!-- Contenedor con soporte dinámico de clases: .grid-view / .list-view -->
+<div class="li-items-container grid-view" id="container-informatica">
+<!-- Línea 1 -->
+<article class="li-card" onclick="showView(2)">
+<div class="li-card-content-block">
+<div class="li-card-top">
+<div class="li-card-icon-box">
+<i class="ph-bold ph-code"></i>
+</div>
+<div class="li-card-heading">
+<span class="li-card-code">LIN-INF-01</span>
+<h4 class="li-card-title">Desarrollo de Software Libre y Soberanía Tecnológica</h4>
+</div>
+</div>
+<p class="li-card-description">
+                  Ingeniería de software orientada a la independencia tecnológica en instituciones públicas, organizaciones comunitarias y unidades socioproductivas.
+                </p>
+<!-- Metadatos con flex-wrap y gap -->
+<div class="li-card-badges">
+<span class="li-badge trayecto-tag"><i class="ph-bold ph-path"></i> Trayectos II, III y IV</span>
+<span class="li-badge"><i class="ph-bold ph-tree-structure"></i> 5 Dim.</span>
+<span class="li-badge"><i class="ph-bold ph-folder-notch"></i> 48 Proy.</span>
+<span class="li-badge has-offers"><i class="ph-bold ph-hand-pointing"></i> 3 Ofertas</span>
+</div>
+</div>
+<!-- Barra de progreso visual y acción -->
+<div class="li-progress-container">
+<div class="li-progress-labels">
+<span>Cobertura Curricular</span>
+<span class="li-progress-percent">86%</span>
+</div>
+<div class="li-progress-track">
+<div class="li-progress-fill" style="width: 86%;"></div>
+</div>
+<div class="li-card-footer-action">
+<span>Explorar submódulos</span>
+<i class="ph-bold ph-arrow-right"></i>
+</div>
+</div>
+</article>
+<!-- Línea 2 -->
+<article class="li-card" onclick="showView(2)">
+<div class="li-card-content-block">
+<div class="li-card-top">
+<div class="li-card-icon-box">
+<i class="ph-bold ph-broadcast"></i>
+</div>
+<div class="li-card-heading">
+<span class="li-card-code">LIN-INF-02</span>
+<h4 class="li-card-title">Infraestructura, Redes Comunitarias y Telecomunicaciones</h4>
+</div>
+</div>
+<p class="li-card-description">
+                  Despliegue de conectividad rural y suburbana, topologías inalámbricas de largo alcance y redes malladas comunitarias para acceso libre y soberano.
+                </p>
+<div class="li-card-badges">
+<span class="li-badge trayecto-tag"><i class="ph-bold ph-path"></i> Trayectos I y III</span>
+<span class="li-badge"><i class="ph-bold ph-tree-structure"></i> 4 Dim.</span>
+<span class="li-badge"><i class="ph-bold ph-folder-notch"></i> 32 Proy.</span>
+<span class="li-badge has-offers"><i class="ph-bold ph-hand-pointing"></i> 2 Ofertas</span>
+</div>
+</div>
+<div class="li-progress-container">
+<div class="li-progress-labels">
+<span>Cobertura Curricular</span>
+<span class="li-progress-percent">64%</span>
+</div>
+<div class="li-progress-track">
+<div class="li-progress-fill" style="width: 64%;"></div>
+</div>
+<div class="li-card-footer-action">
+<span>Explorar submódulos</span>
+<i class="ph-bold ph-arrow-right"></i>
+</div>
+</div>
+</article>
+<!-- Línea 3 -->
+<article class="li-card" onclick="showView(2)">
+<div class="li-card-content-block">
+<div class="li-card-top">
+<div class="li-card-icon-box">
+<i class="ph-bold ph-shield-check"></i>
+</div>
+<div class="li-card-heading">
+<span class="li-card-code">LIN-INF-03</span>
+<h4 class="li-card-title">Seguridad de la Información y Gestión de Datos</h4>
+</div>
+</div>
+<p class="li-card-description">
+                  Políticas de confidencialidad y planes de contingencia, análisis de vulnerabilidades, auditorías de código abierto y resguardo seguro comunal.
+                </p>
+<div class="li-card-badges">
+<span class="li-badge trayecto-tag"><i class="ph-bold ph-path"></i> Trayectos III y IV</span>
+<span class="li-badge"><i class="ph-bold ph-tree-structure"></i> 3 Dim.</span>
+<span class="li-badge"><i class="ph-bold ph-folder-notch"></i> 19 Proy.</span>
+<span class="li-badge has-offers"><i class="ph-bold ph-hand-pointing"></i> 1 Oferta</span>
+</div>
+</div>
+<div class="li-progress-container">
+<div class="li-progress-labels">
+<span>Cobertura Curricular</span>
+<span class="li-progress-percent">45%</span>
+</div>
+<div class="li-progress-track">
+<div class="li-progress-fill" style="width: 45%;"></div>
+</div>
+<div class="li-card-footer-action">
+<span>Explorar submódulos</span>
+<i class="ph-bold ph-arrow-right"></i>
+</div>
+</div>
+</article>
+<!-- Línea 4 -->
+<article class="li-card" onclick="showView(2)">
+<div class="li-card-content-block">
+<div class="li-card-top">
+<div class="li-card-icon-box">
+<i class="ph-bold ph-cpu"></i>
+</div>
+<div class="li-card-heading">
+<span class="li-card-code">LIN-INF-04</span>
+<h4 class="li-card-title">Hardware Libre, IoT y Sistemas Embebidos Socioproductivos</h4>
+</div>
+</div>
+<p class="li-card-description">
+                  Automatización de bajo coste para sectores socioproductivos locales utilizando microcontroladores abiertos, telemetría y sensores aplicados.
+                </p>
+<div class="li-card-badges">
+<span class="li-badge trayecto-tag"><i class="ph-bold ph-path"></i> Trayectos II y IV</span>
+<span class="li-badge"><i class="ph-bold ph-tree-structure"></i> 6 Dim.</span>
+<span class="li-badge"><i class="ph-bold ph-folder-notch"></i> 19 Proy.</span>
+<span class="li-badge has-offers"><i class="ph-bold ph-hand-pointing"></i> 3 Ofertas</span>
+</div>
+</div>
+<div class="li-progress-container">
+<div class="li-progress-labels">
+<span>Cobertura Curricular</span>
+<span class="li-progress-percent">52%</span>
+</div>
+<div class="li-progress-track">
+<div class="li-progress-fill" style="width: 52%;"></div>
+</div>
+<div class="li-card-footer-action">
+<span>Explorar submódulos</span>
+<i class="ph-bold ph-arrow-right"></i>
+</div>
+</div>
+</article>
+</div>
+</section>
+<!-- ====================================================================
+             PROGRAMAS PREVISTOS: PNF PLANIFICADOS (FASE 2)
+             ==================================================================== -->
+<section class="li-pnf-group">
+<div class="li-pnf-header">
+<div class="li-pnf-title-area">
+<i class="ph-bold ph-clock-countdown li-pnf-icon" style="color: var(--texto-silenciado);"></i>
+<div class="li-pnf-name" style="color: var(--texto-silenciado);">
+<span>Próximos Programas en Integración</span>
+<span class="li-badge-upcoming-pnf"><i class="ph-bold ph-calendar-plus"></i> Fase 2 • En Formulación</span>
+</div>
+</div>
+<span class="li-pnf-meta">Líneas en proceso de homologación por los comités curriculares</span>
+</div>
+<!-- Tarjetas en formato de vista previa deshabilitada -->
+<div class="li-items-container grid-view" id="container-proximos">
+<article class="li-card card-upcoming">
+<div>
+<span class="li-pill-upcoming-line"><i class="ph-bold ph-lock-key"></i> Fase 2 Prevista</span>
+<div class="li-card-top">
+<div class="li-card-icon-box">
+<i class="ph-bold ph-briefcase"></i>
+</div>
+<div class="li-card-heading">
+<span class="li-card-code">PNF EN ADMINISTRACIÓN</span>
+<h4 class="li-card-title">Gestión Financiera en Empresas de Propiedad Social</h4>
+</div>
+</div>
+<p class="li-card-description">
+                  Modelos contables simplificados y rendición transparente comunal. Apertura del registro proyectada para la siguiente convocatoria académica.
+                </p>
+<div class="li-card-badges">
+<span class="li-badge"><i class="ph-bold ph-hourglass-simple"></i> En revisión</span>
+<span class="li-badge"><i class="ph-bold ph-tree-structure"></i> 4 Dim. proyectadas</span>
+</div>
+</div>
+<div class="li-progress-container">
+<div class="li-progress-labels">
+<span>Estado de Homologación</span>
+<span class="li-progress-percent" style="color: var(--texto-silenciado);">70%</span>
+</div>
+<div class="li-progress-track">
+<div class="li-progress-fill" style="width: 70%;"></div>
+</div>
+<div class="li-card-footer-action" style="color: var(--texto-silenciado);">
+<span>Próximamente disponible</span>
+<i class="ph-bold ph-clock"></i>
+</div>
+</div>
+</article>
+<article class="li-card card-upcoming">
+<div>
+<span class="li-pill-upcoming-line"><i class="ph-bold ph-lock-key"></i> Fase 2 Prevista</span>
+<div class="li-card-top">
+<div class="li-card-icon-box">
+<i class="ph-bold ph-plant"></i>
+</div>
+<div class="li-card-heading">
+<span class="li-card-code">PNF EN AGROALIMENTACIÓN</span>
+<h4 class="li-card-title">Sistemas de Producción y Soberanía Agroalimentaria</h4>
+</div>
+</div>
+<p class="li-card-description">
+                  Técnicas de cultivo agroecológico, fertilizantes orgánicos y cadenas de suministro territorial en mesas técnicas comunitarias.
+                </p>
+<div class="li-card-badges">
+<span class="li-badge"><i class="ph-bold ph-hourglass-simple"></i> En revisión</span>
+<span class="li-badge"><i class="ph-bold ph-tree-structure"></i> 5 Dim. proyectadas</span>
+</div>
+</div>
+<div class="li-progress-container">
+<div class="li-progress-labels">
+<span>Estado de Homologación</span>
+<span class="li-progress-percent" style="color: var(--texto-silenciado);">50%</span>
+</div>
+<div class="li-progress-track">
+<div class="li-progress-fill" style="width: 50%;"></div>
+</div>
+<div class="li-card-footer-action" style="color: var(--texto-silenciado);">
+<span>Próximamente disponible</span>
+<i class="ph-bold ph-clock"></i>
+</div>
+</div>
+</article>
+</div>
+</section>
+</main>
+</div>
