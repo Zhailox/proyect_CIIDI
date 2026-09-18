@@ -76,10 +76,11 @@ class LineasModel extends QueryBuilder {
             LEFT  JOIN dimensiones_operativas dim ON dim.id   = rc.id_dimension_operativa
             LEFT  JOIN recurso_autores ra  ON ra.id_recurso   = r.id
             LEFT  JOIN autores a           ON a.id            = ra.id_autor
-            WHERE rc.id_linea_investigacion = ?
+            WHERE rc.id_linea_investigacion = ? AND r.activo = true
             GROUP BY r.id, r.titulo, r.anio_publicacion, dp.resumen,
                      dp.nivel_academico, dp.palabras_clave, dp.fecha_defensa, dim.nombre
             ORDER BY r.anio_publicacion DESC
+            LIMIT 50 OFFSET 0 -- Paginación básica inicial
         ";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$id_linea]);
@@ -120,6 +121,33 @@ class LineasModel extends QueryBuilder {
      * Inserta una nueva línea de investigación.
      * @return int|false ID generado o false en fallo
      */
+
+    public function existeNombre(string $nombre, int $id_carrera, ?int $exclude_id = null): bool {
+        $sql = "SELECT COUNT(*) FROM lineas_investigacion WHERE LOWER(nombre) = LOWER(?) AND id_carrera = ?";
+        $params = [$nombre, $id_carrera];
+        if ($exclude_id !== null) {
+            $sql .= " AND id != ?";
+            $params[] = $exclude_id;
+        }
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return (int)$stmt->fetchColumn() > 0;
+    }
+
+    public function tieneDependencias(int $id_linea): array {
+        $sql1 = "SELECT COUNT(*) FROM recurso_clasificaciones WHERE id_linea_investigacion = ?";
+        $stmt1 = $this->db->prepare($sql1);
+        $stmt1->execute([$id_linea]);
+        $proyectos = (int)$stmt1->fetchColumn();
+
+        $sql2 = "SELECT COUNT(*) FROM investigaciones_ofertadas WHERE id_linea = ?";
+        $stmt2 = $this->db->prepare($sql2);
+        $stmt2->execute([$id_linea]);
+        $ofertas = (int)$stmt2->fetchColumn();
+
+        return ['proyectos' => $proyectos, 'ofertas' => $ofertas];
+    }
+
     public function crear(array $datos) {
         return $this->tabla('lineas_investigacion')->insert($datos);
     }

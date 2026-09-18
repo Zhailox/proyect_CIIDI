@@ -79,7 +79,7 @@
                     <summary class="li-dim-summary">
                         <span>
                             <i class="ph-fill ph-dot-outline" style="color:var(--li-indigo);margin-right:0.4rem;"></i>
-                            <?= htmlspecialchars($dim['nombre']) ?>
+                            <a href='?ruta=buscador-unificado&dim=<?php echo urlencode($dim["nombre"]); ?>' style='color:inherit; text-decoration:none; border-bottom: 1px dashed var(--li-indigo);'><?= htmlspecialchars($dim['nombre']) ?></a>
                         </span>
                     </summary>
                     <div class="li-dim-body">
@@ -102,6 +102,7 @@
                 <div class="li-empty-state" style="padding:2rem;">
                     <i class="ph-bold ph-folder-open"></i>
                     <p>Aún no hay proyectos clasificados en esta línea de investigación.</p>
+                    <a href="?ruta=mis-proyectos" style="display:inline-block; margin-top:1rem; padding:8px 16px; background:var(--li-indigo); color:white; border-radius:6px; text-decoration:none; font-size:0.85rem; font-weight:600;"><i class="ph-bold ph-plus"></i> Registra tu Proyecto PST aquí</a>
                 </div>
             <?php else: ?>
                 <div class="li-proj-grid">
@@ -132,6 +133,9 @@
                             <?= htmlspecialchars($proy['resumen']) ?>
                         </p>
                         <?php endif; ?>
+                        <div style="margin-top: 1rem; border-top: 1px solid #e2e8f0; padding-top: 0.8rem;">
+                            <a href="?ruta=visor-documento&id=<?= $proy['id'] ?>" style="display:inline-flex; align-items:center; gap:0.4rem; font-size:0.8rem; font-weight:600; color:var(--li-violet); text-decoration:none;"><i class="ph-bold ph-file-pdf"></i> Ver Documento</a>
+                        </div>
                     </div>
                 <?php endforeach; ?>
                 </div>
@@ -171,6 +175,11 @@
                         <div class="li-inv-estado <?= htmlspecialchars($estadoClass) ?>">
                             <?= htmlspecialchars($inv['estado'] ?? 'N/D') ?>
                         </div>
+                        <?php if (strtolower($inv['estado'] ?? '') === 'abierta'): ?>
+                            <div style="margin-top: 0.8rem;">
+                                <a href="?ruta=cartelera-oportunidades&id_investigacion=<?= $inv['id'] ?>" style="display:block; text-align:center; padding:6px; background:#f1f5f9; color:var(--li-indigo); border-radius:4px; font-size:0.75rem; font-weight:700; text-decoration:none; border: 1px solid #cbd5e1;"><i class="ph-bold ph-hand-pointing"></i> Postularse / Contactar</a>
+                            </div>
+                        <?php endif; ?>
                     </div>
                     <?php endforeach; ?>
                 <?php endif; ?>

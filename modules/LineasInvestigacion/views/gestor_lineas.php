@@ -1,206 +1,11 @@
+<?php require_once __DIR__ . '/../../../core/Security/CSRF.php'; ?>
 <?php
 // modules/LineasInvestigacion/views/gestor_lineas.php
 ?>
 
 
 
-<style>
 
-/* CLASES PARA VISTA TIPO LISTA (REAL) */
-.ag-view-list {
-    grid-template-columns: 1fr !important;
-}
-.ag-view-list .ag-card {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.5rem 2rem;
-    gap: 2rem;
-}
-.ag-view-list .ag-card-content {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
-.ag-view-list .ag-card-icon {
-    margin-bottom: 0 !important;
-}
-.ag-view-list .ag-card-actions {
-    border-top: none !important;
-    padding-top: 0 !important;
-    border-left: 1px solid rgba(80, 89, 132, 0.1);
-    padding-left: 2rem;
-    margin-left: 1rem;
-    min-width: max-content;
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-}
-.ag-view-list .ag-card-actions .ag-btn-manage {
-    width: auto !important;
-}
-
-.ag-header-banner {
-    background: linear-gradient(135deg, rgba(80, 89, 132, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%) !important;
-    color: #ffffff;
-    border-radius: 14px;
-    padding: 2rem 2.5rem;
-    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.15);
-    margin-bottom: 2rem;
-    position: relative;
-    overflow: hidden;
-}
-.ag-header-banner::before {
-    content: '';
-    position: absolute;
-    top: -50%; right: -10%;
-    width: 300px; height: 300px;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-    border-radius: 50%;
-}
-.ag-header-subtitle {
-    display: inline-flex; 
-    align-items: center; 
-    gap: 0.5rem; 
-    color: #94a3b8; 
-    font-weight: 800; 
-    font-size: 0.8rem; 
-    text-transform: uppercase; 
-    letter-spacing: 1.5px; 
-    margin-bottom: 0.5rem;
-}
-.ag-header-title {
-    font-size: 2rem; 
-    font-weight: 800; 
-    margin: 0; 
-    color: #ffffff;
-    letter-spacing: -0.5px;
-}
-.ag-header-desc {
-    margin: 0.5rem 0 0 0; 
-    color: #cbd5e1; 
-    font-size: 1rem;
-    max-width: 600px;
-}
-
-.ag-modules-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-.ag-card {
-    background: #ffffff;
-    border: 1px solid rgba(80, 89, 132, 0.15);
-    border-top: 4px solid #505984;
-    border-radius: 12px;
-    padding: 1.8rem;
-    box-shadow: 0 10px 25px rgba(18, 26, 62, 0.03);
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 1.5rem;
-}
-.ag-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 20px 40px rgba(18, 26, 62, 0.08);
-    border-color: rgba(80, 89, 132, 0.25);
-}
-.ag-card-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
-    background: rgba(80, 89, 132, 0.08);
-    border: 1px solid rgba(80, 89, 132, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.8rem;
-    color: #505984;
-}
-.ag-btn-manage {
-    background: #505984;
-    color: #ffffff;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 16px;
-    font-weight: 700;
-    font-size: 0.9rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    cursor: pointer;
-    width: 100%;
-}
-.ag-btn-manage:hover {
-    background: #3C456A;
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(80, 89, 132, 0.3);
-}
-.ag-btn-delete {
-    color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
-    border: none;
-    padding: 8px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.2s;
-    font-weight: bold;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-.ag-btn-delete:hover { background: #ef4444; color: #fff; }
-
-.li-alert {
-    padding: 1rem 1.25rem;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-.li-alert.exito { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-.li-alert.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-
-/* Custom Modal Styles */
-.ag-modal-label {
-    display: block;
-    font-weight: 700;
-    margin-bottom: 0.4rem;
-    color: #475569;
-    font-size: 0.9rem;
-}
-.ag-modal-input {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 1rem 1.25rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 0.95rem;
-    transition: all 0.2s;
-    background: #f8fafc;
-}
-.ag-modal-input:focus {
-    outline: none;
-    border-color: #505984;
-    background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(80, 89, 132, 0.2);
-}
-.ag-swal-popup {
-    border-radius: 16px !important;
-    padding: 2rem !important;
-}
-</style>
 
 <div class="li-gestor-wrapper">
 
@@ -287,6 +92,7 @@
 
 <!-- Formularios Ocultos -->
 <form id="formEliminarLinea" method="POST" action="index.php?ruta=gestionar-lineas" style="display:none;">
+        <?= CSRF::campoOculto() ?>
     <input type="hidden" name="accion" value="eliminar">
     <input type="hidden" name="id" id="deleteLineaId" value="">
 </form>
@@ -327,6 +133,7 @@ function abrirModalCrearLinea() {
         html: `
             <div style="text-align: left; margin-top: 1rem;">
                 <form id="form-create-linea" method="POST" action="index.php?ruta=gestionar-lineas">
+        <?= CSRF::campoOculto() ?>
                     <input type="hidden" name="accion" value="crear">
                     
                     <div style="margin-bottom:1.2rem;">

@@ -216,7 +216,7 @@ class VinculacionController
 
     public function procesarAsignacion()
     {
-        Auth::requierePrivilegioMinimo($this->nivelPublico);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'VinculacionEmpresarial');
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id_postulacion = (int) $_POST['id_postulacion'];
             $id_investigacion = (int) $_POST['id_investigacion'];
@@ -381,13 +381,14 @@ class VinculacionController
     }
 
     // --- METODOS DE VISTAS FRONTEND ---
-    
-    public function carteleraOportunidades(): array {
+
+    public function carteleraOportunidades(): array
+    {
         $nivelPublico = SystemConfigService::get('accesos_modulos.vinculacion_empresarial.publico', 999);
         Auth::requierePrivilegioMinimo($nivelPublico); // 999 permite a cualquier usuario autenticado
-        
+
         $oportunidades = $this->modelo->getAceptadas();
-        
+
         // Agrupar y extraer datos unicos para los filtros de la vista
         $lineasUnicas = [];
         $cuposUnicos = [];
@@ -399,7 +400,7 @@ class VinculacionController
                 $lineasUnicas[] = $linea;
             }
 
-            $cupos = (int)($op['cupos_disponibles'] ?? 1);
+            $cupos = (int) ($op['cupos_disponibles'] ?? 1);
             if (!in_array($cupos, $cuposUnicos)) {
                 $cuposUnicos[] = $cupos;
             }
@@ -413,8 +414,8 @@ class VinculacionController
 
         sort($lineasUnicas);
         sort($cuposUnicos);
-        ksort($oportunidadesPorTrayecto); 
-        
+        ksort($oportunidadesPorTrayecto);
+
         $userData = [];
         if (Auth::check()) {
             $pdo = \Connection::getInstance();
@@ -422,7 +423,7 @@ class VinculacionController
             $stmt->execute([$_SESSION['usuario_id']]);
             $userData = $stmt->fetch(\PDO::FETCH_ASSOC) ?: [];
         }
-        
+
         return [
             'oportunidades' => $oportunidades,
             'userData' => $userData,
@@ -432,8 +433,9 @@ class VinculacionController
         ];
     }
 
-    
-    public function gestionProyectos(): array {
+
+    public function gestionProyectos(): array
+    {
         Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'VinculacionEmpresarial');
         $tab = $_GET['tab'] ?? 'propuestas';
         return [

@@ -65,6 +65,18 @@ class LineasInvestigacionModule implements ModuleContract {
                 'metodo'           => 'detalleGestionLinea'
             ],
             // Panel Admin: Gestión CRUD de dimensiones operativas
+                        'exportar-lineas-csv' => [
+                'controlador' => 'GestorLineasController',
+                'controlador_path' => __DIR__ . '/controllers/GestorController.php',
+                'metodo' => 'exportarCsv',
+                'oculto' => true
+            ],
+            'imprimir-matriz' => [
+                'controlador' => 'GestorLineasController',
+                'controlador_path' => __DIR__ . '/controllers/GestorController.php',
+                'metodo' => 'imprimirMatriz',
+                'oculto' => true
+            ],
             'gestionar-dimensiones' => [
                 'vista'            => __DIR__ . '/views/gestor_dimensiones.php',
                 'titulo'           => 'Gestión de Dimensiones Operativas - Admin',

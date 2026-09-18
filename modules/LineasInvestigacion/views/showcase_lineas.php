@@ -2,232 +2,189 @@
 // modules/LineasInvestigacion/views/showcase_lineas.php
 // Variables inyectadas por ShowcaseLineasController:
 //   $lineas (array), $total_dimensiones (int), $total_proyectos (int), $total_invest (int)
+
+// Agrupar por carrera
+$lineasPorCarrera = [];
+foreach ($lineas as $l) {
+    $carrera = empty($l['carrera_nombre']) ? 'General' : $l['carrera_nombre'];
+    if (!isset($lineasPorCarrera[$carrera])) {
+        $lineasPorCarrera[$carrera] = [];
+    }
+    $lineasPorCarrera[$carrera][] = $l;
+}
 ?>
 
 <div class="li-wrapper">
 
-    <!-- ╔══ HERO ══════════════════════════════════════════════════════════╗ -->
-    <style>
-.ag-header-banner {
-    background: linear-gradient(135deg, rgba(80, 89, 132, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%) !important;
-    color: #ffffff;
-    border-radius: 14px;
-    padding: 2.5rem 3rem;
-    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.15);
-    margin-bottom: 2.5rem;
-    position: relative;
-    overflow: hidden;
-}
-.ag-header-banner::before {
-    content: '';
-    position: absolute;
-    top: -50%; right: -10%;
-    width: 400px; height: 400px;
-    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 60%);
-    border-radius: 50%;
-}
-.ag-header-subtitle {
-    display: inline-flex; 
-    align-items: center; 
-    gap: 0.5rem; 
-    color: #94a3b8; 
-    font-weight: 800; 
-    font-size: 0.8rem; 
-    text-transform: uppercase; 
-    letter-spacing: 1.5px; 
-    margin-bottom: 0.5rem;
-}
-.ag-header-title {
-    font-size: 2.2rem; 
-    font-weight: 800; 
-    margin: 0 0 0.8rem 0; 
-    color: #ffffff;
-    letter-spacing: -0.5px;
-}
-.ag-header-desc {
-    margin: 0; 
-    color: #cbd5e1; 
-    font-size: 1.05rem;
-    max-width: 800px;
-    line-height: 1.6;
-}
-</style>
-
-<div class="ag-header-banner" style="margin-bottom: 3rem;">
-    <canvas id="li-nodes-canvas-2" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.6;"></canvas>
-    <div style="position: relative; z-index: 1; display:flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 20px;">
-        <div style="flex: 1; min-width: 300px;">
-            <div class="ag-header-subtitle">
-                <i class="ph-bold ph-graph"></i> CIIDI • UPTTMBI
-            </div>
-            <h1 class="ag-header-title">Líneas de Investigación</h1>
-            <p class="ag-header-desc">
-                Ejes estratégicos que articulan el conocimiento científico-tecnológico del PNF en Informática. Explora las dimensiones operativas, proyectos clasificados e investigaciones disponibles para postulación.
-            </p>
-        </div>
-        <div style="display:flex; gap: 15px; flex-wrap: wrap; flex-shrink: 0;">
-            <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 15px 25px; text-align: center; min-width: 100px;">
-                <div style="font-size: 2.2rem; font-weight: 800; line-height: 1; margin-bottom: 5px;"><?= count($lineas) ?></div>
-                <div style="font-size: 0.8rem; font-weight: 700; color: #cbd5e1; text-transform: uppercase;">Líneas</div>
-            </div>
-            <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 15px 25px; text-align: center; min-width: 100px;">
-                <div style="font-size: 2.2rem; font-weight: 800; line-height: 1; margin-bottom: 5px;"><?= (int)$total_dimensiones ?></div>
-                <div style="font-size: 0.8rem; font-weight: 700; color: #cbd5e1; text-transform: uppercase;">Dimensiones</div>
-            </div>
-            <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 15px 25px; text-align: center; min-width: 100px;">
-                <div style="font-size: 2.2rem; font-weight: 800; line-height: 1; margin-bottom: 5px; color: #34d399;"><?= (int)$total_proyectos ?></div>
-                <div style="font-size: 0.8rem; font-weight: 700; color: #cbd5e1; text-transform: uppercase;">Proyectos</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-    <!-- ╔══ GRID DE LÍNEAS ═════════════════════════════════════════════════╗ -->
-    <?php if (empty($lineas)): ?>
-        <div class="li-empty-state">
-            <i class="ph-bold ph-flask"></i>
-            <p>No hay líneas de investigación registradas aún.<br>
-               Los administradores pueden crearlas desde el panel de gestión.</p>
-        </div>
-    <?php else: ?>
-
-    <div class="li-grid">
-        <?php foreach ($lineas as $idx => $linea):
-            $accentIdx = $idx % 6;
-        ?>
-        <div class="li-card">
-
-            <!-- Barra de color top -->
-            <div class="li-card-accent li-accent-<?= $accentIdx ?>"></div>
-
-            <div class="li-card-body">
-                <!-- Icono + Título -->
-                <div class="li-card-header-row">
-                    <div class="li-icon-box li-icon-<?= $accentIdx ?>">
-                        <i class="<?= htmlspecialchars($linea['icono']) ?>"></i>
-                    </div>
-                    <div>
-                        <h2 class="li-card-title">
-                            <?= htmlspecialchars(mb_convert_case($linea['nombre'], MB_CASE_TITLE, 'UTF-8')) ?>
-                        </h2>
-                        <?php if (!empty($linea['carrera_nombre'])): ?>
-                        <div class="li-carrera-badge" style="margin-top:0.4rem;">
-                            <i class="ph-bold ph-graduation-cap"></i>
-                            <?= htmlspecialchars($linea['carrera_nombre']) ?>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <!-- Descripción -->
-                <?php if (!empty($linea['descripcion'])): ?>
-                <p class="li-card-desc">
-                    <?= htmlspecialchars($linea['descripcion']) ?>
-                </p>
-                <?php endif; ?>
-
-                <!-- Stats -->
-                <div class="li-card-stats">
-                    <div class="li-stat-item">
-                        <i class="ph-fill ph-squares-four"></i>
-                        <span class="li-stat-num"><?= (int)$linea['total_dimensiones'] ?></span>
-                        Dimensiones
-                    </div>
-                    <div class="li-stat-item">
-                        <i class="ph-fill ph-folder-open"></i>
-                        <span class="li-stat-num"><?= (int)$linea['total_proyectos'] ?></span>
-                        Proyectos
-                    </div>
-                    <?php if ((int)$linea['total_investigaciones'] > 0): ?>
-                    <div class="li-stat-item">
-                        <i class="ph-fill ph-flask"></i>
-                        <span class="li-stat-num"><?= (int)$linea['total_investigaciones'] ?></span>
-                        Ofertadas
-                    </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <!-- Botón de detalle -->
-            <div class="li-card-footer">
-                <a href="index.php?ruta=detalle-linea&id=<?= (int)$linea['id'] ?>"
-                   class="li-btn-ver">
-                    <i class="ph-bold ph-arrow-right"></i>
-                    Ver Detalle
-                </a>
-            </div>
-
-        </div>
-        <?php endforeach; ?>
-    </div>
-
-    <?php endif; ?>
-
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const canvas = document.getElementById('li-nodes-canvas-2');
-    if (canvas) {
-        const ctx = canvas.getContext('2d');
-        let width = canvas.width = canvas.offsetWidth;
-        let height = canvas.height = canvas.offsetHeight;
+    <!-- HERO SECTION -->
+    <div class="ag-header-banner" style="text-align: center;">
+        <span class="ag-header-subtitle"><i class="ph-bold ph-network"></i> Ecosistema de Investigación</span>
+        <h1 class="ag-header-title">Líneas de Investigación Institucionales</h1>
+        <p class="ag-header-desc">
+            Explora las directrices académicas que guían el desarrollo de proyectos y la innovación tecnológica.
+        </p>
         
-        window.addEventListener('resize', () => {
-            if (!canvas) return;
-            width = canvas.width = canvas.offsetWidth;
-            height = canvas.height = canvas.offsetHeight;
-        });
+        <!-- GLOBAL SEARCH BAR -->
+        <div style="margin-top: 2rem;">
+            <input type="text" id="agSearchInput" class="ag-search-bar" placeholder="Buscar línea por nombre, palabra clave o PNF..." autocomplete="off">
+        </div>
+    </div>
 
-        const particles = [];
-        const numParticles = 40;
+    <!-- GLOBAL STATS -->
+    <div class="li-stats-bar">
+        <div class="li-stat-card">
+            <div class="li-stat-icon" style="background: rgba(18, 26, 62, 0.08); color: var(--li-indigo);">
+                <i class="ph-fill ph-git-merge"></i>
+            </div>
+            <div>
+                <div class="li-stat-value"><?= count($lineas) ?></div>
+                <div class="li-stat-label">Líneas Activas</div>
+            </div>
+        </div>
+        <div class="li-stat-card">
+            <div class="li-stat-icon" style="background: rgba(80, 89, 132, 0.08); color: var(--li-violet);">
+                <i class="ph-fill ph-squares-four"></i>
+            </div>
+            <div>
+                <div class="li-stat-value"><?= $total_dimensiones ?></div>
+                <div class="li-stat-label">Dimensiones Operativas</div>
+            </div>
+        </div>
+        <div class="li-stat-card">
+            <div class="li-stat-icon" style="background: rgba(112, 144, 203, 0.08); color: var(--li-cyan);">
+                <i class="ph-fill ph-folder-open"></i>
+            </div>
+            <div>
+                <div class="li-stat-value"><?= $total_proyectos ?></div>
+                <div class="li-stat-label">Proyectos Desarrollados</div>
+            </div>
+        </div>
+        <div class="li-stat-card">
+            <div class="li-stat-icon" style="background: rgba(217, 119, 6, 0.08); color: var(--li-amber);">
+                <i class="ph-fill ph-flask"></i>
+            </div>
+            <div>
+                <div class="li-stat-value"><?= $total_invest ?></div>
+                <div class="li-stat-label">Investigaciones Ofertadas</div>
+            </div>
+        </div>
+    </div>
 
-        for (let i = 0; i < numParticles; i++) {
-            particles.push({
-                x: Math.random() * width,
-                y: Math.random() * height,
-                vx: (Math.random() - 0.5) * 0.5,
-                vy: (Math.random() - 0.5) * 0.5,
-                radius: Math.random() * 2 + 1.2
-            });
-        }
+    <!-- MAIN CONTENT: SECTIONED BY PNF -->
+    <div id="agLineasContainer">
+        <?php if (empty($lineas)): ?>
+            <div style="text-align: center; padding: 4rem; color: var(--text-muted);">
+                <i class="ph-fill ph-empty" style="font-size: 3rem;"></i>
+                <p>No hay líneas de investigación registradas.</p>
+            </div>
+        <?php else: ?>
+            
+            <?php foreach ($lineasPorCarrera as $carrera => $grupo): ?>
+                <div class="ag-carrera-section" data-carrera="<?= htmlspecialchars(strtolower($carrera)) ?>">
+                    <div style="border-bottom: 2px solid #e2e8f0; margin-bottom: 1.5rem; padding-bottom: 0.5rem; margin-top: 3rem;">
+                        <h2 style="font-size: 1.5rem; color: var(--li-indigo); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="ph-bold ph-graduation-cap"></i> <?= htmlspecialchars($carrera) ?>
+                        </h2>
+                    </div>
 
-        function animate() {
-            ctx.clearRect(0, 0, width, height);
+                    <div class="li-grid">
+                        <?php foreach ($grupo as $index => $linea): 
+                            $accentIdx = ($index % 4) + 1;
+                            $porcentaje = $total_proyectos > 0 ? round(($linea['total_proyectos'] / $total_proyectos) * 100) : 0;
+                        ?>
+                            <a href="?ruta=detalle-linea&id=<?= $linea['id'] ?>" class="li-card ag-linea-item" data-nombre="<?= htmlspecialchars(strtolower($linea['nombre'])) ?>">
+                                <div class="li-card-accent li-accent-<?= $accentIdx ?>"></div>
+                                <div class="li-card-body">
+                                    <div class="li-card-header-row">
+                                        <div class="li-icon-box li-icon-<?= $accentIdx ?>">
+                                            <i class="<?= htmlspecialchars($linea['icono'] ?: 'ph-fill ph-graph') ?>"></i>
+                                        </div>
+                                        <div>
+                                            <h2 class="li-card-title">
+                                                <?= htmlspecialchars(mb_convert_case($linea['nombre'], MB_CASE_TITLE, 'UTF-8')) ?>
+                                            </h2>
+                                        </div>
+                                    </div>
+                                    <?php if (!empty($linea['descripcion'])): ?>
+                                        <p class="li-card-desc">
+                                            <?= htmlspecialchars($linea['descripcion']) ?>
+                                        </p>
+                                    <?php endif; ?>
 
-            for (let i = 0; i < numParticles; i++) {
-                const p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
+                                    <!-- Barra de Cobertura Visual -->
+                                    <div style="margin-bottom: 1rem;">
+                                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">
+                                            <span>Cobertura de proyectos</span>
+                                            <span><?= $porcentaje ?>%</span>
+                                        </div>
+                                        <div style="width: 100%; background: #f1f5f9; border-radius: 4px; height: 6px; overflow: hidden;">
+                                            <div style="height: 100%; background: var(--li-indigo); width: <?= $porcentaje ?>%;"></div>
+                                        </div>
+                                    </div>
 
-                if (p.x < 0 || p.x > width) p.vx *= -1;
-                if (p.y < 0 || p.y > height) p.vy *= -1;
+                                    <div class="li-card-stats">
+                                        <div class="li-stat-item">
+                                            <i class="ph-fill ph-squares-four"></i>
+                                            <span class="li-stat-num"><?= (int)$linea['total_dimensiones'] ?></span> Dim.
+                                        </div>
+                                        <div class="li-stat-item">
+                                            <i class="ph-fill ph-folder-open"></i>
+                                            <span class="li-stat-num"><?= (int)$linea['total_proyectos'] ?></span> Proy.
+                                        </div>
+                                        <?php if ((int)$linea['total_investigaciones'] > 0): ?>
+                                            <div class="li-stat-item">
+                                                <i class="ph-fill ph-flask"></i>
+                                                <span class="li-stat-num"><?= (int)$linea['total_investigaciones'] ?></span> Ofer.
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endforeach; ?>
 
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(112, 144, 203, 0.75)';
-                ctx.fill();
+        <?php endif; ?>
+    </div>
 
-                for (let j = i + 1; j < numParticles; j++) {
-                    const p2 = particles[j];
-                    const dx = p.x - p2.x;
-                    const dy = p.y - p2.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (dist < 100) {
-                        ctx.beginPath();
-                        ctx.moveTo(p.x, p.y);
-                        ctx.lineTo(p2.x, p2.y);
-                        ctx.strokeStyle = `rgba(112, 144, 203, ${0.4 - dist/250})`;
-                        ctx.lineWidth = 0.8;
-                        ctx.stroke();
+    <!-- CANVAS BACKGROUND EFFECT -->
+    <canvas id="li-network-canvas" class="li-network-bg"></canvas>
+</div>
+
+<script src="../modules/LineasInvestigacion/assets/js/pst_network.js"></script>
+<script>
+    // Buscador en tiempo real
+    const searchInput = document.getElementById('agSearchInput');
+    const sections = document.querySelectorAll('.ag-carrera-section');
+
+    if(searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase().trim();
+
+            sections.forEach(sec => {
+                const carrera = sec.getAttribute('data-carrera');
+                const items = sec.querySelectorAll('.ag-linea-item');
+                let matchesInSection = 0;
+
+                items.forEach(item => {
+                    const nombre = item.getAttribute('data-nombre');
+                    // Mostrar si coincide el termino en nombre o carrera
+                    if (nombre.includes(term) || carrera.includes(term)) {
+                        item.style.display = 'block';
+                        matchesInSection++;
+                    } else {
+                        item.style.display = 'none';
                     }
+                });
+
+                // Ocultar sección completa si no hay matches
+                if (matchesInSection === 0) {
+                    sec.style.display = 'none';
+                } else {
+                    sec.style.display = 'block';
                 }
-            }
-            requestAnimationFrame(animate);
-        }
-        animate();
+            });
+        });
     }
-});
 </script>
