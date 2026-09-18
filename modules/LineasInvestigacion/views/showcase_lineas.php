@@ -101,7 +101,7 @@ foreach ($lineas as $l) {
                                         </div>
                                         <div>
                                             <h2 class="li-card-title">
-                                                <?= htmlspecialchars($linea[\'nombre\']) ?>
+                                                <?= htmlspecialchars($linea['nombre']) ?>
                                             </h2>
                                         </div>
                                     </div>
