@@ -1,6 +1,7 @@
 <?php
 // modules/SuperAdmin/controllers/GestorUsuariosController.php
 require_once CORE_PATH . 'Security/Auth.php';
+require_once CORE_PATH . 'Services/MailService.php';
 require_once __DIR__ . '/../models/AdminUsuarioModel.php';
 
 class GestorUsuariosController {
@@ -271,10 +272,39 @@ class GestorUsuariosController {
             $hashSeguro = password_hash($password, PASSWORD_BCRYPT);
         }
 
+        // Obtener datos del usuario antes de la edición para verificar cambio de rol
+        $usuarioAnterior = $this->adminModel->buscarPorCedula($_POST['cedula_original'] ?? $cedula);
+
         // Pasamos el hashSeguro al modelo (será null si no se llenaron los campos)
         $this->adminModel->actualizarUsuario($id, $cedula, $nombre, $email, $id_rol, $hashSeguro);
         
-        $detallesEdicion = "Datos actualizados para el Usuario C.I. {$cedula} ({$nombre})." . ($hashSeguro ? " Se forzó cambio de contraseña." : "");
+        // Si el rol cambió, disparar correo de notificación superadmin.cambio_rol
+        if ($usuarioAnterior && (int)$usuarioAnterior['id_rol'] !== $id_rol) {
+            $roles = $this->adminModel->obtenerRoles();
+            $rolAnteriorNombre = $usuarioAnterior['rol_nombre'] ?? 'Desconocido';
+            $nuevoRolNombre = 'Usuario';
+            foreach ($roles as $r) {
+                if ((int)$r['id'] === $id_rol) { $nuevoRolNombre = $r['nombre']; break; }
+            }
+
+            MailService::enviarEvento('superadmin.cambio_rol', $email, [
+                'NOMBRE_USUARIO' => $nombre,
+                'ROL_ANTERIOR'   => $rolAnteriorNombre,
+                'NUEVO_ROL'      => $nuevoRolNombre,
+                'FECHA_CAMBIO'   => date('d/m/Y H:i A')
+            ], $nombre);
+        }
+
+        // Revocación remota de sesión automática para que los datos en caché y sesión del usuario se reseteen al instante
+        $miUsuarioId = (int)($_SESSION['usuario_id'] ?? 0);
+        if ($id > 0 && $id !== $miUsuarioId) {
+            $archivoSesiones = CORE_PATH . '../storage/revoked_sessions.json';
+            $revogadas = file_exists($archivoSesiones) ? (json_decode(file_get_contents($archivoSesiones), true) ?: []) : [];
+            $revogadas[(string)$id] = true;
+            file_put_contents($archivoSesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
+        }
+
+        $detallesEdicion = "Datos actualizados para el Usuario C.I. {$cedula} ({$nombre})." . ($hashSeguro ? " Se forzó cambio de contraseña." : "") . " Sesión remota revocada.";
         AuditLogger::registrar('INFO', 'SuperAdmin', 'Editar Usuario', $detallesEdicion);
 
         header("Location: gestor-usuarios?cedula=" . urlencode($cedula));
@@ -299,6 +329,31 @@ class GestorUsuariosController {
             // Invertimos el estado
             $this->adminModel->cambiarEstadoActivo($id, !$estadoActual);
             
+            $usuarioObj = $this->adminModel->buscarPorCedula($cedula);
+            if ($usuarioObj && !empty($usuarioObj['email'])) {
+                $protocolo = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+                $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                $baseDir = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/\\');
+                $baseUrl = "{$protocolo}://{$host}" . ($baseDir && $baseDir !== '/' ? $baseDir : '');
+
+                if (!$estadoActual) {
+                    // Se acaba de restaurar/reactivar la cuenta
+                    MailService::enviarEvento('superadmin.cuenta_restaurada', $usuarioObj['email'], [
+                        'NOMBRE_USUARIO' => $usuarioObj['nombre_completo'],
+                        'ENLACE_ACCESO'   => "{$baseUrl}/login"
+                    ], $usuarioObj['nombre_completo']);
+                } else {
+                    // Se acaba de suspender/bloquear la cuenta
+                    MailService::enviarEvento('seguridad.cuenta_bloqueada', $usuarioObj['email'], [
+                        'NOMBRE_USUARIO' => $usuarioObj['nombre_completo'],
+                        'MOTIVO'         => 'Suspensión administrativa ejecutada desde el Panel de SuperAdmin',
+                        'IP_ORIGEN'      => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
+                        'FECHA_HORA'     => date('d/m/Y H:i A'),
+                        'ENLACE_SOPORTE' => "{$baseUrl}/recuperar-cuenta"
+                    ], $usuarioObj['nombre_completo']);
+                }
+            }
+
             $accionAudit = !$estadoActual ? 'Restaurar Cuenta Usuario' : 'Suspender Cuenta Usuario';
             $sevAudit = !$estadoActual ? 'INFO' : 'WARNING';
             AuditLogger::registrar($sevAudit, 'SuperAdmin', $accionAudit, "Estado de la cuenta del Usuario C.I. {$cedula} cambiado a: " . (!$estadoActual ? 'Activo' : 'Suspendido'));
@@ -341,7 +396,29 @@ class GestorUsuariosController {
             if (session_status() === PHP_SESSION_NONE) session_start();
             if ($exito) {
                 AuditLogger::registrar('INFO', 'SuperAdmin', 'Crear Usuario', "Nuevo usuario registrado: {$nombre} (C.I: {$cedula})");
-                $_SESSION['mensaje_gestor_exito'] = "Usuario '{$nombre}' creado exitosamente en el sistema.";
+                
+                // Disparar correo situacional de invitación
+                $roles = $this->adminModel->obtenerRoles();
+                $nombreRol = 'Usuario';
+                foreach ($roles as $r) {
+                    if ((int)$r['id'] === $id_rol) { $nombreRol = $r['nombre']; break; }
+                }
+
+                $protocolo = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+                $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                $baseDir = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/\\');
+                $baseUrl = "{$protocolo}://{$host}" . ($baseDir && $baseDir !== '/' ? $baseDir : '');
+                $enlaceAcceso = "{$baseUrl}/login";
+
+                MailService::enviarEvento('superadmin.invitacion_usuario', $email, [
+                    'NOMBRE_USUARIO' => $nombre,
+                    'CEDULA'         => $cedula,
+                    'ROL_ASIGNADO'   => $nombreRol,
+                    'CLAVE_TEMPORAL' => $clave,
+                    'ENLACE_ACCESO'   => $enlaceAcceso
+                ], $nombre);
+
+                $_SESSION['mensaje_gestor_exito'] = "Usuario '{$nombre}' creado exitosamente en el sistema y notificación enviada a su correo.";
             } else {
                 $_SESSION['mensaje_gestor_error'] = "Error inesperado al crear el usuario.";
             }
@@ -443,6 +520,100 @@ class GestorUsuariosController {
                     $_SESSION['mensaje_gestor_error'] = "No se puede eliminar un nivel que tiene roles asignados.";
                 }
             }
+            header("Location: gestor-usuarios");
+            exit;
+        }
+    }
+
+    /**
+     * Emite una invitación oficial a un docente/profesor enviando un enlace firmado criptográficamente.
+     */
+    public function invitarProfesorAction() {
+        Auth::requierePrivilegioMinimo(0);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $cedula = trim($_POST['cedula'] ?? '');
+            $nombre = trim($_POST['nombre'] ?? '');
+            $email = trim($_POST['email'] ?? '');
+
+            if (empty($cedula) || empty($nombre) || empty($email)) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "Cédula, Nombre Completo y Correo Institucional son obligatorios para invitar a un profesor.";
+                header("Location: gestor-usuarios");
+                exit;
+            }
+
+            // Verificar si el usuario ya existe por cédula o correo en la base de datos
+            $db = Connection::getInstance();
+            $stmtCheck = $db->prepare("SELECT id, cedula, email FROM usuarios WHERE cedula = ? OR email = ?");
+            $stmtCheck->execute([$cedula, $email]);
+            $duplicado = $stmtCheck->fetch();
+
+            if ($duplicado) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                if ($duplicado['cedula'] === $cedula) {
+                    $_SESSION['mensaje_gestor_error'] = "Ya existe un usuario registrado con la C.I. {$cedula}.";
+                } else {
+                    $_SESSION['mensaje_gestor_error'] = "El correo electrónico '{$email}' ya se encuentra registrado por otro usuario.";
+                }
+                header("Location: gestor-usuarios");
+                exit;
+            }
+
+            // Buscar el ID de Rol de Profesor (o crear si no existe)
+            $roles = $this->adminModel->obtenerRoles();
+            $idRolProfesor = 0;
+            foreach ($roles as $r) {
+                if (mb_strtolower($r['nombre']) === 'profesor' || mb_strtolower($r['nombre']) === 'docente') {
+                    $idRolProfesor = (int)$r['id'];
+                    break;
+                }
+            }
+            // Si no se encuentra un rol denominado 'Profesor', usamos el rol ID 2 por defecto
+            if ($idRolProfesor === 0) {
+                $idRolProfesor = 2;
+            }
+
+            // Generar Token Firmado SHA-256 (validez 48 horas)
+            $rawToken = bin2hex(random_bytes(32));
+            $tokenHash = hash('sha256', $rawToken);
+
+            // Crear usuario en estado inactivo (esperando que establezca clave por token)
+            $hashClaveDummy = password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT);
+            $sql = "INSERT INTO usuarios (cedula, nombre_completo, email, id_rol, contrasena, activo, activation_token) VALUES (?, ?, ?, ?, ?, 'false', ?)";
+            
+            try {
+                $stmt = $db->prepare($sql);
+                $exito = $stmt->execute([$cedula, $nombre, $email, $idRolProfesor, $hashClaveDummy, $tokenHash]);
+            } catch (Throwable $e) {
+                $exito = false;
+            }
+
+            if (session_status() === PHP_SESSION_NONE) session_start();
+
+            if ($exito) {
+                $protocolo = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+                $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                $scriptName = $_SERVER['SCRIPT_NAME'] ?? '/index.php';
+                $baseDir = rtrim(dirname($scriptName), '/\\');
+                $baseUrl = "{$protocolo}://{$host}" . ($baseDir && $baseDir !== '/' ? $baseDir : '');
+                
+                // Si la URL amigable con .htaccess falla en el entorno local, garantizamos fallback con index.php?ruta=
+                $enlaceActivacion = "{$baseUrl}/index.php?ruta=completar-registro&token={$rawToken}";
+
+                MailService::enviarEvento('superadmin.invitacion_profesor', $email, [
+                    'NOMBRE_PROFESOR'   => $nombre,
+                    'CEDULA'            => $cedula,
+                    'ENLACE_ACTIVACION' => $enlaceActivacion,
+                    'TIEMPO_EXPIRACION' => '48 horas'
+                ], $nombre);
+
+                AuditLogger::registrar('INFO', 'SuperAdmin', 'Invitar Profesor', "Invitación emitida para el profesor {$nombre} (C.I: {$cedula}, Correo: {$email})");
+                $_SESSION['mensaje_gestor_exito'] = "Invitación emitida y correo de registro enviado exitosamente al profesor '{$nombre}'.";
+            } else {
+                $_SESSION['mensaje_gestor_error'] = "Error al intentar guardar el registro del profesor en la base de datos.";
+            }
+
             header("Location: gestor-usuarios");
             exit;
         }

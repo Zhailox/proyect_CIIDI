@@ -2,7 +2,6 @@
 // modules/Investigaciones/index.php
 
 require_once CORE_PATH . 'Interfaces/ModuleContract.php';
-require_once __DIR__ . '/../SuperAdmin/services/SystemConfigService.php';
 
 class InvestigacionesModule implements ModuleContract {
 
@@ -118,8 +117,6 @@ class InvestigacionesModule implements ModuleContract {
     }
 
     public function getMenuConfig(): array {
-        $nivelAdmin = SystemConfigService::get('accesos_modulos.investigaciones.admin', 0);
-        $nivelPublico = SystemConfigService::get('accesos_modulos.investigaciones.publico', 999);
         return [
             [
                 'tipo'        => 'parent',
@@ -129,16 +126,14 @@ class InvestigacionesModule implements ModuleContract {
                 'activadores' => [
                     'investigaciones', 'postulaciones-investigacion', 'investigadores',
                     'mis-investigaciones', 'crear-investigacion', 'editar-investigacion',
-                    'mis-postulantes', 'panel-investigaciones-admin'
+                    'mis-postulantes', 'panel-investigaciones-admin',
                 ],
-                'privilegio_minimo' => $nivelPublico,
                 'subitems' => [
-                    ['ruta' => 'investigaciones',             'titulo' => 'Cartelera I+D', 'privilegio_minimo' => $nivelPublico],
-                    ['ruta' => 'postulaciones-investigacion', 'titulo' => 'Panel Postulaciones', 'privilegio_minimo' => $nivelPublico],
-                    ['ruta' => 'investigadores',              'titulo' => 'Investigadores', 'privilegio_minimo' => $nivelPublico],
-                    ['ruta' => 'mis-investigaciones',         'titulo' => 'Mis Investigaciones',  'privilegio_minimo' => $nivelAdmin],
-                    ['ruta' => 'mis-postulantes',             'titulo' => 'Mis Postulantes',       'privilegio_minimo' => $nivelAdmin],
-                    ['ruta' => 'panel-investigaciones-admin', 'titulo' => 'Panel Admin I+D',        'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'investigaciones',             'titulo' => 'Cartelera I+D'],
+                    ['ruta' => 'investigadores',              'titulo' => 'Investigadores'],
+                    ['ruta' => 'mis-investigaciones',         'titulo' => 'Mis Investigaciones',  'privilegio_minimo' => 1],
+                    ['ruta' => 'mis-postulantes',             'titulo' => 'Mis Postulantes',       'privilegio_minimo' => 1],
+                    ['ruta' => 'panel-investigaciones-admin', 'titulo' => 'Panel Admin I+D',        'privilegio_minimo' => 2],
                 ],
             ],
         ];

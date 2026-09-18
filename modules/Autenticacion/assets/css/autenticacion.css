@@ -149,6 +149,123 @@
     border-bottom: 2px solid var(--color-secundario);
 }
 
+/* Envoltura y Toggle dinámico de contraseña */
+.password-field-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.password-field-wrapper .login-flat-input,
+.password-field-wrapper .recovery-flat-input {
+    padding-right: 2.5rem;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 4px;
+    top: 42%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--texto-silenciado, #64748b);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease, transform 0.15s ease;
+    user-select: none;
+    outline: none;
+}
+
+.password-toggle-btn:hover {
+    color: var(--color-secundario, #2563eb);
+    transform: translateY(-50%) scale(1.12);
+}
+
+.password-toggle-btn:active {
+    transform: translateY(-50%) scale(0.92);
+}
+
+.password-toggle-btn i {
+    transition: color 0.2s ease;
+}
+
+/* ==========================================
+   PASSWORD STRENGTH / ENTROPY METER
+   ========================================== */
+.strength-meter-container {
+    margin-top: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.strength-bar-track {
+    width: 100%;
+    height: 5px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+}
+
+.strength-bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 4px;
+    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease;
+}
+
+.strength-label-text {
+    font-size: 0.76rem;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #64748b;
+    transition: color 0.3s ease;
+}
+
+.password-rules-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem 0.6rem;
+    margin-top: 0.4rem;
+    padding: 0;
+    list-style: none;
+}
+
+.rule-item {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: color 0.25s ease;
+}
+
+.rule-item i {
+    font-size: 0.85rem;
+    transition: transform 0.2s ease, color 0.25s ease;
+}
+
+.rule-item.valid {
+    color: #10b981;
+}
+
+.rule-item.valid i {
+    color: #10b981;
+}
+
+.rule-item.invalid i {
+    color: #cbd5e1;
+}
+
 /* Botón Rectangular Sólido, imitando la referencia */
 .login-btn-submit {
     background-color: var(--color-secundario);

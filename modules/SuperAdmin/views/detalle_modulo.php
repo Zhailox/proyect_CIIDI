@@ -60,8 +60,8 @@ if (empty($mod)) {
 }
 
 .ag-tab-btn.active {
-    color: var(--color-secundario, #2563eb) !important;
-    border-bottom-color: var(--color-secundario, #2563eb) !important;
+    color: var(--color-secundario) !important;
+    border-bottom-color: var(--color-secundario) !important;
 }
 
 .ag-tab-btn:hover:not(.active) {
@@ -83,7 +83,7 @@ if (empty($mod)) {
 }
 
 .ag-btn-solid {
-    background: var(--color-secundario, #2563eb) !important;
+    background: var(--color-secundario) !important;
     color: #ffffff !important;
     border: none !important;
     padding: 9px 18px !important;
@@ -95,14 +95,14 @@ if (empty($mod)) {
     align-items: center;
     gap: 8px;
     text-decoration: none !important;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    box-shadow: 0 4px 12px rgba(80, 89, 132, 0.2);
     transition: all 0.25s ease !important;
 }
 
 .ag-btn-solid:hover {
-    background: #1d4ed8 !important;
+    background: var(--color-secundario-dark, rgb(60, 68, 105)) !important;
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 6px 16px rgba(80, 89, 132, 0.3);
 }
 
 .ag-btn-orange {
@@ -447,7 +447,7 @@ if (empty($mod)) {
                                 <td style="padding: 10px;">
                                     <?php
                                     $n = strtoupper($log['nivel']);
-                                    $bg = $n === 'ERROR' || $n === 'CRITICAL' ? '#ef4444' : ($n === 'WARNING' ? '#d97706' : '#2563eb');
+                                    $bg = $n === 'ERROR' || $n === 'CRITICAL' ? '#ef4444' : ($n === 'WARNING' ? '#d97706' : 'rgb(80, 89, 132)');
                                     ?>
                                     <span style="background: <?= $bg ?>; color: #ffffff; padding: 2px 7px; border-radius: 4px; font-weight: 800; font-size: 0.72rem;"><?= $n ?></span>
                                 </td>

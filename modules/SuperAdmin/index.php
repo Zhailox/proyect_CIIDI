@@ -23,6 +23,11 @@ class SuperAdminModule implements ModuleContract {
                 'titulo'           => 'Gestión de Usuarios - UPTTMBI',
                 'css'              => ['SuperAdmin.css', 'gestor.css']
             ],
+            'invitar-profesor' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'invitarProfesorAction'
+            ],
             'guardar-matriz-rbac' => [
                 'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
                 'controlador'      => 'GestorUsuariosController',
@@ -67,11 +72,6 @@ class SuperAdminModule implements ModuleContract {
                 'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
                 'controlador'      => 'GestorUsuariosController',
                 'metodo'           => 'crearUsuarioAction'
-            ],
-            'resetear-clave-usuario' => [
-                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
-                'controlador'      => 'GestorUsuariosController',
-                'metodo'           => 'resetClaveRapido'
             ],
             'sudoadmin' => [
                 'controlador_path' => __DIR__ . '/controllers/AdminController.php',
@@ -348,6 +348,16 @@ class SuperAdminModule implements ModuleContract {
                 'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
                 'controlador'      => 'ConfiguracionController',
                 'metodo'           => 'guardarLayoutCorreo'
+            ],
+            'enviar-correo-directo' => [
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'controlador'      => 'ConfiguracionController',
+                'metodo'           => 'enviarCorreoDirecto'
+            ],
+            'guardar-plantilla-personalizada' => [
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'controlador'      => 'ConfiguracionController',
+                'metodo'           => 'guardarPlantillaPersonalizadaAction'
             ]
         ];
     }

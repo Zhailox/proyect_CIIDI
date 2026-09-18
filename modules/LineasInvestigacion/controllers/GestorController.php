@@ -1,6 +1,8 @@
 <?php
 // modules/LineasInvestigacion/controllers/GestorController.php
 
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
+require_once __DIR__ . '/../../../core/Security/Auth.php';
 require_once __DIR__ . '/../models/LineasModel.php';
 require_once __DIR__ . '/../models/DimensionesModel.php';
 
@@ -11,16 +13,26 @@ require_once __DIR__ . '/../models/DimensionesModel.php';
  */
 class GestorLineasController {
 
+    private int $nivelAdmin;
+
+    public function __construct() {
+        $this->nivelAdmin = SystemConfigService::get('accesos_modulos.lineas_investigacion.admin', 1);
+    }
+
     // =========================================================
     //  GESTIÓN DE LÍNEAS DE INVESTIGACIÓN
     // =========================================================
 
     public function index() {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'LineasInvestigacion');
         $lineasModel = new LineasModel();
 
         // --- Procesar operaciones POST (CRUD) ---
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $accion = trim($_POST['accion'] ?? '');
+            if ($accion === 'crear') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'LineasInvestigacion');
+            if ($accion === 'editar') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'LineasInvestigacion');
+            if ($accion === 'eliminar') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'LineasInvestigacion');
 
             try {
                 switch ($accion) {
@@ -65,7 +77,13 @@ class GestorLineasController {
                         $this->redirigir('gestionar-lineas', 'error', 'Acción no reconocida.');
                 }
             } catch (Exception $e) {
-                $this->redirigir('gestionar-lineas', 'error', 'Error en la base de datos: ' . $e->getMessage());
+                $msg = $e->getMessage();
+                if (strpos($msg, '23000') !== false || strpos($msg, '23503') !== false) {
+                    $msg = 'No se puede eliminar porque tiene registros asociados dependientes (ej. proyectos o investigaciones).';
+                } else {
+                    $msg = 'Error en la base de datos: ' . $msg;
+                }
+                $this->redirigir('gestionar-lineas', 'error', $msg);
             }
 
             return false; // Siempre redirecciona en POST
@@ -75,10 +93,19 @@ class GestorLineasController {
         $lineas   = $lineasModel->getTodasConEstadisticas();
         $carreras = $this->getCarreras();
 
+        $dimModel = new DimensionesModel();
+        $todas_dimensiones = $dimModel->getTodasConLinea();
+
         // Línea a editar (si viene ?editar=ID)
         $linea_editar = null;
         if (!empty($_GET['editar'])) {
             $linea_editar = $lineasModel->getLineaConCarrera((int) $_GET['editar']);
+        }
+
+        // Dimensión a editar (si viene ?editar_dim=ID)
+        $dim_editar = null;
+        if (!empty($_GET['editar_dim'])) {
+            $dim_editar = $dimModel->getPorId((int) $_GET['editar_dim']);
         }
 
         // Mensajes flash desde URL
@@ -89,6 +116,8 @@ class GestorLineasController {
             'lineas'        => $lineas,
             'carreras'      => $carreras,
             'linea_editar'  => $linea_editar,
+            'dimensiones'   => $todas_dimensiones,
+            'dim_editar'    => $dim_editar,
             'mensaje'       => $mensaje,
             'tipo_mensaje'  => $tipo_mensaje,
         ];
@@ -98,12 +127,46 @@ class GestorLineasController {
     //  GESTIÓN DE DIMENSIONES OPERATIVAS
     // =========================================================
 
+
+    public function detalleGestionLinea() {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'LineasInvestigacion');
+        $id = (int)($_GET['id'] ?? 0);
+        if (!$id) {
+            header("Location: index.php?ruta=gestionar-lineas");
+            exit;
+        }
+
+        $lineasModel = new LineasModel();
+        $linea = $lineasModel->getLineaConCarrera($id);
+        if (!$linea) {
+            header("Location: index.php?ruta=gestionar-lineas");
+            exit;
+        }
+
+        $dimModel = new DimensionesModel();
+        $dimensiones = $dimModel->getPorLinea($id);
+
+        $mensaje = htmlspecialchars($_GET['msg'] ?? '');
+        $tipo_mensaje = htmlspecialchars($_GET['tipo'] ?? '');
+
+        return [
+            'linea'        => $linea,
+            'dimensiones'  => $dimensiones,
+            'mensaje'      => $mensaje,
+            'tipo_mensaje' => $tipo_mensaje
+        ];
+    }
+
     public function dimensiones() {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'LineasInvestigacion');
         $dimModel    = new DimensionesModel();
         $lineasModel = new LineasModel();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $accion = trim($_POST['accion'] ?? '');
+            if ($accion === 'crear') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'LineasInvestigacion');
+            if ($accion === 'editar') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'LineasInvestigacion');
+            if ($accion === 'eliminar') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'LineasInvestigacion');
 
             try {
                 switch ($accion) {
@@ -115,10 +178,10 @@ class GestorLineasController {
                             'descripcion' => trim($_POST['descripcion'] ?? ''),
                         ];
                         if (empty($datos['nombre']) || $datos['id_linea'] === 0) {
-                            $this->redirigir('gestionar-dimensiones', 'error', 'Nombre y línea son obligatorios.');
+                            $this->redirigir('gestionar-lineas', 'error', 'Nombre y línea son obligatorios.');
                         }
                         $dimModel->crear($datos);
-                        $this->redirigir('gestionar-dimensiones', 'exito', 'Dimensión operativa creada exitosamente.');
+                        $this->redirigir('gestionar-lineas', 'exito', 'Dimensión operativa creada exitosamente.');
                         break;
 
                     case 'editar':
@@ -129,26 +192,26 @@ class GestorLineasController {
                             'descripcion' => trim($_POST['descripcion'] ?? ''),
                         ];
                         if ($id === 0 || empty($datos['nombre'])) {
-                            $this->redirigir('gestionar-dimensiones', 'error', 'Datos incompletos.');
+                            $this->redirigir('gestionar-lineas', 'error', 'Datos incompletos.');
                         }
                         $dimModel->actualizar($id, $datos);
-                        $this->redirigir('gestionar-dimensiones', 'exito', 'Dimensión actualizada correctamente.');
+                        $this->redirigir('gestionar-lineas', 'exito', 'Dimensión actualizada correctamente.');
                         break;
 
                     case 'eliminar':
                         $id = (int) ($_POST['id'] ?? 0);
                         if ($id === 0) {
-                            $this->redirigir('gestionar-dimensiones', 'error', 'ID inválido.');
+                            $this->redirigir('gestionar-lineas', 'error', 'ID inválido.');
                         }
                         $dimModel->eliminar($id);
-                        $this->redirigir('gestionar-dimensiones', 'exito', 'Dimensión eliminada correctamente.');
+                        $this->redirigir('gestionar-lineas', 'exito', 'Dimensión eliminada correctamente.');
                         break;
 
                     default:
-                        $this->redirigir('gestionar-dimensiones', 'error', 'Acción no reconocida.');
+                        $this->redirigir('gestionar-lineas', 'error', 'Acción no reconocida.');
                 }
             } catch (Exception $e) {
-                $this->redirigir('gestionar-dimensiones', 'error', 'Error en la BD: ' . $e->getMessage());
+                $this->redirigir('gestionar-lineas', 'error', 'Error en la BD: ' . $e->getMessage());
             }
 
             return false;
@@ -183,6 +246,9 @@ class GestorLineasController {
      * Redirige a una ruta con un mensaje de estado y detiene la ejecución.
      */
     private function redirigir(string $ruta, string $tipo, string $msg): void {
+        if (!empty($_POST['redirect_to'])) {
+            $ruta = $_POST['redirect_to'];
+        }
         $url = 'index.php?ruta=' . $ruta
              . '&tipo=' . urlencode($tipo)
              . '&msg='  . urlencode($msg);

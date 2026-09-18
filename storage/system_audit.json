@@ -1,5 +1,6 @@
 [
     {
+<<<<<<< HEAD
         "id": "log_6aa9f56d4a0e7",
         "fecha_hora": "2026-09-16 01:48:29",
         "nivel": "CRITICAL",
@@ -26,12 +27,113 @@
     {
         "id": "log_6aa9f552e4876",
         "fecha_hora": "2026-09-16 01:48:02",
+=======
+        "id": "log_6aab684b74308",
+        "fecha_hora": "2026-09-17 04:10:51",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Invitar Profesor",
+        "detalles": "Invitación emitida para el profesor asdasdas (C.I: 12312345, Correo: miguelalejandroomega2005@gmail.com)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "51e286457b1c2a3124b063d777339267bd1394f5cfecdcccf263d91cd875d923",
+        "hash_integridad": "daab14060bef07410b06a6a845d15105a727df98e48f98f52bb625237312efb4"
+    },
+    {
+        "id": "log_6aab67f37ee3f",
+        "fecha_hora": "2026-09-17 04:09:23",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Invitar Profesor",
+        "detalles": "Invitación emitida para el profesor mikisida (C.I: 12312312, Correo: miguelalejandrooomega2005@gmail.com)",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "d4b8c5f3c6fb3bcac55207396f1f3c95e6b500e68fbc7d59dceb06995a474198",
+        "hash_integridad": "51e286457b1c2a3124b063d777339267bd1394f5cfecdcccf263d91cd875d923"
+    },
+    {
+        "id": "log_6aab60ed177ae",
+        "fecha_hora": "2026-09-17 03:39:25",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Restaurar Cuenta Usuario",
+        "detalles": "Estado de la cuenta del Usuario C.I. 30469331 cambiado a: Activo",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "8d2af0a8bad6e60c75ac3b4a9cc15e48eccb3cc722b05e2034e38253a163e9f3",
+        "hash_integridad": "d4b8c5f3c6fb3bcac55207396f1f3c95e6b500e68fbc7d59dceb06995a474198"
+    },
+    {
+        "id": "log_6aab604a95a66",
+        "fecha_hora": "2026-09-17 03:36:42",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Suspender Cuenta Usuario",
+        "detalles": "Estado de la cuenta del Usuario C.I. 30469331 cambiado a: Suspendido",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "dfcda1570cff50024db905f49cb1c37b4963b96ad28b09e6e0e530edd84d69a8",
+        "hash_integridad": "8d2af0a8bad6e60c75ac3b4a9cc15e48eccb3cc722b05e2034e38253a163e9f3"
+    },
+    {
+        "id": "log_6aaafaaa67c9d",
+        "fecha_hora": "2026-09-16 20:23:06",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Prueba SMTP Exitosa",
+        "detalles": "Correo enviado a andrusramirez2020@gmail.com",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "4589da0d41fa4df2141842539b69180b9fcb27c97dd927d9a31b0ad18e13d3a5",
+        "hash_integridad": "dfcda1570cff50024db905f49cb1c37b4963b96ad28b09e6e0e530edd84d69a8"
+    },
+    {
+        "id": "log_6aaaf9afc2401",
+        "fecha_hora": "2026-09-16 20:18:55",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Prueba SMTP Exitosa",
+        "detalles": "Correo enviado a andrusramirez2020@gmail.com",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "de6b5b365b0e6b9edf8272abaefbebc6b473ff8ec897014b5c5c6c77e4228552",
+        "hash_integridad": "4589da0d41fa4df2141842539b69180b9fcb27c97dd927d9a31b0ad18e13d3a5"
+    },
+    {
+        "id": "log_6aaaf6e364441",
+        "fecha_hora": "2026-09-16 20:06:59",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Envío Directo de Correo",
+        "detalles": "Se enviaron 1 correos exitosamente (0 fallidos). Asunto: aviso importante",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "34c927c631c394374356290cb6165435b43d1fc7e9d76d9e94043a4246e81ac8",
+        "hash_integridad": "de6b5b365b0e6b9edf8272abaefbebc6b473ff8ec897014b5c5c6c77e4228552"
+    },
+    {
+        "id": "log_6aaaf6ce9afc3",
+        "fecha_hora": "2026-09-16 20:06:38",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Guardar Plantilla Personalizada",
+        "detalles": "Se creó la plantilla personalizada: basica para avisos",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "08e0d7f0748384fb115080247ede72ccf5a2a92ffb8a964b44dbc7f40e853cab",
+        "hash_integridad": "34c927c631c394374356290cb6165435b43d1fc7e9d76d9e94043a4246e81ac8"
+    },
+    {
+        "id": "log_6aaa1eebd87e2",
+        "fecha_hora": "2026-09-16 04:45:31",
+>>>>>>> c052b32c211ee89a0990505c5ac3856755ed4efe
         "nivel": "WARNING",
         "modulo": "SuperAdmin",
         "accion": "Restaurar BD",
         "detalles": "Base de datos restaurada exitosamente.",
         "responsable": "Miguel González (ID: 7)",
         "ip": "::1",
+<<<<<<< HEAD
         "hash_anterior": "b4f59a0b4276f4c2e4d534bf1ab14cc7f0bfb84154d6906585e562239c3b1947",
         "hash_integridad": "bb7a27e28969b24afbe0948972f22cebaa07bf4b3bdf5dcf4619a3797b301d97"
     },
@@ -46,6 +148,58 @@
         "ip": "::1",
         "hash_anterior": "f3c1e52bc3075baed939e5e9ae028499079f759304d80cb6004263b7483505fa",
         "hash_integridad": "b4f59a0b4276f4c2e4d534bf1ab14cc7f0bfb84154d6906585e562239c3b1947"
+=======
+        "hash_anterior": "14586d0146aad85196247ca7a673caaa9376610050894256c80e7a37f4b9472c",
+        "hash_integridad": "08e0d7f0748384fb115080247ede72ccf5a2a92ffb8a964b44dbc7f40e853cab"
+    },
+    {
+        "id": "log_6aaa1eea78cc9",
+        "fecha_hora": "2026-09-16 04:45:30",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Crear Backup",
+        "detalles": "Respaldo pre_restore_checkpoint_2026-09-16_04-45-29.sql.gz generado exitosamente. Respaldos antiguos purgados: 0",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "8fa02a5c00e0ddb984cb3f2b1eb990ce42646799c551e3de7770fe8deae73ce1",
+        "hash_integridad": "14586d0146aad85196247ca7a673caaa9376610050894256c80e7a37f4b9472c"
+    },
+    {
+        "id": "log_6aaa1d4a47f1f",
+        "fecha_hora": "2026-09-16 04:38:34",
+        "nivel": "CRITICAL",
+        "modulo": "SuperAdmin",
+        "accion": "Fallo Restauración BD",
+        "detalles": "SET SET SET SET SET SET  set_config ------------  (1 fila)  SET SET SET SET ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE DROP TRIGGER DROP TRIGGER DROP TRIGGER DROP TRIGGER DROP TRIGGER DROP INDEX DROP INDEX DROP INDEX ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE ALTER TABLE psql:C:\/wamp64\/www\/proyect_CIIDI\/proyect_CIIDI\/storage\/backups\/backup_ciidi_2026-09-14_20-58-56.sql:72: ERROR:  no existe la restricción «unique_nivel_privilegio» en la relación «privilegios»",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "a4e7d90bd581baa8f649b8ca460d50df5d914f53c5d7fadcffe6ce8b87d80052",
+        "hash_integridad": "8fa02a5c00e0ddb984cb3f2b1eb990ce42646799c551e3de7770fe8deae73ce1"
+    },
+    {
+        "id": "log_6aaa1d49f0b3d",
+        "fecha_hora": "2026-09-16 04:38:33",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Crear Backup",
+        "detalles": "Respaldo pre_restore_checkpoint_2026-09-16_04-38-33.sql.gz generado exitosamente. Respaldos antiguos purgados: 0",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "1b324ea3c338bb915f5cd43ed7b617f83a3bc4f4db0365a6096560a40c8334f1",
+        "hash_integridad": "a4e7d90bd581baa8f649b8ca460d50df5d914f53c5d7fadcffe6ce8b87d80052"
+    },
+    {
+        "id": "log_6aaa040a8023f",
+        "fecha_hora": "2026-09-16 02:50:50",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Test Respuesta Core",
+        "detalles": "Diagnóstico del Core ejecutado en 47.29ms. Memoria: 2 MB. Estado: SALUDABLE",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "f3c1e52bc3075baed939e5e9ae028499079f759304d80cb6004263b7483505fa",
+        "hash_integridad": "1b324ea3c338bb915f5cd43ed7b617f83a3bc4f4db0365a6096560a40c8334f1"
+>>>>>>> c052b32c211ee89a0990505c5ac3856755ed4efe
     },
     {
         "id": "log_6aa87f8fa693c",

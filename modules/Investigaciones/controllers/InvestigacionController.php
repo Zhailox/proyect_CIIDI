@@ -1,18 +1,14 @@
 <?php
 // modules/Investigaciones/controllers/InvestigacionController.php
 require_once __DIR__ . '/../models/InvestigacionModel.php';
-require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
 require_once CORE_PATH . 'Security/Auth.php';
 
 class InvestigacionController {
-    private int $nivelAdmin;
-    private int $nivelPublico;
+
     private InvestigacionModel $model;
 
     public function __construct() {
         $this->model = new InvestigacionModel();
-        $this->nivelAdmin   = SystemConfigService::get('accesos_modulos.investigaciones.admin', 1);
-        $this->nivelPublico   = SystemConfigService::get('accesos_modulos.investigaciones.publico', 10);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -32,15 +28,36 @@ class InvestigacionController {
         if (!empty($_GET['estado'])) {
             $filtros['estado'] = trim(strip_tags($_GET['estado']));
         }
-        
-        $investigaciones = $this->model->listarInvestigaciones($filtros);
+
+        // Paginación: 9 tarjetas por página por defecto (cuadrícula 3×3)
+        $filtros['por_pagina'] = 9;
+        $filtros['pagina']     = max(1, (int)($_GET['page'] ?? 1));
+
+        $resultado = $this->model->listarInvestigaciones($filtros);
+        $investigaciones = $resultado['items'];
+        $paginacion = [
+            'pagina'    => $resultado['pagina'],
+            'paginas'   => $resultado['paginas'],
+            'total'     => $resultado['total'],
+            'por_pagina'=> $resultado['por_pagina'],
+        ];
         $busqueda = $_GET['q'] ?? '';
 
-        return compact('lineas', 'investigaciones', 'busqueda');
+        // Cargar datos de postulación para el drawer integrado
+        $misPostulaciones = [];
+        $postuladas_ids   = [];
+        $is_logged        = Auth::check();
+        if ($is_logged) {
+            $user = Auth::usuario();
+            $misPostulaciones = $this->model->obtenerMisPostulaciones((int)$user['id']);
+            $postuladas_ids   = array_column($misPostulaciones, 'id_investigacion');
+        }
+
+        return compact('lineas', 'investigaciones', 'busqueda', 'paginacion', 'misPostulaciones', 'postuladas_ids', 'is_logged');
     }
 
     public function mostrarPanelPostulaciones(): array {
-        Auth::requierePrivilegioMinimo($this->nivelPublico);
+        Auth::requierePrivilegioMinimo(0);
         $user = Auth::usuario();
 
         $lineas = $this->model->obtenerLineas();
@@ -72,16 +89,16 @@ class InvestigacionController {
     }
 
     public function procesarPostulacion() {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'Investigaciones');
+        Auth::requierePrivilegioMinimo(0);
         $user = Auth::usuario();
         
-        $id_inv = (int)($_POST['id_investigacion'] ?? 0);
+        $id_inv    = (int)($_POST['id_investigacion'] ?? 0);
         $motivacion = trim($_POST['motivacion'] ?? '');
         $portafolio = trim($_POST['portafolio'] ?? '');
         
         if (empty($id_inv) || empty($motivacion)) {
             $_SESSION['flash_error'] = 'Debe completar el mensaje de motivación.';
-            header('Location: ?ruta=postulaciones-investigacion');
+            header('Location: ?ruta=investigaciones');
             exit;
         }
         
@@ -97,7 +114,7 @@ class InvestigacionController {
             $_SESSION['flash_error'] = 'Ya te has postulado a este proyecto anteriormente.';
         }
         
-        header('Location: ?ruta=postulaciones-investigacion');
+        header('Location: ?ruta=investigaciones');
         exit;
     }
     
@@ -106,15 +123,19 @@ class InvestigacionController {
         return compact('investigadores');
     }
 
+    // ──────────────────────────────────────────────────────────────────────────
+    // PROFESORES (Nivel >= 1)
+    // ──────────────────────────────────────────────────────────────────────────
+
     public function mostrarMisInvestigaciones(): array {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin);
+        Auth::requierePrivilegioMinimo(1);
         $user = Auth::usuario();
         $investigaciones = $this->model->obtenerMisInvestigaciones((int)$user['id']);
         return compact('investigaciones');
     }
 
     public function mostrarFormCrear(): array {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'Investigaciones');
+        Auth::requierePrivilegioMinimo(1);
         $lineas = $this->model->obtenerLineas();
         // Variables por defecto para el formulario
         $investigacion = [
@@ -126,7 +147,7 @@ class InvestigacionController {
     }
 
     public function mostrarFormEditar(): array {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Investigaciones');
+        Auth::requierePrivilegioMinimo(1);
         $user = Auth::usuario();
         $id = (int)($_GET['id'] ?? 0);
         
@@ -144,7 +165,7 @@ class InvestigacionController {
     }
 
     public function guardarInvestigacion() {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'Investigaciones');
+        Auth::requierePrivilegioMinimo(1);
         $user = Auth::usuario();
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
@@ -192,7 +213,7 @@ class InvestigacionController {
     }
 
     public function actualizarInvestigacion() {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Investigaciones');
+        Auth::requierePrivilegioMinimo(1);
         $user = Auth::usuario();
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
@@ -234,7 +255,7 @@ class InvestigacionController {
     }
 
     public function eliminarInvestigacion() {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'Investigaciones');
+        Auth::requierePrivilegioMinimo(1);
         $user = Auth::usuario();
         $id = (int)($_POST['id'] ?? 0);
         
@@ -252,14 +273,14 @@ class InvestigacionController {
     }
 
     public function mostrarMisPostulantes(): array {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin);
+        Auth::requierePrivilegioMinimo(1);
         $user = Auth::usuario();
         $postulaciones = $this->model->obtenerPostulantesDeMiProyecto((int)$user['id']);
         return compact('postulaciones');
     }
 
     public function responderPostulacion() {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin);
+        Auth::requierePrivilegioMinimo(1);
         $user = Auth::usuario();
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
@@ -285,18 +306,50 @@ class InvestigacionController {
     // ADMIN (Nivel >= 2)
     // ──────────────────────────────────────────────────────────────────────────
 
+
     public function mostrarPanelAdmin(): array {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'Investigaciones');
-        
-        $investigaciones = $this->model->obtenerTodasAdmin();
-        $postulaciones = $this->model->obtenerPostulacionesAdmin();
-        $lineas = $this->model->obtenerLineas();
-        
-        return compact('investigaciones', 'postulaciones', 'lineas');
+        Auth::requierePrivilegioMinimo(2);
+
+        // ── Configuración de paginación (guardada en sesión o POST) ──────────
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['config_paginacion'])) {
+            $nuevoPorPagina = max(1, min(100, (int)($_POST['por_pagina_inv'] ?? 12)));
+            $_SESSION['inv_admin_por_pagina'] = $nuevoPorPagina;
+            $_SESSION['flash_success'] = 'Configuración de paginación guardada.';
+            header('Location: ?ruta=panel-investigaciones-admin');
+            exit;
+        }
+        $porPaginaInv = (int)($_SESSION['inv_admin_por_pagina'] ?? 12);
+
+        // ── Investigaciones paginadas ────────────────────────────────────────
+        $filtros = [
+            'por_pagina' => $porPaginaInv,
+            'pagina'     => max(1, (int)($_GET['page'] ?? 1)),
+        ];
+        if (!empty($_GET['estado'])) {
+            $filtros['estado'] = trim(strip_tags($_GET['estado']));
+        }
+        if (!empty($_GET['q'])) {
+            $filtros['busqueda'] = trim(strip_tags($_GET['q']));
+        }
+
+        $resultado = $this->model->obtenerTodasAdmin($filtros);
+        $investigaciones = $resultado['items'];
+        $paginacion = [
+            'pagina'    => $resultado['pagina'],
+            'paginas'   => $resultado['paginas'],
+            'total'     => $resultado['total'],
+            'por_pagina'=> $resultado['por_pagina'],
+        ];
+
+        // ── Postulaciones paginadas ──────────────────────────────────────────
+        $postulaciones  = $this->model->obtenerPostulacionesAdmin();
+        $lineas         = $this->model->obtenerLineas();
+
+        return compact('investigaciones', 'paginacion', 'postulaciones', 'lineas', 'porPaginaInv');
     }
 
     public function cambiarEstado() {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Investigaciones');
+        Auth::requierePrivilegioMinimo(2);
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
         
         $id = (int)($_POST['id'] ?? 0);
@@ -318,16 +371,39 @@ class InvestigacionController {
         if (!is_dir($targetDir)) {
             mkdir($targetDir, 0755, true);
         }
-        
-        $fileName = uniqid('inv_') . '_' . basename($file['name']);
+
+        // MIME real detectado por contenido (no confiar en $_FILES['type'])
+        $finfo    = finfo_open(FILEINFO_MIME_TYPE);
+        $realMime = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+
+        // Tipos MIME permitidos → extensión segura
+        $mimeToExt = [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/webp' => 'webp',
+        ];
+
+        if (!array_key_exists($realMime, $mimeToExt)) {
+            $_SESSION['flash_error'] = 'Formato de imagen no permitido. Use JPG, PNG o WebP.';
+            return '';
+        }
+
+        // Validar también la extensión del archivo original
+        $extOriginal  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $allowedExts  = ['jpg', 'jpeg', 'png', 'webp'];
+        if (!in_array($extOriginal, $allowedExts, true)) {
+            $_SESSION['flash_error'] = 'Extensión no permitida. Use .jpg, .jpeg, .png o .webp.';
+            return '';
+        }
+
+        // Nombre único usando la extensión derivada del MIME real
+        $safeExt   = $mimeToExt[$realMime];
+        $fileName  = uniqid('inv_') . '.' . $safeExt;
         $targetPath = $targetDir . $fileName;
-        
-        // Validar tipo de imagen
-        $validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-        if (in_array($file['type'], $validTypes)) {
-            if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-                return 'uploads/investigaciones/' . $fileName;
-            }
+
+        if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+            return 'uploads/investigaciones/' . $fileName;
         }
         return '';
     }

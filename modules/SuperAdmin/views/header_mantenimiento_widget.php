@@ -9,7 +9,7 @@ $mostrarCountdown = (!$isActWidget && $tsInicioWidget > $ahoraTs);
 ?>
 
 <?php if ($mostrarCountdown): ?>
-    <div id="main-header-countdown" style="background: rgba(80, 89, 132, 0.08); color: var(--color-secundario, #2563eb); border: 1px solid rgba(80, 89, 132, 0.2); padding: 3px 10px; border-radius: 6px; font-size: 0.73rem; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; height: 28px;" title="Mantenimiento Programado Próximo">
+    <div id="main-header-countdown" style="background: rgba(80, 89, 132, 0.08); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.2); padding: 3px 10px; border-radius: 6px; font-size: 0.73rem; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; height: 28px;" title="Mantenimiento Programado Próximo">
         <i class="ph-bold ph-timer" style="font-size: 0.85rem; color: var(--color-secundario);"></i> Mant: <span id="main-header-clock" style="font-family: monospace; font-size: 0.8rem; font-weight: 800;">...</span>
     </div>
     <script>

@@ -73,9 +73,9 @@
 }
 
 .ag-btn-manage:hover {
-    background: #1d4ed8 !important;
+    background: var(--color-secundario-dark, rgb(60, 68, 105)) !important;
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.32);
+    box-shadow: 0 6px 16px rgba(80, 89, 132, 0.32);
     color: #ffffff !important;
 }
 

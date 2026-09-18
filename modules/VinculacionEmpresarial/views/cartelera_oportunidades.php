@@ -67,6 +67,9 @@ function getAttrNivel($trayecto) {
 <style>
 /* Forzar la paleta azul para los botones y elementos Kanban de esta vista */
 .post-wrapper {
+    padding: 0 1.5rem;
+    margin: 0 auto;
+    max-width: 1800px;
     --color-principal: #121a3e;
 }
 .post-kanban-board {

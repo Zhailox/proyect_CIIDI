@@ -56,7 +56,7 @@
                             <?php foreach ($lineas as $li): ?>
                             <option value="<?= (int)$li['id'] ?>"
                                 <?= isset($dim_editar['id_linea']) && (int)$dim_editar['id_linea'] === (int)$li['id'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars(ucwords(strtolower($li['nombre']))) ?>
+                                <?= htmlspecialchars(mb_convert_case($li['nombre'], MB_CASE_TITLE, 'UTF-8')) ?>
                             </option>
                             <?php endforeach; ?>
                         </select>
@@ -136,7 +136,7 @@
                     </td>
                     <td>
                         <span class="li-tbl-badge">
-                            <?= htmlspecialchars(ucwords(strtolower($dim['linea_nombre'] ?? '—'))) ?>
+                            <?= htmlspecialchars(mb_convert_case($dim['linea_nombre'] ?? '—', MB_CASE_TITLE, 'UTF-8')) ?>
                         </span>
                     </td>
                     <td style="font-size:0.8rem;color:var(--text-muted);max-width:280px;">

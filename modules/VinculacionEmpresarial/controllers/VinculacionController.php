@@ -1,14 +1,20 @@
 <?php
 // modules/VinculacionEmpresarial/controllers/VinculacionController.php
 
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
+require_once __DIR__ . '/../../../core/Security/Auth.php';
 require_once __DIR__ . '/../models/PropuestaEmpresaModel.php';
 
 class VinculacionController {
+
+    private int $nivelAdmin;
+
 
     private $modelo;
 
     public function __construct() {
         $this->modelo = new PropuestaEmpresaModel();
+        $this->nivelAdmin = SystemConfigService::get('accesos_modulos.vinculacion_empresarial.admin', 1);
     }
 
     public function guardarPropuesta() {
@@ -40,6 +46,7 @@ class VinculacionController {
     }
 
     public function procesarPropuesta() {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'VinculacionEmpresarial');
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_propuesta'], $_POST['accion'])) {
             $roles_permitidos = ['Profesor', 'Super Administrador', 'Comite'];
             if (!isset($_SESSION['rol_nombre']) || !in_array($_SESSION['rol_nombre'], $roles_permitidos)) {
@@ -167,6 +174,7 @@ class VinculacionController {
     }
 
     public function postularOportunidad() {
+        Auth::requierePrivilegioMinimo(0);
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             require_once CORE_PATH . 'Security/Auth.php';
             if (!Auth::check()) {
@@ -198,6 +206,7 @@ class VinculacionController {
     }
 
     public function procesarAsignacion() {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'VinculacionEmpresarial');
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id_postulacion = (int)$_POST['id_postulacion'];
             $id_investigacion = (int)$_POST['id_investigacion'];

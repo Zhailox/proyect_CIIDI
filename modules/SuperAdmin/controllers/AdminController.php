@@ -636,7 +636,6 @@ class AdminController {
                     putenv("PGPASSWORD={$creds['pass']}");
                     $comando = "{$psqlPath} -h {$creds['host']} -p {$creds['port']} "
                     . "-U {$creds['user']} -d {$creds['db']} "
-                    . "--set=ON_ERROR_STOP=1 --single-transaction "
                     . "-f \"{$rutaParaPsql}\" 2>&1";
 
                     $salida = [];
@@ -654,9 +653,25 @@ class AdminController {
                         AuditLogger::registrar('WARNING', 'SuperAdmin', 'Restaurar BD', "Base de datos restaurada exitosamente.");
                         $_SESSION['mensaje_admin_exito'] = "Base de datos restaurada correctamente. Integridad verificada antes del proceso.";
                     } else {
-                        $errDetalle = implode(' ', $salida);
+                        // Filtrar la salida ruidosa de psql (SET, ALTER, DROP, CREATE) y extraer solo los mensajes de ERROR reales
+                        $erroresReales = array_filter($salida, function($linea) {
+                            $t = trim($linea);
+                            return preg_match('/^(psql:.*:)?\s*ERROR:/i', $t) || preg_match('/FATAL:|CRITICAL:/i', $t);
+                        });
+
+                        if (!empty($erroresReales)) {
+                            $errDetalle = implode(' | ', array_map('trim', $erroresReales));
+                        } else {
+                            // Si psql falló por ON_ERROR_STOP pero la última línea no contiene 'ERROR:', tomar las últimas líneas relevantes
+                            $lineasRelevantes = array_filter($salida, function($l) {
+                                $t = trim($l);
+                                return !empty($t) && !preg_match('/^(SET|ALTER|DROP|CREATE|TRUNCATE)\b/i', $t);
+                            });
+                            $errDetalle = !empty($lineasRelevantes) ? implode(' | ', array_slice(array_map('trim', $lineasRelevantes), -3)) : implode(' ', array_slice($salida, -5));
+                        }
+
                         AuditLogger::registrar('CRITICAL', 'SuperAdmin', 'Fallo Restauración BD', $errDetalle);
-                        $_SESSION['mensaje_admin_error'] = "Error al restaurar la BD. " . ($errDetalle ?: "Código: {$codigo_retorno}");
+                        $_SESSION['mensaje_admin_error'] = "Error al restaurar la BD: " . ($errDetalle ?: "Código de salida: {$codigo_retorno}");
                     }
                 } else {
                     if (session_status() === PHP_SESSION_NONE) session_start();

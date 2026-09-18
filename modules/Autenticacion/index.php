@@ -24,6 +24,11 @@ public function getRutas(): array {
                 'layout'           => ['header' => true, 'sidebar' => true, 'footer' => true],
                 'css'              => ['autenticacion.css']
             ],
+            'captcha-imagen' => [
+                'controlador_path' => __DIR__ . '/controllers/LoginController.php',
+                'controlador'      => 'LoginController',
+                'metodo'           => 'generarCaptchaImagen'
+            ],
             // Endpoint invisible que procesa el formulario
             'procesar-login' => [
                 'controlador_path' => __DIR__ . '/controllers/LoginController.php',
@@ -109,6 +114,20 @@ public function getRutas(): array {
                 'vista'            => __DIR__ . '/views/transicion.php',
                 'layout'           => ['header' => false, 'sidebar' => false, 'footer' => false],
                 'css'              => ['transicion.css']
+            ],
+            // Registro y activación privada de Docentes/Profesores por Token
+            'completar-registro' => [
+                'controlador_path' => __DIR__ . '/controllers/LoginController.php',
+                'controlador'      => 'LoginController',
+                'metodo'           => 'mostrarCompletarRegistroProfesor',
+                'vista'            => __DIR__ . '/views/completar_registro_profesor.php',
+                'titulo'           => 'Activar Cuenta Docente - CIIDI UPTTMBI',
+                'css'              => ['autenticacion.css']
+            ],
+            'procesar-completar-registro' => [
+                'controlador_path' => __DIR__ . '/controllers/LoginController.php',
+                'controlador'      => 'LoginController',
+                'metodo'           => 'procesarCompletarRegistroProfesor'
             ]
         ];
     }

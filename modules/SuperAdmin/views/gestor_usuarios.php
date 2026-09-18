@@ -11,7 +11,10 @@
                 Control centralizado de usuarios, registro directo, matriz de privilegios y reseteo de claves.
             </p>
         </div>
-        <div style="display: flex; gap: 0.5rem;">
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button onclick="toggleModalInvitarProfesor(true)" class="btn sa-btn-primary" style="background: #121a3e !important; color: #ffffff !important; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border: none;">
+                <i class="ph-bold ph-envelope-simple-open"></i> + Invitar Profesor
+            </button>
             <button onclick="toggleModalCrearUsuario(true)" class="btn sa-btn-primary" style="background: var(--color-secundario) !important; color: #ffffff !important; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border: none;">
                 <i class="ph-bold ph-user-plus"></i> + Crear Usuario
             </button>
@@ -149,14 +152,6 @@ if (isset($privilegios)) {
                                             <i class="ph-bold ph-pencil-simple"></i> Editar
                                         </button>
 
-                                        <!-- CLAVE -->
-                                        <form action="resetear-clave-usuario" method="POST" style="margin:0;">
-                                            <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
-                                            <input type="hidden" name="cedula" value="<?= htmlspecialchars($usr['cedula']) ?>">
-                                            <button type="button" class="btn" title="Restablecer Clave" style="background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 8px; font-size: 0.78rem; border-radius: 4px; cursor: pointer; font-weight: 600;" onclick="mostrarConfirmacionUsuarios(this.form, 'Restablecer Contraseña', '¿Restablecer contraseña a Temporal2026!?', 'ph-key', '#d97706')">
-                                                <i class="ph-bold ph-key"></i> Clave
-                                            </button>
-                                        </form>
 
                                         <!-- REVOCAR -->
                                         <form action="revocar-sesion" method="POST" style="margin:0;">
@@ -390,10 +385,10 @@ if (isset($privilegios)) {
 <div id="modalCrearUsuario" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center;">
     <div style="background: #ffffff; width: 100%; max-width: 480px; border-radius: 12px; padding: 1.75rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(226, 232, 240, 0.8);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--color-principal); display: flex; align-items: center; gap: 8px;">
-                <i class="ph-bold ph-user-plus" style="color: var(--color-secundario);"></i> Registrar Nuevo Usuario
+            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: flex; align-items: center; gap: 8px;">
+                <i class="ph-bold ph-user-plus" style="color: var(--color-secundario, #2563eb);"></i> Registrar Nuevo Usuario
             </h3>
-            <button onclick="toggleModalCrearUsuario(false)" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b;">✕</button>
+            <button type="button" onclick="toggleModalCrearUsuario(false)" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b;">✕</button>
         </div>
 
         <form action="crear-usuario" method="POST" style="display: flex; flex-direction: column; gap: 0.85rem;">
@@ -426,9 +421,9 @@ if (isset($privilegios)) {
                 <input type="password" name="password" class="sa-filter-input" placeholder="••••••••" required style="width: 100%; box-sizing: border-box;">
             </div>
 
-            <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.75rem;">
-                <button type="button" onclick="toggleModalCrearUsuario(false)" class="btn btn-outline" style="border-color: #cbd5e1; color: #64748b; padding: 0.65rem 1rem; border-radius: 6px; font-size: 0.85rem;">Cancelar</button>
-                <button type="submit" class="btn btn-solid" style="background: var(--color-secundario) !important; color: #ffffff !important; border: none; padding: 0.65rem 1.25rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700;">Guardar Usuario</button>
+            <div style="display: flex; flex-direction: row; gap: 0.75rem; justify-content: flex-end; align-items: center; margin-top: 1.25rem;">
+                <button type="button" onclick="toggleModalCrearUsuario(false)" style="flex: 1; border: 1px solid #cbd5e1; background: #ffffff; color: #64748b; padding: 0 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700; height: 40px; line-height: 40px; text-align: center; cursor: pointer; box-sizing: border-box; margin: 0; outline: none; display: block;">Cancelar</button>
+                <button type="submit" style="flex: 1; background: var(--color-secundario, #2563eb) !important; color: #ffffff !important; border: none; padding: 0 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700; height: 40px; line-height: 40px; text-align: center; cursor: pointer; box-sizing: border-box; margin: 0; outline: none; display: block;">Guardar Usuario</button>
             </div>
         </form>
     </div>
@@ -568,7 +563,7 @@ if (isset($privilegios)) {
 
             <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.75rem;">
                 <button type="button" onclick="toggleModalCrearRol(false)" class="btn btn-outline" style="border-color: #cbd5e1; color: #64748b; padding: 0.65rem 1rem; border-radius: 6px; font-size: 0.85rem;">Cancelar</button>
-                <button type="submit" class="btn btn-solid" style="background: #10b981 !important; color: #ffffff !important; border: none; padding: 0.65rem 1.25rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700;">Crear Rol</button>
+                <button type="submit" class="btn btn-solid" style="background: var(--color-secundario) !important; color: #ffffff !important; border: none; padding: 0.65rem 1.25rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700;">Crear Rol</button>
             </div>
         </form>
     </div>
@@ -756,4 +751,49 @@ function confirmarEliminacionNivel(nivel) {
     const form = document.getElementById('formEliminarNivel');
     mostrarConfirmacionUsuarios(form, 'Eliminar Nivel', `¿Seguro que deseas eliminar el nivel de privilegio ${nivel}? Esta acción fallará por seguridad si aún existen roles asignados a esta jerarquía.`, 'ph-trash', '#ef4444');
 }
+function toggleModalInvitarProfesor(show) {
+    const modal = document.getElementById('modalInvitarProfesor');
+    if (modal) {
+        modal.style.display = show ? 'flex' : 'none';
+    }
+}
 </script>
+
+<!-- MODAL: INVITAR PROFESOR POR CORREO -->
+<div id="modalInvitarProfesor" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18, 26, 62, 0.6); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center; padding: 1rem;">
+    <div class="glass-panel" style="background: #ffffff; width: 100%; max-width: 500px; border-radius: 12px; padding: 1.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(80,89,132,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+            <h3 style="margin: 0; font-size: 1.1rem; color: #121a3e; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                <i class="ph-bold ph-envelope-simple-open" style="color: #7090cb;"></i> Invitar Nuevo Docente / Profesor
+            </h3>
+            <button type="button" onclick="toggleModalInvitarProfesor(false)" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer;">&times;</button>
+        </div>
+        <p style="font-size: 0.85rem; color: #64748b; margin-top: 0; margin-bottom: 1.25rem;">
+            Emita un token de invitación firmado enviado al correo institucional del docente para que defina su propia contraseña y active su cuenta.
+        </p>
+
+        <form action="invitar-profesor" method="POST">
+            <div style="margin-bottom: 1rem;">
+                <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 4px;">Cédula de Identidad (*):</label>
+                <input type="text" name="cedula" required class="sa-filter-input" style="width: 100%;" placeholder="Ej: V-12345678">
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 4px;">Nombre Completo (*):</label>
+                <input type="text" name="nombre" required class="sa-filter-input" style="width: 100%;" placeholder="Ej: Prof. María Pérez">
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+                <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 4px;">Correo Institucional (*):</label>
+                <input type="email" name="email" required class="sa-filter-input" style="width: 100%;" placeholder="docente@upttmbi.edu.ve">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+                <button type="button" onclick="toggleModalInvitarProfesor(false)" style="background: #e2e8f0; color: #475569; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer;">Cancelar</button>
+                <button type="submit" style="background: #121a3e; color: #ffffff; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="ph-bold ph-paper-plane-tilt"></i> Emitir Invitación
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -147,7 +147,7 @@
 
                 <!-- Módulo Especial Autenticación -->
                 <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <h5 style="margin: 0 0 10px 0; color: #10b981; font-size: 0.9rem;"><i class="ph-bold ph-sign-in"></i> Autenticación</h5>
+                    <h5 style="margin: 0 0 10px 0; color: var(--color-secundario); font-size: 0.9rem;"><i class="ph-bold ph-sign-in"></i> Autenticación</h5>
                     <div style="display: flex; gap: 1rem;">
                         <div style="flex: 1;">
                             <label style="font-size: 0.75rem; font-weight: 700; color: var(--texto-silenciado);">Nivel Login/Registro</label>

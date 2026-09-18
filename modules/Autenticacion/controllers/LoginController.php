@@ -2,6 +2,7 @@
 // modules/Autenticacion/controllers/LoginController.php
 require_once __DIR__ . '/../models/UsuarioModel.php';
 require_once CORE_PATH . 'Security/Auth.php';
+require_once CORE_PATH . 'Security/CaptchaService.php';
 require_once CORE_PATH . 'Services/MailService.php';
 
 class LoginController {
@@ -10,6 +11,11 @@ class LoginController {
 
     public function __construct() {
         $this->usuarioModel = new UsuarioModel();
+    }
+
+    public function generarCaptchaImagen() {
+        CaptchaService::renderImagenCaptcha();
+        return false;
     }
 
     public function mostrarFormulario() {
@@ -42,6 +48,14 @@ class LoginController {
         
         $metodo = $_POST['metodo_recuperacion'] ?? '';
         $dato = trim($_POST['dato_recuperacion'] ?? '');
+        
+        // Validación de captcha
+        $verifCaptcha = CaptchaService::validarPeticion($_POST);
+        if (!$verifCaptcha['valido']) {
+            $_SESSION['error_recuperar'] = $verifCaptcha['mensaje'];
+            header("Location: recuperar-cuenta");
+            exit;
+        }
         
         $usuario = null;
         if ($metodo === 'cedula') {
@@ -221,6 +235,12 @@ class LoginController {
     public function procesar() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return false;
 
+        // Validación de seguridad Anti-Bot (Honeypot + Tiempo Humano + Captcha)
+        $verifCaptcha = CaptchaService::validarPeticion($_POST);
+        if (!$verifCaptcha['valido']) {
+            return ['es_error' => true, 'mensaje' => $verifCaptcha['mensaje'], 'destino' => 'login'];
+        }
+
         $cedula = trim($_POST['cedula'] ?? '');
         $password = trim($_POST['password'] ?? '');
 
@@ -324,6 +344,12 @@ class LoginController {
     public function procesarRegistro() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return false;
 
+        // Validación de seguridad Anti-Bot (Honeypot + Tiempo Humano + Captcha)
+        $verifCaptcha = CaptchaService::validarPeticion($_POST);
+        if (!$verifCaptcha['valido']) {
+            return ['es_error' => true, 'mensaje' => $verifCaptcha['mensaje'], 'destino' => 'registro'];
+        }
+
         $cedula = trim($_POST['cedula'] ?? '');
         $nombre = trim($_POST['nombre'] ?? '');
         $email = filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL);
@@ -344,6 +370,20 @@ class LoginController {
             return [
                 'es_error' => true,
                 'mensaje'  => 'Las contraseñas no coinciden. Verifique e intente nuevamente.',
+                'destino'  => 'registro'
+            ];
+        }
+
+        // 2.1. Validar fortaleza de la contraseña en el backend (mínimo 8 caracteres, 1 mayúscula, 1 número y 1 especial)
+        $hasLength  = strlen($password) >= 8;
+        $hasUpper   = preg_match('/[A-Z]/', $password);
+        $hasNumber  = preg_match('/[0-9]/', $password);
+        $hasSpecial = preg_match('/[@$!%*?&._\-\#\^\(\)\{\}\[\]]/', $password);
+
+        if (!$hasLength || !$hasUpper || !$hasNumber || !$hasSpecial) {
+            return [
+                'es_error' => true,
+                'mensaje'  => 'La contraseña no cumple con los requisitos mínimos de seguridad (8+ caracteres, 1 mayúscula, 1 número y 1 carácter especial).',
                 'destino'  => 'registro'
             ];
         }
@@ -389,6 +429,105 @@ class LoginController {
                 'mensaje'  => 'Ocurrió un error interno en el servidor al intentar crear la cuenta.',
                 'destino'  => 'registro'
             ];
+        }
+    }
+
+    /**
+     * Valida el token de invitación enviado al profesor y muestra el formulario privado de activación.
+     */
+    public function mostrarCompletarRegistroProfesor() {
+        $rawToken = trim($_GET['token'] ?? '');
+        if (empty($rawToken)) {
+            $_SESSION['error_login'] = "El token de invitación es inválido o no fue proporcionado.";
+            header("Location: login");
+            exit;
+        }
+
+        $tokenHash = hash('sha256', $rawToken);
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("SELECT u.id, u.nombre_completo, u.email, u.cedula FROM usuarios u WHERE u.activation_token = ? AND u.activo = false");
+        $stmt->execute([$tokenHash]);
+        $profesor = $stmt->fetch();
+
+        if (!$profesor) {
+            $_SESSION['error_login'] = "El token de invitación ha expirado, ya fue utilizado o es inválido.";
+            header("Location: login");
+            exit;
+        }
+
+        return [
+            'token'    => $rawToken,
+            'profesor' => $profesor,
+            'error'    => $_SESSION['error_completar_registro'] ?? null
+        ];
+    }
+
+    /**
+     * Recibe la nueva contraseña definida por el profesor, activa su cuenta y elimina el token.
+     */
+    public function procesarCompletarRegistroProfesor() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header("Location: login");
+            exit;
+        }
+
+        $rawToken = trim($_POST['token'] ?? '');
+        $password = trim($_POST['password'] ?? '');
+        $passwordConfirm = trim($_POST['password_confirm'] ?? '');
+
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        if (empty($rawToken)) {
+            $_SESSION['error_login'] = "Token inválido.";
+            header("Location: login");
+            exit;
+        }
+
+        if (empty($password) || empty($passwordConfirm)) {
+            $_SESSION['error_completar_registro'] = "Debe ingresar y confirmar su nueva contraseña.";
+            header("Location: completar-registro?token=" . urlencode($rawToken));
+            exit;
+        }
+
+        if ($password !== $passwordConfirm) {
+            $_SESSION['error_completar_registro'] = "Las contraseñas ingresadas no coinciden.";
+            header("Location: completar-registro?token=" . urlencode($rawToken));
+            exit;
+        }
+
+        // Requisitos mínimos de seguridad (8+ caracteres, 1 mayúscula, 1 número, 1 símbolo)
+        if (strlen($password) < 8 || !preg_match('/[A-Z]/', $password) || !preg_match('/[0-9]/', $password) || !preg_match('/[@$!%*?&._\-\#\^\(\)\{\}\[\]]/', $password)) {
+            $_SESSION['error_completar_registro'] = "La contraseña debe tener al menos 8 caracteres, 1 mayúscula, 1 número y 1 carácter especial.";
+            header("Location: completar-registro?token=" . urlencode($rawToken));
+            exit;
+        }
+
+        $tokenHash = hash('sha256', $rawToken);
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("SELECT id, nombre_completo, email, cedula FROM usuarios WHERE activation_token = ? AND activo = false");
+        $stmt->execute([$tokenHash]);
+        $profesor = $stmt->fetch();
+
+        if (!$profesor) {
+            $_SESSION['error_login'] = "La invitación ha expirado o ya fue procesada.";
+            header("Location: login");
+            exit;
+        }
+
+        $hashSeguro = password_hash($password, PASSWORD_BCRYPT);
+        $stmtUpdate = $db->prepare("UPDATE usuarios SET contrasena = ?, activo = true, email_verified = true, activation_token = NULL WHERE id = ?");
+        $exito = $stmtUpdate->execute([$hashSeguro, $profesor['id']]);
+
+        if ($exito) {
+            AuditLogger::registrar('INFO', 'Autenticacion', 'Activación Docente Exitoso', "El profesor {$profesor['nombre_completo']} (C.I: {$profesor['cedula']}) activo su cuenta mediante token.");
+
+            $_SESSION['exito_login'] = "¡Cuenta de profesor activada exitosamente! Ya puede iniciar sesión con sus credenciales.";
+            header("Location: login");
+            exit;
+        } else {
+            $_SESSION['error_completar_registro'] = "Error inesperado al activar la cuenta.";
+            header("Location: completar-registro?token=" . urlencode($rawToken));
+            exit;
         }
     }
 }

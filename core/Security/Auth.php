@@ -90,9 +90,23 @@ class Auth {
 
 
     private static function render403() {
-        http_response_code(403);
+        if (!headers_sent()) {
+            http_response_code(403);
+        }
         $vista_modulo_path = CORE_VIEWS . '403.php';
         $titulo_pagina     = '403 - Acceso Denegado';
+        
+        // Si las cabeceras ya se enviaron, significa que master.php ya está cargado y estamos en medio de la vista.
+        // Renderizamos solo el 403 para no duplicar el navbar y la barra lateral.
+        if (headers_sent()) {
+            if (file_exists($vista_modulo_path)) {
+                include $vista_modulo_path;
+            } else {
+                echo "<div style='padding:40px;text-align:center;'><h2>Acceso Denegado (403)</h2></div>";
+            }
+            exit;
+        }
+
         $layout_config     = ['header' => true, 'sidebar' => true, 'footer' => true];
         if (file_exists(CORE_VIEWS . 'master.php')) {
             include CORE_VIEWS . 'master.php';

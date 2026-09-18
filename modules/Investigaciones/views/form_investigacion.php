@@ -9,7 +9,7 @@ $esEdicion = !empty($investigacion['id']);
         <a href="?ruta=mis-investigaciones" style="color:var(--inv-muted); text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem; font-weight:600; font-size:0.9rem; margin-bottom:1rem; transition:color 0.2s;" onmouseover="this.style.color='var(--inv-primary)';" onmouseout="this.style.color='var(--inv-muted)';"><i class="ph-bold ph-arrow-left"></i> Volver a Mis Proyectos</a>
         
         <h1 style="font-size: 2.5rem; font-weight: 800; color: var(--inv-dark); margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.8rem;">
-            <div style="width:50px; height:50px; border-radius:12px; background: linear-gradient(135deg, #0EA5E9 0%, #0369A1 100%); color:white; display:flex; align-items:center; justify-content:center; font-size:1.6rem; box-shadow:0 10px 20px rgba(14, 165, 233, 0.3);">
+            <div style="width:50px; height:50px; border-radius:12px; background: linear-gradient(135deg, #0369A1 0%, #0077BE 100%); color:white; display:flex; align-items:center; justify-content:center; font-size:1.6rem; box-shadow:0 10px 20px rgba(3, 105, 161, 0.3);">
                 <i class="ph-fill <?= $esEdicion ? 'ph-pencil-simple' : 'ph-plus' ?>"></i>
             </div>
             <?= $esEdicion ? 'Editar Investigación' : 'Crear Investigación' ?>
@@ -29,7 +29,13 @@ $esEdicion = !empty($investigacion['id']);
 
         <!-- SECCIÓN 1: PRINCIPAL -->
         <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04);">
-            <h3 style="font-weight:800; color:var(--inv-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;"><i class="ph-fill ph-info" style="color:var(--inv-primary);"></i> 1. Información Principal</h3>
+            <!-- Sección 1: icono azul #0369A1 -->
+            <h3 style="font-weight:800; color:var(--inv-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;">
+                <span style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; background:#E0F2FE;">
+                    <i class="ph-fill ph-info" style="color:#0369A1; font-size:1.2rem;"></i>
+                </span>
+                1. Información Principal
+            </h3>
             
             <div style="margin-bottom:1.5rem;">
                 <label style="display:block; font-weight:600; color:var(--inv-dark); margin-bottom:0.5rem;">Título del Proyecto <span style="color:var(--inv-danger);">*</span></label>
@@ -73,7 +79,13 @@ $esEdicion = !empty($investigacion['id']);
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap:2rem;">
             
             <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04); display:flex; flex-direction:column;">
-                <h3 style="font-weight:800; color:var(--inv-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;"><i class="ph-fill ph-article" style="color:var(--inv-primary);"></i> 2. Planteamiento y Objetivos</h3>
+                <!-- Sección 2: icono índigo #4F46E5 -->
+                <h3 style="font-weight:800; color:var(--inv-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;">
+                    <span style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; background:#EDE9FE;">
+                        <i class="ph-fill ph-article" style="color:#4F46E5; font-size:1.2rem;"></i>
+                    </span>
+                    2. Planteamiento y Objetivos
+                </h3>
                 
                 <div style="margin-bottom:1.5rem;">
                     <label style="display:block; font-weight:600; color:var(--inv-dark); margin-bottom:0.5rem;">Planteamiento del Problema / Resumen <span style="color:var(--inv-danger);">*</span></label>
@@ -86,21 +98,27 @@ $esEdicion = !empty($investigacion['id']);
             </div>
 
             <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04); display:flex; flex-direction:column;">
-                <h3 style="font-weight:800; color:var(--inv-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;"><i class="ph-fill ph-image" style="color:var(--inv-primary);"></i> 3. Recursos Multimedia</h3>
+                <!-- Sección 3: icono verde #059669 -->
+                <h3 style="font-weight:800; color:var(--inv-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;">
+                    <span style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; background:#D1FAE5;">
+                        <i class="ph-fill ph-image" style="color:#059669; font-size:1.2rem;"></i>
+                    </span>
+                    3. Recursos Multimedia
+                </h3>
                 
                 <div style="margin-bottom:1.5rem;">
                     <label style="display:block; font-weight:600; color:var(--inv-dark); margin-bottom:0.5rem;">Imagen de Portada (Archivo Local)</label>
-                    <label style="display:block; border:2px dashed var(--inv-border); border-radius:12px; padding:2rem; text-align:center; cursor:pointer; background:#F8FAFC; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--inv-primary)';" onmouseout="this.style.borderColor='var(--inv-border)';">
+                    <label style="display:block; border:2px dashed var(--inv-border); border-radius:12px; padding:2rem; text-align:center; cursor:pointer; background:#F8FAFC; transition:all 0.2s;" onmouseover="this.style.borderColor='#059669';" onmouseout="this.style.borderColor='var(--inv-border)';">
                         <i class="ph-fill ph-upload-simple" style="font-size:2.5rem; color:var(--inv-muted); margin-bottom:1rem; display:block;"></i>
-                        <strong style="color:var(--inv-primary);">Seleccionar Imagen</strong>
-                        <div style="font-size:0.85rem; color:var(--inv-muted); margin-top:0.5rem;">JPG, PNG, WebP</div>
-                        <input type="file" name="imagen" accept="image/*" style="display:none;" onchange="document.getElementById('file-name').textContent = this.files[0].name;">
+                        <strong style="color:#059669;">Seleccionar Imagen</strong>
+                        <div style="font-size:0.82rem; color:var(--inv-muted); margin-top:0.5rem;">.jpg &bull; .jpeg &bull; .png &bull; .webp</div>
+                        <input type="file" name="imagen" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="document.getElementById('file-name').textContent = this.files[0].name;">
                         <div id="file-name" style="margin-top:1rem; font-weight:600; color:var(--inv-dark);"></div>
                     </label>
                     <?php if (!empty($investigacion['imagen']) && strpos($investigacion['imagen'], 'http') !== 0): ?>
-                        <div style="margin-top:1rem; padding:1rem; background:rgba(14, 165, 233, 0.1); border-radius:8px; display:flex; align-items:center; gap:1rem;">
+                        <div style="margin-top:1rem; padding:1rem; background:rgba(5, 150, 105, 0.08); border-radius:8px; display:flex; align-items:center; gap:1rem; border:1px solid rgba(5,150,105,0.2);">
                             <img src="<?= htmlspecialchars($investigacion['imagen']) ?>" alt="Actual" style="width:50px; height:50px; object-fit:cover; border-radius:6px;">
-                            <span style="font-weight:600; color:#0369A1; font-size:0.9rem;">Imagen local cargada</span>
+                            <span style="font-weight:600; color:#059669; font-size:0.9rem;"><i class="ph-bold ph-check-circle"></i> Imagen local cargada</span>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -109,16 +127,22 @@ $esEdicion = !empty($investigacion['id']);
                     <label style="display:block; font-weight:600; color:var(--inv-dark); margin-bottom:0.5rem;">O Enlace Web (URL Alternativa)</label>
                     <div style="position:relative;">
                         <i class="ph-bold ph-link" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--inv-muted);"></i>
-                        <input type="url" name="imagen_url" placeholder="https://ejemplo.com/imagen.jpg" value="<?= (strpos($investigacion['imagen'] ?? '', 'http') === 0) ? htmlspecialchars($investigacion['imagen']) : '' ?>" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--inv-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(14,165,233,0.15)'; this.style.borderColor='var(--inv-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--inv-border)';">
+                        <input type="url" name="imagen_url" placeholder="https://ejemplo.com/imagen.jpg" value="<?= (strpos($investigacion['imagen'] ?? '', 'http') === 0) ? htmlspecialchars($investigacion['imagen']) : '' ?>" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--inv-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(5,150,105,0.15)'; this.style.borderColor='#059669';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--inv-border)';">
                     </div>
                 </div>
             </div>
 
         </div>
 
-        <!-- SECCIÓN 3: METADATOS TÉCNICOS -->
+        <!-- SECCIÓN 4: METADATOS TÉCNICOS -->
         <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04);">
-            <h3 style="font-weight:800; color:var(--inv-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;"><i class="ph-fill ph-sliders" style="color:var(--inv-primary);"></i> 4. Parámetros Académicos</h3>
+            <!-- Sección 4: icono ámbar #D97706 -->
+            <h3 style="font-weight:800; color:var(--inv-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;">
+                <span style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; background:#FEF3C7;">
+                    <i class="ph-fill ph-sliders" style="color:#D97706; font-size:1.2rem;"></i>
+                </span>
+                4. Parámetros Académicos
+            </h3>
             
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:1.5rem;">
                 <div>
@@ -150,7 +174,7 @@ $esEdicion = !empty($investigacion['id']);
             <a href="?ruta=mis-investigaciones" style="background: white; color: var(--inv-dark); border: 1px solid var(--inv-border); padding: 1rem 2rem; border-radius: 50px; font-weight: 700; font-size: 1.15rem; text-decoration:none; transition: background 0.2s;" onmouseover="this.style.background='#F1F5F9';" onmouseout="this.style.background='white';">Cancelar</a>
             
             <button type="submit" style="
-                background: linear-gradient(135deg, #0EA5E9 0%, #0369A1 100%); 
+                background: linear-gradient(135deg, #0369A1 0%, #0077BE 100%); 
                 color: white; 
                 border: none; 
                 padding: 1rem 2.5rem; 

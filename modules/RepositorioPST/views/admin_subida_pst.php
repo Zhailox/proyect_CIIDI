@@ -27,16 +27,6 @@ if (typeof window.mammoth === 'undefined') {
             </div>
         </header>
 
-        <?php if ($accion === 'listar'): ?>
-            <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'crear', 'RepositorioPST', false)): ?>
-            <div style="margin-bottom: 1rem; display: flex; justify-content: flex-start;">
-                <a href="?ruta=agregar-documento&accion=crear" class="btn-create-new">
-                    <i class="ph ph-plus-circle" style="font-size: 1rem;"></i> Agregar Nuevo Proyecto
-                </a>
-            </div>
-            <?php endif; ?>
-        <?php endif; ?>
-
         <!-- VISTA 1: FORMULARIO (CREAR O EDITAR) -->
         <?php if ($accion === 'crear' || $accion === 'editar'): ?>
             
@@ -337,92 +327,168 @@ if (typeof window.mammoth === 'undefined') {
         <!-- VISTA 2: TABLA DE GESTIÓN (LISTADO CRUD) -->
         <?php else: ?>
             
-            <section class="crud-table-wrapper">
-                
-                <!-- Buscador rápido en el panel de control -->
-                <form method="GET" action="" class="search-crud-bar">
+            <?php 
+            $totalDocs = count($documentos ?? []);
+            $activosCount = 0;
+            $conPdfCount = 0;
+            if (!empty($documentos)) {
+                foreach ($documentos as $d) {
+                    if ($d['activo'] ?? true) $activosCount++;
+                    if (!empty($d['archivo_pdf'])) $conPdfCount++;
+                }
+            }
+            ?>
+
+            <!-- TARJETAS DE MÉTRICAS KPI (GLASSMORPHISM) -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+                <div style="background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(112, 144, 203, 0.25); border-radius: 12px; padding: 1rem 1.2rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03);">
+                    <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(80, 89, 132, 0.12); color: var(--color-secundario); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+                        <i class="ph ph-folder-open"></i>
+                    </div>
+                    <div>
+                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= $pagination['total_records'] ?? $totalDocs ?></div>
+                        <div style="font-size: 0.75rem; font-weight: 600; color: var(--texto-silenciado); text-transform: uppercase; letter-spacing: 0.5px;">Proyectos En Catálogo</div>
+                    </div>
+                </div>
+
+                <div style="background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(112, 144, 203, 0.25); border-radius: 12px; padding: 1rem 1.2rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03);">
+                    <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(16, 185, 129, 0.12); color: #059669; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+                        <i class="ph ph-eye"></i>
+                    </div>
+                    <div>
+                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= $activosCount ?></div>
+                        <div style="font-size: 0.75rem; font-weight: 600; color: var(--texto-silenciado); text-transform: uppercase; letter-spacing: 0.5px;">Visibles al Público</div>
+                    </div>
+                </div>
+
+                <div style="background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(112, 144, 203, 0.25); border-radius: 12px; padding: 1rem 1.2rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03);">
+                    <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(112, 144, 203, 0.12); color: var(--color-terciario); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+                        <i class="ph ph-file-pdf"></i>
+                    </div>
+                    <div>
+                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= $conPdfCount ?></div>
+                        <div style="font-size: 0.75rem; font-weight: 600; color: var(--texto-silenciado); text-transform: uppercase; letter-spacing: 0.5px;">Documentos Adjuntos</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TOOLBAR DE GESTIÓN Y BÚSQUEDA GLASSMORPHIC -->
+            <div style="background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(112, 144, 203, 0.25); border-radius: 12px; padding: 0.85rem 1.1rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; box-shadow: 0 8px 25px rgba(0,0,0,0.03);">
+                <form method="GET" action="" style="display: flex; align-items: center; gap: 0.6rem; flex: 1; min-width: 300px; flex-wrap: wrap;">
                     <input type="hidden" name="ruta" value="agregar-documento">
-                    <input type="text" name="q" value="<?= htmlspecialchars($q ?? '') ?>" class="search-crud-input" placeholder="Buscar por títulos, palabras clave o autores de PST...">
-                    <button type="submit" class="btn-search-crud">Buscar</button>
+                    <div style="position: relative; flex: 1; min-width: 220px; max-width: 400px;">
+                        <i class="ph ph-magnifying-glass" style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: var(--color-secundario); font-size: 1.1rem;"></i>
+                        <input type="text" name="q" value="<?= htmlspecialchars($q ?? '') ?>" class="upload-input" style="padding-left: 2.5rem; padding-top: 0.55rem; padding-bottom: 0.55rem; font-size: 0.85rem; border-radius: 8px; width: 100%;" placeholder="Buscar por título, autores o palabras clave...">
+                    </div>
+                    <button type="submit" class="btn-save" style="padding: 0.55rem 1.2rem; font-size: 0.82rem;">
+                        <i class="ph ph-magnifying-glass"></i> Buscar
+                    </button>
                     <?php if (!empty($q)): ?>
-                        <a href="?ruta=agregar-documento" class="btn-search-crud" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">Restablecer</a>
+                        <a href="?ruta=agregar-documento" class="btn-cancel" style="padding: 0.55rem 1rem; font-size: 0.82rem;">
+                            <i class="ph ph-arrow-counter-clockwise"></i> Restablecer
+                        </a>
                     <?php endif; ?>
                 </form>
 
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <!-- Botón Agregar Nuevo Proyecto (Único en el toolbar) -->
+                    <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'crear', 'RepositorioPST', false)): ?>
+                        <a href="?ruta=agregar-documento&accion=crear" class="btn-create-new" style="padding: 0.6rem 1.4rem; font-size: 0.88rem; box-shadow: 0 4px 14px rgba(80, 89, 132, 0.25);">
+                            <i class="ph ph-plus-circle" style="font-size: 1.1rem;"></i> Agregar Nuevo Proyecto
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- CONTENEDOR DE TABLA DE GESTIÓN GLASSMORPHIC -->
+            <section class="crud-table-wrapper" style="background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(112, 144, 203, 0.25); border-radius: 12px; padding: 1.2rem; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);">
+                
                 <div class="table-responsive">
-                    <table class="pst-table">
+                    <table class="pst-table" style="width: 100%; border-collapse: separate; border-spacing: 0 0.4rem;">
                         <thead>
-                            <tr>
-                                <th style="width: 50%;">TÍTULO DEL PROYECTO</th>
-                                <th style="width: 25%;">AUTORES DEL EQUIPO</th>
-                                <th style="width: 10%;">AÑO</th>
-                                <th style="text-align: center; width: 15%;">ACCIONES</th>
+                            <tr style="border-bottom: 2px solid rgba(112, 144, 203, 0.2);">
+                                <th style="width: 48%; padding: 0.75rem 1rem; color: var(--texto-titulos); font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">TÍTULO DEL PROYECTO</th>
+                                <th style="width: 25%; padding: 0.75rem 1rem; color: var(--texto-titulos); font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">AUTORES DEL EQUIPO</th>
+                                <th style="width: 10%; padding: 0.75rem 1rem; color: var(--texto-titulos); font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; text-align: center;">AÑO</th>
+                                <th style="text-align: center; width: 17%; padding: 0.75rem 1rem; color: var(--texto-titulos); font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">ACCIONES</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($documentos)): ?>
                                 <tr>
-                                    <td colspan="4" style="text-align: center; padding: 2rem; color: var(--texto-silenciado);">
+                                    <td colspan="4" style="text-align: center; padding: 3rem 1.5rem; color: var(--texto-silenciado); background: rgba(255, 255, 255, 0.4); border-radius: 8px;">
+                                        <i class="ph ph-folder-open" style="font-size: 2.5rem; color: var(--color-terciario); opacity: 0.6; display: block; margin-bottom: 0.5rem;"></i>
                                         No se encontraron registros de proyectos socio-tecnológicos.
                                     </td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($documentos as $doc): ?>
-                                    <tr>
-                                         <td class="pst-td-title">
-                                             <div style="display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.15rem; flex-wrap: wrap;">
-                                                 <span class="pst-badge-soft" style="background-color: rgba(112, 144, 203, 0.15); color: var(--color-secundario); padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.7rem; font-weight: 700;"><?= htmlspecialchars($doc['nivel_academico'] ?? 'Pregrado') ?></span>
+                                    <tr style="background: rgba(255, 255, 255, 0.45); transition: all 0.2s ease; border-radius: 8px;">
+                                         <td class="pst-td-title" style="padding: 0.85rem 1rem; border-radius: 8px 0 0 8px;">
+                                             <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
+                                                 <span class="pst-badge-soft" style="background-color: rgba(80, 89, 132, 0.12); color: var(--color-secundario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(80, 89, 132, 0.2);"><?= htmlspecialchars($doc['nivel_academico'] ?? 'Pregrado') ?></span>
                                                  <?php if (($doc['nivel_academico'] ?? 'Pregrado') === 'Pregrado' && !empty($doc['trayecto'])): ?>
-                                                     <span class="pst-badge-soft" style="background-color: rgba(0, 123, 255, 0.1); color: var(--color-terciario); padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.7rem; font-weight: 700;"><?= htmlspecialchars($doc['trayecto']) ?></span>
+                                                     <span class="pst-badge-soft" style="background-color: rgba(112, 144, 203, 0.12); color: var(--color-terciario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(112, 144, 203, 0.2);"><?= htmlspecialchars($doc['trayecto']) ?></span>
                                                  <?php endif; ?>
                                                  <?php if (($doc['activo'] ?? true)): ?>
-                                                     <span style="background: #def7ec; color: #03543f; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.68rem; font-weight: 700;">Visibilidad: Activo</span>
+                                                     <span style="background: rgba(16, 185, 129, 0.12); color: #047857; padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.25); display: inline-flex; align-items: center; gap: 0.2rem;">
+                                                         <span style="width: 6px; height: 6px; border-radius: 50%; background-color: #10b981; display: inline-block;"></span> Activo
+                                                     </span>
                                                  <?php else: ?>
-                                                     <span style="background: #fde8e8; color: #9b1c1c; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.68rem; font-weight: 700;">Visibilidad: Oculto</span>
+                                                     <span style="background: rgba(239, 68, 68, 0.1); color: #b91c1c; padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.2); display: inline-flex; align-items: center; gap: 0.2rem;">
+                                                         <span style="width: 6px; height: 6px; border-radius: 50%; background-color: #ef4444; display: inline-block;"></span> Oculto
+                                                     </span>
                                                  <?php endif; ?>
                                                  <?php if (!empty($doc['url_repositorio'])): ?>
-                                                     <a href="<?= htmlspecialchars($doc['url_repositorio']) ?>" target="_blank" style="color: var(--color-secundario); font-size: 0.75rem; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.2rem;" title="Ver código fuente">
+                                                     <a href="<?= htmlspecialchars($doc['url_repositorio']) ?>" target="_blank" style="color: var(--color-secundario); font-size: 0.73rem; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem; background: rgba(80, 89, 132, 0.08); padding: 0.12rem 0.4rem; border-radius: 4px;" title="Ver código fuente">
                                                          <i class="ph ph-git-branch"></i> Git
                                                      </a>
                                                  <?php endif; ?>
                                              </div>
-                                             <strong><?= htmlspecialchars($doc['titulo'] ?? '') ?></strong>
+                                             <strong style="font-size: 0.92rem; color: var(--texto-titulos); line-height: 1.3; display: block;"><?= htmlspecialchars($doc['titulo'] ?? '') ?></strong>
                                              <?php if (!empty($doc['obj_general'])): ?>
-                                                 <div style="font-size: 0.73rem; color: var(--texto-normal); margin-top: 0.15rem; font-style: italic;">
+                                                 <div style="font-size: 0.75rem; color: var(--texto-silenciado); margin-top: 0.25rem; font-style: italic; line-height: 1.35;">
                                                      <strong>Objetivo:</strong> <?= htmlspecialchars(substr($doc['obj_general'], 0, 110)) ?>...
                                                  </div>
                                              <?php endif; ?>
                                          </td>
-                                         <td><?= htmlspecialchars($doc['autores_nombres'] ?? 'No registrados') ?></td>
-                                         <td><strong><?= $doc['anio_publicacion'] ?></strong></td>
-                                         <td style="text-align: center;">
-                                             <div class="action-links" style="display: flex; gap: 0.3rem; justify-content: center; flex-wrap: wrap;">
+                                         <td style="padding: 0.85rem 1rem; color: var(--texto-comun); font-size: 0.85rem; vertical-align: middle;">
+                                             <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                                 <i class="ph ph-users" style="color: var(--color-terciario); font-size: 1rem;"></i>
+                                                 <span><?= htmlspecialchars($doc['autores_nombres'] ?? 'No registrados') ?></span>
+                                             </div>
+                                         </td>
+                                         <td style="padding: 0.85rem 1rem; text-align: center; vertical-align: middle;">
+                                             <span style="background: rgba(255,255,255,0.7); padding: 0.25rem 0.55rem; border-radius: 6px; font-weight: 800; font-size: 0.85rem; color: var(--texto-titulos); border: 1px solid rgba(169, 168, 166, 0.2);"><?= $doc['anio_publicacion'] ?></span>
+                                         </td>
+                                         <td style="text-align: center; padding: 0.85rem 1rem; border-radius: 0 8px 8px 0; vertical-align: middle;">
+                                             <div class="action-links" style="display: flex; gap: 0.35rem; justify-content: center; flex-wrap: wrap;">
                                                  <!-- Opción 3: Previsualizar Ficha Completa -->
-                                                 <button type="button" class="btn-action-edit" style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;" title="Previsualizar Ficha Técnica" onclick="abrirModalPrevisualizarFichaAdmin(<?= htmlspecialchars(json_encode($doc)) ?>)">
+                                                 <button type="button" class="btn-action-edit" style="background: rgba(16, 185, 129, 0.1); color: #047857; border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700;" title="Previsualizar Ficha Técnica" onclick="abrirModalPrevisualizarFichaAdmin(<?= htmlspecialchars(json_encode($doc)) ?>)">
                                                      <i class="ph ph-eye"></i> Ficha
                                                  </button>
 
                                                  <!-- Opción 5: Descargar Documento Adjunto -->
                                                  <?php if (!empty($doc['archivo_pdf'])): ?>
-                                                     <a href="?ruta=ver-pdf-pst&id=<?= $doc['id'] ?>" target="_blank" class="btn-action-edit" style="background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd;" title="Descargar / Abrir Documento Digital">
+                                                     <a href="?ruta=ver-pdf-pst&id=<?= $doc['id'] ?>" target="_blank" class="btn-action-edit" style="background: rgba(112, 144, 203, 0.12); color: var(--color-secundario); border: 1px solid rgba(112, 144, 203, 0.3); border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700; text-decoration: none;" title="Descargar / Abrir Documento Digital">
                                                          <i class="ph ph-download-simple"></i> Adjunto
                                                      </a>
                                                  <?php endif; ?>
 
                                                  <!-- Opción 1: Activar / Desactivar (Soft Delete) -->
                                                  <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'editar', 'RepositorioPST', false)): ?>
-                                                     <a href="?ruta=agregar-documento&accion=toggle_estado&id=<?= $doc['id'] ?>" class="btn-action-edit" style="background: <?= ($doc['activo'] ?? true) ? '#fef3c7; color: #92400e; border: 1px solid #fde68a;' : '#dcfce7; color: #15803d; border: 1px solid #86efac;' ?>" title="<?= ($doc['activo'] ?? true) ? 'Ocultar del catálogo público' : 'Hacer visible en el catálogo público' ?>">
+                                                     <a href="?ruta=agregar-documento&accion=toggle_estado&id=<?= $doc['id'] ?>" class="btn-action-edit" style="background: <?= ($doc['activo'] ?? true) ? 'rgba(245, 158, 11, 0.1); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.25);' : 'rgba(16, 185, 129, 0.1); color: #047857; border: 1px solid rgba(16, 185, 129, 0.25);' ?> border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700; text-decoration: none;" title="<?= ($doc['activo'] ?? true) ? 'Ocultar del catálogo público' : 'Hacer visible en el catálogo público' ?>">
                                                          <i class="ph ph-eye-slash"></i> <?= ($doc['activo'] ?? true) ? 'Ocultar' : 'Activar' ?>
                                                      </a>
 
                                                      <!-- Opción Editar -->
-                                                     <a href="?ruta=agregar-documento&accion=editar&id=<?= $doc['id'] ?>" class="btn-action-edit" title="Modificar Metadatos">
+                                                     <a href="?ruta=agregar-documento&accion=editar&id=<?= $doc['id'] ?>" class="btn-action-edit" style="background: rgba(80, 89, 132, 0.1); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25); border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700; text-decoration: none;" title="Modificar Metadatos">
                                                          <i class="ph ph-pencil-simple"></i> Editar
                                                      </a>
                                                  <?php endif; ?>
 
                                                  <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'eliminar', 'RepositorioPST', false)): ?>
-                                                     <a href="javascript:void(0)" class="btn-action-delete" title="Eliminar Registro Definitivo" onclick="confirmarEliminacionModal('?ruta=agregar-documento&accion=eliminar&id=<?= $doc['id'] ?>')">
+                                                     <a href="javascript:void(0)" class="btn-action-delete" style="background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700; text-decoration: none;" title="Eliminar Registro Definitivo" onclick="confirmarEliminacionModal('?ruta=agregar-documento&accion=eliminar&id=<?= $doc['id'] ?>')">
                                                          <i class="ph ph-trash"></i> Eliminar
                                                      </a>
                                                  <?php endif; ?>

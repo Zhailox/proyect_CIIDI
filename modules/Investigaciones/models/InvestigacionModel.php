@@ -81,47 +81,68 @@ class InvestigacionModel {
     }
 
     public function listarInvestigaciones(array $filtros = []): array {
-        $sql = "
-            SELECT 
-                i.id, i.titulo, i.planteamiento_problema, i.objetivo_general, 
-                i.cupos_disponibles, i.estado, i.fecha_creacion,
-                u.nombre_completo AS profesor,
-                l.nombre AS linea_nombre
-            FROM public.investigaciones_ofertadas i
-            LEFT JOIN public.usuarios u ON i.id_profesor = u.id
-            LEFT JOIN public.lineas_investigacion l ON i.id_linea = l.id
-            WHERE 1=1
-        ";
-        
+        $whereBase = " WHERE 1=1";
         $params = [];
-        
+
         if (!empty($filtros['estado'])) {
-            $sql .= " AND i.estado = ?";
+            $whereBase .= " AND i.estado = ?";
             $params[] = $filtros['estado'];
         }
-        
         if (!empty($filtros['busqueda'])) {
-            $sql .= " AND (i.titulo ILIKE ? OR i.planteamiento_problema ILIKE ? OR u.nombre_completo ILIKE ?)";
+            $whereBase .= " AND (i.titulo ILIKE ? OR i.planteamiento_problema ILIKE ? OR u.nombre_completo ILIKE ?)";
             $term = '%' . $filtros['busqueda'] . '%';
             $params[] = $term; $params[] = $term; $params[] = $term;
         }
-
         if (!empty($filtros['id_linea'])) {
-            $sql .= " AND i.id_linea = ?";
+            $whereBase .= " AND i.id_linea = ?";
             $params[] = (int)$filtros['id_linea'];
         }
 
-        $sql .= " ORDER BY i.fecha_creacion DESC";
-        
+        $fromJoin = "
+            FROM public.investigaciones_ofertadas i
+            LEFT JOIN public.usuarios u ON i.id_profesor = u.id
+            LEFT JOIN public.lineas_investigacion l ON i.id_linea = l.id
+        ";
+
+        // Total de registros para paginación
+        $sqlCount = "SELECT COUNT(*) " . $fromJoin . $whereBase;
+        $stmtCount = $this->db->prepare($sqlCount);
+        $stmtCount->execute($params);
+        $total = (int)$stmtCount->fetchColumn();
+
+        // Paginación
+        $perPage  = max(1, (int)($filtros['por_pagina'] ?? 9));
+        $paginas  = max(1, (int)ceil($total / $perPage));
+        $pagina   = max(1, min((int)($filtros['pagina'] ?? 1), $paginas));
+        $offset   = ($pagina - 1) * $perPage;
+
+        $sql = "
+            SELECT
+                i.id, i.titulo, i.planteamiento_problema, i.objetivo_general,
+                i.cupos_disponibles, i.estado, i.fecha_creacion,
+                u.nombre_completo AS profesor,
+                l.nombre AS linea_nombre
+            " . $fromJoin . $whereBase . "
+            ORDER BY i.fecha_creacion DESC
+            LIMIT ? OFFSET ?
+        ";
+
+        $paramsPage = array_merge($params, [$perPage, $offset]);
         $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
+        $stmt->execute($paramsPage);
         $resultados = $stmt->fetchAll();
 
-        return $this->mergeMetadata($resultados);
+        return [
+            'items'     => $this->mergeMetadata($resultados),
+            'total'     => $total,
+            'pagina'    => $pagina,
+            'paginas'   => $paginas,
+            'por_pagina' => $perPage,
+        ];
     }
     
     public function obtenerTodasAdmin(array $filtros = []): array {
-        // Reutilizamos listarInvestigaciones que ya hace los JOINs necesarios
+        // Reutiliza listarInvestigaciones (paginación integrada)
         return $this->listarInvestigaciones($filtros);
     }
     
