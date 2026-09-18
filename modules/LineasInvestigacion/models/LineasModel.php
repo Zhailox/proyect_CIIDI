@@ -76,7 +76,7 @@ class LineasModel extends QueryBuilder {
             LEFT  JOIN dimensiones_operativas dim ON dim.id   = rc.id_dimension_operativa
             LEFT  JOIN recurso_autores ra  ON ra.id_recurso   = r.id
             LEFT  JOIN autores a           ON a.id            = ra.id_autor
-            WHERE rc.id_linea_investigacion = ? AND r.activo = true
+            WHERE rc.id_linea_investigacion = ? AND dp.activo = true
             GROUP BY r.id, r.titulo, r.anio_publicacion, dp.resumen,
                      dp.nivel_academico, dp.palabras_clave, dp.fecha_defensa, dim.nombre
             ORDER BY r.anio_publicacion DESC
