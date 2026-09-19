@@ -14,7 +14,7 @@
         }
     },
     "paginacion": {
-        "limite_catalogo": 51,
+        "limite_catalogo": 50,
         "limite_gestor": 20,
         "max_recomendados": 4,
         "limite_gestor_catalogos": 16

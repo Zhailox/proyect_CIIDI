@@ -116,12 +116,12 @@ public function getRutas(): array {
                 'icono'       => 'ph-fill ph-newspaper',
                 'enlace'      => 'articulos',
                 'activadores' => ['articulos', 'leer-articulo', 'gestor-articulos', 'nuevo-articulo', 'procesar-articulo', 'editar-articulo', 'actualizar-articulo', 'eliminar-articulo', 'gestor-catalogos', 'configuracion-articulos'],
-                'privilegio_minimo' => $nivelPublico, // El menú padre lo ven todos
+                'privilegio_minimo' => $nivelPublico,
                 'subitems'    => [
                     ['ruta' => 'articulos', 'titulo' => 'Revista Digital', 'privilegio_minimo' => $nivelPublico],
                     ['ruta' => 'gestor-articulos', 'titulo' => 'Gestor Interno', 'privilegio_minimo' => $nivelAdmin],
                     ['ruta' => 'gestor-catalogos', 'titulo' => 'Gestor Catalogos', 'privilegio_minimo' => $nivelAdmin],
-                    ['ruta' => 'configuracion-articulos', 'titulo' => 'Ajustes de Revista', 'privilegio_minimo' => $nivelAdmin]
+                    ['ruta' => 'configuracion-articulos', 'titulo' => 'Ajustes de Revista', 'privilegio_minimo' => $nivelAdmin, 'permiso_rbac' => 'auditar', 'modulo_rbac' => 'RepositorioPST']
                 ]
             ]
         ];

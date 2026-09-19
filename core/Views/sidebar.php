@@ -22,32 +22,29 @@ $ruta          = $ruta ?? '';
     <?php foreach ($menu_dinamico as $item): ?>
         <?php
         $privilegioExigido = $item['privilegio_minimo'] ?? 999;
+        $permisoRbac = $item['permiso_rbac'] ?? null;
+        $moduloRbac = $item['modulo_rbac'] ?? null;
 
-        // Si es SuperAdmin/Admin Total jamás se oculta ningún menú.
-        if (!$esAdminTotal && $nivelUsuario > $privilegioExigido) {
-            continue; 
+        // Si la opción requiere un permiso específico (como 'auditar'), preguntamos si lo tiene.
+        // Si no lo tiene, hacemos 'continue' para que el botón no se dibuje en pantalla.
+        if ($permisoRbac && $moduloRbac) {
+            if (!Auth::requierePrivilegioMinimo($privilegioExigido, $permisoRbac, $moduloRbac, false)) continue;
+        } else {
+            if (!$esAdminTotal && $nivelUsuario > $privilegioExigido) continue; 
         }
+        
+        $icono_clase = $item['icono'];
+        $icono_html = strpos($icono_clase, '<i') !== false ? $icono_clase : '<i class="' . $icono_clase . '"></i>';
         ?>
         
-        <?php 
-            // Inyectar clase Phosphor de forma segura (Cero Emojis)
-            $icono_clase = $item['icono'];
-            $icono_html = strpos($icono_clase, '<i') !== false ? $icono_clase : '<i class="' . $icono_clase . '"></i>';
-        ?>
-        
-        <?php if ($item['tipo'] === 'link'): // Si es un botón simple directo ?>
-            
+        <?php if ($item['tipo'] === 'link'): ?>
             <a href="<?php echo $item['enlace']; ?>" class="nav-item <?php echo ($ruta == $item['enlace']) ? 'active' : ''; ?>">
                 <span class="nav-icon"><?php echo $icono_html; ?></span> 
                 <span class="nav-text"><?php echo $item['titulo']; ?></span>
             </a>
             
-        <?php elseif ($item['tipo'] === 'parent'): // Si es un grupo con submenús ?>
-            
-            <?php 
-                $is_active_parent = in_array($ruta, $item['activadores']); 
-            ?>
-            
+        <?php elseif ($item['tipo'] === 'parent'): ?>
+            <?php $is_active_parent = in_array($ruta, $item['activadores']); ?>
             <div class="nav-parent">
                 <a href="<?php echo $item['enlace']; ?>" class="nav-item <?php echo $is_active_parent ? 'active' : ''; ?>">
                   <span class="nav-icon"><?php echo $icono_html; ?></span> 
@@ -59,7 +56,15 @@ $ruta          = $ruta ?? '';
                     <?php foreach ($item['subitems'] as $sub): ?>
                         <?php 
                             $subPriv = $sub['privilegio_minimo'] ?? 999;
-                            if (!$esAdminTotal && $nivelUsuario > $subPriv) continue;
+                            $subPermiso = $sub['permiso_rbac'] ?? null;
+                            $subModulo = $sub['modulo_rbac'] ?? null;
+                            
+                            // Lo mismo para los sub-botones. Si no tiene el permiso, no se dibuja.
+                            if ($subPermiso && $subModulo) {
+                                if (!Auth::requierePrivilegioMinimo($subPriv, $subPermiso, $subModulo, false)) continue;
+                            } else {
+                                if (!$esAdminTotal && $nivelUsuario > $subPriv) continue;
+                            }
                         ?>
                         <a href="<?php echo $sub['ruta']; ?>" class="sub-nav-item <?php echo ($ruta == $sub['ruta']) ? 'active' : ''; ?>">
                             <span class="nav-text"><?php echo $sub['titulo']; ?></span>

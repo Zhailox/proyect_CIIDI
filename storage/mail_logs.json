@@ -1,5 +1,165 @@
 [
     {
+        "id": "mail_6aaf130125686",
+        "fecha": "2026-09-19 22:56:01",
+        "destino_email": "676767@gmail.com",
+        "destino_nombre": "Sixsevenaldo González",
+        "asunto": "Actualización de Permisos y Rol Institucional - CIIDI",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
+        "id": "mail_6aaef8e2e7f2b",
+        "fecha": "2026-09-19 21:04:34",
+        "destino_email": "orlando5711666@gmail.com",
+        "destino_nombre": "no soy miguel",
+        "asunto": "Alerta de Seguridad: Su cuenta ha sido bloqueada temporalmente",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
+        "id": "mail_6aaef869e5960",
+        "fecha": "2026-09-19 21:02:33",
+        "destino_email": "676767@gmail.com",
+        "destino_nombre": "Sixsevenaldo González",
+        "asunto": "Actualización de Permisos y Rol Institucional - CIIDI",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
+        "id": "mail_6aaef77493487",
+        "fecha": "2026-09-19 20:58:28",
+        "destino_email": "yisu@gmail.com",
+        "destino_nombre": "Yisu Monte",
+        "asunto": "Actualización de Permisos y Rol Institucional - CIIDI",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
+        "id": "mail_6aaef76011911",
+        "fecha": "2026-09-19 20:58:08",
+        "destino_email": "123@gmail.com",
+        "destino_nombre": "Juan",
+        "asunto": "Actualización de Permisos y Rol Institucional - CIIDI",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
+        "id": "mail_6aaef74fb49f7",
+        "fecha": "2026-09-19 20:57:51",
+        "destino_email": "orlando5711666@gmail.com",
+        "destino_nombre": "no soy miguel",
+        "asunto": "Actualización de Permisos y Rol Institucional - CIIDI",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
+        "id": "mail_6aaef740b4dbc",
+        "fecha": "2026-09-19 20:57:36",
+        "destino_email": "cepillin@gmail.com",
+        "destino_nombre": "Cepillíno",
+        "asunto": "Actualización de Permisos y Rol Institucional - CIIDI",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
+        "id": "mail_6aaeef4a21269",
+        "fecha": "2026-09-19 20:23:38",
+        "destino_email": "676767@gmail.com",
+        "destino_nombre": "Sixsevenaldo González",
+        "asunto": "Actualización de Permisos y Rol Institucional - CIIDI",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
+        "id": "mail_6aaeef2756f7f",
+        "fecha": "2026-09-19 20:23:03",
+        "destino_email": "676767@gmail.com",
+        "destino_nombre": "Sixsevenaldo González",
+        "asunto": "Actualización de Permisos y Rol Institucional - CIIDI",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
+        "id": "mail_6aaeef1955876",
+        "fecha": "2026-09-19 20:22:49",
+        "destino_email": "676767@gmail.com",
+        "destino_nombre": "Sixsevenaldo González",
+        "asunto": "Su cuenta institucional ha sido Reactivada - CIIDI",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
+        "id": "mail_6aaeeedabd1fa",
+        "fecha": "2026-09-19 20:21:46",
+        "destino_email": "676767@gmail.com",
+        "destino_nombre": "Sixsevenaldo González",
+        "asunto": "Alerta de Seguridad: Su cuenta ha sido bloqueada temporalmente",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
+        "id": "mail_6aaeee6deaaea",
+        "fecha": "2026-09-19 20:19:57",
+        "destino_email": "pedrin@gmail.com",
+        "destino_nombre": "Pedro Paez",
+        "asunto": "Su cuenta institucional ha sido Reactivada - CIIDI",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
+        "id": "mail_6aaeee5204b42",
+        "fecha": "2026-09-19 20:19:30",
+        "destino_email": "pedrin@gmail.com",
+        "destino_nombre": "Pedro Paez",
+        "asunto": "Alerta de Seguridad: Su cuenta ha sido bloqueada temporalmente",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
+        "id": "mail_6aaeee4a99011",
+        "fecha": "2026-09-19 20:19:22",
+        "destino_email": "pedrin@gmail.com",
+        "destino_nombre": "Pedro Paez",
+        "asunto": "Actualización de Permisos y Rol Institucional - CIIDI",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
+        "id": "mail_6aaeee437b906",
+        "fecha": "2026-09-19 20:19:15",
+        "destino_email": "pedrin@gmail.com",
+        "destino_nombre": "Pedro Paez",
+        "asunto": "Actualización de Permisos y Rol Institucional - CIIDI",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
+        "id": "mail_6aaeedf251294",
+        "fecha": "2026-09-19 20:17:54",
+        "destino_email": "pedrin@gmail.com",
+        "destino_nombre": "Pedro Paez",
+        "asunto": "Bienvenido al Sistema CIIDI - Credenciales de Acceso",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
         "id": "mail_6aaee0354e3fe",
         "fecha": "2026-09-19 19:19:17",
         "destino_email": "andrusramirez2020@gmail.com",

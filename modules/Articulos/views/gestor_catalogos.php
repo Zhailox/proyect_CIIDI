@@ -1,4 +1,7 @@
 <?php
+require_once CORE_PATH . 'Security/Auth.php';
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
+$nivelAdminArt = SystemConfigService::get('accesos_modulos.articulos.admin', 1);
 $mensajeExito = $_SESSION['mensaje_exito'] ?? '';
 $mensajeError = $_SESSION['mensaje_error'] ?? '';
 
@@ -66,6 +69,7 @@ $tabActiva = $_GET['tab'] ?? 'cat';
             </div>
 
             <!-- Formulario de creación rápida -->
+            <?php if (Auth::requierePrivilegioMinimo($nivelAdminArt, 'crear', 'Articulos', false)): ?>
             <form action="gestor-catalogos" method="POST" style="margin-bottom: 1.25rem;">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                 <input type="hidden" name="tab" value="cat">
@@ -77,6 +81,7 @@ $tabActiva = $_GET['tab'] ?? 'cat';
                     </button>
                 </div>
             </form>
+            <?php endif; ?>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.85rem;">
                 <?php if(empty($categorias['data'])): ?>
