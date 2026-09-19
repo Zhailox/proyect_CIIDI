@@ -8,11 +8,14 @@ if ($nivelUsuario === 0) {
     $puedeEditar = true;
     $puedeEliminar = true;
 } else {
-    $archivo_rbac = CORE_PATH . '../storage/rbac_matrix.json';
-    if (file_exists($archivo_rbac)) {
-        $matrix = json_decode(file_get_contents($archivo_rbac), true) ?: [];
-        $puedeEditar = !empty($matrix[$nivelUsuario]['Articulos']['editar']);
-        $puedeEliminar = !empty($matrix[$nivelUsuario]['Articulos']['eliminar']);
+    $db = Connection::getInstance();
+    $stmt = $db->prepare("SELECT permisos FROM matriz_rbac WHERE nivel_privilegio = ? AND modulo = 'Articulos'");
+    $stmt->execute([$nivelUsuario]);
+    $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($fila && !empty($fila['permisos'])) {
+        $permisos = is_string($fila['permisos']) ? json_decode($fila['permisos'], true) : $fila['permisos'];
+        $puedeEditar = !empty($permisos['editar']);
+        $puedeEliminar = !empty($permisos['eliminar']);
     }
 }
 

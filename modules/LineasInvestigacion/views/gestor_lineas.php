@@ -1,206 +1,12 @@
+<?php require_once __DIR__ . '/../../../core/Security/CSRF.php'; ?>
 <?php
 // modules/LineasInvestigacion/views/gestor_lineas.php
+$isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
 ?>
 
 
 
-<style>
 
-/* CLASES PARA VISTA TIPO LISTA (REAL) */
-.ag-view-list {
-    grid-template-columns: 1fr !important;
-}
-.ag-view-list .ag-card {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.5rem 2rem;
-    gap: 2rem;
-}
-.ag-view-list .ag-card-content {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
-.ag-view-list .ag-card-icon {
-    margin-bottom: 0 !important;
-}
-.ag-view-list .ag-card-actions {
-    border-top: none !important;
-    padding-top: 0 !important;
-    border-left: 1px solid rgba(80, 89, 132, 0.1);
-    padding-left: 2rem;
-    margin-left: 1rem;
-    min-width: max-content;
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-}
-.ag-view-list .ag-card-actions .ag-btn-manage {
-    width: auto !important;
-}
-
-.ag-header-banner {
-    background: linear-gradient(135deg, rgba(80, 89, 132, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%) !important;
-    color: #ffffff;
-    border-radius: 14px;
-    padding: 2rem 2.5rem;
-    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.15);
-    margin-bottom: 2rem;
-    position: relative;
-    overflow: hidden;
-}
-.ag-header-banner::before {
-    content: '';
-    position: absolute;
-    top: -50%; right: -10%;
-    width: 300px; height: 300px;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-    border-radius: 50%;
-}
-.ag-header-subtitle {
-    display: inline-flex; 
-    align-items: center; 
-    gap: 0.5rem; 
-    color: #94a3b8; 
-    font-weight: 800; 
-    font-size: 0.8rem; 
-    text-transform: uppercase; 
-    letter-spacing: 1.5px; 
-    margin-bottom: 0.5rem;
-}
-.ag-header-title {
-    font-size: 2rem; 
-    font-weight: 800; 
-    margin: 0; 
-    color: #ffffff;
-    letter-spacing: -0.5px;
-}
-.ag-header-desc {
-    margin: 0.5rem 0 0 0; 
-    color: #cbd5e1; 
-    font-size: 1rem;
-    max-width: 600px;
-}
-
-.ag-modules-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-.ag-card {
-    background: #ffffff;
-    border: 1px solid rgba(80, 89, 132, 0.15);
-    border-top: 4px solid #505984;
-    border-radius: 12px;
-    padding: 1.8rem;
-    box-shadow: 0 10px 25px rgba(18, 26, 62, 0.03);
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 1.5rem;
-}
-.ag-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 20px 40px rgba(18, 26, 62, 0.08);
-    border-color: rgba(80, 89, 132, 0.25);
-}
-.ag-card-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
-    background: rgba(80, 89, 132, 0.08);
-    border: 1px solid rgba(80, 89, 132, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.8rem;
-    color: #505984;
-}
-.ag-btn-manage {
-    background: #505984;
-    color: #ffffff;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 16px;
-    font-weight: 700;
-    font-size: 0.9rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    cursor: pointer;
-    width: 100%;
-}
-.ag-btn-manage:hover {
-    background: #3C456A;
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(80, 89, 132, 0.3);
-}
-.ag-btn-delete {
-    color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
-    border: none;
-    padding: 8px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.2s;
-    font-weight: bold;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-.ag-btn-delete:hover { background: #ef4444; color: #fff; }
-
-.li-alert {
-    padding: 1rem 1.25rem;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-.li-alert.exito { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-.li-alert.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-
-/* Custom Modal Styles */
-.ag-modal-label {
-    display: block;
-    font-weight: 700;
-    margin-bottom: 0.4rem;
-    color: #475569;
-    font-size: 0.9rem;
-}
-.ag-modal-input {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 1rem 1.25rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 0.95rem;
-    transition: all 0.2s;
-    background: #f8fafc;
-}
-.ag-modal-input:focus {
-    outline: none;
-    border-color: #505984;
-    background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(80, 89, 132, 0.2);
-}
-.ag-swal-popup {
-    border-radius: 16px !important;
-    padding: 2rem !important;
-}
-</style>
 
 <div class="li-gestor-wrapper">
 
@@ -219,6 +25,9 @@
             </div>
             <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 12px; z-index: 1;">
             <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <a href="index.php?ruta=exportar-lineas-csv" style="background: #10b981; color: #ffffff; padding: 10px 18px; border: none; border-radius: 8px; font-weight: 800; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: 0.2s;" onmouseover="this.style.background='#059669'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#10b981'; this.style.transform='translateY(0)'">
+                    <i class="ph-bold ph-download-simple"></i> Exportar a Excel
+                </a>
                 <button type="button" onclick="abrirModalCrearLinea()" style="background: #ffffff; color: #0f172a; padding: 10px 18px; border: none; border-radius: 8px; font-weight: 800; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: 0.2s;" onmouseover="this.style.background='#f1f5f9'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'">
                     <i class="ph-bold ph-plus-circle"></i> Nueva Línea
                 </button>
@@ -271,9 +80,24 @@
                 <!-- Botones Inferiores -->
                 <div class="ag-card-actions" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-top: 1px solid rgba(80, 89, 132, 0.1); padding-top: 1.2rem;">
                     
-                    <button type="button" class="ag-btn-delete" title="Eliminar Línea" onclick="eliminarLinea(<?= htmlspecialchars($li['id']) ?>, '<?= htmlspecialchars(addslashes($li['nombre'])) ?>')">
-                        <i class="ph-bold ph-trash"></i>
-                    </button>
+                    
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <?php if ($li['activo']): ?>
+                            <button type="button" class="ag-btn-edit" style="background:#f59e0b; color:white; border-color:#f59e0b;" title="Ocultar Línea" onclick="ocultarLinea(<?= htmlspecialchars($li['id']) ?>, '<?= htmlspecialchars(addslashes($li['nombre'])) ?>')">
+                                <i class="ph-bold ph-eye-slash"></i> Ocultar
+                            </button>
+                        <?php else: ?>
+                            <button type="button" class="ag-btn-edit" style="background:#10b981; color:white; border-color:#10b981;" title="Mostrar Línea" onclick="mostrarLinea(<?= htmlspecialchars($li['id']) ?>)">
+                                <i class="ph-bold ph-eye"></i> Mostrar
+                            </button>
+                        <?php endif; ?>
+                        
+                        <?php if ($isSuper): ?>
+                        <button type="button" class="ag-btn-delete" title="Eliminar Definitivamente" onclick="eliminarLinea(<?= htmlspecialchars($li['id']) ?>, '<?= htmlspecialchars(addslashes($li['nombre'])) ?>')">
+                            <i class="ph-bold ph-trash"></i>
+                        </button>
+                        <?php endif; ?>
+                    </div>
 
                     <a href="index.php?ruta=detalle-gestion-linea&id=<?= urlencode($li['id']) ?>" class="ag-btn-manage" title="Abrir gestor dedicado de la línea">
                         <i class="ph-bold ph-gear-six"></i> Gestionar Línea
@@ -286,7 +110,13 @@
 </div>
 
 <!-- Formularios Ocultos -->
+    <form id="formExportarLineas" method="POST" action="index.php?ruta=gestionar-lineas" style="display:none;">
+        <input type="hidden" name="accion" value="exportar">
+        <?= CSRF::campoOculto() ?>
+    </form>
+
 <form id="formEliminarLinea" method="POST" action="index.php?ruta=gestionar-lineas" style="display:none;">
+        <?= CSRF::campoOculto() ?>
     <input type="hidden" name="accion" value="eliminar">
     <input type="hidden" name="id" id="deleteLineaId" value="">
 </form>
@@ -297,15 +127,28 @@ const carrerasList = <?= json_encode($carreras) ?>;
 
 function eliminarLinea(id, nombre) {
     Swal.fire({
-        title: '¿Eliminar Línea?',
-        html: `Estás a punto de eliminar la línea <strong>${nombre}</strong>.<br><br><span style="color:#ef4444; font-weight:bold;">¡ADVERTENCIA!</span> Esta acción eliminará también todas sus dimensiones operativas asociadas.`,
-        icon: 'warning',
+        title: '¡ADVERTENCIA CRÍTICA!',
+        html: `Estás a punto de eliminar definitivamente la línea <strong>${nombre}</strong> y todas sus dimensiones.<br><br>` + 
+              `<span style="color:#ef4444; font-weight:bold;">¡ESTO DEJARÁ PROYECTOS HUÉRFANOS!</span><br>` +
+              `Todos los proyectos, postulaciones e investigaciones vinculadas a esta línea o sus dimensiones perderán su referencia estructural, ` +
+              `lo que podría causar errores en las estadísticas o pérdida de datos académicos históricos.<br><br>` + 
+              `Para proceder, escribe la palabra <b>ELIMINAR</b> en mayúsculas:`,
+        icon: 'error',
+        input: 'text',
+        inputPlaceholder: 'Escribe ELIMINAR',
         showCancelButton: true,
         confirmButtonColor: '#ef4444',
         cancelButtonColor: '#64748b',
-        confirmButtonText: 'Sí, eliminar',
+        confirmButtonText: '<i class="ph-bold ph-trash"></i> Ejecutar Borrado Crítico',
         cancelButtonText: 'Cancelar',
-        customClass: { popup: 'ag-swal-popup' }
+        customClass: { popup: 'ag-swal-popup' },
+        preConfirm: (inputValue) => {
+            if (inputValue !== 'ELIMINAR') {
+                Swal.showValidationMessage('Debes escribir la palabra ELIMINAR para confirmar.');
+                return false;
+            }
+            return true;
+        }
     }).then((result) => {
         if (result.isConfirmed) {
             document.getElementById('deleteLineaId').value = id;
@@ -327,6 +170,7 @@ function abrirModalCrearLinea() {
         html: `
             <div style="text-align: left; margin-top: 1rem;">
                 <form id="form-create-linea" method="POST" action="index.php?ruta=gestionar-lineas">
+        <?= CSRF::campoOculto() ?>
                     <input type="hidden" name="accion" value="crear">
                     
                     <div style="margin-bottom:1.2rem;">
@@ -429,6 +273,43 @@ document.addEventListener('DOMContentLoaded', function() {
         animate();
     }
 });
+</script>
+
+<form id="formOcultarLinea" method="POST" action="index.php?ruta=gestionar-lineas" style="display:none;">
+    <input type="hidden" name="accion" value="ocultar">
+    <input type="hidden" name="id" id="inputIdOcultar">
+    <?= CSRF::campoOculto() ?>
+</form>
+
+<form id="formMostrarLinea" method="POST" action="index.php?ruta=gestionar-lineas" style="display:none;">
+    <input type="hidden" name="accion" value="mostrar">
+    <input type="hidden" name="id" id="inputIdMostrar">
+    <?= CSRF::campoOculto() ?>
+</form>
+
+<script>
+function ocultarLinea(id, nombre) {
+    Swal.fire({
+        title: '¿Ocultar Línea?',
+        html: `Estás a punto de ocultar la línea <strong>${nombre}</strong>.<br><br>Dejará de aparecer en las listas públicas, pero los proyectos y datos seguirán intactos.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f59e0b',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, ocultar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('inputIdOcultar').value = id;
+            document.getElementById('formOcultarLinea').submit();
+        }
+    });
+}
+
+function mostrarLinea(id) {
+    document.getElementById('inputIdMostrar').value = id;
+    document.getElementById('formMostrarLinea').submit();
+}
 </script>
 </body>
 

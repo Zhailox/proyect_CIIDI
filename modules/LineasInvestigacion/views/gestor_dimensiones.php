@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/../../../core/Security/CSRF.php'; ?>
 <?php
 // modules/LineasInvestigacion/views/gestor_dimensiones.php
 // Variables inyectadas por GestorLineasController::dimensiones():
@@ -42,6 +43,7 @@
 
         <div class="li-form-body">
             <form method="POST" action="index.php?ruta=gestionar-dimensiones">
+        <?= CSRF::campoOculto() ?>
                 <input type="hidden" name="accion" value="<?= $dim_editar ? 'editar' : 'crear' ?>">
                 <?php if ($dim_editar): ?>
                 <input type="hidden" name="id" value="<?= (int)$dim_editar['id'] ?>">
@@ -177,6 +179,7 @@
                                             Cancelar
                                         </label>
                                         <form method="POST" action="index.php?ruta=gestionar-dimensiones" style="display:inline;">
+        <?= CSRF::campoOculto() ?>
                                             <input type="hidden" name="accion" value="eliminar">
                                             <input type="hidden" name="id" value="<?= (int)$dim['id'] ?>">
                                             <button type="submit" class="btn li-btn-del" style="font-size:0.85rem;padding:0.5rem 1rem;">

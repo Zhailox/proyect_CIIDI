@@ -11,3 +11,13 @@
 
 # Desactivar la navegación de directorios
 Options -Indexes
+
+#  EXCEPCIÓN: Permitir públicamente solo imágenes y documentos específicos
+<FilesMatch "\.(jpg|jpeg|png|webp|gif|pdf)$">
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Allow from all
+    </IfModule>
+</FilesMatch>

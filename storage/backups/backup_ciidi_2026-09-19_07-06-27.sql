@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict dBfH3fBryngx1ruD9KXyVTehIOqSPudxBhzvEHuBfh52GTkb09pTEVjhQDJXP30
+\restrict XM8yLhhRukakrEhcZGaIuUM9ClIvfQhmC2fOhg0i98teFKfpqBJoy1Espfjg6W1
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -19,187 +19,198 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
-ALTER TABLE ONLY public.usuarios DROP CONSTRAINT usuarios_id_rol_fkey;
-ALTER TABLE ONLY public.registro_actividad DROP CONSTRAINT registro_actividad_id_visitante_fkey;
-ALTER TABLE ONLY public.registro_actividad DROP CONSTRAINT registro_actividad_id_usuario_fkey;
-ALTER TABLE ONLY public.recursos DROP CONSTRAINT recursos_id_tipo_recurso_fkey;
-ALTER TABLE ONLY public.recurso_categorias DROP CONSTRAINT recurso_categorias_id_recurso_fkey;
-ALTER TABLE ONLY public.recurso_categorias DROP CONSTRAINT recurso_categorias_id_categoria_fkey;
-ALTER TABLE ONLY public.recurso_autores DROP CONSTRAINT recurso_autores_id_recurso_fkey;
-ALTER TABLE ONLY public.recurso_autores DROP CONSTRAINT recurso_autores_id_autor_fkey;
-ALTER TABLE ONLY public.proyecto_tutores DROP CONSTRAINT proyecto_tutores_tipo_tutor_id_fkey;
-ALTER TABLE ONLY public.proyecto_tutores DROP CONSTRAINT proyecto_tutores_id_tutor_fkey;
-ALTER TABLE ONLY public.proyecto_tutores DROP CONSTRAINT proyecto_tutores_id_recurso_fkey;
-ALTER TABLE ONLY public.preferencias_usuario DROP CONSTRAINT preferencias_usuario_id_usuario_fkey;
-ALTER TABLE ONLY public.notificaciones DROP CONSTRAINT notificaciones_id_usuario_fkey;
-ALTER TABLE ONLY public.lineas_investigacion DROP CONSTRAINT lineas_investigacion_id_carrera_fkey;
-ALTER TABLE ONLY public.historico_versiones_pst DROP CONSTRAINT fk_version_recurso;
-ALTER TABLE ONLY public.recurso_etiquetas DROP CONSTRAINT fk_recurso_etiqueta;
-ALTER TABLE ONLY public.recurso_clasificaciones DROP CONSTRAINT fk_recurso;
-ALTER TABLE ONLY public.postulaciones_estudiantes DROP CONSTRAINT fk_postulacion_inv;
-ALTER TABLE ONLY public.postulaciones_estudiantes DROP CONSTRAINT fk_postulacion_estudiante;
-ALTER TABLE ONLY public.recurso_clasificaciones DROP CONSTRAINT fk_linea_investigacion;
-ALTER TABLE ONLY public.investigaciones_ofertadas DROP CONSTRAINT fk_inv_profesor;
-ALTER TABLE ONLY public.investigaciones_ofertadas DROP CONSTRAINT fk_inv_linea;
-ALTER TABLE ONLY public.investigaciones_ofertadas DROP CONSTRAINT fk_inv_dimension;
-ALTER TABLE ONLY public.recurso_etiquetas DROP CONSTRAINT fk_etiqueta_recurso;
-ALTER TABLE ONLY public.recurso_clasificaciones DROP CONSTRAINT fk_dimension_operativa;
-ALTER TABLE ONLY public.dimensiones_operativas DROP CONSTRAINT fk_dimension_linea;
-ALTER TABLE ONLY public.detalles_investigaciones DROP CONSTRAINT fk_detalles_investigaciones_recurso;
-ALTER TABLE ONLY public.detalles_investigaciones DROP CONSTRAINT fk_detalles_investigaciones_ofertada;
-ALTER TABLE ONLY public.detalles_articulos DROP CONSTRAINT detalles_revistas_id_recurso_fkey;
-ALTER TABLE ONLY public.detalles_articulos DROP CONSTRAINT detalles_revistas_id_editorial_fkey;
-ALTER TABLE ONLY public.detalles_proyectos DROP CONSTRAINT detalles_proyectos_id_recurso_fkey;
-ALTER TABLE ONLY public.detalles_proyectos DROP CONSTRAINT detalles_proyectos_id_investigacion_padre_fkey;
-ALTER TABLE ONLY public.detalles_proyectos DROP CONSTRAINT detalles_proyectos_id_carrera_fkey;
-ALTER TABLE ONLY public.cursos DROP CONSTRAINT cursos_id_docente_fkey;
-ALTER TABLE ONLY public.auditoria DROP CONSTRAINT auditoria_usuario_responsable_fkey;
-ALTER TABLE ONLY public.accesos_recursos DROP CONSTRAINT accesos_recursos_id_registro_actividad_fkey;
-ALTER TABLE ONLY public.accesos_recursos DROP CONSTRAINT accesos_recursos_id_recurso_fkey;
-DROP TRIGGER tg_auditoria_usuarios_update ON public.usuarios;
-DROP TRIGGER tg_auditoria_usuarios_insert ON public.usuarios;
-DROP TRIGGER tg_auditoria_usuarios_delete ON public.usuarios;
-DROP TRIGGER tg_auditoria_recursos_insert ON public.recursos;
-DROP TRIGGER tg_auditoria_recursos_delete ON public.recursos;
-DROP INDEX public.idx_recurso_clasif_linea;
-DROP INDEX public.idx_recurso_clasif_dimension;
-DROP INDEX public.idx_detalles_inv_ofertada;
-ALTER TABLE ONLY public.visitantes DROP CONSTRAINT visitantes_pkey;
-ALTER TABLE ONLY public.usuarios DROP CONSTRAINT usuarios_pkey;
-ALTER TABLE ONLY public.usuarios DROP CONSTRAINT usuarios_email_key;
-ALTER TABLE ONLY public.usuarios DROP CONSTRAINT usuarios_cedula_key;
-ALTER TABLE ONLY public.postulaciones_estudiantes DROP CONSTRAINT unique_postulacion;
-ALTER TABLE ONLY public.privilegios DROP CONSTRAINT unique_nivel_privilegio;
-ALTER TABLE ONLY public.tutores DROP CONSTRAINT tutores_pkey;
-ALTER TABLE ONLY public.tutores DROP CONSTRAINT tutores_cedula_key;
-ALTER TABLE ONLY public.tipo_tutor DROP CONSTRAINT tipo_tutor_pkey;
-ALTER TABLE ONLY public.tipo_tutor DROP CONSTRAINT tipo_tutor_nombre_key;
-ALTER TABLE ONLY public.tipo_recurso DROP CONSTRAINT tipo_recurso_pkey;
-ALTER TABLE ONLY public.tipo_recurso DROP CONSTRAINT tipo_recurso_nombre_key;
-ALTER TABLE ONLY public.roles DROP CONSTRAINT roles_pkey;
-ALTER TABLE ONLY public.roles DROP CONSTRAINT roles_nombre_key;
-ALTER TABLE ONLY public.registro_actividad DROP CONSTRAINT registro_actividad_pkey;
-ALTER TABLE ONLY public.recursos DROP CONSTRAINT recursos_pkey;
-ALTER TABLE ONLY public.recurso_etiquetas DROP CONSTRAINT recurso_etiquetas_pkey;
-ALTER TABLE ONLY public.recurso_clasificaciones DROP CONSTRAINT recurso_clasificaciones_pkey;
-ALTER TABLE ONLY public.recurso_categorias DROP CONSTRAINT recurso_categorias_pkey;
-ALTER TABLE ONLY public.recurso_autores DROP CONSTRAINT recurso_autores_pkey;
-ALTER TABLE ONLY public.proyecto_tutores DROP CONSTRAINT proyecto_tutores_pkey;
-ALTER TABLE ONLY public.propuestas_empresa DROP CONSTRAINT propuestas_empresa_pkey;
-ALTER TABLE ONLY public.preferencias_usuario DROP CONSTRAINT preferencias_usuario_pkey;
-ALTER TABLE ONLY public.postulaciones_estudiantes DROP CONSTRAINT postulaciones_estudiantes_pkey;
-ALTER TABLE ONLY public.notificaciones DROP CONSTRAINT notificaciones_pkey;
-ALTER TABLE ONLY public.lineas_investigacion DROP CONSTRAINT lineas_investigacion_pkey;
-ALTER TABLE ONLY public.investigaciones_ofertadas DROP CONSTRAINT investigaciones_ofertadas_pkey;
-ALTER TABLE ONLY public.historico_versiones_pst DROP CONSTRAINT historico_versiones_pst_pkey;
-ALTER TABLE ONLY public.etiquetas DROP CONSTRAINT etiquetas_pkey;
-ALTER TABLE ONLY public.etiquetas DROP CONSTRAINT etiquetas_nombre_key;
-ALTER TABLE ONLY public.editoriales DROP CONSTRAINT editoriales_pkey;
-ALTER TABLE ONLY public.editoriales DROP CONSTRAINT editoriales_nombre_key;
-ALTER TABLE ONLY public.dimensiones_operativas DROP CONSTRAINT dimensiones_operativas_pkey;
-ALTER TABLE ONLY public.detalles_articulos DROP CONSTRAINT detalles_revistas_pkey;
-ALTER TABLE ONLY public.detalles_proyectos DROP CONSTRAINT detalles_proyectos_pkey;
-ALTER TABLE ONLY public.detalles_investigaciones DROP CONSTRAINT detalles_investigaciones_pkey;
-ALTER TABLE ONLY public.cursos DROP CONSTRAINT cursos_pkey;
-ALTER TABLE ONLY public.categorias DROP CONSTRAINT categorias_pkey;
-ALTER TABLE ONLY public.categorias DROP CONSTRAINT categorias_nombre_key;
-ALTER TABLE ONLY public.carreras DROP CONSTRAINT carreras_pkey;
-ALTER TABLE ONLY public.carreras DROP CONSTRAINT carreras_nombre_key;
-ALTER TABLE ONLY public.autores DROP CONSTRAINT autores_pkey;
-ALTER TABLE ONLY public.auditoria DROP CONSTRAINT auditoria_pkey;
-ALTER TABLE ONLY public.accesos_recursos DROP CONSTRAINT accesos_recursos_pkey;
-ALTER TABLE public.visitantes ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.usuarios ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.tutores ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.tipo_tutor ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.tipo_recurso ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.roles ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.registro_actividad ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.recursos ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.propuestas_empresa ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.privilegios ALTER COLUMN privilegio_id DROP DEFAULT;
-ALTER TABLE public.postulaciones_estudiantes ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.notificaciones ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.lineas_investigacion ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.investigaciones_ofertadas ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.historico_versiones_pst ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.etiquetas ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.editoriales ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.dimensiones_operativas ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.cursos ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.categorias ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.carreras ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.autores ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.auditoria ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.accesos_recursos ALTER COLUMN id DROP DEFAULT;
-DROP SEQUENCE public.visitantes_id_seq;
-DROP TABLE public.visitantes;
-DROP SEQUENCE public.usuarios_id_seq;
-DROP TABLE public.usuarios;
-DROP SEQUENCE public.tutores_id_seq;
-DROP TABLE public.tutores;
-DROP SEQUENCE public.tipo_tutor_id_seq;
-DROP TABLE public.tipo_tutor;
-DROP SEQUENCE public.tipo_recurso_id_seq;
-DROP TABLE public.tipo_recurso;
-DROP SEQUENCE public.roles_id_seq;
-DROP TABLE public.roles;
-DROP SEQUENCE public.registro_actividad_id_seq;
-DROP TABLE public.registro_actividad;
-DROP SEQUENCE public.recursos_id_seq;
-DROP TABLE public.recursos;
-DROP TABLE public.recurso_etiquetas;
-DROP TABLE public.recurso_clasificaciones;
-DROP TABLE public.recurso_categorias;
-DROP TABLE public.recurso_autores;
-DROP TABLE public.proyecto_tutores;
-DROP SEQUENCE public.propuestas_empresa_id_seq;
-DROP TABLE public.propuestas_empresa;
-DROP SEQUENCE public.privilegios_privilegio_id_seq;
-DROP TABLE public.privilegios;
-DROP TABLE public.preferencias_usuario;
-DROP SEQUENCE public.postulaciones_estudiantes_id_seq;
-DROP TABLE public.postulaciones_estudiantes;
-DROP SEQUENCE public.notificaciones_id_seq;
-DROP TABLE public.notificaciones;
-DROP SEQUENCE public.lineas_investigacion_id_seq;
-DROP TABLE public.lineas_investigacion;
-DROP SEQUENCE public.investigaciones_ofertadas_id_seq;
-DROP TABLE public.investigaciones_ofertadas;
-DROP SEQUENCE public.historico_versiones_pst_id_seq;
-DROP TABLE public.historico_versiones_pst;
-DROP SEQUENCE public.etiquetas_id_seq;
-DROP TABLE public.etiquetas;
-DROP SEQUENCE public.editoriales_id_seq;
-DROP TABLE public.editoriales;
-DROP SEQUENCE public.dimensiones_operativas_id_seq;
-DROP TABLE public.dimensiones_operativas;
-DROP TABLE public.detalles_proyectos;
-DROP TABLE public.detalles_investigaciones;
-DROP TABLE public.detalles_articulos;
-DROP SEQUENCE public.cursos_id_seq;
-DROP TABLE public.cursos;
-DROP SEQUENCE public.categorias_id_seq;
-DROP TABLE public.categorias;
-DROP SEQUENCE public.carreras_id_seq;
-DROP TABLE public.carreras;
-DROP SEQUENCE public.autores_id_seq;
-DROP TABLE public.autores;
-DROP SEQUENCE public.auditoria_id_seq;
-DROP TABLE public.auditoria;
-DROP SEQUENCE public.accesos_recursos_id_seq;
-DROP TABLE public.accesos_recursos;
-DROP PROCEDURE public.insertarproyectoaleatorio(IN fecha_creada timestamp without time zone);
-DROP FUNCTION public.fn_auditoria_usuarios();
-DROP FUNCTION public.fn_auditoria_recursos();
-DROP TYPE public.tipo_pregunta_enum;
-DROP TYPE public.tipo_interaccion_usuario_enum;
-DROP TYPE public.tipo_interaccion_enum;
-DROP TYPE public.nivel_academico_enum;
-DROP TYPE public.estado_propuesta_enum;
-DROP TYPE public.estado_curso_enum;
-DROP TYPE public.accion_auditoria_enum;
-DROP TYPE public.accion_acceso_enum;
+ALTER TABLE IF EXISTS ONLY public.usuarios DROP CONSTRAINT IF EXISTS usuarios_id_rol_fkey;
+ALTER TABLE IF EXISTS ONLY public.registro_actividad DROP CONSTRAINT IF EXISTS registro_actividad_id_visitante_fkey;
+ALTER TABLE IF EXISTS ONLY public.registro_actividad DROP CONSTRAINT IF EXISTS registro_actividad_id_usuario_fkey;
+ALTER TABLE IF EXISTS ONLY public.recursos DROP CONSTRAINT IF EXISTS recursos_id_tipo_recurso_fkey;
+ALTER TABLE IF EXISTS ONLY public.recurso_categorias DROP CONSTRAINT IF EXISTS recurso_categorias_id_recurso_fkey;
+ALTER TABLE IF EXISTS ONLY public.recurso_categorias DROP CONSTRAINT IF EXISTS recurso_categorias_id_categoria_fkey;
+ALTER TABLE IF EXISTS ONLY public.recurso_autores DROP CONSTRAINT IF EXISTS recurso_autores_id_recurso_fkey;
+ALTER TABLE IF EXISTS ONLY public.recurso_autores DROP CONSTRAINT IF EXISTS recurso_autores_id_autor_fkey;
+ALTER TABLE IF EXISTS ONLY public.proyecto_tutores DROP CONSTRAINT IF EXISTS proyecto_tutores_tipo_tutor_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.proyecto_tutores DROP CONSTRAINT IF EXISTS proyecto_tutores_id_tutor_fkey;
+ALTER TABLE IF EXISTS ONLY public.proyecto_tutores DROP CONSTRAINT IF EXISTS proyecto_tutores_id_recurso_fkey;
+ALTER TABLE IF EXISTS ONLY public.preferencias_usuario DROP CONSTRAINT IF EXISTS preferencias_usuario_id_usuario_fkey;
+ALTER TABLE IF EXISTS ONLY public.notificaciones DROP CONSTRAINT IF EXISTS notificaciones_id_usuario_fkey;
+ALTER TABLE IF EXISTS ONLY public.lineas_investigacion DROP CONSTRAINT IF EXISTS lineas_investigacion_id_carrera_fkey;
+ALTER TABLE IF EXISTS ONLY public.historico_versiones_pst DROP CONSTRAINT IF EXISTS fk_version_recurso;
+ALTER TABLE IF EXISTS ONLY public.recurso_etiquetas DROP CONSTRAINT IF EXISTS fk_recurso_etiqueta;
+ALTER TABLE IF EXISTS ONLY public.recurso_clasificaciones DROP CONSTRAINT IF EXISTS fk_recurso;
+ALTER TABLE IF EXISTS ONLY public.postulaciones_estudiantes DROP CONSTRAINT IF EXISTS fk_postulacion_inv;
+ALTER TABLE IF EXISTS ONLY public.postulaciones_estudiantes DROP CONSTRAINT IF EXISTS fk_postulacion_estudiante;
+ALTER TABLE IF EXISTS ONLY public.recurso_clasificaciones DROP CONSTRAINT IF EXISTS fk_linea_investigacion;
+ALTER TABLE IF EXISTS ONLY public.investigaciones_ofertadas DROP CONSTRAINT IF EXISTS fk_inv_profesor;
+ALTER TABLE IF EXISTS ONLY public.investigaciones_ofertadas DROP CONSTRAINT IF EXISTS fk_inv_linea;
+ALTER TABLE IF EXISTS ONLY public.investigaciones_ofertadas DROP CONSTRAINT IF EXISTS fk_inv_dimension;
+ALTER TABLE IF EXISTS ONLY public.recurso_etiquetas DROP CONSTRAINT IF EXISTS fk_etiqueta_recurso;
+ALTER TABLE IF EXISTS ONLY public.recurso_clasificaciones DROP CONSTRAINT IF EXISTS fk_dimension_operativa;
+ALTER TABLE IF EXISTS ONLY public.dimensiones_operativas DROP CONSTRAINT IF EXISTS fk_dimension_linea;
+ALTER TABLE IF EXISTS ONLY public.detalles_investigaciones DROP CONSTRAINT IF EXISTS fk_detalles_investigaciones_recurso;
+ALTER TABLE IF EXISTS ONLY public.detalles_investigaciones DROP CONSTRAINT IF EXISTS fk_detalles_investigaciones_ofertada;
+ALTER TABLE IF EXISTS ONLY public.detalles_articulos DROP CONSTRAINT IF EXISTS detalles_revistas_id_recurso_fkey;
+ALTER TABLE IF EXISTS ONLY public.detalles_articulos DROP CONSTRAINT IF EXISTS detalles_revistas_id_editorial_fkey;
+ALTER TABLE IF EXISTS ONLY public.detalles_proyectos DROP CONSTRAINT IF EXISTS detalles_proyectos_id_recurso_fkey;
+ALTER TABLE IF EXISTS ONLY public.detalles_proyectos DROP CONSTRAINT IF EXISTS detalles_proyectos_id_investigacion_padre_fkey;
+ALTER TABLE IF EXISTS ONLY public.detalles_proyectos DROP CONSTRAINT IF EXISTS detalles_proyectos_id_carrera_fkey;
+ALTER TABLE IF EXISTS ONLY public.cursos DROP CONSTRAINT IF EXISTS cursos_id_docente_fkey;
+ALTER TABLE IF EXISTS ONLY public.auditoria DROP CONSTRAINT IF EXISTS auditoria_usuario_responsable_fkey;
+ALTER TABLE IF EXISTS ONLY public.accesos_recursos DROP CONSTRAINT IF EXISTS accesos_recursos_id_registro_actividad_fkey;
+ALTER TABLE IF EXISTS ONLY public.accesos_recursos DROP CONSTRAINT IF EXISTS accesos_recursos_id_recurso_fkey;
+DROP TRIGGER IF EXISTS tg_auditoria_usuarios_update ON public.usuarios;
+DROP TRIGGER IF EXISTS tg_auditoria_usuarios_insert ON public.usuarios;
+DROP TRIGGER IF EXISTS tg_auditoria_usuarios_delete ON public.usuarios;
+DROP TRIGGER IF EXISTS tg_auditoria_recursos_insert ON public.recursos;
+DROP TRIGGER IF EXISTS tg_auditoria_recursos_delete ON public.recursos;
+DROP INDEX IF EXISTS public.idx_recurso_clasif_linea;
+DROP INDEX IF EXISTS public.idx_recurso_clasif_dimension;
+DROP INDEX IF EXISTS public.idx_detalles_inv_ofertada;
+ALTER TABLE IF EXISTS ONLY public.visitantes DROP CONSTRAINT IF EXISTS visitantes_pkey;
+ALTER TABLE IF EXISTS ONLY public.usuarios DROP CONSTRAINT IF EXISTS usuarios_pkey;
+ALTER TABLE IF EXISTS ONLY public.usuarios DROP CONSTRAINT IF EXISTS usuarios_email_key;
+ALTER TABLE IF EXISTS ONLY public.usuarios DROP CONSTRAINT IF EXISTS usuarios_cedula_key;
+ALTER TABLE IF EXISTS ONLY public.postulaciones_estudiantes DROP CONSTRAINT IF EXISTS unique_postulacion;
+ALTER TABLE IF EXISTS ONLY public.privilegios DROP CONSTRAINT IF EXISTS unique_nivel_privilegio;
+ALTER TABLE IF EXISTS ONLY public.tutores DROP CONSTRAINT IF EXISTS tutores_pkey;
+ALTER TABLE IF EXISTS ONLY public.tutores DROP CONSTRAINT IF EXISTS tutores_cedula_key;
+ALTER TABLE IF EXISTS ONLY public.tipo_tutor DROP CONSTRAINT IF EXISTS tipo_tutor_pkey;
+ALTER TABLE IF EXISTS ONLY public.tipo_tutor DROP CONSTRAINT IF EXISTS tipo_tutor_nombre_key;
+ALTER TABLE IF EXISTS ONLY public.tipo_recurso DROP CONSTRAINT IF EXISTS tipo_recurso_pkey;
+ALTER TABLE IF EXISTS ONLY public.tipo_recurso DROP CONSTRAINT IF EXISTS tipo_recurso_nombre_key;
+ALTER TABLE IF EXISTS ONLY public.telemetria_cache DROP CONSTRAINT IF EXISTS telemetria_cache_pkey;
+ALTER TABLE IF EXISTS ONLY public.system_audit_log DROP CONSTRAINT IF EXISTS system_audit_log_pkey;
+ALTER TABLE IF EXISTS ONLY public.roles DROP CONSTRAINT IF EXISTS roles_pkey;
+ALTER TABLE IF EXISTS ONLY public.roles DROP CONSTRAINT IF EXISTS roles_nombre_key;
+ALTER TABLE IF EXISTS ONLY public.registro_actividad DROP CONSTRAINT IF EXISTS registro_actividad_pkey;
+ALTER TABLE IF EXISTS ONLY public.recursos DROP CONSTRAINT IF EXISTS recursos_pkey;
+ALTER TABLE IF EXISTS ONLY public.recurso_etiquetas DROP CONSTRAINT IF EXISTS recurso_etiquetas_pkey;
+ALTER TABLE IF EXISTS ONLY public.recurso_clasificaciones DROP CONSTRAINT IF EXISTS recurso_clasificaciones_pkey;
+ALTER TABLE IF EXISTS ONLY public.recurso_categorias DROP CONSTRAINT IF EXISTS recurso_categorias_pkey;
+ALTER TABLE IF EXISTS ONLY public.recurso_autores DROP CONSTRAINT IF EXISTS recurso_autores_pkey;
+ALTER TABLE IF EXISTS ONLY public.proyecto_tutores DROP CONSTRAINT IF EXISTS proyecto_tutores_pkey;
+ALTER TABLE IF EXISTS ONLY public.propuestas_empresa DROP CONSTRAINT IF EXISTS propuestas_empresa_pkey;
+ALTER TABLE IF EXISTS ONLY public.propuestas_empresa DROP CONSTRAINT IF EXISTS propuestas_empresa_codigo_seguimiento_key;
+ALTER TABLE IF EXISTS ONLY public.preferencias_usuario DROP CONSTRAINT IF EXISTS preferencias_usuario_pkey;
+ALTER TABLE IF EXISTS ONLY public.postulaciones_estudiantes DROP CONSTRAINT IF EXISTS postulaciones_estudiantes_pkey;
+ALTER TABLE IF EXISTS ONLY public.password_resets DROP CONSTRAINT IF EXISTS password_resets_pkey;
+ALTER TABLE IF EXISTS ONLY public.notificaciones DROP CONSTRAINT IF EXISTS notificaciones_pkey;
+ALTER TABLE IF EXISTS ONLY public.matriz_rbac DROP CONSTRAINT IF EXISTS matriz_rbac_pkey;
+ALTER TABLE IF EXISTS ONLY public.lineas_investigacion DROP CONSTRAINT IF EXISTS lineas_investigacion_pkey;
+ALTER TABLE IF EXISTS ONLY public.investigaciones_ofertadas DROP CONSTRAINT IF EXISTS investigaciones_ofertadas_pkey;
+ALTER TABLE IF EXISTS ONLY public.historico_versiones_pst DROP CONSTRAINT IF EXISTS historico_versiones_pst_pkey;
+ALTER TABLE IF EXISTS ONLY public.etiquetas DROP CONSTRAINT IF EXISTS etiquetas_pkey;
+ALTER TABLE IF EXISTS ONLY public.etiquetas DROP CONSTRAINT IF EXISTS etiquetas_nombre_key;
+ALTER TABLE IF EXISTS ONLY public.editoriales DROP CONSTRAINT IF EXISTS editoriales_pkey;
+ALTER TABLE IF EXISTS ONLY public.editoriales DROP CONSTRAINT IF EXISTS editoriales_nombre_key;
+ALTER TABLE IF EXISTS ONLY public.dimensiones_operativas DROP CONSTRAINT IF EXISTS dimensiones_operativas_pkey;
+ALTER TABLE IF EXISTS ONLY public.detalles_articulos DROP CONSTRAINT IF EXISTS detalles_revistas_pkey;
+ALTER TABLE IF EXISTS ONLY public.detalles_proyectos DROP CONSTRAINT IF EXISTS detalles_proyectos_pkey;
+ALTER TABLE IF EXISTS ONLY public.detalles_investigaciones DROP CONSTRAINT IF EXISTS detalles_investigaciones_pkey;
+ALTER TABLE IF EXISTS ONLY public.cursos DROP CONSTRAINT IF EXISTS cursos_pkey;
+ALTER TABLE IF EXISTS ONLY public.categorias DROP CONSTRAINT IF EXISTS categorias_pkey;
+ALTER TABLE IF EXISTS ONLY public.categorias DROP CONSTRAINT IF EXISTS categorias_nombre_key;
+ALTER TABLE IF EXISTS ONLY public.carreras DROP CONSTRAINT IF EXISTS carreras_pkey;
+ALTER TABLE IF EXISTS ONLY public.carreras DROP CONSTRAINT IF EXISTS carreras_nombre_key;
+ALTER TABLE IF EXISTS ONLY public.autores DROP CONSTRAINT IF EXISTS autores_pkey;
+ALTER TABLE IF EXISTS ONLY public.auditoria DROP CONSTRAINT IF EXISTS auditoria_pkey;
+ALTER TABLE IF EXISTS ONLY public.accesos_recursos DROP CONSTRAINT IF EXISTS accesos_recursos_pkey;
+ALTER TABLE IF EXISTS public.visitantes ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.usuarios ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.tutores ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.tipo_tutor ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.tipo_recurso ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.roles ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.registro_actividad ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.recursos ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.propuestas_empresa ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.privilegios ALTER COLUMN privilegio_id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.postulaciones_estudiantes ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.password_resets ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.notificaciones ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.lineas_investigacion ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.investigaciones_ofertadas ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.historico_versiones_pst ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.etiquetas ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.editoriales ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.dimensiones_operativas ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.cursos ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.categorias ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.carreras ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.autores ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.auditoria ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.accesos_recursos ALTER COLUMN id DROP DEFAULT;
+DROP SEQUENCE IF EXISTS public.visitantes_id_seq;
+DROP TABLE IF EXISTS public.visitantes;
+DROP SEQUENCE IF EXISTS public.usuarios_id_seq;
+DROP TABLE IF EXISTS public.usuarios;
+DROP SEQUENCE IF EXISTS public.tutores_id_seq;
+DROP TABLE IF EXISTS public.tutores;
+DROP SEQUENCE IF EXISTS public.tipo_tutor_id_seq;
+DROP TABLE IF EXISTS public.tipo_tutor;
+DROP SEQUENCE IF EXISTS public.tipo_recurso_id_seq;
+DROP TABLE IF EXISTS public.tipo_recurso;
+DROP TABLE IF EXISTS public.telemetria_cache;
+DROP TABLE IF EXISTS public.system_audit_log;
+DROP SEQUENCE IF EXISTS public.roles_id_seq;
+DROP TABLE IF EXISTS public.roles;
+DROP SEQUENCE IF EXISTS public.registro_actividad_id_seq;
+DROP TABLE IF EXISTS public.registro_actividad;
+DROP SEQUENCE IF EXISTS public.recursos_id_seq;
+DROP TABLE IF EXISTS public.recursos;
+DROP TABLE IF EXISTS public.recurso_etiquetas;
+DROP TABLE IF EXISTS public.recurso_clasificaciones;
+DROP TABLE IF EXISTS public.recurso_categorias;
+DROP TABLE IF EXISTS public.recurso_autores;
+DROP TABLE IF EXISTS public.proyecto_tutores;
+DROP SEQUENCE IF EXISTS public.propuestas_empresa_id_seq;
+DROP TABLE IF EXISTS public.propuestas_empresa;
+DROP SEQUENCE IF EXISTS public.privilegios_privilegio_id_seq;
+DROP TABLE IF EXISTS public.privilegios;
+DROP TABLE IF EXISTS public.preferencias_usuario;
+DROP SEQUENCE IF EXISTS public.postulaciones_estudiantes_id_seq;
+DROP TABLE IF EXISTS public.postulaciones_estudiantes;
+DROP SEQUENCE IF EXISTS public.password_resets_id_seq;
+DROP TABLE IF EXISTS public.password_resets;
+DROP SEQUENCE IF EXISTS public.notificaciones_id_seq;
+DROP TABLE IF EXISTS public.notificaciones;
+DROP TABLE IF EXISTS public.matriz_rbac;
+DROP SEQUENCE IF EXISTS public.lineas_investigacion_id_seq;
+DROP TABLE IF EXISTS public.lineas_investigacion;
+DROP SEQUENCE IF EXISTS public.investigaciones_ofertadas_id_seq;
+DROP TABLE IF EXISTS public.investigaciones_ofertadas;
+DROP SEQUENCE IF EXISTS public.historico_versiones_pst_id_seq;
+DROP TABLE IF EXISTS public.historico_versiones_pst;
+DROP SEQUENCE IF EXISTS public.etiquetas_id_seq;
+DROP TABLE IF EXISTS public.etiquetas;
+DROP SEQUENCE IF EXISTS public.editoriales_id_seq;
+DROP TABLE IF EXISTS public.editoriales;
+DROP SEQUENCE IF EXISTS public.dimensiones_operativas_id_seq;
+DROP TABLE IF EXISTS public.dimensiones_operativas;
+DROP TABLE IF EXISTS public.detalles_proyectos;
+DROP TABLE IF EXISTS public.detalles_investigaciones;
+DROP TABLE IF EXISTS public.detalles_articulos;
+DROP SEQUENCE IF EXISTS public.cursos_id_seq;
+DROP TABLE IF EXISTS public.cursos;
+DROP SEQUENCE IF EXISTS public.categorias_id_seq;
+DROP TABLE IF EXISTS public.categorias;
+DROP SEQUENCE IF EXISTS public.carreras_id_seq;
+DROP TABLE IF EXISTS public.carreras;
+DROP SEQUENCE IF EXISTS public.autores_id_seq;
+DROP TABLE IF EXISTS public.autores;
+DROP SEQUENCE IF EXISTS public.auditoria_id_seq;
+DROP TABLE IF EXISTS public.auditoria;
+DROP SEQUENCE IF EXISTS public.accesos_recursos_id_seq;
+DROP TABLE IF EXISTS public.accesos_recursos;
+DROP PROCEDURE IF EXISTS public.insertarproyectoaleatorio(IN fecha_creada timestamp without time zone);
+DROP FUNCTION IF EXISTS public.fn_auditoria_usuarios();
+DROP FUNCTION IF EXISTS public.fn_auditoria_recursos();
+DROP TYPE IF EXISTS public.tipo_pregunta_enum;
+DROP TYPE IF EXISTS public.tipo_interaccion_usuario_enum;
+DROP TYPE IF EXISTS public.tipo_interaccion_enum;
+DROP TYPE IF EXISTS public.nivel_academico_enum;
+DROP TYPE IF EXISTS public.estado_propuesta_enum;
+DROP TYPE IF EXISTS public.estado_curso_enum;
+DROP TYPE IF EXISTS public.accion_auditoria_enum;
+DROP TYPE IF EXISTS public.accion_acceso_enum;
 --
 -- Name: accion_acceso_enum; Type: TYPE; Schema: public; Owner: postgres
 --
@@ -740,7 +751,8 @@ CREATE TABLE public.dimensiones_operativas (
     id integer NOT NULL,
     id_linea integer NOT NULL,
     nombre character varying(150) NOT NULL,
-    descripcion text
+    descripcion text,
+    activo boolean DEFAULT true
 );
 
 
@@ -927,7 +939,8 @@ CREATE TABLE public.lineas_investigacion (
     id integer NOT NULL,
     nombre character varying(255) NOT NULL,
     id_carrera integer NOT NULL,
-    descripcion text
+    descripcion text,
+    activo boolean DEFAULT true
 );
 
 
@@ -954,6 +967,19 @@ ALTER SEQUENCE public.lineas_investigacion_id_seq OWNER TO postgres;
 
 ALTER SEQUENCE public.lineas_investigacion_id_seq OWNED BY public.lineas_investigacion.id;
 
+
+--
+-- Name: matriz_rbac; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.matriz_rbac (
+    nivel_privilegio integer NOT NULL,
+    modulo character varying(100) NOT NULL,
+    permisos jsonb
+);
+
+
+ALTER TABLE public.matriz_rbac OWNER TO postgres;
 
 --
 -- Name: notificaciones; Type: TABLE; Schema: public; Owner: postgres
@@ -992,6 +1018,44 @@ ALTER SEQUENCE public.notificaciones_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE public.notificaciones_id_seq OWNED BY public.notificaciones.id;
+
+
+--
+-- Name: password_resets; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.password_resets (
+    id integer NOT NULL,
+    email character varying(100) NOT NULL,
+    token_hash character varying(255) NOT NULL,
+    expiracion timestamp without time zone NOT NULL,
+    utilizado boolean DEFAULT false,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.password_resets OWNER TO postgres;
+
+--
+-- Name: password_resets_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.password_resets_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.password_resets_id_seq OWNER TO postgres;
+
+--
+-- Name: password_resets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.password_resets_id_seq OWNED BY public.password_resets.id;
 
 
 --
@@ -1098,8 +1162,8 @@ CREATE TABLE public.propuestas_empresa (
     estado public.estado_propuesta_enum DEFAULT 'pendiente'::public.estado_propuesta_enum,
     fecha_creacion timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     nivel_trayecto character varying(50),
-    motivo_rechazo text,
-    codigo_seguimiento character varying(255)
+    codigo_seguimiento character varying(20),
+    motivo_rechazo text
 );
 
 
@@ -1302,6 +1366,38 @@ ALTER SEQUENCE public.roles_id_seq OWNED BY public.roles.id;
 
 
 --
+-- Name: system_audit_log; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.system_audit_log (
+    id character varying(50) NOT NULL,
+    fecha_hora timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    nivel character varying(20),
+    modulo character varying(100),
+    accion character varying(100),
+    detalles text,
+    responsable character varying(150),
+    ip character varying(45),
+    hash_anterior character varying(64),
+    hash_integridad character varying(64)
+);
+
+
+ALTER TABLE public.system_audit_log OWNER TO postgres;
+
+--
+-- Name: telemetria_cache; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.telemetria_cache (
+    id integer DEFAULT 1 NOT NULL,
+    datos jsonb
+);
+
+
+ALTER TABLE public.telemetria_cache OWNER TO postgres;
+
+--
 -- Name: tipo_recurso; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1425,35 +1521,8 @@ CREATE TABLE public.usuarios (
     activation_token character varying(255) DEFAULT NULL::character varying
 );
 
+
 ALTER TABLE public.usuarios OWNER TO postgres;
-
---
--- Name: password_resets; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.password_resets (
-    id integer NOT NULL,
-    email character varying(100) NOT NULL,
-    token_hash character varying(255) NOT NULL,
-    expiracion timestamp without time zone NOT NULL,
-    utilizado boolean DEFAULT false,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-ALTER TABLE public.password_resets OWNER TO postgres;
-
-CREATE SEQUENCE public.password_resets_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-ALTER SEQUENCE public.password_resets_id_seq OWNER TO postgres;
-ALTER SEQUENCE public.password_resets_id_seq OWNED BY public.password_resets.id;
-ALTER TABLE ONLY public.password_resets ALTER COLUMN id SET DEFAULT nextval('public.password_resets_id_seq'::regclass);
-ALTER TABLE ONLY public.password_resets ADD CONSTRAINT password_resets_pkey PRIMARY KEY (id);
 
 --
 -- Name: usuarios_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1602,6 +1671,13 @@ ALTER TABLE ONLY public.lineas_investigacion ALTER COLUMN id SET DEFAULT nextval
 --
 
 ALTER TABLE ONLY public.notificaciones ALTER COLUMN id SET DEFAULT nextval('public.notificaciones_id_seq'::regclass);
+
+
+--
+-- Name: password_resets id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.password_resets ALTER COLUMN id SET DEFAULT nextval('public.password_resets_id_seq'::regclass);
 
 
 --
@@ -1952,6 +2028,7 @@ INSERT INTO public.auditoria VALUES (299, 'usuarios', 13, 'UPDATE', NULL, NULL, 
 INSERT INTO public.auditoria VALUES (300, 'usuarios', 13, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 3, "nombre": "Cepillíno"}', '{"activo": false, "id_rol": 3, "nombre": "Cepillíno"}', '2026-09-11 22:50:16.912961');
 INSERT INTO public.auditoria VALUES (301, 'usuarios', 13, 'UPDATE', NULL, NULL, '{"activo": false, "id_rol": 3, "nombre": "Cepillíno"}', '{"activo": true, "id_rol": 3, "nombre": "Cepillíno"}', '2026-09-11 22:50:18.90332');
 INSERT INTO public.auditoria VALUES (303, 'usuarios', 15, 'INSERT', NULL, NULL, NULL, '{"email": "DIOS@gmail.com", "id_rol": 1, "nombre": "DIOS"}', '2026-09-13 23:57:20.408394');
+INSERT INTO public.auditoria VALUES (304, 'usuarios', 16, 'INSERT', NULL, NULL, NULL, '{"email": "orlando5711666@gmail.com", "id_rol": 3, "nombre": "no soy miguel"}', '2026-09-16 22:56:54.613604');
 
 
 --
@@ -2089,6 +2166,7 @@ INSERT INTO public.cursos VALUES (2, 4, 'Fundamentos de Inteligencia Artificial'
 INSERT INTO public.cursos VALUES (4, 1, 'tamaños de jose', 'los pn que jose ha tenido segun tamaño', NULL, 'borrador', 69.96, '2026-04-03 04:40:03', '2026-09-02 21:38:28.289267');
 INSERT INTO public.cursos VALUES (3, 10, 'Normas APA y Redacción Científica', 'Aprende a redactar documentos académicos siguiendo las normas APA 7ma edición. Ideal para la elaboración de tu Proyecto Socio-Tecnológico.', NULL, 'archivado', 67.00, '2026-04-03 03:28:04', '2026-09-02 21:39:04.419332');
 INSERT INTO public.cursos VALUES (6, 9, 'e', 'e', NULL, 'publicado', 70.00, '2026-09-02 21:40:20.207518', '2026-09-02 21:40:27.256632');
+INSERT INTO public.cursos VALUES (7, 7, 'e', 'e', 'public/uploads/cursos/curso_1789800856_34a50e7c.webp', 'borrador', 70.00, '2026-09-19 02:54:16.395792', '2026-09-19 02:54:16.395792');
 
 
 --
@@ -2163,34 +2241,34 @@ INSERT INTO public.detalles_proyectos VALUES (127, '2026-09-02', 'Pregrado', 'Au
 INSERT INTO public.detalles_proyectos VALUES (128, '2026-09-02', 'Pregrado', 'En el ámbito de la seguridad informática, la autenticación basada en contraseñas sigue siendo uno de los eslabones más vulnerables en la protección de sistemas y datos, el presente informe documenta un ejercicio práctico de auditoría de credenciales, cuyo objetivo principal es demostrar la susceptibilidad de las contraseñas débiles ante técnicas de criptoanálisis, específicamente mediante ataques de diccionario.', 1, 'Comunidad / Organización No Específicamente Nombrada', 'Waos', '2026-09-02 17:22:38.760639', NULL, 'Trayecto I', NULL, NULL, true);
 INSERT INTO public.detalles_proyectos VALUES (149, '2026-09-11', 'Pregrado', 'El Proyecto Socio Tecnológico realizado en el Departamento de Sistemas del Centro Clínico "María Edelmira Araujo", S.A. tiene como objetivo general ofrecer soporte técnico a usuarios y equipos de computación, utilizando mantenimiento correctivo y preventivo tanto a nivel de software como de hardware. Para la implementación del proyecto, se utilizarán técnicas de entrevista y observación como estrategias de recolección de datos, además de la realización de un inventario. Se espera mejorar la eficiencia y productividad del departamento a través de estas acciones', 1, 'Centro Clínico “María Edelmira Araujo”, S', 'Soporte técnico, correctivo, preventivo, software, hardware', '2026-09-10 21:02:32.217243', NULL, 'Trayecto I', NULL, 'Proporcionar un Soporte Técnico a Usuarios y Equipos de Computación en el Centro Clínico “María Edelmira Araujo”, S.A.', true);
 INSERT INTO public.detalles_proyectos VALUES (132, '2026-09-04', 'Pregrado', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry". Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP', '2026-09-04 10:35:11.057661', NULL, 'Trayecto I', NULL, 'Desarrollar un Sistema Integral de Gestión Documentos Académicos, basado en una arquitectura modular, para la automatización de la búsqueda híbrida de información y la centralización de recursos académicos en beneficio de la comunidad del PNF en Informática.', true);
-INSERT INTO public.detalles_proyectos VALUES (147, '2026-09-11', 'Pregrado', 'Ofrecer a nuestros clientes accesorios para dispositivos móviles de calidad, brindando soluciones prácticas y accesibles que protejan, complementen y mejoren la experiencia diaria con su celular, a través de una atención personalizada y un catálogo de productos variado que se adapte a las necesidades de cada usuario.', 1, 'Smarthphone World C', '', '2026-09-10 21:02:31.80467', NULL, 'Trayecto I', NULL, 'Desarrollar un Sistema Integral de Gestión Comercial y Tienda Virtual para Smartphone World C.A., compuesto por un módulo de gestión local y una plataforma de comercio electrónico interconectados mediante una base de datos centralizada en la nube, con el fin de automatizar los procesos internos de inventario y ventas, y ampliar el alcance comercial de la empresa hacia el entorno digital.', true);
 INSERT INTO public.detalles_proyectos VALUES (148, '2026-09-11', 'Pregrado', 'El proyecto socio tecnológico tuvo como propósito desarrollar una Aplicación Web Móvil para el proceso de ascensos en la Coordinación de Formación Permanente y Docencia de la UPTTMBI. Se destaca la importancia que tienen las aplicaciones web en la vida cotidiana, dado que facilitan obtener, modificar información inmediata, dado que las mismas se ejecutan a través de internet, los datos son procesados y almacenados dentro de la web. La metodología utilizada fue programación extrema, metodología ágil de gestión de proyectos que se centra en la velocidad y la simplicidad con ciclos de desarrollo cortos y con menos documentación. De acuerdo con los objetivos establecidos, se utilizó la entrevista, encuesta, reuniones con los actores para desarrollar las historias de usuarios, se planifico, diseño, programo y realizaron pruebas a la aplicación. Como producto resultante se desarrolló una App móvil para el apoyo de los docentes en la solicitud de los procesos manejados en la Coordinación de Formación permanente y docente de la UPTTMBI, utilizando tecnologías de software libre como son PHP, Java y como gestor de base de datos se utilizó MySQL. La aplicación web móvil tiene como finalidad automatizar procesos que permitan una adecuada administración en lo referente al proceso de ascenso y solicitud de bono didáctico por parte de los docentes de la UPTTMBI, ayudando a la coordinación obtener información inmediata en tiempo real con resultados favorables, que contribuyen al desarrollo óptimo de los procesos y dando un mejor control a las necesidades de los docentes', 1, 'Coordinación de Formación Permanente y Docencia de la Universidad Politécnica Territorial del estado Trujillo Mario Briceño Iragorry', 'App, Aplicación móvil, Coordinación, Ascensos', '2026-09-10 21:02:31.979685', NULL, 'Trayecto I', NULL, 'Crear y fortalecer las condiciones intelectuales y materiales para propiciar, generar, coordinar, diseminar y difundir conocimiento científico y cultural que responda al perfeccionamiento de las y los docentes en servicio, que contribuyan de manera sustancial al mejoramiento, desarrollo y crecimiento académico.', true);
+INSERT INTO public.detalles_proyectos VALUES (147, '2026-09-11', 'Pregrado', 'Ofrecer a nuestros clientes accesorios para dispositivos móviles de calidad, brindando soluciones prácticas y accesibles que protejan, complementen y mejoren la experiencia diaria con su celular, a través de una atención personalizada y un catálogo de productos variado que se adapte a las necesidades de cada usuario.', 1, 'Smarthphone World C', '', '2026-09-10 21:02:31.80467', NULL, 'Trayecto I', NULL, 'Desarrollar un Sistema Integral de Gestión Comercial y Tienda Virtual para Smartphone World C.A., compuesto por un módulo de gestión local y una plataforma de comercio electrónico interconectados mediante una base de datos centralizada en la nube, con el fin de automatizar los procesos internos de inventario y ventas, y ampliar el alcance comercial de la empresa hacia el entorno digital.', true);
 
 
 --
 -- Data for Name: dimensiones_operativas; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.dimensiones_operativas VALUES (5, 7, 'Sistemas de informaci¢n tradicionales', 'Est  constituido por un conjunto de elementos de naturaleza diversa que incluyen: equipos, recursos humanos (usuario), datos e informaci¢n y programas y aplicaciones; que interact£an entre si dentro de una organizaci¢n con el fin de apoyar las actividades y funciones que cumplan con los objetivos propuestos de la misma.');
-INSERT INTO public.dimensiones_operativas VALUES (6, 7, 'Sistemas de informaci¢n con propiedades geogr ficas', 'Son sistemas que permiten evaluar propiedades geogr ficas de un entorno, generando informaci¢n referente a una entidad geogr fica desplegando im genes e informaci¢n en un hipermapa.');
-INSERT INTO public.dimensiones_operativas VALUES (7, 7, 'Sistemas de informaci¢n web', 'Son primeramente sistemas de informaci¢n que para su desarrollo se debe considerar la misma disciplina de construcci¢n de sistemas de informaci¢n no Web exitosos y de calidad, sirven para integrar procesos o sistemas dentro de una sola interfaz y a ellos se puede acceder por medio de una Intranet local o por la red global Internet van m s all  de ser un conjunto de p ginas Web.');
-INSERT INTO public.dimensiones_operativas VALUES (8, 7, 'Sistemas de informaci¢n colaborativos', 'Son sistemas donde se pueden expresar ideas, experiencias, definiciones, entre otros; los cuales constituyen una red de distribuci¢n de la informaci¢n en una organizaci¢n o entre organizaciones.');
-INSERT INTO public.dimensiones_operativas VALUES (9, 7, 'Gesti¢n tecnol¢gica', 'Procesos relacionados con la implantaci¢n de sistemas, tales como, verificar e instalar nuevos equipos, entrenar a los usuarios, instalar nuevas aplicaciones, agregar nuevos m¢dulos, adem s de comprobar el correcto funcionamiento de los componentes de un sistema de informaci¢n que puede abarcar auditor¡as, t‚cnicas de control, evaluaci¢n de la calidad.');
-INSERT INTO public.dimensiones_operativas VALUES (10, 8, 'Software educativo', 'Programas para el computador creados con la finalidad espec¡fica de ser utilizados como medio did ctico, es decir, para facilitar los procesos de ense¤anza y de aprendizaje. Combina conocimiento educacional, comunicacional e inform tico.');
-INSERT INTO public.dimensiones_operativas VALUES (11, 8, 'Gu¡as de estudio web', 'Representan un material instruccional utilizados para cursos de educaci¢n a distancia y como complemento a la educaci¢n presencial, lo cual provee una estructura para un curso.');
-INSERT INTO public.dimensiones_operativas VALUES (12, 8, 'Tutoriales', 'Son programas que en mayor o menor medida dirigen el trabajo de los alumnos. Pretenden que, a partir de unas informaciones y mediante la realizaci¢n de ciertas actividades, los estudiantes pongan en juego determinadas capacidades.');
-INSERT INTO public.dimensiones_operativas VALUES (13, 8, 'Juegos did cticos', 'El juego puede cumplir al menos tres funciones en el proceso de aprendizaje, al constituirse en un medio de exploraci¢n y expresi¢n, un instrumento para la organizaci¢n y aplicaci¢n de habilidades y, un factor de socializaci¢n e integraci¢n.');
-INSERT INTO public.dimensiones_operativas VALUES (14, 8, 'Entornos interactivos de ense¤anza', 'Proyectos donde el profesor y los alumnos se encuentran en lugares f¡sicamente distintos. El proceso de ense¤anza-aprendizaje se lleva a cabo a trav‚s de Internet, en cualquier momento y en cualquier lugar.');
-INSERT INTO public.dimensiones_operativas VALUES (15, 8, 'Sistemas e-learning', 'Programas que faciliten la creaci¢n, adopci¢n y distribuci¢n de contenidos, as¡ como la adaptaci¢n del ritmo de aprendizaje y la disponibilidad de las herramientas de aprendizaje independientemente de l¡mites horarios o geogr ficos.');
-INSERT INTO public.dimensiones_operativas VALUES (16, 9, 'Aplicaciones cliente - servidor', 'Sistema distribuido entre m£ltiples procesadores donde hay clientes que solicitan servicios y servidores que los proporcionan. Separa los servicios situando cada uno en su plataforma m s adecuada.');
-INSERT INTO public.dimensiones_operativas VALUES (17, 9, 'Servicios de integraci¢n para aplicaciones web', 'Medio para exponer y hacer disponible la funcionalidad de los sistemas de informaci¢n mediante las tecnolog¡as est ndar Web, permitiendo reducci¢n de la heterogeneidad por uso de tecnolog¡as est ndar.');
-INSERT INTO public.dimensiones_operativas VALUES (18, 10, 'Simulaci¢n y herramientas de simulaci¢n', 'Antes de iniciar el desarrollo de cualquier sistema complejo, los ingenieros suelen utilizar alguna herramienta de simulaci¢n o test donde sea posible modelizar y probar el sistema que est  desarrollando. Reduce tiempo y chequea decisiones a priori.');
-INSERT INTO public.dimensiones_operativas VALUES (19, 10, 'Modelos de transmisi¢n de datos', 'Se discute la conceptualizaci¢n integral de un sistema de transmisi¢n desde un marco com£n a diferentes tecnolog¡as, tales como: sistemas de comunicaci¢n por cable, radio enlaces fijos, m¢viles y satelitales.');
-INSERT INTO public.dimensiones_operativas VALUES (20, 9, 'Aplicaciones multiplataforma', 'diseño y desarrollo de soluciones que pueden ejecutarse en distintos entornos (web, móvil, escritorio, híbrido), utilizando frameworks como Flutter, React Native o Electron. Esta dimensión favorece la portabilidad, la eficiencia en el mantenimiento y la cobertura de usuarios diversos.');
-INSERT INTO public.dimensiones_operativas VALUES (21, 9, 'Aplicaciones web interactivas', 'diseño y desarrollo de soluciones que pueden ejecutarse en distintos entornos (web, móvil, escritorio, híbrido), utilizando frameworks como Flutter, React Native o Electron. Esta dimensión favorece la portabilidad, la eficiencia en el mantenimiento y la cobertura de usuarios diversos.');
-INSERT INTO public.dimensiones_operativas VALUES (22, 9, 'Aplicaciones móviles y ubicuas', 'desarrollo de soluciones adaptadas a dispositivos móviles y contextos de movilidad, integrando sensores, geolocalización, notificaciones y conectividad. Se promueve la experiencia de usuario y el acceso remoto a servicios en tiempo real.');
-INSERT INTO public.dimensiones_operativas VALUES (23, 9, 'Modelado y gestión de datos', 'diseño conceptual, lógico y físico de estructuras de datos que sustentan el funcionamiento de las aplicaciones, Incluye el uso de modelos entidad-relación, normalización, diseño de esquemas relacionales y no relacionales, así como la implementación en sistemas gestores de bases de datos. Esta dimensión garantiza la integridad, consistencia y eficiencia en el almacenamiento, recuperación y procesamiento de la información.');
-INSERT INTO public.dimensiones_operativas VALUES (24, 9, 'Seguridad y auditoría de aplicaciones', 'incorporación de prácticas de desarrollo seguro, autenticación, autorización, cifrado y trazabilidad. Se abordan normativas como ISO/IEC 27001 y principios de privacidad por diseño, garantizando la integridad y confidencialidad de los sistemas.');
+INSERT INTO public.dimensiones_operativas VALUES (7, 7, 'Sistemas de información web', 'Son primeramente sistemas de información que para su desarrollo se debe considerar la misma disciplina de construcción de sistemas de información no Web exitosos y de calidad, sirven para integrar procesos o sistemas dentro de una sola interfaz y a ellos se puede acceder por medio de una Intranet local o por la red global Internet van m s all  de ser un conjunto de p ginas Web.', true);
+INSERT INTO public.dimensiones_operativas VALUES (8, 7, 'Sistemas de información colaborativos', 'Son sistemas donde se pueden expresar ideas, experiencias, definiciones, entre otros; los cuales constituyen una red de distribución de la información en una organización o entre organizaciones.', true);
+INSERT INTO public.dimensiones_operativas VALUES (9, 7, 'Gestión tecnológica', 'Procesos relacionados con la implantación de sistemas, tales como, verificar e instalar nuevos equipos, entrenar a los usuarios, instalar nuevas aplicaciones, agregar nuevos módulos, adem s de comprobar el correcto funcionamiento de los componentes de un sistema de información que puede abarcar auditorías, t‚cnicas de control, evaluación de la calidad.', true);
+INSERT INTO public.dimensiones_operativas VALUES (10, 8, 'Software educativo', 'Programas para el computador creados con la finalidad especáfica de ser utilizados como medio did ctico, es decir, para facilitar los procesos de ense¤anza y de aprendizaje. Combina conocimiento educacional, comunicacional e inform tico.', true);
+INSERT INTO public.dimensiones_operativas VALUES (11, 8, 'Guáas de estudio web', 'Representan un material instruccional utilizados para cursos de educación a distancia y como complemento a la educación presencial, lo cual provee una estructura para un curso.', true);
+INSERT INTO public.dimensiones_operativas VALUES (12, 8, 'Tutoriales', 'Son programas que en mayor o menor medida dirigen el trabajo de los alumnos. Pretenden que, a partir de unas informaciones y mediante la realización de ciertas actividades, los estudiantes pongan en juego determinadas capacidades.', true);
+INSERT INTO public.dimensiones_operativas VALUES (14, 8, 'Entornos interactivos de ense¤anza', 'Proyectos donde el profesor y los alumnos se encuentran en lugares fásicamente distintos. El proceso de ense¤anza-aprendizaje se lleva a cabo a trav‚s de Internet, en cualquier momento y en cualquier lugar.', true);
+INSERT INTO public.dimensiones_operativas VALUES (15, 8, 'Sistemas e-learning', 'Programas que faciliten la creación, adopción y distribución de contenidos, asá como la adaptación del ritmo de aprendizaje y la disponibilidad de las herramientas de aprendizaje independientemente de lámites horarios o geogr ficos.', true);
+INSERT INTO public.dimensiones_operativas VALUES (16, 9, 'Aplicaciones cliente - servidor', 'Sistema distribuido entre múltiples procesadores donde hay clientes que solicitan servicios y servidores que los proporcionan. Separa los servicios situando cada uno en su plataforma m s adecuada.', true);
+INSERT INTO public.dimensiones_operativas VALUES (17, 9, 'Servicios de integración para aplicaciones web', 'Medio para exponer y hacer disponible la funcionalidad de los sistemas de información mediante las tecnologáas est ndar Web, permitiendo reducción de la heterogeneidad por uso de tecnologáas est ndar.', true);
+INSERT INTO public.dimensiones_operativas VALUES (18, 10, 'Simulación y herramientas de simulación', 'Antes de iniciar el desarrollo de cualquier sistema complejo, los ingenieros suelen utilizar alguna herramienta de simulación o test donde sea posible modelizar y probar el sistema que est  desarrollando. Reduce tiempo y chequea decisiones a priori.', true);
+INSERT INTO public.dimensiones_operativas VALUES (19, 10, 'Modelos de transmisión de datos', 'Se discute la conceptualización integral de un sistema de transmisión desde un marco común a diferentes tecnologáas, tales como: sistemas de comunicación por cable, radio enlaces fijos, móviles y satelitales.', true);
+INSERT INTO public.dimensiones_operativas VALUES (20, 9, 'Aplicaciones multiplataforma', 'diseño y desarrollo de soluciones que pueden ejecutarse en distintos entornos (web, móvil, escritorio, híbrido), utilizando frameworks como Flutter, React Native o Electron. Esta dimensión favorece la portabilidad, la eficiencia en el mantenimiento y la cobertura de usuarios diversos.', true);
+INSERT INTO public.dimensiones_operativas VALUES (21, 9, 'Aplicaciones web interactivas', 'diseño y desarrollo de soluciones que pueden ejecutarse en distintos entornos (web, móvil, escritorio, híbrido), utilizando frameworks como Flutter, React Native o Electron. Esta dimensión favorece la portabilidad, la eficiencia en el mantenimiento y la cobertura de usuarios diversos.', true);
+INSERT INTO public.dimensiones_operativas VALUES (22, 9, 'Aplicaciones móviles y ubicuas', 'desarrollo de soluciones adaptadas a dispositivos móviles y contextos de movilidad, integrando sensores, geolocalización, notificaciones y conectividad. Se promueve la experiencia de usuario y el acceso remoto a servicios en tiempo real.', true);
+INSERT INTO public.dimensiones_operativas VALUES (23, 9, 'Modelado y gestión de datos', 'diseño conceptual, lógico y físico de estructuras de datos que sustentan el funcionamiento de las aplicaciones, Incluye el uso de modelos entidad-relación, normalización, diseño de esquemas relacionales y no relacionales, así como la implementación en sistemas gestores de bases de datos. Esta dimensión garantiza la integridad, consistencia y eficiencia en el almacenamiento, recuperación y procesamiento de la información.', true);
+INSERT INTO public.dimensiones_operativas VALUES (24, 9, 'Seguridad y auditoría de aplicaciones', 'incorporación de prácticas de desarrollo seguro, autenticación, autorización, cifrado y trazabilidad. Se abordan normativas como ISO/IEC 27001 y principios de privacidad por diseño, garantizando la integridad y confidencialidad de los sistemas.', true);
+INSERT INTO public.dimensiones_operativas VALUES (5, 7, 'Sistemas de información tradicionales', 'Est  constituido por un conjunto de elementos de naturaleza diversa que incluyen: equipos, recursos humanos (usuario), datos e información y programas y aplicaciones; que interactúan entre si dentro de una organización con el fin de apoyar las actividades y funciones que cumplan con los objetivos propuestos de la misma.', true);
+INSERT INTO public.dimensiones_operativas VALUES (6, 7, 'Sistemas de información con propiedades geogr ficas', 'Son sistemas que permiten evaluar propiedades geogr ficas de un entorno, generando información referente a una entidad geogr fica desplegando im genes e información en un hipermapa.', true);
+INSERT INTO public.dimensiones_operativas VALUES (13, 8, 'Juegos did cticos', 'El juego puede cumplir al menos tres funciones en el proceso de aprendizaje, al constituirse en un medio de exploración y expresión, un instrumento para la organización y aplicación de habilidades y, un factor de socialización e integración.', true);
 
 
 --
@@ -2231,16 +2309,61 @@ INSERT INTO public.etiquetas VALUES (17, 'Machine Learning', '#0ea5e9');
 --
 
 INSERT INTO public.investigaciones_ofertadas VALUES (1, 7, 'asdasdasdasd', 'asdasdasdasdasdasd', 'asdasdasdasdasdasd', 9, NULL, 3, 'Abierta', '2026-09-09 23:15:22.674054', NULL);
+INSERT INTO public.investigaciones_ofertadas VALUES (2, 7, 'Requerimiento: Sistema de Inventario', 'isuuuuuuu ordeña a carmencita
+
+(Nivel Requerido: Trayecto I)', 'Dar respuesta y solución tecnológica a los requerimientos de Megacell', 7, 9, 3, 'Abierta', '2026-09-17 00:01:42.595736', 16);
 
 
 --
 -- Data for Name: lineas_investigacion; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.lineas_investigacion VALUES (7, 'SISTEMAS DE INFORMACION Y MODELADO DE DATOS', 1, 'Desarrollar y gestionar sistemas de informaci¢n dentro del  mbito social. Aplicando soluciones efectivas para el uso adecuado y ¢ptimo de los sistemas de informaci¢n.');
-INSERT INTO public.lineas_investigacion VALUES (8, 'EDUMATICA', 1, 'Aplicar las Tecnolog¡as de la Informaci¢n y Comunicaci¢n (TIC) para apoyar el proceso de aprendizaje, y as¡ contribuir al mejoramiento de la educaci¢n en todos sus niveles.');
-INSERT INTO public.lineas_investigacion VALUES (10, 'REDES Y TELECOMUNICACIONES', 1, 'Desarrollar aplicaciones que permitan analizar, verificar y simular la transmisi¢n de datos, como tambi‚n la detecci¢n de fallas dentro de una red.');
-INSERT INTO public.lineas_investigacion VALUES (9, 'DESARROLLO DE APLICACIONES', 1, 'Desarrollar aplicaciones informáticas que respondan a las necesidades de gestión, control e intercambio de información en diversos entornos organizacionales, educativos y sociales, mediante el uso de tecnologías multiplataforma y arquitecturas orientadas a servicios, tanto en entornos locales como distribuidos.');
+INSERT INTO public.lineas_investigacion VALUES (8, 'EDUMATICA', 1, 'Aplicar las Tecnologías de la Información y Comunicación (TIC) para apoyar el proceso de aprendizaje, y asá contribuir al mejoramiento de la educación en todos sus niveles.', true);
+INSERT INTO public.lineas_investigacion VALUES (10, 'REDES Y TELECOMUNICACIONES', 1, 'Desarrollar aplicaciones que permitan analizar, verificar y simular la transmisión de datos, como tambi‚n la detección de fallas dentro de una red.', true);
+INSERT INTO public.lineas_investigacion VALUES (9, 'DESARROLLO DE APLICACIONES', 1, 'Desarrollar aplicaciones informáticas que respondan a las necesidades de gestión, control e intercambio de información en diversos entornos organizacionales, educativos y sociales, mediante el uso de tecnologías multiplataforma y arquitecturas orientadas a servicios, tanto en entornos locales como distribuidos.', true);
+INSERT INTO public.lineas_investigacion VALUES (7, 'SISTEMAS DE INFORMACION Y MODELADO DE DATOS', 1, 'Desarrollar y gestionar sistemas de información dentro del  ámbito social. Aplicando soluciones efectivas para el uso adecuado y óptimo de los sistemas de información.', true);
+
+
+--
+-- Data for Name: matriz_rbac; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO public.matriz_rbac VALUES (1, 'Articulos', '{"crear": true, "editar": true, "auditar": true, "eliminar": true}');
+INSERT INTO public.matriz_rbac VALUES (1, 'Cursos', '{"crear": true, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (1, 'Investigaciones', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (1, 'LineasInvestigacion', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (1, 'RepositorioPST', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (1, 'VinculacionEmpresarial', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (2, 'Articulos', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (2, 'Cursos', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (2, 'Investigaciones', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (2, 'LineasInvestigacion', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (2, 'RepositorioPST', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (2, 'VinculacionEmpresarial', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (3, 'Articulos', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (3, 'Cursos', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (3, 'Investigaciones', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (3, 'LineasInvestigacion', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (3, 'RepositorioPST', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (3, 'VinculacionEmpresarial', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (4, 'Articulos', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (4, 'Cursos', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (4, 'Investigaciones', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (4, 'LineasInvestigacion', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (4, 'RepositorioPST', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (4, 'VinculacionEmpresarial', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (5, 'Articulos', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (5, 'Cursos', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (5, 'Investigaciones', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (5, 'LineasInvestigacion', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (5, 'RepositorioPST', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (5, 'VinculacionEmpresarial', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (6, 'Articulos', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (6, 'Cursos', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (6, 'Investigaciones', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (6, 'LineasInvestigacion', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (6, 'RepositorioPST', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
+INSERT INTO public.matriz_rbac VALUES (6, 'VinculacionEmpresarial', '{"crear": false, "editar": false, "auditar": false, "eliminar": false}');
 
 
 --
@@ -2256,10 +2379,18 @@ INSERT INTO public.notificaciones VALUES (6, 5, 'Actualización Moderada de Cuen
 
 
 --
+-- Data for Name: password_resets; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO public.password_resets VALUES (1, 'orlando5711666@gmail.com', '98ae6a718e630e4dffb2c144bbb36b095f55358c7299904798709c244db29659', '2026-09-17 00:03:43.94943', false, '2026-09-16 23:48:43.94943');
+
+
+--
 -- Data for Name: postulaciones_estudiantes; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.postulaciones_estudiantes VALUES (1, 1, 7, 'asdasdasd', 'Pendiente', '2026-09-09 23:16:44.679115', NULL, NULL);
+INSERT INTO public.postulaciones_estudiantes VALUES (1, 1, 7, 'asdasdasd', 'Rechazado', '2026-09-09 23:16:44.679115', '2026-09-19 02:07:44.686527', NULL);
+INSERT INTO public.postulaciones_estudiantes VALUES (2, 2, 7, '', 'Rechazado', '2026-09-18 23:33:33.698004', '2026-09-19 02:08:00.249562', '[]');
 
 
 --
@@ -2289,10 +2420,22 @@ INSERT INTO public.privilegios VALUES (10, 6);
 -- Data for Name: propuestas_empresa; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.propuestas_empresa VALUES (1, 'Punto Yali', '213123123', 'Yohan Estrada', '0416-6777467', 'yohan@gmail.com', 'facturacion', 'Hace falta que venga un mardito chavista pa matarlo', 'aceptada', '2026-09-02 21:41:41.17287', 'Trayecto II (T2)', NULL, NULL);
+INSERT INTO public.propuestas_empresa VALUES (14, 'Punto Yali', '27889926', 'Miki boss', '04121609721', 'lando1609721@gmail.com', 'Sistema de Inventario', 'vbnchngfhgjfhgj', 'aceptada', '2026-09-13 22:30:07.723734', 'Trayecto I', 'CIIDI-2026-29E32', NULL);
 INSERT INTO public.propuestas_empresa VALUES (2, '123', '123', '123', '123', '123@gmail.com', 'inventario', '123', 'aceptada', '2026-09-02 21:42:33.312089', 'Trayecto IV (T4)', NULL, NULL);
 INSERT INTO public.propuestas_empresa VALUES (3, 'Punto Yali', '123', 'Yohan Estrada', '0416-6777467', 'yohan@gmail.com', 'facturacion', 'IAIAIAIA', 'rechazada', '2026-09-11 22:13:08.195366', NULL, '', 'CIIDI-2026-F421F');
-INSERT INTO public.propuestas_empresa VALUES (4, 'Punto Yali', '123', 'Yohan Estrada', '0416-6777467', 'yohan@gmail.com', 'facturacion', 'IAIAIA', 'pendiente', '2026-09-12 00:33:17.17419', NULL, NULL, 'CIIDI-2026-2D242');
+INSERT INTO public.propuestas_empresa VALUES (5, 'Megacell', 'J-12045552-', 'Miki waza', '04121609721', 'lando1609721@gmail.com', 'inventario', 'Necesito un sistema que haga inventario', 'rechazada', '2026-08-25 17:16:56.513754', 'Trayecto II', NULL, NULL);
+INSERT INTO public.propuestas_empresa VALUES (6, 'Megacell', 'J20789378', 'Miki waza', '0414-7573234', 'lando1609721@gmail.com', 'inventario', 'necesito un sistema para mi alacen', 'aceptada', '2026-09-09 21:47:51.4141', 'Trayecto I', 'CIIDI-2026-AF997', NULL);
+INSERT INTO public.propuestas_empresa VALUES (7, 'Megacellll', 'J20789378', 'Miki waza', '04121609721', 'lando16097211@gmail.com', 'redes', '11111111111111', 'aceptada', '2026-09-10 23:12:34.730038', 'Trayecto I', 'CIIDI-2026-4050F', NULL);
+INSERT INTO public.propuestas_empresa VALUES (8, 'Punto Yali', '27889926', 'Miki waza', '04121609721', 'orlando5711666@gmail.com', 'inventario', 'necesito ayuda con respecto a un sistema que me controle el inventario de los productos que vendo aca en el local', 'aceptada', '2026-09-13 18:02:49.521927', 'Trayecto I', 'CIIDI-2026-84BAE', NULL);
+INSERT INTO public.propuestas_empresa VALUES (9, 'gregoria', '123456789', 'Miki waza', '04121609721', 'orlando5711666@gmail.com', 'facturacion', 'hola', 'aceptada', '2026-09-13 18:42:50.07038', 'Trayecto II', 'CIIDI-2026-4DDC5', NULL);
+INSERT INTO public.propuestas_empresa VALUES (11, 'zambrano cell', '27889926', 'chailon', '04121609721', 'lando1609721@gmail.com', 'inventario', 'ailberth deje de robarse las pantallas pa su primo chamo', 'aceptada', '2026-09-13 18:55:13.333522', 'Trayecto III', 'CIIDI-2026-E5EAE', NULL);
+INSERT INTO public.propuestas_empresa VALUES (10, 'carmencita coito', '12345567889', 'Miki boss', '04121609721', 'lando1609721@gmail.com', 'datos', 'yisus porfa ordeña a carmencita sisisisi', 'aceptada', '2026-09-13 18:53:14.455601', 'Trayecto IV', 'CIIDI-2026-D55D0', NULL);
+INSERT INTO public.propuestas_empresa VALUES (4, 'Punto G De Yali', 'G-30676767-0', 'Iojan', '4147755888', 'Puntogdeyali@gmail.com', 'redes', 'Quiero un sistema de clasificacion de los pelos de mi anito riko mmm sisisii', 'aceptada', '2026-07-10 14:02:25.411413', 'Trayecto I', NULL, NULL);
+INSERT INTO public.propuestas_empresa VALUES (1, 'Megacell', 'J-12045552-', 'ELLL PRIMOOOO', '04121609721', 'lando1609721@gmail.com', 'facturacion', 'NECESITAMOS UN SISTEMA PARA CLASIFICAR FEMBOY, FURROS Y KPOPERAS ', 'aceptada', '2026-07-10 00:05:36.297999', 'Trayecto I', NULL, NULL);
+INSERT INTO public.propuestas_empresa VALUES (12, 'Megacell', 'J20789378', 'chailon', '04121609721', 'lando1609721@gmail.com', 'Sistema de Inventario', 'necesito un sistema para poder registrar los telefonos que estamo haciendo', 'aceptada', '2026-09-13 19:46:05.970023', 'Trayecto I', 'CIIDI-2026-F5A16', NULL);
+INSERT INTO public.propuestas_empresa VALUES (13, 'Punto Yali', '20789378', 'Miki boss', '04121609721', 'lando1609721@gmail.com', 'Sistema de Inventario', 'caafagsdfddsfdsfdsf', 'aceptada', '2026-09-13 22:28:56.260924', 'Trayecto I', 'CIIDI-2026-EC9AC', NULL);
+INSERT INTO public.propuestas_empresa VALUES (16, 'Megacell', '27889926', 'Miki waza', '04121609721', 'lando1609721@gmail.com', 'Sistema de Inventario', 'isuuuuuuu ordeña a carmencita', 'aceptada', '2026-09-16 23:57:18.499486', 'Trayecto I', 'CIIDI-2026-CAA12', NULL);
+INSERT INTO public.propuestas_empresa VALUES (15, 'zambrano cell', '20789378', 'chailon', '04121609721', 'lando1609721@gmail.com', 'Mejora de sistema', 'ghfjhmfhjfgdjhfd', 'aceptada', '2026-09-13 22:30:21.539904', 'Trayecto I', 'CIIDI-2026-C8F0D', NULL);
 
 
 --
@@ -2348,12 +2491,12 @@ INSERT INTO public.proyecto_tutores VALUES (127, 40, 3);
 INSERT INTO public.proyecto_tutores VALUES (128, 40, 3);
 INSERT INTO public.proyecto_tutores VALUES (132, 28, 2);
 INSERT INTO public.proyecto_tutores VALUES (132, 10, 4);
-INSERT INTO public.proyecto_tutores VALUES (147, 22, 3);
 INSERT INTO public.proyecto_tutores VALUES (148, 29, 3);
 INSERT INTO public.proyecto_tutores VALUES (148, 30, 2);
 INSERT INTO public.proyecto_tutores VALUES (148, 31, 4);
 INSERT INTO public.proyecto_tutores VALUES (149, 35, 3);
 INSERT INTO public.proyecto_tutores VALUES (149, 36, 4);
+INSERT INTO public.proyecto_tutores VALUES (147, 22, 3);
 
 
 --
@@ -2490,13 +2633,13 @@ INSERT INTO public.recurso_autores VALUES (119, 47);
 INSERT INTO public.recurso_autores VALUES (119, 48);
 INSERT INTO public.recurso_autores VALUES (118, 44);
 INSERT INTO public.recurso_autores VALUES (143, 13);
-INSERT INTO public.recurso_autores VALUES (147, 52);
-INSERT INTO public.recurso_autores VALUES (147, 53);
 INSERT INTO public.recurso_autores VALUES (149, 50);
 INSERT INTO public.recurso_autores VALUES (149, 51);
 INSERT INTO public.recurso_autores VALUES (149, 57);
 INSERT INTO public.recurso_autores VALUES (150, 13);
 INSERT INTO public.recurso_autores VALUES (151, 31);
+INSERT INTO public.recurso_autores VALUES (147, 52);
+INSERT INTO public.recurso_autores VALUES (147, 53);
 
 
 --
@@ -2572,9 +2715,9 @@ INSERT INTO public.recurso_clasificaciones VALUES (117, 7, 7);
 INSERT INTO public.recurso_clasificaciones VALUES (127, 8, 13);
 INSERT INTO public.recurso_clasificaciones VALUES (128, 7, 9);
 INSERT INTO public.recurso_clasificaciones VALUES (132, 10, 18);
-INSERT INTO public.recurso_clasificaciones VALUES (147, 7, 5);
 INSERT INTO public.recurso_clasificaciones VALUES (148, 9, 17);
 INSERT INTO public.recurso_clasificaciones VALUES (149, 7, 5);
+INSERT INTO public.recurso_clasificaciones VALUES (147, 7, 5);
 
 
 --
@@ -2674,11 +2817,11 @@ INSERT INTO public.recursos VALUES (118, 'Middleware MiSCi para ciudades intelig
 INSERT INTO public.recursos VALUES (143, 'Investigación y modelado de pérdidas por corriente circulante en sistemas de puesta a tierra de torres de alta tensión', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/124890/98825');
 INSERT INTO public.recursos VALUES (146, 'Modelamiento de confort adaptativo para un trapiche panelero', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/112625/91645');
 INSERT INTO public.recursos VALUES (144, 'Propuesta de un modelo de implementación basado en aprendizaje automático para el reclutamiento de profesionales de ingeniería en una universidad pública', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/124428/98826');
-INSERT INTO public.recursos VALUES (147, 'SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WORLD C.A', 1, 2026, 1, 1, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_c_1789088544_891.docx');
 INSERT INTO public.recursos VALUES (148, 'VALERA EDO TRUJILLO Aplicación Web Móvil para el proceso de Ascensos en la Coordinación de Formación Permanente y Docencia de la UPTTMBI Docente Asesor: Dra. María Luisa Colmenares Representante Institucional: Dra. Rossana Virgilio Representante...', 1, 2023, 1, 1, 'storage/documentos/pst/pst_valera_edo_trujillo_aplicaci___1789088548_770.docx');
 INSERT INTO public.recursos VALUES (149, 'NUES DR. PABLO VILORIA – LA BEATRIZ SOPORTE TÉCNICO A EQUIPOS DE COMPUTACION Y USUARIOS EN CENTRO CLÍNICO “MARÍA EDELMIRA ARAUJO”, S.A. VALERA ESTADO TRUJILLO', 1, 2023, 1, 1, 'storage/documentos/pst/pst_nues_dr__pablo_viloria_____la__1789088547_631.pdf');
 INSERT INTO public.recursos VALUES (150, 'e', 3, 2026, 1, 1, 'https://www.youtube.com/');
 INSERT INTO public.recursos VALUES (151, 'e', 3, 2026, 1, 1, 'https://www.wikipedia.org/');
+INSERT INTO public.recursos VALUES (147, 'SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WORLD C.A', 1, 2026, 1, 1, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_c_1789794852.pdf');
 
 
 --
@@ -2696,6 +2839,26 @@ INSERT INTO public.roles VALUES (1, 'Super Administrador', 1);
 INSERT INTO public.roles VALUES (3, 'Estudiantes', 6);
 INSERT INTO public.roles VALUES (2, 'Comité', 2);
 INSERT INTO public.roles VALUES (4, 'Docentes', 3);
+
+
+--
+-- Data for Name: system_audit_log; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO public.system_audit_log VALUES ('log_6aae33579b38a', '2026-09-19 07:01:43', 'WARNING', 'SuperAdmin', 'Modificar Matriz RBAC', 'Se actualizaron los permisos granulares por Módulo y Nivel.', 'Miguel González (ID: 7)', '::1', 'GENESIS_CIIDI_V1', '7ce1ff0dbf2ae1f6bcfd13e8e1f43e3f22eb9785c9790be455571ddfbc027aa5');
+INSERT INTO public.system_audit_log VALUES ('log_6aae335f0804a', '2026-09-19 07:01:51', 'WARNING', 'SuperAdmin', 'Modificar Matriz RBAC', 'Se actualizaron los permisos granulares por Módulo y Nivel.', 'Miguel González (ID: 7)', '::1', '7ce1ff0dbf2ae1f6bcfd13e8e1f43e3f22eb9785c9790be455571ddfbc027aa5', 'b92bffbeb139d260065cf1393677605a9164f8c200f4265b76d6a17ce53a05b2');
+INSERT INTO public.system_audit_log VALUES ('log_6aae3381958c6', '2026-09-19 07:02:25', 'WARNING', 'SuperAdmin', 'Modificar Matriz RBAC', 'Se actualizaron los permisos granulares por Módulo y Nivel.', 'Miguel González (ID: 7)', '::1', 'b92bffbeb139d260065cf1393677605a9164f8c200f4265b76d6a17ce53a05b2', '92bd5c01e500270acb0577a629f1ba38e01030a6c8f48011175fe43db49f11da');
+INSERT INTO public.system_audit_log VALUES ('log_6aae33853f3ff', '2026-09-19 07:02:29', 'WARNING', 'SuperAdmin', 'Modificar Matriz RBAC', 'Se actualizaron los permisos granulares por Módulo y Nivel.', 'Miguel González (ID: 7)', '::1', '92bd5c01e500270acb0577a629f1ba38e01030a6c8f48011175fe43db49f11da', '10728c9fbed4aaed7081884890652f4a51ca7732afdf7452bb54491753b978b8');
+INSERT INTO public.system_audit_log VALUES ('log_6aae346b666a8', '2026-09-19 07:06:19', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: backup_ciidi_2026-09-19_06-32-52.sql.gz', 'Miguel González (ID: 7)', '::1', '10728c9fbed4aaed7081884890652f4a51ca7732afdf7452bb54491753b978b8', '7165f8e5f3d33d1d9c132ee3905aaa19e0b505521014637fd448096702e3f29b');
+INSERT INTO public.system_audit_log VALUES ('log_6aae346e42a0f', '2026-09-19 07:06:22', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: backup_ciidi_2026-09-19_06-32-55.sql', 'Miguel González (ID: 7)', '::1', '7165f8e5f3d33d1d9c132ee3905aaa19e0b505521014637fd448096702e3f29b', '989e826b2ae9a6fe7bd9aaa9edc5514dbe52f58059ddd0041facdb691b27f740');
+INSERT INTO public.system_audit_log VALUES ('log_6aae3470d43bb', '2026-09-19 07:06:24', 'INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo backup_ciidi_2026-09-19_07-06-24.sql.gz generado exitosamente. Respaldos antiguos purgados: 0', 'Miguel González (ID: 7)', '::1', '989e826b2ae9a6fe7bd9aaa9edc5514dbe52f58059ddd0041facdb691b27f740', '63aac83ff563a917cade4fa0383272872eb32923d19eda5ce4f53e737d20e5b0');
+
+
+--
+-- Data for Name: telemetria_cache; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO public.telemetria_cache VALUES (1, '{"timestamp": 1789801478, "storage_mb": 2.44, "files_count": 42}');
 
 
 --
@@ -2762,21 +2925,22 @@ INSERT INTO public.tutores VALUES (40, 'KarinAI', 'Karina');
 -- Data for Name: usuarios; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.usuarios VALUES (2, 'lando', 'lando@gmail.com', '22222222', '$2y$10$o0Uk8V6gzXNSW/EZBWvd1OoC7O6UzrU3LRbDMIqxYDou2KJGRXdUa', 2, true, NULL, NULL, NULL);
-INSERT INTO public.usuarios VALUES (3, 'miki', 'miki@gmail.com', '33333333', '$2y$10$o0Uk8V6gzXNSW/EZBWvd1OoC7O6UzrU3LRbDMIqxYDou2KJGRXdUa', 3, true, NULL, NULL, NULL);
-INSERT INTO public.usuarios VALUES (4, 'ale', 'ale@yaju.com', '44444444', '$2y$10$o0Uk8V6gzXNSW/EZBWvd1OoC7O6UzrU3LRbDMIqxYDou2KJGRXdUa', 3, true, NULL, NULL, NULL);
-INSERT INTO public.usuarios VALUES (5, 'bibi', 'bibi@gmail.com', '4444111', NULL, 3, true, NULL, NULL, NULL);
-INSERT INTO public.usuarios VALUES (8, 'Yisu Monte', 'yisu@gmail.com', '30866991', '$2y$10$jOukhIGIbdJCmpHdS.MqWusufmhQgHf.O9UByeqN.NFue38kT47xa', 3, true, NULL, NULL, NULL);
-INSERT INTO public.usuarios VALUES (9, 'Pedro Perez', 'iaiaia@gmail.com', '4123123', '$2y$10$xOgs5kJnv17wwzjNtnNUguWc7pxdYv.lMZGFejPOz7fIgLNEybLgC', 3, true, NULL, NULL, NULL);
-INSERT INTO public.usuarios VALUES (11, 'Juan', '123@gmail.com', '1234', '$2y$10$HBPGRak0eIYzElwfC.bGuOvgFOfK.GbG40ct2e7X9CS7OgMARJRcC', 3, true, NULL, NULL, NULL);
-INSERT INTO public.usuarios VALUES (7, 'Miguel González', 'erwazaaaa@gmail.com', '32621284', '$2y$10$tqm17pwan91BnMUfmCAB/O01faShLfeK3jo0jYVwpQcBpGr5iLiE.', 1, true, NULL, NULL, NULL);
-INSERT INTO public.usuarios VALUES (6, 'Piñin Piña', 'pina@hotmail.com', '1', '$2y$10$wqwwyjK8T7ccki5IeOK4ueZRlW8K3g2xC42ZyOG01kDru0CNhba/a', 4, false, NULL, NULL, NULL);
-INSERT INTO public.usuarios VALUES (10, 'Wazaaaa', 'wazaaa@gmail.com', '123', '$2y$10$G7tnCsgxNo7nFV93A4H7Ie86N2RYtbppgkB6iEPg.STWF4wn2qn7O', 4, true, NULL, NULL, NULL);
-INSERT INTO public.usuarios VALUES (1, 'Adrus', 'andru@gmail.com', '11111111', '$2y$10$1sBy413YpJ9MQGlRt/g6y.OGkfno7aRuKxShONKSeWrvhQNS53YDO', 1, true, NULL, NULL, NULL);
-INSERT INTO public.usuarios VALUES (14, 'Sixsevenaldo González', '676767@gmail.com', '67', '$2y$10$XIdtQdP6d.bZSGCINdEbIuTtuqee9E3EEKYp5Ogbm/I2JW5XQbP/O', 3, true, NULL, NULL, NULL);
-INSERT INTO public.usuarios VALUES (12, 'ANDRUS', 'andrusramirez2020@gmail.com', '30469331', '$2y$10$ZbFA.4WVMGxSx4yd2xWVgOHanaXCjTwoUFAtJdo12k6Nf52S.fV0G', 3, true, NULL, NULL, NULL);
-INSERT INTO public.usuarios VALUES (13, 'Cepillíno', 'cepillin@gmail.com', '80', '$2y$10$ML6M4RYmR0f2yCoxOpRvaONIE/nUvwOmcsmGySeBOOBGjy9xUmbk6', 3, true, NULL, NULL, NULL);
-INSERT INTO public.usuarios VALUES (15, 'DIOS', 'DIOS@gmail.com', '12000000', '$2y$12$UYjWng5QxllkWu3dz7JiJO8sHhxW10GiMc7SYRVgCpTLmRN82FCr6', 1, true, NULL, NULL, NULL);
+INSERT INTO public.usuarios VALUES (2, 'lando', 'lando@gmail.com', '22222222', '$2y$10$o0Uk8V6gzXNSW/EZBWvd1OoC7O6UzrU3LRbDMIqxYDou2KJGRXdUa', 2, true, NULL, NULL, NULL, false, NULL);
+INSERT INTO public.usuarios VALUES (3, 'miki', 'miki@gmail.com', '33333333', '$2y$10$o0Uk8V6gzXNSW/EZBWvd1OoC7O6UzrU3LRbDMIqxYDou2KJGRXdUa', 3, true, NULL, NULL, NULL, false, NULL);
+INSERT INTO public.usuarios VALUES (4, 'ale', 'ale@yaju.com', '44444444', '$2y$10$o0Uk8V6gzXNSW/EZBWvd1OoC7O6UzrU3LRbDMIqxYDou2KJGRXdUa', 3, true, NULL, NULL, NULL, false, NULL);
+INSERT INTO public.usuarios VALUES (5, 'bibi', 'bibi@gmail.com', '4444111', NULL, 3, true, NULL, NULL, NULL, false, NULL);
+INSERT INTO public.usuarios VALUES (8, 'Yisu Monte', 'yisu@gmail.com', '30866991', '$2y$10$jOukhIGIbdJCmpHdS.MqWusufmhQgHf.O9UByeqN.NFue38kT47xa', 3, true, NULL, NULL, NULL, false, NULL);
+INSERT INTO public.usuarios VALUES (9, 'Pedro Perez', 'iaiaia@gmail.com', '4123123', '$2y$10$xOgs5kJnv17wwzjNtnNUguWc7pxdYv.lMZGFejPOz7fIgLNEybLgC', 3, true, NULL, NULL, NULL, false, NULL);
+INSERT INTO public.usuarios VALUES (11, 'Juan', '123@gmail.com', '1234', '$2y$10$HBPGRak0eIYzElwfC.bGuOvgFOfK.GbG40ct2e7X9CS7OgMARJRcC', 3, true, NULL, NULL, NULL, false, NULL);
+INSERT INTO public.usuarios VALUES (7, 'Miguel González', 'erwazaaaa@gmail.com', '32621284', '$2y$10$tqm17pwan91BnMUfmCAB/O01faShLfeK3jo0jYVwpQcBpGr5iLiE.', 1, true, NULL, NULL, NULL, false, NULL);
+INSERT INTO public.usuarios VALUES (6, 'Piñin Piña', 'pina@hotmail.com', '1', '$2y$10$wqwwyjK8T7ccki5IeOK4ueZRlW8K3g2xC42ZyOG01kDru0CNhba/a', 4, false, NULL, NULL, NULL, false, NULL);
+INSERT INTO public.usuarios VALUES (10, 'Wazaaaa', 'wazaaa@gmail.com', '123', '$2y$10$G7tnCsgxNo7nFV93A4H7Ie86N2RYtbppgkB6iEPg.STWF4wn2qn7O', 4, true, NULL, NULL, NULL, false, NULL);
+INSERT INTO public.usuarios VALUES (1, 'Adrus', 'andru@gmail.com', '11111111', '$2y$10$1sBy413YpJ9MQGlRt/g6y.OGkfno7aRuKxShONKSeWrvhQNS53YDO', 1, true, NULL, NULL, NULL, false, NULL);
+INSERT INTO public.usuarios VALUES (14, 'Sixsevenaldo González', '676767@gmail.com', '67', '$2y$10$XIdtQdP6d.bZSGCINdEbIuTtuqee9E3EEKYp5Ogbm/I2JW5XQbP/O', 3, true, NULL, NULL, NULL, false, NULL);
+INSERT INTO public.usuarios VALUES (12, 'ANDRUS', 'andrusramirez2020@gmail.com', '30469331', '$2y$10$ZbFA.4WVMGxSx4yd2xWVgOHanaXCjTwoUFAtJdo12k6Nf52S.fV0G', 3, true, NULL, NULL, NULL, false, NULL);
+INSERT INTO public.usuarios VALUES (13, 'Cepillíno', 'cepillin@gmail.com', '80', '$2y$10$ML6M4RYmR0f2yCoxOpRvaONIE/nUvwOmcsmGySeBOOBGjy9xUmbk6', 3, true, NULL, NULL, NULL, false, NULL);
+INSERT INTO public.usuarios VALUES (15, 'DIOS', 'DIOS@gmail.com', '12000000', '$2y$12$UYjWng5QxllkWu3dz7JiJO8sHhxW10GiMc7SYRVgCpTLmRN82FCr6', 1, true, NULL, NULL, NULL, false, NULL);
+INSERT INTO public.usuarios VALUES (16, 'no soy miguel', 'orlando5711666@gmail.com', '1234567', '$2y$10$g1LIDvziBpq3KrEilAhp3.RC1ziliq9hOpkdhWFISEjtJ.Y00SUHS', 3, true, NULL, NULL, NULL, true, NULL);
 
 
 --
@@ -2789,14 +2953,14 @@ INSERT INTO public.usuarios VALUES (15, 'DIOS', 'DIOS@gmail.com', '12000000', '$
 -- Name: accesos_recursos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.accesos_recursos_id_seq', 1, false);
+SELECT pg_catalog.setval('public.accesos_recursos_id_seq', 1, true);
 
 
 --
 -- Name: auditoria_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.auditoria_id_seq', 303, true);
+SELECT pg_catalog.setval('public.auditoria_id_seq', 304, true);
 
 
 --
@@ -2817,14 +2981,14 @@ SELECT pg_catalog.setval('public.carreras_id_seq', 5, true);
 -- Name: categorias_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.categorias_id_seq', 24, true);
+SELECT pg_catalog.setval('public.categorias_id_seq', 18, true);
 
 
 --
 -- Name: cursos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.cursos_id_seq', 6, true);
+SELECT pg_catalog.setval('public.cursos_id_seq', 7, true);
 
 
 --
@@ -2838,7 +3002,7 @@ SELECT pg_catalog.setval('public.dimensiones_operativas_id_seq', 24, true);
 -- Name: editoriales_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.editoriales_id_seq', 12, true);
+SELECT pg_catalog.setval('public.editoriales_id_seq', 8, true);
 
 
 --
@@ -2852,21 +3016,21 @@ SELECT pg_catalog.setval('public.etiquetas_id_seq', 17, true);
 -- Name: historico_versiones_pst_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.historico_versiones_pst_id_seq', 1, false);
+SELECT pg_catalog.setval('public.historico_versiones_pst_id_seq', 1, true);
 
 
 --
 -- Name: investigaciones_ofertadas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.investigaciones_ofertadas_id_seq', 1, true);
+SELECT pg_catalog.setval('public.investigaciones_ofertadas_id_seq', 2, true);
 
 
 --
 -- Name: lineas_investigacion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.lineas_investigacion_id_seq', 16, true);
+SELECT pg_catalog.setval('public.lineas_investigacion_id_seq', 10, true);
 
 
 --
@@ -2877,10 +3041,17 @@ SELECT pg_catalog.setval('public.notificaciones_id_seq', 6, true);
 
 
 --
+-- Name: password_resets_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.password_resets_id_seq', 1, true);
+
+
+--
 -- Name: postulaciones_estudiantes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.postulaciones_estudiantes_id_seq', 1, true);
+SELECT pg_catalog.setval('public.postulaciones_estudiantes_id_seq', 2, true);
 
 
 --
@@ -2894,7 +3065,7 @@ SELECT pg_catalog.setval('public.privilegios_privilegio_id_seq', 10, true);
 -- Name: propuestas_empresa_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.propuestas_empresa_id_seq', 4, true);
+SELECT pg_catalog.setval('public.propuestas_empresa_id_seq', 16, true);
 
 
 --
@@ -2915,14 +3086,14 @@ SELECT pg_catalog.setval('public.registro_actividad_id_seq', 1, true);
 -- Name: roles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.roles_id_seq', 8, true);
+SELECT pg_catalog.setval('public.roles_id_seq', 4, true);
 
 
 --
 -- Name: tipo_recurso_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.tipo_recurso_id_seq', 4, true);
+SELECT pg_catalog.setval('public.tipo_recurso_id_seq', 3, true);
 
 
 --
@@ -2943,14 +3114,14 @@ SELECT pg_catalog.setval('public.tutores_id_seq', 40, true);
 -- Name: usuarios_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.usuarios_id_seq', 15, true);
+SELECT pg_catalog.setval('public.usuarios_id_seq', 16, true);
 
 
 --
 -- Name: visitantes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.visitantes_id_seq', 1, false);
+SELECT pg_catalog.setval('public.visitantes_id_seq', 1, true);
 
 
 --
@@ -3106,11 +3277,27 @@ ALTER TABLE ONLY public.lineas_investigacion
 
 
 --
+-- Name: matriz_rbac matriz_rbac_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.matriz_rbac
+    ADD CONSTRAINT matriz_rbac_pkey PRIMARY KEY (nivel_privilegio, modulo);
+
+
+--
 -- Name: notificaciones notificaciones_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.notificaciones
     ADD CONSTRAINT notificaciones_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: password_resets password_resets_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.password_resets
+    ADD CONSTRAINT password_resets_pkey PRIMARY KEY (id);
 
 
 --
@@ -3127,6 +3314,14 @@ ALTER TABLE ONLY public.postulaciones_estudiantes
 
 ALTER TABLE ONLY public.preferencias_usuario
     ADD CONSTRAINT preferencias_usuario_pkey PRIMARY KEY (id_usuario);
+
+
+--
+-- Name: propuestas_empresa propuestas_empresa_codigo_seguimiento_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.propuestas_empresa
+    ADD CONSTRAINT propuestas_empresa_codigo_seguimiento_key UNIQUE (codigo_seguimiento);
 
 
 --
@@ -3207,6 +3402,22 @@ ALTER TABLE ONLY public.roles
 
 ALTER TABLE ONLY public.roles
     ADD CONSTRAINT roles_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: system_audit_log system_audit_log_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.system_audit_log
+    ADD CONSTRAINT system_audit_log_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: telemetria_cache telemetria_cache_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.telemetria_cache
+    ADD CONSTRAINT telemetria_cache_pkey PRIMARY KEY (id);
 
 
 --
@@ -3661,5 +3872,5 @@ ALTER TABLE ONLY public.usuarios
 -- PostgreSQL database dump complete
 --
 
-\unrestrict dBfH3fBryngx1ruD9KXyVTehIOqSPudxBhzvEHuBfh52GTkb09pTEVjhQDJXP30
+\unrestrict XM8yLhhRukakrEhcZGaIuUM9ClIvfQhmC2fOhg0i98teFKfpqBJoy1Espfjg6W1
 

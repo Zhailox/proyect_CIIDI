@@ -12,6 +12,8 @@ RewriteEngine On
     </IfModule>
 </FilesMatch>
 
-# 2. Redirigir la raíz pública si el servidor web apunta a la raíz del repositorio
-RewriteCond %{REQUEST_URI} !^/public/
+# 2. Redirigir a public/ EXCEPTO si es un archivo o directorio real (como los CSS en modules/)
+RewriteCond %{REQUEST_URI} !/public/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ public/$1 [L]
