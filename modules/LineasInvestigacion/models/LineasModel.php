@@ -30,6 +30,7 @@ class LineasModel extends QueryBuilder {
             LEFT JOIN dimensiones_operativas dim ON dim.id_linea = li.id
             LEFT JOIN recurso_clasificaciones rc  ON rc.id_linea_investigacion = li.id
             LEFT JOIN investigaciones_ofertadas io ON io.id_linea = li.id
+            WHERE li.activo = true
             GROUP BY li.id, li.nombre, li.descripcion, li.id_carrera, c.nombre
             ORDER BY li.id ASC
         ";
@@ -185,5 +186,16 @@ class LineasModel extends QueryBuilder {
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function toggleActivo(int $id, bool $estado): bool {
+        $sql = "UPDATE lineas_investigacion SET activo = ? WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$estado ? 1 : 0, $id]);
+    }
+    
+    public function toggleActivoDimension(int $id, bool $estado): bool {
+        $sql = "UPDATE dimensiones_operativas SET activo = ? WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$estado ? 1 : 0, $id]);
     }
 }

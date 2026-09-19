@@ -72,12 +72,27 @@ class GestorLineasController {
                         break;
 
                     case 'eliminar':
+                        if (($_SESSION['nivel_privilegio'] ?? 999) !== 0) {
+                            $this->redirigir('gestionar-lineas', 'error', 'Solo el Dios Superadministrador puede eliminar líneas de investigación.');
+                        }
                         $id = (int) ($_POST['id'] ?? 0);
                         if ($id === 0) {
                             $this->redirigir('gestionar-lineas', 'error', 'ID inválido para eliminar.');
                         }
                         $lineasModel->eliminar($id);
-                        $this->redirigir('gestionar-lineas', 'exito', 'Línea eliminada. Sus dimensiones asociadas también fueron removidas.');
+                        $this->redirigir('gestionar-lineas', 'exito', 'Línea eliminada definitivamente.');
+                        break;
+
+                    case 'ocultar':
+                        $id = (int) ($_POST['id'] ?? 0);
+                        $lineasModel->toggleActivo($id, false);
+                        $this->redirigir('gestionar-lineas', 'exito', 'Línea ocultada del repositorio público.');
+                        break;
+
+                    case 'mostrar':
+                        $id = (int) ($_POST['id'] ?? 0);
+                        $lineasModel->toggleActivo($id, true);
+                        $this->redirigir('gestionar-lineas', 'exito', 'Línea nuevamente visible.');
                         break;
 
                     default:
@@ -209,12 +224,27 @@ class GestorLineasController {
                         break;
 
                     case 'eliminar':
+                        if (($_SESSION['nivel_privilegio'] ?? 999) !== 0) {
+                            $this->redirigir('gestionar-lineas', 'error', 'Solo el Dios Superadministrador puede eliminar dimensiones.');
+                        }
                         $id = (int) ($_POST['id'] ?? 0);
                         if ($id === 0) {
                             $this->redirigir('gestionar-lineas', 'error', 'ID inválido.');
                         }
                         $dimModel->eliminar($id);
                         $this->redirigir('gestionar-lineas', 'exito', 'Dimensión eliminada correctamente.');
+                        break;
+
+                    case 'ocultar':
+                        $id = (int) ($_POST['id'] ?? 0);
+                        $lineasModel->toggleActivoDimension($id, false); // Using the method we added
+                        $this->redirigir('gestionar-lineas', 'exito', 'Dimensión ocultada.');
+                        break;
+                        
+                    case 'mostrar':
+                        $id = (int) ($_POST['id'] ?? 0);
+                        $lineasModel->toggleActivoDimension($id, true);
+                        $this->redirigir('gestionar-lineas', 'exito', 'Dimensión nuevamente visible.');
                         break;
 
                     default:

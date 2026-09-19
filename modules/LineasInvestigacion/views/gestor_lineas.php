@@ -1,6 +1,7 @@
 <?php require_once __DIR__ . '/../../../core/Security/CSRF.php'; ?>
 <?php
 // modules/LineasInvestigacion/views/gestor_lineas.php
+$isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
 ?>
 
 
@@ -76,9 +77,24 @@
                 <!-- Botones Inferiores -->
                 <div class="ag-card-actions" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-top: 1px solid rgba(80, 89, 132, 0.1); padding-top: 1.2rem;">
                     
-                    <button type="button" class="ag-btn-delete" title="Eliminar Línea" onclick="eliminarLinea(<?= htmlspecialchars($li['id']) ?>, '<?= htmlspecialchars(addslashes($li['nombre'])) ?>')">
-                        <i class="ph-bold ph-trash"></i>
-                    </button>
+                    
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <?php if ($li['activo']): ?>
+                            <button type="button" class="ag-btn-edit" style="background:#f59e0b; color:white; border-color:#f59e0b;" title="Ocultar Línea" onclick="ocultarLinea(<?= htmlspecialchars($li['id']) ?>, '<?= htmlspecialchars(addslashes($li['nombre'])) ?>')">
+                                <i class="ph-bold ph-eye-slash"></i> Ocultar
+                            </button>
+                        <?php else: ?>
+                            <button type="button" class="ag-btn-edit" style="background:#10b981; color:white; border-color:#10b981;" title="Mostrar Línea" onclick="mostrarLinea(<?= htmlspecialchars($li['id']) ?>)">
+                                <i class="ph-bold ph-eye"></i> Mostrar
+                            </button>
+                        <?php endif; ?>
+                        
+                        <?php if ($isSuper): ?>
+                        <button type="button" class="ag-btn-delete" title="Eliminar Definitivamente" onclick="eliminarLinea(<?= htmlspecialchars($li['id']) ?>, '<?= htmlspecialchars(addslashes($li['nombre'])) ?>')">
+                            <i class="ph-bold ph-trash"></i>
+                        </button>
+                        <?php endif; ?>
+                    </div>
 
                     <a href="index.php?ruta=detalle-gestion-linea&id=<?= urlencode($li['id']) ?>" class="ag-btn-manage" title="Abrir gestor dedicado de la línea">
                         <i class="ph-bold ph-gear-six"></i> Gestionar Línea
@@ -104,7 +120,7 @@ const carrerasList = <?= json_encode($carreras) ?>;
 function eliminarLinea(id, nombre) {
     Swal.fire({
         title: '¿Eliminar Línea?',
-        html: `Estás a punto de eliminar la línea <strong>${nombre}</strong>.<br><br><span style="color:#ef4444; font-weight:bold;">¡ADVERTENCIA!</span> Esta acción eliminará también todas sus dimensiones operativas asociadas.`,
+        html: `Estás a punto de eliminar la línea <strong>${nombre}</strong>.<br><br><span style="color:#ef4444; font-weight:bold;">¡ADVERTENCIA!</span> Esta acción eliminará también todas sus dimensiones operativas asociadas.<br><br>¿Dónde quedan los proyectos y postulaciones de esta línea? <b>¡Se perderán o quedarán sin referencias válidas en la base de datos (huérfanos)!</b><br><br>Por favor, usa la opción <b>Ocultar</b> si tienes dudas.`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#ef4444',
@@ -236,6 +252,43 @@ document.addEventListener('DOMContentLoaded', function() {
         animate();
     }
 });
+</script>
+
+<form id="formOcultarLinea" method="POST" action="index.php?ruta=gestionar-lineas" style="display:none;">
+    <input type="hidden" name="accion" value="ocultar">
+    <input type="hidden" name="id" id="inputIdOcultar">
+    <?= CSRF::crearCampo() ?>
+</form>
+
+<form id="formMostrarLinea" method="POST" action="index.php?ruta=gestionar-lineas" style="display:none;">
+    <input type="hidden" name="accion" value="mostrar">
+    <input type="hidden" name="id" id="inputIdMostrar">
+    <?= CSRF::crearCampo() ?>
+</form>
+
+<script>
+function ocultarLinea(id, nombre) {
+    Swal.fire({
+        title: '¿Ocultar Línea?',
+        html: `Estás a punto de ocultar la línea <strong>${nombre}</strong>.<br><br>Dejará de aparecer en las listas públicas, pero los proyectos y datos seguirán intactos.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f59e0b',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, ocultar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('inputIdOcultar').value = id;
+            document.getElementById('formOcultarLinea').submit();
+        }
+    });
+}
+
+function mostrarLinea(id) {
+    document.getElementById('inputIdMostrar').value = id;
+    document.getElementById('formMostrarLinea').submit();
+}
 </script>
 </body>
 

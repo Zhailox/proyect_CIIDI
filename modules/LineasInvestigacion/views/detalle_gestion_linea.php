@@ -1,5 +1,6 @@
 <?php
 // modules/LineasInvestigacion/views/detalle_gestion_linea.php
+$isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
 ?>
 
 
@@ -90,9 +91,22 @@
                         <button type="button" class="ag-btn-edit" onclick="abrirModalEditarDimension(<?= htmlspecialchars(json_encode($dim)) ?>)">
                             <i class="ph-bold ph-pencil-simple"></i> Editar
                         </button>
+                        
+                        <?php if (isset($dim['activo']) && $dim['activo']): ?>
+                            <button type="button" class="ag-btn-edit" style="background:#f59e0b; color:white; border-color:#f59e0b;" onclick="ocultarDimension(<?= htmlspecialchars($dim['id']) ?>, '<?= htmlspecialchars(addslashes($dim['nombre'])) ?>')">
+                                <i class="ph-bold ph-eye-slash"></i> Ocultar
+                            </button>
+                        <?php else: ?>
+                            <button type="button" class="ag-btn-edit" style="background:#10b981; color:white; border-color:#10b981;" onclick="mostrarDimension(<?= htmlspecialchars($dim['id']) ?>)">
+                                <i class="ph-bold ph-eye"></i> Mostrar
+                            </button>
+                        <?php endif; ?>
+                        
+                        <?php if ($isSuper): ?>
                         <button type="button" class="ag-btn-delete" onclick="eliminarDimension(<?= htmlspecialchars($dim['id']) ?>, '<?= htmlspecialchars(addslashes($dim['nombre'])) ?>')">
                             <i class="ph-bold ph-trash"></i> Eliminar
                         </button>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -321,3 +335,41 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 </body>
+
+
+<form id="formOcultarDim" method="POST" action="index.php?ruta=detalle-gestion-linea&id=<?= urlencode($linea['id']) ?>" style="display:none;">
+    <input type="hidden" name="accion" value="ocultar">
+    <input type="hidden" name="id" id="inputIdOcultarDim">
+    <?= CSRF::crearCampo() ?>
+</form>
+
+<form id="formMostrarDim" method="POST" action="index.php?ruta=detalle-gestion-linea&id=<?= urlencode($linea['id']) ?>" style="display:none;">
+    <input type="hidden" name="accion" value="mostrar">
+    <input type="hidden" name="id" id="inputIdMostrarDim">
+    <?= CSRF::crearCampo() ?>
+</form>
+
+<script>
+function ocultarDimension(id, nombre) {
+    Swal.fire({
+        title: '¿Ocultar Dimensión?',
+        html: `La dimensión <strong>${nombre}</strong> se ocultará, pero sus proyectos permanecerán.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f59e0b',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Ocultar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('inputIdOcultarDim').value = id;
+            document.getElementById('formOcultarDim').submit();
+        }
+    });
+}
+function mostrarDimension(id) {
+    document.getElementById('inputIdMostrarDim').value = id;
+    document.getElementById('formMostrarDim').submit();
+}
+</script>
+</div> <!-- end wrapper -->
