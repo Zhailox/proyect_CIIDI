@@ -241,7 +241,7 @@
                     <h4 class="li-offer-title"><?= htmlspecialchars($inv['titulo']) ?></h4>
                     <div class="li-offer-prof">
                         <i class="ph-bold ph-graduation-cap"></i>
-                        <span>Prof. <?= htmlspecialchars($inv['nombre_profesor'] . ' ' . $inv['apellido_profesor']) ?></span>
+                        <span>Prof. <?= htmlspecialchars($inv['nombre_profesor'] ?? 'No asignado') ?></span>
                     </div>
                     <?php if ($inv['estado'] === 'Abierta'): ?>
                         <a href="?ruta=postulaciones-investigacion" class="li-btn-apply" style="text-decoration:none; display:flex;">
