@@ -80,16 +80,33 @@
             <p style="color: #64748b; font-size: 0.9rem;">No hay dimensiones operativas registradas.</p>
         <?php else: ?>
             <?php foreach($dimensiones as $dim): ?>
-                <article class="li-card" style="padding: 1.25rem; background: #ffffff; border: 1px solid var(--color-borde); border-radius: var(--radio-md); box-shadow: var(--sombra-sm);">
-                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-                        <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(112, 144, 203, 0.15); display: flex; align-items: center; justify-content: center; color: var(--color-terciario);">
-                            <i class="ph-bold ph-tag"></i>
+                <?php
+                $c_proy = count(array_filter($proyectos, function($p) use ($dim) { return $p['dimension_nombre'] === $dim['nombre']; }));
+                $c_inv = count(array_filter($investigaciones, function($i) use ($dim) { return $i['dimension_nombre'] === $dim['nombre']; }));
+                ?>
+                <article class="li-card" style="padding: 1.25rem; background: #ffffff; border: 1px solid var(--color-borde); border-radius: var(--radio-md); box-shadow: var(--sombra-sm); display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(112, 144, 203, 0.15); display: flex; align-items: center; justify-content: center; color: var(--color-terciario);">
+                                    <i class="ph-bold ph-tag"></i>
+                                </div>
+                                <h4 style="margin: 0; font-size: 1.05rem; color: var(--li-text-title);"><?= htmlspecialchars($dim['nombre']) ?></h4>
+                            </div>
                         </div>
-                        <h4 style="margin: 0; font-size: 1.05rem; color: var(--li-text-title);"><?= htmlspecialchars($dim['nombre']) ?></h4>
+                        <p style="margin: 0; font-size: 0.9rem; color: var(--li-text-desc); line-height: 1.5; margin-bottom: 1rem;">
+                            <?= htmlspecialchars($dim['descripcion'] ?: 'Sin descripción registrada.') ?>
+                        </p>
                     </div>
-                    <p style="margin: 0; font-size: 0.9rem; color: var(--li-text-desc); line-height: 1.5;">
-                        <?= htmlspecialchars($dim['descripcion'] ?: 'Sin descripción registrada.') ?>
-                    </p>
+                    
+                    <div style="display: flex; gap: 1rem; border-top: 1px solid var(--color-borde); padding-top: 0.75rem;">
+                        <span style="font-size: 0.8rem; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 4px;">
+                            <i class="ph-bold ph-folder-notch" style="color: #64748b;"></i> <?= $c_proy ?> Proyectos Vinculados
+                        </span>
+                        <span style="font-size: 0.8rem; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 4px;">
+                            <i class="ph-bold ph-hand-pointing" style="color: #64748b;"></i> <?= $c_inv ?> Ofertas Activas
+                        </span>
+                    </div>
                 </article>
             <?php endforeach; ?>
         <?php endif; ?>
