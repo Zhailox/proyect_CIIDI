@@ -18,62 +18,51 @@
 <div class="li-detail-header-inner">
 <!-- Migas de pan -->
 <nav class="li-breadcrumbs">
-<a onclick="showView(1)">
+<a href="?ruta=lineas-investigacion" class="li-breadcrumb-link">
 <i class="ph-bold ph-arrow-left"></i>
 <span>Explorar Líneas</span>
 </a>
 <i class="ph-bold ph-caret-right li-breadcrumbs-sep"></i>
 <span><?= htmlspecialchars($linea['carrera_nombre'] ?? 'General') ?> (Activo)</span>
 <i class="ph-bold ph-caret-right li-breadcrumbs-sep"></i>
-<span class="li-breadcrumbs-current">LIN-INF-01</span>
+<span class="li-breadcrumbs-current">Línea #<?= $linea['id'] ?></span>
 </nav>
 <div class="li-line-title-row">
 <div>
 <div class="li-line-title-meta">
-<span class="li-code-badge">LIN-INF-01</span>
-<span class="li-pnf-tag">Programa Nacional de Formación en Informática</span>
-<span class="li-badge-operative">100% Operativo</span>
+<span class="li-code-badge">LÍNEA #<?= $linea['id'] ?></span>
+<span class="li-pnf-tag"><?= htmlspecialchars($linea['carrera_nombre'] ?? 'General') ?></span>
 </div>
-<h1 class="li-line-title">Desarrollo de Software Libre y Soberanía Tecnológica</h1>
+<h1 class="li-line-title"><?= htmlspecialchars($linea['nombre']) ?></h1>
 </div>
-<button class="li-btn-primary" onclick="alert('Formulario de vinculación de Proyecto PST abierto');">
-<i class="ph-bold ph-plus-circle"></i>
-<span>Vincular Proyecto PST</span>
-</button>
+
 </div>
-<p class="li-line-description">
-            Articulación sistemática para el diseño, despliegue y auditoría de soluciones informáticas basadas en estándares abiertos y software libre. Promueve la independencia y seguridad tecnológica en la gestión pública, consejos comunales y cadenas productivas territoriales mediante metodologías ágiles participativas.
-          </p>
+<p class="li-line-description"><?= htmlspecialchars($linea['descripcion'] ?: 'Sin descripción registrada.') ?></p>
+
 <div class="li-header-stats-strip">
 <div class="li-strip-stat">
 <i class="ph-bold ph-tree-structure li-strip-stat-icon"></i>
 <div>
-<span class="li-strip-stat-val">5</span>
+<span class="li-strip-stat-val"><?= count($dimensiones) ?></span>
 <span class="li-strip-stat-desc">Dimensiones Operativas</span>
 </div>
 </div>
 <div class="li-strip-stat">
 <i class="ph-bold ph-folder-notch li-strip-stat-icon"></i>
 <div>
-<span class="li-strip-stat-val">48</span>
+<span class="li-strip-stat-val"><?= count($proyectos) ?></span>
 <span class="li-strip-stat-desc">Proyectos Vinculados</span>
 </div>
 </div>
 <div class="li-strip-stat">
-<i class="ph-bold ph-chalkboard-teacher li-strip-stat-icon"></i>
+<i class="ph-bold ph-hand-pointing li-strip-stat-icon"></i>
 <div>
-<span class="li-strip-stat-val">3</span>
+<span class="li-strip-stat-val"><?= count($investigaciones) ?></span>
 <span class="li-strip-stat-desc">Ofertas Docentes Activas</span>
 </div>
 </div>
-<div class="li-strip-stat">
-<i class="ph-bold ph-check-circle li-strip-stat-icon"></i>
-<div>
-<span class="li-strip-stat-val">86%</span>
-<span class="li-strip-stat-desc">Tasa de Cobertura Curricular</span>
 </div>
-</div>
-</div>
+
 </div>
 </section>
 <!-- Layout de 2 Columnas (70% - 30%) -->
@@ -81,41 +70,32 @@
 <!-- Columna Izquierda (70%) - Proyectos y Dimensiones -->
 <div class="li-col-left">
 <!-- Panel de Dimensiones Operativas (Etiquetas Clickeables) -->
+
 <section class="li-dimensions-panel">
-<h3 class="li-panel-title">
-<i class="ph-bold ph-tag"></i>
-              Dimensiones Operativas de la Línea
-            </h3>
-<p class="li-panel-subtitle">
-              Filtra los proyectos sociotecnológicos según la dimensión temática de aplicación:
-            </p>
-<div class="li-dimension-tags">
-<button class="li-dimension-chip active">
-<span>Todas las Dimensiones</span>
-<span class="chip-qty">48</span>
-</button>
-<button class="li-dimension-chip">
-<span>Sistemas de Gestión Comunal</span>
-<span class="chip-qty">16</span>
-</button>
-<button class="li-dimension-chip">
-<span>Interoperabilidad y APIs Abiertas</span>
-<span class="chip-qty">12</span>
-</button>
-<button class="li-dimension-chip">
-<span>Seguridad y Criptografía Libre</span>
-<span class="chip-qty">8</span>
-</button>
-<button class="li-dimension-chip">
-<span>Migración a GNU/Linux</span>
-<span class="chip-qty">7</span>
-</button>
-<button class="li-dimension-chip">
-<span>Bases de Datos Distribuidas</span>
-<span class="chip-qty">5</span>
-</button>
-</div>
+    <h3 class="li-panel-title">
+        <i class="ph-bold ph-tag"></i> Dimensiones Operativas de la Línea
+    </h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; margin-top: 1rem;">
+        <?php if(empty($dimensiones)): ?>
+            <p style="color: #64748b; font-size: 0.9rem;">No hay dimensiones operativas registradas.</p>
+        <?php else: ?>
+            <?php foreach($dimensiones as $dim): ?>
+                <article class="li-card" style="padding: 1.25rem; background: #ffffff; border: 1px solid var(--color-borde); border-radius: var(--radio-md); box-shadow: var(--sombra-sm);">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                        <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(112, 144, 203, 0.15); display: flex; align-items: center; justify-content: center; color: var(--color-terciario);">
+                            <i class="ph-bold ph-tag"></i>
+                        </div>
+                        <h4 style="margin: 0; font-size: 1.05rem; color: var(--li-text-title);"><?= htmlspecialchars($dim['nombre']) ?></h4>
+                    </div>
+                    <p style="margin: 0; font-size: 0.9rem; color: var(--li-text-desc); line-height: 1.5;">
+                        <?= htmlspecialchars($dim['descripcion'] ?: 'Sin descripción registrada.') ?>
+                    </p>
+                </article>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </div>
 </section>
+
 <!-- Listado de Proyectos Desarrollados -->
 <section class="li-projects-section">
 <div class="li-projects-header">

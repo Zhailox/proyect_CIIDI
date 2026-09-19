@@ -1735,11 +1735,16 @@
 
     /* 4 KPIs / Estadísticas globales */
     .li-kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
       gap: 1.25rem;
-      max-width: 880px;
+      max-width: 1000px;
       margin: 0 auto;
+    }
+    .li-kpi-grid > .li-kpi-card {
+      flex: 1 1 200px;
+      max-width: 250px;
     }
 
     .li-kpi-card {
@@ -1791,7 +1796,7 @@
        VISTA 1: CONTENIDO PRINCIPAL, FILTROS Y VISTAS
        ========================================================================== */
     .li-main-content {
-      padding: 2.25rem 3rem 4rem 3rem;
+      padding: 1.25rem 3rem 4rem 3rem;
       max-width: 1400px;
       margin: 0 auto;
       width: 100%;
@@ -1884,6 +1889,7 @@
     }
 
     .li-section-title {
+      margin-bottom: 0 !important;
       font-size: 1.35rem;
       font-weight: 700;
       color: var(--texto-titulos);
@@ -3120,7 +3126,7 @@
         padding: 2.5rem 1.5rem;
       }
       .li-main-content {
-        padding: 1.5rem;
+        padding: 1rem 1.5rem 1.5rem 1.5rem;
       }
       .li-detail-layout {
         padding: 1.5rem;

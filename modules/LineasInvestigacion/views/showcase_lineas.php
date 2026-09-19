@@ -23,13 +23,7 @@ if (!empty($lineas)) {
 <!-- Hero Section -->
 <section class="li-hero">
 <div class="li-hero-inner">
-<div class="li-hero-tag-row">
-<div class="li-hero-tag">
-<i class="ph-bold ph-flask"></i>
-              Ecosistema Científico Institucional
-            </div>
 
-</div>
 <h1 class="li-hero-title">Ecosistema de Investigación CIIDI</h1>
 <p class="li-hero-subtitle">
             Catálogo unificado y articulador de líneas de investigación institucionales, dimensiones operativas y producción académica sociotecnológica.
@@ -254,7 +248,7 @@ if (!empty($lineas)) {
                     
                     <div class="li-card-footer">
                         <div class="li-card-footer-action">
-                            <span>Explorar submódulos</span>
+                            <span>Explorar dimensiones</span>
                             <i class="ph-bold ph-arrow-right"></i>
                         </div>
                     </div>
