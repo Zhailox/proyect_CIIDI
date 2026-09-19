@@ -1501,9 +1501,9 @@
      El CSS generado por Stitch asume que --color-principal es índigo,
      pero el core real lo define como blanco (rgb 255,255,255).
      ========================================================= */
-  --color-principal: #121a3e;     /* Indigo oscuro institucional */
-  --color-secundario: #505984;    /* Violeta/Grisáceo de balance */
-  --color-terciario: #7090cb;     /* Cyan suave / Acanto */
+  --color-principal: rgb(80, 89, 132); /* Igual al botón Buscar PST */
+  --color-secundario: rgb(30, 41, 59);
+  --color-terciario: rgb(112, 144, 203);
 }
 
 
@@ -1557,7 +1557,7 @@
        VISTA 1: HERO SECTION INSPIRACIONAL Y BUSCADOR UNIVERSAL
        ========================================================================== */
     .li-hero {
-      background: linear-gradient(135deg, var(--color-principal) 0%, #1e2954 60%, var(--color-secundario) 100%);
+      background: linear-gradient(135deg, rgba(80, 89, 132, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%);
       color: #ffffff;
       padding: 3.25rem 2.5rem 2.75rem 2.5rem;
       position: relative;
@@ -1601,9 +1601,9 @@
       letter-spacing: 0.06em;
       text-transform: uppercase;
       font-weight: 700;
-      color: var(--color-terciario);
-      background: rgba(112, 144, 203, 0.12);
-      border: 1px solid rgba(112, 144, 203, 0.25);
+      color: #ffffff;
+      background: rgba(112, 144, 203, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.3);
       padding: 0.3rem 0.85rem;
       border-radius: var(--radio-full);
     }

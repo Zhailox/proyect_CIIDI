@@ -16,7 +16,7 @@ class LineasInvestigacionModule implements ModuleContract {
             'lineas-investigacion' => [
                 'vista'            => __DIR__ . '/views/showcase_lineas.php',
                 'titulo'           => 'Líneas de Investigación - CIIDI UPTTMBI',
-                'css'              => ['LineasInvestigacion.css'],
+                'css'              => ['LineasInvestigacion.css?v=' . time()],
                 'controlador'      => 'ShowcaseLineasController',
                 'controlador_path' => __DIR__ . '/controllers/ShowcaseController.php',
                 'metodo'           => 'index'
@@ -25,7 +25,7 @@ class LineasInvestigacionModule implements ModuleContract {
             'analitica' => [
                 'vista'            => __DIR__ . '/views/dashboard_analitica.php',
                 'titulo'           => 'Analítica Predictiva IA',
-                'css'              => ['LineasInvestigacion.css'],
+                'css'              => ['LineasInvestigacion.css?v=' . time()],
                 'js'               => ['analitica_ui.js'],
                 'controlador'      => 'AnaliticaController',
                 'controlador_path' => __DIR__ . '/controllers/AnaliticaController.php',
@@ -42,7 +42,7 @@ class LineasInvestigacionModule implements ModuleContract {
             'detalle-linea' => [
                 'vista'            => __DIR__ . '/views/detalle_linea.php',
                 'titulo'           => 'Detalle de Línea de Investigación',
-                'css'              => ['LineasInvestigacion.css'],
+                'css'              => ['LineasInvestigacion.css?v=' . time()],
                 'controlador'      => 'DetalleLineaController',
                 'controlador_path' => __DIR__ . '/controllers/DetalleController.php',
                 'metodo'           => 'index'
@@ -51,7 +51,7 @@ class LineasInvestigacionModule implements ModuleContract {
             'gestionar-lineas' => [
                 'vista'            => __DIR__ . '/views/gestor_lineas.php',
                 'titulo'           => 'Gestión de Líneas de Investigación - Admin',
-                'css'              => ['LineasInvestigacion.css'],
+                'css'              => ['LineasInvestigacion.css?v=' . time()],
                 'controlador'      => 'GestorLineasController',
                 'controlador_path' => __DIR__ . '/controllers/GestorController.php',
                 'metodo'           => 'index'
@@ -59,7 +59,7 @@ class LineasInvestigacionModule implements ModuleContract {
             'detalle-gestion-linea' => [
                 'vista'            => __DIR__ . '/views/detalle_gestion_linea.php',
                 'titulo'           => 'Detalle y Dimensiones',
-                'css'              => ['LineasInvestigacion.css'],
+                'css'              => ['LineasInvestigacion.css?v=' . time()],
                 'controlador'      => 'GestorLineasController',
                 'controlador_path' => __DIR__ . '/controllers/GestorController.php',
                 'metodo'           => 'detalleGestionLinea'
@@ -80,7 +80,7 @@ class LineasInvestigacionModule implements ModuleContract {
             'gestionar-dimensiones' => [
                 'vista'            => __DIR__ . '/views/gestor_dimensiones.php',
                 'titulo'           => 'Gestión de Dimensiones Operativas - Admin',
-                'css'              => ['LineasInvestigacion.css'],
+                'css'              => ['LineasInvestigacion.css?v=' . time()],
                 'controlador'      => 'GestorLineasController',
                 'controlador_path' => __DIR__ . '/controllers/GestorController.php',
                 'metodo'           => 'dimensiones'
