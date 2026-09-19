@@ -317,19 +317,22 @@ class GestorUsuariosController {
             $hashSeguro = password_hash($password, PASSWORD_BCRYPT);
         }
 
-        // Obtener datos del usuario antes de la edición para verificar cambio de rol
-        $usuarioAnterior = $this->adminModel->buscarPorCedula($_POST['cedula_original'] ?? $cedula);
+        // Obtener datos exactos del usuario por ID antes de aplicar los cambios en la BD
+        $usuarioAnterior = $this->adminModel->buscarPorId($id);
 
-        // Pasamos el hashSeguro al modelo (será null si no se llenaron los campos)
+        // Pasamos el hashSeguro al modelo (será null si no se llenaron los campos de clave)
         $this->adminModel->actualizarUsuario($id, $cedula, $nombre, $email, $id_rol, $hashSeguro);
         
-        // Si el rol cambió, disparar correo de notificación superadmin.cambio_rol
-        if ($usuarioAnterior && (int)$usuarioAnterior['id_rol'] !== $id_rol) {
+        // Evaluar ESTRICTAMENTE si hubo una modificación real en el id_rol
+        if ($usuarioAnterior && isset($usuarioAnterior['id_rol']) && (int)$usuarioAnterior['id_rol'] !== (int)$id_rol) {
             $roles = $this->adminModel->obtenerRoles();
             $rolAnteriorNombre = $usuarioAnterior['rol_nombre'] ?? 'Desconocido';
             $nuevoRolNombre = 'Usuario';
             foreach ($roles as $r) {
-                if ((int)$r['id'] === $id_rol) { $nuevoRolNombre = $r['nombre']; break; }
+                if ((int)$r['id'] === (int)$id_rol) { 
+                    $nuevoRolNombre = $r['nombre']; 
+                    break; 
+                }
             }
 
             MailService::enviarEvento('superadmin.cambio_rol', $email, [

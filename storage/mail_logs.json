@@ -1,5 +1,15 @@
 [
     {
+        "id": "mail_6aaee0354e3fe",
+        "fecha": "2026-09-19 19:19:17",
+        "destino_email": "andrusramirez2020@gmail.com",
+        "destino_nombre": "adruss",
+        "asunto": "Actualización de Permisos y Rol Institucional - CIIDI",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
         "id": "mail_6aaededf82f08",
         "fecha": "2026-09-19 19:13:35",
         "destino_email": "DIOS@gmail.com",

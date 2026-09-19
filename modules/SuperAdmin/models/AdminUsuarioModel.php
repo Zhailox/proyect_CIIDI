@@ -10,15 +10,26 @@ class AdminUsuarioModel {
         // Constructor limpio
     }
 
-    // Busca un usuario individual sin importar su rol
+    // Busca un usuario individual sin importar su rol por Cédula
     public function buscarPorCedula(string $cedula) {
-        $qb = new QueryBuilder(); // <-- 1. Instancia nueva y limpia
+        $qb = new QueryBuilder();
         
         return $qb->tabla('usuarios u')
-            ->select('u.id, u.cedula, u.nombre_completo, u.email, u.activo, r.nombre AS rol_nombre, p.nivel_privilegio')
+            ->select('u.id, u.cedula, u.nombre_completo, u.email, u.activo, u.id_rol, r.nombre AS rol_nombre, p.nivel_privilegio')
             ->join('roles r', 'u.id_rol = r.id')
             ->join('privilegios p', 'r.privilegio_id = p.privilegio_id')
             ->where('u.cedula', '=', $cedula)
+            ->first();
+    }
+
+    // Busca un usuario individual por su ID primario
+    public function buscarPorId(int $id) {
+        $qb = new QueryBuilder();
+        return $qb->tabla('usuarios u')
+            ->select('u.id, u.cedula, u.nombre_completo, u.email, u.activo, u.id_rol, r.nombre AS rol_nombre, p.nivel_privilegio')
+            ->join('roles r', 'u.id_rol = r.id')
+            ->join('privilegios p', 'r.privilegio_id = p.privilegio_id')
+            ->where('u.id', '=', $id)
             ->first();
     }
 
