@@ -25,6 +25,9 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
             </div>
             <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 12px; z-index: 1;">
             <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <button type="button" onclick="document.getElementById('formExportarLineas').submit()" style="background: #10b981; color: #ffffff; padding: 10px 18px; border: none; border-radius: 8px; font-weight: 800; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: 0.2s;" onmouseover="this.style.background='#059669'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#10b981'; this.style.transform='translateY(0)'">
+                    <i class="ph-bold ph-download-simple"></i> Exportar a Excel
+                </button>
                 <button type="button" onclick="abrirModalCrearLinea()" style="background: #ffffff; color: #0f172a; padding: 10px 18px; border: none; border-radius: 8px; font-weight: 800; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: 0.2s;" onmouseover="this.style.background='#f1f5f9'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'">
                     <i class="ph-bold ph-plus-circle"></i> Nueva Línea
                 </button>
