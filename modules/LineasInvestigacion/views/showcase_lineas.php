@@ -28,9 +28,7 @@ if (!empty($lineas)) {
 <i class="ph-bold ph-flask"></i>
               Ecosistema Científico Institucional
             </div>
-<div class="li-hero-status-pill">
-<span>Fase 1: PNF Informática 100% Operativo</span>
-</div>
+
 </div>
 <h1 class="li-hero-title">Ecosistema de Investigación CIIDI</h1>
 <p class="li-hero-subtitle">
@@ -38,10 +36,6 @@ if (!empty($lineas)) {
           </p>
 <!-- Buscador Universal Grande -->
 <div class="li-search-box">
-<div class="li-search-scope">
-<i class="ph-bold ph-funnel"></i>
-<span>PNF Informática (Activo)</span>
-</div>
 <div class="li-search-input-wrapper">
 <i class="ph-bold ph-magnifying-glass"></i>
 <input class="li-search-input" placeholder="Buscar por código, dimensión temática, tecnología (ej. GNU/Linux, REST API)..." type="text"/>
@@ -76,7 +70,7 @@ if (!empty($lineas)) {
 <i class="ph-bold ph-folder-open"></i>
 </div>
 <div>
-<div class="li-kpi-value">118</div>
+<div class="li-kpi-value"><?= $totalProyectos ?></div>
 <div class="li-kpi-label">Proyectos PST Informática</div>
 </div>
 </div>
@@ -94,20 +88,7 @@ if (!empty($lineas)) {
 </section>
 <!-- Contenido Principal -->
 <main class="li-main-content">
-<!-- Banner de Estado de PNF (Requerimiento 1) -->
-<div class="li-stage-banner">
-<div class="li-stage-info">
-<div class="li-stage-icon">
-<i class="ph-bold ph-check-circle"></i>
-</div>
-<div class="li-stage-text">
-<h4>
-<span>Programa Activo: PNF en Informática</span>
-<span class="li-stage-badge-active">100% Operativo</span>
-</h4>
-<p>Módulo de registro, vinculación de proyectos PST y banco de ofertas habilitado en producción para Informática. Los próximos PNF se integrarán progresivamente.</p>
-</div>
-</div>
+
 <div>
 <span class="li-stage-badge-upcoming">
 <i class="ph-bold ph-clock"></i> Fase 2 Planificada: 3 PNF
@@ -118,15 +99,10 @@ if (!empty($lineas)) {
 <div class="li-section-toolbar">
 <div class="li-toolbar-left">
 <h2 class="li-section-title">Líneas de Investigación</h2>
-<span class="li-badge-counter">4 Activas en Informática</span>
+<span class="li-badge-counter"><?= $totalLineas ?> Activas</span>
 </div>
 <div class="li-toolbar-right">
-<!-- Botón para alternar Panel de Filtros Avanzados -->
-<button class="li-btn-filter-toggle" id="btn-toggle-filters" onclick="toggleAdvancedFilters()">
-<i class="ph-bold ph-sliders-horizontal"></i>
-<span>Filtros Avanzados</span>
-<span class="li-filter-count-badge">3</span>
-</button>
+
 <!-- Toggle Vista Cuadrícula / Vista Lista (Requerimiento 3) -->
 <div aria-label="Modo de visualización" class="li-view-mode-selector" role="group">
 <button class="li-view-btn active" id="btn-view-grid" onclick="setListingView('grid')" title="Vista Cuadrícula">
@@ -138,29 +114,7 @@ if (!empty($lineas)) {
 </div>
 </div>
 </div>
-<!-- Píldoras de Filtros Facetados de Carreras con Estado Activo / Próximamente (Requerimiento 1) -->
-<div class="li-facet-filters">
-<button class="li-facet-chip active">
-<i class="ph-bold ph-laptop"></i>
-<span>PNF en Informática</span>
-<span class="li-facet-status-tag active-tag">100% Operativo</span>
-</button>
-<button class="li-facet-chip disabled" title="Próximamente disponible en Fase 2">
-<i class="ph-bold ph-briefcase"></i>
-<span>PNF en Administración</span>
-<span class="li-facet-status-tag soon-tag">Próximamente • Fase 2</span>
-</button>
-<button class="li-facet-chip disabled" title="Próximamente disponible en Fase 2">
-<i class="ph-bold ph-plant"></i>
-<span>PNF en Agroalimentación</span>
-<span class="li-facet-status-tag soon-tag">Próximamente • Fase 2</span>
-</button>
-<button class="li-facet-chip disabled" title="Próximamente disponible en Fase 2">
-<i class="ph-bold ph-lightning"></i>
-<span>PNF en Electricidad</span>
-<span class="li-facet-status-tag soon-tag">Próximamente • Fase 2</span>
-</button>
-</div>
+
 <!-- ====================================================================
              PANEL DE FILTROS AVANZADOS EXPANDIBLE (REQUERIMIENTO 2)
              ==================================================================== -->
@@ -267,7 +221,7 @@ if (!empty($lineas)) {
                 <i class="ph-bold ph-laptop li-pnf-icon"></i>
                 <div class="li-pnf-name">
                     <span><?= htmlspecialchars($carrera) ?></span>
-                    <span class="li-badge-operative">Operativo</span>
+                    
                 </div>
             </div>
             <span class="li-pnf-meta"><?= count($grupo) ?> Líneas de Investigación Homologadas</span>
@@ -350,3 +304,27 @@ function toggleAdvancedFilters() {
     if(panel) panel.classList.toggle('active');
 }
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.querySelector('.li-search-input');
+    const searchBtn = document.querySelector('.li-search-action-btn');
+    const cards = document.querySelectorAll('.li-card');
+    function filterCards() {
+        if (!searchInput) return;
+        const term = searchInput.value.toLowerCase().trim();
+        cards.forEach(card => {
+            const title = card.querySelector('.li-card-title')?.textContent.toLowerCase() || '';
+            const desc = card.querySelector('.li-card-desc')?.textContent.toLowerCase() || '';
+            if (title.includes(term) || desc.includes(term)) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+    if (searchInput) searchInput.addEventListener('input', filterCards);
+    if (searchBtn) searchBtn.addEventListener('click', (e) => { e.preventDefault(); filterCards(); });
+});
+</script>
+</div></div>
