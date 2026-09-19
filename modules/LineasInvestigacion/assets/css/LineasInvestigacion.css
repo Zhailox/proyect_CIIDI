@@ -1495,6 +1495,18 @@
    UI GENERADA POR STITCH
    ========================================== */
 
+.li-wrapper {
+  /* =========================================================
+     OVERRIDES DE COLORES GLOBALES PARA ESTE MÓDULO
+     El CSS generado por Stitch asume que --color-principal es índigo,
+     pero el core real lo define como blanco (rgb 255,255,255).
+     ========================================================= */
+  --color-principal: #121a3e;     /* Indigo oscuro institucional */
+  --color-secundario: #505984;    /* Violeta/Grisáceo de balance */
+  --color-terciario: #7090cb;     /* Cyan suave / Acanto */
+}
+
+
     
 
     /* Barra de control para alternar entre Vista 1 y Vista 2 */
