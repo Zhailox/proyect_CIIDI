@@ -173,102 +173,13 @@ if (!empty($lineas)) {
     <!-- ====================================================================
              PANEL DE FILTROS AVANZADOS EXPANDIBLE (REQUERIMIENTO 2)
              ==================================================================== -->
-<section class="li-advanced-filter-panel" id="panel-filtros-avanzados">
-<div class="li-af-header">
-<div class="li-af-title">
-<i class="ph-bold ph-funnel" style="color: var(--color-secundario);"></i>
-<span>Criterios Avanzados de Búsqueda Académica</span>
-</div>
-<span style="font-size: 0.75rem; color: var(--texto-silenciado);">Repositorio Curricular PST</span>
-</div>
-<div class="li-af-grid" style="display: flex; flex-direction: column; gap: 1rem;">
-<!-- Criterio 1: Trayecto Formativo PST -->
-<div class="li-af-group">
-<label class="li-af-label">
-<i class="ph-bold ph-path"></i> Trayecto Formativo PST
-              </label>
-<select class="li-af-select">
-<option value="">Todos los Trayectos</option>
-<option value="T1">Trayecto I (Soporte Técnico y Redes)</option>
-<option value="T2">Trayecto II (Desarrollo y BD Básicas)</option>
-<option value="T3">Trayecto III (Sistemas Distribuidos y Web)</option>
-<option value="T4">Trayecto IV (Ingeniería e I+D Integral)</option>
-</select>
-</div>
-<!-- Criterio 2: Estatus / Nivel de Cobertura -->
-<div class="li-af-group">
-<label class="li-af-label">
-<i class="ph-bold ph-chart-donut"></i> Estatus / Cobertura
-              </label>
-<select class="li-af-select">
-<option value="">Cualquier Cobertura</option>
-<option selected="" value="proy">Con Proyectos Activos (&gt; 20)</option>
-<option value="ofertas">Con Ofertas Docentes Abiertas</option>
-<option value="form">En Fase de Formulación</option>
-<option value="alta">Alta Cobertura (&gt; 70%)</option>
-</select>
-</div>
-<!-- Criterio 3: Tipología de Dimensión / Área Tecnológica -->
-<div class="li-af-group">
-<label class="li-af-label">
-<i class="ph-bold ph-tree-structure"></i> Área Tecnológica
-              </label>
-<select class="li-af-select">
-<option value="">Todas las Áreas</option>
-<option value="sw-libre">Software Libre y Abierto</option>
-<option value="redes">Redes y Telecomunicaciones Comunitarias</option>
-<option value="ciber">Seguridad y Criptografía</option>
-<option value="iot">Internet de las Cosas (IoT) y Embebidos</option>
-</select>
-</div>
-<!-- Criterio 4: Período / Año Académico -->
-<div class="li-af-group">
-<label class="li-af-label">
-<i class="ph-bold ph-calendar-blank"></i> Año / Cohorte
-              </label>
-<select class="li-af-select">
-<option value="">Todos los Períodos</option>
-<option selected="" value="2024">Período Académico 2024</option>
-<option value="2023">Período Académico 2023</option>
-<option value="2022">Período Académico 2022</option>
-</select>
-</div>
-</div>
-<!-- Footer del Panel: Píldoras de Filtros Activos y Acciones -->
-<div class="li-af-footer">
-<div class="li-af-active-pills">
-<span style="font-size: 0.75rem; font-weight: 700; color: var(--texto-silenciado); margin-right: 0.25rem;">
-                Filtros aplicados:
-              </span>
-<span class="li-af-pill-removable" onclick="this.remove()">
-<span>PNF: Informática</span>
-<i class="ph-bold ph-x"></i>
-</span>
-<span class="li-af-pill-removable" onclick="this.remove()">
-<span>Cobertura: Con Proyectos</span>
-<i class="ph-bold ph-x"></i>
-</span>
-<span class="li-af-pill-removable" onclick="this.remove()">
-<span>Año: 2024</span>
-<i class="ph-bold ph-x"></i>
-</span>
-</div>
-<div class="li-af-actions">
-<button class="li-af-btn-clear" onclick="resetFilters()">
-<i class="ph-bold ph-arrow-counter-clockwise"></i> Limpiar Filtros
-              </button>
-<button class="li-af-btn-apply" onclick="applyFilters()">
-<i class="ph-bold ph-check"></i> Aplicar Filtros (4 Resultados)
-              </button>
-</div>
-</div>
-</section>
+
     
     <!-- Ofertas de Investigación -->
-    <section class="li-sidebar-ofertas" style="margin-top: 2rem; background: #ffffff; border: 1px solid var(--color-borde); border-radius: var(--radio-md); padding: 1.5rem; box-shadow: var(--sombra-sm);">
+    <section class="li-sidebar-ofertas" style="background: #ffffff; border: 1px solid var(--color-borde); border-radius: var(--radio-md); padding: 1.5rem; box-shadow: var(--sombra-sm);">
         <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--li-text-title); margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--color-borde); padding-bottom: 0.75rem;">
             <i class="ph-bold ph-hand-pointing" style="color: var(--color-secundario);"></i>
-            Ofertas PST Disponibles
+            Ofertas de Investigaciones
         </h3>
         
         <div style="display: flex; flex-direction: column; gap: 1rem;">
