@@ -89,11 +89,7 @@ if (!empty($lineas)) {
 <!-- Contenido Principal -->
 <main class="li-main-content">
 
-<div>
-<span class="li-stage-badge-upcoming">
-<i class="ph-bold ph-clock"></i> Fase 2 Planificada: 3 PNF
-            </span>
-</div>
+
 </div>
 <!-- Toolbar de Resultados y Controles de Vista (Requerimiento 3) -->
 <div class="li-section-toolbar">
@@ -256,17 +252,7 @@ if (!empty($lineas)) {
                         </div>
                     </div>
                     
-                    <div class="li-progress-container">
-                        <?php 
-                        $cobertura = min(100, max(20, (int)($linea['total_proyectos'] ?? 0) * 10)); 
-                        ?>
-                        <div class="li-progress-labels">
-                            <span>Cobertura Estimada</span>
-                            <span class="li-progress-percent"><?= $cobertura ?>%</span>
-                        </div>
-                        <div class="li-progress-track">
-                            <div class="li-progress-fill" style="width: <?= $cobertura ?>%;"></div>
-                        </div>
+                    <div class="li-card-footer">
                         <div class="li-card-footer-action">
                             <span>Explorar submódulos</span>
                             <i class="ph-bold ph-arrow-right"></i>

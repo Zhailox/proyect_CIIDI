@@ -2484,8 +2484,9 @@
       border: 1px solid var(--color-borde);
       border-radius: var(--radio-md);
       padding: 1.15rem 1.4rem;
-      display: grid;
-      grid-template-columns: 2.2fr 1.6fr 1fr 140px;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
       align-items: center;
       gap: 1.5rem;
       box-shadow: var(--sombra-sm);
@@ -2504,9 +2505,7 @@
       align-items: center;
     }
 
-    .li-items-container.list-view .li-card-description {
-      display: none; /* En lista compacta se oculta la descripción larga para pulcritud */
-    }
+    /* description is visible now */
 
     .li-items-container.list-view .li-card-badges {
       margin-bottom: 0;
