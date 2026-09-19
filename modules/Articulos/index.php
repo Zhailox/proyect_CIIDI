@@ -121,7 +121,7 @@ public function getRutas(): array {
                     ['ruta' => 'articulos', 'titulo' => 'Revista Digital', 'privilegio_minimo' => $nivelPublico],
                     ['ruta' => 'gestor-articulos', 'titulo' => 'Gestor Interno', 'privilegio_minimo' => $nivelAdmin],
                     ['ruta' => 'gestor-catalogos', 'titulo' => 'Gestor Catalogos', 'privilegio_minimo' => $nivelAdmin],
-                    ['ruta' => 'configuracion-articulos', 'titulo' => 'Ajustes de Revista', 'privilegio_minimo' => $nivelAdmin, 'permiso_rbac' => 'auditar', 'modulo_rbac' => 'RepositorioPST']
+                    ['ruta' => 'configuracion-articulos', 'titulo' => 'Ajustes de Revista', 'privilegio_minimo' => $nivelAdmin, 'permiso_rbac' => 'auditar', 'modulo_rbac' => 'Articulos']
                 ]
             ]
         ];
