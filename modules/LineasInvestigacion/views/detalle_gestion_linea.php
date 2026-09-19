@@ -7,11 +7,11 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
 
     <!-- BREADCRUMBS -->
     <div style="margin-bottom: 1rem; font-size: 0.85rem; font-weight: 600;">
-        <a href="index.php?ruta=dashboard" style="color: var(--text-muted); text-decoration: none;"><i class="ph-bold ph-squares-four"></i> Dashboard</a>
-        <span style="color: #cbd5e1; margin: 0 0.5rem;">/</span>
-        <a href="index.php?ruta=gestionar-lineas" style="color: var(--text-muted); text-decoration: none;">Gestión de Líneas</a>
-        <span style="color: #cbd5e1; margin: 0 0.5rem;">/</span>
-        <span style="color: var(--li-indigo);">Detalle</span>
+        <a href="index.php?ruta=dashboard" style="color: var(--color-secundario); text-decoration: none; transition: color 0.2s;"><i class="ph-bold ph-squares-four"></i> Dashboard</a>
+        <span style="color: var(--color-borde); margin: 0 0.5rem;">/</span>
+        <a href="index.php?ruta=gestionar-lineas" style="color: var(--color-secundario); text-decoration: none; transition: color 0.2s;">Gestión de Líneas</a>
+        <span style="color: var(--color-borde); margin: 0 0.5rem;">/</span>
+        <span style="color: var(--texto-silenciado);">Detalle de la Línea</span>
     </div>
     <div class="li-gestor-wrapper">
 
