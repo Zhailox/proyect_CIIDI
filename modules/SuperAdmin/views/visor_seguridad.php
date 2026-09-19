@@ -209,6 +209,44 @@
     </div>
 </div>
 
+<!-- PANEL DE BLINDAJE DE ALMACENAMIENTO Y VARIABLES DE ENTORNO (.ENV & STORAGE SHIELD) -->
+<?php
+$hEnv = $hardening['env_activo'] ?? false;
+$hStorage = $hardening['storage_htaccess'] ?? false;
+$hRoot = $hardening['root_htaccess'] ?? false;
+$blindajeCompleto = $hEnv && $hStorage && $hRoot;
+?>
+<div class="ag-sec-card mb-2" style="border-left: 5px solid <?= $blindajeCompleto ? '#10b981' : '#f59e0b' ?> !important;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <h3 style="margin:0; font-size: 1.15rem; font-weight: 800; color: var(--texto-titulos);">
+                    Protección de Almacenamiento & Credenciales (.env Shield)
+                </h3>
+                <span class="<?= $blindajeCompleto ? 'ag-badge ag-badge-ok' : 'ag-badge ag-badge-warn' ?>">
+                    <i class="ph-bold <?= $blindajeCompleto ? 'ph-shield-check' : 'ph-warning' ?>"></i>
+                    <?= $blindajeCompleto ? 'DEFENSA COMPLETA ACTIVA' : 'CONFIGURACIÓN PARCIAL' ?>
+                </span>
+            </div>
+            <p style="margin:0; font-size: 0.88rem; color: var(--texto-silenciado);">
+                Blindaje contra descargas web directas de credenciales JSON y aislamiento de variables de entorno fuera de la zona pública.
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <span class="<?= $hEnv ? 'ag-badge ag-badge-ok' : 'ag-badge ag-badge-danger' ?>">
+                <i class="ph-bold <?= $hEnv ? 'ph-check-circle' : 'ph-x-circle' ?>"></i> .env: <?= $hEnv ? 'Cargado' : 'Faltante' ?>
+            </span>
+            <span class="<?= $hStorage ? 'ag-badge ag-badge-ok' : 'ag-badge ag-badge-danger' ?>">
+                <i class="ph-bold <?= $hStorage ? 'ph-lock' : 'ph-warning' ?>"></i> storage/.htaccess: <?= $hStorage ? 'Deny All' : 'Expuesto' ?>
+            </span>
+            <span class="<?= $hRoot ? 'ag-badge ag-badge-ok' : 'ag-badge ag-badge-warn' ?>">
+                <i class="ph-bold <?= $hRoot ? 'ph-path' : 'ph-warning' ?>"></i> /.htaccess: <?= $hRoot ? 'Enrutado' : 'Sin filtro' ?>
+            </span>
+        </div>
+    </div>
+</div>
+
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;" class="mb-2">
     
     <!-- 1. MONITOR DE FUERZA BRUTA & RATE LIMITING -->

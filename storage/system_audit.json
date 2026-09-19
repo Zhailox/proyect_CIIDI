@@ -1,5 +1,53 @@
 [
     {
+        "id": "log_6aae0b9de34ef",
+        "fecha_hora": "2026-09-19 04:12:13",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Test Respuesta Core",
+        "detalles": "Diagnóstico del Core ejecutado en 158.82ms. Memoria: 2 MB. Estado: SALUDABLE",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "72dad92c98002b8c820c8df3ca76feee10628846c1c3e929fe401995fb9e1284",
+        "hash_integridad": "c56270c014dd2fb42376793cc09f8fcbe610ce698050748be506524e899d3fc2"
+    },
+    {
+        "id": "log_6aadfa90cc5e2",
+        "fecha_hora": "2026-09-19 02:59:28",
+        "nivel": "ERROR",
+        "modulo": "SuperAdmin",
+        "accion": "Falla de Prueba SMTP",
+        "detalles": "Error al enviar correo vía SMTP: SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "c8d4950247192a99879f627565f41fe20cfb7377bd2c7725cc060a198b73ca0d",
+        "hash_integridad": "72dad92c98002b8c820c8df3ca76feee10628846c1c3e929fe401995fb9e1284"
+    },
+    {
+        "id": "log_6aadfa7c287f0",
+        "fecha_hora": "2026-09-19 02:59:08",
+        "nivel": "WARNING",
+        "modulo": "SuperAdmin",
+        "accion": "Modificar Variables Globales",
+        "detalles": "Se actualizaron las variables de entorno del sistema.",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "bee666d17320078861f14b33a669d09df95d2e816dfed9a8ad0521dfb3ceb284",
+        "hash_integridad": "c8d4950247192a99879f627565f41fe20cfb7377bd2c7725cc060a198b73ca0d"
+    },
+    {
+        "id": "log_6aadf9fce84d7",
+        "fecha_hora": "2026-09-19 02:57:00",
+        "nivel": "ERROR",
+        "modulo": "SuperAdmin",
+        "accion": "Falla de Prueba SMTP",
+        "detalles": "Error al enviar correo vía SMTP: SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "daab14060bef07410b06a6a845d15105a727df98e48f98f52bb625237312efb4",
+        "hash_integridad": "bee666d17320078861f14b33a669d09df95d2e816dfed9a8ad0521dfb3ceb284"
+    },
+    {
         "id": "log_6aab684b74308",
         "fecha_hora": "2026-09-17 04:10:51",
         "nivel": "INFO",

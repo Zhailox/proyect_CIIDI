@@ -620,8 +620,14 @@
         <!-- TARJETA: MODIFICAR PARÁMETROS DE CONEXIÓN BD -->
         <div class="ag-glass-card">
             <h3 style="margin: 0 0 0.4rem 0; font-size: 1.15rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: flex; align-items: center; gap: 8px;">
-                <i class="ph-bold ph-database" style="color: var(--color-secundario);"></i> Conexión PostgreSQL Dinámica
+                <i class="ph-bold ph-database" style="color: var(--color-secundario);"></i> Conexión PostgreSQL Dinámica (.env Shield)
             </h3>
+            <div style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.2rem; font-size: 0.82rem; color: #047857; display: flex; align-items: center; gap: 8px;">
+                <i class="ph-bold ph-shield-check" style="font-size: 1.1rem;"></i>
+                <div>
+                    <strong>Estado de Seguridad:</strong> Credenciales gestionadas mediante <code>.env</code> y carpeta <code>storage/</code> protegida contra accesos HTTP externos (403 Forbidden).
+                </div>
+            </div>
             <p style="font-size: 0.86rem; color: var(--texto-silenciado, #64748b); margin-bottom: 1.4rem; line-height: 1.45;">
                 Actualiza el Host, Puerto, Base de Datos, Usuario y Contraseña de PostgreSQL. Requiere confirmar la contraseña de tu cuenta actual de SuperAdmin.
             </p>

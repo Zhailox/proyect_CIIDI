@@ -14,11 +14,19 @@ class SecurityMonitorController {
         $whitelist = RateLimiter::obtenerListaBlanca();
         $verificacionIntegridad = AuditLogger::verificarIntegridadCadena();
 
+        $basePath = defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 3);
+        $hardening = [
+            'env_activo' => file_exists($basePath . '/.env'),
+            'storage_htaccess' => file_exists($basePath . '/storage/.htaccess'),
+            'root_htaccess' => file_exists($basePath . '/.htaccess'),
+        ];
+
         return [
             'intentos' => $intentos,
             'blacklist' => $blacklist,
             'whitelist' => $whitelist,
-            'integridad' => $verificacionIntegridad
+            'integridad' => $verificacionIntegridad,
+            'hardening' => $hardening
         ];
     }
 

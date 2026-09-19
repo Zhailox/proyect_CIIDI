@@ -20,10 +20,20 @@ class Connection {
     }
 
     private function cargarCredenciales() {
+        // 1. Cargar preferentemente desde variables de entorno (.env)
+        if (class_exists('Env')) {
+            $this->host = (string)Env::get('DB_HOST', $this->host);
+            $this->port = (string)Env::get('DB_PORT', $this->port);
+            $this->db   = (string)Env::get('DB_NAME', $this->db);
+            $this->user = (string)Env::get('DB_USER', $this->user);
+            $this->pass = (string)Env::get('DB_PASS', $this->pass);
+        }
+
+        // 2. Fallback retrocompatible desde db_config.json si las vars de entorno están vacías
         $file = self::getConfigPath();
         if (file_exists($file)) {
             $data = json_decode(file_get_contents($file), true) ?: [];
-            if (!empty($data['host'])) $this->host = $data['host'];
+            if (!empty($data['host']) && (empty($this->host) || $this->host === 'localhost')) $this->host = $data['host'];
             if (!empty($data['port'])) $this->port = (string)$data['port'];
             if (!empty($data['db']))   $this->db   = $data['db'];
             if (!empty($data['user'])) $this->user = $data['user'];
@@ -110,13 +120,28 @@ class Connection {
     }
 
     /**
-     * Guarda las credenciales de la base de datos en storage/db_config.json
+     * Guarda las credenciales de la base de datos tanto en .env como en storage/db_config.json
      */
     public static function saveCredentials(string $host, string $port, string $db, string $user, string $pass): bool {
+        $envPath = defined('BASE_PATH') ? BASE_PATH . '/.env' : __DIR__ . '/../../.env';
+        
+        // 1. Escribir o actualizar en .env
+        $envContent = "# Configuración del Entorno CIIDI\n" .
+                      "APP_ENV=production\n" .
+                      "APP_DEBUG=false\n" .
+                      "DB_HOST=" . trim($host) . "\n" .
+                      "DB_PORT=" . trim($port) . "\n" .
+                      "DB_NAME=" . trim($db) . "\n" .
+                      "DB_USER=" . trim($user) . "\n" .
+                      "DB_PASS=" . $pass . "\n";
+                      
+        @file_put_contents($envPath, $envContent);
+
+        // 2. Guardar en storage/db_config.json de forma segura
         $file = self::getConfigPath();
         $dir = dirname($file);
         if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
+            mkdir($dir, 0750, true);
         }
         $data = [
             'host' => trim($host),
@@ -126,7 +151,9 @@ class Connection {
             'pass' => $pass,
             'updated_at' => date('Y-m-d H:i:s')
         ];
-        return file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) !== false;
+        $res = file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) !== false;
+        @chmod($file, 0640);
+        return $res;
     }
 
     /**
