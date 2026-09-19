@@ -5,6 +5,14 @@ class Auth {
     
     public static function check() {
         if (session_status() === PHP_SESSION_NONE) {
+            ini_set('session.use_strict_mode', '1');
+            session_set_cookie_params([
+                'lifetime' => 0,
+                'path' => '/',
+                'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
             session_start();
         }
         
@@ -25,7 +33,19 @@ class Auth {
                 
                 session_unset();
                 session_destroy();
+                
+                // Reiniciar sesión de forma segura y regenerar el ID para evitar fijación
+                ini_set('session.use_strict_mode', '1');
+                session_set_cookie_params([
+                    'lifetime' => 0,
+                    'path' => '/',
+                    'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
+                    'httponly' => true,
+                    'samesite' => 'Lax'
+                ]);
                 session_start();
+                session_regenerate_id(true);
+                
                 $_SESSION['error_login'] = "Tu sesión ha sido finalizada por el administrador por razones de seguridad.";
                 header("Location: login");
                 exit;
@@ -56,12 +76,17 @@ class Auth {
 
         // 1. Si se especifican módulo y permiso, la matriz RBAC tiene prioridad absoluta
         if ($permisoRuta !== null && $moduloRuta !== null) {
-            $archivo_rbac = CORE_PATH . '../storage/rbac_matrix.json';
             $autorizado = false;
+            
+            // Reemplazo de JSON por consulta SQL
+            $db = Connection::getInstance();
+            $stmt = $db->prepare("SELECT permisos FROM matriz_rbac WHERE nivel_privilegio = ? AND modulo = ?");
+            $stmt->execute([$nivelUsuario, $moduloRuta]);
+            $fila = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if (file_exists($archivo_rbac)) {
-                $matrix = json_decode(file_get_contents($archivo_rbac), true) ?: [];
-                if (!empty($matrix[$nivelUsuario][$moduloRuta][$permisoRuta])) {
+            if ($fila && !empty($fila['permisos'])) {
+                $permisos = is_string($fila['permisos']) ? json_decode($fila['permisos'], true) : $fila['permisos'];
+                if (!empty($permisos[$permisoRuta])) {
                     $autorizado = true;
                 }
             }
@@ -141,46 +166,25 @@ class AuditLogger {
         $responsable = $usuario ? "{$usuario['nombre']} (ID: {$usuario['id']})" : "Sistema / Anónimo";
         $ip = class_exists('RateLimiter') ? RateLimiter::obtenerIPCliente() : ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
 
-        $archivo = CORE_PATH . '../storage/system_audit.json';
-        $directorio = dirname($archivo);
-        if (!is_dir($directorio)) {
-            mkdir($directorio, 0777, true);
-        }
+        $db = Connection::getInstance();
+        // Obtener el Hash del registro inmediatamente anterior desde la BD
+    $stmt = $db->query("SELECT hash_integridad FROM system_audit_log ORDER BY fecha_hora DESC LIMIT 1");
+    $last = $stmt->fetch(PDO::FETCH_ASSOC);
+    $hashAnterior = $last ? $last['hash_integridad'] : 'GENESIS_CIIDI_V1';
+    
+    $idLog = uniqid('log_');
+    $fechaHora = date('Y-m-d H:i:s');
 
-        $logs = file_exists($archivo) ? (json_decode(file_get_contents($archivo), true) ?: []) : [];
+    // Generar Hash SHA-256 de integridad
+    $payloadIntegridad = "{$idLog}|{$fechaHora}|{$nivel}|{$modulo}|{$accion}|{$detalles}|{$responsable}|{$ip}|{$hashAnterior}";
+    $hashIntegridad = hash('sha256', $payloadIntegridad);
 
-        // Obtener el Hash del registro inmediatamente anterior para el encadenamiento Tamper-Proof
-        $hashAnterior = !empty($logs) && isset($logs[0]['hash_integridad']) ? $logs[0]['hash_integridad'] : 'GENESIS_CIIDI_V1';
-        $idLog = uniqid('log_');
-        $fechaHora = date('Y-m-d H:i:s');
-
-        // Generar Hash SHA-256 de integridad (Cadena de Custodia Criptográfica)
-        $payloadIntegridad = "{$idLog}|{$fechaHora}|{$nivel}|{$modulo}|{$accion}|{$detalles}|{$responsable}|{$ip}|{$hashAnterior}";
-        $hashIntegridad = hash('sha256', $payloadIntegridad);
-
-        $registro = [
-            'id'              => $idLog,
-            'fecha_hora'      => $fechaHora,
-            'nivel'           => strtoupper($nivel), // INFO | WARNING | ERROR | CRITICAL
-            'modulo'          => $modulo,
-            'accion'          => $accion,
-            'detalles'        => $detalles,
-            'responsable'     => $responsable,
-            'ip'              => $ip,
-            'hash_anterior'   => $hashAnterior,
-            'hash_integridad' => $hashIntegridad
-        ];
-
-        array_unshift($logs, $registro); // Insertar al inicio para orden cronológico descendente
-        
-        // Conservar los últimos 1000 eventos en storage
-        if (count($logs) > 1000) {
-            $logs = array_slice($logs, 0, 1000);
-        }
-
-        file_put_contents($archivo, json_encode($logs, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-    }
-
+    $sql = "INSERT INTO system_audit_log (id, fecha_hora, nivel, modulo, accion, detalles, responsable, ip, hash_anterior, hash_integridad) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    
+    $stmtInsert = $db->prepare($sql);
+    $stmtInsert->execute([$idLog, $fechaHora, $nivel, $modulo, $accion, $detalles, $responsable, $ip, $hashAnterior, $hashIntegridad]);
+}
     /**
      * Valida la integridad criptográfica SHA-256 de todos los registros de auditoría almacenados.
      */

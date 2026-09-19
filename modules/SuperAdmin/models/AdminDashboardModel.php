@@ -83,17 +83,24 @@ class AdminDashboardModel {
 
         // 3. Espacio, archivos e inodos en directorio storage/ (Con caché temporal de 5 minutos)
         $storageDir = CORE_PATH . '../storage';
-        $cacheFile = $storageDir . '/.telemetry_cache.json';
         $storageMb = 0;
         $totalFilesCount = 0;
+        $usarCache = false;
 
-        if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < 300)) {
-            $cached = json_decode(file_get_contents($cacheFile), true);
-            if (is_array($cached)) {
-                $storageMb = $cached['storage_mb'] ?? 0;
-                $totalFilesCount = $cached['files_count'] ?? 0;
+        $stmtCache = $db->query("SELECT datos FROM telemetria_cache WHERE id = 1");
+        $cacheData = $stmtCache->fetch(PDO::FETCH_ASSOC);
+
+        if ($cacheData && !empty($cacheData['datos'])) {
+            $datos = is_string($cacheData['datos']) ? json_decode($cacheData['datos'], true) : $cacheData['datos'];
+            // Validar que la caché tenga menos de 5 minutos (300 segundos)
+            if (isset($datos['timestamp']) && (time() - $datos['timestamp'] < 300)) {
+                $storageMb = $datos['storage_mb'] ?? 0;
+                $totalFilesCount = $datos['files_count'] ?? 0;
+                $usarCache = true;
             }
-        } else {
+        }
+
+        if (!$usarCache) {
             $storageBytes = 0;
             if (is_dir($storageDir)) {
                 $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($storageDir, RecursiveDirectoryIterator::SKIP_DOTS));
@@ -103,7 +110,16 @@ class AdminDashboardModel {
                 }
             }
             $storageMb = round($storageBytes / (1024 * 1024), 2);
-            @file_put_contents($cacheFile, json_encode(['storage_mb' => $storageMb, 'files_count' => $totalFilesCount]));
+            
+            $nuevosDatos = json_encode([
+                'storage_mb' => $storageMb, 
+                'files_count' => $totalFilesCount, 
+                'timestamp' => time()
+            ]);
+            
+            // Upsert nativo para PostgreSQL (Actualiza si existe, inserta si no)
+            $db->prepare("INSERT INTO telemetria_cache (id, datos) VALUES (1, ?) ON CONFLICT (id) DO UPDATE SET datos = EXCLUDED.datos")
+               ->execute([$nuevosDatos]);
         }
 
         // Espacio libre y total en disco
@@ -149,11 +165,10 @@ class AdminDashboardModel {
     }
 
     public function obtenerUltimasAccionesAudit(int $limit = 5): array {
-        $archivo = CORE_PATH . '../storage/system_audit.json';
-        if (!file_exists($archivo)) return [];
-        $logs = json_decode(file_get_contents($archivo), true) ?: [];
-        $logs = array_reverse($logs);
-        return array_slice($logs, 0, $limit);
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("SELECT * FROM system_audit_log ORDER BY fecha_hora DESC LIMIT ?");
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
     public function obtenerTablasSistema(): array {

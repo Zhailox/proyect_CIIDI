@@ -25,39 +25,36 @@ class LogsModel {
     }
 
     public function obtenerAuditTrailPaginado(?string $nivel = null, ?string $modulo = null, ?string $fechaInicio = null, ?string $fechaFin = null, int $pagina = 1, int $porPagina = 15): array {
-        $archivo = CORE_PATH . '../storage/system_audit.json';
-        if (!file_exists($archivo)) {
-            return ['data' => [], 'total' => 0, 'pagina' => 1, 'paginas' => 1, 'por_pagina' => $porPagina];
+        $qb = new QueryBuilder();
+        
+        $query = $qb->tabla('system_audit_log')->select('*');
+        $countQuery = $qb->tabla('system_audit_log')->select('COUNT(*) as total');
+        
+        if (!empty($nivel)) {
+            $query->where('nivel', '=', strtoupper($nivel));
+            $countQuery->where('nivel', '=', strtoupper($nivel));
+        }
+        if (!empty($modulo)) {
+            $query->where('modulo', '=', $modulo);
+            $countQuery->where('modulo', '=', $modulo);
+        }
+        if (!empty($fechaInicio)) {
+            $query->where('fecha_hora', '>=', $fechaInicio . ' 00:00:00');
+            $countQuery->where('fecha_hora', '>=', $fechaInicio . ' 00:00:00');
+        }
+        if (!empty($fechaFin)) {
+            $query->where('fecha_hora', '<=', $fechaFin . ' 23:59:59');
+            $countQuery->where('fecha_hora', '<=', $fechaFin . ' 23:59:59');
         }
 
-        $logs = json_decode(file_get_contents($archivo), true) ?: [];
-        $logs = array_reverse($logs);
-
-        $filtered = array_values(array_filter($logs, function($l) use ($nivel, $modulo, $fechaInicio, $fechaFin) {
-            if (!empty($nivel) && strtoupper($l['nivel']) !== strtoupper($nivel)) return false;
-            if (!empty($modulo) && strtolower($l['modulo']) !== strtolower($modulo)) return false;
-            
-            if (!empty($fechaInicio)) {
-                $timeLog = strtotime($l['fecha_hora']);
-                $timeInicio = strtotime($fechaInicio . ' 00:00:00');
-                if ($timeLog < $timeInicio) return false;
-            }
-
-            if (!empty($fechaFin)) {
-                $timeLog = strtotime($l['fecha_hora']);
-                $timeFin = strtotime($fechaFin . ' 23:59:59');
-                if ($timeLog > $timeFin) return false;
-            }
-
-            return true;
-        }));
-
-        $total = count($filtered);
+        $totalRes = $countQuery->first();
+        $total = $totalRes ? (int)$totalRes['total'] : 0;
+        
         $paginas = max(1, (int) ceil($total / $porPagina));
         $paginaActual = max(1, min($pagina, $paginas));
         $offset = ($paginaActual - 1) * $porPagina;
 
-        $items = array_slice($filtered, $offset, $porPagina);
+        $items = $query->orderBy('fecha_hora', 'DESC')->limit($porPagina)->offset($offset)->get();
 
         return [
             'data'       => $items,

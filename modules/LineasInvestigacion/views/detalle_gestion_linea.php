@@ -1,196 +1,19 @@
 <?php
 // modules/LineasInvestigacion/views/detalle_gestion_linea.php
+$isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
 ?>
-<style>
-.ag-header-banner {
-    background: linear-gradient(135deg, rgba(80, 89, 132, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%) !important;
-    color: #ffffff;
-    border-radius: 14px;
-    padding: 2.5rem 3rem;
-    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.15);
-    margin-bottom: 2.5rem;
-    position: relative;
-    overflow: hidden;
-}
-.ag-header-banner::before {
-    content: '';
-    position: absolute;
-    top: -50%; right: -10%;
-    width: 400px; height: 400px;
-    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 60%);
-    border-radius: 50%;
-}
-.ag-header-subtitle {
-    display: inline-flex; 
-    align-items: center; 
-    gap: 0.5rem; 
-    color: #94a3b8; 
-    font-weight: 800; 
-    font-size: 0.8rem; 
-    text-transform: uppercase; 
-    letter-spacing: 1.5px; 
-    margin-bottom: 0.5rem;
-}
-.ag-header-title {
-    font-size: 2.2rem; 
-    font-weight: 800; 
-    margin: 0 0 0.8rem 0; 
-    color: #ffffff;
-    letter-spacing: -0.5px;
-}
-.ag-header-desc {
-    margin: 0; 
-    color: #cbd5e1; 
-    font-size: 1.05rem;
-    max-width: 800px;
-    line-height: 1.6;
-}
 
-.ag-kpi-grid {
-    display: flex;
-    gap: 1.5rem;
-    margin-bottom: 2.5rem;
-    flex-wrap: wrap;
-}
-.ag-kpi-card {
-    background: #ffffff;
-    border-radius: 14px;
-    padding: 1.5rem 2rem;
-    border: 1px solid rgba(80, 89, 132, 0.15);
-    border-left: 5px solid #505984;
-    box-shadow: 0 8px 24px rgba(18, 26, 62, 0.04);
-    min-width: 200px;
-    flex: 1;
-}
-.ag-kpi-label {
-    font-size: 0.8rem;
-    font-weight: 800;
-    color: var(--texto-silenciado, #64748b);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 0.5rem;
-}
-.ag-kpi-value {
-    font-size: 2.8rem;
-    font-weight: 800;
-    color: var(--texto-titulos, #0f172a);
-    line-height: 1;
-}
 
-.ag-list-container {
-    background: #ffffff;
-    border: 1px solid rgba(80, 89, 132, 0.15);
-    border-radius: 16px;
-    padding: 2.5rem;
-    box-shadow: 0 10px 30px rgba(18, 26, 62, 0.05);
-}
 
-.ag-dim-item {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-left: 4px solid var(--color-secundario, #059669);
-    border-radius: 10px;
-    padding: 1.5rem;
-    margin-bottom: 1.2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: 0.2s;
-}
-.ag-dim-item:hover {
-    background: #ffffff;
-    border-color: #cbd5e1;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.06);
-    transform: translateX(4px);
-}
-.ag-dim-title {
-    font-weight: 800;
-    color: var(--texto-titulos, #0f172a);
-    font-size: 1.2rem;
-    margin-bottom: 0.4rem;
-}
-.ag-dim-desc {
-    color: var(--texto-silenciado, #475569);
-    font-size: 0.95rem;
-    line-height: 1.5;
-}
-
-.ag-btn-edit {
-    color: #d97706;
-    background: rgba(245, 158, 11, 0.1);
-    border: 1px solid rgba(245, 158, 11, 0.2);
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.85rem;
-    transition: 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-.ag-btn-edit:hover { background: #d97706; color: #fff; }
-
-.ag-btn-delete {
-    color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.85rem;
-    transition: 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-.ag-btn-delete:hover { background: #ef4444; color: #fff; }
-
-.li-alert {
-    padding: 1rem 1.25rem;
-    border-radius: 8px;
-    margin-bottom: 2rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-.li-alert.exito { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-.li-alert.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-
-/* Custom Modal Styles */
-.ag-modal-label {
-    display: block;
-    font-weight: 700;
-    margin-bottom: 0.4rem;
-    color: #475569;
-    font-size: 0.9rem;
-}
-.ag-modal-input {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 1rem 1.25rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 0.95rem;
-    transition: all 0.2s;
-    background: #f8fafc;
-}
-.ag-modal-input:focus {
-    outline: none;
-    border-color: #505984;
-    background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(80, 89, 132, 0.2);
-}
-.ag-swal-popup {
-    border-radius: 16px !important;
-    padding: 2rem !important;
-}
-</style>
-
-<div class="li-gestor-wrapper">
+    <!-- BREADCRUMBS -->
+    <div style="margin-bottom: 1rem; font-size: 0.85rem; font-weight: 600;">
+        <a href="index.php?ruta=dashboard" style="color: var(--color-secundario); text-decoration: none; transition: color 0.2s;"><i class="ph-bold ph-squares-four"></i> Dashboard</a>
+        <span style="color: var(--color-borde); margin: 0 0.5rem;">/</span>
+        <a href="index.php?ruta=gestionar-lineas" style="color: var(--color-secundario); text-decoration: none; transition: color 0.2s;">Gestión de Líneas</a>
+        <span style="color: var(--color-borde); margin: 0 0.5rem;">/</span>
+        <span style="color: var(--texto-silenciado);">Detalle de la Línea</span>
+    </div>
+    <div class="li-gestor-wrapper">
 
     <!-- ENCABEZADO -->
     <div class="ag-header-banner">
@@ -268,9 +91,22 @@
                         <button type="button" class="ag-btn-edit" onclick="abrirModalEditarDimension(<?= htmlspecialchars(json_encode($dim)) ?>)">
                             <i class="ph-bold ph-pencil-simple"></i> Editar
                         </button>
+                        
+                        <?php if (isset($dim['activo']) && $dim['activo']): ?>
+                            <button type="button" class="ag-btn-edit" style="background:#f59e0b; color:white; border-color:#f59e0b;" onclick="ocultarDimension(<?= htmlspecialchars($dim['id']) ?>, '<?= htmlspecialchars(addslashes($dim['nombre'])) ?>')">
+                                <i class="ph-bold ph-eye-slash"></i> Ocultar
+                            </button>
+                        <?php else: ?>
+                            <button type="button" class="ag-btn-edit" style="background:#10b981; color:white; border-color:#10b981;" onclick="mostrarDimension(<?= htmlspecialchars($dim['id']) ?>)">
+                                <i class="ph-bold ph-eye"></i> Mostrar
+                            </button>
+                        <?php endif; ?>
+                        
+                        <?php if ($isSuper): ?>
                         <button type="button" class="ag-btn-delete" onclick="eliminarDimension(<?= htmlspecialchars($dim['id']) ?>, '<?= htmlspecialchars(addslashes($dim['nombre'])) ?>')">
                             <i class="ph-bold ph-trash"></i> Eliminar
                         </button>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -338,15 +174,27 @@ function abrirModalEditarLinea(linea) {
 
 function eliminarDimension(id, nombre) {
     Swal.fire({
-        title: '¿Eliminar Dimensión?',
-        html: `Estás a punto de eliminar <strong>${nombre}</strong>. ¿Confirmas esta acción?`,
-        icon: 'warning',
+        title: '¡ADVERTENCIA CRÍTICA!',
+        html: `Estás a punto de eliminar definitivamente la dimensión <strong>${nombre}</strong>.<br><br>` + 
+              `<span style="color:#ef4444; font-weight:bold;">¡ESTO DEJARÁ PROYECTOS HUÉRFANOS!</span><br>` +
+              `Los proyectos o postulaciones PST vinculados específicamente a esta dimensión quedarán en el aire sin categorización válida en la base de datos.<br><br>` + 
+              `Para proceder, escribe la palabra <b>ELIMINAR</b> en mayúsculas:`,
+        icon: 'error',
+        input: 'text',
+        inputPlaceholder: 'Escribe ELIMINAR',
         showCancelButton: true,
         confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#94a3b8',
-        confirmButtonText: 'Sí, eliminar',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: '<i class="ph-bold ph-trash"></i> Ejecutar Borrado Crítico',
         cancelButtonText: 'Cancelar',
-        customClass: { popup: 'ag-swal-popup' }
+        customClass: { popup: 'ag-swal-popup' },
+        preConfirm: (inputValue) => {
+            if (inputValue !== 'ELIMINAR') {
+                Swal.showValidationMessage('Debes escribir la palabra ELIMINAR en mayúsculas.');
+                return false;
+            }
+            return true;
+        }
     }).then((result) => {
         if (result.isConfirmed) {
             document.getElementById('deleteDimensionId').value = id;
@@ -499,3 +347,41 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 </body>
+
+
+<form id="formOcultarDim" method="POST" action="index.php?ruta=detalle-gestion-linea&id=<?= urlencode($linea['id']) ?>" style="display:none;">
+    <input type="hidden" name="accion" value="ocultar">
+    <input type="hidden" name="id" id="inputIdOcultarDim">
+    <?= CSRF::campoOculto() ?>
+</form>
+
+<form id="formMostrarDim" method="POST" action="index.php?ruta=detalle-gestion-linea&id=<?= urlencode($linea['id']) ?>" style="display:none;">
+    <input type="hidden" name="accion" value="mostrar">
+    <input type="hidden" name="id" id="inputIdMostrarDim">
+    <?= CSRF::campoOculto() ?>
+</form>
+
+<script>
+function ocultarDimension(id, nombre) {
+    Swal.fire({
+        title: '¿Ocultar Dimensión?',
+        html: `La dimensión <strong>${nombre}</strong> se ocultará, pero sus proyectos permanecerán.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f59e0b',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Ocultar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('inputIdOcultarDim').value = id;
+            document.getElementById('formOcultarDim').submit();
+        }
+    });
+}
+function mostrarDimension(id) {
+    document.getElementById('inputIdMostrarDim').value = id;
+    document.getElementById('formMostrarDim').submit();
+}
+</script>
+</div> <!-- end wrapper -->

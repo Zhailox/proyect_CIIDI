@@ -13,6 +13,10 @@ if (file_exists(BASE_PATH . '/vendor/autoload.php')) {
     require_once BASE_PATH . '/vendor/autoload.php';
 }
 
+// 1.6. Cargar Motor de Variables de Entorno (.env)
+require_once CORE_PATH . 'System/Env.php';
+Env::load(BASE_PATH . '/.env');
+
 // 2. Importar el motor del sistema (Microkernel)
 require_once CORE_PATH . 'System/Kernel.php';
 

@@ -1,8 +1,14 @@
 [
     {
+<<<<<<< HEAD
         "id": "mail_6aad671556054",
         "fecha": "2026-09-18 16:30:13",
         "destino_email": "miguelalejandroomega2005@gmail.com",
+=======
+        "id": "mail_6aadfa90cbe4a",
+        "fecha": "2026-09-19 02:59:28",
+        "destino_email": "andrusramirez2020@gmail.com",
+>>>>>>> 070f79a577ca6e6f0ba055cd13862c079b05757d
         "destino_nombre": "Administrador de Prueba",
         "asunto": "Prueba de Conexión SMTP - CIIDI UPTTMBI",
         "exito": false,
@@ -10,9 +16,15 @@
         "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
     },
     {
+<<<<<<< HEAD
         "id": "mail_6aad66e00d147",
         "fecha": "2026-09-18 16:29:20",
         "destino_email": "miguelalejandroomega2005@gmail.com",
+=======
+        "id": "mail_6aadf9fce7f98",
+        "fecha": "2026-09-19 02:57:00",
+        "destino_email": "andrusramirez2020@gmail.com",
+>>>>>>> 070f79a577ca6e6f0ba055cd13862c079b05757d
         "destino_nombre": "Administrador de Prueba",
         "asunto": "Prueba de Conexión SMTP - CIIDI UPTTMBI",
         "exito": false,
@@ -20,6 +32,7 @@
         "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
     },
     {
+<<<<<<< HEAD
         "id": "mail_6aad64053fbc1",
         "fecha": "2026-09-18 16:17:09",
         "destino_email": "miguelalejandroomega2005@gmail.com",
@@ -70,6 +83,8 @@
         "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
     },
     {
+=======
+>>>>>>> 070f79a577ca6e6f0ba055cd13862c079b05757d
         "id": "mail_6aab684b73dca",
         "fecha": "2026-09-17 04:10:51",
         "destino_email": "miguelalejandroomega2005@gmail.com",

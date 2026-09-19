@@ -52,52 +52,57 @@ class GestorUsuariosController {
     }
 
     private function obtenerMatrizRBAC(): array {
-        $archivo = CORE_PATH . '../storage/rbac_matrix.json';
-        if (file_exists($archivo)) {
-            return json_decode(file_get_contents($archivo), true) ?: [];
+        $db = Connection::getInstance();
+        $stmt = $db->query("SELECT nivel_privilegio, modulo, permisos FROM matriz_rbac");
+        $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $matriz = [];
+        foreach ($resultados as $row) {
+            $nivel = $row['nivel_privilegio'];
+            $modulo = $row['modulo'];
+            $permisos = is_string($row['permisos']) ? json_decode($row['permisos'], true) : $row['permisos'];
+            $matriz[$nivel][$modulo] = $permisos;
         }
-        return [
-            'Estudiante' => ['crear' => true, 'editar' => false, 'eliminar' => false, 'auditar' => false],
-            'Profesor'   => ['crear' => true, 'editar' => true, 'eliminar' => false, 'auditar' => true],
-            'Bibliotecario' => ['crear' => true, 'editar' => true, 'eliminar' => true, 'auditar' => true]
-        ];
+        return $matriz;
     }
 
     public function guardarMatrizRBAC() {
         Auth::requierePrivilegioMinimo(0);
-
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $rawMatrix = $_POST['matrix'] ?? [];
-            $matrizProcesada = [];
-
-            // Matriz 3D: Nivel -> Modulo -> Accion
-            foreach ($rawMatrix as $nivel => $modulos) {
-                if (is_array($modulos)) {
-                    foreach ($modulos as $nombreModulo => $permisos) {
-                        foreach ($permisos as $accion => $val) {
-                            $matrizProcesada[$nivel][$nombreModulo][$accion] = ($val === '1' || $val === 1 || $val === true);
+            
+            $db = Connection::getInstance();
+            $db->beginTransaction();
+            try {
+                // Borrar configuración vieja e insertar la nueva de golpe
+                $db->exec("TRUNCATE matriz_rbac");
+                $stmt = $db->prepare("INSERT INTO matriz_rbac (nivel_privilegio, modulo, permisos) VALUES (?, ?, ?)");
+                
+                foreach ($rawMatrix as $nivel => $modulos) {
+                    if (is_array($modulos)) {
+                        foreach ($modulos as $nombreModulo => $permisos) {
+                            $permisosProcesados = [];
+                            foreach ($permisos as $accion => $val) {
+                                $permisosProcesados[$accion] = ($val === '1' || $val === 1 || $val === true);
+                            }
+                            $stmt->execute([$nivel, $nombreModulo, json_encode($permisosProcesados)]);
                         }
                     }
                 }
+                $db->commit();
+                AuditLogger::registrar('WARNING', 'SuperAdmin', 'Modificar Matriz RBAC', 'Se actualizaron los permisos granulares por Módulo y Nivel.');
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_exito'] = "Matriz de permisos segmentada actualizada en BD correctamente.";
+            } catch (Exception $e) {
+                $db->rollBack();
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "Error al guardar la matriz en la base de datos.";
             }
-
-            $archivo = CORE_PATH . '../storage/rbac_matrix.json';
-            $directorio = dirname($archivo);
-            if (!is_dir($directorio)) {
-                mkdir($directorio, 0777, true);
-            }
-
-            file_put_contents($archivo, json_encode($matrizProcesada, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-            
-            AuditLogger::registrar('WARNING', 'SuperAdmin', 'Modificar Matriz RBAC', 'Se actualizaron los permisos granulares por Módulo y Nivel.');
-
-            if (session_status() === PHP_SESSION_NONE) session_start();
-            $_SESSION['mensaje_gestor_exito'] = "Matriz de permisos segmentada actualizada correctamente.";
             header("Location: gestor-usuarios");
             exit;
         }
     }
-
+    
     public function actualizarRol() {
         Auth::requierePrivilegioMinimo(0);
 

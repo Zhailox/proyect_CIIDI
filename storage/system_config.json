@@ -10,7 +10,7 @@
     },
     "smtp": {
         "host": "smtp.gmail.com",
-        "port": 587,
+        "port": 465,
         "user": "orlando5711666@gmail.com",
         "pass": "hkwtkytxrqxslngb",
         "from_email": "orlando5711666@gmail.com"
