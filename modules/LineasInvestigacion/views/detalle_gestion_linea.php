@@ -174,15 +174,27 @@ function abrirModalEditarLinea(linea) {
 
 function eliminarDimension(id, nombre) {
     Swal.fire({
-        title: '¿Eliminar Dimensión?',
-        html: `Estás a punto de eliminar <strong>${nombre}</strong>. ¿Confirmas esta acción?`,
-        icon: 'warning',
+        title: '¡ADVERTENCIA CRÍTICA!',
+        html: `Estás a punto de eliminar definitivamente la dimensión <strong>${nombre}</strong>.<br><br>` + 
+              `<span style="color:#ef4444; font-weight:bold;">¡ESTO DEJARÁ PROYECTOS HUÉRFANOS!</span><br>` +
+              `Los proyectos o postulaciones PST vinculados específicamente a esta dimensión quedarán en el aire sin categorización válida en la base de datos.<br><br>` + 
+              `Para proceder, escribe la palabra <b>ELIMINAR</b> en mayúsculas:`,
+        icon: 'error',
+        input: 'text',
+        inputPlaceholder: 'Escribe ELIMINAR',
         showCancelButton: true,
         confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#94a3b8',
-        confirmButtonText: 'Sí, eliminar',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: '<i class="ph-bold ph-trash"></i> Ejecutar Borrado Crítico',
         cancelButtonText: 'Cancelar',
-        customClass: { popup: 'ag-swal-popup' }
+        customClass: { popup: 'ag-swal-popup' },
+        preConfirm: (inputValue) => {
+            if (inputValue !== 'ELIMINAR') {
+                Swal.showValidationMessage('Debes escribir la palabra ELIMINAR en mayúsculas.');
+                return false;
+            }
+            return true;
+        }
     }).then((result) => {
         if (result.isConfirmed) {
             document.getElementById('deleteDimensionId').value = id;

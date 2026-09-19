@@ -119,15 +119,28 @@ const carrerasList = <?= json_encode($carreras) ?>;
 
 function eliminarLinea(id, nombre) {
     Swal.fire({
-        title: '¿Eliminar Línea?',
-        html: `Estás a punto de eliminar la línea <strong>${nombre}</strong>.<br><br><span style="color:#ef4444; font-weight:bold;">¡ADVERTENCIA!</span> Esta acción eliminará también todas sus dimensiones operativas asociadas.<br><br>¿Dónde quedan los proyectos y postulaciones de esta línea? <b>¡Se perderán o quedarán sin referencias válidas en la base de datos (huérfanos)!</b><br><br>Por favor, usa la opción <b>Ocultar</b> si tienes dudas.`,
-        icon: 'warning',
+        title: '¡ADVERTENCIA CRÍTICA!',
+        html: `Estás a punto de eliminar definitivamente la línea <strong>${nombre}</strong> y todas sus dimensiones.<br><br>` + 
+              `<span style="color:#ef4444; font-weight:bold;">¡ESTO DEJARÁ PROYECTOS HUÉRFANOS!</span><br>` +
+              `Todos los proyectos, postulaciones e investigaciones vinculadas a esta línea o sus dimensiones perderán su referencia estructural, ` +
+              `lo que podría causar errores en las estadísticas o pérdida de datos académicos históricos.<br><br>` + 
+              `Para proceder, escribe la palabra <b>ELIMINAR</b> en mayúsculas:`,
+        icon: 'error',
+        input: 'text',
+        inputPlaceholder: 'Escribe ELIMINAR',
         showCancelButton: true,
         confirmButtonColor: '#ef4444',
         cancelButtonColor: '#64748b',
-        confirmButtonText: 'Sí, eliminar',
+        confirmButtonText: '<i class="ph-bold ph-trash"></i> Ejecutar Borrado Crítico',
         cancelButtonText: 'Cancelar',
-        customClass: { popup: 'ag-swal-popup' }
+        customClass: { popup: 'ag-swal-popup' },
+        preConfirm: (inputValue) => {
+            if (inputValue !== 'ELIMINAR') {
+                Swal.showValidationMessage('Debes escribir la palabra ELIMINAR para confirmar.');
+                return false;
+            }
+            return true;
+        }
     }).then((result) => {
         if (result.isConfirmed) {
             document.getElementById('deleteLineaId').value = id;
