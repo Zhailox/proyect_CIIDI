@@ -160,10 +160,10 @@ if (!empty($lineas)) {
                         <div style="margin-top: 1.25rem;">
                             <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--texto-silenciado); margin-bottom:6px;">
                                 <span>Cobertura Estimada</span>
-                                <span style="font-weight:700; color:var(--color-primario);"><?= $pct ?>%</span>
+                                <span style="font-weight:700; color:var(--color-principal);"><?= $pct ?>%</span>
                             </div>
                             <div style="width:100%; background:var(--color-borde); border-radius:10px; height:6px; overflow:hidden;">
-                                <div style="width:<?= $pct ?>%; background:linear-gradient(90deg, var(--color-primario), var(--color-secundario)); height:100%; border-radius:10px; transition:width 0.5s ease;"></div>
+                                <div style="width:<?= $pct ?>%; background:linear-gradient(90deg, var(--color-terciario), var(--color-principal)); height:100%; border-radius:10px; transition:width 0.5s ease;"></div>
                             </div>
                         </div>
                     </div>
