@@ -145,11 +145,11 @@
             <?php foreach ($proyectos as $p): ?>
                 <article class="li-project-item" style="background:#fff; border:1px solid var(--color-borde); border-radius:12px; padding:1.25rem; display:flex; justify-content:space-between; align-items:flex-start; gap:1.5rem; transition:0.2s;">
                     <div class="li-project-content" style="flex:1;">
-                        <span class="li-project-dim-badge" style="display:inline-block; font-size:0.75rem; font-weight:700; color:var(--li-indigo); background:rgba(99,102,241,0.1); padding:4px 8px; border-radius:6px; margin-bottom:8px; letter-spacing:0.5px; text-transform:uppercase;">
+                        <span class="li-project-dim-badge" style="display:inline-block; font-size:0.75rem; font-weight:700; color:#4338ca; background:#e0e7ff; padding:4px 8px; border-radius:6px; margin-bottom:8px; letter-spacing:0.5px; text-transform:uppercase;">
                             <?= htmlspecialchars($p['dimension_nombre'] ?? 'Sin Dimensión') ?>
                         </span>
                         <h4 class="li-project-title" style="font-size:1.1rem; font-weight:700; color:var(--texto-oscuro); margin-bottom:10px; line-height:1.4;">
-                            <?= htmlspecialchars(mb_convert_case($p['titulo'], MB_CASE_TITLE, 'UTF-8')) ?>
+                            <?= htmlspecialchars($p['titulo']) ?>
                         </h4>
                         <div class="li-project-meta-row" style="display:flex; flex-wrap:wrap; gap:1rem; font-size:0.85rem; color:#64748b; font-weight:500;">
                             <span class="li-project-meta-item" style="display:flex; align-items:center; gap:4px;">
