@@ -34,8 +34,15 @@ class DetalleLineaController {
         // Carga dimensiones operativas de esta línea
         $dimensiones = $dimensionesModel->getPorLinea($id);
 
+        // Paginación
+        $page = isset($_GET['p']) ? max(1, (int)$_GET['p']) : 1;
+        $limit = 10;
+        $offset = ($page - 1) * $limit;
+
         // Carga proyectos clasificados bajo esta línea
-        $proyectos = $lineasModel->getProyectosPorLinea($id);
+        $proyectos = $lineasModel->getProyectosPorLinea($id, $limit, $offset);
+        $total_proyectos = $lineasModel->countProyectosPorLinea($id);
+        $total_pages = ceil($total_proyectos / $limit);
 
         // Carga investigaciones ofertadas bajo esta línea
         $investigaciones = $lineasModel->getInvestigacionesPorLinea($id);
@@ -45,6 +52,12 @@ class DetalleLineaController {
             'dimensiones'     => $dimensiones,
             'proyectos'       => $proyectos,
             'investigaciones' => $investigaciones,
+            'pagination'      => [
+                'current_page' => $page,
+                'total_pages'  => $total_pages,
+                'total_items'  => $total_proyectos,
+                'limit'        => $limit
+            ],
             'error'           => null,
         ];
     }

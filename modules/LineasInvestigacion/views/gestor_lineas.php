@@ -107,6 +107,11 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
 </div>
 
 <!-- Formularios Ocultos -->
+    <form id="formExportarLineas" method="POST" action="index.php?ruta=gestionar-lineas" style="display:none;">
+        <input type="hidden" name="accion" value="exportar">
+        <?= CSRF::campoOculto() ?>
+    </form>
+
 <form id="formEliminarLinea" method="POST" action="index.php?ruta=gestionar-lineas" style="display:none;">
         <?= CSRF::campoOculto() ?>
     <input type="hidden" name="accion" value="eliminar">

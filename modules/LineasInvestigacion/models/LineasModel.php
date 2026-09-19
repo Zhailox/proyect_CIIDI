@@ -60,12 +60,13 @@ class LineasModel extends QueryBuilder {
      * Obtiene los proyectos (recursos tipo 1) clasificados en una línea,
      * con datos de autor, dimensión operativa y detalle del proyecto.
      */
-    public function getProyectosPorLinea(int $id_linea): array {
+    public function getProyectosPorLinea(int $id_linea, int $limit = 0, int $offset = 0): array {
         $sql = "
             SELECT
                 r.id,
                 r.titulo,
                 r.anio_publicacion,
+                r.archivo_pdf,
                 dp.resumen,
                 dp.nivel_academico,
                 dp.palabras_clave,
@@ -79,14 +80,29 @@ class LineasModel extends QueryBuilder {
             LEFT  JOIN recurso_autores ra  ON ra.id_recurso   = r.id
             LEFT  JOIN autores a           ON a.id            = ra.id_autor
             WHERE rc.id_linea_investigacion = ? AND dp.activo = true
-            GROUP BY r.id, r.titulo, r.anio_publicacion, dp.resumen,
+            GROUP BY r.id, r.titulo, r.anio_publicacion, r.archivo_pdf, dp.resumen,
                      dp.nivel_academico, dp.palabras_clave, dp.fecha_defensa, dim.nombre
-            ORDER BY r.anio_publicacion DESC
-            LIMIT 50 OFFSET 0 -- Paginación básica inicial
+            ORDER BY dp.fecha_defensa DESC
         ";
+        
+        if ($limit > 0) {
+            $sql .= " LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
+        }
+
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$id_linea]);
         return $stmt->fetchAll();
+    }
+    
+    public function countProyectosPorLinea(int $id_linea): int {
+        $sql = "SELECT COUNT(DISTINCT r.id) 
+                FROM recurso_clasificaciones rc
+                INNER JOIN recursos r ON r.id = rc.id_recurso
+                LEFT JOIN detalles_proyectos dp ON dp.id_recurso = r.id
+                WHERE rc.id_linea_investigacion = ? AND dp.activo = true";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id_linea]);
+        return (int) $stmt->fetchColumn();
     }
 
     /**
@@ -198,5 +214,16 @@ class LineasModel extends QueryBuilder {
         $sql = "UPDATE dimensiones_operativas SET activo = ? WHERE id = ?";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([$estado ? 1 : 0, $id]);
+    }
+    public function existeNombre(string $nombre, int $id_carrera, int $id_excluir = 0): bool {
+        $sql = "SELECT COUNT(*) FROM lineas_investigacion WHERE LOWER(TRIM(nombre)) = LOWER(TRIM(?)) AND id_carrera = ?";
+        $params = [$nombre, $id_carrera];
+        if ($id_excluir > 0) {
+            $sql .= " AND id != ?";
+            $params[] = $id_excluir;
+        }
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return (int) $stmt->fetchColumn() > 0;
     }
 }

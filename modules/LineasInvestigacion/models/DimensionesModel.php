@@ -86,4 +86,15 @@ class DimensionesModel extends QueryBuilder {
                     ->where('id', '=', $id)
                     ->delete();
     }
+    public function existeNombre(string $nombre, int $id_linea, int $id_excluir = 0): bool {
+        $sql = "SELECT COUNT(*) FROM dimensiones_operativas WHERE LOWER(TRIM(nombre)) = LOWER(TRIM(?)) AND id_linea = ?";
+        $params = [$nombre, $id_linea];
+        if ($id_excluir > 0) {
+            $sql .= " AND id != ?";
+            $params[] = $id_excluir;
+        }
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return (int) $stmt->fetchColumn() > 0;
+    }
 }

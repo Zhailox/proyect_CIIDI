@@ -115,96 +115,85 @@
 
 <!-- Listado de Proyectos Desarrollados -->
 <section class="li-projects-section">
-<div class="li-projects-header">
-<h3 class="li-projects-title">
-<i class="ph-bold ph-file-text"></i>
-                Proyectos Desarrollados Recientes
-              </h3>
-<span class="li-badge-counter">4 de 48 registrados</span>
-</div>
-<div class="li-projects-list">
-<!-- Proyecto 1 -->
-<article class="li-project-item">
-<div class="li-project-content">
-<span class="li-project-dim-badge">Sistemas de Gestión Comunal • Trayecto III</span>
-<h4 class="li-project-title">Sistema Integral Abierto para Distribución de Insumos Socioproductivos "La Candelaria"</h4>
-<div class="li-project-meta-row">
-<span class="li-project-meta-item">
-<i class="ph-bold ph-users"></i>
-                      M. Briceño, C. Mendoza, Y. Pérez
-                    </span>
-<span class="li-project-meta-item">
-<i class="ph-bold ph-calendar"></i>
-                      Julio 2024
-                    </span>
-<span class="li-project-meta-item">
-<i class="ph-bold ph-medal"></i>
-                      Mención Honorífica
-                    </span>
-</div>
-</div>
-<div class="li-project-actions">
-<a class="li-btn-secondary" href="#doc-pdf" title="Descargar documento de investigación">
-<i class="ph-bold ph-file-pdf"></i>
-<span>Ver Documento</span>
-</a>
-</div>
-</article>
-<!-- Proyecto 2 -->
-<article class="li-project-item">
-<div class="li-project-content">
-<span class="li-project-dim-badge">Interoperabilidad y APIs Abiertas • Trayecto IV</span>
-<h4 class="li-project-title">Plataforma API RESTful para Integración de Catálogos de Bienes Comunitarios</h4>
-<div class="li-project-meta-row">
-<span class="li-project-meta-item">
-<i class="ph-bold ph-users"></i>
-                      A. Salazar, J. Rivas
-                    </span>
-<span class="li-project-meta-item">
-<i class="ph-bold ph-calendar"></i>
-                      Mayo 2024
-                    </span>
-<span class="li-project-meta-item">
-<i class="ph-bold ph-check"></i>
-                      Aprobado con Distinción
-                    </span>
-</div>
-</div>
-<div class="li-project-actions">
-<a class="li-btn-secondary" href="#doc-pdf">
-<i class="ph-bold ph-file-pdf"></i>
-<span>Ver Documento</span>
-</a>
-</div>
-</article>
-<!-- Proyecto 3 -->
-<article class="li-project-item">
-<div class="li-project-content">
-<span class="li-project-dim-badge">Migración a GNU/Linux • Trayecto II</span>
-<h4 class="li-project-title">Protocolo de Auditoría y Transición a Estaciones de Trabajo Canaima en Centros de Salud</h4>
-<div class="li-project-meta-row">
-<span class="li-project-meta-item">
-<i class="ph-bold ph-users"></i>
-                      E. Valera, G. Márquez
-                    </span>
-<span class="li-project-meta-item">
-<i class="ph-bold ph-calendar"></i>
-                      Noviembre 2023
-                    </span>
-<span class="li-project-meta-item">
-<i class="ph-bold ph-check"></i>
-                      Aprobado
-                    </span>
-</div>
-</div>
-<div class="li-project-actions">
-<a class="li-btn-secondary" href="#doc-pdf">
-<i class="ph-bold ph-file-pdf"></i>
-<span>Ver Documento</span>
-</a>
-</div>
-</article>
-</div>
+    <div class="li-projects-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h3 class="li-projects-title" style="font-size:1.2rem; font-weight:700; color:var(--texto-oscuro); display:flex; align-items:center; gap:8px;">
+            <i class="ph-bold ph-file-text" style="color:var(--color-secundario);"></i>
+            Proyectos Desarrollados
+        </h3>
+        <?php if (!empty($proyectos)): ?>
+            <span class="li-badge-counter" style="background:#f1f5f9; color:#475569; padding:4px 10px; border-radius:20px; font-size:0.8rem; font-weight:700;">
+                Mostrando <?= count($proyectos) ?> de <?= $pagination['total_items'] ?>
+            </span>
+        <?php endif; ?>
+    </div>
+
+    <div class="li-projects-list" style="display:flex; flex-direction:column; gap:1rem;">
+        <?php if (empty($proyectos)): ?>
+            <div style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:12px; padding:3rem 1rem; text-align:center;">
+                <div style="width:60px; height:60px; background:#e2e8f0; color:#64748b; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin:0 auto 1rem;">
+                    <i class="ph-bold ph-folder-dashed"></i>
+                </div>
+                <h4 style="font-size:1.1rem; color:#334155; margin-bottom:0.5rem; font-weight:700;">Aún no hay proyectos clasificados en esta línea</h4>
+                <p style="color:#64748b; max-width:400px; margin:0 auto 1.5rem; font-size:0.9rem; line-height:1.5;">
+                    Esta línea de investigación está esperando por nuevos desarrollos. Si estás cursando tu PST, ¡tu proyecto podría ser el primero!
+                </p>
+                <a href="?ruta=mis-proyectos" style="background:var(--color-primario); color:#fff; text-decoration:none; padding:10px 20px; border-radius:8px; font-weight:700; font-size:0.9rem; display:inline-flex; align-items:center; gap:6px; transition:0.2s; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
+                    <i class="ph-bold ph-plus-circle"></i> Registra tu Proyecto PST aquí
+                </a>
+            </div>
+        <?php else: ?>
+            <?php foreach ($proyectos as $p): ?>
+                <article class="li-project-item" style="background:#fff; border:1px solid var(--color-borde); border-radius:12px; padding:1.25rem; display:flex; justify-content:space-between; align-items:flex-start; gap:1.5rem; transition:0.2s;">
+                    <div class="li-project-content" style="flex:1;">
+                        <span class="li-project-dim-badge" style="display:inline-block; font-size:0.75rem; font-weight:700; color:var(--li-indigo); background:rgba(99,102,241,0.1); padding:4px 8px; border-radius:6px; margin-bottom:8px; letter-spacing:0.5px; text-transform:uppercase;">
+                            <?= htmlspecialchars($p['dimension_nombre'] ?? 'Sin Dimensión') ?>
+                        </span>
+                        <h4 class="li-project-title" style="font-size:1.1rem; font-weight:700; color:var(--texto-oscuro); margin-bottom:10px; line-height:1.4;">
+                            <?= htmlspecialchars(mb_convert_case($p['titulo'], MB_CASE_TITLE, 'UTF-8')) ?>
+                        </h4>
+                        <div class="li-project-meta-row" style="display:flex; flex-wrap:wrap; gap:1rem; font-size:0.85rem; color:#64748b; font-weight:500;">
+                            <span class="li-project-meta-item" style="display:flex; align-items:center; gap:4px;">
+                                <i class="ph-bold ph-users"></i> <?= htmlspecialchars($p['autores'] ?? 'Autores No Registrados') ?>
+                            </span>
+                            <span class="li-project-meta-item" style="display:flex; align-items:center; gap:4px;">
+                                <i class="ph-bold ph-calendar"></i> <?= htmlspecialchars($p['anio_publicacion'] ?? '') ?>
+                            </span>
+                            <?php if (!empty($p['nivel_academico'])): ?>
+                            <span class="li-project-meta-item" style="display:flex; align-items:center; gap:4px;">
+                                <i class="ph-bold ph-graduation-cap"></i> <?= htmlspecialchars($p['nivel_academico']) ?>
+                            </span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <?php if (!empty($p['archivo_pdf'])): ?>
+                    <div class="li-project-actions" style="flex-shrink:0;">
+                        <a class="li-btn-secondary" href="descargas/<?= htmlspecialchars($p['archivo_pdf']) ?>" target="_blank" title="Descargar documento de investigación" style="background:#f8fafc; color:#334155; border:1px solid #cbd5e1; padding:8px 12px; border-radius:8px; font-weight:600; font-size:0.85rem; display:inline-flex; align-items:center; gap:6px; text-decoration:none; transition:0.2s;">
+                            <i class="ph-bold ph-file-pdf" style="color:#ef4444;"></i>
+                            <span>Ver PDF</span>
+                        </a>
+                    </div>
+                    <?php endif; ?>
+                </article>
+            <?php endforeach; ?>
+            
+            <!-- Paginación -->
+            <?php if ($pagination['total_pages'] > 1): ?>
+            <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin-top:1.5rem; border-top:1px solid var(--color-borde); padding-top:1.5rem;">
+                <?php if ($pagination['current_page'] > 1): ?>
+                    <a href="?ruta=detalle-linea&id=<?= $linea['id'] ?>&p=<?= $pagination['current_page'] - 1 ?>" style="padding:8px 16px; border:1px solid var(--color-borde); border-radius:8px; color:var(--texto-oscuro); text-decoration:none; font-weight:600; font-size:0.9rem; background:#fff; transition:0.2s;"><i class="ph-bold ph-caret-left"></i> Anterior</a>
+                <?php endif; ?>
+                
+                <span style="font-size:0.9rem; font-weight:600; color:#64748b;">
+                    Página <?= $pagination['current_page'] ?> de <?= $pagination['total_pages'] ?>
+                </span>
+                
+                <?php if ($pagination['current_page'] < $pagination['total_pages']): ?>
+                    <a href="?ruta=detalle-linea&id=<?= $linea['id'] ?>&p=<?= $pagination['current_page'] + 1 ?>" style="padding:8px 16px; border:1px solid var(--color-borde); border-radius:8px; color:var(--texto-oscuro); text-decoration:none; font-weight:600; font-size:0.9rem; background:#fff; transition:0.2s;">Siguiente <i class="ph-bold ph-caret-right"></i></a>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+        <?php endif; ?>
+    </div>
 </section>
 </div>
 <!-- Columna Derecha (30%) - Investigaciones Ofertadas -->
