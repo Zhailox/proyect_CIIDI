@@ -2,17 +2,18 @@
 // modules/LineasInvestigacion/views/showcase_lineas.php
 require_once CORE_PATH . 'Security/Auth.php';
 
-$totalLineas = 0;
-$totalDimensiones = 0;
-$totalProyectos = 0;
-$totalOfertas = 0;
+// Variables inyectadas por el controlador: $lineas, $total_dimensiones, $total_proyectos, $total_invest
+$totalLineas = isset($lineas) ? count($lineas) : 0;
+$totalDimensiones = $total_dimensiones ?? 0;
+$totalProyectos = $total_proyectos ?? 0;
+$totalOfertas = $total_invest ?? 0;
 
-foreach ($lineasPorCarrera as $grupo) {
-    $totalLineas += count($grupo);
-    foreach ($grupo as $l) {
-        $totalDimensiones += $l['total_dimensiones'] ?? 0;
-        $totalProyectos += $l['total_proyectos'] ?? 0;
-        $totalOfertas += $l['total_investigaciones'] ?? 0;
+// Agrupar las líneas por carrera para la vista
+$lineasPorCarrera = [];
+if (!empty($lineas)) {
+    foreach ($lineas as $linea) {
+        $carrera = !empty($linea['carrera_nombre']) ? $linea['carrera_nombre'] : 'General';
+        $lineasPorCarrera[$carrera][] = $linea;
     }
 }
 ?>
