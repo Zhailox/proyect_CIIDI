@@ -340,13 +340,13 @@ document.addEventListener('DOMContentLoaded', function() {
 <form id="formOcultarDim" method="POST" action="index.php?ruta=detalle-gestion-linea&id=<?= urlencode($linea['id']) ?>" style="display:none;">
     <input type="hidden" name="accion" value="ocultar">
     <input type="hidden" name="id" id="inputIdOcultarDim">
-    <?= CSRF::crearCampo() ?>
+    <?= CSRF::campoOculto() ?>
 </form>
 
 <form id="formMostrarDim" method="POST" action="index.php?ruta=detalle-gestion-linea&id=<?= urlencode($linea['id']) ?>" style="display:none;">
     <input type="hidden" name="accion" value="mostrar">
     <input type="hidden" name="id" id="inputIdMostrarDim">
-    <?= CSRF::crearCampo() ?>
+    <?= CSRF::campoOculto() ?>
 </form>
 
 <script>

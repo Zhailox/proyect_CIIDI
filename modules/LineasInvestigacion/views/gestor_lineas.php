@@ -257,13 +257,13 @@ document.addEventListener('DOMContentLoaded', function() {
 <form id="formOcultarLinea" method="POST" action="index.php?ruta=gestionar-lineas" style="display:none;">
     <input type="hidden" name="accion" value="ocultar">
     <input type="hidden" name="id" id="inputIdOcultar">
-    <?= CSRF::crearCampo() ?>
+    <?= CSRF::campoOculto() ?>
 </form>
 
 <form id="formMostrarLinea" method="POST" action="index.php?ruta=gestionar-lineas" style="display:none;">
     <input type="hidden" name="accion" value="mostrar">
     <input type="hidden" name="id" id="inputIdMostrar">
-    <?= CSRF::crearCampo() ?>
+    <?= CSRF::campoOculto() ?>
 </form>
 
 <script>
