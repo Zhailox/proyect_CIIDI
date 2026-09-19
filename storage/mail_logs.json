@@ -1,5 +1,55 @@
 [
     {
+        "id": "mail_6aae3659f086b",
+        "fecha": "2026-09-19 07:14:33",
+        "destino_email": "cepillino@gmail.com",
+        "destino_nombre": "Cepillín",
+        "asunto": "Alerta de Seguridad: Su cuenta ha sido bloqueada temporalmente",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
+        "id": "mail_6aae364fe4b64",
+        "fecha": "2026-09-19 07:14:23",
+        "destino_email": "cepillino@gmail.com",
+        "destino_nombre": "Cepillín",
+        "asunto": "Alerta de Seguridad: Su cuenta ha sido bloqueada temporalmente",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
+        "id": "mail_6aae3645d7704",
+        "fecha": "2026-09-19 07:14:13",
+        "destino_email": "cepillino@gmail.com",
+        "destino_nombre": "Cepillín",
+        "asunto": "Alerta de Seguridad: Su cuenta ha sido bloqueada temporalmente",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
+        "id": "mail_6aae35fb5307e",
+        "fecha": "2026-09-19 07:12:59",
+        "destino_email": "cepillino@gmail.com",
+        "destino_nombre": "Cepillín",
+        "asunto": "Su cuenta institucional ha sido Reactivada - CIIDI",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
+        "id": "mail_6aae35e648103",
+        "fecha": "2026-09-19 07:12:38",
+        "destino_email": "cepillino@gmail.com",
+        "destino_nombre": "Cepillín",
+        "asunto": "Invitación Oficial - Registro de Cuenta Docente CIIDI",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
         "id": "mail_6aae34a49bfcd",
         "fecha": "2026-09-19 07:07:16",
         "destino_email": "orlando5711666@gmail.com",
