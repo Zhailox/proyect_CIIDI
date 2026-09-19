@@ -169,4 +169,21 @@ class LineasModel extends QueryBuilder {
                     ->where('id', '=', $id)
                     ->delete();
     }
+    public function getOfertasRecientes(int $limit = 5): array {
+        $sql = "
+            SELECT 
+                io.id, io.titulo, io.estado, io.cupos_disponibles,
+                u.nombre_completo AS profesor,
+                li.nombre AS linea_nombre
+            FROM investigaciones_ofertadas io
+            LEFT JOIN usuarios u ON u.id = io.id_profesor
+            LEFT JOIN lineas_investigacion li ON li.id = io.id_linea
+            WHERE io.estado = 'Abierta'
+            ORDER BY io.fecha_creacion DESC
+            LIMIT $limit
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

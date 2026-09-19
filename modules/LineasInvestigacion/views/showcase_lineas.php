@@ -82,9 +82,8 @@ if (!empty($lineas)) {
 </section>
 <!-- Contenido Principal -->
 <main class="li-main-content">
-
-
-</div>
+<div style="display: grid; grid-template-columns: 1fr 340px; gap: 2rem; align-items: start;" class="li-main-layout">
+<div class="li-layout-left">
 <!-- Toolbar de Resultados y Controles de Vista (Requerimiento 3) -->
 <div class="li-section-toolbar">
 <div class="li-toolbar-left">
@@ -105,7 +104,73 @@ if (!empty($lineas)) {
 </div>
 </div>
 
+
 <!-- ====================================================================
+             GRUPO DE LÍNEAS ACTIVAS: PNF EN INFORMÁTICA (100% OPERATIVO)
+             ==================================================================== -->
+
+    
+    <?php foreach ($lineasPorCarrera as $carrera => $grupo): ?>
+    <!-- GRUPO PNF -->
+    <section class="li-pnf-group">
+        <div class="li-pnf-header">
+            <div class="li-pnf-title-area">
+                <i class="ph-bold ph-laptop li-pnf-icon"></i>
+                <div class="li-pnf-name">
+                    <span><?= htmlspecialchars($carrera) ?></span>
+                    
+                </div>
+            </div>
+            <span class="li-pnf-meta"><?= count($grupo) ?> Líneas de Investigación Homologadas</span>
+        </div>
+        
+        <div class="li-items-container grid-view">
+            <?php foreach ($grupo as $linea): ?>
+            <!-- CARD -->
+            <a href="?ruta=detalle-linea&id=<?= $linea['id'] ?>" style="text-decoration: none; color: inherit; display: block;">
+                <article class="li-card">
+                    <div class="li-card-content-block">
+                        <div class="li-card-top">
+                            <div class="li-card-icon-box">
+                                <i class="ph-bold ph-code"></i>
+                            </div>
+                            <div class="li-card-heading">
+                                <h4 class="li-card-title"><?= htmlspecialchars($linea['nombre']) ?></h4>
+                            </div>
+                        </div>
+                        <p class="li-card-description">
+                            <?= htmlspecialchars($linea['descripcion'] ?: 'Sin descripción registrada en el sistema.') ?>
+                        </p>
+                        
+                        <div class="li-card-badges">
+                            <span class="li-badge"><i class="ph-bold ph-tree-structure"></i> <?= (int)($linea['total_dimensiones'] ?? 0) ?> Dim.</span>
+                            <span class="li-badge"><i class="ph-bold ph-folder-notch"></i> <?= (int)($linea['total_proyectos'] ?? 0) ?> Proy.</span>
+                            <?php if (!empty($linea['total_investigaciones'])): ?>
+                                <span class="li-badge has-offers"><i class="ph-bold ph-hand-pointing"></i> <?= (int)$linea['total_investigaciones'] ?> Ofertas</span>
+                            <?php else: ?>
+                                <span class="li-badge"><i class="ph-bold ph-hand-pointing"></i> 0 Ofertas</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    
+                    <div class="li-card-footer">
+                        <div class="li-card-footer-action">
+                            <span>Explorar dimensiones</span>
+                            <i class="ph-bold ph-arrow-right"></i>
+                        </div>
+                    </div>
+                </article>
+            </a>
+            <?php endforeach; ?>
+        </div>
+    </section>
+    <?php endforeach; ?>
+    
+
+</div> <!-- end li-layout-left -->
+
+<aside class="li-layout-right">
+    <!-- ====================================================================
              PANEL DE FILTROS AVANZADOS EXPANDIBLE (REQUERIMIENTO 2)
              ==================================================================== -->
 <section class="li-advanced-filter-panel" id="panel-filtros-avanzados">
@@ -116,7 +181,7 @@ if (!empty($lineas)) {
 </div>
 <span style="font-size: 0.75rem; color: var(--texto-silenciado);">Repositorio Curricular PST</span>
 </div>
-<div class="li-af-grid">
+<div class="li-af-grid" style="display: flex; flex-direction: column; gap: 1rem;">
 <!-- Criterio 1: Trayecto Formativo PST -->
 <div class="li-af-group">
 <label class="li-af-label">
@@ -198,67 +263,49 @@ if (!empty($lineas)) {
 </div>
 </div>
 </section>
-<!-- ====================================================================
-             GRUPO DE LÍNEAS ACTIVAS: PNF EN INFORMÁTICA (100% OPERATIVO)
-             ==================================================================== -->
-
     
-    <?php foreach ($lineasPorCarrera as $carrera => $grupo): ?>
-    <!-- GRUPO PNF -->
-    <section class="li-pnf-group">
-        <div class="li-pnf-header">
-            <div class="li-pnf-title-area">
-                <i class="ph-bold ph-laptop li-pnf-icon"></i>
-                <div class="li-pnf-name">
-                    <span><?= htmlspecialchars($carrera) ?></span>
-                    
-                </div>
-            </div>
-            <span class="li-pnf-meta"><?= count($grupo) ?> Líneas de Investigación Homologadas</span>
+    <!-- Ofertas de Investigación -->
+    <section class="li-sidebar-ofertas" style="margin-top: 2rem; background: #ffffff; border: 1px solid var(--color-borde); border-radius: var(--radio-md); padding: 1.5rem; box-shadow: var(--sombra-sm);">
+        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--li-text-title); margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--color-borde); padding-bottom: 0.75rem;">
+            <i class="ph-bold ph-hand-pointing" style="color: var(--color-secundario);"></i>
+            Ofertas PST Disponibles
+        </h3>
+        
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <?php if(empty($ofertas_recientes)): ?>
+                <p style="color: var(--texto-silenciado); font-size: 0.85rem; margin: 0;">No hay ofertas activas en este momento.</p>
+            <?php else: ?>
+                <?php foreach($ofertas_recientes as $oferta): ?>
+                    <a href="?ruta=postulaciones-investigacion" style="display: block; text-decoration: none; border: 1px solid var(--color-borde); border-radius: 8px; padding: 1rem; transition: all 0.2s; background: #ffffff;" onmouseover="this.style.borderColor='var(--color-principal)'; this.style.background='#ffffff'" onmouseout="this.style.borderColor='var(--color-borde)'; this.style.background='#fafafa'">
+                        <span style="display: inline-block; background: #dcfce7; color: #166534; font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-bottom: 0.5rem; text-transform: uppercase;">Activa &bull; <?= $oferta['cupos_disponibles'] ?> Cupos</span>
+                        
+                        <h4 style="margin: 0 0 0.25rem 0; font-size: 0.9rem; color: var(--li-text-title); font-weight: 700; line-height: 1.3;">
+                            <?= htmlspecialchars($oferta['titulo'] ?? 'Requerimiento de Sistema PST') ?>
+                        </h4>
+                        
+                        <div style="font-size: 0.75rem; color: var(--texto-comun); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 4px;">
+                            <i class="ph-bold ph-user"></i> Prof. <?= htmlspecialchars($oferta['profesor']) ?>
+                        </div>
+                        
+                        <div style="font-size: 0.75rem; color: var(--texto-silenciado); background: #f1f5f9; padding: 4px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="ph-bold ph-flask"></i> <?= htmlspecialchars($oferta['linea_nombre'] ?? 'Línea General') ?>
+                        </div>
+                        
+                        <div style="margin-top: 0.75rem; font-size: 0.8rem; font-weight: 600; color: var(--color-principal); display: flex; align-items: center; gap: 4px;">
+                            Postularse <i class="ph-bold ph-arrow-right"></i>
+                        </div>
+                    </a>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
         
-        <div class="li-items-container grid-view">
-            <?php foreach ($grupo as $linea): ?>
-            <!-- CARD -->
-            <a href="?ruta=detalle-linea&id=<?= $linea['id'] ?>" style="text-decoration: none; color: inherit; display: block;">
-                <article class="li-card">
-                    <div class="li-card-content-block">
-                        <div class="li-card-top">
-                            <div class="li-card-icon-box">
-                                <i class="ph-bold ph-code"></i>
-                            </div>
-                            <div class="li-card-heading">
-                                <h4 class="li-card-title"><?= htmlspecialchars($linea['nombre']) ?></h4>
-                            </div>
-                        </div>
-                        <p class="li-card-description">
-                            <?= htmlspecialchars($linea['descripcion'] ?: 'Sin descripción registrada en el sistema.') ?>
-                        </p>
-                        
-                        <div class="li-card-badges">
-                            <span class="li-badge"><i class="ph-bold ph-tree-structure"></i> <?= (int)($linea['total_dimensiones'] ?? 0) ?> Dim.</span>
-                            <span class="li-badge"><i class="ph-bold ph-folder-notch"></i> <?= (int)($linea['total_proyectos'] ?? 0) ?> Proy.</span>
-                            <?php if (!empty($linea['total_investigaciones'])): ?>
-                                <span class="li-badge has-offers"><i class="ph-bold ph-hand-pointing"></i> <?= (int)$linea['total_investigaciones'] ?> Ofertas</span>
-                            <?php else: ?>
-                                <span class="li-badge"><i class="ph-bold ph-hand-pointing"></i> 0 Ofertas</span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    
-                    <div class="li-card-footer">
-                        <div class="li-card-footer-action">
-                            <span>Explorar dimensiones</span>
-                            <i class="ph-bold ph-arrow-right"></i>
-                        </div>
-                    </div>
-                </article>
-            </a>
-            <?php endforeach; ?>
-        </div>
+        <a href="?ruta=postulaciones-investigacion" style="display: block; text-align: center; margin-top: 1.25rem; font-size: 0.85rem; font-weight: 600; color: var(--color-secundario); text-decoration: none;">
+            Ver todas las ofertas
+        </a>
     </section>
-    <?php endforeach; ?>
-    
+</aside>
+</div> <!-- end li-main-layout -->
+
 </main>
 </div>
 

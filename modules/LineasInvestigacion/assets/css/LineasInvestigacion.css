@@ -2060,7 +2060,7 @@
       padding: 1.5rem;
       margin-bottom: 2rem;
       box-shadow: var(--sombra-sm);
-      display: none;
+      
       animation: fadeIn 0.25s ease-in-out;
     }
 
@@ -3171,3 +3171,5 @@
     }
   
 .li-detail-header-wrapper .li-code-badge { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.3); color: #ffffff; }
+
+@media (max-width: 900px) { .li-main-layout { grid-template-columns: 1fr !important; } }
