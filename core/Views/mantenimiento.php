@@ -26,63 +26,78 @@ $mensajeCustom = !empty($mensajeCustom) ? $mensajeCustom : "Estamos realizando l
             min-height: 100vh;
             color: #1e293b;
         }
-        .mantenimiento-wrapper {
-            max-width: 1000px;
-            width: 92%;
-            background: #ffffff;
-            border-radius: 16px;
-            padding: 1.25rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            border: 1px solid rgba(0, 0, 0, 0.06);
+        .mantenimiento-container {
+            width: 100%;
+            max-width: 950px;
+            padding: 1.5rem 1rem;
             text-align: center;
             box-sizing: border-box;
-            margin: 1.5rem auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         .mantenimiento-img {
-            width: 100%;
-            max-height: 68vh;
+            max-width: 900px;
+            width: 95%;
+            max-height: 65vh;
             height: auto;
-            border-radius: 12px;
             display: block;
             object-fit: contain;
             margin: 0 auto;
+            filter: drop-shadow(0 14px 30px rgba(18, 26, 62, 0.14));
+            border-radius: 16px;
         }
         .mantenimiento-msg {
             margin-top: 1.25rem;
-            font-size: 1rem;
+            font-size: 1.05rem;
             color: #475569;
             line-height: 1.5;
             max-width: 650px;
             margin-left: auto;
             margin-right: auto;
+            font-weight: 500;
+        }
+        .mantenimiento-timer-card {
+            margin-top: 1.25rem;
+            background: rgba(254, 243, 199, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(253, 230, 138, 0.8);
+            border-radius: 50px;
+            padding: 0.75rem 2rem;
+            max-width: 480px;
+            box-shadow: 0 4px 15px rgba(217, 119, 6, 0.12);
         }
         .mantenimiento-actions {
-            margin-top: 1.25rem;
+            margin-top: 1.5rem;
             display: flex;
             justify-content: center;
             gap: 1rem;
             flex-wrap: wrap;
         }
-        .btn-admin {
+        .btn-admin-pill {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.6rem;
             background: var(--color-secundario, #002244);
             color: #ffffff;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
+            padding: 0.75rem 1.6rem;
+            border-radius: 50px;
+            font-weight: 700;
             text-decoration: none;
             font-size: 0.95rem;
-            transition: opacity 0.2s ease;
+            box-shadow: 0 8px 20px rgba(0, 34, 68, 0.25);
+            transition: all 0.25s ease;
         }
-        .btn-admin:hover {
-            opacity: 0.9;
+        .btn-admin-pill:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(0, 34, 68, 0.35);
+            color: #ffffff;
         }
     </style>
 </head>
 <body>
-    <div class="mantenimiento-wrapper">
+    <div class="mantenimiento-container">
+        <!-- Imagen Libre Sin Contenedor Blanco Confinado -->
         <img src="assets/img/503.jpg" alt="503 - Sistema en Mantenimiento" class="mantenimiento-img">
         
         <?php if (!empty($mensajeCustom)): ?>
@@ -90,11 +105,11 @@ $mensajeCustom = !empty($mensajeCustom) ? $mensajeCustom : "Estamos realizando l
         <?php endif; ?>
 
         <?php if (!empty($fechaFinMantenimiento)): ?>
-            <div style="margin-top: 1.25rem; background: #fef3c7; border: 1px solid #fde68a; border-radius: 12px; padding: 1rem; max-width: 500px; margin-left: auto; margin-right: auto;">
-                <span style="font-weight: 600; color: #92400e; font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">
+            <div class="mantenimiento-timer-card">
+                <span style="font-weight: 600; color: #92400e; font-size: 0.85rem; display: block; margin-bottom: 0.25rem;">
                     <i class="ph-bold ph-timer"></i> Tiempo Estimado de Apertura:
                 </span>
-                <div id="countdown-timer" style="font-size: 1.6rem; font-weight: 700; color: #78350f; font-family: monospace; letter-spacing: 2px;">
+                <div id="countdown-timer" style="font-size: 1.5rem; font-weight: 700; color: #78350f; font-family: monospace; letter-spacing: 2px;">
                     Calculando...
                 </div>
             </div>
@@ -131,8 +146,8 @@ $mensajeCustom = !empty($mensajeCustom) ? $mensajeCustom : "Estamos realizando l
         <?php endif; ?>
 
         <div class="mantenimiento-actions">
-            <a href="login" class="btn-admin">
-                <i class="ph ph-lock-key" style="font-size: 1.2rem;"></i> Acceso Administrativo
+            <a href="login" onclick="if(window.location.search){ window.location.href = './login'; return false; }" class="btn-admin-pill">
+                <i class="ph ph-lock-key" style="font-size: 1.25rem;"></i> Acceso Administrativo
             </a>
         </div>
     </div>

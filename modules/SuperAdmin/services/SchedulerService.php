@@ -415,6 +415,12 @@ class SchedulerService {
             }
         }
 
+        try {
+            $db = Connection::getInstance();
+            $db->exec("DELETE FROM telemetria_cache");
+            $archivosBorrados++;
+        } catch (Throwable $e) {}
+
         $cacheFile = $storageDir . '.telemetry_cache.json';
         if (file_exists($cacheFile)) {
             @unlink($cacheFile);
@@ -438,23 +444,29 @@ class SchedulerService {
     }
 
     public static function purgarLogs(): array {
+        $purgados = 0;
+        try {
+            $db = Connection::getInstance();
+            // Mantener solo los últimos 2000 registros en la base de datos
+            $stmtCount = $db->query("SELECT COUNT(*) FROM system_audit_log");
+            $total = (int)$stmtCount->fetchColumn();
+            if ($total > 2000) {
+                $exceso = $total - 2000;
+                $db->exec("DELETE FROM system_audit_log WHERE id IN (SELECT id FROM system_audit_log ORDER BY fecha_hora ASC LIMIT {$exceso})");
+                $purgados = $exceso;
+            }
+        } catch (Throwable $e) {}
+
         $storageDir = self::getStorageDir();
         $archivoAudit = $storageDir . 'system_audit.json';
-        $purgados = 0;
-
         if (file_exists($archivoAudit)) {
-            $logs = json_decode(file_get_contents($archivoAudit), true) ?: [];
-            if (count($logs) > 2000) {
-                $mantenidos = array_slice($logs, 0, 1000);
-                $purgados = count($logs) - count($mantenidos);
-                file_put_contents($archivoAudit, json_encode($mantenidos, JSON_PRETTY_PRINT));
-            }
+            @file_put_contents($archivoAudit, json_encode([], JSON_PRETTY_PRINT));
         }
 
         return [
             'exito' => true,
             'mensaje' => "Optimización de logs completada. {$purgados} registros obsoletos purgados.",
-            'salida' => "Registros purgados de system_audit.json: {$purgados}"
+            'salida' => "Registros purgados de system_audit_log en BD: {$purgados}"
         ];
     }
 

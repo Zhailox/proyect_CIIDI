@@ -71,4 +71,45 @@ class Env {
         if ($lower === 'null' || $lower === '(null)') return null;
         return $value;
     }
+
+    /**
+     * Actualiza o inserta variables clave=valor en el archivo .env conservando comentarios y formato
+     */
+    public static function updateEnvFile(array $keyValues): bool {
+        $path = defined('BASE_PATH') ? BASE_PATH . '/.env' : __DIR__ . '/../../.env';
+        if (!file_exists($path)) {
+            $lines = ["# Configuración del Entorno CIIDI"];
+        } else {
+            $lines = file($path, FILE_IGNORE_NEW_LINES);
+            if ($lines === false) $lines = [];
+        }
+
+        $existing = [];
+        foreach ($lines as $idx => $line) {
+            $trimmed = trim($line);
+            if (empty($trimmed) || str_starts_with($trimmed, '#')) continue;
+            if (str_contains($trimmed, '=')) {
+                list($k, $v) = explode('=', $trimmed, 2);
+                $existing[trim($k)] = $idx;
+            }
+        }
+
+        foreach ($keyValues as $k => $v) {
+            $vStr = is_bool($v) ? ($v ? 'true' : 'false') : (string)$v;
+            putenv("{$k}={$vStr}");
+            $_ENV[$k] = $vStr;
+            $_SERVER[$k] = $vStr;
+
+            $lineText = "{$k}={$vStr}";
+            if (isset($existing[$k])) {
+                $lines[$existing[$k]] = $lineText;
+            } else {
+                $lines[] = $lineText;
+            }
+        }
+
+        $res = file_put_contents($path, implode("\n", $lines) . "\n") !== false;
+        @chmod($path, 0640);
+        return $res;
+    }
 }

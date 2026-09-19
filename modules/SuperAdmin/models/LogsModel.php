@@ -77,9 +77,16 @@ class LogsModel {
     }
 
     public function limpiarLogsAudit(): bool {
+        try {
+            $db = Connection::getInstance();
+            $db->exec("TRUNCATE TABLE system_audit_log");
+        } catch (Throwable $e) {
+            // Ignorar si la tabla no está disponible
+        }
+
         $archivo = CORE_PATH . '../storage/system_audit.json';
         if (file_exists($archivo)) {
-            return (bool) file_put_contents($archivo, json_encode([], JSON_PRETTY_PRINT));
+            @file_put_contents($archivo, json_encode([], JSON_PRETTY_PRINT));
         }
         return true;
     }

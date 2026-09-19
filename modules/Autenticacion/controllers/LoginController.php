@@ -20,7 +20,8 @@ class LoginController {
 
     public function mostrarFormulario() {
         if (Auth::check()) {
-            header("Location: perfil");
+            $esAdmin = isset($_SESSION['nivel_privilegio']) && (int)$_SESSION['nivel_privilegio'] <= 2;
+            header("Location: " . ($esAdmin ? "sudoadmin" : "perfil"));
             exit; 
         }
         
@@ -278,11 +279,11 @@ class LoginController {
             $data = json_decode(file_get_contents($archivoMant), true);
             if (isset($data['activo']) && $data['activo'] === true) {
                 $nivelUsuario = (int) $usuario['nivel_privilegio'];
-                if ($nivelUsuario < 3) {
+                // En la estructura del sistema, niveles <= 2 representan administradores/gestores (0 es SuperAdmin)
+                if ($nivelUsuario > 2) {
                     // Error: solo administradores pueden acceder durante mantenimiento
                     $_SESSION['error_login'] = 'El sistema está en mantenimiento. Solo administradores pueden acceder.';
-                    header("Location: login");
-                    exit;
+                    return ['es_error' => true, 'mensaje' => 'El sistema está en mantenimiento. Solo administradores pueden acceder.', 'destino' => 'login'];
                 }
             }
         }
@@ -303,12 +304,14 @@ class LoginController {
             // Si falla la auditoría, no detenemos el login, solo seguimos adelante
         }
 
+        $esAdmin = (int)$usuario['nivel_privilegio'] <= 2;
+
         // ÉXITO: Mandamos los datos para la pantalla de bienvenida (anillo de carga)
         return [
             'es_error'       => false,
             'nombre_usuario' => $usuario['nombre_completo'],
             'rol_nombre'     => $usuario['nombre_rol'],
-            'destino'        => 'perfil'
+            'destino'        => $esAdmin ? 'sudoadmin' : 'perfil'
         ];
     }
 

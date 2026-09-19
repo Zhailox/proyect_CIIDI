@@ -170,13 +170,10 @@ class GestorUsuariosController {
             try {
                 $this->adminModel->crearRol($nombre, $privilegioId);
                 
-                // Inicializar en la matriz RBAC vacía
-                $archivo = CORE_PATH . '../storage/rbac_matrix.json';
-                $matriz = file_exists($archivo) ? (json_decode(file_get_contents($archivo), true) ?: []) : [];
-                if (!isset($matriz[$nombre])) {
-                    $matriz[$nombre] = ['crear' => false, 'editar' => false, 'eliminar' => false, 'auditar' => false];
-                    file_put_contents($archivo, json_encode($matriz, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-                }
+                // Inicializar en la matriz RBAC en BD
+                $db = Connection::getInstance();
+                $stmt = $db->prepare("INSERT INTO matriz_rbac (nivel_privilegio, modulo, permisos) VALUES (?, 'Sistema', ?) ON CONFLICT DO NOTHING");
+                $stmt->execute([$privilegioId, json_encode(['ver' => true, 'editar' => false, 'eliminar' => false])]);
 
                 AuditLogger::registrar('WARNING', 'SuperAdmin', 'Crear Rol', "Nuevo rol creado: {$nombre} (Privilegio ID: {$privilegioId})");
                 if (session_status() === PHP_SESSION_NONE) session_start();
@@ -212,6 +209,49 @@ class GestorUsuariosController {
             } else {
                 if (session_status() === PHP_SESSION_NONE) session_start();
                 $_SESSION['mensaje_gestor_error'] = "No puedes revocar tu propia sesión activa desde esta acción.";
+            }
+
+            header("Location: gestor-usuarios");
+            exit;
+        }
+    }
+
+    public function eliminarUsuarioAction() {
+        Auth::requierePrivilegioMinimo(0);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $usuarioIdAEliminar = (int)($_POST['usuario_id'] ?? 0);
+            $usuarioIdActual = (int)($_SESSION['usuario_id'] ?? 0);
+
+            if ($usuarioIdAEliminar <= 0) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "ID de usuario no válido para eliminación.";
+                header("Location: gestor-usuarios");
+                exit;
+            }
+
+            if ($usuarioIdAEliminar === $usuarioIdActual) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "Operación denegada: No puedes eliminar tu propia cuenta en sesión activa.";
+                header("Location: gestor-usuarios");
+                exit;
+            }
+
+            $exito = $this->adminModel->archivarUsuario($usuarioIdAEliminar);
+
+            if (session_status() === PHP_SESSION_NONE) session_start();
+
+            if ($exito) {
+                // Expulsar cualquier sesión activa del usuario eliminado
+                $archivo = CORE_PATH . '../storage/revoked_sessions.json';
+                $revogadas = file_exists($archivo) ? (json_decode(file_get_contents($archivo), true) ?: []) : [];
+                $revogadas[(string)$usuarioIdAEliminar] = true;
+                file_put_contents($archivo, json_encode($revogadas, JSON_PRETTY_PRINT));
+
+                AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar/Archivar Usuario', "Usuario ID #{$usuarioIdAEliminar} archivado exitosamente. Credenciales liberadas.");
+                $_SESSION['mensaje_gestor_exito'] = "Usuario #{$usuarioIdAEliminar} eliminado exitosamente. Sus credenciales han sido liberadas para nuevos registros.";
+            } else {
+                $_SESSION['mensaje_gestor_error'] = "No se pudo eliminar el usuario especificado o no existe en la base de datos.";
             }
 
             header("Location: gestor-usuarios");
@@ -507,15 +547,10 @@ class GestorUsuariosController {
                     // 1. Eliminar de la Base de Datos
                     $this->adminModel->eliminarPrivilegio($nivel);
                     
-                    // 2. Purgar los datos fantasma del archivo JSON
-                    $archivo = CORE_PATH . '../storage/rbac_matrix.json';
-                    if (file_exists($archivo)) {
-                        $matriz = json_decode(file_get_contents($archivo), true) ?: [];
-                        if (isset($matriz[$nivel])) {
-                            unset($matriz[$nivel]); // Elimina la rama completa de ese nivel
-                            file_put_contents($archivo, json_encode($matriz, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-                        }
-                    }
+                    // 2. Purgar de la tabla matriz_rbac en PostgreSQL
+                    $db = Connection::getInstance();
+                    $stmt = $db->prepare("DELETE FROM matriz_rbac WHERE nivel_privilegio = ?");
+                    $stmt->execute([$nivel]);
 
                     AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Nivel', "Nivel de privilegio {$nivel} eliminado de la BD y purgado del RBAC.");
                     if (session_status() === PHP_SESSION_NONE) session_start();

@@ -56,6 +56,19 @@ class ConfiguracionController {
                 }
             }
             
+            // Entorno y Depuración (.env Shield)
+            $appDebug = isset($_POST['app_debug']) && ($_POST['app_debug'] === 'true' || $_POST['app_debug'] === '1' || $_POST['app_debug'] === 'on');
+            $appEnv = trim($_POST['app_env'] ?? 'production');
+            
+            if (class_exists('Env')) {
+                Env::updateEnvFile([
+                    'APP_DEBUG' => $appDebug ? 'true' : 'false',
+                    'APP_ENV'   => $appEnv
+                ]);
+            }
+            $config['entorno']['app_debug'] = $appDebug;
+            $config['entorno']['app_env'] = $appEnv;
+
             // Solo actualizamos la contraseña si se escribió una nueva
             if (!empty($_POST['smtp_pass'])) {
                 $config['smtp']['pass'] = trim($_POST['smtp_pass']);

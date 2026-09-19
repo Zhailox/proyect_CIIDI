@@ -122,17 +122,21 @@ class InstallerService {
                         'mensaje' => "Las credenciales son válidas, pero la base de datos '{$dbName}' no existe aún en PostgreSQL."
                     ];
                 } catch (PDOException $e2) {
+                    if (class_exists('Connection')) Connection::logSystemError($e2);
+                    $appDebug = class_exists('Env') ? Env::get('APP_DEBUG', false) : false;
                     return [
                         'exito' => false,
                         'bd_existe' => false,
-                        'mensaje' => "Credenciales incorrectas o servidor PostgreSQL inaccesible: " . $e2->getMessage()
+                        'mensaje' => "Credenciales incorrectas o servidor PostgreSQL inaccesible." . ($appDebug ? " Detalle: " . $e2->getMessage() : "")
                     ];
                 }
             }
+            if (class_exists('Connection')) Connection::logSystemError($e);
+            $appDebug = class_exists('Env') ? Env::get('APP_DEBUG', false) : false;
             return [
                 'exito' => false,
                 'bd_existe' => false,
-                'mensaje' => "Fallo de conexión PDO PostgreSQL: " . $errorMsg
+                'mensaje' => "Fallo al verificar servidor PostgreSQL." . ($appDebug ? " Detalle: " . $errorMsg : "")
             ];
         }
     }
@@ -150,9 +154,11 @@ class InstallerService {
                 'mensaje' => "Base de datos '{$cleanDb}' creada exitosamente en PostgreSQL."
             ];
         } catch (PDOException $e) {
+            if (class_exists('Connection')) Connection::logSystemError($e);
+            $appDebug = class_exists('Env') ? Env::get('APP_DEBUG', false) : false;
             return [
                 'exito' => false,
-                'mensaje' => "No se pudo crear la base de datos: " . $e->getMessage()
+                'mensaje' => "No se pudo crear la base de datos." . ($appDebug ? " Detalle: " . $e->getMessage() : "")
             ];
         }
     }
@@ -197,9 +203,11 @@ class InstallerService {
             if (isset($pdo) && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
+            if (class_exists('Connection')) Connection::logSystemError($e);
+            $appDebug = class_exists('Env') ? Env::get('APP_DEBUG', false) : false;
             return [
                 'exito' => false,
-                'mensaje' => "Error al ejecutar la migración SQL: " . $e->getMessage()
+                'mensaje' => "Error al ejecutar la migración SQL." . ($appDebug ? " Detalle: " . $e->getMessage() : "")
             ];
         }
     }
@@ -257,9 +265,11 @@ class InstallerService {
                 'mensaje' => "SuperAdmin '{$nombre}' creado correctamente con privilegio de acceso absoluto."
             ];
         } catch (PDOException $e) {
+            if (class_exists('Connection')) Connection::logSystemError($e);
+            $appDebug = class_exists('Env') ? Env::get('APP_DEBUG', false) : false;
             return [
                 'exito' => false,
-                'mensaje' => "Error al registrar el SuperAdmin: " . $e->getMessage()
+                'mensaje' => "Error al registrar la cuenta de SuperAdmin." . ($appDebug ? " Detalle: " . $e->getMessage() : "")
             ];
         }
     }

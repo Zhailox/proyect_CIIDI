@@ -568,11 +568,19 @@ class AdminController {
 
     private function cerrarSesionesNoAdmin() {
         $savePath = session_save_path() ?: (ini_get('session.save_path') ?: sys_get_temp_dir());
+        $currentSessionId = session_id();
         $archivos = glob($savePath . '/sess_*');
         foreach ($archivos as $archivo) {
-            $contenido = file_get_contents($archivo);
+            // No cerrar la sesión actual desde la cual el Administrador activó el mantenimiento
+            if (!empty($currentSessionId) && str_contains($archivo, $currentSessionId)) {
+                continue;
+            }
+            $contenido = @file_get_contents($archivo);
+            if ($contenido === false) continue;
+            
             preg_match('/nivel_privilegio\|i:(\d+)/', $contenido, $matches);
-            if (isset($matches[1]) && (int)$matches[1] < 3) {
+            // Si el nivel de privilegio no está presente o es menor a 3, se destruye la sesión del usuario no admin
+            if (!isset($matches[1]) || (int)$matches[1] < 3) {
                 @unlink($archivo);
             }
         }

@@ -1,0 +1,86 @@
+[2026-09-19 18:19:31] [IP: ::1] [ERROR] SMTP Error: Could not connect to SMTP host. Failed to connect to server in C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Stack Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Sat, 19 S...', '--b1=_r08NhzDtQ...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(174): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(131): MailService::enviar('andrusramirez20...', 'ANDRUS', 'Actualizaci\xC3\xB3n ...', '<h2 style="colo...', '', false)
+#5 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(292): MailService::enviarEvento('superadmin.camb...', 'andrusramirez20...', Array, 'ANDRUS')
+#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(253): GestorUsuariosController->procesarEdicion()
+#7 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-09-19 18:49:09] [IP: 127.0.0.1] [ERROR] could not find driver in C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:58
+Stack Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(58): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(123): Connection->__construct()
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\Auth.php(169): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\services\BackupService.php(72): AuditLogger::registrar('INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo backup...')
+#4 Command line code(1): BackupService::crearBackup('sql', false)
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-19 18:54:03] [IP: 127.0.0.1] [ERROR] could not find driver in C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:58
+Stack Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(58): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(123): Connection->__construct()
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\Auth.php(169): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\services\BackupService.php(72): AuditLogger::registrar('INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo backup...')
+#4 Command line code(1): BackupService::crearBackup('sql', false)
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-19 18:57:20] [IP: ::1] [ERROR] SMTP Error: Could not connect to SMTP host. Failed to connect to server in C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Stack Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Sat, 19 S...', '--b1=_IzhsZ7bva...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(174): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(131): MailService::enviar('andrusramirez20...', '30469331', '\xC2\xA1Bienvenido a ...', '<h2 style="colo...', '', false)
+#5 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(414): MailService::enviarEvento('autenticacion.b...', 'andrusramirez20...', Array, '30469331')
+#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(253): LoginController->procesarRegistro()
+#7 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-09-19 18:59:39] [IP: ::1] [ERROR] SMTP Error: Could not connect to SMTP host. Failed to connect to server in C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Stack Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Sat, 19 S...', '--b1=_r44Zz03mh...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(174): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(131): MailService::enviar('andrusramirez20...', 'adru', 'Actualizaci\xC3\xB3n ...', '<h2 style="colo...', '', false)
+#5 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(335): MailService::enviarEvento('superadmin.camb...', 'andrusramirez20...', Array, 'adru')
+#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(253): GestorUsuariosController->procesarEdicion()
+#7 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-09-19 19:01:56] [IP: ::1] [ERROR] SMTP Error: Could not connect to SMTP host. Failed to connect to server in C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Stack Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Sat, 19 S...', '--b1=_XhnmMGaxA...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(174): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ConfiguracionController.php(312): MailService::enviar('andrusramirez20...', 'Administrador d...', 'Prueba de Conex...', '\r\n             ...')
+#5 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(253): ConfiguracionController->probarSmtp()
+#6 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#7 {main}
+--------------------------------------------------------------------------------
+[2026-09-19 19:12:56] [IP: ::1] [ERROR] SMTP Error: Could not connect to SMTP host. Failed to connect to server in C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Stack Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Sat, 19 S...', '--b1=_Ij6cVaTLM...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(197): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ConfiguracionController.php(312): MailService::enviar('andrusramirez20...', 'Administrador d...', 'Prueba de Conex...', '\r\n             ...')
+#5 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(253): ConfiguracionController->probarSmtp()
+#6 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#7 {main}
+--------------------------------------------------------------------------------
+[2026-09-19 19:13:35] [IP: ::1] [ERROR] SMTP Error: Could not connect to SMTP host. Failed to connect to server in C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Stack Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Sat, 19 S...', '--b1=_bhrkIc2nf...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(197): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(150): MailService::enviar('DIOS@gmail.com', 'DIOSs', 'Actualizaci\xC3\xB3n ...', '<h2 style="colo...', '', false)
+#5 [internal function]: MailService::{closure}()
+#6 {main}
+--------------------------------------------------------------------------------

@@ -102,8 +102,9 @@ class MailService {
 
     /**
      * Envía un correo electrónico desacoplado procesando una plantilla/evento del sistema.
+     * Permite dispatching síncrono o asíncrono en segundo plano (non-blocking).
      */
-    public static function enviarEvento(string $templateKey, string $destinoEmail, array $variables = [], string $destinoNombre = 'Usuario'): array {
+    public static function enviarEvento(string $templateKey, string $destinoEmail, array $variables = [], string $destinoNombre = 'Usuario', bool $async = true): array {
         $plantillas = self::obtenerPlantillas();
 
         if (!isset($plantillas[$templateKey])) {
@@ -123,12 +124,33 @@ class MailService {
         // Reemplazar variables dinámicas en el Asunto y Cuerpo
         foreach ($variables as $clave => $valor) {
             $placeholder = '{' . strtoupper($clave) . '}';
-            $asunto = str_replace($placeholder, $valor, $asunto);
-            $cuerpoHtml = str_replace($placeholder, $valor, $cuerpoHtml);
+            $asunto = str_replace($placeholder, (string)$valor, $asunto);
+            $cuerpoHtml = str_replace($placeholder, (string)$valor, $cuerpoHtml);
         }
 
         $esCompleta = !empty($tpl['plantilla_completa']);
+
+        if ($async) {
+            return self::enviarAsincrono($destinoEmail, $destinoNombre, $asunto, $cuerpoHtml, '', $esCompleta);
+        }
+
         return self::enviar($destinoEmail, $destinoNombre, $asunto, $cuerpoHtml, '', $esCompleta);
+    }
+
+    /**
+     * Encola el correo en un buffer y lo dispara en segundo plano liberando la petición HTTP inmediatamente (< 50ms).
+     */
+    public static function enviarAsincrono(string $destinoEmail, string $destinoNombre, string $asunto, string $contenidoHtml, string $textoPlano = '', bool $esCompleta = false): array {
+        // En Linux / Windows con fastcgi_finish_request o shutdown hook
+        register_shutdown_function(function() use ($destinoEmail, $destinoNombre, $asunto, $contenidoHtml, $textoPlano, $esCompleta) {
+            if (function_exists('fastcgi_finish_request')) {
+                fastcgi_finish_request();
+            }
+            // Ejecutar envío real en segundo plano sin congelar la pantalla del usuario
+            @self::enviar($destinoEmail, $destinoNombre, $asunto, $contenidoHtml, $textoPlano, $esCompleta);
+        });
+
+        return ['exito' => true, 'mensaje' => 'Correo programado en segundo plano para ' . htmlspecialchars($destinoEmail)];
     }
 
     /**
@@ -151,7 +173,6 @@ class MailService {
 
         try {
             $mail->CharSet = 'UTF-8';
-
             $mail->isSMTP();
 
             // Si hay un host configurado en el panel, lo usamos; de lo contrario fallback a localhost
@@ -161,7 +182,9 @@ class MailService {
             $mail->Password   = $pass;
             $mail->SMTPSecure = ($port === 465) ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = $port;
-            $mail->Timeout    = 10;
+            
+            // OPTIMIZACIÓN LENTITUD: Reducir Timeout de conexión TCP a 3s para evitar congelamientos de servidor
+            $mail->Timeout    = 3;
 
             $mail->setFrom($fromEmail, 'Sistema CIIDI - UPTTMBI');
             $mail->addAddress($destinoEmail, $destinoNombre);
@@ -176,7 +199,11 @@ class MailService {
             return ['exito' => true, 'mensaje' => 'Correo enviado exitosamente a ' . htmlspecialchars($destinoEmail)];
         } catch (Exception $e) {
             self::registrarLog($destinoEmail, $destinoNombre, $asunto, false, $mail->ErrorInfo);
-            return ['exito' => false, 'mensaje' => 'Error al enviar correo vía SMTP: ' . $mail->ErrorInfo];
+            if (class_exists('Connection')) Connection::logSystemError($e);
+            
+            $appDebug = class_exists('Env') ? Env::get('APP_DEBUG', false) : false;
+            $msg = $appDebug ? 'Error al enviar correo vía SMTP: ' . $mail->ErrorInfo : 'No se pudo entregar el correo en este momento. Intente más tarde.';
+            return ['exito' => false, 'mensaje' => $msg];
         }
     }
 

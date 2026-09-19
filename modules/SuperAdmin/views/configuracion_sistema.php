@@ -42,6 +42,9 @@
         <button type="button" class="sa-tab-btn" onclick="switchConfigTab('tabSeguridad', this)">
             <i class="ph-bold ph-shield-check"></i> Seguridad Base
         </button>
+        <button type="button" class="sa-tab-btn" onclick="switchConfigTab('tabEnv', this)">
+            <i class="ph-bold ph-bug"></i> Variables .env & Depuración
+        </button>
         <button type="button" class="sa-tab-btn" onclick="switchConfigTab('tabAccesos', this)">
             <i class="ph-bold ph-lock-key"></i> Accesos por Módulo
         </button>
@@ -92,6 +95,51 @@
                 <div>
                     <label style="font-size: 0.8rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 6px;">Intentos de Login Fallidos</label>
                     <input type="number" name="seg_intentos" value="<?= (int)($config['seguridad']['intentos_login'] ?? 5) ?>" min="1" class="sa-filter-input" style="width: 100%;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB VARIABLES .ENV & DEPURACIÓN -->
+    <?php
+    $appDebugActual = class_exists('Env') ? Env::get('APP_DEBUG', false) : false;
+    $appEnvActual   = class_exists('Env') ? Env::get('APP_ENV', 'production') : 'production';
+    ?>
+    <div id="tabEnv" class="sa-tab-content" style="display:none;">
+        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-sm);">
+            <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem; font-weight: 700; color: var(--texto-titulos); display: flex; align-items: center; gap: 6px;">
+                <i class="ph-bold ph-bug" style="color: var(--color-terciario);"></i> Modo de Depuración y Entorno de Ejecución (.env Shield)
+            </h4>
+            <p style="font-size: 0.85rem; color: var(--texto-silenciado); margin-bottom: 1.25rem;">
+                Controla la exposición de excepciones PDO y errores del servidor. En producción, desactiva <code>APP_DEBUG</code> para evitar fuga de información.
+            </p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                <div style="background: #f8fafc; padding: 1.2rem; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <label style="font-size: 0.85rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 6px;">
+                        <i class="ph-bold ph-toggle-left"></i> Modo Depuración (APP_DEBUG)
+                    </label>
+                    <select name="app_debug" class="sa-filter-input" style="width: 100%; font-weight: 600;">
+                        <option value="false" <?= !$appDebugActual ? 'selected' : '' ?>>🔴 false (Producción - Errores genéricos seguros)</option>
+                        <option value="true" <?= $appDebugActual ? 'selected' : '' ?>>🟢 true (Desarrollo - Muestra trazas de excepciones PDO)</option>
+                    </select>
+                    <div style="margin-top: 8px; font-size: 0.78rem; color: var(--texto-silenciado);">
+                        Si está en <code>false</code>, los usuarios recibirán un mensaje seguro de Error 500 y las trazas se guardarán silenciosamente en <code>storage/logs/system_errors.log</code>.
+                    </div>
+                </div>
+
+                <div style="background: #f8fafc; padding: 1.2rem; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <label style="font-size: 0.85rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 6px;">
+                        <i class="ph-bold ph-tree-structure"></i> Entorno de Ejecución (APP_ENV)
+                    </label>
+                    <select name="app_env" class="sa-filter-input" style="width: 100%; font-weight: 600;">
+                        <option value="production" <?= $appEnvActual === 'production' ? 'selected' : '' ?>>Production (Servidor de Producción UPTTMBI)</option>
+                        <option value="development" <?= $appEnvActual === 'development' ? 'selected' : '' ?>>Development (Entorno Local de Desarrollo)</option>
+                        <option value="staging" <?= $appEnvActual === 'staging' ? 'selected' : '' ?>>Staging (Servidor de Pruebas / QA)</option>
+                    </select>
+                    <div style="margin-top: 8px; font-size: 0.78rem; color: var(--texto-silenciado);">
+                        Define el perfil operacional del sistema.
+                    </div>
                 </div>
             </div>
         </div>

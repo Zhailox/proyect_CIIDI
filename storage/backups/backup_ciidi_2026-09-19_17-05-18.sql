@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict XM8yLhhRukakrEhcZGaIuUM9ClIvfQhmC2fOhg0i98teFKfpqBJoy1Espfjg6W1
+\restrict lmYJkGAHul5FTiDYeVqhlpdJYf60h2a1GTA3fQVg4wHlJZcvK9ZXyVSk4BaXfVj
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -64,6 +64,7 @@ DROP TRIGGER IF EXISTS tg_auditoria_recursos_delete ON public.recursos;
 DROP INDEX IF EXISTS public.idx_recurso_clasif_linea;
 DROP INDEX IF EXISTS public.idx_recurso_clasif_dimension;
 DROP INDEX IF EXISTS public.idx_detalles_inv_ofertada;
+ALTER TABLE IF EXISTS ONLY public.waf_rate_limiter DROP CONSTRAINT IF EXISTS waf_rate_limiter_pkey;
 ALTER TABLE IF EXISTS ONLY public.visitantes DROP CONSTRAINT IF EXISTS visitantes_pkey;
 ALTER TABLE IF EXISTS ONLY public.usuarios DROP CONSTRAINT IF EXISTS usuarios_pkey;
 ALTER TABLE IF EXISTS ONLY public.usuarios DROP CONSTRAINT IF EXISTS usuarios_email_key;
@@ -105,6 +106,7 @@ ALTER TABLE IF EXISTS ONLY public.dimensiones_operativas DROP CONSTRAINT IF EXIS
 ALTER TABLE IF EXISTS ONLY public.detalles_articulos DROP CONSTRAINT IF EXISTS detalles_revistas_pkey;
 ALTER TABLE IF EXISTS ONLY public.detalles_proyectos DROP CONSTRAINT IF EXISTS detalles_proyectos_pkey;
 ALTER TABLE IF EXISTS ONLY public.detalles_investigaciones DROP CONSTRAINT IF EXISTS detalles_investigaciones_pkey;
+ALTER TABLE IF EXISTS ONLY public.cursos DROP CONSTRAINT IF EXISTS cursos_slug_key;
 ALTER TABLE IF EXISTS ONLY public.cursos DROP CONSTRAINT IF EXISTS cursos_pkey;
 ALTER TABLE IF EXISTS ONLY public.categorias DROP CONSTRAINT IF EXISTS categorias_pkey;
 ALTER TABLE IF EXISTS ONLY public.categorias DROP CONSTRAINT IF EXISTS categorias_nombre_key;
@@ -138,6 +140,7 @@ ALTER TABLE IF EXISTS public.carreras ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.autores ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.auditoria ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.accesos_recursos ALTER COLUMN id DROP DEFAULT;
+DROP TABLE IF EXISTS public.waf_rate_limiter;
 DROP SEQUENCE IF EXISTS public.visitantes_id_seq;
 DROP TABLE IF EXISTS public.visitantes;
 DROP SEQUENCE IF EXISTS public.usuarios_id_seq;
@@ -657,7 +660,17 @@ CREATE TABLE public.cursos (
     estado public.estado_curso_enum DEFAULT 'borrador'::public.estado_curso_enum NOT NULL,
     nota_minima_aprobacion numeric(5,2) DEFAULT 70.00 NOT NULL,
     fecha_creacion timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    fecha_actualizacion timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    slug character varying(255),
+    url_moodle text,
+    modalidad character varying(50) DEFAULT 'Virtual'::character varying,
+    nivel character varying(50) DEFAULT 'B sico'::character varying,
+    duracion character varying(80),
+    cupo_maximo integer,
+    fecha_inicio date,
+    fecha_fin date,
+    url_video_preview text,
+    estado_inscripcion character varying(50) DEFAULT 'Abierta'::character varying
 );
 
 
@@ -1583,6 +1596,25 @@ ALTER SEQUENCE public.visitantes_id_seq OWNED BY public.visitantes.id;
 
 
 --
+-- Name: waf_rate_limiter; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.waf_rate_limiter (
+    ip character varying(45) NOT NULL,
+    tipo character varying(20) NOT NULL,
+    intentos integer DEFAULT 0,
+    primer_intento timestamp without time zone,
+    ultimo_intento timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    bloqueado_hasta timestamp without time zone,
+    razon text,
+    datos_adicionales jsonb,
+    creado_el timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.waf_rate_limiter OWNER TO postgres;
+
+--
 -- Name: accesos_recursos id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -2161,12 +2193,12 @@ INSERT INTO public.categorias VALUES (12, 'Andrus');
 -- Data for Name: cursos; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.cursos VALUES (1, 4, 'Introducción a la Metodología de la Investigación', 'Curso fundamental para comprender los métodos y técnicas de investigación científica aplicados al PNF en Informática. Incluye diseño experimental, recolección de datos y análisis estadístico básico.', NULL, 'publicado', 70.00, '2026-04-03 03:28:04', '2026-04-03 03:28:04');
-INSERT INTO public.cursos VALUES (2, 4, 'Fundamentos de Inteligencia Artificial', 'Curso introductorio sobre los conceptos básicos de la IA, redes neuronales, aprendizaje automático y sus aplicaciones en el contexto venezolano.', NULL, 'publicado', 70.00, '2026-04-03 03:28:04', '2026-04-03 03:28:04');
-INSERT INTO public.cursos VALUES (4, 1, 'tamaños de jose', 'los pn que jose ha tenido segun tamaño', NULL, 'borrador', 69.96, '2026-04-03 04:40:03', '2026-09-02 21:38:28.289267');
-INSERT INTO public.cursos VALUES (3, 10, 'Normas APA y Redacción Científica', 'Aprende a redactar documentos académicos siguiendo las normas APA 7ma edición. Ideal para la elaboración de tu Proyecto Socio-Tecnológico.', NULL, 'archivado', 67.00, '2026-04-03 03:28:04', '2026-09-02 21:39:04.419332');
-INSERT INTO public.cursos VALUES (6, 9, 'e', 'e', NULL, 'publicado', 70.00, '2026-09-02 21:40:20.207518', '2026-09-02 21:40:27.256632');
-INSERT INTO public.cursos VALUES (7, 7, 'e', 'e', 'public/uploads/cursos/curso_1789800856_34a50e7c.webp', 'borrador', 70.00, '2026-09-19 02:54:16.395792', '2026-09-19 02:54:16.395792');
+INSERT INTO public.cursos VALUES (1, 4, 'Introducción a la Metodología de la Investigación', 'Curso fundamental para comprender los métodos y técnicas de investigación científica aplicados al PNF en Informática. Incluye diseño experimental, recolección de datos y análisis estadístico básico.', NULL, 'publicado', 70.00, '2026-04-03 03:28:04', '2026-04-03 03:28:04', NULL, NULL, 'Virtual', 'B sico', NULL, NULL, NULL, NULL, NULL, 'Abierta');
+INSERT INTO public.cursos VALUES (2, 4, 'Fundamentos de Inteligencia Artificial', 'Curso introductorio sobre los conceptos básicos de la IA, redes neuronales, aprendizaje automático y sus aplicaciones en el contexto venezolano.', NULL, 'publicado', 70.00, '2026-04-03 03:28:04', '2026-04-03 03:28:04', NULL, NULL, 'Virtual', 'B sico', NULL, NULL, NULL, NULL, NULL, 'Abierta');
+INSERT INTO public.cursos VALUES (4, 1, 'tamaños de jose', 'los pn que jose ha tenido segun tamaño', NULL, 'borrador', 69.96, '2026-04-03 04:40:03', '2026-09-02 21:38:28.289267', NULL, NULL, 'Virtual', 'B sico', NULL, NULL, NULL, NULL, NULL, 'Abierta');
+INSERT INTO public.cursos VALUES (3, 10, 'Normas APA y Redacción Científica', 'Aprende a redactar documentos académicos siguiendo las normas APA 7ma edición. Ideal para la elaboración de tu Proyecto Socio-Tecnológico.', NULL, 'archivado', 67.00, '2026-04-03 03:28:04', '2026-09-02 21:39:04.419332', NULL, NULL, 'Virtual', 'B sico', NULL, NULL, NULL, NULL, NULL, 'Abierta');
+INSERT INTO public.cursos VALUES (6, 9, 'e', 'e', NULL, 'publicado', 70.00, '2026-09-02 21:40:20.207518', '2026-09-02 21:40:27.256632', NULL, NULL, 'Virtual', 'B sico', NULL, NULL, NULL, NULL, NULL, 'Abierta');
+INSERT INTO public.cursos VALUES (7, 7, 'e', 'e', 'public/uploads/cursos/curso_1789800856_34a50e7c.webp', 'borrador', 70.00, '2026-09-19 02:54:16.395792', '2026-09-19 02:54:16.395792', NULL, NULL, 'Virtual', 'B sico', NULL, NULL, NULL, NULL, NULL, 'Abierta');
 
 
 --
@@ -2852,6 +2884,11 @@ INSERT INTO public.system_audit_log VALUES ('log_6aae33853f3ff', '2026-09-19 07:
 INSERT INTO public.system_audit_log VALUES ('log_6aae346b666a8', '2026-09-19 07:06:19', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: backup_ciidi_2026-09-19_06-32-52.sql.gz', 'Miguel González (ID: 7)', '::1', '10728c9fbed4aaed7081884890652f4a51ca7732afdf7452bb54491753b978b8', '7165f8e5f3d33d1d9c132ee3905aaa19e0b505521014637fd448096702e3f29b');
 INSERT INTO public.system_audit_log VALUES ('log_6aae346e42a0f', '2026-09-19 07:06:22', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: backup_ciidi_2026-09-19_06-32-55.sql', 'Miguel González (ID: 7)', '::1', '7165f8e5f3d33d1d9c132ee3905aaa19e0b505521014637fd448096702e3f29b', '989e826b2ae9a6fe7bd9aaa9edc5514dbe52f58059ddd0041facdb691b27f740');
 INSERT INTO public.system_audit_log VALUES ('log_6aae3470d43bb', '2026-09-19 07:06:24', 'INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo backup_ciidi_2026-09-19_07-06-24.sql.gz generado exitosamente. Respaldos antiguos purgados: 0', 'Miguel González (ID: 7)', '::1', '989e826b2ae9a6fe7bd9aaa9edc5514dbe52f58059ddd0041facdb691b27f740', '63aac83ff563a917cade4fa0383272872eb32923d19eda5ce4f53e737d20e5b0');
+INSERT INTO public.system_audit_log VALUES ('log_6aaebe659d9cc', '2026-09-19 16:55:01', 'WARNING', 'SuperAdmin', 'Restaurar BD', 'Base de datos restaurada exitosamente.', 'Miguel González (ID: 7)', '::1', '63aac83ff563a917cade4fa0383272872eb32923d19eda5ce4f53e737d20e5b0', '349aec4bff15575b26a32e4e827f5fa0b09c9c67540455b521bc655719099d4b');
+INSERT INTO public.system_audit_log VALUES ('log_6aaebe6f1390f', '2026-09-19 16:55:11', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: pre_restore_checkpoint_2026-09-19_16-54-59.sql.gz', 'Miguel González (ID: 7)', '::1', '349aec4bff15575b26a32e4e827f5fa0b09c9c67540455b521bc655719099d4b', '801ddd3377f74f80faf0d829ed9a4936124a1fa57770ffe290c6644645fea72c');
+INSERT INTO public.system_audit_log VALUES ('log_6aaebe75516f3', '2026-09-19 16:55:17', 'INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo backup_ciidi_2026-09-19_16-55-16.sql generado exitosamente. Respaldos antiguos purgados: 0', 'Miguel González (ID: 7)', '::1', '801ddd3377f74f80faf0d829ed9a4936124a1fa57770ffe290c6644645fea72c', 'b8aeed769123fca37fbec08b1a4ce40e9b6000dd7b4433dba98361d52cb82b53');
+INSERT INTO public.system_audit_log VALUES ('log_6aaec0c63a16d', '2026-09-19 17:05:10', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: backup_ciidi_2026-09-19_07-06-27.sql', 'Miguel González (ID: 7)', '::1', 'b8aeed769123fca37fbec08b1a4ce40e9b6000dd7b4433dba98361d52cb82b53', 'ac1dc2a4b53a1009983ef217a2f5cf8cb889ec700941cf1d5bc8911706c84f5b');
+INSERT INTO public.system_audit_log VALUES ('log_6aaec0c9790a9', '2026-09-19 17:05:13', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: backup_ciidi_2026-09-19_16-55-16.sql', 'Miguel González (ID: 7)', '::1', 'ac1dc2a4b53a1009983ef217a2f5cf8cb889ec700941cf1d5bc8911706c84f5b', 'dd3b69603536d8045b7c4ee32c271343ebfe05ecf606e4d214daf7bbe79c8ed3');
 
 
 --
@@ -2945,6 +2982,12 @@ INSERT INTO public.usuarios VALUES (16, 'no soy miguel', 'orlando5711666@gmail.c
 
 --
 -- Data for Name: visitantes; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+
+
+--
+-- Data for Name: waf_rate_limiter; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 
@@ -3186,6 +3229,14 @@ ALTER TABLE ONLY public.categorias
 
 ALTER TABLE ONLY public.cursos
     ADD CONSTRAINT cursos_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: cursos cursos_slug_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.cursos
+    ADD CONSTRAINT cursos_slug_key UNIQUE (slug);
 
 
 --
@@ -3514,6 +3565,14 @@ ALTER TABLE ONLY public.usuarios
 
 ALTER TABLE ONLY public.visitantes
     ADD CONSTRAINT visitantes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: waf_rate_limiter waf_rate_limiter_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.waf_rate_limiter
+    ADD CONSTRAINT waf_rate_limiter_pkey PRIMARY KEY (ip, tipo);
 
 
 --
@@ -3872,5 +3931,5 @@ ALTER TABLE ONLY public.usuarios
 -- PostgreSQL database dump complete
 --
 
-\unrestrict XM8yLhhRukakrEhcZGaIuUM9ClIvfQhmC2fOhg0i98teFKfpqBJoy1Espfjg6W1
+\unrestrict lmYJkGAHul5FTiDYeVqhlpdJYf60h2a1GTA3fQVg4wHlJZcvK9ZXyVSk4BaXfVj
 

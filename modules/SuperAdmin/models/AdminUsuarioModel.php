@@ -79,6 +79,7 @@ class AdminUsuarioModel {
             INNER JOIN roles r ON u.id_rol = r.id
             INNER JOIN privilegios p ON r.privilegio_id = p.privilegio_id
             LEFT JOIN registro_actividad ra ON u.id = ra.id_usuario
+            WHERE u.cedula NOT LIKE '%_x%' AND u.email NOT LIKE '%_deleted_%'
             ORDER BY u.id DESC
         ";
         $stmt = $db->prepare($sql);
@@ -92,6 +93,32 @@ class AdminUsuarioModel {
         $sql = "UPDATE usuarios SET activo = ? WHERE id = ?";
         $stmt = $db->prepare($sql);
         return $stmt->execute([$nuevoEstado ? 'true' : 'false', $id]);
+    }
+
+    // Archiva a un usuario liberando sus credenciales (Cédula y Email) manteniendo la integridad histórica
+    public function archivarUsuario(int $id): bool {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("SELECT cedula, email, nombre_completo FROM usuarios WHERE id = ?");
+        $stmt->execute([$id]);
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$usuario) {
+            return false;
+        }
+
+        $ts = time();
+        $cedulaLimpia = preg_replace('/[^0-9A-Za-z]/', '', $usuario['cedula'] ?? '');
+        $cedulaCorta = (strlen($cedulaLimpia) > 8) ? substr($cedulaLimpia, 0, 8) : $cedulaLimpia;
+        $suffixTs    = substr((string)$ts, -7);
+        $cedulaArchivada = $cedulaCorta . '_x' . $suffixTs; // Ejemplo: 30469331_x8984383 (Longitud max: 17 chars, dentro del límite VARCHAR(20))
+
+        $emailArchivado  = $usuario['email'] . '_deleted_' . $ts;
+        $nombreArchivado = '[Archivado] ' . $usuario['nombre_completo'];
+        $hashInvalido    = password_hash('DISABLED_ACCOUNT_' . bin2hex(random_bytes(16)), PASSWORD_BCRYPT);
+
+        $sql = "UPDATE usuarios SET cedula = ?, email = ?, nombre_completo = ?, contrasena = ?, activo = false WHERE id = ?";
+        $stmtUpdate = $db->prepare($sql);
+        return $stmtUpdate->execute([$cedulaArchivada, $emailArchivado, $nombreArchivado, $hashInvalido, $id]);
     }
 
     // Actualiza el nombre de un rol en la base de datos

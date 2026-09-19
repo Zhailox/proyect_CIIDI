@@ -316,12 +316,19 @@ class ModulosController {
 
         // Obtener Logs de auditoría asociados a este módulo
         $auditLogsModulo = [];
-        $archivoAudit = CORE_PATH . '../storage/system_audit.json';
-        if (file_exists($archivoAudit)) {
-            $allAudit = json_decode(file_get_contents($archivoAudit), true) ?: [];
-            foreach ($allAudit as $item) {
-                if (isset($item['modulo']) && strcasecmp($item['modulo'], $idModulo) === 0) {
-                    $auditLogsModulo[] = $item;
+        try {
+            $db = Connection::getInstance();
+            $stmt = $db->prepare("SELECT * FROM system_audit_log WHERE LOWER(modulo) = LOWER(?) ORDER BY fecha_hora DESC LIMIT 50");
+            $stmt->execute([$idModulo]);
+            $auditLogsModulo = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (Throwable $e) {
+            $archivoAudit = CORE_PATH . '../storage/system_audit.json';
+            if (file_exists($archivoAudit)) {
+                $allAudit = json_decode(file_get_contents($archivoAudit), true) ?: [];
+                foreach ($allAudit as $item) {
+                    if (isset($item['modulo']) && strcasecmp($item['modulo'], $idModulo) === 0) {
+                        $auditLogsModulo[] = $item;
+                    }
                 }
             }
         }

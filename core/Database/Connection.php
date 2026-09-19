@@ -62,31 +62,59 @@ class Connection {
                 return;
             }
 
+            self::logSystemError($e);
+
             if (session_status() === PHP_SESSION_NONE) {
                 session_start();
             }
-            $_SESSION['db_connection_error'] = $e->getMessage();
 
-            // Si es una petición AJAX / API, devolver 500 JSON
+            $appDebug = class_exists('Env') ? Env::get('APP_DEBUG', false) : false;
+            $detalleDev = $appDebug ? $e->getMessage() : "Imposible conectar con el servidor de datos. Notifique al administrador.";
+
+            $_SESSION['db_connection_error'] = $detalleDev;
+
+            // Si es una petición AJAX / API, devolver 500 JSON estandarizado
             if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
                 http_response_code(500);
                 header('Content-Type: application/json');
-                echo json_encode(['error' => true, 'mensaje' => 'Error de conexión a la BD: ' . $e->getMessage()]);
+                echo json_encode([
+                    'error' => true, 
+                    'mensaje' => 'Error de infraestructura de datos. Por favor reintente más tarde.',
+                    'debug' => $appDebug ? $e->getMessage() : null
+                ]);
                 exit;
             }
 
             http_response_code(500);
-            $dbErrorMsg = "Imposible conectar a la base de datos: " . $e->getMessage();
+            $dbErrorMsg = $detalleDev;
             $isStandalone = true;
             $vista_modulo_path = defined('CORE_VIEWS') ? CORE_VIEWS . '500.php' : __DIR__ . '/../Views/500.php';
 
             if (file_exists($vista_modulo_path)) {
                 include $vista_modulo_path;
             } else {
-                die("Error 500: Fallo Crítico del Kernel - Imposible conectar a la base de datos: " . $e->getMessage());
+                echo "<div style='padding:40px;text-align:center;'><h2>Error 500: Servicio Temporante No Disponible</h2></div>";
             }
             exit;
         }
+    }
+
+    /**
+     * Registra silenciosamente la traza completa de errores del sistema en storage/logs/system_errors.log
+     */
+    public static function logSystemError(Throwable $e): void {
+        $storageDir = defined('STORAGE_PATH') ? STORAGE_PATH . 'logs/' : __DIR__ . '/../../storage/logs/';
+        if (!is_dir($storageDir)) {
+            @mkdir($storageDir, 0750, true);
+        }
+        
+        $logFile = $storageDir . 'system_errors.log';
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        $timestamp = date('Y-m-d H:i:s');
+        $msg = "[{$timestamp}] [IP: {$ip}] [ERROR] {$e->getMessage()} in {$e->getFile()}:{$e->getLine()}\nStack Trace:\n{$e->getTraceAsString()}\n" . str_repeat('-', 80) . "\n";
+        
+        @file_put_contents($logFile, $msg, FILE_APPEND);
+        @chmod($logFile, 0640);
     }
 
     // Método estático para obtener la conexión

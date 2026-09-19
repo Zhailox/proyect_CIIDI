@@ -173,8 +173,9 @@ class Kernel {
             }
 
             if (isset($dataMantenimiento['activo']) && $dataMantenimiento['activo'] === true) {
-                $esAdmin = isset($_SESSION['nivel_privilegio']) && (int)$_SESSION['nivel_privilegio'] >= 3;
-                $rutasPermitidas = ['login', 'procesar-login', 'cerrar-sesion'];
+                // En el sistema, nivel_privilegio <= 2 representa privilegios administrativos/gestión (0 es SuperAdmin)
+                $esAdmin = isset($_SESSION['nivel_privilegio']) && (int)$_SESSION['nivel_privilegio'] <= 2;
+                $rutasPermitidas = ['login', 'procesar-login', 'cerrar-sesion', 'captcha-imagen'];
                 
                 if (!$esAdmin && !in_array($ruta, $rutasPermitidas)) {
                     $mensajeCustom = !empty($dataMantenimiento['mensaje']) ? $dataMantenimiento['mensaje'] : "Estamos realizando labores de optimización. Vuelve en un momento.";
@@ -295,7 +296,12 @@ class Kernel {
         if (file_exists(CORE_VIEWS . 'master.php')) {
             include CORE_VIEWS . 'master.php';
         } else {
-            die("Error Crítico: No se encuentra master.php");
+            http_response_code(500);
+            if (class_exists('Connection')) {
+                Connection::logSystemError(new Exception("Fallo Crítico: No se encuentra la plantilla maestra en " . CORE_VIEWS . 'master.php'));
+            }
+            echo "<div style='padding:40px;text-align:center;font-family:sans-serif;'><h2>Error 500: Plantilla del sistema no encontrada</h2></div>";
+            exit;
         }
     }
     public function getInfoModulosAdmin(): array {

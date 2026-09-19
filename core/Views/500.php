@@ -102,13 +102,11 @@ $passCur = $currentCreds['pass'] ?? '';
 <body>
 <?php endif; ?>
 
-<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
-    <div style="max-width: 900px; width: 100%; background: #ffffff; border-radius: 16px; padding: 1.8rem; box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08); border: 1px solid rgba(0, 0, 0, 0.08); box-sizing: border-box;">
-        
-        <!-- ILUSTRACIÓN 500 ERROR -->
-        <div style="text-align: center; margin-bottom: 1.25rem;">
-            <img src="assets/img/500.jpg" alt="Error 500 - Error de Conexión" style="width: 100%; max-height: 280px; height: auto; border-radius: 12px; object-fit: contain; display: block; margin: 0 auto;">
-        </div>
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 85vh; padding: 1rem 0;">
+    <!-- ILUSTRACIÓN 500 ERROR LIBRE SIN CONTENEDOR CONFINANTE -->
+    <img src="assets/img/500.jpg" alt="Error 500 - Servicio No Disponible" style="max-width: 900px; width: 95%; max-height: 55vh; height: auto; border-radius: 16px; object-fit: contain; display: block; margin: 0 auto; filter: drop-shadow(0 12px 28px rgba(18, 26, 62, 0.12));">
+
+    <div style="max-width: 900px; width: 95%; margin-top: 1.5rem; box-sizing: border-box;">
 
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem; margin-bottom: 1.25rem;">
             <div style="display: flex; align-items: center; gap: 10px;">
@@ -130,9 +128,17 @@ $passCur = $currentCreds['pass'] ?? '';
             </div>
         </div>
 
-        <?php if (!empty($mensajeError)): ?>
-            <div style="padding: 0.75rem 1rem; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; color: #9f1239; font-size: 0.84rem; font-family: monospace; word-break: break-word; margin-bottom: 1.25rem;">
-                <strong>Excepción BD:</strong> <?= htmlspecialchars($mensajeError) ?>
+        <?php 
+        $appDebug = class_exists('Env') ? Env::get('APP_DEBUG', false) : false;
+        $esEmerg = !empty($_SESSION['modo_emergencia_aislado']);
+        if (!empty($mensajeError)): 
+        ?>
+            <div style="padding: 0.75rem 1rem; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; color: #9f1239; font-size: 0.84rem; word-break: break-word; margin-bottom: 1.25rem;">
+                <?php if ($appDebug || $esEmerg): ?>
+                    <strong>Excepción BD (Modo Depuración):</strong> <code><?= htmlspecialchars($mensajeError) ?></code>
+                <?php else: ?>
+                    <strong>Aviso del Sistema:</strong> El servicio de datos no está disponible en este momento. Los administradores han sido notificados.
+                <?php endif; ?>
             </div>
         <?php endif; ?>
 

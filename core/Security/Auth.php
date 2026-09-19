@@ -1,5 +1,6 @@
 <?php
 // core/Security/Auth.php
+require_once CORE_PATH . 'Database/Connection.php';
 
 class Auth {
     
@@ -186,15 +187,19 @@ class AuditLogger {
     $stmtInsert->execute([$idLog, $fechaHora, $nivel, $modulo, $accion, $detalles, $responsable, $ip, $hashAnterior, $hashIntegridad]);
 }
     /**
-     * Valida la integridad criptográfica SHA-256 de todos los registros de auditoría almacenados.
+     * Valida la integridad criptográfica SHA-256 de todos los registros de auditoría almacenados en PostgreSQL.
      */
     public static function verificarIntegridadCadena(): array {
-        $archivo = CORE_PATH . '../storage/system_audit.json';
-        if (!file_exists($archivo)) {
-            return ['integro' => true, 'mensaje' => 'El archivo de auditoría está vacío o no ha sido generado.', 'total' => 0, 'corruptos' => 0];
+        try {
+            $db = Connection::getInstance();
+            $stmt = $db->query("SELECT id, fecha_hora, nivel, modulo, accion, detalles, responsable, ip, hash_anterior, hash_integridad FROM system_audit_log ORDER BY fecha_hora DESC");
+            $logs = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (Throwable $e) {
+            // Fallback si la BD no responde
+            $archivo = CORE_PATH . '../storage/system_audit.json';
+            $logs = file_exists($archivo) ? (json_decode(file_get_contents($archivo), true) ?: []) : [];
         }
 
-        $logs = json_decode(file_get_contents($archivo), true) ?: [];
         if (empty($logs)) {
             return ['integro' => true, 'mensaje' => 'No existen eventos de auditoría registrados.', 'total' => 0, 'corruptos' => 0];
         }
@@ -204,8 +209,6 @@ class AuditLogger {
 
         for ($i = 0; $i < $total; $i++) {
             $current = $logs[$i];
-            
-            // Si el log viejo no tiene hash_integridad (legacy), lo omitimos de la falla estricta
             if (!isset($current['hash_integridad'])) continue;
 
             $hashGuardado = $current['hash_integridad'];

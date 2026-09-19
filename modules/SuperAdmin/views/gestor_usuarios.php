@@ -166,8 +166,16 @@ if (isset($privilegios)) {
                                             <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
                                             <input type="hidden" name="cedula" value="<?= htmlspecialchars($usr['cedula']) ?>">
                                             <input type="hidden" name="estado_actual" value="<?= $usr['activo'] ? '1' : '0' ?>">
-                                            <button type="button" class="btn" style="background: <?= $usr['activo'] ? 'rgba(239,68,68,0.12)' : 'rgba(16,185,129,0.12)' ?>; color: <?= $usr['activo'] ? '#ef4444' : '#10b981' ?>; border: 1px solid <?= $usr['activo'] ? 'rgba(239,68,68,0.25)' : 'rgba(16,185,129,0.25)' ?>; padding: 4px 8px; font-size: 0.78rem; border-radius: 4px; cursor: pointer; font-weight: 600;" onclick="mostrarConfirmacionUsuarios(this.form, '<?= $usr['activo'] ? 'Suspender' : 'Restaurar' ?> Cuenta', '¿Confirma que desea <?= $usr['activo'] ? 'SUSPENDER' : 'RESTAURAR' ?> al usuario <?= htmlspecialchars($usr['nombre_completo'], ENT_QUOTES) ?>?', '<?= $usr['activo'] ? 'ph-user-minus' : 'ph-user-check' ?>', '<?= $usr['activo'] ? '#ef4444' : '#10b981' ?>')">
+                                            <button type="button" class="btn" style="background: <?= $usr['activo'] ? 'rgba(245,158,11,0.12)' : 'rgba(16,185,129,0.12)' ?>; color: <?= $usr['activo'] ? '#d97706' : '#10b981' ?>; border: 1px solid <?= $usr['activo'] ? 'rgba(245,158,11,0.25)' : 'rgba(16,185,129,0.25)' ?>; padding: 4px 8px; font-size: 0.78rem; border-radius: 4px; cursor: pointer; font-weight: 600;" onclick="mostrarConfirmacionUsuarios(this.form, '<?= $usr['activo'] ? 'Suspender' : 'Restaurar' ?> Cuenta', '¿Confirma que desea <?= $usr['activo'] ? 'SUSPENDER' : 'RESTAURAR' ?> al usuario <?= htmlspecialchars($usr['nombre_completo'], ENT_QUOTES) ?>?', '<?= $usr['activo'] ? 'ph-user-minus' : 'ph-user-check' ?>', '<?= $usr['activo'] ? '#d97706' : '#10b981' ?>')">
                                                 <i class="ph-bold <?= $usr['activo'] ? 'ph-user-minus' : 'ph-user-check' ?>"></i> <?= $usr['activo'] ? 'Suspender' : 'Restaurar' ?>
+                                            </button>
+                                        </form>
+
+                                        <!-- ELIMINAR Y LIBERAR CREDENCIALES -->
+                                        <form action="eliminar-usuario" method="POST" style="margin:0;">
+                                            <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
+                                            <button type="button" class="btn" title="Eliminar Usuario y Liberar Credenciales" style="background: #dc2626; color: #ffffff; border: none; padding: 4px 8px; font-size: 0.78rem; border-radius: 4px; cursor: pointer; font-weight: 700; box-shadow: 0 2px 6px rgba(220,38,38,0.25);" onclick="mostrarConfirmacionUsuarios(this.form, 'Eliminar y Archivar Usuario', '¿Está seguro de ELIMINAR permanentemente a <?= htmlspecialchars($usr['nombre_completo'], ENT_QUOTES) ?>? Sus credenciales (Cédula y Email) se liberarán de inmediato.', 'ph-trash', '#dc2626')">
+                                                <i class="ph-bold ph-trash"></i> Eliminar
                                             </button>
                                         </form>
                                     </div>

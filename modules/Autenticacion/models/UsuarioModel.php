@@ -24,22 +24,37 @@ class UsuarioModel {
             ->first();
     }
     /**
-     * Actualiza el registro de última actividad del usuario.
+     * Registra o actualiza el contador de accesos y la última actividad del usuario.
      */
     public function registrarAcceso(int $id_usuario) {
-        // Pedimos la conexión directa a PostgreSQL usando nuestra clase del Core
         $db = Connection::getInstance();
         
-        $sql = "
-            UPDATE registro_actividad 
-            SET ultima_actividad = CURRENT_TIMESTAMP, 
-                conteo_accesos = conteo_accesos + 1 
-            WHERE id_usuario = :id_usuario
-        ";
-        
-        // Ahora usamos $db local en lugar de $this->db
-        $stmt = $db->prepare($sql);
-        $stmt->execute(['id_usuario' => $id_usuario]);
+        try {
+            // 1. Verificar si el usuario ya posee un registro de actividad
+            $stmtCheck = $db->prepare("SELECT id FROM registro_actividad WHERE id_usuario = ? LIMIT 1");
+            $stmtCheck->execute([$id_usuario]);
+            $row = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+            if ($row) {
+                // 2. Si existe, actualizamos la fecha y sumamos 1 al contador
+                $stmtUpdate = $db->prepare("
+                    UPDATE registro_actividad 
+                    SET ultima_actividad = CURRENT_TIMESTAMP, 
+                        conteo_accesos = conteo_accesos + 1 
+                    WHERE id = ?
+                ");
+                $stmtUpdate->execute([$row['id']]);
+            } else {
+                // 3. Si no existe, creamos el primer registro de acceso para este usuario
+                $stmtInsert = $db->prepare("
+                    INSERT INTO registro_actividad (id_usuario, fecha_inicial, ultima_actividad, conteo_accesos) 
+                    VALUES (?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1)
+                ");
+                $stmtInsert->execute([$id_usuario]);
+            }
+        } catch (Throwable $e) {
+            // Manejar excepcion en silencio para evitar bloquear la experiencia del usuario
+        }
     }
     /**
      * Verifica si un usuario ya existe por cédula o correo
