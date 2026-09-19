@@ -13,12 +13,6 @@
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
-    <!-- Phosphor Icons CSS Fallback -->
-    <link href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/bold/style.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css" rel="stylesheet">
-
-
     <link rel="stylesheet" href="assets/css/style.css">
     
     <?php 
@@ -29,7 +23,7 @@
     ?>
     <?php if (!empty($css_modulo)): ?>
         <?php foreach ($css_modulo as $estilo_vista): ?>
-            <link rel="stylesheet" href="<?php echo htmlspecialchars($estilo_vista); ?>?v=<?= time() ?>">
+            <link rel="stylesheet" href="<?php echo htmlspecialchars($estilo_vista); ?>">
         <?php endforeach; ?>
     <?php endif; ?>
 </head>
