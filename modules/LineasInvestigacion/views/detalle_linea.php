@@ -167,7 +167,7 @@
                     </div>
                     <?php if (!empty($p['archivo_pdf'])): ?>
                     <div class="li-project-actions" style="flex-shrink:0;">
-                        <a class="li-btn-secondary" href="?ruta=ver-pdf-pst&id=<?= $p[\'id\'] ?>" target="_blank" title="Descargar documento de investigación" style="background:#f8fafc; color:#334155; border:1px solid #cbd5e1; padding:8px 12px; border-radius:8px; font-weight:600; font-size:0.85rem; display:inline-flex; align-items:center; gap:6px; text-decoration:none; transition:0.2s;">
+                        <a class="li-btn-secondary" href="?ruta=ver-pdf-pst&id=<?= $p['id'] ?>" target="_blank" title="Descargar documento de investigación" style="background:#f8fafc; color:#334155; border:1px solid #cbd5e1; padding:8px 12px; border-radius:8px; font-weight:600; font-size:0.85rem; display:inline-flex; align-items:center; gap:6px; text-decoration:none; transition:0.2s;">
                             <i class="ph-bold ph-file-pdf" style="color:#ef4444;"></i>
                             <span>Ver PDF</span>
                         </a>
