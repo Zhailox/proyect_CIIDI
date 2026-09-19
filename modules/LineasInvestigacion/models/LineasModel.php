@@ -215,15 +215,4 @@ class LineasModel extends QueryBuilder {
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([$estado ? 1 : 0, $id]);
     }
-    public function existeNombre(string $nombre, int $id_carrera, int $id_excluir = 0): bool {
-        $sql = "SELECT COUNT(*) FROM lineas_investigacion WHERE LOWER(TRIM(nombre)) = LOWER(TRIM(?)) AND id_carrera = ?";
-        $params = [$nombre, $id_carrera];
-        if ($id_excluir > 0) {
-            $sql .= " AND id != ?";
-            $params[] = $id_excluir;
-        }
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        return (int) $stmt->fetchColumn() > 0;
-    }
 }

@@ -1,5 +1,29 @@
 [
     {
+        "id": "log_6aadfc2e26aaf",
+        "fecha_hora": "2026-09-19 03:06:22",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Prueba SMTP Exitosa",
+        "detalles": "Correo enviado a andrusramirez2020@gmail.com",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "a710a1f9dc77ca758a813d2411cbd0fe6874264d3fd7dc520c7a5533fe7d5d69",
+        "hash_integridad": "c2447f66b277f8c58ec7df48ae945e30024d8ea4078c3036e6e5c4733dc9c29d"
+    },
+    {
+        "id": "log_6aadfbee7ec1e",
+        "fecha_hora": "2026-09-19 03:05:18",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Prueba SMTP Exitosa",
+        "detalles": "Correo enviado a andrusramirez2020@gmail.com",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "dfcda1570cff50024db905f49cb1c37b4963b96ad28b09e6e0e530edd84d69a8",
+        "hash_integridad": "a710a1f9dc77ca758a813d2411cbd0fe6874264d3fd7dc520c7a5533fe7d5d69"
+    },
+    {
         "id": "log_6aaafaaa67c9d",
         "fecha_hora": "2026-09-16 20:23:06",
         "nivel": "INFO",

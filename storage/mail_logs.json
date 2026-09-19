@@ -1,5 +1,25 @@
 [
     {
+        "id": "mail_6aadfc2e265df",
+        "fecha": "2026-09-19 03:06:22",
+        "destino_email": "andrusramirez2020@gmail.com",
+        "destino_nombre": "Usuario de Prueba",
+        "asunto": "Alerta de Seguridad: Su cuenta ha sido bloqueada temporalmente",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6aadfbee7e700",
+        "fecha": "2026-09-19 03:05:18",
+        "destino_email": "andrusramirez2020@gmail.com",
+        "destino_nombre": "Administrador de Prueba",
+        "asunto": "Prueba de Conexión SMTP - CIIDI UPTTMBI",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
         "id": "mail_6aab631db088e",
         "fecha": "2026-09-17 03:48:45",
         "destino_email": "orlando5711666@gmail.com",
