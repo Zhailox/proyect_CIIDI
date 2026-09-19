@@ -25,36 +25,42 @@ class LogsModel {
     }
 
     public function obtenerAuditTrailPaginado(?string $nivel = null, ?string $modulo = null, ?string $fechaInicio = null, ?string $fechaFin = null, int $pagina = 1, int $porPagina = 15): array {
-        $qb = new QueryBuilder();
+        // Instanciar dos constructores separados para evitar colisión de estados
+        $qbCount = new QueryBuilder();
+        $qbItems = new QueryBuilder();
         
-        $query = $qb->tabla('system_audit_log')->select('*');
-        $countQuery = $qb->tabla('system_audit_log')->select('COUNT(*) as total');
+        $qbCount->tabla('system_audit_log')->select('COUNT(*) as total');
+        $qbItems->tabla('system_audit_log')->select('*');
         
         if (!empty($nivel)) {
-            $query->where('nivel', '=', strtoupper($nivel));
-            $countQuery->where('nivel', '=', strtoupper($nivel));
+            $qbCount->where('nivel', '=', strtoupper($nivel));
+            $qbItems->where('nivel', '=', strtoupper($nivel));
         }
         if (!empty($modulo)) {
-            $query->where('modulo', '=', $modulo);
-            $countQuery->where('modulo', '=', $modulo);
+            $qbCount->where('modulo', '=', $modulo);
+            $qbItems->where('modulo', '=', $modulo);
         }
         if (!empty($fechaInicio)) {
-            $query->where('fecha_hora', '>=', $fechaInicio . ' 00:00:00');
-            $countQuery->where('fecha_hora', '>=', $fechaInicio . ' 00:00:00');
+            $qbCount->where('fecha_hora', '>=', $fechaInicio . ' 00:00:00');
+            $qbItems->where('fecha_hora', '>=', $fechaInicio . ' 00:00:00');
         }
         if (!empty($fechaFin)) {
-            $query->where('fecha_hora', '<=', $fechaFin . ' 23:59:59');
-            $countQuery->where('fecha_hora', '<=', $fechaFin . ' 23:59:59');
+            $qbCount->where('fecha_hora', '<=', $fechaFin . ' 23:59:59');
+            $qbItems->where('fecha_hora', '<=', $fechaFin . ' 23:59:59');
         }
 
-        $totalRes = $countQuery->first();
+        $totalRes = $qbCount->first();
         $total = $totalRes ? (int)$totalRes['total'] : 0;
         
         $paginas = max(1, (int) ceil($total / $porPagina));
         $paginaActual = max(1, min($pagina, $paginas));
         $offset = ($paginaActual - 1) * $porPagina;
 
-        $items = $query->orderBy('fecha_hora', 'DESC')->limit($porPagina)->offset($offset)->get();
+        // El ORDER BY ahora se aplica estrictamente solo a la consulta de extracción de datos
+        $items = $qbItems->orderBy('fecha_hora', 'DESC')
+                         ->limit($porPagina)
+                         ->offset($offset)
+                         ->get();
 
         return [
             'data'       => $items,
