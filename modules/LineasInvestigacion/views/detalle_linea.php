@@ -75,7 +75,7 @@
     <h3 class="li-panel-title">
         <i class="ph-bold ph-tag"></i> Dimensiones Operativas de la Línea
     </h3>
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; margin-top: 1rem;">
+    <div style="display: grid; grid-template-columns: 1fr; gap: 1rem; margin-top: 1rem;">
         <?php if(empty($dimensiones)): ?>
             <p style="color: #64748b; font-size: 0.9rem;">No hay dimensiones operativas registradas.</p>
         <?php else: ?>

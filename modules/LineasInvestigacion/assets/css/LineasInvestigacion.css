@@ -1559,7 +1559,7 @@
     .li-hero {
       background: linear-gradient(135deg, rgba(80, 89, 132, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%);
       color: #ffffff;
-      padding: 3.25rem 2.5rem 2.75rem 2.5rem;
+      padding: 3.25rem 2.5rem 1.5rem 2.5rem;
       position: relative;
       overflow: hidden;
     }
@@ -1735,16 +1735,11 @@
 
     /* 4 KPIs / Estadísticas globales */
     .li-kpi-grid {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 1.25rem;
-      max-width: 1000px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      max-width: 1100px;
       margin: 0 auto;
-    }
-    .li-kpi-grid > .li-kpi-card {
-      flex: 1 1 200px;
-      max-width: 250px;
     }
 
     .li-kpi-card {
@@ -1796,7 +1791,7 @@
        VISTA 1: CONTENIDO PRINCIPAL, FILTROS Y VISTAS
        ========================================================================== */
     .li-main-content {
-      padding: 1.25rem 3rem 4rem 3rem;
+      padding: 0.5rem 3rem 4rem 3rem;
       max-width: 1400px;
       margin: 0 auto;
       width: 100%;
@@ -2585,9 +2580,48 @@
        VISTA 2: DETALLE DE LA LÍNEA Y SUBMÓDULOS (ROL CONECTOR)
        ========================================================================== */
     .li-detail-header-wrapper {
-      background: #ffffff;
+      background: linear-gradient(135deg, rgba(80, 89, 132, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%);
       border-bottom: 1px solid var(--color-borde);
-      padding: 2rem 3rem 2rem 3rem;
+      padding: 2.5rem 3rem 2.5rem 3rem;
+      color: #ffffff;
+    }
+
+    .li-detail-header-wrapper .li-line-title,
+    .li-detail-header-wrapper .li-strip-stat-val {
+      color: #ffffff;
+    }
+
+    .li-detail-header-wrapper .li-line-description {
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .li-detail-header-wrapper .li-strip-stat-desc {
+      color: rgba(255, 255, 255, 0.65);
+    }
+
+    .li-detail-header-wrapper .li-strip-stat-icon {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .li-detail-header-wrapper .li-breadcrumb-link {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .li-detail-header-wrapper .li-breadcrumb-link:hover {
+      color: #ffffff;
+    }
+
+    .li-detail-header-wrapper .li-breadcrumbs-sep {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .li-detail-header-wrapper .li-breadcrumbs-current {
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 600;
+    }
+
+    .li-detail-header-wrapper .li-pnf-tag {
+      color: rgba(255, 255, 255, 0.8);
     }
 
     .li-detail-header-inner {
