@@ -14,12 +14,13 @@ class LineasModel extends QueryBuilder {
      * Obtiene todas las líneas con estadísticas agregadas:
      * total de dimensiones, proyectos clasificados e investigaciones ofertadas.
      */
-    public function getTodasConEstadisticas(): array {
+    public function getTodasConEstadisticas(bool $soloActivos = false): array {
         $sql = "
             SELECT
                 li.id,
                 li.nombre,
                 li.descripcion,
+                li.activo,
                 li.id_carrera,
                 c.nombre  AS carrera_nombre,
                 COUNT(DISTINCT dim.id)       AS total_dimensiones,
@@ -30,8 +31,8 @@ class LineasModel extends QueryBuilder {
             LEFT JOIN dimensiones_operativas dim ON dim.id_linea = li.id
             LEFT JOIN recurso_clasificaciones rc  ON rc.id_linea_investigacion = li.id
             LEFT JOIN investigaciones_ofertadas io ON io.id_linea = li.id
-            WHERE li.activo = true
-            GROUP BY li.id, li.nombre, li.descripcion, li.id_carrera, c.nombre
+            " . ($soloActivos ? "WHERE li.activo = true" : "") . "
+            GROUP BY li.id, li.nombre, li.descripcion, li.activo, li.id_carrera, c.nombre
             ORDER BY li.id ASC
         ";
         $stmt = $this->db->prepare($sql);

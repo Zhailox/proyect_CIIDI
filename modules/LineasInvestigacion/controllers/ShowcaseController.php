@@ -13,7 +13,7 @@ class ShowcaseLineasController {
         $model = new LineasModel();
 
         // Carga todas las líneas con sus estadísticas desde la BD
-        $lineas = $model->getTodasConEstadisticas();
+        $lineas = $model->getTodasConEstadisticas(true);
 
         // Calcular totales globales para el hero
         $total_dimensiones  = 0;
