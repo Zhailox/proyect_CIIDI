@@ -20,8 +20,8 @@ class LoginController {
 
     public function mostrarFormulario() {
         if (Auth::check()) {
-            $esAdmin = isset($_SESSION['nivel_privilegio']) && (int)$_SESSION['nivel_privilegio'] <= 2;
-            header("Location: " . ($esAdmin ? "sudoadmin" : "perfil"));
+            $esSuperAdmin = isset($_SESSION['nivel_privilegio']) && (int)$_SESSION['nivel_privilegio'] === 0;
+            header("Location: " . ($esSuperAdmin ? "sudoadmin" : "perfil"));
             exit; 
         }
         
@@ -310,14 +310,14 @@ class LoginController {
             // Si falla la auditoría, no detenemos el login, solo seguimos adelante
         }
 
-        $esAdmin = (int)$usuario['nivel_privilegio'] <= 2;
+        $esSuperAdmin = (int)$usuario['nivel_privilegio'] === 0;
 
         // ÉXITO: Mandamos los datos para la pantalla de bienvenida (anillo de carga)
         return [
             'es_error'       => false,
             'nombre_usuario' => $usuario['nombre_completo'],
             'rol_nombre'     => $usuario['nombre_rol'],
-            'destino'        => $esAdmin ? 'sudoadmin' : 'perfil'
+            'destino'        => $esSuperAdmin ? 'sudoadmin' : 'perfil'
         ];
     }
 

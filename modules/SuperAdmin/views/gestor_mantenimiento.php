@@ -269,12 +269,13 @@
                 $dataMantHdr = file_exists($archivo_mant_hdr) ? json_decode(file_get_contents($archivo_mant_hdr), true) : ['activo' => false];
                 $isAct = $dataMantHdr['activo'] ?? false;
                 $isProg = $dataMantHdr['programado'] ?? false;
+                $esFuturoProg = $isProg && !empty($dataMantHdr['fecha_inicio']) && (strtotime($dataMantHdr['fecha_inicio']) > time());
                 ?>
                 <?php if ($isAct): ?>
                     <span style="background: rgba(239,68,68,0.12); color: #dc2626; border: 1px solid rgba(239,68,68,0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; display: inline-flex; align-items: center; gap: 5px;">
                         <i class="ph-bold ph-power"></i> Mantenimiento Activo
                     </span>
-                <?php elseif ($isProg && !empty($dataMantHdr['fecha_inicio'])): ?>
+                <?php elseif ($esFuturoProg): ?>
                     <span id="ag-countdown-badge" style="background: rgba(245,158,11,0.12); color: #b45309; border: 1px solid rgba(245,158,11,0.3); padding: 4px 12px; border-radius: 20px; font-size: 0.76rem; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
                         <i class="ph-bold ph-timer"></i> Mantenimiento Programado: <span id="ag-countdown-clock" style="font-family: monospace; font-size: 0.85rem; font-weight: 800;"><?= date('H:i - d/m', strtotime($dataMantHdr['fecha_inicio'])) ?></span>
                     </span>

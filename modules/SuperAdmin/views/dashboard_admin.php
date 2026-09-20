@@ -112,6 +112,16 @@ $stats = array_merge([
             <p style="margin:3px 0 0 0; font-size: 0.78rem; color: var(--texto-silenciado);">Histórico de eventos, trazabilidad y descargas PDF/CSV.</p>
         </div>
     </a>
+    <a href="gestor-correos" class="sa-quick-card glass-card hover-glow" style="border-radius: var(--radius-sm); text-decoration: none;">
+        <div class="sa-quick-icon" style="background: rgba(147, 51, 234, 0.15); color: #9333ea;">
+            <i class="ph-bold ph-envelope-simple-open"></i>
+        </div>
+        <div>
+            <h4 style="margin:0; font-size: 0.95rem; font-weight: 700; color: var(--texto-titulos);">Gestión de Correos & SMTP</h4>
+            <p style="margin:3px 0 0 0; font-size: 0.78rem; color: var(--texto-silenciado);">Servidor SMTP, plantillas de correo y pruebas de envío.</p>
+        </div>
+    </a>
+
     <a href="configuracion-sistema" class="sa-quick-card glass-card hover-glow" style="border-radius: var(--radius-sm); text-decoration: none;">
         <div class="sa-quick-icon" style="background: rgba(24, 105, 116, 0.15); color: var(--color-secundario);">
             <i class="ph-bold ph-gear"></i>

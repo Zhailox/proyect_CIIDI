@@ -90,9 +90,40 @@ class GestorUsuariosController {
                     }
                 }
                 $db->commit();
-                AuditLogger::registrar('WARNING', 'SuperAdmin', 'Modificar Matriz RBAC', 'Se actualizaron los permisos granulares por Módulo y Nivel.');
+
+                // Revocación masiva por Nivel de Privilegio modificado en la Matriz RBAC
+                try {
+                    $nivelesModificados = array_keys($rawMatrix);
+                    if (!empty($nivelesModificados)) {
+                        $placeholders = implode(',', array_fill(0, count($nivelesModificados), '?'));
+                        $stmtUsers = $db->prepare("
+                            SELECT u.id 
+                            FROM usuarios u
+                            JOIN roles r ON u.id_rol = r.id
+                            JOIN privilegios p ON r.privilegio_id = p.privilegio_id
+                            WHERE p.nivel_privilegio IN ({$placeholders})
+                        ");
+                        $stmtUsers->execute($nivelesModificados);
+                        $afectados = $stmtUsers->fetchAll(PDO::FETCH_COLUMN);
+
+                        if (!empty($afectados)) {
+                            $archivoSesiones = CORE_PATH . '../storage/revoked_sessions.json';
+                            $revogadas = file_exists($archivoSesiones) ? (json_decode(file_get_contents($archivoSesiones), true) ?: []) : [];
+                            $miUsuarioId = (int)($_SESSION['usuario_id'] ?? 0);
+
+                            foreach ($afectados as $uId) {
+                                if ((int)$uId !== $miUsuarioId) {
+                                    $revogadas[(string)$uId] = true;
+                                }
+                            }
+                            file_put_contents($archivoSesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
+                        }
+                    }
+                } catch (Throwable $e) {}
+
+                AuditLogger::registrar('WARNING', 'SuperAdmin', 'Modificar Matriz RBAC', 'Se actualizaron los permisos granulares por Módulo y Nivel. Sesiones sincronizadas.');
                 if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['mensaje_gestor_exito'] = "Matriz de permisos segmentada actualizada en BD correctamente.";
+                $_SESSION['mensaje_gestor_exito'] = "Matriz de permisos segmentada actualizada en BD correctamente y sesiones sincronizadas.";
             } catch (Exception $e) {
                 $db->rollBack();
                 if (session_status() === PHP_SESSION_NONE) session_start();
@@ -137,9 +168,30 @@ class GestorUsuariosController {
                     $_SESSION['rol_nombre'] = $nuevoNombre;
                 }
 
-                AuditLogger::registrar('INFO', 'SuperAdmin', 'Modificar Rol', "Rol ID #{$rolId} actualizado a '{$nuevoNombre}' (Nivel: {$nuevoPrivilegioId}).");
+                // Revocación masiva de sesión para todos los usuarios pertenecientes a este Rol
+                try {
+                    $db = Connection::getInstance();
+                    $stmtUsers = $db->prepare("SELECT id FROM usuarios WHERE id_rol = ?");
+                    $stmtUsers->execute([$rolId]);
+                    $usuariosAfectados = $stmtUsers->fetchAll(PDO::FETCH_COLUMN);
+
+                    if (!empty($usuariosAfectados)) {
+                        $archivoSesiones = CORE_PATH . '../storage/revoked_sessions.json';
+                        $revogadas = file_exists($archivoSesiones) ? (json_decode(file_get_contents($archivoSesiones), true) ?: []) : [];
+                        $miUsuarioId = (int)($_SESSION['usuario_id'] ?? 0);
+
+                        foreach ($usuariosAfectados as $uId) {
+                            if ((int)$uId !== $miUsuarioId) {
+                                $revogadas[(string)$uId] = true;
+                            }
+                        }
+                        file_put_contents($archivoSesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
+                    }
+                } catch (Throwable $e) {}
+
+                AuditLogger::registrar('INFO', 'SuperAdmin', 'Modificar Rol', "Rol ID #{$rolId} actualizado a '{$nuevoNombre}' (Nivel: {$nuevoPrivilegioId}). Sesiones remotas de usuarios revocadas.");
                 if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['mensaje_gestor_exito'] = "Rol actualizado exitosamente en la base de datos.";
+                $_SESSION['mensaje_gestor_exito'] = "Rol actualizado exitosamente en la base de datos y sesiones sincronizadas.";
             }
             header("Location: gestor-usuarios");
             exit;
@@ -377,6 +429,14 @@ class GestorUsuariosController {
             // Invertimos el estado
             $this->adminModel->cambiarEstadoActivo($id, !$estadoActual);
             
+            // Si el estado pasa de Activo a Suspendido, revocar inmediatamente su sesión
+            if ($estadoActual) {
+                $archivoSesiones = CORE_PATH . '../storage/revoked_sessions.json';
+                $revogadas = file_exists($archivoSesiones) ? (json_decode(file_get_contents($archivoSesiones), true) ?: []) : [];
+                $revogadas[(string)$id] = true;
+                file_put_contents($archivoSesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
+            }
+            
             $usuarioObj = $this->adminModel->buscarPorCedula($cedula);
             if ($usuarioObj && !empty($usuarioObj['email'])) {
                 $protocolo = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
@@ -445,6 +505,20 @@ class GestorUsuariosController {
             if ($exito) {
                 AuditLogger::registrar('INFO', 'SuperAdmin', 'Crear Usuario', "Nuevo usuario registrado: {$nombre} (C.I: {$cedula})");
                 
+                // Asegurar que si el ID fue previamente marcado como revocado, sea limpiado
+                $usuarioNuevo = $this->adminModel->buscarPorCedula($cedula);
+                if ($usuarioNuevo && isset($usuarioNuevo['id'])) {
+                    $archivoSesiones = CORE_PATH . '../storage/revoked_sessions.json';
+                    if (file_exists($archivoSesiones)) {
+                        $revogadas = json_decode(file_get_contents($archivoSesiones), true) ?: [];
+                        $idStr = (string)$usuarioNuevo['id'];
+                        if (isset($revogadas[$idStr])) {
+                            unset($revogadas[$idStr]);
+                            file_put_contents($archivoSesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
+                        }
+                    }
+                }
+
                 // Disparar correo situacional de invitación
                 $roles = $this->adminModel->obtenerRoles();
                 $nombreRol = 'Usuario';

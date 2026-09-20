@@ -474,7 +474,11 @@ class AdminController {
                 }
 
                 $ahora = time();
-                $esParaAhora = ($timestampInicio <= ($ahora + 10)); // tolerancia 10s
+                if ($timestampInicio < ($ahora - 60)) {
+                    throw new InvalidArgumentException("No se pueden agendar ventanas de mantenimiento en el pasado. Seleccione una fecha y hora futura.");
+                }
+
+                $esParaAhora = ($timestampInicio <= ($ahora + 30));
                 $fechaFin = date('Y-m-d H:i:s', $timestampInicio + ($duracionMinutos * 60));
 
                 $archivo = defined('STORAGE_PATH') ? STORAGE_PATH . 'maintenance.json' : __DIR__ . '/../../../storage/maintenance.json';

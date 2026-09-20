@@ -32,7 +32,8 @@ class MaintenanceService {
         $mantMasCercano = null;
         $hayActivoEnAgenda = false;
 
-        foreach ($agenda as &$item) {
+        $agendaLimpia = [];
+        foreach ($agenda as $item) {
             $inicioTs = strtotime($item['fecha_inicio'] ?? '');
             $finTs = strtotime($item['fecha_fin'] ?? '');
 
@@ -42,42 +43,52 @@ class MaintenanceService {
                     $item['programado'] = false;
                     $hayActivoEnAgenda = true;
                     $mantMasCercano = $item;
+                    $agendaLimpia[] = $item;
                 } elseif ($inicioTs > $ahora) {
                     $item['activo'] = false;
                     $item['programado'] = true;
                     if ($mantMasCercano === null || $inicioTs < strtotime($mantMasCercano['fecha_inicio'])) {
                         $mantMasCercano = $item;
                     }
+                    $agendaLimpia[] = $item;
                 } else {
-                    $item['activo'] = false;
-                    $item['programado'] = false;
+                    // Caducó: se purga de la agenda activa
+                    $cambioArchivo = true;
                 }
             }
         }
-        unset($item);
+        $agenda = $agendaLimpia;
 
         if ($hayActivoEnAgenda && empty($dataMantenimiento['activo'])) {
             $dataMantenimiento['activo'] = true;
+            $dataMantenimiento['programado'] = false;
             $dataMantenimiento['fecha_inicio'] = $mantMasCercano['fecha_inicio'];
             $dataMantenimiento['fecha_fin'] = $mantMasCercano['fecha_fin'];
             $dataMantenimiento['mensaje'] = $mantMasCercano['mensaje'];
             $cambioArchivo = true;
         } elseif (!$hayActivoEnAgenda && !empty($dataMantenimiento['activo']) && !empty($dataMantenimiento['fecha_fin']) && strtotime($dataMantenimiento['fecha_fin']) <= $ahora) {
             $dataMantenimiento['activo'] = false;
+            $dataMantenimiento['programado'] = !empty($mantMasCercano);
             $cambioArchivo = true;
         }
 
         if (!empty($mantMasCercano) && empty($dataMantenimiento['activo'])) {
+            $dataMantenimiento['programado'] = true;
             if (($dataMantenimiento['fecha_inicio'] ?? '') !== $mantMasCercano['fecha_inicio']) {
                 $dataMantenimiento['fecha_inicio'] = $mantMasCercano['fecha_inicio'];
                 $dataMantenimiento['fecha_fin'] = $mantMasCercano['fecha_fin'];
                 $dataMantenimiento['mensaje'] = $mantMasCercano['mensaje'];
                 $cambioArchivo = true;
             }
+        } elseif (empty($mantMasCercano) && empty($dataMantenimiento['activo'])) {
+            if (!empty($dataMantenimiento['programado'])) {
+                $dataMantenimiento['programado'] = false;
+                $cambioArchivo = true;
+            }
         }
 
         if ($cambioArchivo) {
-            $dataMantenimiento['agenda'] = $agenda;
+            $dataMantenimiento['agenda'] = array_values($agenda);
             file_put_contents(
                 $this->mantenimientoFilePath,
                 json_encode($dataMantenimiento, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)

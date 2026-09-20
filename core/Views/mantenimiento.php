@@ -146,9 +146,15 @@ $mensajeCustom = !empty($mensajeCustom) ? $mensajeCustom : "Estamos realizando l
         <?php endif; ?>
 
         <div class="mantenimiento-actions">
-            <a href="login" onclick="if(window.location.search){ window.location.href = './login'; return false; }" class="btn-admin-pill">
-                <i class="ph ph-lock-key" style="font-size: 1.25rem;"></i> Acceso Administrativo
-            </a>
+            <?php if (isset($_SESSION['usuario_id'])): ?>
+                <a href="cerrar-sesion" class="btn-admin-pill" style="background: rgba(239, 68, 68, 0.15); color: #dc2626; border: 1px solid rgba(239,68,68,0.3); box-shadow: none;">
+                    <i class="ph-bold ph-sign-out" style="font-size: 1.25rem;"></i> Cerrar Sesión Activa
+                </a>
+            <?php else: ?>
+                <a href="login" onclick="if(window.location.search){ window.location.href = './login'; return false; }" class="btn-admin-pill">
+                    <i class="ph ph-lock-key" style="font-size: 1.25rem;"></i> Acceso Administrativo
+                </a>
+            <?php endif; ?>
         </div>
     </div>
 </body>

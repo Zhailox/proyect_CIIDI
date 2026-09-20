@@ -1,5 +1,6 @@
 <?php
 // core/System/Kernel.php
+date_default_timezone_set('America/Caracas');
 
 require_once CORE_PATH . 'Interfaces/ModuleContract.php';
 require_once CORE_PATH . 'Security/SessionManager.php';
