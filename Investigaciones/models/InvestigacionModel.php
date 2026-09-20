@@ -146,21 +146,45 @@ class InvestigacionModel {
         return $this->listarInvestigaciones($filtros);
     }
     
-    public function obtenerMisInvestigaciones(int $id_profesor): array {
-        $sql = "
-            SELECT 
-                i.*, 
-                l.nombre AS linea_nombre,
-                (SELECT COUNT(*) FROM public.postulaciones_estudiantes p WHERE p.id_investigacion = i.id AND p.estado = 'Pendiente') as postulantes_pendientes
+    public function obtenerMisInvestigaciones(int $id_profesor, array $filtros = []): array {
+        $fromJoin = "
             FROM public.investigaciones_ofertadas i
             LEFT JOIN public.lineas_investigacion l ON i.id_linea = l.id
-            WHERE i.id_profesor = ?
+        ";
+        $where  = " WHERE i.id_profesor = ?";
+        $params = [$id_profesor];
+
+        // Total
+        $stmtCount = $this->db->prepare("SELECT COUNT(*) " . $fromJoin . $where);
+        $stmtCount->execute($params);
+        $total = (int)$stmtCount->fetchColumn();
+
+        $perPage = max(1, (int)($filtros['por_pagina'] ?? 10));
+        $paginas = max(1, (int)ceil($total / $perPage));
+        $pagina  = max(1, min((int)($filtros['pagina'] ?? 1), $paginas));
+        $offset  = ($pagina - 1) * $perPage;
+
+        $sql = "
+            SELECT
+                i.*,
+                l.nombre AS linea_nombre,
+                (SELECT COUNT(*) FROM public.postulaciones_estudiantes p
+                 WHERE p.id_investigacion = i.id AND p.estado = 'Pendiente') AS postulantes_pendientes
+            " . $fromJoin . $where . "
             ORDER BY i.fecha_creacion DESC
+            LIMIT ? OFFSET ?
         ";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$id_profesor]);
+        $stmt->execute(array_merge($params, [$perPage, $offset]));
         $resultados = $stmt->fetchAll();
-        return $this->mergeMetadata($resultados);
+
+        return [
+            'items'      => $this->mergeMetadata($resultados),
+            'total'      => $total,
+            'pagina'     => $pagina,
+            'paginas'    => $paginas,
+            'por_pagina' => $perPage,
+        ];
     }
 
     public function obtenerPorId(int $id): ?array {
@@ -288,22 +312,45 @@ class InvestigacionModel {
         return $stmt->fetchAll();
     }
     
-    public function obtenerPostulantesDeMiProyecto(int $id_profesor): array {
-        $sql = "
-            SELECT 
-                p.*, 
-                u.nombre_completo AS estudiante, 
-                u.email,
-                i.titulo AS investigacion_titulo
+    public function obtenerPostulantesDeMiProyecto(int $id_profesor, array $filtros = []): array {
+        $fromJoin = "
             FROM public.postulaciones_estudiantes p
             INNER JOIN public.investigaciones_ofertadas i ON p.id_investigacion = i.id
             INNER JOIN public.usuarios u ON p.id_estudiante = u.id
-            WHERE i.id_profesor = ?
+        ";
+        $where  = " WHERE i.id_profesor = ?";
+        $params = [$id_profesor];
+
+        // Total
+        $stmtCount = $this->db->prepare("SELECT COUNT(*) " . $fromJoin . $where);
+        $stmtCount->execute($params);
+        $total = (int)$stmtCount->fetchColumn();
+
+        $perPage = max(1, (int)($filtros['por_pagina'] ?? 10));
+        $paginas = max(1, (int)ceil($total / $perPage));
+        $pagina  = max(1, min((int)($filtros['pagina'] ?? 1), $paginas));
+        $offset  = ($pagina - 1) * $perPage;
+
+        $sql = "
+            SELECT
+                p.*,
+                u.nombre_completo AS estudiante,
+                u.email,
+                i.titulo AS investigacion_titulo
+            " . $fromJoin . $where . "
             ORDER BY p.fecha_postulacion DESC
+            LIMIT ? OFFSET ?
         ";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$id_profesor]);
-        return $stmt->fetchAll();
+        $stmt->execute(array_merge($params, [$perPage, $offset]));
+
+        return [
+            'items'      => $stmt->fetchAll(),
+            'total'      => $total,
+            'pagina'     => $pagina,
+            'paginas'    => $paginas,
+            'por_pagina' => $perPage,
+        ];
     }
     
     public function obtenerPostulacionesAdmin(): array {
@@ -374,5 +421,25 @@ class InvestigacionModel {
             ORDER BY total_investigaciones DESC, u.nombre_completo ASC
         ";
         return $this->db->query($sql)->fetchAll();
+    }
+
+    /**
+     * Estadísticas rápidas de postulantes de un profesor
+     * (Pendientes / Aceptados / Rechazados / Total) sin cargar todos los registros.
+     */
+    public function obtenerEstadisticasPostulantes(int $id_profesor): array {
+        $sql = "
+            SELECT
+                COUNT(*) FILTER (WHERE p.estado = 'Pendiente')  AS pendientes,
+                COUNT(*) FILTER (WHERE p.estado = 'Aceptado')   AS aceptados,
+                COUNT(*) FILTER (WHERE p.estado = 'Rechazado')  AS rechazados,
+                COUNT(*)                                          AS total
+            FROM public.postulaciones_estudiantes p
+            INNER JOIN public.investigaciones_ofertadas i ON p.id_investigacion = i.id
+            WHERE i.id_profesor = ?
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id_profesor]);
+        return $stmt->fetch() ?: ['pendientes' => 0, 'aceptados' => 0, 'rechazados' => 0, 'total' => 0];
     }
 }

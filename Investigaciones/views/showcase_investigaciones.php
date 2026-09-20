@@ -16,8 +16,9 @@ $misPostulaciones = $misPostulaciones ?? [];
         <div class="inv-flash inv-flash-error"><i class="ph-fill ph-warning-circle"></i> <?= $_SESSION['flash_error']; unset($_SESSION['flash_error']); ?></div>
     <?php endif; ?>
 
-    <!-- HERO SECTION -->
-    <section class="landing-hero-modern" style="margin-bottom: 2rem; border-radius: var(--inv-radius-xl); overflow: hidden; box-shadow: 0 20px 40px rgba(0, 119, 190, 0.2); background: linear-gradient(135deg, #0077BE 0%, #003F66 100%); border: none;">
+    <!-- HERO SECTION — Paleta de Cursos -->
+    <section class="landing-hero-modern" style="margin-bottom: 2rem; border-radius: var(--inv-radius-xl); overflow: hidden; box-shadow: 0 20px 40px rgba(80, 89, 132, 0.25); background: linear-gradient(135deg, rgba(80,89,132,0.97) 0%, rgba(112,144,203,0.93) 100%); border: none;">
+
         <canvas id="landingCanvasBg" class="landing-hero-canvas"></canvas>
 
         <div class="hero-text-content">
@@ -29,7 +30,7 @@ $misPostulaciones = $misPostulaciones ?? [];
             
             <div style="display: flex; gap: 1rem; flex-wrap:wrap;">
                 <a href="#inv-grid" onclick="event.preventDefault(); document.getElementById('inv-grid').scrollIntoView({behavior:'smooth'});"
-                   style="background: white; color: #0369A1; padding: 0.8rem 1.5rem; border-radius: 50px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: transform 0.2s;"
+                   style="background: white; color: var(--inv-primary); padding: 0.8rem 1.5rem; border-radius: 50px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: transform 0.2s;"
                    onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
                     <i class="ph-bold ph-rocket-launch"></i> Ver Proyectos
                 </a>
@@ -70,7 +71,7 @@ $misPostulaciones = $misPostulaciones ?? [];
     <?php if ($is_logged && !empty($misPostulaciones)): ?>
     <div style="background: rgba(255,255,255,0.95); border: 1px solid rgba(80,89,132,0.15); border-radius: 16px; padding: 1.5rem 2rem; margin-bottom: 2rem; box-shadow: var(--inv-shadow-sm);">
         <h2 style="color: var(--inv-dark); font-size: 1.1rem; font-weight:800; margin-bottom: 1rem; display:flex; align-items:center; gap:0.5rem;">
-            <i class="ph-fill ph-clock-counter-clockwise" style="color:#0369A1;"></i> Mis Postulaciones Enviadas
+            <i class="ph-fill ph-clock-counter-clockwise" style="color:var(--inv-primary);"></i> Mis Postulaciones Enviadas
         </h2>
         <div style="display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 0.5rem;">
             <?php foreach($misPostulaciones as $mp): ?>
@@ -104,7 +105,7 @@ $misPostulaciones = $misPostulaciones ?? [];
                     <i class="ph-bold ph-magnifying-glass" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--inv-muted);"></i>
                     <input type="text" name="q" value="<?= htmlspecialchars($busqueda) ?>" placeholder="Buscar título o descripción..."
                            style="width:100%; padding:0.8rem 1rem 0.8rem 2.5rem; border:1px solid var(--inv-border); border-radius:50px; font-size:1rem; outline:none; transition:all 0.2s;"
-                           onfocus="this.style.boxShadow='0 0 0 3px rgba(3,105,161,0.15)'; this.style.borderColor='#0369A1';"
+                           onfocus="this.style.boxShadow='0 0 0 3px rgba(80,89,132,0.2)'; this.style.borderColor='var(--inv-primary)';"
                            onblur="this.style.boxShadow='none'; this.style.borderColor='var(--inv-border)';">
                 </div>
                 <!-- Selector estado -->
@@ -116,9 +117,13 @@ $misPostulaciones = $misPostulaciones ?? [];
                         <option value="Abierta"       <?= (isset($_GET['estado']) && $_GET['estado'] == 'Abierta')       ? 'selected' : '' ?>>Abiertas a Postulación</option>
                         <option value="En Desarrollo" <?= (isset($_GET['estado']) && $_GET['estado'] == 'En Desarrollo') ? 'selected' : '' ?>>En Desarrollo</option>
                         <option value="Finalizada"    <?= (isset($_GET['estado']) && $_GET['estado'] == 'Finalizada')    ? 'selected' : '' ?>>Finalizada</option>
+                        <?php if ($nivel_usuario >= 1): /* Cerrada: solo docentes/admin la ven */ ?>
+                        <option value="Cerrada"       <?= (isset($_GET['estado']) && $_GET['estado'] == 'Cerrada')       ? 'selected' : '' ?>>Cerrada</option>
+                        <?php endif; ?>
                     </select>
                 </div>
             </div>
+
 
             <!-- Pills de Líneas -->
             <div style="display:flex; align-items:center; gap:1rem; border-top:1px solid var(--inv-border); padding-top:1.5rem; overflow-x:auto;">
@@ -126,7 +131,7 @@ $misPostulaciones = $misPostulaciones ?? [];
                 
                 <a href="?ruta=investigaciones<?= !empty($busqueda)?'&q='.urlencode($busqueda):'' ?><?= !empty($_GET['estado'])?'&estado='.urlencode($_GET['estado']):'' ?>"
                    style="padding:0.4rem 1rem; border-radius:50px; font-size:0.85rem; font-weight:700; text-decoration:none; white-space:nowrap; transition:all 0.2s;
-                          <?= empty($_GET['linea']) ? 'background:#0369A1; color:white; box-shadow:0 4px 10px rgba(3,105,161,0.3);' : 'background:#F1F5F9; color:var(--inv-muted); border:1px solid transparent;' ?>">
+                          <?= empty($_GET['linea']) ? 'background:var(--inv-primary); color:white; box-shadow:0 4px 10px rgba(80,89,132,0.35);' : 'background:#F1F5F9; color:var(--inv-muted); border:1px solid transparent;' ?>">
                     Todas
                 </a>
                 
@@ -139,10 +144,11 @@ $misPostulaciones = $misPostulaciones ?? [];
                     ?>
                     <a href="<?= $url ?>"
                        style="padding:0.4rem 1rem; border-radius:50px; font-size:0.85rem; font-weight:700; text-decoration:none; white-space:nowrap; transition:all 0.2s;
-                              <?= $isActive ? 'background:#0369A1; color:white; box-shadow:0 4px 10px rgba(3,105,161,0.3);' : 'background:#F1F5F9; color:var(--inv-muted); border:1px solid transparent;' ?>">
+                              <?= $isActive ? 'background:var(--inv-primary); color:white; box-shadow:0 4px 10px rgba(80,89,132,0.35);' : 'background:#F1F5F9; color:var(--inv-muted); border:1px solid transparent;' ?>">
                         <?= htmlspecialchars($l['nombre']) ?>
                     </a>
                 <?php endforeach; ?>
+
             </div>
         </form>
     </header>
@@ -165,7 +171,7 @@ $misPostulaciones = $misPostulaciones ?? [];
                          onerror="this.src='https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=400'">
                     <span class="inv-badge" style="background: rgba(15,23,42,0.85);"><i class="ph-fill ph-pulse"></i> <?= htmlspecialchars($inv['estado']) ?></span>
                     <?php if ($yaPostulado): ?>
-                    <span class="inv-badge" style="background: rgba(3,105,161,0.9); top:auto; bottom:1rem; left:1rem; letter-spacing:0.3px;">
+                    <span class="inv-badge" style="background: rgba(80,89,132,0.9); top:auto; bottom:1rem; left:1rem; letter-spacing:0.3px;">
                         <i class="ph-bold ph-check"></i> Ya Postulado
                     </span>
                     <?php endif; ?>
@@ -176,9 +182,9 @@ $misPostulaciones = $misPostulaciones ?? [];
                         <span style="background: #F1F5F9; color:#475569; padding:0.2rem 0.6rem; border-radius:6px; font-size:0.75rem; font-weight:600; display:flex; align-items:center; gap:0.3rem;" title="Docente/Tutor">
                             <i class="ph-fill ph-chalkboard-teacher"></i> <?= htmlspecialchars($inv['profesor'] ?? $inv['tag_quien'] ?? 'Tutor') ?>
                         </span>
-                        <span style="background: #E0F2FE; color:#0369A1; padding:0.2rem 0.6rem; border-radius:6px; font-size:0.75rem; font-weight:600; display:flex; align-items:center; gap:0.3rem;" title="Línea de Investigación">
-                            <i class="ph-fill ph-bookmark-simple"></i> <?= htmlspecialchars($inv['linea_nombre'] ?? 'Sin línea') ?>
-                        </span>
+                        <span style="background: var(--inv-primary-light); color:var(--inv-primary); padding:0.2rem 0.6rem; border-radius:6px; font-size:0.75rem; font-weight:600; display:flex; align-items:center; gap:0.3rem;" title="Línea de Investigación">
+                        <i class="ph-bold ph-git-branch"></i> <?= htmlspecialchars($inv['linea_nombre']) ?>
+                    </span>
                     </div>
 
                     <h3 class="inv-card-title"><?= htmlspecialchars($inv['titulo']) ?></h3>
@@ -233,7 +239,7 @@ $misPostulaciones = $misPostulaciones ?? [];
             <?php if ($pagActual > 1): ?>
             <a href="<?= $basePaginacion . ($pagActual - 1) ?>"
                style="width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:white; border:1px solid var(--inv-border); color:var(--inv-dark); text-decoration:none; font-weight:700; transition:all 0.2s; box-shadow:var(--inv-shadow-sm);"
-               onmouseover="this.style.background='#0369A1'; this.style.color='white'; this.style.borderColor='#0369A1';"
+               onmouseover="this.style.background='var(--inv-primary)'; this.style.color='white'; this.style.borderColor='var(--inv-primary)';"
                onmouseout="this.style.background='white'; this.style.color='var(--inv-dark)'; this.style.borderColor='var(--inv-border)';">
                 <i class="ph-bold ph-caret-left"></i>
             </a>
@@ -252,9 +258,9 @@ $misPostulaciones = $misPostulaciones ?? [];
             <?php for ($i = $inicio; $i <= $fin; $i++): ?>
             <a href="<?= $basePaginacion . $i ?>"
                style="width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; text-decoration:none; font-weight:700; transition:all 0.2s;
-                      <?= $i === $pagActual ? 'background:linear-gradient(135deg,#0369A1,#0077BE); color:white; border:none; box-shadow:0 4px 12px rgba(3,105,161,0.3);' : 'background:white; border:1px solid var(--inv-border); color:var(--inv-dark);' ?>"
+                      <?= $i === $pagActual ? 'background:linear-gradient(135deg, var(--color-principal, #121a3e), var(--color-secundario, #505984)); color:white; border:none; box-shadow:0 4px 12px rgba(80,89,132,0.35);' : 'background:white; border:1px solid var(--inv-border); color:var(--inv-dark);' ?>"
                <?php if ($i !== $pagActual): ?>
-               onmouseover="this.style.background='#0369A1'; this.style.color='white'; this.style.borderColor='#0369A1';"
+               onmouseover="this.style.background='var(--inv-primary)'; this.style.color='white'; this.style.borderColor='var(--inv-primary)';"
                onmouseout="this.style.background='white'; this.style.color='var(--inv-dark)'; this.style.borderColor='var(--inv-border)';"
                <?php endif; ?>>
                 <?= $i ?>
@@ -270,7 +276,7 @@ $misPostulaciones = $misPostulaciones ?? [];
             <?php if ($pagActual < $pagTotal): ?>
             <a href="<?= $basePaginacion . ($pagActual + 1) ?>"
                style="width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:white; border:1px solid var(--inv-border); color:var(--inv-dark); text-decoration:none; font-weight:700; transition:all 0.2s; box-shadow:var(--inv-shadow-sm);"
-               onmouseover="this.style.background='#0369A1'; this.style.color='white'; this.style.borderColor='#0369A1';"
+               onmouseover="this.style.background='var(--inv-primary)'; this.style.color='white'; this.style.borderColor='var(--inv-primary)';"
                onmouseout="this.style.background='white'; this.style.color='var(--inv-dark)'; this.style.borderColor='var(--inv-border)';">
                 <i class="ph-bold ph-caret-right"></i>
             </a>
@@ -292,9 +298,9 @@ $misPostulaciones = $misPostulaciones ?? [];
                 box-shadow:-20px 0 60px rgba(15,23,42,0.15); transform:translateX(100%); transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);">
 
         <!-- Encabezado sticky -->
-        <div style="position:sticky; top:0; z-index:10; background:white; padding:1.2rem 1.5rem; border-bottom:1px solid var(--inv-border); display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 8px rgba(15,23,42,0.04);">
+        <div style="position:sticky; top:0; z-index:10; background:white; padding:1.2rem 1.5rem; border-bottom:1px solid var(--inv-border); display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 8px rgba(18,26,62,0.04);">
             <span style="font-weight:800; color:var(--inv-dark); font-size:1.1rem; display:flex; align-items:center; gap:0.5rem;">
-                <i class="ph-fill ph-flask" style="color:#0369A1;"></i> Detalles del Proyecto
+                <i class="ph-fill ph-flask" style="color:var(--inv-primary);"></i> Detalles del Proyecto
             </span>
             <button onclick="cerrarDrawer()"
                     style="background:#F1F5F9; border:none; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1rem; color:var(--inv-muted); transition:all 0.2s;"
@@ -359,26 +365,26 @@ function abrirDrawer(id) {
                     <i class="ph-fill ph-lock-key" style="font-size:3rem; color:#F59E0B; margin-bottom:1rem; display:block;"></i>
                     <p style="font-size:1rem; color:var(--inv-dark); font-weight:700; margin-bottom:0.5rem;">Inicia sesión para postularte</p>
                     <p style="font-size:0.9rem; color:var(--inv-muted); margin-bottom:1.5rem;">Necesitas una cuenta para aplicar a este proyecto de investigación.</p>
-                    <a href="?ruta=login" style="background:linear-gradient(135deg,#0369A1,#0077BE); color:white; padding:0.8rem 2rem; border-radius:50px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:0.5rem; box-shadow:0 4px 15px rgba(3,105,161,0.3);">
+                    <a href="?ruta=login" style="background:linear-gradient(135deg,var(--color-principal),var(--inv-primary)); color:white; padding:0.8rem 2rem; border-radius:50px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:0.5rem; box-shadow:0 4px 15px rgba(80,89,132,0.35);">
                         <i class="ph-bold ph-sign-in"></i> Iniciar Sesión
                     </a>
                 </div>`;
         } else if (yaPostulado) {
             postulacionHtml = `
-                <div style="background:#E0F2FE; border-radius:14px; padding:1.5rem; display:flex; align-items:center; gap:1rem; border:1px solid #BAE6FD;">
-                    <div style="width:50px; height:50px; background:#0369A1; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 12px rgba(3,105,161,0.3);">
+                <div style="background:var(--inv-primary-light); border-radius:14px; padding:1.5rem; display:flex; align-items:center; gap:1rem; border:1px solid rgba(80,89,132,0.2);">
+                    <div style="width:50px; height:50px; background:var(--inv-primary); border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 12px rgba(80,89,132,0.35);">
                         <i class="ph-bold ph-check" style="color:white; font-size:1.5rem;"></i>
                     </div>
                     <div>
-                        <strong style="color:#0C4A6E; font-size:1rem; display:block; margin-bottom:0.3rem;">¡Ya enviaste tu postulación!</strong>
-                        <span style="color:#075985; font-size:0.9rem;">Tu solicitud está siendo revisada por el docente responsable del proyecto.</span>
+                        <strong style="color:var(--inv-primary); font-size:1rem; display:block; margin-bottom:0.3rem;">¡Ya enviaste tu postulación!</strong>
+                        <span style="color:var(--inv-primary); font-size:0.9rem;">Tu solicitud está siendo revisada por el docente responsable del proyecto.</span>
                     </div>
                 </div>`;
         } else {
             postulacionHtml = `
                 <div style="background:#F8FAFC; border-radius:14px; padding:1.5rem; border:1px solid var(--inv-border);">
                     <h4 style="color:var(--inv-dark); font-weight:800; font-size:1rem; margin-bottom:1.2rem; display:flex; align-items:center; gap:0.5rem;">
-                        <i class="ph-bold ph-paper-plane-tilt" style="color:#0369A1;"></i> Postularme a este Proyecto
+                        <i class="ph-bold ph-paper-plane-tilt" style="color:var(--inv-primary);"></i> Postularme a este Proyecto
                     </h4>
                     <form action="?ruta=postulaciones-procesar" method="POST">
                         <input type="hidden" name="id_investigacion" value="${inv.id}">
@@ -389,7 +395,7 @@ function abrirDrawer(id) {
                             <textarea name="motivacion" required rows="4"
                                 placeholder="Explica por qué te interesa este proyecto y qué puedes aportar..."
                                 style="width:100%; padding:0.9rem; border:1px solid var(--inv-border); border-radius:10px; font-size:0.9rem; outline:none; font-family:inherit; resize:vertical; transition:box-shadow 0.2s; box-sizing:border-box;"
-                                onfocus="this.style.boxShadow='0 0 0 3px rgba(3,105,161,0.15)'; this.style.borderColor='#0369A1';"
+                                onfocus="this.style.boxShadow='0 0 0 3px rgba(80,89,132,0.2)'; this.style.borderColor='var(--inv-primary)';"
                                 onblur="this.style.boxShadow='none'; this.style.borderColor='var(--inv-border)';"></textarea>
                         </div>
                         <div style="margin-bottom:1.5rem;">
@@ -400,14 +406,14 @@ function abrirDrawer(id) {
                                 <i class="ph-bold ph-link" style="position:absolute; left:0.9rem; top:50%; transform:translateY(-50%); color:var(--inv-muted); font-size:0.95rem;"></i>
                                 <input type="url" name="portafolio" placeholder="https://github.com/tu-usuario"
                                     style="width:100%; padding:0.8rem 0.8rem 0.8rem 2.4rem; border:1px solid var(--inv-border); border-radius:10px; font-size:0.9rem; outline:none; transition:box-shadow 0.2s; box-sizing:border-box;"
-                                    onfocus="this.style.boxShadow='0 0 0 3px rgba(3,105,161,0.15)'; this.style.borderColor='#0369A1';"
+                                    onfocus="this.style.boxShadow='0 0 0 3px rgba(80,89,132,0.2)'; this.style.borderColor='var(--inv-primary)';"
                                     onblur="this.style.boxShadow='none'; this.style.borderColor='var(--inv-border)';">
                             </div>
                         </div>
                         <button type="submit"
-                            style="width:100%; background:linear-gradient(135deg,#0369A1 0%,#0077BE 100%); color:white; border:none; padding:1rem; border-radius:50px; font-weight:700; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.6rem; transition:all 0.2s; box-shadow:0 4px 15px rgba(3,105,161,0.3);"
-                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(3,105,161,0.45)';"
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(3,105,161,0.3)';">
+                            style="width:100%; background:linear-gradient(135deg, var(--color-principal, #121a3e) 0%, var(--color-secundario, #505984) 100%); color:white; border:none; padding:1rem; border-radius:50px; font-weight:700; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.6rem; transition:all 0.2s; box-shadow:0 4px 15px rgba(80,89,132,0.35);"
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(80,89,132,0.45)';" 
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(80,89,132,0.35)';">
                             <i class="ph-bold ph-paper-plane-tilt"></i> Enviar Postulación
                         </button>
                     </form>
@@ -436,7 +442,7 @@ function abrirDrawer(id) {
             <span style="background:${sc.bg}; color:${sc.color}; padding:0.3rem 0.85rem; border-radius:20px; font-size:0.78rem; font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
                 <i class="ph-bold ${sc.icon}"></i> ${esc(inv.estado)}
             </span>
-            <span style="background:#E0F2FE; color:#0369A1; padding:0.3rem 0.85rem; border-radius:20px; font-size:0.78rem; font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
+            <span style="background:var(--inv-primary-light); color:var(--inv-primary); padding:0.3rem 0.85rem; border-radius:20px; font-size:0.78rem; font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
                 <i class="ph-fill ph-bookmark-simple"></i> ${esc(inv.linea_nombre || 'Sin línea')}
             </span>
             <span style="background:#F1F5F9; color:#475569; padding:0.3rem 0.85rem; border-radius:20px; font-size:0.78rem; font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
@@ -448,11 +454,11 @@ function abrirDrawer(id) {
         </div>
 
         <!-- Título -->
-        <h2 style="font-size:1.45rem; font-weight:800; color:var(--inv-dark); margin-bottom:1rem; line-height:1.3;">${esc(inv.titulo)}</h2>
+        <h2 style="font-size:1.45rem; font-weight:800; color:var(--inv-dark); margin-bottom:1.5rem; line-height:1.3;">${esc(inv.titulo)}</h2>
 
         <!-- Docente -->
         <div style="display:flex; align-items:center; gap:0.8rem; margin-bottom:1.5rem; padding:0.9rem 1rem; background:#F8FAFC; border-radius:12px; border:1px solid var(--inv-border);">
-            <div style="width:40px; height:40px; background:linear-gradient(135deg,#0369A1,#0077BE); border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <div style="width:40px; height:40px; background:linear-gradient(135deg, var(--color-principal, #121a3e), var(--color-secundario, #505984)); border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                 <i class="ph-fill ph-chalkboard-teacher" style="color:white; font-size:1.1rem;"></i>
             </div>
             <div>
@@ -465,9 +471,9 @@ function abrirDrawer(id) {
         ${inv.planteamiento_problema ? `
         <div style="margin-bottom:1.5rem;">
             <div style="font-size:0.78rem; font-weight:700; color:var(--inv-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.6rem; display:flex; align-items:center; gap:0.4rem;">
-                <i class="ph-bold ph-file-text" style="color:#0369A1;"></i> Planteamiento / Resumen
+                <i class="ph-bold ph-file-text" style="color:var(--inv-primary);"></i> Planteamiento / Resumen
             </div>
-            <p style="color:var(--inv-dark); font-size:0.92rem; line-height:1.65; background:#F8FAFC; padding:1rem 1.2rem; border-radius:10px; margin:0; border-left:3px solid #0369A1;">
+            <p style="color:var(--inv-dark); font-size:0.92rem; line-height:1.65; background:#F8FAFC; padding:1rem 1.2rem; border-radius:10px; margin:0; border-left:3px solid var(--inv-primary);">
                 ${esc(inv.planteamiento_problema)}
             </p>
         </div>` : ''}
@@ -486,7 +492,7 @@ function abrirDrawer(id) {
         <!-- Sección postulación -->
         <div style="border-top:2px solid var(--inv-border); padding-top:1.5rem; margin-top:0.5rem;">
             <h3 style="font-size:1rem; font-weight:800; color:var(--inv-dark); margin-bottom:1.2rem; display:flex; align-items:center; gap:0.5rem;">
-                <i class="ph-bold ph-rocket-launch" style="color:#0369A1;"></i> Postulación al Proyecto
+                <i class="ph-bold ph-rocket-launch" style="color:var(--inv-primary);"></i> Postulación al Proyecto
             </h3>
             ${postulacionHtml}
         </div>

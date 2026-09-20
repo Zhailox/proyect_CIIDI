@@ -98,21 +98,20 @@ class CursosModule implements ModuleContract {
     }
 
     public function getMenuConfig(): array {
+        $nivelAdmin = SystemConfigService::get('accesos_modulos.cursos.admin', 0);
         $nivelPublico = SystemConfigService::get('accesos_modulos.cursos.publico', 10);
-        $nivelAdmin   = SystemConfigService::get('accesos_modulos.cursos.admin', 1);
-
         return [
             [
                 'tipo'        => 'parent',
                 'titulo'      => 'Cursos',
                 'icono'       => 'ph-fill ph-graduation-cap',
                 'enlace'      => 'cursos',
-                'privilegio_minimo' => $nivelPublico,
                 'activadores' => ['cursos', 'cursos-gestion', 'cursos-crear', 'cursos-editar', 'cursos-config'],
+                'privilegio_minimo' => $nivelPublico,
                 'subitems'    => [
-                    ['ruta' => 'cursos',         'titulo' => 'Oferta Formativa',    'privilegio_minimo' => $nivelPublico],
-                    ['ruta' => 'cursos-gestion', 'titulo' => 'Gestión de Cursos',   'privilegio_minimo' => $nivelAdmin],
-                    ['ruta' => 'cursos-config',  'titulo' => 'Configuración',       'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'cursos',        'titulo' => 'Oferta Formativa', 'privilegio_minimo' => $nivelPublico],
+                    ['ruta' => 'cursos-gestion',  'titulo' => 'Registrar Curso', 'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'cursos-config', 'titulo' => 'Configuración', 'privilegio_minimo' => $nivelAdmin],
                 ],
             ],
         ];
