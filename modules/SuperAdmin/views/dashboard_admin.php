@@ -1,3 +1,31 @@
+<?php
+// Asegurar valores por defecto en telemetría y stats
+$telemetria = array_merge([
+    'storage_mb' => 0,
+    'files_count' => 0,
+    'disk_free' => 'N/D',
+    'db_size' => '0 MB',
+    'active_connections' => 0,
+    'max_connections' => 100,
+    'db_name' => 'ciidi',
+    'memory_usage_mb' => 0,
+    'memory_peak_mb' => 0,
+    'php_version' => PHP_VERSION,
+    'pg_version' => 'N/D',
+    'pg_status' => 'N/D'
+], $telemetria ?? []);
+
+$stats = array_merge([
+    'usuarios_activos' => 0,
+    'usuarios_online' => 0,
+    'usuarios_bloqueados' => 0,
+    'docentes' => 0,
+    'accesos_hoy' => 0,
+    'modulos_activos' => 0,
+    'modulos_total' => 0
+], $stats ?? []);
+?>
+
 <div class="sa-hero-header mb-2" style="background: #ffffff !important; border: 1px solid rgba(80, 89, 132, 0.18); padding: 1.75rem 2rem; border-radius: var(--radius-md); box-shadow: 0 4px 20px rgba(18, 26, 62, 0.04);">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>

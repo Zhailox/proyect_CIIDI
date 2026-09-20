@@ -263,3 +263,754 @@ Stack Trace:
 #4 C:\wamp64\www\proyect_CIIDI\test_carreras_script.php(9): DocumentoModel->getCarreras()
 #5 {main}
 --------------------------------------------------------------------------------
+[2026-09-20 20:15:36] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(34): AuditLogger::registrar('CRITICAL', 'SuperAdmin', 'Error Panel Adm...', 'Call to undefin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->mostrarPanelAdministrativo()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('sudoadmin', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:19:10] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(34): AuditLogger::registrar('CRITICAL', 'SuperAdmin', 'Error Panel Adm...', 'Call to undefin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->mostrarPanelAdministrativo()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('sudoadmin', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:20:02] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(34): AuditLogger::registrar('CRITICAL', 'SuperAdmin', 'Error Panel Adm...', 'Call to undefin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->mostrarPanelAdministrativo()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('sudoadmin', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:23:19] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(172): AuditLogger::registrar('INFO', 'SuperAdmin', 'Test Respuesta ...', 'Diagn\xC3\xB3stico de...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->testearCore()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-core', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:23:30] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(172): AuditLogger::registrar('INFO', 'SuperAdmin', 'Test Respuesta ...', 'Diagn\xC3\xB3stico de...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->testearCore()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-core', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:23:34] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(172): AuditLogger::registrar('INFO', 'SuperAdmin', 'Test Respuesta ...', 'Diagn\xC3\xB3stico de...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->testearCore()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-core', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:24:42] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(392): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo elimin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->eliminarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('eliminar-backup', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:24:45] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(392): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo elimin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->eliminarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('eliminar-backup', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:24:48] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(392): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo elimin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->eliminarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('eliminar-backup', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:24:53] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(392): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo elimin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->eliminarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('eliminar-backup', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:24:55] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(392): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo elimin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->eliminarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('eliminar-backup', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:24:58] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(392): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo elimin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->eliminarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('eliminar-backup', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:25:00] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(392): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo elimin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->eliminarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('eliminar-backup', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:25:04] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(246): AuditLogger::registrar('CRITICAL', 'SuperAdmin', 'Excepci\xC3\xB3n Back...', 'Call to undefin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->generarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('generar-backup', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:28:57] ERROR: could not find driver en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(170): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(18): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\services\BackupService.php(72): AuditLogger::registrar('INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo backup...')
+#4 Command line code(1): BackupService::crearBackup('sql')
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:28:57] ERROR: Error de infraestructura de datos. Por favor reintente más tarde. en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:158
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(170): Connection->__construct(false)
+#1 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(18): Connection::getInstance()
+#2 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\services\BackupService.php(72): AuditLogger::registrar('INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo backup...')
+#3 Command line code(1): BackupService::crearBackup('sql')
+#4 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:33:42] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\services\BackupService.php(72): AuditLogger::registrar('INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo backup...')
+#2 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(237): BackupService::crearBackup('sql', false)
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->generarBackup()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('generar-backup', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:33:51] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\services\BackupService.php(72): AuditLogger::registrar('INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo tabla_...')
+#2 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(293): BackupService::crearBackup('sql', false, 'password_resets')
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->generarBackupTabla()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('generar-backup-...', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:34:56] ERROR: could not find driver en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(170): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Database\QueryBuilder.php(19): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\models\AdminDashboardModel.php(7): QueryBuilder->__construct()
+#4 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(22): AdminDashboardModel->obtenerEstadisticas()
+#5 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->mostrarPanelAdministrativo()
+#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('sudoadmin', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#8 Command line code(1): require('C:\\wamp64\\www\\p...')
+#9 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:34:56] ERROR: could not find driver en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(170): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(18): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(34): AuditLogger::registrar('CRITICAL', 'SuperAdmin', 'Error Panel Adm...', 'Error de infrae...')
+#4 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->mostrarPanelAdministrativo()
+#5 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('sudoadmin', Array, Array, Array, Object(AssetResolver))
+#6 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#7 Command line code(1): require('C:\\wamp64\\www\\p...')
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:34:56] ERROR: Error de infraestructura de datos. Por favor reintente más tarde. en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:158
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(170): Connection->__construct(false)
+#1 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(18): Connection::getInstance()
+#2 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(34): AuditLogger::registrar('CRITICAL', 'SuperAdmin', 'Error Panel Adm...', 'Error de infrae...')
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->mostrarPanelAdministrativo()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('sudoadmin', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#6 Command line code(1): require('C:\\wamp64\\www\\p...')
+#7 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:36:18] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(172): AuditLogger::registrar('INFO', 'SuperAdmin', 'Test Respuesta ...', 'Diagn\xC3\xB3stico de...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->testearCore()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-core', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:36:49] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(356): AuditLogger::registrar('INFO', 'SuperAdmin', 'Editar Usuario', 'Datos actualiza...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorUsuariosController->procesarEdicion()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('procesar-edicio...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:36:59] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'Articulos', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:37:00] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'Articulos', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:37:01] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'Articulos', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:37:03] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'Articulos', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:37:41] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'Autenticacion', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:37:43] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'Autenticacion', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:37:43] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'Autenticacion', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:37:45] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'Autenticacion', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:37:46] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'Autenticacion', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:37:47] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'Autenticacion', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:37:48] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'Autenticacion', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:37:49] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'Autenticacion', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:37:50] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'Autenticacion', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:38:00] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'SuperAdmin', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:38:02] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'SuperAdmin', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:38:03] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'SuperAdmin', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:38:04] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'SuperAdmin', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:38:05] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'SuperAdmin', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:38:06] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'SuperAdmin', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:38:07] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'SuperAdmin', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:38:09] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'SuperAdmin', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:38:09] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'SuperAdmin', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:38:10] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'SuperAdmin', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:38:11] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'SuperAdmin', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:38:12] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'SuperAdmin', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:38:13] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ModulosController.php(481): AuditLogger::registrar('INFO', 'SuperAdmin', 'Health Check Ru...', 'Test en ruta '?...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ModulosController->testearRuta()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('testear-ruta', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:39:49] ERROR: SMTP Error: Could not connect to SMTP host. Failed to connect to server en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Sun, 20 S...', '--b1=_T0949Mz2y...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(197): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ConfiguracionController.php(312): MailService::enviar('andrusramirez20...', 'Administrador d...', 'Prueba de Conex...', '\r\n             ...')
+#5 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ConfiguracionController->probarSmtp()
+#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('probar-smtp', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:39:49] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ConfiguracionController.php(319): AuditLogger::registrar('ERROR', 'SuperAdmin', 'Falla de Prueba...', 'Error al enviar...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ConfiguracionController->probarSmtp()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('probar-smtp', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:40:56] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(436): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Alternar Manten...', 'Modo Mantenimie...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->alternarMantenimiento()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('alternar-manten...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:41:14] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(436): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Alternar Manten...', 'Modo Mantenimie...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->alternarMantenimiento()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('alternar-manten...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:53:22] ERROR: could not find driver en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(170): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Database\QueryBuilder.php(19): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\models\AdminUsuarioModel.php(38): QueryBuilder->__construct()
+#4 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(46): AdminUsuarioModel->obtenerProfesores()
+#5 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorUsuariosController->index()
+#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('gestor-usuarios', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#8 Command line code(1): require('C:\\wamp64\\www\\p...')
+#9 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:57:25] ERROR: could not find driver en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(170): Connection->__construct(false)
+#2 Command line code(1): Connection::getInstance()
+#3 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:59:12] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\services\BackupService.php(72): AuditLogger::registrar('INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo pre_re...')
+#2 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(625): BackupService::crearBackup('sql.gz', false, NULL, 'pre_restore_che...')
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->restaurarBackup()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('restaurar-backu...', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:59:14] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(661): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Restaurar BD', 'Base de datos r...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->restaurarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('restaurar-backu...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:59:20] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\services\BackupService.php(72): AuditLogger::registrar('INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo pre_re...')
+#2 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(625): BackupService::crearBackup('sql.gz', false, NULL, 'pre_restore_che...')
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->restaurarBackup()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('restaurar-backu...', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:59:21] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(661): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Restaurar BD', 'Base de datos r...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->restaurarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('restaurar-backu...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:59:27] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\services\BackupService.php(72): AuditLogger::registrar('INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo esquem...')
+#2 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(258): BackupService::crearBackup('sql', true)
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->generarBackupEsquema()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('generar-backup-...', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:59:43] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(392): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo elimin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->eliminarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('eliminar-backup', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:59:46] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(392): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo elimin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->eliminarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('eliminar-backup', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:59:50] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(392): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo elimin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->eliminarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('eliminar-backup', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:59:53] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(392): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo elimin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->eliminarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('eliminar-backup', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:59:55] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(392): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo elimin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->eliminarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('eliminar-backup', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 20:59:58] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(392): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo elimin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->eliminarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('eliminar-backup', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 21:00:04] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\services\BackupService.php(72): AuditLogger::registrar('INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo backup...')
+#2 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(237): BackupService::crearBackup('sql', false)
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->generarBackup()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('generar-backup', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-09-20 21:01:05] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(219): AuditLogger::registrar('INFO', 'SuperAdmin', 'Optimizar BD', 'VACUUM ANALYZE ...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->optimizarBaseDatos()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(66): Dispatcher->dispatch('optimizar-bd', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------

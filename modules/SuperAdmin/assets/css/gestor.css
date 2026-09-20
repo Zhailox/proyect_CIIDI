@@ -21,29 +21,94 @@
     font-weight: 800 !important;
 }
 
-/* Inputs de Filtro y Controles con alto contraste */
-.sa-filter-input, select.sa-filter-input, input[type="text"].sa-filter-input {
+/* Pestañas de Navegación Interna (Tabs) */
+.sa-tabs-header {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.sa-tab-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 10px 18px !important;
+    border-radius: 8px !important;
+    border: 1px solid transparent !important;
+    background: transparent !important;
+    color: #64748b !important;
+    font-weight: 700 !important;
+    font-size: 0.88rem !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    transition: all 0.2s ease !important;
+}
+
+.sa-tab-btn i {
+    font-size: 1.1rem !important;
+}
+
+.sa-tab-btn:hover {
+    color: #121a3e !important;
+    background: rgba(112, 144, 203, 0.12) !important;
+}
+
+.sa-tab-btn.tab-active, .sa-tab-btn.active {
+    background: #121a3e !important;
+    color: #ffffff !important;
+    border-color: #121a3e !important;
+    box-shadow: 0 4px 14px rgba(18, 26, 62, 0.25) !important;
+}
+
+.sa-tab-btn.tab-active i, .sa-tab-btn.active i {
+    color: #ffffff !important;
+}
+
+/* Inputs de Filtro y Controles con alto contraste y diseño personalizado */
+.sa-filter-input, input[type="text"].sa-filter-input {
     background-color: #ffffff !important;
     border: 1px solid rgba(80, 89, 132, 0.25) !important;
     color: #121a3e !important;
     font-weight: 700 !important;
     font-size: 0.88rem !important;
     border-radius: 6px !important;
-    padding: 6px 12px !important;
+    padding: 8px 14px !important;
     outline: none !important;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.sa-filter-input:focus, select.sa-filter-input:focus, input[type="text"].sa-filter-input:focus {
+select.sa-filter-input, select.ag-input, select {
+    background-color: #ffffff !important;
+    border: 1px solid rgba(80, 89, 132, 0.3) !important;
+    color: #121a3e !important;
+    font-weight: 700 !important;
+    font-size: 0.88rem !important;
+    border-radius: 6px !important;
+    padding: 8px 36px 8px 14px !important;
+    outline: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23505984%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 12px top 50% !important;
+    background-size: 10px auto !important;
+    cursor: pointer !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sa-filter-input:focus, select.sa-filter-input:focus, input[type="text"].sa-filter-input:focus, select:focus {
     border-color: var(--color-terciario) !important;
-    box-shadow: 0 0 0 3px rgba(112, 144, 203, 0.15) !important;
+    box-shadow: 0 0 0 3px rgba(112, 144, 203, 0.2) !important;
     color: #121a3e !important;
 }
 
-select.sa-filter-input option {
+select.sa-filter-input option, select option {
     background-color: #ffffff !important;
     color: #121a3e !important;
-    font-weight: 700 !important;
+    font-weight: 600 !important;
+    padding: 8px !important;
 }
 
 /* Formulario de búsqueda rápida */

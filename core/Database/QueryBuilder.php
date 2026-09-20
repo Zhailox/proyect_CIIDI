@@ -5,7 +5,7 @@ require_once __DIR__ . '/Connection.php';
 class QueryBuilder {
     
     protected $db;
-    protected $tabla;
+    protected $tabla = '';
     protected $joins = [];
     protected $condiciones = [];
     protected $parametros = [];
@@ -16,15 +16,15 @@ class QueryBuilder {
     protected $offset = '';
 
     public function __construct() {
-        // Inyectamos la conexión Singleton automáticamente
         $this->db = Connection::getInstance();
     }
 
     /**
-     * Define la tabla sobre la cual se operará y reinicia el estado.
+     * Limpia completamente el estado interno del QueryBuilder.
      */
-    public function tabla(string $nombre_tabla) {
-        $this->tabla = $nombre_tabla;
+    public function reset(): self {
+        $this->tabla = '';
+        $this->joins = [];
         $this->condiciones = [];
         $this->parametros = [];
         $this->columnas = '*';
@@ -32,23 +32,30 @@ class QueryBuilder {
         $this->orden = '';
         $this->grupo = '';
         $this->offset = '';
-        return $this; // Permite encadenamiento: $qb->tabla('usuarios')->where(...)
+        return $this;
+    }
+
+    /**
+     * Define la tabla sobre la cual se operará y reinicia el estado.
+     */
+    public function tabla(string $nombre_tabla): self {
+        $this->reset();
+        $this->tabla = $nombre_tabla;
+        return $this;
     }
     
     /**
      * Define las columnas a seleccionar.
      */
-    public function select(string $columnas) {
+    public function select(string $columnas): self {
         $this->columnas = $columnas;
         return $this;
     }
-    
-    
 
     /**
      * Añade una condición WHERE con parámetros seguros.
      */
-    public function where(string $columna, string $operador, $valor) {
+    public function where(string $columna, string $operador, $valor): self {
         $this->condiciones[] = "$columna $operador ?";
         $this->parametros[] = $valor;
         return $this;
@@ -57,58 +64,49 @@ class QueryBuilder {
     /**
      * Añade una condición WHERE cruda con bindings.
      */
-    public function whereRaw(string $sql, array $bindings = []) {
+    public function whereRaw(string $sql, array $bindings = []): self {
         $this->condiciones[] = $sql;
-        $this->parametros = array_merge($this->parametros, $bindings);
+        foreach ($bindings as $binding) {
+            $this->parametros[] = $binding;
+        }
         return $this;
     }
 
-    /**
-     * Ordenamiento (ORDER BY)
-     */
-    public function orderBy(string $columna, string $direccion = 'ASC') {
+    public function orderBy(string $columna, string $direccion = 'ASC'): self {
+        $direccion = strtoupper($direccion) === 'DESC' ? 'DESC' : 'ASC';
         $this->orden = "ORDER BY $columna $direccion";
         return $this;
     }
 
-    /**
-     * Límite (LIMIT)
-     */
-    public function limit(int $cantidad) {
-        $this->limite = "LIMIT $cantidad";
+    public function limit(int $cantidad): self {
+        $this->limite = "LIMIT " . (int)$cantidad;
         return $this;
     }
 
-    /**
-     * Desplazamiento (OFFSET)
-     */
-    public function offset(int $cantidad) {
-        $this->offset = "OFFSET $cantidad";
+    public function offset(int $cantidad): self {
+        $this->offset = "OFFSET " . (int)$cantidad;
         return $this;
     }
 
-    /**
-     * Agrupamiento (GROUP BY)
-     */
-    public function groupBy(string $columnas) {
+    public function groupBy(string $columnas): self {
         $this->grupo = "GROUP BY $columnas";
         return $this;
     }
 
-    /**
-     * Ejecuta una consulta SELECT y devuelve todos los resultados.
-     */
-    // NUEVO: Método para encadenar INNER JOIN, LEFT JOIN, etc.
-    public function join(string $tabla_join, string $condicion, string $tipo = 'INNER') {
-        $this->joins[] = "$tipo JOIN $tabla_join ON $condicion";
+    public function join(string $tabla_join, string $condicion, string $tipo = 'INNER'): self {
+        $tipoSanitized = strtoupper($tipo);
+        if (!in_array($tipoSanitized, ['INNER', 'LEFT', 'RIGHT', 'FULL'], true)) {
+            $tipoSanitized = 'INNER';
+        }
+        $this->joins[] = "$tipoSanitized JOIN $tabla_join ON $condicion";
         return $this;
     }
 
-    // ACTUALIZACIÓN: Le enseñamos al método get() a armar los JOINs, GROUP BY y OFFSET
-    public function get() {
+    public function get(): array {
+        if (!$this->db) return [];
+
         $sql = "SELECT {$this->columnas} FROM {$this->tabla}";
         
-        // Inyectamos los JOINs antes del WHERE
         if (!empty($this->joins)) {
             $sql .= " " . implode(" ", $this->joins);
         }
@@ -136,18 +134,18 @@ class QueryBuilder {
         $stmt = $this->db->prepare($sql);
         $stmt->execute($this->parametros);
         
-        return $stmt->fetchAll();
+        return $stmt->fetchAll() ?: [];
     }
 
-    /**
-     * Ejecuta una consulta SELECT y devuelve solo el primer registro.
-     */
-    public function first() {
+    public function first(): ?array {
         $this->limit(1);
         $resultados = $this->get();
         return !empty($resultados) ? $resultados[0] : null;
     }
+
     public function count(): int {
+        if (!$this->db) return 0;
+
         $sql = "SELECT COUNT(*) as total FROM {$this->tabla}";
         
         if (!empty($this->joins)) {
@@ -164,11 +162,10 @@ class QueryBuilder {
         $resultado = $stmt->fetch();
         return $resultado ? (int) $resultado['total'] : 0;
     }
-    /**
-     * Inserta un nuevo registro y devuelve el ID generado.
-     * Adaptado para PostgreSQL usando la cláusula RETURNING.
-     */
+
     public function insert(array $datos) {
+        if (!$this->db) return false;
+
         $columnas = implode(", ", array_keys($datos));
         $placeholders = implode(", ", array_fill(0, count($datos), "?"));
         
@@ -182,10 +179,9 @@ class QueryBuilder {
         return $resultado ? $resultado['id'] : false;
     }
 
-    /**
-     * Actualiza registros que coincidan con las condiciones.
-     */
-    public function update(array $datos) {
+    public function update(array $datos): bool {
+        if (!$this->db) return false;
+
         if (empty($this->condiciones)) {
             throw new Exception("Advertencia de Seguridad: Intentando hacer UPDATE sin condiciones (WHERE).");
         }
@@ -201,17 +197,15 @@ class QueryBuilder {
         $sql = "UPDATE {$this->tabla} SET " . implode(", ", $set_clause);
         $sql .= " WHERE " . implode(" AND ", $this->condiciones);
 
-        // Unimos los valores del SET con los valores del WHERE
         $parametros_finales = array_merge($valores_update, $this->parametros);
 
         $stmt = $this->db->prepare($sql);
         return $stmt->execute($parametros_finales);
     }
 
-    /**
-     * Elimina registros que coincidan con las condiciones.
-     */
-    public function delete() {
+    public function delete(): bool {
+        if (!$this->db) return false;
+
         if (empty($this->condiciones)) {
             throw new Exception("Advertencia de Seguridad: Intentando hacer DELETE sin condiciones (WHERE).");
         }

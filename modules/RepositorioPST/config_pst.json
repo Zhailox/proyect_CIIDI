@@ -13,7 +13,7 @@
             },
             "vancouver": {
                 "nombre": "Estilo Vancouver",
-                "activo": false,
+                "activo": true,
                 "plantilla": "{autores}. {titulo}. Trujillo: UPTTMBI; {anio}."
             }
         }

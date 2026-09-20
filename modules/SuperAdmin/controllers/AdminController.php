@@ -213,7 +213,7 @@ class AdminController {
     public function optimizarBaseDatos() {
         Auth::requierePrivilegioMinimo(0);
         try {
-            $res = $this->dashboardModel->optimizarBaseDatos();
+            $res = $this->getDashboardModel()->optimizarBaseDatos();
             if (session_status() === PHP_SESSION_NONE) session_start();
             if ($res['exito']) {
                 AuditLogger::registrar('INFO', 'SuperAdmin', 'Optimizar BD', 'VACUUM ANALYZE ejecutado exitosamente.');

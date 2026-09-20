@@ -294,8 +294,14 @@ class LoginController {
         }
         session_regenerate_id(true);
         $_SESSION['usuario_id'] = $usuario['id'];
+        $_SESSION['usuario_nombre'] = $usuario['nombre_completo'];
         $_SESSION['nombre_usuario'] = $usuario['nombre_completo'];
+        $_SESSION['nombre'] = $usuario['nombre_completo'];
+        $_SESSION['usuario_cedula'] = $usuario['cedula'] ?? $cedula;
+        $_SESSION['usuario_email'] = $usuario['email'] ?? '';
         $_SESSION['rol_nombre'] = $usuario['nombre_rol'];
+        $_SESSION['rol'] = $usuario['nombre_rol'];
+        $_SESSION['usuario_rol'] = $usuario['nombre_rol'];
         $_SESSION['nivel_privilegio'] = (int) $usuario['nivel_privilegio'];
 
         try {

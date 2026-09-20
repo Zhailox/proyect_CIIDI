@@ -33,17 +33,27 @@ class AdminUsuarioModel {
             ->first();
     }
 
-    // Obtiene a todo el personal docente (por nivel de privilegio docente/profesor)
+    // Obtiene a todo el personal docente (por nivel de privilegio docente/profesor o coincidencia de rol)
     public function obtenerProfesores() {
-        $qb = new QueryBuilder(); // <-- 2. Instancia nueva y limpia
-        
-        return $qb->tabla('usuarios u')
-            ->select('u.id, u.cedula, u.nombre_completo, u.email, u.activo')
-            ->join('roles r', 'u.id_rol = r.id')
-            ->join('privilegios p', 'r.privilegio_id = p.privilegio_id')
-            ->where('p.nivel_privilegio', '=', 2)
-            ->orderBy('u.nombre_completo', 'ASC')
-            ->get();
+        $db = Connection::getInstance();
+        $sql = "
+            SELECT u.id, u.cedula, u.nombre_completo, u.email, u.activo, r.nombre AS rol_nombre
+            FROM usuarios u
+            INNER JOIN roles r ON u.id_rol = r.id
+            INNER JOIN privilegios p ON r.privilegio_id = p.privilegio_id
+            WHERE p.nivel_privilegio > 0 
+              AND (
+                  p.nivel_privilegio = 2 
+                  OR LOWER(r.nombre) LIKE '%profe%' 
+                  OR LOWER(r.nombre) LIKE '%docent%'
+                  OR LOWER(r.nombre) LIKE '%tutor%'
+              )
+              AND u.cedula NOT LIKE '%_x%'
+            ORDER BY u.nombre_completo ASC
+        ";
+        $stmt = $db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
     }
     // Obtiene todos los roles disponibles para el select de edición
     // Obtiene todos los roles disponibles para el select de edición

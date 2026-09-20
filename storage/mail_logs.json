@@ -1,5 +1,15 @@
 [
     {
+        "id": "mail_6ab04495d1751",
+        "fecha": "2026-09-20 20:39:49",
+        "destino_email": "andrusramirez2020@gmail.com",
+        "destino_nombre": "Administrador de Prueba",
+        "asunto": "Prueba de Conexión SMTP - CIIDI UPTTMBI",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
+    },
+    {
         "id": "mail_6aaf130125686",
         "fecha": "2026-09-19 22:56:01",
         "destino_email": "676767@gmail.com",

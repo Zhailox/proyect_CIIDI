@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // modules/VinculacionEmpresarial/index.php
 
 require_once CORE_PATH . 'Interfaces/ModuleContract.php';

@@ -55,8 +55,171 @@ if (isset($privilegios)) {
 ?>
 
 
+<style>
+/* Estilos explícitos garantizados para Pestañas (Tabs) y Selectores */
+.sa-tabs-header {
+    display: flex !important;
+    gap: 0.5rem !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    margin-bottom: 1.5rem !important;
+    background: #ffffff !important;
+    padding: 8px !important;
+    border-radius: var(--radius-sm, 8px) !important;
+    border: 1px solid rgba(80, 89, 132, 0.15) !important;
+}
+
+.sa-tab-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 10px 18px !important;
+    border-radius: 8px !important;
+    border: 1px solid transparent !important;
+    background: transparent !important;
+    color: #64748b !important;
+    font-weight: 700 !important;
+    font-size: 0.88rem !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    transition: all 0.2s ease !important;
+}
+
+.sa-tab-btn i {
+    font-size: 1.1rem !important;
+}
+
+.sa-tab-btn:hover {
+    color: #121a3e !important;
+    background: rgba(112, 144, 203, 0.12) !important;
+}
+
+.sa-tab-btn.tab-active, .sa-tab-btn.active {
+    background: #121a3e !important;
+    color: #ffffff !important;
+    border-color: #121a3e !important;
+    box-shadow: 0 4px 14px rgba(18, 26, 62, 0.25) !important;
+}
+
+.sa-tab-btn.tab-active i, .sa-tab-btn.active i {
+    color: #ffffff !important;
+}
+
+/* Input y Select Búsqueda / Form Filter */
+input.sa-filter-input, input[type="text"].sa-filter-input, input[type="email"].sa-filter-input, input[type="password"].sa-filter-input {
+    background-color: #ffffff !important;
+    border: 1px solid rgba(80, 89, 132, 0.3) !important;
+    color: #121a3e !important;
+    font-weight: 600 !important;
+    font-size: 0.88rem !important;
+    border-radius: 6px !important;
+    padding: 8px 14px !important;
+    outline: none !important;
+    box-shadow: none !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+input.sa-filter-input:focus, input[type="text"].sa-filter-input:focus {
+    border-color: #7090cb !important;
+    box-shadow: 0 0 0 3px rgba(112, 144, 203, 0.2) !important;
+}
+
+select.sa-filter-input, select.ag-input, select {
+    background-color: #ffffff !important;
+    border: 1px solid rgba(80, 89, 132, 0.3) !important;
+    color: #121a3e !important;
+    font-weight: 700 !important;
+    font-size: 0.88rem !important;
+    border-radius: 6px !important;
+    padding: 8px 36px 8px 14px !important;
+    outline: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23505984%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 12px top 50% !important;
+    background-size: 10px auto !important;
+    cursor: pointer !important;
+}
+
+select.sa-filter-input option, select option {
+    background-color: #ffffff !important;
+    color: #121a3e !important;
+    font-weight: 600 !important;
+    padding: 8px !important;
+}
+
+/* Grilla de Docentes */
+.gestor-teachers-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+    gap: 1.25rem !important;
+    margin-top: 1rem !important;
+}
+
+.gestor-teacher-card {
+    background: #ffffff !important;
+    border: 1px solid rgba(80, 89, 132, 0.2) !important;
+    border-radius: 10px !important;
+    padding: 1.25rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    box-shadow: 0 4px 12px rgba(18, 26, 62, 0.04) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.gestor-teacher-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 20px rgba(18, 26, 62, 0.08) !important;
+    border-color: rgba(112, 144, 203, 0.4) !important;
+}
+
+.gestor-teacher-avatar {
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 50% !important;
+    background: #121a3e !important;
+    color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 800 !important;
+    font-size: 1.2rem !important;
+    flex-shrink: 0 !important;
+}
+
+.gestor-teacher-info {
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+.gestor-teacher-name {
+    margin: 0 !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    color: #121a3e !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.gestor-teacher-cedula {
+    display: block !important;
+    font-size: 0.8rem !important;
+    color: #64748b !important;
+    margin-top: 2px !important;
+    font-weight: 600 !important;
+}
+
+.gestor-teacher-remove i {
+    font-size: 1.4rem !important;
+}
+</style>
+
 <!-- NAVEGACIÓN INTERNA EN PESTAÑAS (TABS) PARA SECCIONAR RESPONSABILIDADES -->
-<div class="sa-tabs-header glass-panel mb-2" style="background: #ffffff; padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(80,89,132,0.15);">
+<div class="sa-tabs-header glass-panel mb-2">
     <button class="sa-tab-btn tab-active" onclick="switchUserTab('tab-comunidad', this)">
         <i class="ph-bold ph-users"></i> Comunidad de Usuarios (<?= count($todosLosUsuarios) ?>)
     </button>

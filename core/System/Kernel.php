@@ -1,427 +1,96 @@
 <?php
 // core/System/Kernel.php
+
 require_once CORE_PATH . 'Interfaces/ModuleContract.php';
+require_once CORE_PATH . 'Security/SessionManager.php';
+require_once CORE_PATH . 'Security/EmergencyRescueService.php';
+require_once CORE_PATH . 'Security/AuditLogger.php';
+require_once CORE_PATH . 'Installer/InstallerHook.php';
+require_once CORE_PATH . 'Services/MaintenanceService.php';
+require_once CORE_PATH . 'System/ModuleLoader.php';
+require_once CORE_PATH . 'System/AssetResolver.php';
+require_once CORE_PATH . 'Http/FeatureFlagMiddleware.php';
+require_once CORE_PATH . 'Http/Router.php';
+require_once CORE_PATH . 'Http/Dispatcher.php';
 
 class Kernel {
-    
-    private $rutasGlobales = [];
-    private $modulosInstalados = [];
-    private $menuGlobal = []; // NUEVO: Aquí guardaremos el menú de todos los módulos
+    private SessionManager $sessionManager;
+    private InstallerHook $installerHook;
+    private MaintenanceService $maintenanceService;
+    private ModuleLoader $moduleLoader;
+    private AssetResolver $assetResolver;
+    private FeatureFlagMiddleware $featureFlagMiddleware;
+    private Router $router;
+    private Dispatcher $dispatcher;
 
     public function __construct() {
+        $this->sessionManager = new SessionManager();
+        $this->installerHook = new InstallerHook();
+        $this->maintenanceService = new MaintenanceService();
+        $this->moduleLoader = new ModuleLoader();
+        $this->assetResolver = new AssetResolver();
+        $this->featureFlagMiddleware = new FeatureFlagMiddleware();
+        $this->router = new Router();
+        $this->dispatcher = new Dispatcher($this);
+
         $archivo_candado = __DIR__ . '/../../storage/installed.lock';
         if (file_exists($archivo_candado)) {
-            $this->cargarModulos();
+            $this->moduleLoader->loadModules();
         }
     }
 
-    private function cargarModulos() {
-        $carpetas = array_diff(scandir(MODULES_PATH), array('.', '..'));
-        
-        // 1. Leemos el archivo de configuración y estados del sistema
-        // Soporta la transición retrocompatible desde modules.json a config_system.json
-        $archivo_config = __DIR__ . '/../../storage/config_system.json';
-        $archivo_legacy = __DIR__ . '/../../storage/modules.json';
-        
-        $config = [];
-        if (file_exists($archivo_config)) {
-            $config = json_decode(file_get_contents($archivo_config), true) ?: [];
-        } elseif (file_exists($archivo_legacy)) {
-            $legacy = json_decode(file_get_contents($archivo_legacy), true) ?: [];
-            $config = ['modulos' => [], 'rutas' => []];
-            foreach ($legacy as $mod => $est) {
-                $config['modulos'][$mod] = ['estado' => $est];
-            }
-        }
-        
-        $estadosModulos = $config['modulos'] ?? [];
-        
-        foreach ($carpetas as $carpeta) {
-            // 2. Verificamos el estado del módulo (Autenticacion y SuperAdmin nunca se apagan)
-            $modConfig = $estadosModulos[$carpeta] ?? ['estado' => 'online'];
-            $estadoActual = is_array($modConfig) ? ($modConfig['estado'] ?? 'online') : $modConfig;
-            $esCore = in_array($carpeta, ['Autenticacion', 'SuperAdmin']);
-            
-            if ($estadoActual === 'offline' && !$esCore) {
-                continue; // El Kernel ignora la carpeta si el módulo está totalmente desactivado
-            }
+    public function run(): void {
+        $this->sessionManager->start();
 
-            $ruta_index_modulo = MODULES_PATH . $carpeta . '/index.php';
-            
-            if (file_exists($ruta_index_modulo)) {
-                $modulo = require_once $ruta_index_modulo;
-                
-                if ($modulo instanceof ModuleContract) {
-                    $this->modulosInstalados[$carpeta] = $modulo;
-                    $this->rutasGlobales = array_merge($this->rutasGlobales, $modulo->getRutas());
-                    
-                    $config_menu_modulo = $modulo->getMenuConfig();
-                    if (!empty($config_menu_modulo)) {
-                        $this->menuGlobal = array_merge($this->menuGlobal, $config_menu_modulo);
-                    }
-                }
-            }
+        $ruta = $_GET['ruta'] ?? 'inicio';
+
+        // 1. Intercepción por Instalación Autónoma
+        if ($this->installerHook->intercept($ruta)) {
+            return;
         }
+
+        // 2. Intercepción por Ventanas de Mantenimiento
+        if ($this->maintenanceService->intercept($ruta)) {
+            return;
+        }
+
+        // 3. Intercepción por Feature Flags (Modo Offline / Solo Lectura)
+        if ($this->featureFlagMiddleware->intercept($ruta)) {
+            return;
+        }
+
+        // 4. Enrutamiento y Ejecución MVC
+        $rutasGlobales = $this->moduleLoader->getRutasGlobales();
+        $match = $this->router->resolve($ruta, $rutasGlobales);
+
+        $this->dispatcher->dispatch(
+            $ruta,
+            $match,
+            $this->moduleLoader->getModulosInstalados(),
+            $this->moduleLoader->getMenuGlobal(),
+            $this->assetResolver
+        );
     }
 
-    public function run() {
-       if (session_status() === PHP_SESSION_NONE) {
-            // Mitiga fijación de sesión (Session Fixation)
-            ini_set('session.use_strict_mode', '1'); 
-            
-            // Configuración segura de cookies de sesión
-            session_set_cookie_params([
-                'lifetime' => 0,
-                'path' => '/',
-                'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'), // cookie_secure
-                'httponly' => true, // cookie_httponly: Bloquea lectura desde JS (XSS)
-                'samesite' => 'Lax' // cookie_samesite: Bloquea envío cruzado (CSRF)
-            ]);
-            
-            session_start();
-        }
-        $ruta = isset($_GET['ruta']) ? $_GET['ruta'] : 'inicio';
+    // Métodos delegados para mantener retrocompatibilidad total con SuperAdmin y Vistas
 
-        // --- DISPARADOR DEL ASISTENTE DE INSTALACIÓN AUTÓNOMA (CORE INSTALLER HOOK) ---
-        $archivo_candado = __DIR__ . '/../../storage/installed.lock';
-        $rutasInstalador = ['install', 'installer-test-db', 'installer-create-db', 'installer-run'];
-
-        if (!file_exists($archivo_candado)) {
-            // Si el sistema no está instalado, redirigir cualquier petición al Wizard de instalación
-            require_once CORE_PATH . 'Installer/InstallerController.php';
-            $installerController = new InstallerController();
-
-            if ($ruta === 'installer-test-db') {
-                $installerController->testConnectionAjax();
-                exit;
-            } elseif ($ruta === 'installer-create-db') {
-                $installerController->createDbAjax();
-                exit;
-            } elseif ($ruta === 'installer-run') {
-                $installerController->installSystemAjax();
-                exit;
-            } else {
-                $datosVista = $installerController->index();
-                extract($datosVista);
-                require_once CORE_PATH . 'Installer/views/wizard.php';
-                exit;
-            }
-        } elseif (in_array($ruta, $rutasInstalador)) {
-            // Si la aplicación ya está instalada y alguien intenta acceder a /install, bloquear
-            header("Location: login");
-            exit;
-        }
-
-        $archivo_mantenimiento = __DIR__ . '/../../storage/maintenance.json';
-        if (file_exists($archivo_mantenimiento)) {
-            $dataMantenimiento = json_decode(file_get_contents($archivo_mantenimiento), true) ?: [];
-            $ahora = time();
-            $cambioArchivo = false;
-
-            // 1. Revisar la agenda para auto-activar o sincronizar la ventana más cercana
-            $agenda = $dataMantenimiento['agenda'] ?? [];
-            $mantMasCercano = null;
-            $hayActivoEnAgenda = false;
-
-            foreach ($agenda as &$item) {
-                $inicioTs = strtotime($item['fecha_inicio'] ?? '');
-                $finTs = strtotime($item['fecha_fin'] ?? '');
-
-                if ($inicioTs && $finTs) {
-                    if ($inicioTs <= $ahora && $finTs > $ahora) {
-                        $item['activo'] = true;
-                        $item['programado'] = false;
-                        $hayActivoEnAgenda = true;
-                        $mantMasCercano = $item;
-                    } elseif ($inicioTs > $ahora) {
-                        $item['activo'] = false;
-                        $item['programado'] = true;
-                        if ($mantMasCercano === null || $inicioTs < strtotime($mantMasCercano['fecha_inicio'])) {
-                            $mantMasCercano = $item;
-                        }
-                    } else {
-                        $item['activo'] = false;
-                        $item['programado'] = false;
-                    }
-                }
-            }
-
-            // Sincronizar estado principal si proviene de una ventana agendada
-            if ($hayActivoEnAgenda && empty($dataMantenimiento['activo'])) {
-                $dataMantenimiento['activo'] = true;
-                $dataMantenimiento['fecha_inicio'] = $mantMasCercano['fecha_inicio'];
-                $dataMantenimiento['fecha_fin'] = $mantMasCercano['fecha_fin'];
-                $dataMantenimiento['mensaje'] = $mantMasCercano['mensaje'];
-                $cambioArchivo = true;
-            } elseif (!$hayActivoEnAgenda && !empty($dataMantenimiento['activo']) && !empty($dataMantenimiento['fecha_fin']) && strtotime($dataMantenimiento['fecha_fin']) <= $ahora) {
-                $dataMantenimiento['activo'] = false;
-                $cambioArchivo = true;
-            }
-
-            if (!empty($mantMasCercano) && empty($dataMantenimiento['activo'])) {
-                if (($dataMantenimiento['fecha_inicio'] ?? '') !== $mantMasCercano['fecha_inicio']) {
-                    $dataMantenimiento['fecha_inicio'] = $mantMasCercano['fecha_inicio'];
-                    $dataMantenimiento['fecha_fin'] = $mantMasCercano['fecha_fin'];
-                    $dataMantenimiento['mensaje'] = $mantMasCercano['mensaje'];
-                    $cambioArchivo = true;
-                }
-            }
-
-            if ($cambioArchivo) {
-                $dataMantenimiento['agenda'] = $agenda;
-                file_put_contents($archivo_mantenimiento, json_encode($dataMantenimiento, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-            }
-
-            if (isset($dataMantenimiento['activo']) && $dataMantenimiento['activo'] === true) {
-                // En el sistema, nivel_privilegio <= 2 representa privilegios administrativos/gestión (0 es SuperAdmin)
-                $esAdmin = isset($_SESSION['nivel_privilegio']) && (int)$_SESSION['nivel_privilegio'] <= 2;
-                $rutasPermitidas = ['login', 'procesar-login', 'cerrar-sesion', 'captcha-imagen'];
-                
-                if (!$esAdmin && !in_array($ruta, $rutasPermitidas)) {
-                    $mensajeCustom = !empty($dataMantenimiento['mensaje']) ? $dataMantenimiento['mensaje'] : "Estamos realizando labores de optimización. Vuelve en un momento.";
-                    $fechaFinMantenimiento = $dataMantenimiento['fecha_fin'] ?? null;
-                    
-                    http_response_code(503);
-                    require_once CORE_VIEWS . 'mantenimiento.php';
-                    exit;
-                }
-            }
-        }
-        
-        // --- MIDDLEWARE: CONTROL GRANULAR DE RUTAS Y MÓDULOS (Feature Flags) ---
-        $esSuperAdmin = isset($_SESSION['nivel_privilegio']) && (int)$_SESSION['nivel_privilegio'] >= 3;
-        
-        // Excluimos del chequeo del middleware las rutas esenciales del sistema y del SuperAdmin
-        $rutasEsenciales = ['login', 'procesar-login', 'cerrar-sesion', 'sudoadmin', 'gestor-modulos', 'alternar-modulo', 'alternar-estado-ruta', 'gestor-usuarios', 'visor-logs'];
-
-        if ($ruta !== 'inicio' && !in_array($ruta, $rutasEsenciales)) {
-            $archivo_config = __DIR__ . '/../../storage/config_system.json';
-            if (file_exists($archivo_config)) {
-                $configSistema = json_decode(file_get_contents($archivo_config), true) ?: [];
-                $rutasConfig = $configSistema['rutas'] ?? [];
-                
-                if (isset($rutasConfig[$ruta])) {
-                    $estadoRuta = $rutasConfig[$ruta]['estado'] ?? 'online'; // online | offline | solo_lectura
-                    $mensajeRutaDeshabilitada = $rutasConfig[$ruta]['mensaje'] ?? 'Esta funcionalidad se encuentra temporalmente deshabilitada por el administrador.';
-                    
-                    // 1. Ruta Desactivada por Completo
-                    if ($estadoRuta === 'offline') {
-                        $modoRuta = 'desactivado';
-                        require_once CORE_VIEWS . 'deshabilitado.php';
-                        exit;
-                    }
-                    
-                    // 2. Ruta en Modo Solo Lectura (Desactiva métodos de modificación POST/PUT/DELETE)
-                    if ($estadoRuta === 'solo_lectura' && $_SERVER['REQUEST_METHOD'] !== 'GET') {
-                        $modoRuta = 'solo_lectura';
-                        $mensajeRutaDeshabilitada = !empty($rutasConfig[$ruta]['mensaje']) 
-                            ? $rutasConfig[$ruta]['mensaje'] 
-                            : 'El sistema se encuentra en modo Solo Lectura para esta función. No se permiten modificaciones en este momento.';
-                        require_once CORE_VIEWS . 'deshabilitado.php';
-                        exit;
-                    }
-                }
-            }
-        }
-        
-        $css_modulo = []; 
-        $titulo_pagina = 'CIIDI';
-
-        // 1. NATIVA: Interceptamos la ruta de inicio para que la maneje el Core
-        if ($ruta === 'inicio') {
-            $vista_modulo_path = CORE_VIEWS . 'home_bienvenida.php';
-            $titulo_pagina     = 'Inicio - Sistema Integral UPTTMBI';
-            $layout_config     = ['header' => true, 'sidebar' => true, 'footer' => true];
-            // Recolectamos el CSS de las franjas personalizadas de los módulos
-            $css_modulo        = $this->getHomeCss(); 
-        } 
-        // 2. DINÁMICA: Buscamos en las rutas de los módulos
-        elseif (array_key_exists($ruta, $this->rutasGlobales)) {
-            $configRuta = $this->rutasGlobales[$ruta];
-            
-            $titulo_pagina = $configRuta['titulo'] ?? 'Sistema Integral';
-            $layout_config = $configRuta['layout'] ?? ['header' => true, 'sidebar' => true, 'footer' => true];
-            $vista_modulo_path = $configRuta['vista'] ?? null;
-            
-            // MAGIA MVC: Si la ruta tiene un controlador, lo ejecutamos primero
-            if (isset($configRuta['controlador']) && isset($configRuta['controlador_path'])) {
-                require_once $configRuta['controlador_path'];
-                $claseControlador = $configRuta['controlador'];
-                $metodo = $configRuta['metodo'];
-                
-                $instancia = new $claseControlador();
-                $datosVista = $instancia->$metodo();
-                
-                // Si el controlador devuelve variables, las "desempaquetamos" para que la vista las use
-                if (is_array($datosVista)) {
-                    extract($datosVista);
-                } 
-                // Si el controlador no devuelve nada (ej. hizo una redirección), detenemos el renderizado
-                elseif ($datosVista === false) {
-                    exit;
-                }
-            }
-            
-            $css_declarados = $configRuta['css'] ?? [];
-            foreach ($css_declarados as $archivo_css) {
-                foreach ($this->modulosInstalados as $nombre_carpeta => $instancia) {
-                    if (array_key_exists($ruta, $instancia->getRutas())) {
-                        $css_modulo[] = '../modules/' . $nombre_carpeta . '/assets/css/' . $archivo_css;
-                        break;
-                    }
-                }
-            }
-
-            $js_modulo = [];
-            $js_declarados = $configRuta['js'] ?? [];
-            foreach ($js_declarados as $archivo_js) {
-                foreach ($this->modulosInstalados as $nombre_carpeta => $instancia) {
-                    if (array_key_exists($ruta, $instancia->getRutas())) {
-                        $js_modulo[] = '../modules/' . $nombre_carpeta . '/assets/js/' . $archivo_js;
-                        break;
-                    }
-                }
-            }
-        }
-        // 3. ERROR 404
-        else {
-            http_response_code(404);
-            $vista_modulo_path = CORE_VIEWS . '404.php';
-            $titulo_pagina     = '404 - Página No Encontrada';
-            $layout_config     = ['header' => true, 'sidebar' => true, 'footer' => true];
-        }
-
-        $menu_dinamico = $this->menuGlobal; 
-
-        if (file_exists(CORE_VIEWS . 'master.php')) {
-            include CORE_VIEWS . 'master.php';
-        } else {
-            http_response_code(500);
-            if (class_exists('Connection')) {
-                Connection::logSystemError(new Exception("Fallo Crítico: No se encuentra la plantilla maestra en " . CORE_VIEWS . 'master.php'));
-            }
-            echo "<div style='padding:40px;text-align:center;font-family:sans-serif;'><h2>Error 500: Plantilla del sistema no encontrada</h2></div>";
-            exit;
-        }
-    }
     public function getInfoModulosAdmin(): array {
-        $infoModulos = [];
-        
-        $modulosIntocables = [
-            'SuperAdmin', // El nombre exacto que devuelve getNombre() en su index.php
-            'Autenticacion'
-        ];
-        
-        foreach ($this->modulosInstalados as $nombre => $instancia) {
-            $menu = $instancia->getMenuConfig();
-            $icono = (!empty($menu) && isset($menu[0]['icono'])) ? $menu[0]['icono'] : 'ph ph-gear';
-            
-            $descripcion = method_exists($instancia, 'getDescripcion') ? $instancia->getDescripcion() : 'Módulo del sistema.';
-            $dependencias = method_exists($instancia, 'getDependencias') ? $instancia->getDependencias() : [];
-            
-            // 2. Comparamos el nombre actual contra nuestra lista de intocables
-            $esCore = in_array($nombre, $modulosIntocables);
-            
-            $infoModulos[] = [
-                'id' => $nombre,
-                'nombre' => $nombre,
-                'icono' => $icono,
-                'descripcion' => $descripcion,
-                'es_core' => $esCore,
-                'estado' => 'online',
-                'dependencias_count' => count($dependencias),
-                'nombres_dependencias' => implode(', ', $dependencias)
-            ];
-        }
-        
-        return $infoModulos;
+        return $this->moduleLoader->getInfoModulosAdmin();
     }
+
     public function getTarjetasInicio(): array {
-        $tarjetas = [];
-        
-        foreach ($this->modulosInstalados as $modulo) {
-            // Verificamos por seguridad que el método exista (por si algún módulo viejo no lo tiene aún)
-            if (method_exists($modulo, 'getHomeConfig')) {
-                $config = $modulo->getHomeConfig();
-                
-                // Si el módulo envió configuración (no está vacío), lo agregamos al inicio
-                if (!empty($config)) {
-                    $tarjetas[] = $config;
-                }
-            }
-        }
-        
-        return $tarjetas;
+        return $this->assetResolver->getTarjetasInicio($this->moduleLoader->getModulosInstalados());
     }
-    // Agrega este método al final de Kernel.php
+
     public function getControlesHeader(): array {
-        $controles = [];
-        
-        foreach ($this->modulosInstalados as $modulo) {
-            if (method_exists($modulo, 'getHeaderConfig')) {
-                $config = $modulo->getHeaderConfig();
-                
-                if (!empty($config)) {
-                    // Verificamos si el módulo devuelve un solo control o un arreglo de varios
-                    if (isset($config['tipo'])) {
-                        $controles[] = $config;
-                    } else {
-                        foreach ($config as $subConfig) {
-                            $controles[] = $subConfig;
-                        }
-                    }
-                }
-            }
-        }
-        
-        // MAGIA DE ORDENAMIENTO: Ordenamos el arreglo basándonos en la llave 'orden'
-        usort($controles, function($a, $b) {
-            // Si el elemento no tiene la llave 'orden', le damos un peso de 50 (al medio)
-            $pesoA = $a['orden'] ?? 50; 
-            $pesoB = $b['orden'] ?? 50;
-            
-            // Operador de nave espacial (<=>) compara y ordena de menor a mayor
-            return $pesoA <=> $pesoB;
-        });
-        
-        return $controles;
+        return $this->assetResolver->getControlesHeader($this->moduleLoader->getModulosInstalados());
     }
+
     public function getGlobalCss(): array {
-        $cssGlobales = [];
-        
-        // Extraemos la llave $carpeta para armar la ruta
-        foreach ($this->modulosInstalados as $carpeta => $modulo) {
-            if (method_exists($modulo, 'getHeaderConfig')) {
-                $config = $modulo->getHeaderConfig();
-                
-                if (!empty($config)) {
-                    // Verificamos si el módulo envió 1 solo control o una lista de varios
-                    $controles = isset($config['tipo']) ? [$config] : $config;
-                    
-                    foreach ($controles as $control) {
-                        if (isset($control['css'])) {
-                            // Generamos la ruta absoluta automática hacia el CSS
-                            $cssGlobales[] = '../modules/' . $carpeta . '/assets/css/' . $control['css'];
-                        }
-                    }
-                }
-            }
-        }
-        
-        return array_unique($cssGlobales);
+        return $this->assetResolver->getGlobalCss($this->moduleLoader->getModulosInstalados());
     }
-    #Esta vaina agarra el css específicamente para la pantalla de inicio
+
     public function getHomeCss(): array {
-        $cssHome = [];
-        foreach ($this->modulosInstalados as $carpeta => $modulo) {
-            if (method_exists($modulo, 'getHomeConfig')) {
-                $config = $modulo->getHomeConfig();
-                // Si el módulo declara una vista custom para el inicio y tiene CSS propio
-                if (!empty($config) && isset($config['css'])) {
-                    $cssHome[] = '../modules/' . $carpeta . '/assets/css/' . $config['css'];
-                }
-            }
-        }
-        return array_unique($cssHome);
+        return $this->assetResolver->getHomeCss($this->moduleLoader->getModulosInstalados());
     }
 }
