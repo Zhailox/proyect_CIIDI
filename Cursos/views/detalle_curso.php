@@ -1,7 +1,8 @@
 <?php
 // modules/Cursos/views/detalle_curso.php
 $titulo      = htmlspecialchars($curso['titulo']);
-$descripcion = nl2br(htmlspecialchars($curso['descripcion'] ?? ''));
+$descripcion = nl2br(htmlspecialchars(trim($curso['descripcion'] ?? '')));
+$descripcion = preg_replace('/^(?:<br\s*\/?>|\s)+/i', '', $descripcion);
 $docente     = htmlspecialchars($curso['nombre_docente'] ?? 'Sin asignar');
 $modalidad   = htmlspecialchars($curso['modalidad'] ?? 'Virtual');
 $nivel_c     = htmlspecialchars($curso['nivel'] ?? 'Básico');
@@ -76,10 +77,8 @@ $url_moodle = !empty($curso['url_moodle']) ? htmlspecialchars($curso['url_moodle
 
     <div style="display: flex; gap: 3rem; flex-wrap: wrap;">
         <div class="cur-detail-desc" style="flex: 2; min-width: 300px; background: #fff; border-radius: 24px; padding: 3rem; box-shadow: 0 10px 30px rgba(0,0,0,0.03);">
-            <h3 style="margin-bottom: 1.5rem; font-size: 1.8rem; font-weight: 800; color: #111827; border-bottom: 2px solid #F3F4F6; padding-bottom: 1rem;">Acerca de este curso</h3>
-            <div style="font-size: 1.1rem; line-height: 1.8; color: #374151;">
-                <?= $descripcion ?>
-            </div>
+            <h3 style="margin: 0; font-size: 1.8rem; font-weight: 800; color: #111827; border-bottom: 2px solid #F3F4F6; padding-bottom: 0.2rem;">Acerca de este curso</h3>
+            <div style="font-size: 1.1rem; line-height: 1.5; color: #374151; margin-top: 0.2rem; padding-top: 0;"><?= $descripcion ?></div>
         </div>
 
         <?php if (!empty($vpreview)): ?>

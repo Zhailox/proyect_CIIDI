@@ -163,7 +163,9 @@ class PromoController {
 
         $titulo      = $this->limpiarTexto($_POST['titulo']      ?? '', 255);
         $descripcion = $this->limpiarTexto($_POST['descripcion'] ?? '', 5000);
-        $duracion    = $this->limpiarTexto($_POST['duracion']    ?? '', 80);
+        $duracion_num = (int)($_POST['duracion_numero'] ?? 0);
+        $duracion_tipo = in_array($_POST['duracion_tipo'] ?? '', ['horas', 'semanas']) ? $_POST['duracion_tipo'] : 'horas';
+        $duracion = $duracion_num > 0 ? $duracion_num . ' ' . $duracion_tipo : '';
 
         if (empty($titulo)) {
             $_SESSION['cur_form_error'] = 'El título del curso es obligatorio.';
@@ -325,7 +327,9 @@ class PromoController {
 
         $titulo      = $this->limpiarTexto($_POST['titulo']      ?? '', 255);
         $descripcion = $this->limpiarTexto($_POST['descripcion'] ?? '', 5000);
-        $duracion    = $this->limpiarTexto($_POST['duracion']    ?? '', 80);
+        $duracion_num = (int)($_POST['duracion_numero'] ?? 0);
+        $duracion_tipo = in_array($_POST['duracion_tipo'] ?? '', ['horas', 'semanas']) ? $_POST['duracion_tipo'] : 'horas';
+        $duracion = $duracion_num > 0 ? $duracion_num . ' ' . $duracion_tipo : '';
 
         if (empty($titulo)) {
             $_SESSION['cur_form_error'] = 'El título del curso es obligatorio.';

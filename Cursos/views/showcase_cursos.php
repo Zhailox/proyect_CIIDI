@@ -27,7 +27,7 @@ if ($busqueda) $url_params .= "&busqueda=$busqueda";
 if ($f_modalidad) $url_params .= "&modalidad=$f_modalidad";
 if ($f_nivel) $url_params .= "&nivel=$f_nivel";
 ?>
-<div class="cur-wrapper" style="max-width: 1300px; margin: 0 auto;">
+<div style="padding: 1.5rem 2.2rem 3.5rem 2.2rem; width: 100%; box-sizing: border-box;">
     <section class="landing-hero-modern" style="margin-bottom: 3rem; border-radius: 32px; overflow: hidden; box-shadow: 0 20px 40px rgba(80,89,132,0.25); background: linear-gradient(135deg, rgba(80,89,132,0.97) 0%, rgba(112,144,203,0.93) 100%); border: none;">
         <canvas id="landingCanvasBg" class="landing-hero-canvas"></canvas>
 
@@ -72,8 +72,9 @@ if ($f_nivel) $url_params .= "&nivel=$f_nivel";
         </div>
     </section>
 
+    <div class="cur-wrapper" style="max-width: 1300px; margin: 0 auto;">
         <!-- BARRA DE FILTROS HORIZONTAL -->
-    <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid #F3F4F6; margin-bottom: 2rem;">
+        <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid #F3F4F6; margin-bottom: 2rem;">
         <form method="GET" action="" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
             <input type="hidden" name="ruta" value="cursos">
             <?php if ($busqueda): ?><input type="hidden" name="busqueda" value="<?= $busqueda ?>"><?php endif; ?>
@@ -187,6 +188,7 @@ if ($f_nivel) $url_params .= "&nivel=$f_nivel";
             <?php endif; ?>
         </div>
     </div>
+</div>
 </div>
 
 <!-- Script animacion canvas del inicio -->

@@ -30,6 +30,12 @@ $m_moodle   = htmlspecialchars($curso['url_moodle'] ?? '');
 $m_modal    = $curso['modalidad']    ?? 'Virtual';
 $m_nivel    = $curso['nivel']        ?? 'Básico';
 $m_duracion = htmlspecialchars($curso['duracion'] ?? '');
+$m_duracion_num = '';
+$m_duracion_tipo = 'horas';
+if (preg_match('/^(\d+)\s*(.*)$/', $curso['duracion'] ?? '', $matches)) {
+    $m_duracion_num = $matches[1];
+    $m_duracion_tipo = (stripos($matches[2], 'semana') !== false) ? 'semanas' : 'horas';
+}
 $m_cupo     = (int)($curso['cupo_maximo'] ?? 0);
 
 $f_f_inicio = $curso['fecha_inicio'] ?? '';
@@ -98,7 +104,7 @@ $f_est_insc = $curso['estado_inscripcion'] ?? 'Abierta';
                     <div style="position:relative;">
                         <i class="ph-bold ph-chalkboard-teacher" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
                         <?php
-                            $nombre_docente_actual = $usuario_actual['nombre'] . ' ' . $usuario_actual['apellido'];
+                            $nombre_docente_actual = $usuario_actual['nombre_completo'] ?? trim(($usuario_actual['nombre'] ?? '') . ' ' . ($usuario_actual['apellido'] ?? ''));
                             if ($es_editar) {
                                 foreach ($docentes as $doc) {
                                     if ($doc['id'] == $f_docente) {
@@ -164,8 +170,13 @@ $f_est_insc = $curso['estado_inscripcion'] ?? 'Abierta';
                 <!-- Panel: Subir archivo -->
                 <div id="panel-archivo" style="margin-bottom:1rem;">
                     <label id="label-portada" style="display:block; border:2px dashed var(--cur-border); border-radius:12px; padding:2rem; text-align:center; cursor:pointer; background:#F8FAFC; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--cur-primary)';" onmouseout="this.style.borderColor='var(--cur-border)';">
-                        <i class="ph-fill ph-upload-simple" style="font-size:2.5rem; color:var(--cur-muted); margin-bottom:0.8rem; display:block;" id="upload-icon"></i>
-                        <img id="img-preview" src="" style="display:none; max-width:100%; max-height:200px; border-radius:8px; margin:0 auto 1rem;" />
+                        <?php if(!empty($f_img)): ?>
+                            <i class="ph-fill ph-upload-simple" style="font-size:2.5rem; color:var(--cur-muted); margin-bottom:0.8rem; display:none;" id="upload-icon"></i>
+                            <img id="img-preview" src="<?= $f_img ?>" style="display:block; max-width:100%; max-height:200px; border-radius:8px; margin:0 auto 1rem;" />
+                        <?php else: ?>
+                            <i class="ph-fill ph-upload-simple" style="font-size:2.5rem; color:var(--cur-muted); margin-bottom:0.8rem; display:block;" id="upload-icon"></i>
+                            <img id="img-preview" src="" style="display:none; max-width:100%; max-height:200px; border-radius:8px; margin:0 auto 1rem;" />
+                        <?php endif; ?>
                         <strong style="color:var(--cur-primary);">Seleccionar Imagen</strong>
                         <div style="font-size:0.85rem; color:var(--cur-muted); margin-top:0.4rem;">Formatos: <strong>.jpg, .png, .webp, .gif</strong> — Máx <?= $img_max_mb ?>MB</div>
                         <input type="file" name="imagen_portada_file" id="portada" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;" onchange="validarArchivoImagen(this)">
@@ -233,10 +244,19 @@ $f_est_insc = $curso['estado_inscripcion'] ?? 'Abierta';
                 </div>
 
                 <div>
-                    <label for="duracion" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Duración (Horas/Semanas)</label>
-                    <div style="position:relative;">
-                        <i class="ph-bold ph-clock" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
-                        <input type="text" id="duracion" name="duracion" value="<?= $m_duracion ?>" placeholder="Ej: 40 horas académicas" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                    <label for="duracion_numero" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Duración</label>
+                    <div style="display:flex; gap:0.5rem;">
+                        <div style="position:relative; flex:1;">
+                            <i class="ph-bold ph-clock" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                            <input type="number" id="duracion_numero" name="duracion_numero" value="<?= $m_duracion_num ?>" placeholder="Ej: 40" min="1" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s; box-sizing:border-box;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                        </div>
+                        <div style="position:relative; flex:1;">
+                            <select id="duracion_tipo" name="duracion_tipo" style="width:100%; padding:1rem 2.5rem 1rem 1rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer; background:#fff; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                                <option value="horas" <?= $m_duracion_tipo === 'horas' ? 'selected' : '' ?>>Horas</option>
+                                <option value="semanas" <?= $m_duracion_tipo === 'semanas' ? 'selected' : '' ?>>Semanas</option>
+                            </select>
+                            <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted); pointer-events:none;"></i>
+                        </div>
                     </div>
                 </div>
 
@@ -281,7 +301,7 @@ $f_est_insc = $curso['estado_inscripcion'] ?? 'Abierta';
                 </div>
 
                 <div style="grid-column: 1 / -1;">
-                    <label for="url_video_preview" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Video Preview (YouTube URL)</label>
+                    <label for="url_video_preview" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Video Preview (OPCIONAL)</label>
                     <div style="position:relative;">
                         <i class="ph-bold ph-video" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
                         <input type="url" id="url_video_preview" name="url_video_preview" value="<?= $f_vpreview ?>" placeholder="Ej: https://youtube.com/watch?v=..." style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">

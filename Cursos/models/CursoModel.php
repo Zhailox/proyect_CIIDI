@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // modules/Cursos/models/CursoModel.php
 require_once CORE_PATH . 'Database/QueryBuilder.php';
 
@@ -46,7 +46,7 @@ class CursoModel {
                 'mime_permitidos'       => ['image/jpeg','image/png','image/gif','image/webp'],
                 'convertir_a_webp'      => true,
                 'lazy_load'             => true,
-                'carpeta_uploads'       => 'public/uploads/cursos/',
+                'carpeta_uploads'       => 'storage/uploads/cursos/',
                 'placeholder_url'       => 'https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=600',
             ],
             'moodle' => [
@@ -149,10 +149,10 @@ class CursoModel {
             SELECT c.*, u.nombre_completo AS nombre_docente
             FROM public.cursos c
             LEFT JOIN public.usuarios u ON c.id_docente = u.id
-            WHERE c.slug = ?
+            WHERE c.slug = ? OR c.id::varchar = ?
         ";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$slug]);
+        $stmt->execute([$slug, $slug]);
         $resultado = $stmt->fetch();
         return $resultado ?: null;
     }
