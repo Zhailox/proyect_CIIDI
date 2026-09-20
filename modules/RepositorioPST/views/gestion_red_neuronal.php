@@ -34,12 +34,12 @@
 
         <!-- Mensajes de Éxito / Error -->
         <?php if (!empty($error)): ?>
-            <div class="alert-message alert-error" style="background-color: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <div class="alert-message alert-error" style="background-color: rgba(100, 116, 139, 0.1); color: var(--texto-titulos); border: 1px solid rgba(100, 116, 139, 0.25); padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
                 <i class="ph ph-warning-circle"></i> <?= htmlspecialchars($error) ?>
             </div>
         <?php endif; ?>
         <?php if (!empty($success)): ?>
-            <div class="alert-message alert-success" style="background-color: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <div class="alert-message alert-success" style="background-color: rgba(80, 89, 132, 0.08); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25); padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
                 <i class="ph ph-check-circle"></i> <?= htmlspecialchars($success) ?>
             </div>
         <?php endif; ?>
@@ -61,9 +61,9 @@
                     <div class="neural-card-header">
                         <h2 class="neural-card-title"><i class="ph ph-activity"></i> Estado del Clasificador IA</h2>
                         <?php if ($metadata): ?>
-                            <span class="badge-sys" style="background-color: #dcfce7; color: #16a34a; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 12px;">ACTIVO</span>
+                            <span class="badge-sys" style="background-color: rgba(80, 89, 132, 0.1); color: var(--color-secundario); font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 12px;">ACTIVO</span>
                         <?php else: ?>
-                            <span class="badge-sys" style="background-color: #fee2e2; color: #ef4444; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 12px;">SIN ENTRENAR</span>
+                            <span class="badge-sys" style="background-color: rgba(100, 116, 139, 0.12); color: var(--texto-silenciado); font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 12px;">SIN ENTRENAR</span>
                         <?php endif; ?>
                     </div>
 
@@ -92,7 +92,7 @@
                                     <span class="legend-item"><span class="legend-color-untrained"></span> Sin Entrenar: <?= $stats['untrained'] ?></span>
                                 </div>
                                 <?php if ($stats['untrained'] > 0): ?>
-                                    <p style="font-size: 0.75rem; color: #ef4444; margin-top: 0.5rem; font-weight: 600;">
+                                    <p style="font-size: 0.75rem; color: var(--texto-silenciado); margin-top: 0.5rem; font-weight: 600;">
                                         <i class="ph ph-info"></i> Hay <?= $stats['untrained'] ?> proyecto(s) agregados recientemente que no están indexados en la red neuronal. Se recomienda reentrenar.
                                     </p>
                                 <?php endif; ?>

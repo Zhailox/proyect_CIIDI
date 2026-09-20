@@ -50,11 +50,11 @@ class DetallePSTController {
         $lineas = $model->getLineasInvestigacion($carreraId);
         $dimensiones = $model->getDimensionesOperativas();
         $comunidades = $model->getComunidadesBeneficiadas();
-        $anioCounts = $model->getPSTCountByYear();
+        $anioCounts = $model->getPSTCountByYear($filtros);
         
         // Conteo rápido agregado por SQL para optimizar rendimiento
-        $conteoLineas = $model->getPSTCountByLinea();
-        $conteoTrayectos = $model->getPSTCountByTrayecto();
+        $conteoLineas = $model->getPSTCountByLinea($carreraId);
+        $conteoTrayectos = $model->getPSTCountByTrayecto($carreraId);
         $totalPSTGeneral = $totalDocs;
         
         $pstPorLinea = [];
@@ -444,6 +444,18 @@ class DetallePSTController {
             exit;
         }
 
+        // 0.2.1 Procesar Acción: OBTENER LÍNEAS DE INVESTIGACIÓN POR CARRERA (AJAX)
+        if ($accion === 'obtener_lineas') {
+            header('Content-Type: application/json; charset=utf-8');
+            $carreraIdReq = !empty($_GET['carrera_id']) ? (int)$_GET['carrera_id'] : null;
+            $lineasCarrera = $model->getLineasInvestigacion($carreraIdReq);
+            echo json_encode([
+                'status' => 'success',
+                'lineas' => $lineasCarrera
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
         // 0.1 Procesar Acción: CREAR VIA AJAX (SUBIDA EN LOTE)
         if ($accion === 'crear_ajax' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Content-Type: application/json; charset=utf-8');
@@ -496,6 +508,7 @@ class DetallePSTController {
                     'obj_general'                => !empty($postData['obj_general']) ? trim($postData['obj_general']) : null,
                     'comunidad_beneficiada'      => !empty($postData['comunidad_beneficiada']) ? trim($postData['comunidad_beneficiada']) : '',
                     'palabras_clave'             => !empty($postData['palabras_clave']) ? trim($postData['palabras_clave']) : '',
+                    'id_carrera'                 => !empty($postData['id_carrera']) ? (int)$postData['id_carrera'] : 1,
                     'linea_id'                   => !empty($postData['linea_id']) ? (int)$postData['linea_id'] : 7,
                     'dimension_id'               => !empty($postData['dimension_id']) ? (int)$postData['dimension_id'] : null,
                 ];
@@ -626,6 +639,7 @@ class DetallePSTController {
                 'obj_general'                => !empty($_POST['obj_general']) ? trim($_POST['obj_general']) : null,
                 'comunidad_beneficiada'      => !empty($_POST['comunidad_beneficiada']) ? trim($_POST['comunidad_beneficiada']) : '',
                 'palabras_clave'             => !empty($_POST['palabras_clave']) ? trim($_POST['palabras_clave']) : '',
+                'id_carrera'                 => !empty($_POST['id_carrera']) ? (int)$_POST['id_carrera'] : 1,
                 'linea_id'                   => !empty($_POST['linea_id']) ? (int)$_POST['linea_id'] : null,
                 'dimension_id'               => !empty($_POST['dimension_id']) ? (int)$_POST['dimension_id'] : null,
             ];
@@ -737,6 +751,7 @@ class DetallePSTController {
                         'obj_general'                => !empty($_POST['obj_general']) ? trim($_POST['obj_general']) : null,
                         'comunidad_beneficiada'      => !empty($_POST['comunidad_beneficiada']) ? trim($_POST['comunidad_beneficiada']) : '',
                         'palabras_clave'             => !empty($_POST['palabras_clave']) ? trim($_POST['palabras_clave']) : '',
+                        'id_carrera'                 => !empty($_POST['id_carrera']) ? (int)$_POST['id_carrera'] : 1,
                         'linea_id'                   => !empty($_POST['linea_id']) ? (int)$_POST['linea_id'] : null,
                         'dimension_id'               => !empty($_POST['dimension_id']) ? (int)$_POST['dimension_id'] : null,
                     ];
@@ -810,10 +825,13 @@ class DetallePSTController {
             ];
         }
 
+        $carreras = $model->getCarreras();
         $lineas = $model->getLineasInvestigacion();
         $dimensiones = $model->getDimensionesOperativas();
         $nivelesAcademicos = $model->getNivelesAcademicos();
         $trayectosList = $model->getTrayectos();
+        
+        $statsResumen = $model->getPSTStatsResumen();
         
         return [
             'accion'            => $accion,
@@ -821,11 +839,13 @@ class DetallePSTController {
             'documento'         => $documento,
             'autores'           => $autores,
             'tutores'           => $tutores,
+            'carreras'          => $carreras,
             'lineas'            => $lineas,
             'dimensiones'       => $dimensiones,
             'nivelesAcademicos' => $nivelesAcademicos,
             'trayectosList'     => $trayectosList,
             'pagination'        => $pagination,
+            'statsResumen'      => $statsResumen,
             'q'                 => $q,
             'error'             => $error,
             'success'           => $success

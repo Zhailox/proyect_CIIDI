@@ -254,3 +254,12 @@ Stack Trace:
 #5 [internal function]: MailService::{closure}()
 #6 {main}
 --------------------------------------------------------------------------------
+[2026-09-20 02:24:59] [IP: 127.0.0.1] [ERROR] could not find driver in C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:58
+Stack Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(58): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(123): Connection->__construct()
+#2 C:\wamp64\www\proyect_CIIDI\core\Database\QueryBuilder.php(20): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(398): QueryBuilder->__construct()
+#4 C:\wamp64\www\proyect_CIIDI\test_carreras_script.php(9): DocumentoModel->getCarreras()
+#5 {main}
+--------------------------------------------------------------------------------

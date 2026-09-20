@@ -17,13 +17,13 @@
         </div>
 
         <?php if (!empty($mensaje)): ?>
-            <div style="background-color: #d1fae5; border: 1px solid #6ee7b7; color: #065f46; padding: 0.75rem 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; font-size: 0.88rem; display: flex; align-items: center; gap: 0.5rem;">
+            <div style="background-color: rgba(80, 89, 132, 0.08); border: 1px solid rgba(80, 89, 132, 0.25); color: var(--color-secundario); padding: 0.75rem 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; font-size: 0.88rem; display: flex; align-items: center; gap: 0.5rem;">
                 <i class="ph ph-check-circle" style="font-size: 1.2rem;"></i> <?= htmlspecialchars($mensaje) ?>
             </div>
         <?php endif; ?>
 
         <?php if (!empty($error)): ?>
-            <div style="background-color: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 0.75rem 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; font-size: 0.88rem; display: flex; align-items: center; gap: 0.5rem;">
+            <div style="background-color: rgba(100, 116, 139, 0.1); border: 1px solid rgba(100, 116, 139, 0.25); color: var(--texto-titulos); padding: 0.75rem 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; font-size: 0.88rem; display: flex; align-items: center; gap: 0.5rem;">
                 <i class="ph ph-warning-circle" style="font-size: 1.2rem;"></i> <?= htmlspecialchars($error) ?>
             </div>
         <?php endif; ?>

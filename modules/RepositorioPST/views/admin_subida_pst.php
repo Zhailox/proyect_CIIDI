@@ -170,26 +170,55 @@ if (typeof window.mammoth === 'undefined') {
                             </div>
 
                             <h3 class="upload-section-title">
-                                <i class="ph ph-tree-structure"></i> Clasificación y Línea
+                                <i class="ph ph-tree-structure"></i> Clasificación y Programa Académico
                             </h3>
 
                             <div class="grid-2-cols">
                                 <?php 
+                                $permitirFiltroCarrera = (bool)ConfigService::get('buscador.permitir_filtro_carrera', false);
+                                $carrerasList = $carreras ?? [];
+                                $currCarrera = $_POST['id_carrera'] ?? $documento['id_carrera'] ?? ($permitirFiltroCarrera ? '' : 1);
                                 $currLinea = $_POST['linea_id'] ?? $documento['linea_id'] ?? '';
+                                $lineasParaMostrar = (!empty($currCarrera)) ? ($lineas ?? []) : [];
                                 ?>
+                                <!-- Selector de Carrera / PNF -->
+                                <div class="upload-input-group">
+                                    <label for="id_carrera"><i class="ph ph-graduation-cap"></i> Programa Académico (Carrera) *</label>
+                                    <?php if ($permitirFiltroCarrera): ?>
+                                        <select id="id_carrera" name="id_carrera" class="upload-input" onchange="actualizarLineasPorCarrera(this.value)" required>
+                                            <option value="">Seleccione una Carrera...</option>
+                                            <?php foreach ($carrerasList as $cItem): ?>
+                                                <option value="<?= $cItem['id'] ?>" <?= ((string)$currCarrera === (string)$cItem['id']) ? 'selected' : '' ?>>
+                                                    <?= htmlspecialchars($cItem['nombre']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    <?php else: ?>
+                                        <input type="hidden" name="id_carrera" value="1">
+                                        <div style="background: rgba(80, 89, 132, 0.08); border: 1px dashed rgba(80, 89, 132, 0.3); padding: 9px 12px; border-radius: var(--radius-sm, 8px); display: flex; align-items: center; justify-content: space-between; font-size: 0.88rem; font-weight: 700; color: var(--texto-titulos, #1E293B);" title="El repositorio está configurado para PNF en Informática">
+                                            <span>PNF en Informática</span>
+                                            <span style="color: #64748B;"><i class="ph ph-lock-key"></i></span>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+
                                 <!-- Selector de Línea de Investigación -->
                                 <div class="upload-input-group">
                                     <label for="linea_id">Línea de Investigación *</label>
-                                    <select id="linea_id" name="linea_id" class="upload-input" required>
-                                        <option value="">Seleccione una Línea...</option>
-                                        <?php foreach ($lineas as $linea): ?>
-                                            <option value="<?= $linea['id'] ?>" <?= ($currLinea == $linea['id']) ? 'selected' : '' ?>>
-                                                <?= htmlspecialchars($linea['nombre'] ?? '') ?>
-                                            </option>
-                                        <?php endforeach; ?>
+                                    <select id="linea_id" name="linea_id" class="upload-input" <?= empty($currCarrera) && $permitirFiltroCarrera ? 'disabled' : '' ?> required>
+                                        <option value=""><?= empty($currCarrera) && $permitirFiltroCarrera ? 'Primero seleccione una Carrera...' : 'Seleccione una Línea...' ?></option>
+                                        <?php if (!empty($lineasParaMostrar)): ?>
+                                            <?php foreach ($lineasParaMostrar as $linea): ?>
+                                                <option value="<?= $linea['id'] ?>" <?= ($currLinea == $linea['id']) ? 'selected' : '' ?>>
+                                                    <?= htmlspecialchars($linea['nombre'] ?? '') ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
                                     </select>
                                 </div>
+                            </div>
 
+                            <div class="grid-2-cols" style="margin-top: 0.5rem;">
                                 <!-- Selector de Dimensión Operativa Dependiente -->
                                 <div class="upload-input-group">
                                     <label for="dimension_id">Dimensión Operativa</label>
@@ -235,8 +264,8 @@ if (typeof window.mammoth === 'undefined') {
                             </h3>
 
                             <!-- Generación de PDF Automática -->
-                            <div style="background-color: #f8fafc; border: 1px solid rgba(169, 168, 166, 0.2); border-radius: 4px; padding: 0.75rem; font-size: 0.8rem; color: var(--texto-normal); line-height: 1.4; margin-bottom: 0.5rem;">
-                                <i class="ph ph-shield-check" style="color: #31c48d; font-weight: 700; font-size: 1rem; vertical-align: middle; margin-right: 0.25rem;"></i> 
+                            <div style="background-color: #fafbfe; border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 4px; padding: 0.75rem; font-size: 0.8rem; color: var(--texto-comun); line-height: 1.4; margin-bottom: 0.5rem;">
+                                <i class="ph ph-shield-check" style="color: var(--color-secundario); font-weight: 700; font-size: 1rem; vertical-align: middle; margin-right: 0.25rem;"></i> 
                                 <strong>Ruta Automática:</strong> El sistema generará una ruta de almacenamiento segura e indexada en el repositorio basándose en el título de la investigación.
                             </div>
 
@@ -258,7 +287,7 @@ if (typeof window.mammoth === 'undefined') {
                                     <p class="drag-desc">Arrastra o selecciona un nuevo archivo PDF o Word (.docx) (Máx. <?= $maxMb ?> MB) para reemplazar el documento actual.</p>
                                     <button type="button" class="btn-browse" id="btnBrowseFile">Sustituir Archivo Adjunto</button>
                                     
-                                    <div id="badgeArchivoSustituido" style="display: none; margin-top: 0.75rem; background: #e0f2fe; border: 1px solid #7dd3fc; border-radius: 4px; padding: 0.5rem 0.75rem; text-align: left; font-size: 0.78rem; color: #0369a1;">
+                                    <div id="badgeArchivoSustituido" style="display: none; margin-top: 0.75rem; background: rgba(80, 89, 132, 0.08); border: 1px solid rgba(80, 89, 132, 0.2); border-radius: 4px; padding: 0.5rem 0.75rem; text-align: left; font-size: 0.78rem; color: var(--color-secundario);">
                                         <i class="ph ph-file-check" style="font-size: 1rem; vertical-align: middle; margin-right: 0.25rem;"></i>
                                         <strong>Nuevo archivo listo para sustituir:</strong> <span id="nombreArchivoSustituidoText" style="font-weight: 700;"></span>
                                     </div>
@@ -293,8 +322,8 @@ if (typeof window.mammoth === 'undefined') {
                             </div>
                             <?php endif; ?>
 
-                            <div style="background-color: #fafbfe; border: 1px solid rgba(0, 123, 255, 0.15); border-radius: 4px; padding: 0.75rem; font-size: 0.8rem; color: var(--texto-normal); line-height: 1.4;">
-                                <i class="ph ph-info" style="color: var(--color-terciario, #007bff); font-weight: 700;"></i> 
+                            <div style="background-color: #fafbfe; border: 1px solid rgba(112, 144, 203, 0.2); border-radius: 4px; padding: 0.75rem; font-size: 0.8rem; color: var(--texto-comun); line-height: 1.4;">
+                                <i class="ph ph-info" style="color: var(--color-terciario); font-weight: 700;"></i> 
                                 <strong>Validación de Registro:</strong> Los campos marcados con <strong>*</strong> son estrictamente necesarios para que la base de datos indexe y clasifique el PST en el repositorio.
                             </div>
 
@@ -307,13 +336,13 @@ if (typeof window.mammoth === 'undefined') {
                         <a href="?ruta=agregar-documento" class="btn-cancel">
                             <i class="ph ph-arrow-left"></i> Cancelar y Volver
                         </a>
-                        <button type="button" class="btn-cancel" style="background-color: #f1f5f9; color: var(--color-secundario);" onclick="abrirModalPrevisualizacionDocumento()">
+                        <button type="button" class="btn-cancel" style="background-color: rgba(80, 89, 132, 0.08); color: var(--color-secundario);" onclick="abrirModalPrevisualizacionDocumento()">
                             <i class="ph ph-eye"></i> Previsualizar Documento
                         </button>
                         <button type="button" class="btn-clear" id="btnLimpiarFormulario" onclick="limpiarFormularioPst()">
                             <i class="ph ph-eraser"></i> Limpiar Formulario
                         </button>
-                        <button type="button" class="btn-clear" id="btnGuardarBorrador" onclick="guardarBorradorEnCola()" style="display: none; background-color: #f0fdf4; color: #15803d; border-color: rgba(21, 128, 61, 0.3);">
+                        <button type="button" class="btn-clear" id="btnGuardarBorrador" onclick="guardarBorradorEnCola()" style="display: none; background-color: rgba(112, 144, 203, 0.1); color: var(--color-secundario); border-color: rgba(80, 89, 132, 0.3);">
                             <i class="ph ph-floppy-disk"></i> Guardar en Borrador
                         </button>
                         <button type="submit" class="btn-save">
@@ -328,45 +357,39 @@ if (typeof window.mammoth === 'undefined') {
         <?php else: ?>
             
             <?php 
-            $totalDocs = count($documentos ?? []);
-            $activosCount = 0;
-            $conPdfCount = 0;
-            if (!empty($documentos)) {
-                foreach ($documentos as $d) {
-                    if ($d['activo'] ?? true) $activosCount++;
-                    if (!empty($d['archivo_pdf'])) $conPdfCount++;
-                }
-            }
+            $totalCatalogReal = $statsResumen['total_catalog'] ?? ($pagination['total_records'] ?? count($documentos ?? []));
+            $totalActivosReal = $statsResumen['total_activos'] ?? 0;
+            $totalConPdfReal  = $statsResumen['total_con_pdf'] ?? 0;
             ?>
 
-            <!-- TARJETAS DE MÉTRICAS KPI (GLASSMORPHISM) -->
+            <!-- TARJETAS DE MÉTRICAS KPI (GLASSMORPHISM & SISTEMA PALETA) -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
-                <div style="background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(112, 144, 203, 0.25); border-radius: 12px; padding: 1rem 1.2rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03);">
+                <div style="background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(80, 89, 132, 0.18); border-radius: 12px; padding: 1rem 1.2rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03);">
                     <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(80, 89, 132, 0.12); color: var(--color-secundario); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
                         <i class="ph ph-folder-open"></i>
                     </div>
                     <div>
-                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= $pagination['total_records'] ?? $totalDocs ?></div>
+                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= number_format($totalCatalogReal) ?></div>
                         <div style="font-size: 0.75rem; font-weight: 600; color: var(--texto-silenciado); text-transform: uppercase; letter-spacing: 0.5px;">Proyectos En Catálogo</div>
                     </div>
                 </div>
 
-                <div style="background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(112, 144, 203, 0.25); border-radius: 12px; padding: 1rem 1.2rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03);">
-                    <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(16, 185, 129, 0.12); color: #059669; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+                <div style="background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(80, 89, 132, 0.18); border-radius: 12px; padding: 1rem 1.2rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03);">
+                    <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(80, 89, 132, 0.12); color: var(--color-secundario); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
                         <i class="ph ph-eye"></i>
                     </div>
                     <div>
-                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= $activosCount ?></div>
+                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= number_format($totalActivosReal) ?></div>
                         <div style="font-size: 0.75rem; font-weight: 600; color: var(--texto-silenciado); text-transform: uppercase; letter-spacing: 0.5px;">Visibles al Público</div>
                     </div>
                 </div>
 
-                <div style="background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(112, 144, 203, 0.25); border-radius: 12px; padding: 1rem 1.2rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03);">
-                    <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(112, 144, 203, 0.12); color: var(--color-terciario); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+                <div style="background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(80, 89, 132, 0.18); border-radius: 12px; padding: 1rem 1.2rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03);">
+                    <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(112, 144, 203, 0.15); color: var(--color-terciario); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
                         <i class="ph ph-file-pdf"></i>
                     </div>
                     <div>
-                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= $conPdfCount ?></div>
+                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= number_format($totalConPdfReal) ?></div>
                         <div style="font-size: 0.75rem; font-weight: 600; color: var(--texto-silenciado); text-transform: uppercase; letter-spacing: 0.5px;">Documentos Adjuntos</div>
                     </div>
                 </div>
@@ -430,27 +453,27 @@ if (typeof window.mammoth === 'undefined') {
                                                  <?php if (($doc['nivel_academico'] ?? 'Pregrado') === 'Pregrado' && !empty($doc['trayecto'])): ?>
                                                      <span class="pst-badge-soft" style="background-color: rgba(112, 144, 203, 0.12); color: var(--color-terciario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(112, 144, 203, 0.2);"><?= htmlspecialchars($doc['trayecto']) ?></span>
                                                  <?php endif; ?>
-                                                 <?php if (($doc['activo'] ?? true)): ?>
-                                                     <span style="background: rgba(16, 185, 129, 0.12); color: #047857; padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.25); display: inline-flex; align-items: center; gap: 0.2rem;">
-                                                         <span style="width: 6px; height: 6px; border-radius: 50%; background-color: #10b981; display: inline-block;"></span> Activo
-                                                     </span>
-                                                 <?php else: ?>
-                                                     <span style="background: rgba(239, 68, 68, 0.1); color: #b91c1c; padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.2); display: inline-flex; align-items: center; gap: 0.2rem;">
-                                                         <span style="width: 6px; height: 6px; border-radius: 50%; background-color: #ef4444; display: inline-block;"></span> Oculto
-                                                     </span>
-                                                 <?php endif; ?>
-                                                 <?php if (!empty($doc['url_repositorio'])): ?>
-                                                     <a href="<?= htmlspecialchars($doc['url_repositorio']) ?>" target="_blank" style="color: var(--color-secundario); font-size: 0.73rem; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem; background: rgba(80, 89, 132, 0.08); padding: 0.12rem 0.4rem; border-radius: 4px;" title="Ver código fuente">
-                                                         <i class="ph ph-git-branch"></i> Git
-                                                     </a>
-                                                 <?php endif; ?>
-                                             </div>
-                                             <strong style="font-size: 0.92rem; color: var(--texto-titulos); line-height: 1.3; display: block;"><?= htmlspecialchars($doc['titulo'] ?? '') ?></strong>
-                                             <?php if (!empty($doc['obj_general'])): ?>
-                                                 <div style="font-size: 0.75rem; color: var(--texto-silenciado); margin-top: 0.25rem; font-style: italic; line-height: 1.35;">
-                                                     <strong>Objetivo:</strong> <?= htmlspecialchars(substr($doc['obj_general'], 0, 110)) ?>...
-                                                 </div>
-                                             <?php endif; ?>
+                                                  <?php if (($doc['activo'] ?? true)): ?>
+                                                      <span style="background: rgba(80, 89, 132, 0.1); color: var(--color-secundario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 700; border: 1px solid rgba(80, 89, 132, 0.2); display: inline-flex; align-items: center; gap: 0.2rem;">
+                                                          <span style="width: 6px; height: 6px; border-radius: 50%; background-color: var(--color-secundario); display: inline-block;"></span> Activo
+                                                      </span>
+                                                  <?php else: ?>
+                                                      <span style="background: rgba(100, 116, 139, 0.12); color: var(--texto-silenciado); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 700; border: 1px solid rgba(100, 116, 139, 0.25); display: inline-flex; align-items: center; gap: 0.2rem;">
+                                                          <span style="width: 6px; height: 6px; border-radius: 50%; background-color: var(--texto-silenciado); display: inline-block;"></span> Oculto
+                                                      </span>
+                                                  <?php endif; ?>
+                                                  <?php if (!empty($doc['url_repositorio'])): ?>
+                                                      <a href="<?= htmlspecialchars($doc['url_repositorio']) ?>" target="_blank" style="color: var(--color-secundario); font-size: 0.73rem; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem; background: rgba(80, 89, 132, 0.08); padding: 0.12rem 0.4rem; border-radius: 4px;" title="Ver código fuente">
+                                                          <i class="ph ph-git-branch"></i> Git
+                                                      </a>
+                                                  <?php endif; ?>
+                                              </div>
+                                              <strong style="font-size: 0.92rem; color: var(--texto-titulos); line-height: 1.3; display: block;"><?= htmlspecialchars($doc['titulo'] ?? '') ?></strong>
+                                              <?php if (!empty($doc['obj_general'])): ?>
+                                                  <div style="font-size: 0.75rem; color: var(--texto-silenciado); margin-top: 0.25rem; font-style: italic; line-height: 1.35;">
+                                                      <strong>Objetivo:</strong> <?= htmlspecialchars(substr($doc['obj_general'], 0, 110)) ?>...
+                                                  </div>
+                                              <?php endif; ?>
                                          </td>
                                          <td style="padding: 0.85rem 1rem; color: var(--texto-comun); font-size: 0.85rem; vertical-align: middle;">
                                              <div style="display: flex; align-items: center; gap: 0.4rem;">
@@ -464,31 +487,31 @@ if (typeof window.mammoth === 'undefined') {
                                          <td style="text-align: center; padding: 0.85rem 1rem; border-radius: 0 8px 8px 0; vertical-align: middle;">
                                              <div class="action-links" style="display: flex; gap: 0.35rem; justify-content: center; flex-wrap: wrap;">
                                                  <!-- Opción 3: Previsualizar Ficha Completa -->
-                                                 <button type="button" class="btn-action-edit" style="background: rgba(16, 185, 129, 0.1); color: #047857; border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700;" title="Previsualizar Ficha Técnica" onclick="abrirModalPrevisualizarFichaAdmin(<?= htmlspecialchars(json_encode($doc)) ?>)">
+                                                 <button type="button" class="btn-action-edit" style="background: rgba(112, 144, 203, 0.12); color: var(--color-terciario); border: 1px solid rgba(112, 144, 203, 0.25); border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700;" title="Previsualizar Ficha Técnica" onclick="abrirModalPrevisualizarFichaAdmin(<?= htmlspecialchars(json_encode($doc)) ?>)">
                                                      <i class="ph ph-eye"></i> Ficha
                                                  </button>
 
                                                  <!-- Opción 5: Descargar Documento Adjunto -->
                                                  <?php if (!empty($doc['archivo_pdf'])): ?>
-                                                     <a href="?ruta=ver-pdf-pst&id=<?= $doc['id'] ?>" target="_blank" class="btn-action-edit" style="background: rgba(112, 144, 203, 0.12); color: var(--color-secundario); border: 1px solid rgba(112, 144, 203, 0.3); border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700; text-decoration: none;" title="Descargar / Abrir Documento Digital">
+                                                     <a href="?ruta=ver-pdf-pst&id=<?= $doc['id'] ?>" target="_blank" class="btn-action-edit" style="background: rgba(80, 89, 132, 0.1); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25); border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700; text-decoration: none;" title="Descargar / Abrir Documento Digital">
                                                          <i class="ph ph-download-simple"></i> Adjunto
                                                      </a>
                                                  <?php endif; ?>
 
                                                  <!-- Opción 1: Activar / Desactivar (Soft Delete) -->
                                                  <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'editar', 'RepositorioPST', false)): ?>
-                                                     <a href="?ruta=agregar-documento&accion=toggle_estado&id=<?= $doc['id'] ?>" class="btn-action-edit" style="background: <?= ($doc['activo'] ?? true) ? 'rgba(245, 158, 11, 0.1); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.25);' : 'rgba(16, 185, 129, 0.1); color: #047857; border: 1px solid rgba(16, 185, 129, 0.25);' ?> border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700; text-decoration: none;" title="<?= ($doc['activo'] ?? true) ? 'Ocultar del catálogo público' : 'Hacer visible en el catálogo público' ?>">
+                                                     <a href="?ruta=agregar-documento&accion=toggle_estado&id=<?= $doc['id'] ?>" class="btn-action-edit" style="background: rgba(80, 89, 132, 0.08); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.2); border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700; text-decoration: none;" title="<?= ($doc['activo'] ?? true) ? 'Ocultar del catálogo público' : 'Hacer visible en el catálogo público' ?>">
                                                          <i class="ph ph-eye-slash"></i> <?= ($doc['activo'] ?? true) ? 'Ocultar' : 'Activar' ?>
                                                      </a>
 
                                                      <!-- Opción Editar -->
-                                                     <a href="?ruta=agregar-documento&accion=editar&id=<?= $doc['id'] ?>" class="btn-action-edit" style="background: rgba(80, 89, 132, 0.1); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25); border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700; text-decoration: none;" title="Modificar Metadatos">
+                                                     <a href="?ruta=agregar-documento&accion=editar&id=<?= $doc['id'] ?>" class="btn-action-edit" style="background: rgba(80, 89, 132, 0.12); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25); border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700; text-decoration: none;" title="Modificar Metadatos">
                                                          <i class="ph ph-pencil-simple"></i> Editar
                                                      </a>
                                                  <?php endif; ?>
 
                                                  <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'eliminar', 'RepositorioPST', false)): ?>
-                                                     <a href="javascript:void(0)" class="btn-action-delete" style="background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700; text-decoration: none;" title="Eliminar Registro Definitivo" onclick="confirmarEliminacionModal('?ruta=agregar-documento&accion=eliminar&id=<?= $doc['id'] ?>')">
+                                                     <a href="javascript:void(0)" class="btn-action-delete" style="background: rgba(30, 41, 59, 0.08); color: var(--texto-titulos); border: 1px solid rgba(30, 41, 59, 0.2); border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700; text-decoration: none;" title="Eliminar Registro Definitivo" onclick="confirmarEliminacionModal('?ruta=agregar-documento&accion=eliminar&id=<?= $doc['id'] ?>')">
                                                          <i class="ph ph-trash"></i> Eliminar
                                                      </a>
                                                  <?php endif; ?>
@@ -549,19 +572,19 @@ if (typeof window.mammoth === 'undefined') {
 </div>
 
 <!-- Modal de Carga / Extracción de Datos -->
-<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 34, 68, 0.75); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; color: white;">
-    <div style="background: var(--bg-card, #ffffff); color: var(--texto-normal, #333); padding: 2.2rem; border-radius: var(--radius-lg, 12px); max-width: 480px; width: 90%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(169, 168, 166, 0.2);">
-        <div style="font-size: 3rem; color: var(--color-terciario, #007bff); margin-bottom: 1rem; animation: pulse-loader 1.5s infinite ease-in-out;">
+<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; color: white;">
+    <div style="background: var(--bg-card, #ffffff); color: var(--texto-comun, #333); padding: 2.2rem; border-radius: var(--radius-lg, 16px); max-width: 480px; width: 90%; text-align: center; box-shadow: 0 12px 35px rgba(0,0,0,0.2); border: 1px solid rgba(80, 89, 132, 0.2);">
+        <div style="font-size: 3rem; color: var(--color-secundario); margin-bottom: 1rem; animation: pulse-loader 1.5s infinite ease-in-out;">
             <i class="ph-bold ph-cpu"></i>
         </div>
-        <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--texto-titulos, #002244); margin-bottom: 0.5rem;" id="loaderTitle">Procesando Archivo</h3>
-        <p style="font-size: 0.85rem; color: var(--texto-silenciado, #666); margin-bottom: 1.5rem;" id="loaderText">Extrayendo texto y analizando metadatos del proyecto...</p>
+        <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--texto-titulos); margin-bottom: 0.5rem;" id="loaderTitle">Procesando Archivo</h3>
+        <p style="font-size: 0.85rem; color: var(--texto-silenciado); margin-bottom: 1.5rem;" id="loaderText">Extrayendo texto y analizando metadatos del proyecto...</p>
         
         <!-- Barra de Progreso -->
-        <div style="width: 100%; height: 8px; background-color: #e2e8f0; border-radius: 4px; overflow: hidden; margin-bottom: 0.5rem;">
-            <div id="progressBar" style="width: 0%; height: 100%; background-color: var(--color-terciario, #007bff); border-radius: 4px; transition: width 0.2s ease-out;"></div>
+        <div style="width: 100%; height: 8px; background-color: rgba(80, 89, 132, 0.12); border-radius: 4px; overflow: hidden; margin-bottom: 0.5rem;">
+            <div id="progressBar" style="width: 0%; height: 100%; background-color: var(--color-secundario); border-radius: 4px; transition: width 0.2s ease-out;"></div>
         </div>
-        <div id="progressPercent" style="font-size: 0.85rem; font-weight: 700; color: var(--color-terciario, #007bff); text-align: right;">0%</div>
+        <div id="progressPercent" style="font-size: 0.85rem; font-weight: 700; color: var(--color-secundario); text-align: right;">0%</div>
     </div>
 </div>
 
@@ -680,6 +703,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function procesarArchivosSeleccionados(fileList) {
     const esEditar = <?= json_encode($accion === 'editar') ?>;
+    const permitirFiltroCarrera = <?= json_encode((bool)ConfigService::get('buscador.permitir_filtro_carrera', false)) ?>;
     let files = Array.from(fileList);
     
     if (esEditar && files.length > 1) {
@@ -722,6 +746,20 @@ function procesarArchivosSeleccionados(fileList) {
         return;
     }
 
+    const carreraSelectForm = document.getElementById('id_carrera');
+    const carreraValActual = carreraSelectForm ? carreraSelectForm.value : '';
+
+    if (permitirFiltroCarrera && !carreraValActual) {
+        archivosPendientesExtraccion = validFiles;
+        const modal = document.getElementById('modalSeleccionCarreraPst');
+        if (modal) modal.style.display = 'flex';
+        return;
+    }
+
+    iniciarProcesamientoListaArchivos(validFiles, carreraValActual || 1);
+}
+
+function iniciarProcesamientoListaArchivos(validFiles, carreraId) {
     const nuevosIndices = [];
     validFiles.forEach(file => {
         const docObj = {
@@ -732,6 +770,7 @@ function procesarArchivosSeleccionados(fileList) {
             errorMsg: '',
             data: {
                 titulo: file.name.replace(/\.[^/.]+$/, ""),
+                id_carrera: carreraId,
                 anio_publicacion: new Date().getFullYear(),
                 fecha_defensa: new Date().toISOString().split('T')[0],
                 nivel_academico: 'Pregrado',
@@ -885,13 +924,13 @@ function renderizarColaUI() {
                 </div>
             `;
         } else if (item.estado === 'listo') {
-            statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: #def7ec; color: #03543f; font-weight: 700;"><i class="ph ph-check-circle"></i> Listo</span>`;
+            statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: rgba(80, 89, 132, 0.1); color: var(--color-secundario); font-weight: 700;"><i class="ph ph-check-circle"></i> Listo</span>`;
         } else if (item.estado === 'subiendo') {
-            statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: #fef3c7; color: #92400e; font-weight: 700;"><i class="ph ph-cloud-arrow-up spin"></i> Subiendo...</span>`;
+            statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: rgba(112, 144, 203, 0.15); color: var(--color-terciario); font-weight: 700;"><i class="ph ph-cloud-arrow-up spin"></i> Subiendo...</span>`;
         } else if (item.estado === 'exito') {
-            statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: #def7ec; color: #03543f; font-weight: 700;"><i class="ph ph-check-circle"></i> Subido</span>`;
+            statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: rgba(80, 89, 132, 0.1); color: var(--color-secundario); font-weight: 700;"><i class="ph ph-check-circle"></i> Subido</span>`;
         } else if (item.estado === 'error') {
-            statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: #fde8e8; color: #c81e1e; font-weight: 700;"><i class="ph ph-warning-circle"></i> Error</span>`;
+            statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: rgba(100, 116, 139, 0.12); color: var(--texto-silenciado); font-weight: 700;"><i class="ph ph-warning-circle"></i> Error</span>`;
         }
 
         const titleText = item.data.titulo ? item.data.titulo : item.nombreArchivo;
@@ -991,6 +1030,7 @@ function obtenerDatosFormularioActual() {
     return {
         archivo_pdf: document.getElementById('archivo_pdf_hidden') ? document.getElementById('archivo_pdf_hidden').value.trim() : '',
         titulo: document.getElementById('titulo') ? document.getElementById('titulo').value.trim() : '',
+        id_carrera: document.getElementById('id_carrera') && document.getElementById('id_carrera').value ? document.getElementById('id_carrera').value : (document.getElementById('carrera_lote_master') ? document.getElementById('carrera_lote_master').value : 1),
         anio_publicacion: document.getElementById('anio_publicacion') ? document.getElementById('anio_publicacion').value : new Date().getFullYear(),
         nivel_academico: document.getElementById('nivel_academico') ? document.getElementById('nivel_academico').value : 'Pregrado',
         trayecto: document.getElementById('trayecto') ? document.getElementById('trayecto').value : 'Trayecto I',
@@ -1173,16 +1213,48 @@ function rellenarFormulario(data) {
     if (getElem('tutor_comunitario_cedula')) getElem('tutor_comunitario_cedula').value = data.tutor_comunitario_cedula || '';
     if (getElem('tutor_comunitario_nombre')) getElem('tutor_comunitario_nombre').value = data.tutor_comunitario_nombre || '';
 
+    const carreraSelect = document.getElementById('id_carrera');
+    const targetCarreraId = data.id_carrera || (carreraSelect ? carreraSelect.value : 1);
+    if (carreraSelect) {
+        carreraSelect.value = targetCarreraId;
+    }
+
+    actualizarLineasPorCarrera(targetCarreraId, data.linea_id, data.dimension_id);
+}
+
+async function actualizarLineasPorCarrera(carreraId, selectedLineaId = null, selectedDimId = null) {
     const lineaSelect = document.getElementById('linea_id');
-    if (lineaSelect) {
-        lineaSelect.value = data.linea_id || '';
-        updateDimensionOptions(lineaSelect.value);
-        if (data.dimension_id) {
-            const dimSelect = document.getElementById('dimension_id');
-            if (dimSelect) {
-                dimSelect.value = data.dimension_id;
+    if (!lineaSelect) return;
+
+    lineaSelect.innerHTML = '<option value="">Cargando líneas...</option>';
+    
+    try {
+        const url = `?ruta=agregar-documento&accion=obtener_lineas${carreraId ? '&carrera_id=' + encodeURIComponent(carreraId) : ''}`;
+        const res = await fetch(url);
+        const json = await res.json();
+        
+        lineaSelect.innerHTML = '<option value="">Seleccione una Línea...</option>';
+        if (json.status === 'success' && Array.isArray(json.lineas)) {
+            json.lineas.forEach(linea => {
+                const opt = document.createElement('option');
+                opt.value = linea.id;
+                opt.textContent = linea.nombre;
+                lineaSelect.appendChild(opt);
+            });
+        }
+        if (selectedLineaId) {
+            lineaSelect.value = selectedLineaId;
+        }
+        if (typeof updateDimensionOptions === 'function') {
+            updateDimensionOptions(lineaSelect.value);
+            if (selectedDimId) {
+                const dimSelect = document.getElementById('dimension_id');
+                if (dimSelect) dimSelect.value = selectedDimId;
             }
         }
+    } catch (e) {
+        console.error('Error cargando líneas por carrera:', e);
+        lineaSelect.innerHTML = '<option value="">Seleccione una Línea...</option>';
     }
 }
 
@@ -1467,12 +1539,12 @@ function renderizarDocxConMammoth(arrayBuffer) {
                             letter-spacing: 1px;
                             color: #64748b;
                             text-transform: uppercase;
-                            border-bottom: 2px solid #007bff;
+                            border-bottom: 2px solid var(--color-secundario, rgb(80, 89, 132));
                             padding-bottom: 0.5rem;
                             margin-bottom: 2rem;
                         }
                         h1, .doc-title {
-                            color: #002244;
+                            color: var(--texto-titulos, #1E293B);
                             font-size: 1.8rem;
                             font-weight: 800;
                             line-height: 1.25;
@@ -1480,7 +1552,7 @@ function renderizarDocxConMammoth(arrayBuffer) {
                             margin-bottom: 1rem;
                         }
                         h2, .doc-subtitle, .doc-heading-1 {
-                            color: #002244;
+                            color: var(--texto-titulos, #1E293B);
                             font-size: 1.35rem;
                             font-weight: 700;
                             margin-top: 1.75rem;
@@ -1489,7 +1561,7 @@ function renderizarDocxConMammoth(arrayBuffer) {
                             padding-bottom: 0.35rem;
                         }
                         h3, .doc-heading-2 {
-                            color: #007bff;
+                            color: var(--color-secundario, rgb(80, 89, 132));
                             font-size: 1.15rem;
                             font-weight: 700;
                             margin-top: 1.4rem;
@@ -1513,7 +1585,7 @@ function renderizarDocxConMammoth(arrayBuffer) {
                             font-weight: 700;
                         }
                         blockquote, .doc-quote, .doc-quote-intense {
-                            border-left: 4px solid #007bff;
+                            border-left: 4px solid var(--color-secundario, rgb(80, 89, 132));
                             background-color: #f8fafc;
                             padding: 0.85rem 1.25rem;
                             margin: 1.25rem 0;
@@ -1614,7 +1686,7 @@ function inicializarAutocompletadoCedulas() {
                         if (data.status === 'success' && data.nombre) {
                             nomElem.value = data.nombre;
                             nomElem.style.transition = 'background-color 0.3s';
-                            nomElem.style.backgroundColor = '#f0fdf4';
+                            nomElem.style.backgroundColor = 'rgba(112, 144, 203, 0.15)';
                             setTimeout(() => { nomElem.style.backgroundColor = ''; }, 1200);
                         }
                     })
@@ -1743,14 +1815,14 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 
 <!-- MODAL DE PREVISUALIZACIÓN COMPLETA DE FICHA TÉCNICA DE PROYECTO (ADMIN) -->
-<div id="modalFichaAdminPst" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 34, 68, 0.85); backdrop-filter: blur(5px); z-index: 99999; align-items: center; justify-content: center; padding: 1rem;">
-    <div style="background: var(--bg-card, #ffffff); border: 1px solid rgba(169, 168, 166, 0.25); border-radius: 12px; width: 95%; max-width: 1050px; max-height: 92vh; overflow-y: auto; padding: 2rem; box-shadow: 0 20px 45px rgba(0,0,0,0.4); animation: fadeIn 0.2s ease-out;">
+<div id="modalFichaAdminPst" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(5px); z-index: 99999; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: var(--bg-card, #ffffff); border: 1px solid rgba(80, 89, 132, 0.25); border-radius: 12px; width: 95%; max-width: 1050px; max-height: 92vh; overflow-y: auto; padding: 2rem; box-shadow: 0 20px 45px rgba(0,0,0,0.25); animation: fadeIn 0.2s ease-out;">
         
         <!-- Encabezado de la Ficha -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid rgba(0, 34, 68, 0.1); padding-bottom: 1rem; margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid rgba(80, 89, 132, 0.15); padding-bottom: 1rem; margin-bottom: 1.25rem;">
             <div style="flex: 1; padding-right: 1rem;">
                 <div style="display: flex; gap: 0.4rem; align-items: center; margin-bottom: 0.35rem; flex-wrap: wrap;">
-                    <span class="pst-badge-soft" id="modalFichaNivel" style="background: rgba(0, 123, 255, 0.1); color: var(--color-terciario); padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 800;"></span>
+                    <span class="pst-badge-soft" id="modalFichaNivel" style="background: rgba(112, 144, 203, 0.12); color: var(--color-terciario); padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 800;"></span>
                     <span id="modalFichaEstado" style="padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 800;"></span>
                 </div>
                 <h2 id="modalFichaTitulo" style="font-size: 1.35rem; font-weight: 800; color: var(--texto-titulos); margin: 0; line-height: 1.35;"></h2>
@@ -1763,7 +1835,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             <!-- Equipo y Tutores -->
             <div class="grid-2-cols" style="gap: 1.25rem;">
-                <div style="background: #fafbfe; padding: 1rem; border-radius: 8px; border: 1px solid rgba(0, 123, 255, 0.12);">
+                <div style="background: #fafbfe; padding: 1rem; border-radius: 8px; border: 1px solid rgba(112, 144, 203, 0.15);">
                     <strong style="color: var(--color-terciario); display: flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.4rem;">
                         <i class="ph ph-users" style="font-size: 1.1rem;"></i> Autores (Estudiantes del Equipo)
                     </strong>
@@ -1779,7 +1851,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
 
             <!-- Objetivo General -->
-            <div id="modalFichaObjWrapper" style="background: #f0f9ff; border-left: 4px solid var(--color-terciario, #007bff); padding: 1rem 1.1rem; border-radius: 0 8px 8px 0;">
+            <div id="modalFichaObjWrapper" style="background: #fafbfe; border-left: 4px solid var(--color-terciario); padding: 1rem 1.1rem; border-radius: 0 8px 8px 0;">
                 <strong style="color: var(--color-terciario); display: flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.3rem;">
                     <i class="ph ph-target" style="font-size: 1.1rem;"></i> Objetivo General de la Investigación
                 </strong>
@@ -1827,7 +1899,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <!-- Botones Inferiores -->
         <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(169, 168, 166, 0.2); padding-top: 1rem; margin-top: 1.5rem;">
             <div id="modalFichaAdjuntoWrapper">
-                <a id="btnModalFichaVerAdjunto" href="#" target="_blank" class="btn-save" style="background: #0284c7; color: white; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 1rem; text-decoration: none;">
+                <a id="btnModalFichaVerAdjunto" href="#" target="_blank" class="btn-save" style="background: var(--color-secundario); color: white; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 1rem; text-decoration: none;">
                     <i class="ph ph-file-pdf" style="font-size: 1.1rem;"></i> Ver / Descargar Documento Adjunto
                 </a>
             </div>
@@ -1844,12 +1916,12 @@ function abrirModalPrevisualizarFichaAdmin(doc) {
     const badgeEstado = document.getElementById('modalFichaEstado');
     if (doc.activo === false || doc.activo === '0' || doc.activo === 0) {
         badgeEstado.textContent = 'Visibilidad: Oculto';
-        badgeEstado.style.background = '#fde8e8';
-        badgeEstado.style.color = '#9b1c1c';
+        badgeEstado.style.background = 'rgba(100, 116, 139, 0.12)';
+        badgeEstado.style.color = 'var(--texto-silenciado)';
     } else {
         badgeEstado.textContent = 'Visibilidad: Activo';
-        badgeEstado.style.background = '#def7ec';
-        badgeEstado.style.color = '#03543f';
+        badgeEstado.style.background = 'rgba(80, 89, 132, 0.1)';
+        badgeEstado.style.color = 'var(--color-secundario)';
     }
 
     document.getElementById('modalFichaTitulo').textContent = doc.titulo || 'Sin título';
@@ -1883,5 +1955,76 @@ function abrirModalPrevisualizarFichaAdmin(doc) {
     }
 
     document.getElementById('modalFichaAdminPst').style.display = 'flex';
+}
+</script>
+
+<!-- MODAL INTERACTIVO DE SELECCIÓN DE CARRERA PARA EXTRACCIÓN POR LOTES -->
+<div id="modalSeleccionCarreraPst" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center;">
+    <div style="background: #ffffff; border-radius: 16px; padding: 2rem; width: 90%; max-width: 460px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); text-align: center; border: 1px solid rgba(80, 89, 132, 0.2); position: relative;">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(80, 89, 132, 0.1); color: var(--color-secundario); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 1.2rem auto; border: 1px solid rgba(80, 89, 132, 0.25);">
+            <i class="ph ph-graduation-cap"></i>
+        </div>
+        <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--texto-titulos); margin: 0 0 0.5rem 0;">Programa Académico Destino</h3>
+        <p style="font-size: 0.88rem; color: var(--texto-silenciado); margin: 0 0 1.2rem 0; line-height: 1.5;">
+            Selecciona la carrera o PNF al que pertenecen los documentos a extraer:
+        </p>
+
+        <div style="margin-bottom: 1.5rem; text-align: left;">
+            <label style="font-size: 0.78rem; font-weight: 800; color: #334155; display: block; margin-bottom: 0.4rem; text-transform: uppercase;">Carrera / PNF *</label>
+            <select id="selectCarreraModalLote" class="upload-input" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 600; font-size: 0.95rem; background: #f8fafc;">
+                <option value="">Seleccione una Carrera...</option>
+                <?php foreach ($carrerasList as $cItem): ?>
+                    <option value="<?= $cItem['id'] ?>" <?= ((string)$currCarrera === (string)$cItem['id']) ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($cItem['nombre']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+            <button type="button" class="btn-cancel" onclick="cerrarModalCarreraPst()" style="padding: 9px 18px; font-size: 0.88rem;">Cancelar</button>
+            <button type="button" class="btn-save" onclick="confirmarCarreraModalLote()" style="padding: 9px 20px; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="ph ph-check-circle"></i> Continuar Extracción
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let archivosPendientesExtraccion = null;
+
+function cerrarModalCarreraPst() {
+    const modal = document.getElementById('modalSeleccionCarreraPst');
+    if (modal) modal.style.display = 'none';
+    archivosPendientesExtraccion = null;
+    const fileInput = document.getElementById('input_archivo_extractor');
+    if (fileInput) fileInput.value = '';
+}
+
+function confirmarCarreraModalLote() {
+    const selectModal = document.getElementById('selectCarreraModalLote');
+    const carreraVal = selectModal ? selectModal.value : '';
+    
+    if (!carreraVal) {
+        mostrarModalAlerta('warning', 'Selección Requerida', 'Por favor selecciona la carrera destino para procesar la investigación.');
+        return;
+    }
+
+    const carreraSelectForm = document.getElementById('id_carrera');
+    if (carreraSelectForm) {
+        carreraSelectForm.value = carreraVal;
+    }
+
+    // Cargar las líneas de la carrera seleccionada
+    actualizarLineasPorCarrera(carreraVal);
+
+    const modal = document.getElementById('modalSeleccionCarreraPst');
+    if (modal) modal.style.display = 'none';
+
+    if (archivosPendientesExtraccion && archivosPendientesExtraccion.length > 0) {
+        const filesToProcess = archivosPendientesExtraccion;
+        archivosPendientesExtraccion = null;
+        iniciarProcesamientoListaArchivos(filesToProcess, carreraVal);
+    }
 }
 </script>

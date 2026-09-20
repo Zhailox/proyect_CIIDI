@@ -209,20 +209,19 @@ mark, .highlight-match {
     margin-top: 4px;
 }
 
-/* Grilla de Trayectos Académicos */
 .ag-pst-trayectos-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 1.2rem;
-    margin-bottom: 1.8rem;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 0.9rem;
+    margin-bottom: 1.5rem;
 }
 
 .ag-pst-trayecto-card {
     background: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(80, 89, 132, 0.15);
-    border-radius: var(--radius-md, 16px);
-    padding: 1.25rem;
+    border-radius: var(--radius-md, 12px);
+    padding: 0.85rem 1rem;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     text-decoration: none;
     color: inherit;
@@ -498,18 +497,34 @@ mark, .highlight-match {
                 Proyectos Socio-Tecnológicos (PST)
             </h1>
             
+            <?php
+            $selectedCarrera = $filtrosActivos['carrera_id'] ?? null;
+            $carrerasLista = $carreras ?? [];
+            $nombreCarreraHero = 'PNF en Informática';
+            if (!empty($selectedCarrera) && !empty($carrerasLista)) {
+                foreach ($carrerasLista as $c) {
+                    if ((string)$c['id'] === (string)$selectedCarrera) {
+                        $nombreCarreraHero = $c['nombre'];
+                        break;
+                    }
+                }
+            }
+            ?>
             <p class="ag-pst-hero-desc">
-                Plataforma de gestión, visibilidad e impacto de la producción científica desarrollada por la comunidad del PNF en Informática.
+                Plataforma de gestión, visibilidad e impacto de la producción científica desarrollada por la comunidad del <?= htmlspecialchars($nombreCarreraHero) ?>.
             </p>
             
             <form action="index.php" method="GET" class="ag-pst-search-box">
                 <input type="hidden" name="ruta" value="buscador">
                 <i class="ph-bold ph-magnifying-glass" style="font-size: 1.25rem; color: #64748b; margin-left: 12px;"></i>
                 <input type="text" name="q" placeholder="Buscar por título, autor, palabras clave o comunidad..." required>
-                <button type="submit" class="ag-pst-search-btn">
-                    Buscar PST <i class="ph-bold ph-arrow-right"></i>
+                <button type="submit" class="ag-pst-search-btn" title="Buscar usando el motor de búsqueda inteligente unificado">
+                    <i class="ph-bold ph-sparkles"></i> Buscar en Motor Inteligente
                 </button>
             </form>
+            <div style="font-size: 0.78rem; color: rgba(255,255,255,0.75); margin-top: 8px; text-align: center;">
+                <i class="ph-bold ph-info"></i> La búsqueda principal procesará su consulta en el <strong>Buscador Global Inteligente PST</strong>.
+            </div>
         </div>
     </div>
 
@@ -553,7 +568,7 @@ mark, .highlight-match {
             <div class="ag-pst-trayectos-grid">
                 <?php if (!empty($lineasConConteoLista)): ?>
                     <?php foreach ($lineasConConteoLista as $lineaCard): ?>
-                        <a href="?ruta=repositorio&linea_id=<?= $lineaCard['id'] ?>" class="ag-pst-trayecto-card">
+                        <a href="?ruta=repositorio&linea_id=<?= $lineaCard['id'] ?><?= !empty($selectedCarrera) ? '&carrera_id='.$selectedCarrera : '' ?>" class="ag-pst-trayecto-card">
                             <div>
                                 <h4 style="margin-top: 0.2rem;"><?= htmlspecialchars($lineaCard['nombre']) ?></h4>
                                 <p><?= htmlspecialchars($lineaCard['descripcion'] ?: 'Línea de investigación institucional del PNF.') ?></p>
@@ -566,7 +581,7 @@ mark, .highlight-match {
                     <?php endforeach; ?>
                 <?php else: ?>
                     <div style="grid-column: 1 / -1; color: var(--texto-silenciado); font-size: 0.88rem;">
-                        No hay líneas de investigación registradas en la base de datos.
+                        No hay líneas de investigación registradas para esta carrera.
                     </div>
                 <?php endif; ?>
             </div>
@@ -599,8 +614,9 @@ mark, .highlight-match {
                     <tbody id="agPstTableBody">
                         <?php if (empty($documentos)): ?>
                             <tr>
-                                <td colspan="5" style="text-align: center; padding: 2.5rem; color: var(--texto-silenciado, #64748B);">
-                                    No se encontraron publicaciones con los criterios seleccionados.
+                                <td colspan="5" style="text-align: center; padding: 2rem; color: var(--texto-silenciado);">
+                                    <i class="ph-bold ph-folder-open" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
+                                    No se encontraron proyectos Socio-Tecnológicos bajo los criterios seleccionados.
                                 </td>
                             </tr>
                         <?php else: ?>
@@ -674,6 +690,31 @@ mark, .highlight-match {
                 <input type="hidden" name="ruta" value="repositorio">
                 <input type="hidden" name="orden" value="<?= htmlspecialchars($filtrosActivos['orden'] ?? 'desc') ?>">
                 <input type="hidden" name="anio" id="agAnioInput" value="<?= htmlspecialchars($filtrosActivos['anio'] ?? '') ?>">
+
+                <?php 
+                $permitirFiltroCarrera = (bool)ConfigService::get('buscador.permitir_filtro_carrera', false);
+                $carrerasLista = $carreras ?? [];
+                $selectedCarrera = $filtrosActivos['carrera_id'] ?? null;
+                ?>
+                <!-- Programa Académico (Dinámica / Bloqueada) -->
+                <div class="ag-filter-group">
+                    <label><i class="ph-bold ph-graduation-cap"></i> Programa Académico</label>
+                    <?php if ($permitirFiltroCarrera): ?>
+                        <select name="carrera_id" id="agCarreraSelect" class="ag-filter-select" onchange="this.form.submit()">
+                            <option value="">Todas las carreras</option>
+                            <?php foreach ($carrerasLista as $cItem): ?>
+                                <option value="<?= $cItem['id'] ?>" <?= ((string)$selectedCarrera === (string)$cItem['id']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($cItem['nombre']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    <?php else: ?>
+                        <div style="background: rgba(80, 89, 132, 0.08); border: 1px dashed rgba(80, 89, 132, 0.3); padding: 8px 12px; border-radius: var(--radius-sm, 8px); display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: var(--texto-titulos, #1E293B);" title="El repositorio está configurado temporalmente para Informática">
+                            <span>PNF en Informática</span>
+                            <span style="color: #64748B;"><i class="ph-bold ph-lock-key"></i></span>
+                        </div>
+                    <?php endif; ?>
+                </div>
 
                 <!-- Nivel Académico (Pregrado, Maestría, Doctorado, etc.) -->
                 <div class="ag-filter-group">

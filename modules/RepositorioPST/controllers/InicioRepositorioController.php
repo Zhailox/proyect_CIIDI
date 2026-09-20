@@ -44,8 +44,20 @@ class InicioRepositorioController {
         $page = !empty($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
         $offset = ($page - 1) * $limit;
 
+        // Configuración de filtro dinámico de carrera
+        $permitirFiltroCarrera = (bool)ConfigService::get('buscador.permitir_filtro_carrera', false);
+        $carreraDefaultId = (int)ConfigService::get('buscador.carrera_default_id', 1);
+
+        $carreraId = null;
+        if ($permitirFiltroCarrera) {
+            $carreraId = !empty($_GET['carrera_id']) ? (int)$_GET['carrera_id'] : null;
+        } else {
+            $carreraId = $carreraDefaultId;
+        }
+
         // Capturar todos los filtros de la URL
         $filtros = [
+            'carrera_id'      => $carreraId,
             'trayecto'        => !empty($_GET['trayecto']) ? trim($_GET['trayecto']) : null,
             'anio'            => !empty($_GET['anio']) ? (int)$_GET['anio'] : null,
             'linea_id'        => !empty($_GET['linea_id']) ? (int)$_GET['linea_id'] : null,
@@ -60,13 +72,14 @@ class InicioRepositorioController {
         $totalPages = max(1, (int)ceil($totalFiltrados / $limit));
 
         // Colecciones para poblar selectores y tarjetas dinámicas desde la BD
-        $lineas            = $model->getLineasInvestigacion();
-        $lineasConConteo   = $model->getPSTCountByLinea();
+        $carreras          = $model->getCarreras();
+        $lineas            = $model->getLineasInvestigacion($carreraId);
+        $lineasConConteo   = $model->getPSTCountByLinea($carreraId);
         $dimensiones       = $model->getDimensionesOperativas();
         $nivelesAcademicos = $model->getNivelesAcademicos();
         $trayectosList     = $model->getTrayectos();
-        $anioCounts        = $model->getPSTCountByYear();
-        $trayectoCountsBD  = $model->getPSTCountByTrayecto();
+        $anioCounts        = $model->getPSTCountByYear($filtros);
+        $trayectoCountsBD  = $model->getPSTCountByTrayecto($carreraId);
         foreach ($trayectoCountsBD as $tNum => $cnt) {
             $trayectoCounts[$tNum] = $cnt;
         }
@@ -78,6 +91,7 @@ class InicioRepositorioController {
             'totalAutores'      => $cantAutores,
             'totalComunidades'  => $cantComunidades,
             'trayectoCounts'    => $trayectoCounts,
+            'carreras'          => $carreras,
             'lineas'            => $lineas,
             'lineasConConteo'   => $lineasConConteo,
             'dimensiones'       => $dimensiones,

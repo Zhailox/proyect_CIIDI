@@ -44,7 +44,7 @@ class BusquedaGlobalController {
         $carreras     = $model->getCarreras();
         $lineas       = $model->getLineasInvestigacion($carreraId);
         $dimensiones  = $model->getDimensionesOperativas();
-        $anioCounts   = $model->getPSTCountByYear();
+        $anioCounts   = $model->getPSTCountByYear($filtrosExtra);
         
         return [
             'resultados'   => $resultados,

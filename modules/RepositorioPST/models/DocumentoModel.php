@@ -245,6 +245,10 @@ class DocumentoModel {
                 WHERE r.id_tipo_recurso = 1";
         
         $params = [];
+        if (isset($filtros['activo']) && $filtros['activo'] !== 'todos') {
+            $sql .= " AND COALESCE(dp.activo, true) = ?";
+            $params[] = ($filtros['activo'] === true || $filtros['activo'] === '1' || $filtros['activo'] === 1) ? true : false;
+        }
         if (!empty($filtros['carrera_id'])) {
             $sql .= " AND COALESCE(dp.id_carrera, li.id_carrera) = ?";
             $params[] = (int)$filtros['carrera_id'];
@@ -284,6 +288,27 @@ class DocumentoModel {
         $stmt->execute($params);
         $res = $stmt->fetch(PDO::FETCH_ASSOC);
         return $res ? (int)$res['total'] : 0;
+    }
+
+    /**
+     * Obtiene el resumen de métricas globales (Total catálogo, Activos visibles, Con adjunto PDF) en una sola consulta.
+     */
+    public function getPSTStatsResumen(): array {
+        $db = Connection::getInstance();
+        $sql = "SELECT 
+                    COUNT(DISTINCT r.id) AS total_catalog,
+                    COUNT(DISTINCT CASE WHEN COALESCE(dp.activo, true) = true THEN r.id END) AS total_activos,
+                    COUNT(DISTINCT CASE WHEN r.archivo_pdf IS NOT NULL AND TRIM(r.archivo_pdf) != '' THEN r.id END) AS total_con_pdf
+                FROM public.recursos r
+                LEFT JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
+                WHERE r.id_tipo_recurso = 1";
+        $stmt = $db->query($sql);
+        $res = $stmt->fetch(PDO::FETCH_ASSOC);
+        return [
+            'total_catalog' => $res ? (int)$res['total_catalog'] : 0,
+            'total_activos' => $res ? (int)$res['total_activos'] : 0,
+            'total_con_pdf' => $res ? (int)$res['total_con_pdf'] : 0,
+        ];
     }
 
     /**
@@ -404,14 +429,8 @@ class DocumentoModel {
         $qb->tabla('lineas_investigacion');
         if ($carreraId !== null && $carreraId > 0) {
             $qb->where('id_carrera', '=', $carreraId);
-        } elseif (!empty(self::$cacheLineas)) {
-            return self::$cacheLineas;
         }
-        $res = $this->cleanArray($qb->orderBy('nombre', 'ASC')->get());
-        if ($carreraId === null || $carreraId <= 0) {
-            self::$cacheLineas = $res;
-        }
-        return $res;
+        return $this->cleanArray($qb->orderBy('nombre', 'ASC')->get());
     }
 
     public function getDimensionesOperativas(): array {
@@ -472,15 +491,23 @@ class DocumentoModel {
         return !empty($trayectos) ? $trayectos : ['Trayecto I', 'Trayecto II', 'Trayecto III', 'Trayecto IV'];
     }
 
-    public function getPSTCountByLinea(): array {
+    public function getPSTCountByLinea(?int $carreraId = null): array {
         $db = Connection::getInstance();
         $sql = "SELECT li.id, li.nombre, li.descripcion, COUNT(DISTINCT r.id) AS total
                 FROM public.lineas_investigacion li
                 LEFT JOIN public.recurso_clasificaciones rc ON li.id = rc.id_linea_investigacion
                 LEFT JOIN public.recursos r ON rc.id_recurso = r.id AND r.id_tipo_recurso = 1
-                GROUP BY li.id, li.nombre, li.descripcion
-                ORDER BY li.id ASC";
-        $stmt = $db->query($sql);
+                LEFT JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso";
+        $params = [];
+        if ($carreraId !== null && $carreraId > 0) {
+            $sql .= " WHERE (li.id_carrera = ? OR COALESCE(dp.id_carrera, li.id_carrera) = ?)";
+            $params[] = $carreraId;
+            $params[] = $carreraId;
+        }
+        $sql .= " GROUP BY li.id, li.nombre, li.descripcion
+                  ORDER BY li.id ASC";
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $res = [];
         foreach ($rows as $r) {
@@ -494,17 +521,24 @@ class DocumentoModel {
         return $res;
     }
 
-    public function getPSTCountByTrayecto(): array {
+    public function getPSTCountByTrayecto(?int $carreraId = null): array {
         $db = Connection::getInstance();
         $sql = "SELECT dp.trayecto::text AS trayecto, COUNT(DISTINCT r.id) AS total
                 FROM public.recursos r
                 JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
+                LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
+                LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
                 WHERE r.id_tipo_recurso = 1 
                   AND dp.trayecto IS NOT NULL 
-                  AND TRIM(dp.trayecto::text) != ''
-                GROUP BY dp.trayecto::text
-                ORDER BY total DESC";
-        $stmt = $db->query($sql);
+                  AND TRIM(dp.trayecto::text) != ''";
+        $params = [];
+        if ($carreraId !== null && $carreraId > 0) {
+            $sql .= " AND COALESCE(dp.id_carrera, li.id_carrera) = ?";
+            $params[] = $carreraId;
+        }
+        $sql .= " GROUP BY dp.trayecto::text ORDER BY total DESC";
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         $res = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
@@ -625,9 +659,10 @@ class DocumentoModel {
             ];
             $nivelAcademico = $nivelMap[$nivelAcademicoRaw] ?? $nivelAcademicoRaw;
             $trayectoVal = ($nivelAcademicoRaw === 'Pregrado') ? (!empty($datos['trayecto']) ? trim($datos['trayecto']) : 'Trayecto I') : null;
+            $idCarrera = !empty($datos['id_carrera']) ? (int)$datos['id_carrera'] : 1;
 
             $stmt = $db->prepare("INSERT INTO public.detalles_proyectos (id_recurso, fecha_defensa, nivel_academico, trayecto, url_repositorio, resumen, obj_general, id_carrera, comunidad_beneficiada, palabras_clave) 
-                                  VALUES (?, ?, ?::public.nivel_academico_enum, ?, ?, ?, ?, 1, ?, ?)");
+                                  VALUES (?, ?, ?::public.nivel_academico_enum, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([
                 $recursoId,
                 !empty($datos['fecha_defensa']) ? $datos['fecha_defensa'] : date('Y-m-d'),
@@ -636,6 +671,7 @@ class DocumentoModel {
                 !empty($datos['url_repositorio']) ? trim($datos['url_repositorio']) : null,
                 $datos['resumen'] ?? null,
                 $datos['obj_general'] ?? null,
+                $idCarrera,
                 $datos['comunidad_beneficiada'] ?? null,
                 $datos['palabras_clave'] ?? null
             ]);
@@ -792,9 +828,10 @@ class DocumentoModel {
             ];
             $nivelAcademico = $nivelMap[$nivelAcademicoRaw] ?? $nivelAcademicoRaw;
             $trayectoVal = ($nivelAcademicoRaw === 'Pregrado') ? (!empty($datos['trayecto']) ? trim($datos['trayecto']) : 'Trayecto I') : null;
+            $idCarrera = !empty($datos['id_carrera']) ? (int)$datos['id_carrera'] : 1;
 
             $stmt = $db->prepare("UPDATE public.detalles_proyectos 
-                                  SET fecha_defensa = ?, nivel_academico = ?::public.nivel_academico_enum, trayecto = ?, url_repositorio = ?, resumen = ?, obj_general = ?, comunidad_beneficiada = ?, palabras_clave = ? 
+                                  SET fecha_defensa = ?, nivel_academico = ?::public.nivel_academico_enum, trayecto = ?, url_repositorio = ?, resumen = ?, obj_general = ?, id_carrera = ?, comunidad_beneficiada = ?, palabras_clave = ? 
                                   WHERE id_recurso = ?");
             $stmt->execute([
                 !empty($datos['fecha_defensa']) ? $datos['fecha_defensa'] : date('Y-m-d'),
@@ -803,6 +840,7 @@ class DocumentoModel {
                 !empty($datos['url_repositorio']) ? trim($datos['url_repositorio']) : null,
                 $datos['resumen'] ?? null,
                 $datos['obj_general'] ?? null,
+                $idCarrera,
                 $datos['comunidad_beneficiada'] ?? null,
                 $datos['palabras_clave'] ?? null,
                 $id
@@ -990,15 +1028,59 @@ class DocumentoModel {
         return $this->cleanArray($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
-    public function getPSTCountByYear(): array {
-        $qb = new QueryBuilder();
-        $results = $qb->tabla('public.recursos r')
-                      ->select('r.anio_publicacion, COUNT(*) as total')
-                      ->where('r.id_tipo_recurso', '=', 1)
-                      ->groupBy('r.anio_publicacion')
-                      ->orderBy('r.anio_publicacion', 'ASC')
-                      ->get();
-                      
+    public function getPSTCountByYear($filtros = null): array {
+        $db = Connection::getInstance();
+        $sql = "SELECT r.anio_publicacion, COUNT(DISTINCT r.id) as total
+                FROM public.recursos r
+                LEFT JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
+                LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
+                LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
+                WHERE r.id_tipo_recurso = 1";
+        
+        $params = [];
+        if (is_numeric($filtros)) {
+            $carreraId = (int)$filtros;
+            if ($carreraId > 0) {
+                $sql .= " AND COALESCE(dp.id_carrera, li.id_carrera) = ?";
+                $params[] = $carreraId;
+            }
+        } elseif (is_array($filtros)) {
+            if (!empty($filtros['carrera_id'])) {
+                $sql .= " AND COALESCE(dp.id_carrera, li.id_carrera) = ?";
+                $params[] = (int)$filtros['carrera_id'];
+            }
+            if (!empty($filtros['linea_id'])) {
+                $sql .= " AND rc.id_linea_investigacion = ?";
+                $params[] = (int)$filtros['linea_id'];
+            }
+            if (!empty($filtros['dimension_id'])) {
+                $sql .= " AND rc.id_dimension_operativa = ?";
+                $params[] = (int)$filtros['dimension_id'];
+            }
+            if (!empty($filtros['nivel_academico'])) {
+                $nivelMap = [
+                    'Especialización' => 'Especializacion',
+                    'Maestría'        => 'Maestria'
+                ];
+                $valNivel = trim($filtros['nivel_academico']);
+                $valNivel = $nivelMap[$valNivel] ?? $valNivel;
+                $sql .= " AND dp.nivel_academico = ?::public.nivel_academico_enum";
+                $params[] = $valNivel;
+            }
+            if (!empty($filtros['trayecto'])) {
+                $sql .= " AND dp.trayecto = ?";
+                $params[] = trim($filtros['trayecto']);
+            }
+            if (!empty($filtros['comunidad'])) {
+                $sql .= " AND dp.comunidad_beneficiada ILIKE ?";
+                $params[] = '%' . trim($filtros['comunidad']) . '%';
+            }
+        }
+        $sql .= " GROUP BY r.anio_publicacion ORDER BY r.anio_publicacion ASC";
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                       
         $counts = [];
         for ($y = 2018; $y <= 2026; $y++) {
             $counts[$y] = 0;

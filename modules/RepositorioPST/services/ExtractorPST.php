@@ -237,6 +237,11 @@ class ExtractorPST {
         for ($i = 0; $i < $count; $i++) {
             $line = trim($lines[$i]);
 
+            // Ignorar títulos de secciones genéricas del índice / plantilla
+            if (preg_match('/(descripción\s+del\s+proyecto|diagn[oó]stico\s+situacional|descripción\s+del\s+contexto|cuadro\s+\d+|tabla\s+\d+|\.\.\.\.\.)/ui', $line)) {
+                continue;
+            }
+
             if (preg_match('/(1\.1\.1|nombre\s+de\s+la\s+comunidad|comunidad\s+u\s+organización|razón\s+social|empresa\s*\/\s*organización|organización\s+beneficiada|comunidad\s+beneficiada)/ui', $line)) {
 
                 // Ignorar si pertenece a la Tabla de Contenidos del Índice
@@ -248,8 +253,11 @@ class ExtractorPST {
                 }
 
                 // Si el nombre está en la misma línea después de los dos puntos
-                if (preg_match('/:\s*(.+)/u', $line, $m) && mb_strlen(trim($m[1])) > 6) {
-                    return self::limpiarComunidad($m[1]);
+                if (preg_match('/:\s*(.+)/u', $line, $m) && mb_strlen(trim($m[1])) > 4) {
+                    $cand = self::limpiarComunidad($m[1]);
+                    if (!preg_match('/(descripción\s+del|diagnóstico)/ui', $cand)) {
+                        return $cand;
+                    }
                 }
 
                 // Si está en las líneas siguientes
@@ -257,24 +265,27 @@ class ExtractorPST {
                     if (!isset($lines[$i + $k])) break;
                     $candidate = trim($lines[$i + $k]);
 
-                    if (preg_match('/^(1\.1\.2|naturaleza|encargo|objetivos|localización|reseña|cuadro|figura|geográfica)/ui', $candidate)) break;
+                    if (preg_match('/^(1\.1\.2|naturaleza|encargo|objetivos|localización|reseña|cuadro|figura|geográfica|descripción|diagnóstico)/ui', $candidate)) break;
                     if (preg_match('/^(1\.1\.1|nombre\s+de\s+la\s+comunidad)/ui', $candidate)) continue;
 
-                    if (mb_strlen($candidate) > 8) {
-                        return self::limpiarComunidad($candidate);
+                    if (mb_strlen($candidate) > 4) {
+                        $cand = self::limpiarComunidad($candidate);
+                        if (!preg_match('/(descripción\s+del|diagnóstico)/ui', $cand)) {
+                            return $cand;
+                        }
                     }
                 }
             }
         }
 
         // 2. Reconocimiento Dinámico de Entidades Nombradas por Patrón Gramatical (NLP Heurístico)
-        $fullText = implode("\n", array_slice($lines, 0, 200));
-        $pattern = '/\b((?:Escuela|Unidad Educativa|Liceo|Colegio|Instituto|Centro|Departamento|Coordinación|Consejo Comunal|Comité|Corporación|Compañía|Empresa|Clínica|Fundación|Asociación|Servicio|Sociedad|S\.A\.|C\.A\.)\s+(?:[A-ZÁÉÍÓÚÑ0-9\x{201c}\x{201d}“"\'\.\-–\(\)]+\s*){2,12})/u';
+        $fullText = implode("\n", array_slice($lines, 0, 250));
+        $pattern = '/\b((?:Escuela|Unidad Educativa|Liceo|Colegio|Instituto|Centro|Departamento|Coordinación|Consejo Comunal|Comité|Corporación|Compañía|Empresa|Clínica|Fundación|Asociación|Servicio|Sociedad|S\.A\.|C\.A\.|Inversiones)\s+(?:[A-ZÁÉÍÓÚÑ0-9\x{201c}\x{201d}“"\'\.\-–\(\)]+\s*){1,12})/u';
 
         if (preg_match_all($pattern, $fullText, $matches)) {
             foreach ($matches[1] as $match) {
                 $cleaned = self::limpiarComunidad($match);
-                if (mb_strlen($cleaned) > 10 && !preg_match('/(república|ministerio|universidad politécnica|programa nacional)/ui', $cleaned)) {
+                if (mb_strlen($cleaned) > 6 && !preg_match('/(república|ministerio|universidad politécnica|programa nacional|descripción|diagnóstico)/ui', $cleaned)) {
                     return $cleaned;
                 }
             }
@@ -287,7 +298,8 @@ class ExtractorPST {
         $text = preg_replace('/^(1\.1\.1\.?|nombre\s+de\s+la\s+comunidad\s+u\s+organización\.?|localización-geográfica:?\s*-?\s*|razón\s+social:?)\s*/ui', '', $text);
         $text = preg_replace('/^(la\s+comunidad\s+institucional\s+seleccionada\s+para\s+el\s+desarrollo\s+del\s+presente\s+proyecto\s+es\s+el|la\s+comunidad\s+seleccionada\s+es\s+la|la\s+institución\s+educativa,\s+conocida\s+como\s*|se\s+desarrolla\s+en\s+el|ubicado\s+en)\s*/ui', '', $text);
 
-        if (preg_match('/^([^,\.\n]+(?:,\s*[^,\.\n]+){0,2})/u', $text, $m)) {
+        // Permitir puntos en siglas de nombres (ej: Inversiones H.R) sin truncar
+        if (preg_match('/^([^,\n]+(?:,\s*[^,\n]+){0,2})/u', $text, $m)) {
             $text = $m[1];
         }
 
@@ -295,7 +307,7 @@ class ExtractorPST {
             $text = mb_substr($text, 0, 160);
         }
 
-        return trim($text, " \t\r\n\:-.,");
+        return trim($text, " \t\r\n\:-");
     }
 
     /**
@@ -406,6 +418,16 @@ class ExtractorPST {
      */
     private static function limpiarTitulo(string $titulo, int $maxChars = 260): string {
         $titulo = preg_replace('/\s+/u', ' ', $titulo);
+        $titulo = trim($titulo, " \t\r\n\:-.,");
+
+        // Eliminar prefijos de ubicación/cintillo como "VALERA ESTADO TRUJILLO", "VALERA, ESTADO TRUJILLO", "VALERA - EDO TRUJILLO", etc.
+        $patternGeo = '/^\s*(?:valera|trujillo|caracas|maracaibo|barquisimeto|merida|san\s+rafael\s+de\s+carvajal|escuque|motatan)\s*(?:,|\s+|-)*\s*(?:estado|edo\.?|municipio)?\s*(?:trujillo|zulia|lara|merida)?\s*(?:\d{4}|enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)?\s*/ui';
+        for ($k = 0; $k < 2; $k++) {
+            if (preg_match($patternGeo, $titulo)) {
+                $titulo = preg_replace($patternGeo, '', $titulo);
+            }
+        }
+
         $titulo = trim($titulo, " \t\r\n\:-.,");
 
         if (mb_strlen($titulo) > $maxChars) {
