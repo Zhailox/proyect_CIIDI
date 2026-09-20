@@ -1,4 +1,7 @@
 <?php
+require_once CORE_PATH . 'Security/Auth.php';
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
+$nivelAdminArt = SystemConfigService::get('accesos_modulos.articulos.admin', 1);
 $mensajeExito = $_SESSION['mensaje_exito'] ?? '';
 $mensajeError = $_SESSION['mensaje_error'] ?? '';
 
@@ -66,6 +69,7 @@ $tabActiva = $_GET['tab'] ?? 'cat';
             </div>
 
             <!-- Formulario de creación rápida -->
+            <?php if (Auth::requierePrivilegioMinimo($nivelAdminArt, 'crear', 'Articulos', false)): ?>
             <form action="gestor-catalogos" method="POST" style="margin-bottom: 1.25rem;">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                 <input type="hidden" name="tab" value="cat">
@@ -77,6 +81,7 @@ $tabActiva = $_GET['tab'] ?? 'cat';
                     </button>
                 </div>
             </form>
+            <?php endif; ?>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.85rem;">
                 <?php if(empty($categorias['data'])): ?>
@@ -87,19 +92,22 @@ $tabActiva = $_GET['tab'] ?? 'cat';
                         <span style="font-weight: 600; font-size: 0.875rem; color: var(--texto-titulos);"><?= htmlspecialchars($cat['nombre']) ?></span>
                         
                         <div style="display:flex; gap: 0.35rem;">
-                            <button type="button" class="btn-icon btn-edit" title="Editar categoría" onclick="abrirModalEdicion('actualizar_categoria', <?= (int)$cat['id'] ?>, '<?= htmlspecialchars($cat['nombre'], ENT_QUOTES) ?>', 'cat')">
-                                <i class="ph-bold ph-pencil-simple"></i>
-                            </button>
-
-                            <form action="gestor-catalogos" method="POST" class="form-inline-delete">
-                                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-                                <input type="hidden" name="tab" value="cat">
-                                <input type="hidden" name="accion" value="eliminar_categoria">
-                                <input type="hidden" name="id" value="<?= (int)$cat['id'] ?>">
-                                <button type="button" class="btn-icon btn-delete" title="Eliminar categoría" onclick="confirmarEliminacionCatalogo(this.form, 'Eliminar Categoría', '¿Está seguro de eliminar la categoría «<?= htmlspecialchars($cat['nombre'], ENT_QUOTES) ?>» del sistema?');">
-                                    <i class="ph-bold ph-trash"></i>
+                            <?php if (Auth::requierePrivilegioMinimo($nivelAdminArt, 'editar', 'Articulos', false)): ?>
+                                <button type="button" class="btn-icon btn-edit" title="Editar categoría" onclick="abrirModalEdicion('actualizar_categoria', <?= (int)$cat['id'] ?>, '<?= htmlspecialchars($cat['nombre'], ENT_QUOTES) ?>', 'cat')">
+                                    <i class="ph-bold ph-pencil-simple"></i>
                                 </button>
-                            </form>
+                            <?php endif; ?>
+                            <?php if (Auth::requierePrivilegioMinimo($nivelAdminArt, 'eliminar', 'Articulos', false)): ?>
+                                <form action="gestor-catalogos" method="POST" class="form-inline-delete">
+                                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                                    <input type="hidden" name="tab" value="cat">
+                                    <input type="hidden" name="accion" value="eliminar_categoria">
+                                    <input type="hidden" name="id" value="<?= (int)$cat['id'] ?>">
+                                    <button type="button" class="btn-icon btn-delete" title="Eliminar categoría" onclick="confirmarEliminacionCatalogo(this.form, 'Eliminar Categoría', '¿Está seguro de eliminar la categoría «<?= htmlspecialchars($cat['nombre'], ENT_QUOTES) ?>» del sistema?');">
+                                        <i class="ph-bold ph-trash"></i>
+                                    </button>
+                                </form>
+                            <?php endif; ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -139,18 +147,19 @@ $tabActiva = $_GET['tab'] ?? 'cat';
                 </form>
             </div>
 
-            <form action="gestor-catalogos" method="POST" style="margin-bottom: 1.25rem;">
-                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-                <input type="hidden" name="tab" value="tag">
-                <input type="hidden" name="accion" value="crear_etiqueta">
-                <div style="display:flex; gap:0.5rem; max-width: 500px;">
-                    <input type="text" name="nombre" class="login-flat-input w-100 p-input" placeholder="Nombre de la nueva etiqueta..." required style="padding: 0.5rem 0.75rem; font-size: 0.85rem; border-radius: 6px;">
-                    <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem; border-radius: 6px; flex-shrink:0;">
-                        <i class="ph-bold ph-plus"></i> Añadir
-                    </button>
-                </div>
-            </form>
-
+            <?php if (Auth::requierePrivilegioMinimo($nivelAdminArt, 'crear', 'Articulos', false)): ?>
+                <form action="gestor-catalogos" method="POST" style="margin-bottom: 1.25rem;">
+                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                    <input type="hidden" name="tab" value="tag">
+                    <input type="hidden" name="accion" value="crear_etiqueta">
+                    <div style="display:flex; gap:0.5rem; max-width: 500px;">
+                        <input type="text" name="nombre" class="login-flat-input w-100 p-input" placeholder="Nombre de la nueva etiqueta..." required style="padding: 0.5rem 0.75rem; font-size: 0.85rem; border-radius: 6px;">
+                        <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem; border-radius: 6px; flex-shrink:0;">
+                            <i class="ph-bold ph-plus"></i> Añadir
+                        </button>
+                    </div>
+                </form>
+            <?php endif; ?>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.85rem;">
                 <?php if(empty($etiquetas['data'])): ?>
                     <p class="text-muted" style="grid-column: 1 / -1; text-align:center; padding: 2rem; font-style:italic;">No hay etiquetas registradas.</p>
@@ -160,19 +169,23 @@ $tabActiva = $_GET['tab'] ?? 'cat';
                         <span style="font-weight: 600; font-size: 0.875rem; color: var(--color-secundario);">#<?= htmlspecialchars($tag['nombre']) ?></span>
                         
                         <div style="display:flex; gap: 0.35rem;">
-                            <button type="button" class="btn-icon btn-edit" title="Editar etiqueta" onclick="abrirModalEdicion('actualizar_etiqueta', <?= (int)$tag['id'] ?>, '<?= htmlspecialchars($tag['nombre'], ENT_QUOTES) ?>', 'tag')">
-                                <i class="ph-bold ph-pencil-simple"></i>
-                            </button>
-
-                            <form action="gestor-catalogos" method="POST" class="form-inline-delete">
-                                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-                                <input type="hidden" name="tab" value="tag">
-                                <input type="hidden" name="accion" value="eliminar_etiqueta">
-                                <input type="hidden" name="id" value="<?= (int)$tag['id'] ?>">
-                                <button type="button" class="btn-icon btn-delete" title="Eliminar etiqueta" onclick="confirmarEliminacionCatalogo(this.form, 'Eliminar Etiqueta', '¿Está seguro de eliminar la etiqueta «#<?= htmlspecialchars($tag['nombre'], ENT_QUOTES) ?>» del sistema?');">
-                                    <i class="ph-bold ph-trash"></i>
+                            <?php if (Auth::requierePrivilegioMinimo($nivelAdminArt, 'editar', 'Articulos', false)): ?>
+                                <button type="button" class="btn-icon btn-edit" title="Editar etiqueta" onclick="abrirModalEdicion('actualizar_etiqueta', <?= (int)$tag['id'] ?>, '<?= htmlspecialchars($tag['nombre'], ENT_QUOTES) ?>', 'tag')">
+                                    <i class="ph-bold ph-pencil-simple"></i>
                                 </button>
-                            </form>
+                            <?php endif; ?>
+
+                            <?php if (Auth::requierePrivilegioMinimo($nivelAdminArt, 'eliminar', 'Articulos', false)): ?>
+                                <form action="gestor-catalogos" method="POST" class="form-inline-delete">
+                                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                                    <input type="hidden" name="tab" value="tag">
+                                    <input type="hidden" name="accion" value="eliminar_etiqueta">
+                                    <input type="hidden" name="id" value="<?= (int)$tag['id'] ?>">
+                                    <button type="button" class="btn-icon btn-delete" title="Eliminar etiqueta" onclick="confirmarEliminacionCatalogo(this.form, 'Eliminar Etiqueta', '¿Está seguro de eliminar la etiqueta «#<?= htmlspecialchars($tag['nombre'], ENT_QUOTES) ?>» del sistema?');">
+                                        <i class="ph-bold ph-trash"></i>
+                                    </button>
+                                </form>
+                            <?php endif; ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -211,19 +224,19 @@ $tabActiva = $_GET['tab'] ?? 'cat';
                     <button type="submit" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size:0.85rem; border-radius:6px;">Buscar</button>
                 </form>
             </div>
-
-            <form action="gestor-catalogos" method="POST" style="margin-bottom: 1.25rem;">
-                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-                <input type="hidden" name="tab" value="edit">
-                <input type="hidden" name="accion" value="crear_editorial">
-                <div style="display:flex; gap:0.5rem; max-width: 500px;">
-                    <input type="text" name="nombre" class="login-flat-input w-100 p-input" placeholder="Nombre del nuevo editorial/repositorio..." required style="padding: 0.5rem 0.75rem; font-size: 0.85rem; border-radius: 6px;">
-                    <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem; border-radius: 6px; flex-shrink:0;">
-                        <i class="ph-bold ph-plus"></i> Añadir
-                    </button>
-                </div>
-            </form>
-
+            <?php if (Auth::requierePrivilegioMinimo($nivelAdminArt, 'crear', 'Articulos', false)): ?>
+                <form action="gestor-catalogos" method="POST" style="margin-bottom: 1.25rem;">
+                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                    <input type="hidden" name="tab" value="edit">
+                    <input type="hidden" name="accion" value="crear_editorial">
+                    <div style="display:flex; gap:0.5rem; max-width: 500px;">
+                        <input type="text" name="nombre" class="login-flat-input w-100 p-input" placeholder="Nombre del nuevo editorial/repositorio..." required style="padding: 0.5rem 0.75rem; font-size: 0.85rem; border-radius: 6px;">
+                        <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem; border-radius: 6px; flex-shrink:0;">
+                            <i class="ph-bold ph-plus"></i> Añadir
+                        </button>
+                    </div>
+                </form>
+            <?php endif; ?>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.85rem;">
                 <?php if(empty($editoriales['data'])): ?>
                     <p class="text-muted" style="grid-column: 1 / -1; text-align:center; padding: 2rem; font-style:italic;">No hay editoriales registradas.</p>
@@ -233,19 +246,22 @@ $tabActiva = $_GET['tab'] ?? 'cat';
                         <span style="font-weight: 600; font-size: 0.875rem; color: var(--texto-titulos);"><?= htmlspecialchars($edit['nombre']) ?></span>
                         
                         <div style="display:flex; gap: 0.35rem;">
-                            <button type="button" class="btn-icon btn-edit" title="Editar editorial" onclick="abrirModalEdicion('actualizar_editorial', <?= (int)$edit['id'] ?>, '<?= htmlspecialchars($edit['nombre'], ENT_QUOTES) ?>', 'edit')">
-                                <i class="ph-bold ph-pencil-simple"></i>
-                            </button>
-
-                            <form action="gestor-catalogos" method="POST" class="form-inline-delete">
-                                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-                                <input type="hidden" name="tab" value="edit">
-                                <input type="hidden" name="accion" value="eliminar_editorial">
-                                <input type="hidden" name="id" value="<?= (int)$edit['id'] ?>">
-                                <button type="button" class="btn-icon btn-delete" title="Eliminar editorial" onclick="confirmarEliminacionCatalogo(this.form, 'Eliminar Editorial', '¿Está seguro de eliminar la editorial «<?= htmlspecialchars($edit['nombre'], ENT_QUOTES) ?>» del sistema?');">
-                                    <i class="ph-bold ph-trash"></i>
+                            <?php if (Auth::requierePrivilegioMinimo($nivelAdminArt, 'editar', 'Articulos', false)): ?>
+                                <button type="button" class="btn-icon btn-edit" title="Editar editorial" onclick="abrirModalEdicion('actualizar_editorial', <?= (int)$edit['id'] ?>, '<?= htmlspecialchars($edit['nombre'], ENT_QUOTES) ?>', 'edit')">
+                                    <i class="ph-bold ph-pencil-simple"></i>
                                 </button>
-                            </form>
+                            <?php endif; ?>
+                            <?php if (Auth::requierePrivilegioMinimo($nivelAdminArt, 'eliminar', 'Articulos', false)): ?>
+                                <form action="gestor-catalogos" method="POST" class="form-inline-delete">
+                                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                                    <input type="hidden" name="tab" value="edit">
+                                    <input type="hidden" name="accion" value="eliminar_editorial">
+                                    <input type="hidden" name="id" value="<?= (int)$edit['id'] ?>">
+                                    <button type="button" class="btn-icon btn-delete" title="Eliminar editorial" onclick="confirmarEliminacionCatalogo(this.form, 'Eliminar Editorial', '¿Está seguro de eliminar la editorial «<?= htmlspecialchars($edit['nombre'], ENT_QUOTES) ?>» del sistema?');">
+                                        <i class="ph-bold ph-trash"></i>
+                                    </button>
+                                </form>
+                            <?php endif; ?>
                         </div>
                     </div>
                 <?php endforeach; ?>

@@ -52,7 +52,7 @@ class ArticulosController {
     }
 
     public function gestor() {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'Articulos');
+        Auth::requierePrivilegioMinimo($this->nivelAdmin);
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         $filtros = [
@@ -464,7 +464,7 @@ class ArticulosController {
         }
     }
     public function gestorCatalogos() {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'Articulos');
+        Auth::requierePrivilegioMinimo($this->nivelAdmin);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (session_status() === PHP_SESSION_NONE) session_start();

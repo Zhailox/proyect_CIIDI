@@ -1,4 +1,7 @@
 <?php
+require_once CORE_PATH . 'Security/Auth.php';
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
+$nivelAdminArt = SystemConfigService::get('accesos_modulos.articulos.admin', 1);
 $paginaActual = (int) ($paginacion['pagina'] ?? 1);
 $paginasTotales = (int) ($paginacion['paginas'] ?? 1);
 $busquedaActual = $_GET['q'] ?? '';
@@ -29,9 +32,11 @@ $buildUrl = function($page) use ($busquedaActual) {
             <a href="gestor-catalogos" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.85rem; border-radius: 6px;">
                 <i class="ph-bold ph-tags"></i> Catálogos
             </a>
-            <a href="nuevo-articulo" class="btn btn-primary gestor-art-btn-new" style="padding: 0.45rem 0.85rem; font-size: 0.85rem; border-radius: 6px;">
-                <i class="ph-bold ph-plus"></i> Registrar Artículo
-            </a>
+            <?php if (Auth::requierePrivilegioMinimo($nivelAdminArt, 'crear', 'Articulos', false)): ?>
+                <a href="nuevo-articulo" class="btn btn-primary gestor-art-btn-new" style="padding: 0.45rem 0.85rem; font-size: 0.85rem; border-radius: 6px;">
+                    <i class="ph-bold ph-plus"></i> Registrar Artículo
+                </a>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -88,21 +93,25 @@ $buildUrl = function($page) use ($busquedaActual) {
                                     <span class="art-category-badge"><?= htmlspecialchars($art['categoria'] ?? 'Sin categoría') ?></span>
                                 </td>
                                 <td class="art-actions-col">
-                                    <a href="toggle-estado-articulo?id=<?= $art['id'] ?>" class="btn-icon" style="background: <?= ($art['activo'] ?? true) ? '#fef3c7; color: #92400e;' : '#dcfce7; color: #15803d;' ?>" title="<?= ($art['activo'] ?? true) ? 'Ocultar' : 'Activar' ?>">
-                                        <i class="ph-bold <?= ($art['activo'] ?? true) ? 'ph-eye-slash' : 'ph-eye' ?>"></i>
-                                    </a>
+                                    <?php if (Auth::requierePrivilegioMinimo($nivelAdminArt, 'editar', 'Articulos', false)): ?>
+                                        <a href="toggle-estado-articulo?id=<?= $art['id'] ?>" class="btn-icon" style="background: <?= ($art['activo'] ?? true) ? '#fef3c7; color: #92400e;' : '#dcfce7; color: #15803d;' ?>" title="<?= ($art['activo'] ?? true) ? 'Ocultar' : 'Activar' ?>">
+                                            <i class="ph-bold <?= ($art['activo'] ?? true) ? 'ph-eye-slash' : 'ph-eye' ?>"></i>
+                                        </a>
 
-                                    <a href="editar-articulo?id=<?= $art['id'] ?>" class="btn-icon btn-edit" title="Editar">
-                                        <i class="ph-bold ph-pencil-simple"></i>
-                                    </a>
+                                        <a href="editar-articulo?id=<?= $art['id'] ?>" class="btn-icon btn-edit" title="Editar">
+                                            <i class="ph-bold ph-pencil-simple"></i>
+                                        </a>
+                                    <?php endif; ?>
                                     
-                                    <form action="eliminar-articulo" method="POST" class="form-inline-delete" id="form-delete-<?= $art['id'] ?>">
-                                        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-                                        <input type="hidden" name="id_articulo" value="<?= $art['id'] ?>">
-                                        <button type="button" class="btn-icon btn-delete" title="Eliminar" onclick="confirmarEliminacion(<?= $art['id'] ?>)">
-                                            <i class="ph-bold ph-trash"></i>
-                                        </button>
-                                    </form>
+                                    <?php if (Auth::requierePrivilegioMinimo($nivelAdminArt, 'eliminar', 'Articulos', false)): ?>
+                                        <form action="eliminar-articulo" method="POST" class="form-inline-delete" id="form-delete-<?= $art['id'] ?>">
+                                            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                                            <input type="hidden" name="id_articulo" value="<?= $art['id'] ?>">
+                                            <button type="button" class="btn-icon btn-delete" title="Eliminar" onclick="confirmarEliminacion(<?= $art['id'] ?>)">
+                                                <i class="ph-bold ph-trash"></i>
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
