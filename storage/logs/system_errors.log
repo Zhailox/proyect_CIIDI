@@ -1058,3 +1058,15 @@ Trace:
 #4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
 #5 {main}
 --------------------------------------------------------------------------------
+[2026-09-22 19:10:47] ERROR: could not find driver en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(170): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Database\QueryBuilder.php(19): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\models\UsuarioModel.php(11): QueryBuilder->__construct()
+#4 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(13): UsuarioModel->__construct()
+#5 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(60): LoginController->__construct()
+#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('login', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------

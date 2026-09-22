@@ -211,8 +211,8 @@ mark, .highlight-match {
 
 .ag-pst-trayectos-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-    gap: 0.9rem;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1rem;
     margin-bottom: 1.5rem;
 }
 
@@ -221,13 +221,16 @@ mark, .highlight-match {
     backdrop-filter: blur(10px);
     border: 1px solid rgba(80, 89, 132, 0.15);
     border-radius: var(--radius-md, 12px);
-    padding: 0.85rem 1rem;
+    padding: 1rem 1.1rem;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     text-decoration: none;
     color: inherit;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    min-width: 0; /* Previene desbordamiento en CSS Grid */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .ag-pst-trayecto-card:hover {
@@ -250,17 +253,23 @@ mark, .highlight-match {
 }
 
 .ag-pst-trayecto-card h4 {
-    font-size: 0.98rem;
+    font-size: 0.92rem;
     font-weight: 800;
     color: var(--texto-titulos, #1E293B);
-    margin: 0 0 0.3rem 0;
+    margin: 0.2rem 0 0.4rem 0;
+    line-height: 1.35;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    hyphens: auto;
 }
 
 .ag-pst-trayecto-card p {
     font-size: 0.8rem;
     color: var(--texto-silenciado, #64748B);
-    line-height: 1.4;
+    line-height: 1.45;
     margin: 0 0 0.8rem 0;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .ag-pst-trayecto-card .t-count {
@@ -457,6 +466,7 @@ mark, .highlight-match {
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-wrap: wrap;
 }
 
 .ag-page-link {
@@ -479,6 +489,60 @@ mark, .highlight-match {
 
 .ag-page-link:hover:not(.active) {
     background: rgba(80, 89, 132, 0.08);
+}
+
+/* AJUSTES RESPONSIVOS Y MOBILE FIRST */
+@media (max-width: 768px) {
+    .ag-pst-hero {
+        padding: 2rem 1.2rem;
+    }
+
+    .ag-pst-hero-title {
+        font-size: 1.6rem;
+    }
+
+    .ag-pst-search-box {
+        flex-direction: column;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.98);
+        padding: 10px;
+    }
+
+    .ag-pst-search-box input {
+        width: 100%;
+    }
+
+    .ag-pst-search-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .ag-pst-trayectos-grid {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+
+    .ag-pst-trayecto-card h4 {
+        font-size: 0.9rem;
+    }
+
+    .ag-pst-stats-row {
+        grid-template-columns: 1fr;
+    }
+
+    .ag-pst-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .ag-pst-table {
+        min-width: 600px;
+    }
+
+    .ag-pst-filter-sidebar {
+        position: static;
+        margin-top: 1rem;
+    }
 }
 </style>
 
@@ -811,33 +875,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const nivelEl = document.getElementById('agNivelAcademicoSelect');
     if (nivelEl) toggleTrayectoByNivel(nivelEl.value);
 
-    // Canvas animation
+    // Canvas animation optimizada con IntersectionObserver
     const canvas = document.getElementById('pst-nodes-canvas');
     if (canvas) {
         const ctx = canvas.getContext('2d');
         let width = canvas.width = canvas.offsetWidth;
         let height = canvas.height = canvas.offsetHeight;
+        let animId = null;
+        let isCanvasVisible = true;
         
+        let resizeTimeout;
         window.addEventListener('resize', () => {
-            if (!canvas) return;
-            width = canvas.width = canvas.offsetWidth;
-            height = canvas.height = canvas.offsetHeight;
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (!canvas) return;
+                width = canvas.width = canvas.offsetWidth;
+                height = canvas.height = canvas.offsetHeight;
+            }, 150);
         });
 
         const particles = [];
-        const numParticles = 40;
+        const numParticles = 30;
 
         for (let i = 0; i < numParticles; i++) {
             particles.push({
                 x: Math.random() * width,
                 y: Math.random() * height,
-                vx: (Math.random() - 0.5) * 0.5,
-                vy: (Math.random() - 0.5) * 0.5,
+                vx: (Math.random() - 0.5) * 0.4,
+                vy: (Math.random() - 0.5) * 0.4,
                 radius: Math.random() * 2 + 1.2
             });
         }
 
         function animate() {
+            if (!isCanvasVisible) return;
             ctx.clearRect(0, 0, width, height);
 
             for (let i = 0; i < numParticles; i++) {
@@ -869,9 +940,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-            requestAnimationFrame(animate);
+            animId = requestAnimationFrame(animate);
         }
-        animate();
+
+        // Pausar renderizado cuando el canvas no está visible en pantalla (ahorro masivo de CPU/GPU)
+        if ('IntersectionObserver' in window) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    isCanvasVisible = entry.isIntersecting;
+                    if (isCanvasVisible) {
+                        if (!animId) animate();
+                    } else if (animId) {
+                        cancelAnimationFrame(animId);
+                        animId = null;
+                    }
+                });
+            }, { threshold: 0.05 });
+            observer.observe(canvas);
+        } else {
+            animate();
+        }
     }
 
     // Lazy Loading scroll listener si está activo en la configuración
