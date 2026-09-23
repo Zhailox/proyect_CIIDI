@@ -95,7 +95,7 @@
             background: #ffffff;
             border: 1px solid rgba(80, 89, 132, 0.18);
             border-radius: 10px;
-            padding: 16px;
+            padding: 18px;
             margin-bottom: 24px;
             text-align: center;
         }
@@ -103,7 +103,7 @@
         .chart-box h3 {
             font-size: 11px;
             color: var(--color-secundario);
-            margin: 0 0 12px 0;
+            margin: 0 0 14px 0;
             text-transform: uppercase;
             letter-spacing: 0.6px;
             font-weight: 800;
@@ -208,15 +208,15 @@
         <div><strong>Total Registros Evaluados:</strong> <?= count($datos) ?></div>
     </div>
 
-    <!-- SECCIÓN DE GRÁFICO ESTADÍSTICO CON CANVA INVISIBLE Y SOLO UNA IMAGEN PNG -->
+    <!-- SECCIÓN DE GRÁFICO ESTADÍSTICO CON ETANQUETAS DE TRAYECTO GRANDES Y LEGIBLES -->
     <?php if (($tipoGrafico ?? 'bar') !== 'none' && !empty($estadisticasGrafico['labels'])): ?>
     <div class="chart-box">
         <h3>Analítica Estadística Agrupada</h3>
-        <div style="max-width: 540px; margin: 0 auto; min-height: 200px; position: relative;">
-            <!-- Canvas oculto únicamente para procesamiento dinámico de Chart.js -->
-            <canvas id="pdfChartCanvas" width="540" height="200" style="display: none !important;"></canvas>
-            <!-- Imagen única en pantalla e impresión -->
-            <img id="pdfChartImg" class="chart-render-img" style="display: block; max-width: 100%; height: auto; margin: 0 auto; border-radius: 6px;" alt="Gráfico Estadístico">
+        <div style="max-width: 680px; margin: 0 auto; min-height: 280px; position: relative;">
+            <!-- Canvas oculto únicamente para procesamiento -->
+            <canvas id="pdfChartCanvas" width="680" height="280" style="display: none !important;"></canvas>
+            <!-- Imagen nítida de alta definición en pantalla e impresión -->
+            <img id="pdfChartImg" class="chart-render-img" style="display: block; width: 100%; max-width: 680px; height: auto; margin: 0 auto; border-radius: 8px;" alt="Gráfico Estadístico">
         </div>
     </div>
 
@@ -258,15 +258,28 @@
                 maintainAspectRatio: true,
                 animation: false,
                 plugins: {
-                    legend: { display: (chartType === 'doughnut' || chartType === 'pie') ? true : false }
+                    legend: { 
+                        display: (chartType === 'doughnut' || chartType === 'pie') ? true : false,
+                        labels: { 
+                            font: { size: 14, weight: 'bold', family: "'Inter', sans-serif" },
+                            color: '#1e293b',
+                            padding: 16
+                        }
+                    }
                 },
                 scales: (chartType === 'doughnut' || chartType === 'pie') ? {} : {
-                    y: { beginAtZero: true }
+                    y: { 
+                        beginAtZero: true, 
+                        ticks: { font: { size: 13, weight: '600', family: "'Inter', sans-serif" }, color: '#1e293b' } 
+                    },
+                    x: { 
+                        ticks: { font: { size: 14, weight: '800', family: "'Inter', sans-serif" }, color: '#121a3e' } 
+                    }
                 }
             }
         });
 
-        // Inmediatamente convertimos el canvas procesado a imagen PNG y lo asignamos al elemento <img>
+        // Convertir canvas a DataURL Base64
         try {
             const dataUrl = canvas.toDataURL('image/png');
             if (img && dataUrl) {

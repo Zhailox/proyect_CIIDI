@@ -184,12 +184,12 @@ $lineasInvestigacion = $lineas ?? [];
                 </select>
             </div>
 
-            <!-- Previsualización reducida -->
+            <!-- Previsualización en Vivo de Mayor Altura y Fuentes Grandes -->
             <div style="background: #f8fafc; border: 1px solid rgba(80,89,132,0.12); border-radius: 8px; padding: 1rem; margin-top: 1rem;">
                 <div style="font-size: 0.78rem; font-weight: 800; color: var(--color-secundario); margin-bottom: 0.5rem; text-transform: uppercase;">
                     Vista Previa en Tiempo Real del Gráfico
                 </div>
-                <div style="width: 100%; height: 160px; position: relative;">
+                <div style="width: 100%; height: 230px; position: relative;">
                     <canvas id="agPreviewChartCanvas"></canvas>
                 </div>
             </div>
@@ -256,7 +256,7 @@ $lineasInvestigacion = $lineas ?? [];
     </div>
 </div>
 
-<!-- LÓGICA DE RENDERING DE CHART.JS -->
+<!-- LÓGICA DE RENDERING DE CHART.JS CON FUENTES AMPLIADAS -->
 <script>
 let previewChartInstance = null;
 const statsGrafico = <?= json_encode($graficoStats) ?>;
@@ -303,10 +303,19 @@ function renderizarGraficoCanvas() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: tipoVal === 'doughnut' ? true : false }
+                legend: { 
+                    display: tipoVal === 'doughnut' ? true : false,
+                    labels: { font: { size: 13, weight: 'bold' } }
+                }
             },
             scales: tipoVal === 'doughnut' ? {} : {
-                y: { beginAtZero: true }
+                y: { 
+                    beginAtZero: true,
+                    ticks: { font: { size: 12, weight: '600' }, color: '#1e293b' } 
+                },
+                x: { 
+                    ticks: { font: { size: 13, weight: 'bold' }, color: '#1e293b' } 
+                }
             }
         }
     });
