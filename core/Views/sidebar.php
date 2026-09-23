@@ -44,45 +44,46 @@ $ruta          = $ruta ?? '';
             </a>
             
         <?php elseif ($item['tipo'] === 'parent'): ?>
-            <?php 
-                $is_active_parent = in_array($ruta, $item['activadores']); 
-                $tieneSubitems = !empty($item['subitems']);
-            ?>
-            <div class="nav-parent <?php echo $is_active_parent ? 'open' : ''; ?>">
-                <a href="<?php echo $item['enlace']; ?>" 
-                   class="nav-item nav-parent-link <?php echo $is_active_parent ? 'active' : ''; ?>">
-                  <span class="nav-icon"><?php echo $icono_html; ?></span> 
-                  <span class="nav-text" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                      <span><?php echo $item['titulo']; ?></span>
-                      <?php if ($tieneSubitems): ?>
-                          <i class="ph-bold ph-caret-down nav-caret" style="font-size: 0.8rem; transition: transform 0.25s ease;"></i>
-                      <?php endif; ?>
-                  </span>
-                </a>
-                
+        <?php 
+            $is_active_parent = in_array($ruta, $item['activadores']); 
+            $tieneSubitems = !empty($item['subitems']);
+        ?>
+        <div class="nav-parent <?php echo $is_active_parent ? 'open' : ''; ?>">
+            <a href="<?php echo $item['enlace']; ?>" 
+            class="nav-item nav-parent-link <?php echo $is_active_parent ? 'active' : ''; ?>">
+            <span class="nav-icon"><?php echo $icono_html; ?></span> 
+            <span class="nav-text" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <span><?php echo $item['titulo']; ?></span>
                 <?php if ($tieneSubitems): ?>
-                <div class="sub-menu">
-                    <?php foreach ($item['subitems'] as $sub): ?>
-                        <?php 
-                            $subPriv = $sub['privilegio_minimo'] ?? 999;
-                            $subPermiso = $sub['permiso_rbac'] ?? null;
-                            $subModulo = $sub['modulo_rbac'] ?? null;
-                            
-                            if ($subPermiso && $subModulo) {
-                                if (!Auth::requierePrivilegioMinimo($subPriv, $subPermiso, $subModulo, false)) continue;
-                            } else {
-                                if (!$esAdminTotal && $nivelUsuario > $subPriv) continue;
-                            }
-                        ?>
-                        <a href="<?php echo $sub['ruta']; ?>" class="sub-nav-item <?php echo ($ruta == $sub['ruta']) ? 'active' : ''; ?>">
-                            <span class="nav-text"><?php echo $sub['titulo']; ?></span>
-                        </a>
-                    <?php endforeach; ?>
-                </div>
+                    <i class="ph-bold ph-caret-down nav-caret" 
+                        style="font-size: 0.8rem; transition: transform 0.25s ease; cursor: pointer; padding: 4px;"
+                        onclick="toggleSidebarParent(event)"></i>
                 <?php endif; ?>
-            </div>
+            </span>
+            </a>
             
-        <?php endif; ?>
+            <?php if ($tieneSubitems): ?>
+            <div class="sub-menu">
+                <?php foreach ($item['subitems'] as $sub): ?>
+                    <?php 
+                        $subPriv = $sub['privilegio_minimo'] ?? 999;
+                        $subPermiso = $sub['permiso_rbac'] ?? null;
+                        $subModulo = $sub['modulo_rbac'] ?? null;
+                        
+                        if ($subPermiso && $subModulo) {
+                            if (!Auth::requierePrivilegioMinimo($subPriv, $subPermiso, $subModulo, false)) continue;
+                        } else {
+                            if (!$esAdminTotal && $nivelUsuario > $subPriv) continue;
+                        }
+                    ?>
+                    <a href="<?php echo $sub['ruta']; ?>" class="sub-nav-item <?php echo ($ruta == $sub['ruta']) ? 'active' : ''; ?>">
+                        <span class="nav-text"><?php echo $sub['titulo']; ?></span>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
         
     <?php endforeach; ?>
 
@@ -90,12 +91,16 @@ $ruta          = $ruta ?? '';
 </aside>
 
 <script>
-function toggleSidebarParent(el, ev) {
+function toggleSidebarParent(ev) {
+    // Evitamos que el click se propague al enlace padre
     ev.preventDefault();
     ev.stopPropagation();
-    const parentContainer = el.closest('.nav-parent');
+
+    // Encontramos el contenedor .nav-parent más cercano al elemento clickeado
+    const parentContainer = ev.target.closest('.nav-parent');
     if (!parentContainer) return;
-    
+
+    // Alternamos la clase 'open'
     parentContainer.classList.toggle('open');
 }
 </script>

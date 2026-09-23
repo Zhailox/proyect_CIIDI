@@ -1,7 +1,3 @@
-/* ==========================================================================
-   GESTOR DE USUARIOS & RBAC - ESTILOS MEJORADOS (ESTILO.MD)
-   ========================================================================== */
-
 .gestor-mt-title {
     margin-top: 1.5rem;
 }
@@ -21,12 +17,17 @@
     font-weight: 800 !important;
 }
 
-/* Pestañas de Navegación Interna (Tabs) */
+/* Estilos explícitos garantizados para Pestañas (Tabs) y Selectores */
 .sa-tabs-header {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    align-items: center;
+    display: flex !important;
+    gap: 0.5rem !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    margin-bottom: 1.5rem !important;
+    background: #ffffff !important;
+    padding: 8px !important;
+    border-radius: var(--radius-sm, 8px) !important;
+    border: 1px solid rgba(80, 89, 132, 0.15) !important;
 }
 
 .sa-tab-btn {
@@ -65,17 +66,23 @@
     color: #ffffff !important;
 }
 
-/* Inputs de Filtro y Controles con alto contraste y diseño personalizado */
-.sa-filter-input, input[type="text"].sa-filter-input {
+/* Input y Select Búsqueda / Form Filter */
+input.sa-filter-input, input[type="text"].sa-filter-input, input[type="email"].sa-filter-input, input[type="password"].sa-filter-input {
     background-color: #ffffff !important;
-    border: 1px solid rgba(80, 89, 132, 0.25) !important;
+    border: 1px solid rgba(80, 89, 132, 0.3) !important;
     color: #121a3e !important;
-    font-weight: 700 !important;
+    font-weight: 600 !important;
     font-size: 0.88rem !important;
     border-radius: 6px !important;
     padding: 8px 14px !important;
     outline: none !important;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: none !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+input.sa-filter-input:focus, input[type="text"].sa-filter-input:focus {
+    border-color: #7090cb !important;
+    box-shadow: 0 0 0 3px rgba(112, 144, 203, 0.2) !important;
 }
 
 select.sa-filter-input, select.ag-input, select {
@@ -95,13 +102,6 @@ select.sa-filter-input, select.ag-input, select {
     background-position: right 12px top 50% !important;
     background-size: 10px auto !important;
     cursor: pointer !important;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.sa-filter-input:focus, select.sa-filter-input:focus, input[type="text"].sa-filter-input:focus, select:focus {
-    border-color: var(--color-terciario) !important;
-    box-shadow: 0 0 0 3px rgba(112, 144, 203, 0.2) !important;
-    color: #121a3e !important;
 }
 
 select.sa-filter-input option, select option {
@@ -111,187 +111,384 @@ select.sa-filter-input option, select option {
     padding: 8px !important;
 }
 
-/* Formulario de búsqueda rápida */
-.gestor-search-form {
-    display: flex;
-    gap: 1rem;
-    max-width: 600px;
-}
-
-.gestor-search-input {
-    width: 100%;
-    border: 1px solid rgba(80, 89, 132, 0.25);
-    background: #ffffff;
-    border-radius: 6px;
-    padding: 0.6rem 1rem;
-    font-size: 0.95rem;
-    color: var(--color-principal);
-    font-weight: 600;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.gestor-search-input:focus {
-    outline: none;
-    border-color: var(--color-terciario);
-    box-shadow: 0 0 0 3px rgba(112, 144, 203, 0.15);
-}
-
-.btn-search-cedula {
-    background-color: var(--color-secundario);
-    color: #ffffff !important;
-    border-radius: 6px;
-    font-weight: 700;
-    padding: 0.6rem 1.2rem;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.btn-search-cedula:hover {
-    background-color: var(--color-principal);
-}
-
-.gestor-error-msg {
-    margin-top: 1rem;
-    color: #ef4444;
-    font-weight: 600;
-}
-
-/* Tarjeta del usuario buscado */
-.gestor-result-box {
-    margin-top: 1.5rem;
-    border-top: 1px solid rgba(80, 89, 132, 0.12);
-    padding-top: 1.5rem;
-}
-
-.gestor-result-title {
-    color: var(--color-terciario);
-    margin-bottom: 1rem;
-    font-weight: 800;
-}
-
-.gestor-user-card {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #ffffff;
-    padding: 1.5rem;
-    border-radius: var(--radius-sm);
-    border: 1px solid rgba(80, 89, 132, 0.18);
-    box-shadow: 0 4px 15px rgba(18, 26, 62, 0.04);
-}
-
-.gestor-user-name {
-    margin: 0;
-    font-size: 1.3rem;
-    font-weight: 800;
-    color: var(--color-principal);
-}
-
-.gestor-user-meta {
-    margin: 0.3rem 0;
-    color: var(--texto-silenciado);
-    font-weight: 500;
-}
-
-/* Badges (Etiquetas de estado) */
-.gestor-badge-role,
-.gestor-badge-status {
-    display: inline-block;
-    padding: 0.3rem 0.85rem;
-    border-radius: 6px;
-    font-weight: 700;
-    font-size: 0.78rem;
-    margin-top: 0.5rem;
-    margin-right: 0.5rem;
-}
-
-.gestor-badge-role {
-    background: rgba(80, 89, 132, 0.12);
-    color: var(--color-secundario);
-    border: 1px solid rgba(80, 89, 132, 0.2);
-}
-
-.status-active {
-    background: rgba(16, 185, 129, 0.12);
-    color: #047857;
-    border: 1px solid rgba(16, 185, 129, 0.25);
-}
-
-.status-suspended {
-    background: rgba(239, 68, 68, 0.12);
-    color: #b91c1c;
-    border: 1px solid rgba(239, 68, 68, 0.25);
-}
-
-/* Grid del Plantel Docente */
+/* Grilla de Docentes */
 .gestor-teachers-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.25rem;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+    gap: 1.25rem !important;
+    margin-top: 1rem !important;
 }
 
 .gestor-teacher-card {
-    background: #ffffff;
-    border-radius: var(--radius-sm);
-    padding: 1.25rem;
-    border: 1px solid rgba(80, 89, 132, 0.18);
-    box-shadow: 0 4px 15px rgba(18, 26, 62, 0.03);
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.25s ease;
+    background: #ffffff !important;
+    border: 1px solid rgba(80, 89, 132, 0.2) !important;
+    border-radius: 10px !important;
+    padding: 1.25rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    box-shadow: 0 4px 12px rgba(18, 26, 62, 0.04) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
 }
 
 .gestor-teacher-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(18, 26, 62, 0.07);
-    border-color: var(--color-terciario);
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 20px rgba(18, 26, 62, 0.08) !important;
+    border-color: rgba(112, 144, 203, 0.4) !important;
 }
 
 .gestor-teacher-avatar {
-    width: 48px;
-    height: 48px;
-    background: linear-gradient(135deg, var(--color-secundario), var(--color-principal));
-    color: #ffffff;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 1.2rem;
-    flex-shrink: 0;
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 50% !important;
+    background: #121a3e !important;
+    color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 800 !important;
+    font-size: 1.2rem !important;
+    flex-shrink: 0 !important;
 }
 
 .gestor-teacher-info {
-    flex: 1;
+    flex: 1 !important;
+    min-width: 0 !important;
 }
 
 .gestor-teacher-name {
-    margin: 0;
-    color: var(--negro);
-    font-weight: 700;
-    font-size: 0.95rem;
+    margin: 0 !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    color: #121a3e !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
 .gestor-teacher-cedula {
-    font-size: 0.8rem;
-    color: var(--texto-silenciado);
+    display: block !important;
+    font-size: 0.8rem !important;
+    color: #64748b !important;
+    margin-top: 2px !important;
+    font-weight: 600 !important;
 }
 
-.gestor-teacher-remove {
-    background: rgba(112, 144, 203, 0.12);
-    color: var(--color-terciario);
-    border-radius: 6px;
+.gestor-teacher-remove i {
+    font-size: 1.4rem !important;
+}
+/* ==========================================================================
+   RBAC — Toolbar unificado y tarjetas de nivel
+   ========================================================================== */
+
+/* Barra superior con título + acciones */
+.rbac-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #f8fafc, #ffffff);
+    border: 1px solid rgba(80, 89, 132, 0.15);
+    border-radius: var(--radius-sm);
+    margin-bottom: 1.15rem;
+}
+
+.rbac-toolbar-info h4 {
+    margin: 0 0 0.2rem 0;
+    font-size: 1rem;
+    font-weight: 800;
+    color: #121a3e;
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 1.3rem;
-    transition: background 0.2s, color 0.2s;
-    padding: 0.4rem;
+    gap: 6px;
 }
 
-.gestor-teacher-remove:hover {
-    background: var(--color-terciario);
-    color: #ffffff !important;
+.rbac-toolbar-info h4 i {
+    color: var(--color-secundario);
+}
+
+.rbac-toolbar-info p {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--texto-silenciado);
+    line-height: 1.4;
+}
+
+.rbac-toolbar-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Botones del RBAC (misma familia visual que .btn pero compactos) */
+.rbac-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    line-height: 1;
+    font-family: var(--font-family);
+    white-space: nowrap;
+}
+
+.rbac-btn i { font-size: 1rem; }
+
+.rbac-btn-outline {
+    background: #ffffff;
+    color: var(--color-secundario);
+    border-color: rgba(80, 89, 132, 0.3);
+}
+.rbac-btn-outline:hover {
+    background: rgba(112, 144, 203, 0.1);
+    border-color: var(--color-terciario);
+    transform: translateY(-1px);
+}
+
+.rbac-btn-solid {
+    background: var(--color-secundario);
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(80, 89, 132, 0.22);
+}
+.rbac-btn-solid:hover {
+    background: var(--btn-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(80, 89, 132, 0.3);
+}
+
+.rbac-btn-solid:active,
+.rbac-btn-outline:active {
+    transform: scale(0.98);
+}
+
+/* Tarjetas de nivel (details/summary) */
+.rbac-level {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(18, 26, 62, 0.03);
+    flex-shrink: 0;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rbac-level[open] {
+    border-color: rgba(112, 144, 203, 0.4);
+    box-shadow: 0 6px 18px rgba(18, 26, 62, 0.08);
+}
+
+.rbac-level-summary {
+    padding: 12px 16px;
+    font-weight: 800;
+    color: var(--color-secundario);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8fafc;
+    list-style: none;
+    transition: background 0.15s ease;
+    user-select: none;
+}
+
+.rbac-level-summary::-webkit-details-marker { display: none; }
+.rbac-level-summary:hover { background: #eef2f9; }
+
+.rbac-level-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+}
+
+.rbac-level-title i.ph-shield-star {
+    color: var(--color-terciario);
+    font-size: 1.15rem;
+}
+
+.rbac-level-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Papelera discreta */
+.rbac-level-delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 0;
+}
+
+.rbac-level-delete:hover {
+    background: rgba(239, 68, 68, 0.08);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.22);
+}
+
+.rbac-level-delete i { font-size: 1.05rem; }
+
+/* Caret con rotación suave */
+.rbac-level-caret {
+    color: #94a3b8;
+    transition: transform 0.25s ease, color 0.2s ease;
+    font-size: 0.95rem;
+}
+
+.rbac-level[open] .rbac-level-caret {
+    transform: rotate(180deg);
+    color: var(--color-secundario);
+}
+
+/* Footer del form de la matriz */
+.rbac-form-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 1.15rem;
+    padding-top: 1rem;
+    border-top: 1px dashed #e2e8f0;
+}
+
+/* Sección de roles */
+.rbac-roles-section {
+    margin-top: 2rem;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 1.35rem;
+}
+
+.rbac-roles-section h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--texto-titulos);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rbac-roles-section h4 i {
+    color: var(--color-terciario);
+}
+
+/* Grid de roles */
+.rbac-roles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+/* Tarjeta del rol supremo (inmutable) */
+.rbac-role-card-locked {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 0.85rem 1rem;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+/* Tarjeta editable de rol */
+.rbac-role-card {
+    background: #ffffff;
+    border: 1px solid rgba(80, 89, 132, 0.2);
+    padding: 0.85rem 1rem;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    box-shadow: 0 2px 8px rgba(18, 26, 62, 0.02);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rbac-role-card:hover {
+    border-color: rgba(112, 144, 203, 0.4);
+    box-shadow: 0 4px 14px rgba(18, 26, 62, 0.05);
+}
+
+.rbac-role-card .rbac-role-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.rbac-role-card .rbac-role-row input[type="text"] {
+    flex: 1;
+    min-width: 0;
+}
+
+.rbac-role-card .rbac-role-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.rbac-role-card .rbac-role-actions .rbac-btn {
+    flex: 1;
+    justify-content: center;
+}
+
+.rbac-btn-danger-outline {
+    background: rgba(239, 68, 68, 0.06);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.rbac-btn-danger-outline:hover {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: #ef4444;
+    transform: translateY(-1px);
+}
+
+/* Badge de nivel */
+.rbac-level-badge {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    background: #1e293b;
+    color: #ffffff;
+    white-space: nowrap;
+}
+.rbac-roles-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px dashed #e2e8f0;
+}
+
+/* Ajuste: el h4 ya no lleva el margen inferior porque el header lo maneja */
+.rbac-roles-section h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--texto-titulos);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rbac-roles-section h4 i {
+    color: var(--color-terciario);
 }

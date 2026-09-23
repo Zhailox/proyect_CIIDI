@@ -612,34 +612,32 @@ class GestorUsuariosController {
     }
     public function eliminarNivelPrivilegioAction() {
         Auth::requierePrivilegioMinimo(0);
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $nivel = (int)($_POST['nivel'] ?? 0);
-            
-            // Protección de los niveles base
-            if ($nivel <= 3) {
-                if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['mensaje_gestor_error'] = "Seguridad: No se pueden eliminar los niveles base (0 al 3) del sistema.";
-            } else {
-                try {
-                    // 1. Eliminar de la Base de Datos
-                    $this->adminModel->eliminarPrivilegio($nivel);
-                    
-                    // 2. Purgar de la tabla matriz_rbac en PostgreSQL
-                    $db = Connection::getInstance();
-                    $stmt = $db->prepare("DELETE FROM matriz_rbac WHERE nivel_privilegio = ?");
-                    $stmt->execute([$nivel]);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
 
-                    AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Nivel', "Nivel de privilegio {$nivel} eliminado de la BD y purgado del RBAC.");
-                    if (session_status() === PHP_SESSION_NONE) session_start();
-                    $_SESSION['mensaje_gestor_exito'] = "Nivel {$nivel} eliminado y purgado de la matriz correctamente.";
-                } catch (Throwable $e) {
-                    if (session_status() === PHP_SESSION_NONE) session_start();
-                    $_SESSION['mensaje_gestor_error'] = "No se puede eliminar un nivel que tiene roles asignados.";
-                }
-            }
+        $nivel = (int)($_POST['nivel'] ?? 0);
+
+        if ($nivel <= 3) {
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            $_SESSION['mensaje_gestor_error'] = "Seguridad: No se pueden eliminar los niveles base (0 al 3).";
             header("Location: gestor-usuarios");
             exit;
         }
+
+        // Verificación + eliminación atómica
+        $resultado = $this->adminModel->eliminarPrivilegio($nivel);
+
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        if ($resultado['exito']) {
+            AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Nivel',
+                "Nivel de privilegio {$nivel} eliminado de la BD y purgado del RBAC.");
+            $_SESSION['mensaje_gestor_exito'] = $resultado['mensaje'];
+        } else {
+            $_SESSION['mensaje_gestor_error'] = $resultado['mensaje'];
+        }
+
+        header("Location: gestor-usuarios");
+        exit;
     }
 
     /**

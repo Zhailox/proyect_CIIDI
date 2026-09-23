@@ -211,14 +211,31 @@ class AdminUsuarioModel {
     }
     // Extiende la jerarquía añadiendo el siguiente número disponible
     public function extenderNivelPrivilegio(): bool {
-        $db = Connection::getInstance();
-        $stmt = $db->query("SELECT MAX(nivel_privilegio) FROM privilegios");
-        $maxNivel = (int) $stmt->fetchColumn();
-        $nuevoNivel = $maxNivel + 1;
-        
-        $stmtInsert = $db->prepare("INSERT INTO privilegios (nivel_privilegio) VALUES (?)");
-        return $stmtInsert->execute([$nuevoNivel]);
+    $db = Connection::getInstance();
+
+    // Buscar el primer número faltante entre 1 y el MAX actual
+    $sql = "
+        SELECT n
+        FROM generate_series(
+            1,
+            GREATEST((SELECT COALESCE(MAX(nivel_privilegio), 0) FROM privilegios), 1)
+        ) AS n
+        WHERE n NOT IN (SELECT nivel_privilegio FROM privilegios)
+        ORDER BY n ASC
+        LIMIT 1
+    ";
+    $stmt = $db->query($sql);
+    $nuevoNivel = $stmt->fetchColumn();
+
+    // Si no hay huecos (todo contiguo), continuamos después del máximo
+    if ($nuevoNivel === false) {
+        $stmtMax = $db->query("SELECT COALESCE(MAX(nivel_privilegio), 0) FROM privilegios");
+        $nuevoNivel = (int) $stmtMax->fetchColumn() + 1;
     }
+
+    $stmtInsert = $db->prepare("INSERT INTO privilegios (nivel_privilegio) VALUES (?)");
+    return $stmtInsert->execute([(int) $nuevoNivel]);
+}
 
     // Elimina un rol (fallará intencionalmente por protección de BD si tiene usuarios asignados)
     public function eliminarRol(int $id): bool {
@@ -226,10 +243,52 @@ class AdminUsuarioModel {
         $stmt = $db->prepare("DELETE FROM roles WHERE id = ?");
         return $stmt->execute([$id]);
     }
+    
     // Elimina un nivel de privilegio específico
-    public function eliminarPrivilegio(int $nivel): bool {
-        $db = Connection::getInstance();
-        $stmt = $db->prepare("DELETE FROM privilegios WHERE nivel_privilegio = ?");
-        return $stmt->execute([$nivel]);
+    public function eliminarPrivilegio(int $nivel): array {
+    $db = Connection::getInstance();
+
+    // 1. Buscar roles que cuelgan de este nivel
+    $stmtRoles = $db->prepare("
+        SELECT r.id, r.nombre, COUNT(u.id) AS total_usuarios
+        FROM roles r
+        INNER JOIN privilegios p ON r.privilegio_id = p.privilegio_id
+        LEFT JOIN usuarios u ON u.id_rol = r.id
+        WHERE p.nivel_privilegio = ?
+        GROUP BY r.id, r.nombre
+    ");
+    $stmtRoles->execute([$nivel]);
+    $rolesAfectados = $stmtRoles->fetchAll(PDO::FETCH_ASSOC);
+
+    if (!empty($rolesAfectados)) {
+        $totalUsuarios = array_sum(array_column($rolesAfectados, 'total_usuarios'));
+        $detalleRoles = [];
+        foreach ($rolesAfectados as $r) {
+            $detalleRoles[] = "«{$r['nombre']}» ({$r['total_usuarios']} usuario(s))";
+        }
+        return [
+            'exito' => false,
+            'mensaje' => "Bloqueado por seguridad: el Nivel {$nivel} tiene roles asignados → " 
+                       . implode(', ', $detalleRoles) 
+                       . ". Reasigna o elimina estos roles antes de borrar el nivel."
+        ];
     }
+
+    // 2. Sin dependencias → eliminar todo en una sola transacción
+    try {
+        $db->beginTransaction();
+
+        $stmtDel = $db->prepare("DELETE FROM privilegios WHERE nivel_privilegio = ?");
+        $stmtDel->execute([$nivel]);
+
+        $stmtRbac = $db->prepare("DELETE FROM matriz_rbac WHERE nivel_privilegio = ?");
+        $stmtRbac->execute([$nivel]);
+
+        $db->commit();
+        return ['exito' => true, 'mensaje' => "Nivel {$nivel} eliminado y purgado del RBAC correctamente."];
+    } catch (Throwable $e) {
+        if ($db->inTransaction()) $db->rollBack();
+        return ['exito' => false, 'mensaje' => "Error de base de datos al eliminar el nivel: " . $e->getMessage()];
+    }
+}
 }

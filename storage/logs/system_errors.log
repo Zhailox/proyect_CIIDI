@@ -1256,3 +1256,290 @@ Trace:
 #4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
 #5 {main}
 --------------------------------------------------------------------------------
+[2026-09-23 13:34:08] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\DetallePSTController.php(590): AuditLogger::registrar('WARNING', 'RepositorioPST', 'Eliminar Proyec...', 'Proyecto PST ID...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): DetallePSTController->crear()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('agregar-documen...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 13:34:17] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\DetallePSTController.php(388): AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Extrac...', 'Error al cargar...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): DetallePSTController->crear()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('agregar-documen...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 13:34:37] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\DetallePSTController.php(678): AuditLogger::registrar('INFO', 'RepositorioPST', 'Registrar Proye...', 'Proyecto PST re...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): DetallePSTController->crear()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('agregar-documen...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 14:07:35] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(588): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Extender Privil...', 'Se ha creado un...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorUsuariosController->crearNivelPrivilegioAction()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('crear-nivel-pri...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 14:07:37] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(588): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Extender Privil...', 'Se ha creado un...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorUsuariosController->crearNivelPrivilegioAction()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('crear-nivel-pri...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 14:07:39] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(632): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Nivel', 'Nivel de privil...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorUsuariosController->eliminarNivelPrivilegioAction()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('eliminar-nivel-...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 14:07:42] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(588): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Extender Privil...', 'Se ha creado un...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorUsuariosController->crearNivelPrivilegioAction()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('crear-nivel-pri...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 14:07:45] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(588): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Extender Privil...', 'Se ha creado un...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorUsuariosController->crearNivelPrivilegioAction()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('crear-nivel-pri...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 14:07:48] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(632): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Nivel', 'Nivel de privil...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorUsuariosController->eliminarNivelPrivilegioAction()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('eliminar-nivel-...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 14:07:50] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(632): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Nivel', 'Nivel de privil...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorUsuariosController->eliminarNivelPrivilegioAction()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('eliminar-nivel-...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 14:07:52] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(632): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Nivel', 'Nivel de privil...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorUsuariosController->eliminarNivelPrivilegioAction()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('eliminar-nivel-...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 14:07:55] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(588): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Extender Privil...', 'Se ha creado un...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorUsuariosController->crearNivelPrivilegioAction()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('crear-nivel-pri...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 14:07:58] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(632): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Nivel', 'Nivel de privil...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorUsuariosController->eliminarNivelPrivilegioAction()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('eliminar-nivel-...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 14:15:41] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(588): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Extender Privil...', 'Se ha creado un...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorUsuariosController->crearNivelPrivilegioAction()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('crear-nivel-pri...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 14:15:47] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(588): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Extender Privil...', 'Se ha creado un...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorUsuariosController->crearNivelPrivilegioAction()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('crear-nivel-pri...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 14:15:51] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(632): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Nivel', 'Nivel de privil...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorUsuariosController->eliminarNivelPrivilegioAction()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('eliminar-nivel-...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 14:15:54] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(632): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Nivel', 'Nivel de privil...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorUsuariosController->eliminarNivelPrivilegioAction()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('eliminar-nivel-...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 14:15:59] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(632): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Nivel', 'Nivel de privil...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorUsuariosController->eliminarNivelPrivilegioAction()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('eliminar-nivel-...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 14:16:01] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(632): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Nivel', 'Nivel de privil...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorUsuariosController->eliminarNivelPrivilegioAction()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('eliminar-nivel-...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 16:19:19] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\services\BackupService.php(72): AuditLogger::registrar('INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo pre_re...')
+#2 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(629): BackupService::crearBackup('sql.gz', false, NULL, 'pre_restore_che...')
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->restaurarBackup()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('restaurar-backu...', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 16:19:19] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(665): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Restaurar BD', 'Base de datos r...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->restaurarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('restaurar-backu...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 16:19:22] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(392): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo elimin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->eliminarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('eliminar-backup', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 16:35:45] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\DetallePSTController.php(590): AuditLogger::registrar('WARNING', 'RepositorioPST', 'Eliminar Proyec...', 'Proyecto PST ID...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): DetallePSTController->crear()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('agregar-documen...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 16:35:54] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\DetallePSTController.php(388): AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Extrac...', 'Error al cargar...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): DetallePSTController->crear()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('agregar-documen...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 16:36:56] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\DetallePSTController.php(590): AuditLogger::registrar('WARNING', 'RepositorioPST', 'Eliminar Proyec...', 'Proyecto PST ID...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): DetallePSTController->crear()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('agregar-documen...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 16:39:54] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\DetallePSTController.php(388): AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Extrac...', 'Error al cargar...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): DetallePSTController->crear()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('agregar-documen...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------

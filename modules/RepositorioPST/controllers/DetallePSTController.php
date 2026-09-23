@@ -534,13 +534,8 @@ class DetallePSTController {
             } catch (Exception $e) {
                 require_once CORE_PATH . 'Security/Auth.php';
                 $tituloFallo = !empty($datos['titulo']) ? $datos['titulo'] : 'Proyecto Sin Título';
-                AuditLogger::registrar(
-                    'WARNING', 
-                    'RepositorioPST', 
-                    'Fallo en Carga de Lote (AJAX)', 
-                    "Error al intentar guardar el PST '{$tituloFallo}': " . $e->getMessage()
-                );
-
+                AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Extracción Masiva', "Error al intentar guardar el PST '{$tituloFallo}': " . $e->getMessage());
+                
                 echo json_encode([
                     'status' => 'error',
                     'message' => $e->getMessage()
@@ -632,9 +627,9 @@ class DetallePSTController {
                         AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo de Formato', "Intento de subir un archivo con extensión no permitida (.{$ext}). Archivo ignorado.");
                     }
                 } elseif ($_FILES['archivo_pst']['error'] !== UPLOAD_ERR_NO_FILE) {
-                    // Si el error NO es 4 (que significa "no se subió archivo"), entonces hubo un fallo técnico
                     $codigoError = $_FILES['archivo_pst']['error'];
-                    AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Subida de Archivo', "El documento adjunto fue rechazado por el servidor (Código de error PHP: {$codigoError}). El registro continuó sin el archivo.");
+                    $tituloTemporal = !empty($_POST['titulo']) ? trim($_POST['titulo']) : 'Sin Título';
+                    AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Subida de Archivo', "El PST '{$tituloTemporal}' se procesó, pero el documento fue rechazado (Código: {$codigoError}).");
                 }
             }
 
@@ -747,7 +742,8 @@ class DetallePSTController {
                             }
                         } elseif ($_FILES['archivo_pst']['error'] !== UPLOAD_ERR_NO_FILE) {
                             $codigoError = $_FILES['archivo_pst']['error'];
-                            AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Subida de Archivo (Edición)', "El nuevo documento adjunto fue rechazado por el servidor (Código de error PHP: {$codigoError}).");
+                            $tituloTemporal = !empty($_POST['titulo']) ? trim($_POST['titulo']) : 'Sin Título';
+                            AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Subida de Archivo (Edición)', "El PST '{$tituloTemporal}' se actualizó, pero el nuevo documento fue rechazado (Código: {$codigoError}).");
                         }
                     }
 

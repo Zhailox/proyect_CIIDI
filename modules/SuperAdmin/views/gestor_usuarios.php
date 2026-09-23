@@ -55,168 +55,7 @@ if (isset($privilegios)) {
 ?>
 
 
-<style>
-/* Estilos explícitos garantizados para Pestañas (Tabs) y Selectores */
-.sa-tabs-header {
-    display: flex !important;
-    gap: 0.5rem !important;
-    flex-wrap: wrap !important;
-    align-items: center !important;
-    margin-bottom: 1.5rem !important;
-    background: #ffffff !important;
-    padding: 8px !important;
-    border-radius: var(--radius-sm, 8px) !important;
-    border: 1px solid rgba(80, 89, 132, 0.15) !important;
-}
 
-.sa-tab-btn {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    padding: 10px 18px !important;
-    border-radius: 8px !important;
-    border: 1px solid transparent !important;
-    background: transparent !important;
-    color: #64748b !important;
-    font-weight: 700 !important;
-    font-size: 0.88rem !important;
-    cursor: pointer !important;
-    white-space: nowrap !important;
-    transition: all 0.2s ease !important;
-}
-
-.sa-tab-btn i {
-    font-size: 1.1rem !important;
-}
-
-.sa-tab-btn:hover {
-    color: #121a3e !important;
-    background: rgba(112, 144, 203, 0.12) !important;
-}
-
-.sa-tab-btn.tab-active, .sa-tab-btn.active {
-    background: #121a3e !important;
-    color: #ffffff !important;
-    border-color: #121a3e !important;
-    box-shadow: 0 4px 14px rgba(18, 26, 62, 0.25) !important;
-}
-
-.sa-tab-btn.tab-active i, .sa-tab-btn.active i {
-    color: #ffffff !important;
-}
-
-/* Input y Select Búsqueda / Form Filter */
-input.sa-filter-input, input[type="text"].sa-filter-input, input[type="email"].sa-filter-input, input[type="password"].sa-filter-input {
-    background-color: #ffffff !important;
-    border: 1px solid rgba(80, 89, 132, 0.3) !important;
-    color: #121a3e !important;
-    font-weight: 600 !important;
-    font-size: 0.88rem !important;
-    border-radius: 6px !important;
-    padding: 8px 14px !important;
-    outline: none !important;
-    box-shadow: none !important;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
-}
-
-input.sa-filter-input:focus, input[type="text"].sa-filter-input:focus {
-    border-color: #7090cb !important;
-    box-shadow: 0 0 0 3px rgba(112, 144, 203, 0.2) !important;
-}
-
-select.sa-filter-input, select.ag-input, select {
-    background-color: #ffffff !important;
-    border: 1px solid rgba(80, 89, 132, 0.3) !important;
-    color: #121a3e !important;
-    font-weight: 700 !important;
-    font-size: 0.88rem !important;
-    border-radius: 6px !important;
-    padding: 8px 36px 8px 14px !important;
-    outline: none !important;
-    appearance: none !important;
-    -webkit-appearance: none !important;
-    -moz-appearance: none !important;
-    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23505984%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E") !important;
-    background-repeat: no-repeat !important;
-    background-position: right 12px top 50% !important;
-    background-size: 10px auto !important;
-    cursor: pointer !important;
-}
-
-select.sa-filter-input option, select option {
-    background-color: #ffffff !important;
-    color: #121a3e !important;
-    font-weight: 600 !important;
-    padding: 8px !important;
-}
-
-/* Grilla de Docentes */
-.gestor-teachers-grid {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
-    gap: 1.25rem !important;
-    margin-top: 1rem !important;
-}
-
-.gestor-teacher-card {
-    background: #ffffff !important;
-    border: 1px solid rgba(80, 89, 132, 0.2) !important;
-    border-radius: 10px !important;
-    padding: 1.25rem !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 1rem !important;
-    box-shadow: 0 4px 12px rgba(18, 26, 62, 0.04) !important;
-    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
-}
-
-.gestor-teacher-card:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 20px rgba(18, 26, 62, 0.08) !important;
-    border-color: rgba(112, 144, 203, 0.4) !important;
-}
-
-.gestor-teacher-avatar {
-    width: 46px !important;
-    height: 46px !important;
-    border-radius: 50% !important;
-    background: #121a3e !important;
-    color: #ffffff !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-weight: 800 !important;
-    font-size: 1.2rem !important;
-    flex-shrink: 0 !important;
-}
-
-.gestor-teacher-info {
-    flex: 1 !important;
-    min-width: 0 !important;
-}
-
-.gestor-teacher-name {
-    margin: 0 !important;
-    font-size: 0.95rem !important;
-    font-weight: 700 !important;
-    color: #121a3e !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-}
-
-.gestor-teacher-cedula {
-    display: block !important;
-    font-size: 0.8rem !important;
-    color: #64748b !important;
-    margin-top: 2px !important;
-    font-weight: 600 !important;
-}
-
-.gestor-teacher-remove i {
-    font-size: 1.4rem !important;
-}
-</style>
 
 <!-- NAVEGACIÓN INTERNA EN PESTAÑAS (TABS) PARA SECCIONAR RESPONSABILIDADES -->
 <div class="sa-tabs-header glass-panel mb-2">
@@ -367,48 +206,54 @@ select.sa-filter-input option, select option {
      ========================================================================== -->
 <div id="tab-rbac" class="sa-tab-content" style="display: none;">
     <div class="glass-panel mb-2" style="padding: 1.5rem; border-radius: var(--radius-sm);">
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
-            <div>
-                <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem; font-weight: 700; color: var(--texto-titulos); display: flex; align-items: center; gap: 6px;">
-                    <i class="ph-bold ph-shield-check" style="color: var(--color-secundario);"></i> Matriz Granular de Permisos (RBAC)
-                </h4>
-                <p style="font-size: 0.85rem; color: var(--texto-silenciado); margin: 0;">
-                    Asigne permisos dinámicos por tipo de acción para controlar el comportamiento del sistema.
-                </p>
-            </div>
-            <form action="crear-nivel-privilegio" method="POST" style="margin: 0;">
-                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-                <button type="button" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem; border-color: var(--color-terciario); color: var(--color-terciario);" onclick="mostrarConfirmacionUsuarios(this.form, 'Extender Privilegios', '¿Crear un nuevo nivel jerárquico superior en la base de datos?', 'ph-sort-ascending', 'var(--color-terciario)')">
-                    <i class="ph-bold ph-plus"></i> Añadir Nivel
-                </button>
-            </form>
-        </div>
 
+        <!-- ===== TOOLBAR SUPERIOR ===== -->
+        <div class="rbac-toolbar">
+            <div class="rbac-toolbar-info">
+                <h4>
+                    <i class="ph-bold ph-shield-check"></i>
+                    Matriz Granular de Permisos (RBAC)
+                </h4>
+                <p>Asigne permisos dinámicos por tipo de acción para controlar el comportamiento del sistema.</p>
+            </div>
+
+            <div class="rbac-toolbar-actions">
+                <form action="crear-nivel-privilegio" method="POST" style="margin: 0;">
+                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                    <button type="button" class="rbac-btn rbac-btn-outline"
+                            onclick="mostrarConfirmacionUsuarios(this.form, 'Extender Privilegios', '¿Crear un nuevo nivel jerárquico superior en la base de datos?', 'ph-sort-ascending', 'var(--color-terciario)')">
+                        <i class="ph-bold ph-plus"></i> Añadir Nivel
+                    </button>
+                </form>
+            </div>
+        </div>
+        <!-- ===== LISTA DE NIVELES ===== -->
         <form action="guardar-matriz-rbac" method="POST">
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-            <div style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 600px; overflow-y: auto; padding-right: 5px;">
-                
-                <?php foreach ($privilegios as $priv): $nivel = $priv['nivel_privilegio']; if ($nivel === 0) continue;?>
 
-                    <details style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.02); flex-shrink: 0;">
-                        <summary style="padding: 12px 16px; font-weight: 800; color: var(--color-secundario); cursor: pointer; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; list-style: none;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <i class="ph-bold ph-shield-star" style="color: var(--color-terciario); font-size: 1.2rem;"></i>
+            <div style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 600px; overflow-y: auto; padding-right: 5px;">
+
+                <?php foreach ($privilegios as $priv): $nivel = $priv['nivel_privilegio']; if ($nivel === 0) continue; ?>
+
+                    <details class="rbac-level">
+                        <summary class="rbac-level-summary">
+                            <div class="rbac-level-title">
+                                <i class="ph-bold ph-shield-star"></i>
                                 Configurar Permisos del Nivel <?= htmlspecialchars($nivel) ?>
                             </div>
-                            
-                            <div style="display: flex; align-items: center; gap: 10px;">
+
+                            <div class="rbac-level-controls">
                                 <?php if ($nivel > 3): ?>
-                                    <!-- Botón limpio, sin form anidado -->
-                                    <button type="button" class="btn-icon btn-delete" title="Eliminar Nivel" style="padding: 2px 6px; height: auto;" onclick="event.stopPropagation(); confirmarEliminacionNivel(<?= $nivel ?>);">
+                                    <button type="button" class="rbac-level-delete"
+                                            title="Eliminar Nivel <?= $nivel ?>"
+                                            onclick="event.preventDefault(); event.stopPropagation(); confirmarEliminacionNivel(<?= $nivel ?>);">
                                         <i class="ph-bold ph-trash"></i>
                                     </button>
                                 <?php endif; ?>
-                                <i class="ph-bold ph-caret-down" style="color: #94a3b8;"></i>
+                                <i class="ph-bold ph-caret-down rbac-level-caret"></i>
                             </div>
                         </summary>
-                        
+
                         <div style="padding: 0; overflow-x: auto; border-top: 1px solid #e2e8f0;">
                             <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
                                 <thead style="background: rgba(244,247,251,0.5);">
@@ -422,12 +267,13 @@ select.sa-filter-input option, select option {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($modulosInstalados as $indice => $moduloNombre): 
+                                    <?php foreach ($modulosInstalados as $indice => $moduloNombre):
                                         $permisosNivelModulo = $matrizRBAC[$nivel][$moduloNombre] ?? [];
                                     ?>
                                         <tr style="border-bottom: 1px solid #f1f5f9; background: <?= $indice % 2 === 0 ? '#ffffff' : '#f8fafc' ?>;">
                                             <td style="padding: 8px 16px; font-weight: 600; color: var(--texto-titulos);">
-                                                <i class="ph-bold ph-plugs-connected" style="color: #64748b; margin-right: 4px;"></i> <?= htmlspecialchars($moduloNombre) ?>
+                                                <i class="ph-bold ph-plugs-connected" style="color: #64748b; margin-right: 4px;"></i>
+                                                <?= htmlspecialchars($moduloNombre) ?>
                                             </td>
                                             <?php foreach ($accionesDisponibles as $accion): ?>
                                                 <td style="padding: 8px 12px; text-align: center;">
@@ -441,67 +287,75 @@ select.sa-filter-input option, select option {
                             </table>
                         </div>
                     </details>
-                <?php endforeach; ?>
 
+                <?php endforeach; ?>
             </div>
 
-            <div style="margin-top: 1.25rem; display: flex; justify-content: flex-end;">
-                <button type="submit" class="btn btn-solid" style="background: var(--color-secundario) !important; color: #ffffff !important; border-radius: 6px; padding: 8px 16px; font-weight: 700; border:none;">
-                    <i class="ph-bold ph-floppy-disk"></i> Guardar Matriz RBAC Segmentada
+            <div class="rbac-form-footer">
+                <button type="submit" class="rbac-btn rbac-btn-solid">
+                    <i class="ph-bold ph-floppy-disk"></i> Guardar Matriz RBAC
                 </button>
             </div>
         </form>
 
-        <!-- SECCIÓN EDICIÓN DE ROLES -->
-        <div style="margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 1.25rem;">
-            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--texto-titulos); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 6px;">
-                <i class="ph-bold ph-pencil-line" style="color: var(--color-terciario);"></i> Editar Denominación y Jerarquía de Roles
-            </h4>
-            <button type="button" onclick="toggleModalCrearRol(true)" class="btn btn-solid" style="padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                <i class="ph-bold ph-plus"></i> Crear Nuevo Rol
-            </button>
+        <!-- ===== SECCIÓN ROLES ===== -->
+        <div class="rbac-roles-section">
+            <div class="rbac-roles-header">
+                <h4>
+                    <i class="ph-bold ph-pencil-line"></i>
+                    Editar Denominación y Jerarquía de Roles
+                </h4>
+                <button type="button" class="rbac-btn rbac-btn-solid" onclick="toggleModalCrearRol(true)">
+                    <i class="ph-bold ph-shield-plus"></i> Crear Nuevo Rol
+                </button>
+            </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
-                <?php foreach ($roles as $rItem): 
+            <div class="rbac-roles-grid">
+                <?php foreach ($roles as $rItem):
                     $esRolSupremo = (isset($idPrivilegioCero) && $rItem['privilegio_id'] == $idPrivilegioCero);
-                    if ($esRolSupremo): 
+                    if ($esRolSupremo):
                 ?>
-                <!-- TARJETA INMUTABLE PARA EL ROL SUPREMO -->
-                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.85rem 1rem; border-radius: 8px; display: flex; flex-direction: column; gap: 0.6rem;">
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <input type="text" value="<?= htmlspecialchars($rItem['nombre']) ?>" class="sa-filter-input" style="flex: 1; min-width: 0; background: #e2e8f0; cursor: not-allowed; color: #64748b;" readonly title="El rol base no puede ser alterado">
-                            <span style="background: #1e293b; color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 700;">Nivel 0</span>
+                    <!-- TARJETA INMUTABLE PARA EL ROL SUPREMO -->
+                    <div class="rbac-role-card-locked">
+                        <div class="rbac-role-row" style="display: flex; gap: 0.5rem; align-items: center;">
+                            <input type="text" value="<?= htmlspecialchars($rItem['nombre']) ?>" class="sa-filter-input"
+                                   style="flex: 1; min-width: 0; background: #e2e8f0; cursor: not-allowed; color: #64748b;"
+                                   readonly title="El rol base no puede ser alterado">
+                            <span class="rbac-level-badge">Nivel 0</span>
                         </div>
                         <div style="display: flex; margin-top: 0.5rem;">
-                            <button type="button" class="btn" style="width: 100%; background: #cbd5e1; color: #64748b; padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; cursor: not-allowed;" disabled>
+                            <button type="button" class="rbac-btn"
+                                    style="width: 100%; justify-content: center; background: #cbd5e1; color: #64748b; cursor: not-allowed;"
+                                    disabled>
                                 <i class="ph-bold ph-lock-key"></i> Rol de Sistema (Inalterable)
                             </button>
                         </div>
                     </div>
                 <?php else: ?>
                     <!-- FORMULARIO NORMAL PARA LOS DEMÁS ROLES -->
-                    <form action="actualizar-rol" method="POST" style="background: #ffffff; border: 1px solid rgba(80, 89, 132, 0.2); padding: 0.85rem 1rem; border-radius: 8px; display: flex; flex-direction: column; gap: 0.6rem; box-shadow: 0 2px 8px rgba(18,26,62,0.02);">
+                    <form action="actualizar-rol" method="POST" class="rbac-role-card">
                         <input type="hidden" name="rol_id" value="<?= $rItem['id'] ?>">
                         <input type="hidden" name="nombre_anterior" value="<?= htmlspecialchars($rItem['nombre']) ?>">
-                        
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <input type="text" name="nuevo_nombre" value="<?= htmlspecialchars($rItem['nombre']) ?>" class="sa-filter-input" style="flex: 1; min-width: 0;" required>
-                            
+
+                        <div class="rbac-role-row">
+                            <input type="text" name="nuevo_nombre" value="<?= htmlspecialchars($rItem['nombre']) ?>" class="sa-filter-input" required>
+
                             <select name="privilegio_id" class="sa-filter-input" required title="Cambiar nivel jerárquico">
-                                <?php foreach ($privilegios as $priv): 
-                                    if ((int)$priv['nivel_privilegio'] === 0) continue; // <-- Oculta Nivel 0
+                                <?php foreach ($privilegios as $priv):
+                                    if ((int)$priv['nivel_privilegio'] === 0) continue;
                                     $isSelected = (isset($rItem['privilegio_id']) && $rItem['privilegio_id'] == $priv['privilegio_id']) ? 'selected' : '';
                                 ?>
                                     <option value="<?= $priv['privilegio_id'] ?>" <?= $isSelected ?>>Nivel <?= $priv['nivel_privilegio'] ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        
-                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                            <button type="submit" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem; border-color: var(--color-secundario); color: var(--color-secundario) !important; cursor: pointer; flex: 1;">
+
+                        <div class="rbac-role-actions">
+                            <button type="submit" class="rbac-btn rbac-btn-outline">
                                 <i class="ph-bold ph-check"></i> Actualizar
                             </button>
-                            <button type="button" class="btn btn-solid" style="background: rgba(239,68,68,0.1) !important; color: #ef4444 !important; border: 1px solid rgba(239,68,68,0.3); padding: 6px 12px; font-size: 0.8rem; cursor: pointer;" onclick="mostrarConfirmacionUsuarios(document.getElementById('form-del-rol-<?= $rItem['id'] ?>'), 'Eliminar Rol', '¿Seguro que desea eliminar el rol <?= htmlspecialchars($rItem['nombre'], ENT_QUOTES) ?>?', 'ph-trash', '#ef4444')">
+                            <button type="button" class="rbac-btn rbac-btn-danger-outline"
+                                    onclick="mostrarConfirmacionUsuarios(document.getElementById('form-del-rol-<?= $rItem['id'] ?>'), 'Eliminar Rol', '¿Seguro que desea eliminar el rol <?= htmlspecialchars($rItem['nombre'], ENT_QUOTES) ?>?', 'ph-trash', '#ef4444')">
                                 <i class="ph-bold ph-trash"></i> Eliminar
                             </button>
                         </div>
@@ -514,9 +368,9 @@ select.sa-filter-input option, select option {
                 <?php endforeach; ?>
             </div>
         </div>
+
     </div>
 </div>
-
 <!-- ==========================================================================
      BLOQUE 3: PLANTEL DOCENTE DEL SISTEMA
      ========================================================================== -->
