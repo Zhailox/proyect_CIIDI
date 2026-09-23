@@ -240,8 +240,14 @@ class ReportesModel {
                             GROUP BY label ORDER BY label ASC";
                 }
             } elseif ($dominio === 'vinculacion') {
-                $sql = "SELECT UPPER(p.estado) as label, COUNT(*) as cantidad 
-                        FROM public.propuestas_empresa p GROUP BY p.estado ORDER BY cantidad DESC";
+                if ($agruparPor === 'trayecto') {
+                    $sql = "SELECT COALESCE(NULLIF(TRIM(p.nivel_trayecto), ''), 'Sin Trayecto') as label, COUNT(*) as cantidad 
+                            FROM public.propuestas_empresa p GROUP BY label ORDER BY cantidad DESC";
+                } else {
+                    // Se agrega el casteo ::text al ENUM para evitar el crash de PostgreSQL
+                    $sql = "SELECT UPPER(p.estado::text) as label, COUNT(*) as cantidad 
+                            FROM public.propuestas_empresa p GROUP BY p.estado ORDER BY cantidad DESC";
+                }
             } elseif ($dominio === 'usuarios') {
                 $sql = "SELECT COALESCE(r.nombre, 'Sin Rol') as label, COUNT(*) as cantidad 
                         FROM public.usuarios u LEFT JOIN public.roles r ON u.id_rol = r.id GROUP BY r.nombre ORDER BY cantidad DESC";
