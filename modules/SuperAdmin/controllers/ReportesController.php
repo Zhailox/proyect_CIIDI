@@ -48,10 +48,10 @@ class ReportesController {
         switch ($dominio) {
             case 'vinculacion':
                 $datos = $this->model->obtenerReporteVinculacion($filtros);
-                $headers = ['ID', 'Empresa', 'Contacto', 'Teléfono', 'Correo', 'Problema Planteado', 'Estado', 'Fecha'];
+                $headers = ['ID', 'Empresa', 'Contacto', 'Teléfono', 'Correo', 'Trayecto', 'Problema Planteado', 'Estado', 'Fecha'];
                 fputcsv($output, $headers);
                 foreach ($datos as $r) {
-                    fputcsv($output, [$r['id'], $r['nombre_empresa'], $r['contacto_persona'], $r['telefono'], $r['correo'], $r['titulo_problematica'], $r['estado'], $r['fecha_creacion']]);
+                    fputcsv($output, [$r['id'], $r['nombre_empresa'], $r['contacto_persona'], $r['telefono'], $r['correo'], $r['nivel_trayecto'], $r['titulo_problematica'], $r['estado'], $r['fecha_creacion']]);
                 }
                 break;
 
@@ -149,6 +149,7 @@ class ReportesController {
                 $columnasMap = [
                     'nombre_empresa' => 'Empresa',
                     'contacto_persona' => 'Contacto',
+                    'nivel_trayecto' => 'Trayecto',
                     'titulo_problematica' => 'Problema Planteado',
                     'estado' => 'Estado',
                     'fecha_creacion' => 'Fecha'

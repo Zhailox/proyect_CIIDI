@@ -210,15 +210,20 @@ body {
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-/* El submenú SOLO se despliega cuando todo el sidebar está expandido (hover) Y el grupo padre está activo u hovreado */
-.sidebar:hover .nav-parent:hover .sub-menu,
+/* El submenú SOLO se muestra cuando el sidebar está expandido (hover) Y el padre está abierto */
 .sidebar:hover .nav-parent.open .sub-menu {
   display: flex;
   opacity: 1;
   transform: translateY(0);
 }
 
-.sidebar:hover .nav-parent:hover .nav-caret,
+/* Cuando el sidebar NO está hover, cualquier submenú queda totalmente oculto,
+   incluso si su padre tiene la clase .open */
+.sidebar:not(:hover) .sub-menu {
+  display: none !important;
+}
+
+/* La flecha rota 180 grados solo cuando el sidebar está expandido y el padre abierto */
 .sidebar:hover .nav-parent.open .nav-caret {
   transform: rotate(180deg);
 }

@@ -15,14 +15,7 @@ class SuperAdminModule implements ModuleContract {
         return [
             // Ruta principal: El dashboard administrativo
             // Nueva ruta para Gestión de Usuarios
-            'gestor-usuarios' => [
-                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
-                'controlador'      => 'GestorUsuariosController',
-                'metodo'           => 'index',
-                'vista'            => __DIR__ . '/views/gestor_usuarios.php', 
-                'titulo'           => 'Gestión de Usuarios - UPTTMBI',
-                'css'              => ['SuperAdmin.css', 'gestor.css']
-            ],
+            
             'invitar-profesor' => [
                 'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
                 'controlador'      => 'GestorUsuariosController',
@@ -388,6 +381,14 @@ class SuperAdminModule implements ModuleContract {
                 'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
                 'controlador'      => 'ConfiguracionController',
                 'metodo'           => 'guardarPlantillaPersonalizadaAction'
+            ],
+            'gestor-usuarios' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'index',
+                'vista'            => __DIR__ . '/views/gestor_usuarios.php', 
+                'titulo'           => 'Gestión de Usuarios - UPTTMBI',
+                'css'              => ['SuperAdmin.css', 'gestor.css']
             ]
         ];
     }

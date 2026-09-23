@@ -638,8 +638,8 @@ class DocumentoModel {
             $pdfPath = !empty($datos['archivo_pdf']) ? trim($datos['archivo_pdf']) : null;
             
             // 1. Insertar el recurso base (id_tipo_recurso = 1 indica PST)
-            $stmt = $db->prepare("INSERT INTO public.recursos (titulo, id_tipo_recurso, anio_publicacion, ejemplares_totales, ejemplares_disponibles, archivo_pdf) 
-                                  VALUES (?, 1, ?, 1, 1, ?) RETURNING id");
+            $stmt = $db->prepare("INSERT INTO public.recursos (titulo, id_tipo_recurso, anio_publicacion, archivo_pdf) 
+                                  VALUES (?, 1, ?, ?) RETURNING id");
             $stmt->execute([
                 $datos['titulo'],
                 (int)$datos['anio_publicacion'],

@@ -122,9 +122,8 @@ class LineasInvestigacionModule implements ModuleContract {
             'titulo' => 'Líneas I+D',
             'descripcion' => 'Explorar y gestionar líneas de investigación.',
             'ruta' => 'lineas-investigacion',
-            'orden' => 3,
-            'texto_boton' => 'EXPLORAR LÍNEAS',
-            'destacado'   => false
+            'enlace'      => 'lineas',
+            'texto_boton' => 'EXPLORAR LÍNEAS'
         ];
     }
 

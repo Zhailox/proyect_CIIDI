@@ -26,6 +26,8 @@
             <link rel="stylesheet" href="<?php echo htmlspecialchars($estilo_vista); ?>">
         <?php endforeach; ?>
     <?php endif; ?>
+    <!-- DEBUG CSS_MODULO: <?php print_r($css_modulo ?? 'NO EXISTE'); ?> -->
+<!-- DEBUG CONFIG: <?php print_r($match['config'] ?? 'NO EXISTE'); ?> -->
 </head>
 <body>
     

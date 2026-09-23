@@ -7,20 +7,16 @@ class AssetResolver {
      * Resuelve los archivos CSS requeridos por una ruta específica.
      */
     public function resolveRouteCss(string $ruta, array $configRuta, array $modulosInstalados): array {
-        $cssModulo = [];
         $cssDeclarados = $configRuta['css'] ?? [];
+        if (empty($cssDeclarados)) return [];
 
+        $nombreCarpeta = $this->deducirCarpetaModulo($ruta, $configRuta, $modulosInstalados);
+        if ($nombreCarpeta === null) return [];
+
+        $cssModulo = [];
         foreach ($cssDeclarados as $archivoCss) {
-            foreach ($modulosInstalados as $nombreCarpeta => $instancia) {
-                if (is_object($instancia) && method_exists($instancia, 'getRutas')) {
-                    if (array_key_exists($ruta, $instancia->getRutas())) {
-                        $cssModulo[] = '../modules/' . $nombreCarpeta . '/assets/css/' . $archivoCss;
-                        break;
-                    }
-                }
-            }
+            $cssModulo[] = '../modules/' . $nombreCarpeta . '/assets/css/' . $archivoCss;
         }
-
         return $cssModulo;
     }
 
@@ -28,20 +24,16 @@ class AssetResolver {
      * Resuelve los archivos JS requeridos por una ruta específica.
      */
     public function resolveRouteJs(string $ruta, array $configRuta, array $modulosInstalados): array {
-        $jsModulo = [];
         $jsDeclarados = $configRuta['js'] ?? [];
+        if (empty($jsDeclarados)) return [];
 
+        $nombreCarpeta = $this->deducirCarpetaModulo($ruta, $configRuta, $modulosInstalados);
+        if ($nombreCarpeta === null) return [];
+
+        $jsModulo = [];
         foreach ($jsDeclarados as $archivoJs) {
-            foreach ($modulosInstalados as $nombreCarpeta => $instancia) {
-                if (is_object($instancia) && method_exists($instancia, 'getRutas')) {
-                    if (array_key_exists($ruta, $instancia->getRutas())) {
-                        $jsModulo[] = '../modules/' . $nombreCarpeta . '/assets/js/' . $archivoJs;
-                        break;
-                    }
-                }
-            }
+            $jsModulo[] = '../modules/' . $nombreCarpeta . '/assets/js/' . $archivoJs;
         }
-
         return $jsModulo;
     }
 
@@ -134,4 +126,24 @@ class AssetResolver {
 
         return $tarjetas;
     }
+    private function deducirCarpetaModulo(string $ruta, array $configRuta, array $modulosInstalados): ?string {
+    // Estrategia 1: parsear controlador_path
+    if (!empty($configRuta['controlador_path'])) {
+        $path = str_replace('\\', '/', $configRuta['controlador_path']);
+        if (preg_match('#/modules/([^/]+)/#i', $path, $m)) {
+            return $m[1];
+        }
+    }
+
+    // Estrategia 2: buscar en módulos instalados por ruta
+    foreach ($modulosInstalados as $carpeta => $instancia) {
+        if (is_object($instancia) && method_exists($instancia, 'getRutas')) {
+            if (array_key_exists($ruta, $instancia->getRutas())) {
+                return $carpeta;
+            }
+        }
+    }
+
+    return null;
+}
 }

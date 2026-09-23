@@ -384,6 +384,9 @@ class DetallePSTController {
                 ], JSON_UNESCAPED_UNICODE);
                 
             } catch (Exception $e) {
+                // Registrar el fallo en la auditoría WAF antes de devolver el error al cliente
+                AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Extracción Masiva', $e->getMessage());
+                
                 echo json_encode([
                     'status' => 'error',
                     'message' => $e->getMessage()
@@ -529,6 +532,10 @@ class DetallePSTController {
                 ], JSON_UNESCAPED_UNICODE);
 
             } catch (Exception $e) {
+                require_once CORE_PATH . 'Security/Auth.php';
+                $tituloFallo = !empty($datos['titulo']) ? $datos['titulo'] : 'Proyecto Sin Título';
+                AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Extracción Masiva', "Error al intentar guardar el PST '{$tituloFallo}': " . $e->getMessage());
+                
                 echo json_encode([
                     'status' => 'error',
                     'message' => $e->getMessage()
@@ -605,14 +612,24 @@ class DetallePSTController {
 
             // Manejo de archivo adjunto si se subió en el form tradicional
             $archivoPath = null;
-            if (isset($_FILES['archivo_pst']) && $_FILES['archivo_pst']['error'] === UPLOAD_ERR_OK) {
-                $ext = strtolower(pathinfo($_FILES['archivo_pst']['name'], PATHINFO_EXTENSION));
-                if (in_array($ext, ['pdf', 'docx'])) {
-                    $slug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($_POST['titulo'] ?? 'pst', 0, 30)));
-                    $destName = 'pst_' . $slug . '_' . time() . '.' . $ext;
-                    if (move_uploaded_file($_FILES['archivo_pst']['tmp_name'], $storageDir . $destName)) {
-                        $archivoPath = 'storage/documentos/pst/' . $destName;
+            if (isset($_FILES['archivo_pst'])) {
+                if ($_FILES['archivo_pst']['error'] === UPLOAD_ERR_OK) {
+                    $ext = strtolower(pathinfo($_FILES['archivo_pst']['name'], PATHINFO_EXTENSION));
+                    if (in_array($ext, ['pdf', 'docx'])) {
+                        $slug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($_POST['titulo'] ?? 'pst', 0, 30)));
+                        $destName = 'pst_' . $slug . '_' . time() . '.' . $ext;
+                        if (move_uploaded_file($_FILES['archivo_pst']['tmp_name'], $storageDir . $destName)) {
+                            $archivoPath = 'storage/documentos/pst/' . $destName;
+                        } else {
+                            AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo de Escritura', "El archivo para el proyecto se recibió pero el servidor no pudo guardarlo en el disco.");
+                        }
+                    } else {
+                        AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo de Formato', "Intento de subir un archivo con extensión no permitida (.{$ext}). Archivo ignorado.");
                     }
+                } elseif ($_FILES['archivo_pst']['error'] !== UPLOAD_ERR_NO_FILE) {
+                    $codigoError = $_FILES['archivo_pst']['error'];
+                    $tituloTemporal = !empty($_POST['titulo']) ? trim($_POST['titulo']) : 'Sin Título';
+                    AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Subida de Archivo', "El PST '{$tituloTemporal}' se procesó, pero el documento fue rechazado (Código: {$codigoError}).");
                 }
             }
 
@@ -698,24 +715,35 @@ class DetallePSTController {
                     }
 
                     $archivoPath = null;
-                    if (isset($_FILES['archivo_pst']) && $_FILES['archivo_pst']['error'] === UPLOAD_ERR_OK) {
-                        $ext = strtolower(pathinfo($_FILES['archivo_pst']['name'], PATHINFO_EXTENSION));
-                        if (in_array($ext, ['pdf', 'docx'])) {
-                            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                            $mimeType = finfo_file($finfo, $_FILES['archivo_pst']['tmp_name']);
-                            finfo_close($finfo);
+                    if (isset($_FILES['archivo_pst'])) {
+                        if ($_FILES['archivo_pst']['error'] === UPLOAD_ERR_OK) {
+                            $ext = strtolower(pathinfo($_FILES['archivo_pst']['name'], PATHINFO_EXTENSION));
+                            if (in_array($ext, ['pdf', 'docx'])) {
+                                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                                $mimeType = finfo_file($finfo, $_FILES['archivo_pst']['tmp_name']);
+                                finfo_close($finfo);
 
-                            $allowedMimeTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip', 'application/x-zip-compressed'];
+                                $allowedMimeTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip', 'application/x-zip-compressed'];
 
-                            if (in_array($mimeType, $allowedMimeTypes)) {
-                                $slug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($_POST['titulo'] ?? 'pst', 0, 30)));
-                                $destName = 'pst_' . $slug . '_' . time() . '.' . $ext;
-                                if (move_uploaded_file($_FILES['archivo_pst']['tmp_name'], $storageDir . $destName)) {
-                                    $archivoPath = 'storage/documentos/pst/' . $destName;
+                                if (in_array($mimeType, $allowedMimeTypes)) {
+                                    $slug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($_POST['titulo'] ?? 'pst', 0, 30)));
+                                    $destName = 'pst_' . $slug . '_' . time() . '.' . $ext;
+                                    if (move_uploaded_file($_FILES['archivo_pst']['tmp_name'], $storageDir . $destName)) {
+                                        $archivoPath = 'storage/documentos/pst/' . $destName;
+                                    } else {
+                                        AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo de Escritura (Edición)', "El nuevo adjunto para el proyecto ID #{$id} no pudo guardarse en el disco.");
+                                    }
+                                } else {
+                                    $error = "El contenido binario del archivo no corresponde a un documento PDF o Word válido.";
+                                    AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo de MIME Type', "Intento de subir un archivo inválido o manipulado (MIME: {$mimeType}) en el proyecto ID #{$id}.");
                                 }
                             } else {
-                                $error = "El contenido binario del archivo no corresponde a un documento PDF o Word válido.";
+                                AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo de Formato (Edición)', "Intento de subir un archivo no permitido (.{$ext}) en el proyecto ID #{$id}.");
                             }
+                        } elseif ($_FILES['archivo_pst']['error'] !== UPLOAD_ERR_NO_FILE) {
+                            $codigoError = $_FILES['archivo_pst']['error'];
+                            $tituloTemporal = !empty($_POST['titulo']) ? trim($_POST['titulo']) : 'Sin Título';
+                            AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Subida de Archivo (Edición)', "El PST '{$tituloTemporal}' se actualizó, pero el nuevo documento fue rechazado (Código: {$codigoError}).");
                         }
                     }
 
