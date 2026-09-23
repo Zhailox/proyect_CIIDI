@@ -175,6 +175,31 @@ class SuperAdminModule implements ModuleContract {
                 'controlador'      => 'LogsController',
                 'metodo'           => 'limpiarLogs'
             ],
+            // Ruta para el Centro de Reportes & Exportación
+            'gestor-reportes' => [
+                'controlador_path' => __DIR__ . '/controllers/ReportesController.php',
+                'controlador'      => 'ReportesController',
+                'metodo'           => 'index',
+                'vista'            => __DIR__ . '/views/gestor_reportes.php', 
+                'titulo'           => 'Centro de Reportes & Exportación - SuperAdmin',
+                'css'              => ['SuperAdmin.css', 'gestor.css'],
+                'js'               => ['chart.min.js']
+            ],
+            'exportar-reporte-csv' => [
+                'controlador_path' => __DIR__ . '/controllers/ReportesController.php',
+                'controlador'      => 'ReportesController',
+                'metodo'           => 'exportarCSV'
+            ],
+            'exportar-reporte-pdf' => [
+                'controlador_path' => __DIR__ . '/controllers/ReportesController.php',
+                'controlador'      => 'ReportesController',
+                'metodo'           => 'exportarPDF'
+            ],
+            'exportar-reporte-json' => [
+                'controlador_path' => __DIR__ . '/controllers/ReportesController.php',
+                'controlador'      => 'ReportesController',
+                'metodo'           => 'exportarJSON'
+            ],
             'generar-backup' => [
                 'controlador_path' => __DIR__ . '/controllers/AdminController.php',
                 'controlador'      => 'AdminController',
@@ -376,10 +401,11 @@ class SuperAdminModule implements ModuleContract {
                 'privilegio_minimo' => 0,
                 'enlace'      => 'sudoadmin',
                 // Rutas que mantienen iluminado y desplegado el panel administrativo en el Sidebar
-                'activadores' => ['sudoadmin', 'gestor-modulos', 'detalle-modulo', 'gestor-mantenimiento', 'visor-logs', 'gestor-usuarios', 'gestor-scheduler', 'visor-seguridad', 'configuracion-sistema', 'gestor-correos'], 
+                'activadores' => ['sudoadmin', 'gestor-usuarios', 'gestor-reportes', 'gestor-modulos', 'detalle-modulo', 'gestor-mantenimiento', 'visor-logs', 'gestor-scheduler', 'visor-seguridad', 'configuracion-sistema', 'gestor-correos'], 
                 'subitems'    => [
                     ['ruta' => 'sudoadmin', 'titulo' => 'Panel de Control', 'privilegio_minimo' => 0],
                     ['ruta' => 'gestor-usuarios', 'titulo' => 'Gestión de Usuarios', 'privilegio_minimo' => 0],
+                    ['ruta' => 'gestor-reportes', 'titulo' => 'Reportes y Exportación', 'privilegio_minimo' => 0],
                     ['ruta' => 'gestor-modulos', 'titulo' => 'Gestor de Módulos', 'privilegio_minimo' => 0],
                     ['ruta' => 'gestor-correos', 'titulo' => 'Gestión de Correos SMTP', 'privilegio_minimo' => 0],
                     ['ruta' => 'configuracion-sistema', 'titulo' => 'Variables de Entorno', 'privilegio_minimo' => 0],

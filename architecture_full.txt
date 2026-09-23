@@ -126,24 +126,7 @@
 │   │   └── /views
 │   │       ├── showcase_cursos.html         # NUEVO: Vista de presentación ("Aprende con nosotros")
 │   │       └── grid_cursos.html             
-│   │
-│   ├── /ForoChatbot                    # MÓDULO 7: IA CONVERSACIONAL (LLM LOCAL)
-│   │   ├── index.php
-│   │   ├── /assets
-│   │   │   └── chat_socket.js               
-│   │   ├── /controllers
-│   │   │   ├── SalaController.php           
-│   │   │   └── LLMController.php            
-│   │   ├── /services
-│   │   │   └── LocalAIClient.php            
-│   │   ├── /models
-│   │   │   ├── HiloModel.php
-│   │   │   └── MensajeModel.php             
-│   │   └── /views
-│   │       ├── showcase_foros.html          # NUEVO: Explicación de la herramienta y top discusiones
-│   │       ├── lista_foros.html             
-│   │       ├── sala_chat.html               
-│   │       └── ui_bot_typing.html           
+│   │        
 │   │
 │   └── /SuperAdmin                     # MÓDULO 8: EL DIOS DEL SISTEMA
 │       ├── index.php
