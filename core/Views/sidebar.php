@@ -44,14 +44,23 @@ $ruta          = $ruta ?? '';
             </a>
             
         <?php elseif ($item['tipo'] === 'parent'): ?>
-            <?php $is_active_parent = in_array($ruta, $item['activadores']); ?>
-            <div class="nav-parent">
-                <a href="<?php echo $item['enlace']; ?>" class="nav-item <?php echo $is_active_parent ? 'active' : ''; ?>">
+            <?php 
+                $is_active_parent = in_array($ruta, $item['activadores']); 
+                $tieneSubitems = !empty($item['subitems']);
+            ?>
+            <div class="nav-parent <?php echo $is_active_parent ? 'open' : ''; ?>">
+                <a href="<?php echo $item['enlace']; ?>" 
+                   class="nav-item nav-parent-link <?php echo $is_active_parent ? 'active' : ''; ?>">
                   <span class="nav-icon"><?php echo $icono_html; ?></span> 
-                  <span class="nav-text"><?php echo $item['titulo']; ?></span>
+                  <span class="nav-text" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                      <span><?php echo $item['titulo']; ?></span>
+                      <?php if ($tieneSubitems): ?>
+                          <i class="ph-bold ph-caret-down nav-caret" style="font-size: 0.8rem; transition: transform 0.25s ease;"></i>
+                      <?php endif; ?>
+                  </span>
                 </a>
                 
-                <?php if ($is_active_parent && !empty($item['subitems'])): ?>
+                <?php if ($tieneSubitems): ?>
                 <div class="sub-menu">
                     <?php foreach ($item['subitems'] as $sub): ?>
                         <?php 
@@ -59,7 +68,6 @@ $ruta          = $ruta ?? '';
                             $subPermiso = $sub['permiso_rbac'] ?? null;
                             $subModulo = $sub['modulo_rbac'] ?? null;
                             
-                            // Lo mismo para los sub-botones. Si no tiene el permiso, no se dibuja.
                             if ($subPermiso && $subModulo) {
                                 if (!Auth::requierePrivilegioMinimo($subPriv, $subPermiso, $subModulo, false)) continue;
                             } else {
@@ -80,3 +88,14 @@ $ruta          = $ruta ?? '';
 
   </nav>
 </aside>
+
+<script>
+function toggleSidebarParent(el, ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    const parentContainer = el.closest('.nav-parent');
+    if (!parentContainer) return;
+    
+    parentContainer.classList.toggle('open');
+}
+</script>

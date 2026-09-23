@@ -194,21 +194,33 @@ body {
   transform: translateX(0);
 }
 
-/* Submenús */
+/* Submenús con Smart Hover */
 .nav-parent {
   display: flex;
   flex-direction: column;
 }
 
 .sub-menu {
-  display: none; 
+  display: none;
   flex-direction: column;
-  padding: 0.5rem 0 0.5rem 1rem;
+  padding: 0.25rem 0 0.25rem 1rem;
   gap: 0.25rem;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.sidebar:hover .sub-menu {
-  display: flex; 
+/* El submenú SOLO se despliega cuando todo el sidebar está expandido (hover) Y el grupo padre está activo u hovreado */
+.sidebar:hover .nav-parent:hover .sub-menu,
+.sidebar:hover .nav-parent.open .sub-menu {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.sidebar:hover .nav-parent:hover .nav-caret,
+.sidebar:hover .nav-parent.open .nav-caret {
+  transform: rotate(180deg);
 }
 
 .sub-nav-item {
@@ -224,8 +236,8 @@ body {
 
 .sub-nav-item.active {
   color: var(--texto-titulos);
-  background-color: rgba(var(--negro-rgb), 0.03);
-  font-weight: 600;
+  background-color: rgba(var(--negro-rgb), 0.05);
+  font-weight: 700;
 }
 
 .sub-nav-item:hover:not(.active) {
