@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict rHERdmrJAg9ZVMcY7MVF4YSgn060d8bWFbyQomRKfoF87soUAQOKxMeSI1Bjeem
+\restrict EF3dYAL8pqieXLkoKKEssqdbnwmg5fN6WHXZvPqr2ovhphbSWg5fJJeaaCyGZS4
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -325,7 +325,6 @@ CREATE FUNCTION public.fn_auditoria_recursos() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 DECLARE
-    -- Intenta leer una variable de sesión configurada por el backend, si no hay, asigna NULL
     v_usuario_actual INT := NULLIF(current_setting('app.usuario_actual', true), '')::INT; 
 BEGIN
     IF (TG_OP = 'DELETE') THEN
@@ -334,8 +333,9 @@ BEGIN
         RETURN OLD;
         
     ELSIF (TG_OP = 'INSERT') THEN
+        -- Aquí se removió la referencia a NEW.ejemplares_totales que hacía explotar la BD
         INSERT INTO auditoria (tabla_afectada, id_registro, accion, usuario_responsable, datos_anteriores, datos_nuevos, fecha_hora)
-        VALUES ('recursos', NEW.id, 'INSERT', v_usuario_actual, NULL, jsonb_build_object('titulo', NEW.titulo, 'id_tipo_recurso', NEW.id_tipo_recurso, 'ejemplares_totales', NEW.ejemplares_totales), CURRENT_TIMESTAMP);
+        VALUES ('recursos', NEW.id, 'INSERT', v_usuario_actual, NULL, jsonb_build_object('titulo', NEW.titulo, 'id_tipo_recurso', NEW.id_tipo_recurso), CURRENT_TIMESTAMP);
         RETURN NEW;
     END IF;
     
@@ -1275,8 +1275,6 @@ CREATE TABLE public.recursos (
     titulo character varying(255) NOT NULL,
     id_tipo_recurso integer NOT NULL,
     anio_publicacion integer,
-    ejemplares_totales integer DEFAULT 1,
-    ejemplares_disponibles integer DEFAULT 1,
     archivo_pdf character varying(255)
 );
 
@@ -2070,6 +2068,14 @@ INSERT INTO public.auditoria VALUES (310, 'usuarios', 15, 'UPDATE', NULL, NULL, 
 INSERT INTO public.auditoria VALUES (311, 'usuarios', 17, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 3, "nombre": "adru"}', '{"activo": true, "id_rol": 3, "nombre": "adruss"}', '2026-09-19 15:19:07.37854');
 INSERT INTO public.auditoria VALUES (312, 'usuarios', 17, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 3, "nombre": "adruss"}', '{"activo": true, "id_rol": 2, "nombre": "adruss"}', '2026-09-19 15:19:14.229116');
 INSERT INTO public.auditoria VALUES (313, 'usuarios', 17, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 2, "nombre": "adruss"}', '{"activo": true, "id_rol": 2, "nombre": "adrusss"}', '2026-09-20 16:36:49.932377');
+INSERT INTO public.auditoria VALUES (314, 'recursos', 152, 'INSERT', NULL, NULL, NULL, '{"titulo": "PROYEC_YOHAN_-_BETSABÉ_-_MIGUEL_ TERMINADO_REVISADO", "id_tipo_recurso": 1, "ejemplares_totales": 1}', '2026-09-23 11:21:36.922266');
+INSERT INTO public.auditoria VALUES (315, 'recursos', 152, 'DELETE', NULL, NULL, '{"titulo": "PROYEC_YOHAN_-_BETSABÉ_-_MIGUEL_ TERMINADO_REVISADO", "id_tipo_recurso": 1}', NULL, '2026-09-23 11:22:57.677896');
+INSERT INTO public.auditoria VALUES (316, 'recursos', 153, 'INSERT', NULL, NULL, NULL, '{"titulo": "PROYEC_YOHAN_-_BETSABÉ_-_MIGUEL_ TERMINADO_REVISADO", "id_tipo_recurso": 1, "ejemplares_totales": 1}', '2026-09-23 11:39:58.402099');
+INSERT INTO public.auditoria VALUES (317, 'recursos', 153, 'DELETE', NULL, NULL, '{"titulo": "PROYEC_YOHAN_-_BETSABÉ_-_MIGUEL_ TERMINADO_REVISADO", "id_tipo_recurso": 1}', NULL, '2026-09-23 11:45:02.317989');
+INSERT INTO public.auditoria VALUES (318, 'recursos', 156, 'INSERT', NULL, NULL, NULL, '{"titulo": "e", "id_tipo_recurso": 3}', '2026-09-23 12:09:57.549672');
+INSERT INTO public.auditoria VALUES (319, 'recursos', 157, 'INSERT', NULL, NULL, NULL, '{"titulo": "PROYEC_YOHAN_-_BETSABÉ_-_MIGUEL_ TERMINADO_REVISADO", "id_tipo_recurso": 1}', '2026-09-23 12:10:19.262043');
+INSERT INTO public.auditoria VALUES (320, 'recursos', 157, 'DELETE', NULL, NULL, '{"titulo": "PROYEC_YOHAN_-_BETSABÉ_-_MIGUEL_ TERMINADO_REVISADO", "id_tipo_recurso": 1}', NULL, '2026-09-23 12:29:33.377305');
+INSERT INTO public.auditoria VALUES (321, 'recursos', 158, 'INSERT', NULL, NULL, NULL, '{"titulo": "PROYEC_YOHAN_-_BETSABÉ_-_MIGUEL_ TERMINADO_REVISADO", "id_tipo_recurso": 1}', '2026-09-23 12:29:57.034447');
 
 
 --
@@ -2223,6 +2229,7 @@ INSERT INTO public.detalles_articulos VALUES (146, NULL, '91', '232', '0012-735'
 INSERT INTO public.detalles_articulos VALUES (144, 8, '93', '242', '0012-7353', '2026-09-09 00:24:54.886595', 'https://revistas.unal.edu.co/public/journals/21/submission_124428_112347_coverImage_es_ES.png', 'Esta investigación desarrolló y evaluó un modelo de aprendizaje automático para optimizar la contratación de profesionales de ingeniería en  una universidad pública, reduciendo el tiempo de evaluación, los errores y la subjetividad en el análisis de currículums. Se empleó un enfoque cuantitativo, aplicado y cuasiexperimental, utilizando procesamiento de lenguaje natural (TF-IDF), clasificación KNN bajo el esquema One vs-Rest y tres conjuntos de datos de 10, 20 y 30 CV. La información fue procesada en Google Colab mediante etapas de limpieza, vectorización, entrenamiento y evaluación. El modelo alcanzó una precisión del 82 % en la clasificación de candidatos, priorizando de manera consistente a los postulantes según su grado académico y experiencia profesional. Además, redujo el tiempo promedio de evaluación de 15 a 2,5 minutos por CV y disminuyó la tasa de error a menos del 2 %, demostrando ser una herramienta eficiente, objetiva y escalable.', true, NULL);
 INSERT INTO public.detalles_articulos VALUES (150, 7, 'e', 'e', 'e', '2026-09-11 11:59:24.004409', 'https://i.pinimg.com/736x/34/63/e7/3463e729b17ec40b1c60c25e1d86af52.jpg', 'e', true, NULL);
 INSERT INTO public.detalles_articulos VALUES (151, 8, 'e', 'e', 'e', '2026-09-11 15:27:57.58139', 'default_article.jpg', 'e', true, NULL);
+INSERT INTO public.detalles_articulos VALUES (156, 8, 'e', 'e', 'e', '2026-09-23 12:09:57.549672', 'default_article.jpg', 'e', true, NULL);
 
 
 --
@@ -2238,7 +2245,6 @@ INSERT INTO public.detalles_articulos VALUES (151, 8, 'e', 'e', 'e', '2026-09-11
 INSERT INTO public.detalles_proyectos VALUES (46, '2025-11-20', 'Pregrado', 'Estudio de la gesti¢n de memoria y el ciclo de vida de los sprites utilizando Lua dentro del motor TIC-80. El proyecto demuestra c¢mo estructurar el c¢digo para videojuegos con est‚tica retro-tech sin saturar el l¡mite de procesamiento de la consola virtual.', 1, 'Estudiantes de Computaci¢n Gr fica', 'Lua, TIC-80, Retro, GameDev, M quina de Estados', '2026-07-05 17:21:44.350197', NULL, 'Trayecto III', NULL, NULL, NULL);
 INSERT INTO public.detalles_proyectos VALUES (47, '2026-07-02', 'Pregrado', 'Metodolog¡a pr ctica para revivir equipos de torre de principios de los 2000. El caso de estudio se centra en una Utech Pentium 4, abordando el reemplazo de condensadores inflados y la instalaci¢n limpia de sistemas operativos legacy para la preservaci¢n de software antiguo.', 1, 'Laboratorios de Arquitectura del Computador', 'Pentium 4, Hardware, Restauraci¢n, Condensadores, Legacy', '2026-07-05 17:21:44.350197', NULL, 'Trayecto IV', NULL, NULL, NULL);
 INSERT INTO public.detalles_proyectos VALUES (48, '2026-05-10', 'Pregrado', 'Creaci¢n de un n£cleo de procesamiento (Core) capaz de cargar m¢dulos MVC de forma independiente. Se detalla la construcci¢n del QueryBuilder, gesti¢n de conexiones PostgreSQL y un sistema de enrutamiento estricto para evitar acoplamientos.', 1, 'Departamento de Sistemas de la Universidad', 'Microkernel, PHP, PostgreSQL, MVC, Arquitectura', '2026-07-05 17:21:44.350197', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (49, '2026-03-15', 'Pregrado', 'Desarrollo de un sistema tradicional para optimizar los m‚todos y procedimientos del inventario m‚dico. Sigue un patr¢n arquitect¢nico modular para agilizar los procesos organizacionales.', 1, 'Ambulatorio Urbano Tipo II', 'Sistemas de Informaci¢n, PostgreSQL, Gesti¢n, Inventario', '2026-07-05 17:39:35.498485', NULL, 'Trayecto II', NULL, NULL, NULL);
 INSERT INTO public.detalles_proyectos VALUES (50, '2026-04-22', 'Pregrado', 'Aplicaci¢n interactiva dise¤ada como medio did ctico para facilitar los procesos de ense¤anza. Combina fundamentos comunicacionales y l¢gicos mediante una interfaz interactiva de alto rendimiento.', 1, 'µrea de Ciencias B sicas de la Instituci¢n', 'Edum tica, Software Educativo, Multimedia, µlgebra', '2026-07-05 17:39:35.498485', NULL, 'Trayecto III', NULL, NULL, NULL);
 INSERT INTO public.detalles_proyectos VALUES (51, '2025-07-10', 'Pregrado', 'Dise¤o de un sistema distribuido cooperativo entre clientes y un servidor centralizado. Permite la gesti¢n din mica de solicitudes concurrentes controlando de manera efectiva las peticiones HTTP contra la base de datos.', 1, 'Coordinaci¢n de Control de Estudios', 'Web, Cliente-Servidor, PHP, PostgreSQL', '2026-07-05 17:39:35.498485', NULL, 'Trayecto IV', NULL, NULL, NULL);
 INSERT INTO public.detalles_proyectos VALUES (52, '2026-06-18', 'Pregrado', 'Herramienta de simulaci¢n orientada al testeo preventivo de la transmisi¢n de datos. Permite modelar el comportamiento de las decisiones de routing antes de iniciar el despliegue f¡sico de una infraestructura de red.', 1, 'Laboratorio de Redes y Telecomunicaciones', 'Simulaci¢n, Routing, Algoritmos, Redes, Topolog¡a', '2026-07-05 17:39:35.498485', NULL, 'Trayecto I', NULL, NULL, NULL);
@@ -2250,6 +2256,7 @@ INSERT INTO public.detalles_proyectos VALUES (78, '2026-08-05', 'Pregrado', 'Est
 INSERT INTO public.detalles_proyectos VALUES (45, '2026-06-15', 'Pregrado', 'Dise¤o e implementaci¢n de un motor de renderizado ligero y de alto rendimiento. Se evit¢ el uso de frameworks pesados para garantizar una ejecuci¢n "metal pure", optimizando el consumo de RAM y CPU en equipos de bajos recursos.', 1, 'Comunidad de Desarrolladores Independientes', 'Rust, Tauri, Novela Visual, Nativo, Optimizaci¢n', '2026-07-05 17:21:44.350197', NULL, 'Trayecto II', NULL, NULL, NULL);
 INSERT INTO public.detalles_proyectos VALUES (80, '2026-08-05', 'Pregrado', 'El Proyecto Socio Tecnológico realizado en el Departamento de Sistemas del Centro Clínico "María Edelmira Araujo", S.A. tiene como objetivo general ofrecer soporte técnico a usuarios y equipos de computación, utilizando mantenimiento correctivo y preventivo tanto a nivel de software como de hardware. Para la implementación del proyecto, se utilizarán técnicas de entrevista y observación como estrategias de recolección de datos, además de la realización de un inventario. Se espera mejorar la eficiencia y productividad del departamento a través de estas acciones', 1, 'Centro Clínico “María Edelmira Araujo”, S', 'Soporte técnico, correctivo, preventivo, software, hardware', '2026-08-05 09:48:05.633265', NULL, 'Trayecto I', NULL, NULL, NULL);
 INSERT INTO public.detalles_proyectos VALUES (88, '2026-08-10', 'Pregrado', 'Según Arboleda (2014), un proyecto representa un esfuerzo temporal diseñado para producir un resultado o entregable único de forma gradual. Para enriquecer la fundamentación, Project Management Institute (2021), lo define como un esfuerzo temporal emprendido para crear un producto, servicio o resultado único.', 1, 'Corporación Eléctrica Nacional (CORPOELEC) de Venezuela', '', '2026-08-10 10:26:58.264555', NULL, 'Trayecto I', NULL, NULL, NULL);
+INSERT INTO public.detalles_proyectos VALUES (49, '2026-03-15', 'Pregrado', 'Desarrollo de un sistema tradicional para optimizar los métodos y procedimientos del inventario médico. Sigue un patrón arquitectónico modular para agilizar los procesos organizacionales.', 1, 'Ambulatorio Urbano Tipo II', 'Sistemas de Información, PostgreSQL, Gestión, Inventario', '2026-07-05 17:39:35.498485', NULL, 'Trayecto II', NULL, NULL, NULL);
 INSERT INTO public.detalles_proyectos VALUES (81, '2026-08-05', 'Pregrado', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry". Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP', '2026-08-05 09:48:05.72936', NULL, 'Trayecto II', NULL, NULL, NULL);
 INSERT INTO public.detalles_proyectos VALUES (82, '2026-08-05', 'Pregrado', 'Una descripción de proyectos es una visión general de alto nivel de por qué está haciendo el mismo. De igual manera el documento explica los objetivos y sus cualidades esenciales, donde la descripción es fundamental debido a que va ayudar en la realización del estudio ya que se requiere de la aplicación de varias metodologías que abordan aspectos desde la identificación del problema, hasta la selección de la alternativa más adecuada, haciendo uso de herramientas y técnicas que permiten la recolección y análisis de información de manera concreta y adecuada, aumentando así el nivel de objetividad del problema a resolver', 1, 'CAIPA Trujillo  ------------------------------------------------Naturaleza de la Comunidad: El CAIPA-Trujillo, Valera Estado Trujillo', '', '2026-08-05 09:48:05.817964', NULL, 'Trayecto III', NULL, NULL, NULL);
 INSERT INTO public.detalles_proyectos VALUES (83, '2026-08-05', 'Pregrado', 'La descripción del proyecto ofrece una visión general de la iniciativa que se va a desarrollar, la cual, debe incluir información clave que permita entender el contexto, los objetivos y la relevancia de la propuesta. Así que, este apartado actúa como un marco de referencia para todos los aspectos esenciales del proyecto, facilitando así, una comprensión clara de lo que se pretende lograr.', 1, 'Escuela Nacional “Antonio Pérez Carmona”, se encuentra registrada con el Registro de Información Fiscal (RIF) J-403419957', '', '2026-08-05 09:48:05.91852', NULL, 'Trayecto IV', NULL, NULL, NULL);
@@ -2283,6 +2290,7 @@ INSERT INTO public.detalles_proyectos VALUES (149, '2026-09-11', 'Pregrado', 'El
 INSERT INTO public.detalles_proyectos VALUES (132, '2026-09-04', 'Pregrado', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry". Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP', '2026-09-04 10:35:11.057661', NULL, 'Trayecto I', NULL, 'Desarrollar un Sistema Integral de Gestión Documentos Académicos, basado en una arquitectura modular, para la automatización de la búsqueda híbrida de información y la centralización de recursos académicos en beneficio de la comunidad del PNF en Informática.', true);
 INSERT INTO public.detalles_proyectos VALUES (148, '2026-09-11', 'Pregrado', 'El proyecto socio tecnológico tuvo como propósito desarrollar una Aplicación Web Móvil para el proceso de ascensos en la Coordinación de Formación Permanente y Docencia de la UPTTMBI. Se destaca la importancia que tienen las aplicaciones web en la vida cotidiana, dado que facilitan obtener, modificar información inmediata, dado que las mismas se ejecutan a través de internet, los datos son procesados y almacenados dentro de la web. La metodología utilizada fue programación extrema, metodología ágil de gestión de proyectos que se centra en la velocidad y la simplicidad con ciclos de desarrollo cortos y con menos documentación. De acuerdo con los objetivos establecidos, se utilizó la entrevista, encuesta, reuniones con los actores para desarrollar las historias de usuarios, se planifico, diseño, programo y realizaron pruebas a la aplicación. Como producto resultante se desarrolló una App móvil para el apoyo de los docentes en la solicitud de los procesos manejados en la Coordinación de Formación permanente y docente de la UPTTMBI, utilizando tecnologías de software libre como son PHP, Java y como gestor de base de datos se utilizó MySQL. La aplicación web móvil tiene como finalidad automatizar procesos que permitan una adecuada administración en lo referente al proceso de ascenso y solicitud de bono didáctico por parte de los docentes de la UPTTMBI, ayudando a la coordinación obtener información inmediata en tiempo real con resultados favorables, que contribuyen al desarrollo óptimo de los procesos y dando un mejor control a las necesidades de los docentes', 1, 'Coordinación de Formación Permanente y Docencia de la Universidad Politécnica Territorial del estado Trujillo Mario Briceño Iragorry', 'App, Aplicación móvil, Coordinación, Ascensos', '2026-09-10 21:02:31.979685', NULL, 'Trayecto I', NULL, 'Crear y fortalecer las condiciones intelectuales y materiales para propiciar, generar, coordinar, diseminar y difundir conocimiento científico y cultural que responda al perfeccionamiento de las y los docentes en servicio, que contribuyan de manera sustancial al mejoramiento, desarrollo y crecimiento académico.', true);
 INSERT INTO public.detalles_proyectos VALUES (147, '2026-09-11', 'Pregrado', 'Ofrecer a nuestros clientes accesorios para dispositivos móviles de calidad, brindando soluciones prácticas y accesibles que protejan, complementen y mejoren la experiencia diaria con su celular, a través de una atención personalizada y un catálogo de productos variado que se adapte a las necesidades de cada usuario.', 1, 'Smarthphone World C', '', '2026-09-10 21:02:31.80467', NULL, 'Trayecto I', NULL, 'Desarrollar un Sistema Integral de Gestión Comercial y Tienda Virtual para Smartphone World C.A., compuesto por un módulo de gestión local y una plataforma de comercio electrónico interconectados mediante una base de datos centralizada en la nube, con el fin de automatizar los procesos internos de inventario y ventas, y ampliar el alcance comercial de la empresa hacia el entorno digital.', true);
+INSERT INTO public.detalles_proyectos VALUES (158, '2026-09-23', 'Pregrado', '', 1, '', '', '2026-09-23 12:29:57.034447', NULL, 'Trayecto I', NULL, NULL, true);
 
 
 --
@@ -2461,7 +2469,6 @@ INSERT INTO public.privilegios VALUES (10, 6);
 --
 
 INSERT INTO public.propuestas_empresa VALUES (14, 'Punto Yali', '27889926', 'Miki boss', '04121609721', 'lando1609721@gmail.com', 'Sistema de Inventario', 'vbnchngfhgjfhgj', 'aceptada', '2026-09-13 22:30:07.723734', 'Trayecto I', 'CIIDI-2026-29E32', NULL);
-INSERT INTO public.propuestas_empresa VALUES (2, '123', '123', '123', '123', '123@gmail.com', 'inventario', '123', 'aceptada', '2026-09-02 21:42:33.312089', 'Trayecto IV (T4)', NULL, NULL);
 INSERT INTO public.propuestas_empresa VALUES (3, 'Punto Yali', '123', 'Yohan Estrada', '0416-6777467', 'yohan@gmail.com', 'facturacion', 'IAIAIAIA', 'rechazada', '2026-09-11 22:13:08.195366', NULL, '', 'CIIDI-2026-F421F');
 INSERT INTO public.propuestas_empresa VALUES (5, 'Megacell', 'J-12045552-', 'Miki waza', '04121609721', 'lando1609721@gmail.com', 'inventario', 'Necesito un sistema que haga inventario', 'rechazada', '2026-08-25 17:16:56.513754', 'Trayecto II', NULL, NULL);
 INSERT INTO public.propuestas_empresa VALUES (6, 'Megacell', 'J20789378', 'Miki waza', '0414-7573234', 'lando1609721@gmail.com', 'inventario', 'necesito un sistema para mi alacen', 'aceptada', '2026-09-09 21:47:51.4141', 'Trayecto I', 'CIIDI-2026-AF997', NULL);
@@ -2476,6 +2483,7 @@ INSERT INTO public.propuestas_empresa VALUES (12, 'Megacell', 'J20789378', 'chai
 INSERT INTO public.propuestas_empresa VALUES (13, 'Punto Yali', '20789378', 'Miki boss', '04121609721', 'lando1609721@gmail.com', 'Sistema de Inventario', 'caafagsdfddsfdsfdsf', 'aceptada', '2026-09-13 22:28:56.260924', 'Trayecto I', 'CIIDI-2026-EC9AC', NULL);
 INSERT INTO public.propuestas_empresa VALUES (16, 'Megacell', '27889926', 'Miki waza', '04121609721', 'lando1609721@gmail.com', 'Sistema de Inventario', 'isuuuuuuu ordeña a carmencita', 'aceptada', '2026-09-16 23:57:18.499486', 'Trayecto I', 'CIIDI-2026-CAA12', NULL);
 INSERT INTO public.propuestas_empresa VALUES (15, 'zambrano cell', '20789378', 'chailon', '04121609721', 'lando1609721@gmail.com', 'Mejora de sistema', 'ghfjhmfhjfgdjhfd', 'aceptada', '2026-09-13 22:30:21.539904', 'Trayecto I', 'CIIDI-2026-C8F0D', NULL);
+INSERT INTO public.propuestas_empresa VALUES (2, '123', '123', '123', '123', '123@gmail.com', 'inventario', '123', 'aceptada', '2026-09-02 21:42:33.312089', 'Trayecto IV', NULL, NULL);
 
 
 --
@@ -2537,6 +2545,7 @@ INSERT INTO public.proyecto_tutores VALUES (148, 31, 4);
 INSERT INTO public.proyecto_tutores VALUES (149, 35, 3);
 INSERT INTO public.proyecto_tutores VALUES (149, 36, 4);
 INSERT INTO public.proyecto_tutores VALUES (147, 22, 3);
+INSERT INTO public.proyecto_tutores VALUES (49, 40, 3);
 
 
 --
@@ -2680,6 +2689,9 @@ INSERT INTO public.recurso_autores VALUES (150, 13);
 INSERT INTO public.recurso_autores VALUES (151, 31);
 INSERT INTO public.recurso_autores VALUES (147, 52);
 INSERT INTO public.recurso_autores VALUES (147, 53);
+INSERT INTO public.recurso_autores VALUES (49, 45);
+INSERT INTO public.recurso_autores VALUES (49, 34);
+INSERT INTO public.recurso_autores VALUES (156, 82);
 
 
 --
@@ -2708,13 +2720,13 @@ INSERT INTO public.recurso_categorias VALUES (144, 1);
 INSERT INTO public.recurso_categorias VALUES (146, 3);
 INSERT INTO public.recurso_categorias VALUES (150, 14);
 INSERT INTO public.recurso_categorias VALUES (151, 3);
+INSERT INTO public.recurso_categorias VALUES (156, 3);
 
 
 --
 -- Data for Name: recurso_clasificaciones; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.recurso_clasificaciones VALUES (49, 7, 5);
 INSERT INTO public.recurso_clasificaciones VALUES (50, 8, 10);
 INSERT INTO public.recurso_clasificaciones VALUES (51, 9, 16);
 INSERT INTO public.recurso_clasificaciones VALUES (52, 10, 18);
@@ -2758,6 +2770,8 @@ INSERT INTO public.recurso_clasificaciones VALUES (132, 10, 18);
 INSERT INTO public.recurso_clasificaciones VALUES (148, 9, 17);
 INSERT INTO public.recurso_clasificaciones VALUES (149, 7, 5);
 INSERT INTO public.recurso_clasificaciones VALUES (147, 7, 5);
+INSERT INTO public.recurso_clasificaciones VALUES (49, 7, 5);
+INSERT INTO public.recurso_clasificaciones VALUES (158, 7, NULL);
 
 
 --
@@ -2778,90 +2792,93 @@ INSERT INTO public.recurso_etiquetas VALUES (144, 1);
 INSERT INTO public.recurso_etiquetas VALUES (146, 10);
 INSERT INTO public.recurso_etiquetas VALUES (150, 5);
 INSERT INTO public.recurso_etiquetas VALUES (151, 3);
+INSERT INTO public.recurso_etiquetas VALUES (156, 1);
 
 
 --
 -- Data for Name: recursos; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.recursos VALUES (1, 'Sistema de Reconocimiento Biométrico Facial para Comedor Universitario', 1, 2026, 1, 1, NULL);
-INSERT INTO public.recursos VALUES (2, 'Prototipo de Cerradura Digital con Matriz de Teclado y Arduino', 1, 2025, 1, 1, NULL);
-INSERT INTO public.recursos VALUES (3, 'Aplicación de Redes Neuronales Convolucionales para la Detección de Plagas en Cultivos Trujillanos', 2, 2026, 1, 1, NULL);
-INSERT INTO public.recursos VALUES (4, 'Impacto del Cambio Climático en Trujillo - Parte 8', 2, 2023, 1, 1, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (5, 'Simulación de Cargas Estáticas en Puentes - Parte 7', 2, 2024, 1, 1, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (6, 'Big Data en Finanzas Institucionales - Parte 9', 1, 2024, 1, 1, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (7, 'Optimización de CPU en Servidores Locales - Parte 7', 1, 2026, 1, 1, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (8, 'Sistemas de Riego Automatizado - Parte 5', 1, 2023, 1, 1, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (9, 'Bioinformática y Análisis de ADN - Parte 5', 3, 2025, 1, 1, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (10, 'Inteligencia Artificial en Diagnóstico Médico - Parte 6', 2, 2025, 1, 1, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (11, 'Robótica Educativa para Escuelas - Parte 5', 3, 2023, 1, 1, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (12, 'Software Libre para Bibliotecas - Parte 1', 3, 2026, 1, 1, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (13, 'E-Learning para Zonas Desfavorecidas - Parte 1', 3, 2018, 1, 1, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (14, 'Telecomunicaciones de Fibra Óptica Rural - Parte 1', 2, 2022, 1, 1, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (15, 'Criptografía Cuántica Post-RSA - Parte 2', 1, 2024, 1, 1, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (16, 'Criptografía Cuántica Post-RSA - Parte 7', 3, 2026, 1, 1, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (17, 'Criptografía Cuántica Post-RSA - Parte 5', 1, 2024, 1, 1, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (18, 'Criptografía Cuántica Post-RSA - Parte 8', 1, 2021, 1, 1, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (19, 'Software Libre para Bibliotecas - Parte 6', 1, 2023, 1, 1, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (20, 'Inteligencia Artificial en Diagnóstico Médico - Parte 1', 3, 2020, 1, 1, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (45, 'Desarrollo de un Motor para Novelas Visuales Nativas usando Rust y Tauri', 1, 2026, 2, 2, 'motor_rust_tauri_v1.pdf');
-INSERT INTO public.recursos VALUES (46, 'Arquitectura de L¢gica de Estados para Videojuegos en Consolas Virtuales TIC-80', 1, 2025, 1, 1, 'juego_aislamiento_tic80.pdf');
-INSERT INTO public.recursos VALUES (47, 'Protocolo de Restauraci¢n y Diagn¢stico de Capacitores en Tarjetas Madre Socket 478', 1, 2026, 3, 3, 'restauracion_pentium4.pdf');
-INSERT INTO public.recursos VALUES (48, 'Implementaci¢n de un Enrutador Din mico basado en Arquitectura Microkernel con PHP Puro', 1, 2026, 1, 1, 'microkernel_php_routing.pdf');
-INSERT INTO public.recursos VALUES (49, 'Sistema de Informaci¢n Automatizado para la Gesti¢n de Inventario y Suministros M‚dicos', 1, 2026, 1, 1, 'proyecto_inventario_medico.pdf');
-INSERT INTO public.recursos VALUES (50, 'Software Educativo Multimedial para el Fortalecimiento del Aprendizaje de µlgebra Lineal', 1, 2026, 1, 1, 'software_educativo_algebra.pdf');
-INSERT INTO public.recursos VALUES (51, 'Plataforma Web bajo Arquitectura Cliente-Servidor para el Control de Citas Acad‚micas', 1, 2025, 1, 1, 'plataforma_web_citas.pdf');
-INSERT INTO public.recursos VALUES (52, 'Simulador de Enrutamiento por Estado de Enlace para la Validaci¢n de Topolog¡as Complejas', 1, 2026, 1, 1, 'simulador_routing_topologias.pdf');
-INSERT INTO public.recursos VALUES (57, 'hola adios', 1, 2026, 1, 1, 'documentos/pst/pst_hola_adios_1783290093.pdf');
-INSERT INTO public.recursos VALUES (58, 'Sistema Integral de Gestión de Documasdasdasdasentos Académicos para el Comité Científico Investigaasdasdasdasdor del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 1, 1, 'documentos/pst/pst_sistema_integral_de_gesti__n_d_1783396914.pdf');
-INSERT INTO public.recursos VALUES (59, 'SISTEMA DE OPTIMIZACIÓN BASADO EN ALGORITMOS GENÉTICOS PARA LA GESTIÓN DE HORARIOS DEL PNFI DE LA UPTTMBI, NÚCLEO LA BEATRIZ', 1, 2026, 1, 1, 'documentos/pst/pst_sistema_de_optimizaci__n_basad_1785849778.pdf');
-INSERT INTO public.recursos VALUES (69, 'NUES DR. PABLO VILORIA – LA BEATRIZ SOPORTE TÉCNICO A EQUIPOS DE COMPUTACION Y USUARIOS EN CENTRO CLÍNICO “MARÍA EDELMIRA ARAUJO”, S.A. VALERA ESTADO TRUJILLO .', 1, 2023, 1, 1, 'documentos/pst/pst_nues_dr__pablo_viloria_____la__1785851934.pdf');
-INSERT INTO public.recursos VALUES (72, 'SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WORLD C.A.', 1, 2026, 1, 1, 'documentos/pst/pst_sistema_integral_de_gesti__n_c_1785852671.pdf');
-INSERT INTO public.recursos VALUES (78, 'PST Prueba Carga por Lotes - 20260805134326', 1, 2026, 1, 1, 'documentos/pst/pst_pst_prueba_carga_por_lotes___2_1785937406.pdf');
-INSERT INTO public.recursos VALUES (79, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 1, 1, 'documentos/pst/pst_sistema_integral_de_gesti__n_d_1785937515.pdf');
-INSERT INTO public.recursos VALUES (80, 'NUES DR. PABLO VILORIA – LA BEATRIZ SOPORTE TÉCNICO A EQUIPOS DE COMPUTACION Y USUARIOS EN CENTRO CLÍNICO “MARÍA EDELMIRA ARAUJO”, S.A. VALERA ESTADO TRUJILLO .', 1, 2023, 1, 1, 'documentos/pst/pst_nues_dr__pablo_viloria_____la__1785937685.pdf');
-INSERT INTO public.recursos VALUES (81, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 1, 1, 'documentos/pst/pst_sistema_integral_de_gesti__n_d_1785937685.pdf');
-INSERT INTO public.recursos VALUES (82, 'OPTIMIZACIÓN DEL SISTEMA DE INFORMACION PARA EL CONTROL DE MATRICULA EN EL CENTRO DE ATENCIÓN INTEGRAL PARA PERSONAS CON AUTISMO “CAIPA TRUJILLO” VERSIÓN 2.0', 1, 2026, 1, 1, 'documentos/pst/pst_optimizaci__n_del_sistema_de_i_1785937685.pdf');
-INSERT INTO public.recursos VALUES (83, 'SISTEMA INTELIGENTE PARA LA GESTIÓN ACADÉMICA Y ADMINISTRATIVA EN LA ESCUELA NACIONAL “ANTONIO PÉREZ CARMONA”, ESCUQUE, ESTADO TRUJILLO', 1, 2026, 1, 1, 'documentos/pst/pst_sistema_inteligente_para_la_ge_1785937685.pdf');
-INSERT INTO public.recursos VALUES (84, 'SOPORTE TECNICO A EQUIPOS Y USUARIOS DE LABORATORIO I EN LA E.T.C MADRE RAFOLS', 1, 2023, 1, 1, 'documentos/pst/pst_soporte_tecnico_a_equipos_y_us_1785937686.pdf');
-INSERT INTO public.recursos VALUES (85, 'PST Prueba Duplicados - 20260805135642', 1, 2026, 1, 1, 'documentos/pst/pst_pst_prueba_duplicados___202608_1785938202.pdf');
-INSERT INTO public.recursos VALUES (86, 'PST Prueba Duplicados - 20260805140204', 1, 2026, 1, 1, 'documentos/pst/pst_pst_prueba_duplicados___202608_1785938524.pdf');
-INSERT INTO public.recursos VALUES (87, 'PST Prueba Duplicados - 20260805143446', 1, 2026, 1, 1, 'documentos/pst/pst_pst_prueba_duplicados___202608_1785940486.pdf');
-INSERT INTO public.recursos VALUES (88, 'SOPORTE TÉCNICO A EQUIPOS DE COMPUTACIÓN Y USUARIOS EN CORPOELEC', 1, 2021, 1, 1, 'storage/documentos/pst/pst_soporte_t__cnico_a_equipos_de__1786372014_343.docx');
-INSERT INTO public.recursos VALUES (89, 'MÓDULO INTELIGENTE BASADO EN MACHINE LEARNING PARA LA GESTIÓN DE LAS LÍNEAS DE INVESTIGACIÓN PARA PROYECTOS ACADÉMICOS DE LA UPTTMBI - NÚCLEO LA BEATRIZ', 1, 2026, 1, 1, 'storage/documentos/pst/pst_m__dulo_inteligente_basado_en__1786372449_773.docx');
-INSERT INTO public.recursos VALUES (90, 'OPTIMIZACIÓN DEL SISTEMA DE sdasdasdINFORMACION PARA EL CONTROL DE MATRICULA EN EL CENTRO DE ATENCIÓN INTEGRAL PARA PERSONAS CON AUTISMO “CAIPA TRUJILLO” VERSIÓN 2.0', 1, 2026, 1, 1, NULL);
-INSERT INTO public.recursos VALUES (91, 'Sistema Inteligente de Redes Neurosdasdasdasdasdasdsadnales para la Gestión Integral de la Coordinación PNF de Contaduría Pública UPTT Mario Briceño Iragorry', 1, 2026, 1, 1, 'storage/documentos/pst/pst_sistema_inteligente_de_redes_n_1786373559_627.docx');
-INSERT INTO public.recursos VALUES (94, 'SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WORLD C.A.2222', 1, 2026, 1, 1, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_c_1786376454_286.docx');
-INSERT INTO public.recursos VALUES (93, 'Sistema Inteligente de Redes Neuronales para la Gestión Integral de la Coordinación P2222NF de Contaduría Pública UPTT Mario Briceño Iragorry', 1, 2026, 1, 1, 'storage/documentos/pst/pst_sistema_inteligente_de_redes_n_1786376074_943.docx');
-INSERT INTO public.recursos VALUES (92, 'SISTEMA INTELIGENTE PARA LA GESTIÓN ACADÉMICA Y ADMIN2wwdasdaISTRATIVA EN LA ESCUELA NACIONAL “ANTONIO PÉREZ CARMONA”, ESCUQUE, ESTADO TRUJILLO', 1, 2026, 1, 1, 'storage/documentos/pst/pst_sistema_inteligente_para_la_ge_1786376037_906.docx');
-INSERT INTO public.recursos VALUES (112, 'SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WOssssssssssssssssssRLD C.A.', 1, 2026, 1, 1, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_c_1787698715_771.docx');
-INSERT INTO public.recursos VALUES (97, 'Sistema Inteligente de Redes Neuronales para la Gestión Integral de la Coordinación PNF desdasdasd Contaduría Pública UPTT Mario Briceño Iragorry', 1, 2026, 1, 1, 'storage/documentos/pst/pst_sistema_inteligente_de_redes_n_1786377809_260.docx');
-INSERT INTO public.recursos VALUES (99, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Inves222222tigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 1, 1, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1786378254_697.docx');
-INSERT INTO public.recursos VALUES (100, 'il para el proceso de Ascensos en la Coordin222222ación de Formación Permanente y Docencia de la UPTTMBI Docente Asesor: Dra.  María Luisa Colmenares Representante Institucional: Dra. Rossana Virgilio Representante Organizacional: Dr. Carlos Simancas', 1, 2023, 1, 1, NULL);
-INSERT INTO public.recursos VALUES (108, 'Sistema Integral de Gestión de Documentos Académicos para el C222222222omité Científico Investigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 1, 1, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1786378813_891.docx');
-INSERT INTO public.recursos VALUES (109, 'SOPORTE TÉCNICO A EQUIPOS DE COMPUTACION Y USUARIOS EN CENTRO CLÍNICO “MARÍA EDELMIRA ARAUJOooo”', 1, 2023, 1, 1, 'storage/documentos/pst/pst_nues_dr__pablo_viloria_____la__1786457302_317.pdf');
-INSERT INTO public.recursos VALUES (110, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNsssssssF en Informática apoyado en Redes Neuronales', 1, 2025, 1, 1, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1787698529_393.docx');
-INSERT INTO public.recursos VALUES (111, 'SOPORTE TÉCNICO A EQUIPOS DE COMPUTACIÓN Y USUARIOS EN LssssssssssssA ESCUELA TÉCNICA COMERCIAL “MADRE RAFOLS”', 1, 2024, 1, 1, 'storage/documentos/pst/pst_soporte_t__cnico_a_equipos_de__1787698700_582.pdf');
-INSERT INTO public.recursos VALUES (113, 'Sistema Integral de Gestión de Documentos Académicos para el 22312312312312213123Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 1, 1, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1787836105_952.docx');
-INSERT INTO public.recursos VALUES (114, 'SOPORTE TÉCNICO A EQUIPOS DE COMPUTACIÓN Y USUARIOS EN LA ESCUELA TÉCNICA COMERCIAL “MADRE RAFOLS”', 1, 2024, 1, 1, 'storage/documentos/pst/pst_soporte_t__cnico_a_equipos_de__1787840266_406.pdf');
-INSERT INTO public.recursos VALUES (116, 'SISTEMA INTELIGENTE PARA LA GESTIÓN ACADÉMICA Y ADMINISTRATIVA EN LA asdasdasdasdESCUELA NACIONAL “ANTONIO PÉREZ CARMONA”, ESCUQUE, ESTADO TRUJILLO', 1, 2026, 1, 1, 'storage/documentos/pst/pst_sistema_inteligente_para_la_ge_1788184014_102.docx');
-INSERT INTO public.recursos VALUES (117, 'SISTEMA DE OPTIMIZACIÓN BASADO EN ALGORITMOS GENÉTICOS PARA LA GESTIsadasdasdÓN DE HORARIOS DEL PNFI DE LA UPTTMBI, NÚCLEO LA BEATRIZ', 1, 2026, 1, 1, 'PST 4 David LidmarFinal.docx');
-INSERT INTO public.recursos VALUES (127, 'ACTIVIDADES ACREDITABLES IV INFORME DE MERCADEO: TIPPEN TAG', 1, 2026, 1, 1, 'storage/documentos/pst/pst_actividades_acreditables_iv_in_1788376198_636.docx');
-INSERT INTO public.recursos VALUES (128, 'Materia: Seguridad Informática', 1, 2026, 1, 1, 'storage/documentos/pst/pst_materia__seguridad_inform__tic_1788384113_508.docx');
-INSERT INTO public.recursos VALUES (132, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Casdasdasientífico Investigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 1, 1, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1788532202_175.docx');
-INSERT INTO public.recursos VALUES (122, 'Revisión sistemática del impacto de las fibras de polipropileno en las propiedades físico-mecánicas, microestructurales y de durabilidad del Concreto', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/121649/97474');
-INSERT INTO public.recursos VALUES (121, 'Modelo matemático para el balance de calor de un techo verde en condiciones de trópico húmedo', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/123977/97473');
-INSERT INTO public.recursos VALUES (120, 'Determinantes de la aceptación del uso de la banca móvil por parte de ganaderos', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/121522/97457');
-INSERT INTO public.recursos VALUES (119, 'Entorno virtual de capacitación con EOG para manipular robots asistenciales', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/124310/98135');
-INSERT INTO public.recursos VALUES (118, 'Middleware MiSCi para ciudades inteligentes extendido con datos enlazados', 3, 2020, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/83226');
-INSERT INTO public.recursos VALUES (143, 'Investigación y modelado de pérdidas por corriente circulante en sistemas de puesta a tierra de torres de alta tensión', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/124890/98825');
-INSERT INTO public.recursos VALUES (146, 'Modelamiento de confort adaptativo para un trapiche panelero', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/112625/91645');
-INSERT INTO public.recursos VALUES (144, 'Propuesta de un modelo de implementación basado en aprendizaje automático para el reclutamiento de profesionales de ingeniería en una universidad pública', 3, 2026, 1, 1, 'https://revistas.unal.edu.co/index.php/dyna/article/view/124428/98826');
-INSERT INTO public.recursos VALUES (148, 'VALERA EDO TRUJILLO Aplicación Web Móvil para el proceso de Ascensos en la Coordinación de Formación Permanente y Docencia de la UPTTMBI Docente Asesor: Dra. María Luisa Colmenares Representante Institucional: Dra. Rossana Virgilio Representante...', 1, 2023, 1, 1, 'storage/documentos/pst/pst_valera_edo_trujillo_aplicaci___1789088548_770.docx');
-INSERT INTO public.recursos VALUES (149, 'NUES DR. PABLO VILORIA – LA BEATRIZ SOPORTE TÉCNICO A EQUIPOS DE COMPUTACION Y USUARIOS EN CENTRO CLÍNICO “MARÍA EDELMIRA ARAUJO”, S.A. VALERA ESTADO TRUJILLO', 1, 2023, 1, 1, 'storage/documentos/pst/pst_nues_dr__pablo_viloria_____la__1789088547_631.pdf');
-INSERT INTO public.recursos VALUES (150, 'e', 3, 2026, 1, 1, 'https://www.youtube.com/');
-INSERT INTO public.recursos VALUES (151, 'e', 3, 2026, 1, 1, 'https://www.wikipedia.org/');
-INSERT INTO public.recursos VALUES (147, 'SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WORLD C.A', 1, 2026, 1, 1, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_c_1789794852.pdf');
+INSERT INTO public.recursos VALUES (1, 'Sistema de Reconocimiento Biométrico Facial para Comedor Universitario', 1, 2026, NULL);
+INSERT INTO public.recursos VALUES (2, 'Prototipo de Cerradura Digital con Matriz de Teclado y Arduino', 1, 2025, NULL);
+INSERT INTO public.recursos VALUES (3, 'Aplicación de Redes Neuronales Convolucionales para la Detección de Plagas en Cultivos Trujillanos', 2, 2026, NULL);
+INSERT INTO public.recursos VALUES (4, 'Impacto del Cambio Climático en Trujillo - Parte 8', 2, 2023, 'dummy.pdf');
+INSERT INTO public.recursos VALUES (5, 'Simulación de Cargas Estáticas en Puentes - Parte 7', 2, 2024, 'dummy.pdf');
+INSERT INTO public.recursos VALUES (6, 'Big Data en Finanzas Institucionales - Parte 9', 1, 2024, 'dummy.pdf');
+INSERT INTO public.recursos VALUES (7, 'Optimización de CPU en Servidores Locales - Parte 7', 1, 2026, 'dummy.pdf');
+INSERT INTO public.recursos VALUES (8, 'Sistemas de Riego Automatizado - Parte 5', 1, 2023, 'dummy.pdf');
+INSERT INTO public.recursos VALUES (9, 'Bioinformática y Análisis de ADN - Parte 5', 3, 2025, 'dummy.pdf');
+INSERT INTO public.recursos VALUES (10, 'Inteligencia Artificial en Diagnóstico Médico - Parte 6', 2, 2025, 'dummy.pdf');
+INSERT INTO public.recursos VALUES (11, 'Robótica Educativa para Escuelas - Parte 5', 3, 2023, 'dummy.pdf');
+INSERT INTO public.recursos VALUES (12, 'Software Libre para Bibliotecas - Parte 1', 3, 2026, 'dummy.pdf');
+INSERT INTO public.recursos VALUES (13, 'E-Learning para Zonas Desfavorecidas - Parte 1', 3, 2018, 'dummy.pdf');
+INSERT INTO public.recursos VALUES (14, 'Telecomunicaciones de Fibra Óptica Rural - Parte 1', 2, 2022, 'dummy.pdf');
+INSERT INTO public.recursos VALUES (15, 'Criptografía Cuántica Post-RSA - Parte 2', 1, 2024, 'dummy.pdf');
+INSERT INTO public.recursos VALUES (16, 'Criptografía Cuántica Post-RSA - Parte 7', 3, 2026, 'dummy.pdf');
+INSERT INTO public.recursos VALUES (17, 'Criptografía Cuántica Post-RSA - Parte 5', 1, 2024, 'dummy.pdf');
+INSERT INTO public.recursos VALUES (18, 'Criptografía Cuántica Post-RSA - Parte 8', 1, 2021, 'dummy.pdf');
+INSERT INTO public.recursos VALUES (19, 'Software Libre para Bibliotecas - Parte 6', 1, 2023, 'dummy.pdf');
+INSERT INTO public.recursos VALUES (20, 'Inteligencia Artificial en Diagnóstico Médico - Parte 1', 3, 2020, 'dummy.pdf');
+INSERT INTO public.recursos VALUES (45, 'Desarrollo de un Motor para Novelas Visuales Nativas usando Rust y Tauri', 1, 2026, 'motor_rust_tauri_v1.pdf');
+INSERT INTO public.recursos VALUES (46, 'Arquitectura de L¢gica de Estados para Videojuegos en Consolas Virtuales TIC-80', 1, 2025, 'juego_aislamiento_tic80.pdf');
+INSERT INTO public.recursos VALUES (47, 'Protocolo de Restauraci¢n y Diagn¢stico de Capacitores en Tarjetas Madre Socket 478', 1, 2026, 'restauracion_pentium4.pdf');
+INSERT INTO public.recursos VALUES (48, 'Implementaci¢n de un Enrutador Din mico basado en Arquitectura Microkernel con PHP Puro', 1, 2026, 'microkernel_php_routing.pdf');
+INSERT INTO public.recursos VALUES (50, 'Software Educativo Multimedial para el Fortalecimiento del Aprendizaje de µlgebra Lineal', 1, 2026, 'software_educativo_algebra.pdf');
+INSERT INTO public.recursos VALUES (51, 'Plataforma Web bajo Arquitectura Cliente-Servidor para el Control de Citas Acad‚micas', 1, 2025, 'plataforma_web_citas.pdf');
+INSERT INTO public.recursos VALUES (52, 'Simulador de Enrutamiento por Estado de Enlace para la Validaci¢n de Topolog¡as Complejas', 1, 2026, 'simulador_routing_topologias.pdf');
+INSERT INTO public.recursos VALUES (57, 'hola adios', 1, 2026, 'documentos/pst/pst_hola_adios_1783290093.pdf');
+INSERT INTO public.recursos VALUES (58, 'Sistema Integral de Gestión de Documasdasdasdasentos Académicos para el Comité Científico Investigaasdasdasdasdor del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 'documentos/pst/pst_sistema_integral_de_gesti__n_d_1783396914.pdf');
+INSERT INTO public.recursos VALUES (59, 'SISTEMA DE OPTIMIZACIÓN BASADO EN ALGORITMOS GENÉTICOS PARA LA GESTIÓN DE HORARIOS DEL PNFI DE LA UPTTMBI, NÚCLEO LA BEATRIZ', 1, 2026, 'documentos/pst/pst_sistema_de_optimizaci__n_basad_1785849778.pdf');
+INSERT INTO public.recursos VALUES (69, 'NUES DR. PABLO VILORIA – LA BEATRIZ SOPORTE TÉCNICO A EQUIPOS DE COMPUTACION Y USUARIOS EN CENTRO CLÍNICO “MARÍA EDELMIRA ARAUJO”, S.A. VALERA ESTADO TRUJILLO .', 1, 2023, 'documentos/pst/pst_nues_dr__pablo_viloria_____la__1785851934.pdf');
+INSERT INTO public.recursos VALUES (72, 'SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WORLD C.A.', 1, 2026, 'documentos/pst/pst_sistema_integral_de_gesti__n_c_1785852671.pdf');
+INSERT INTO public.recursos VALUES (78, 'PST Prueba Carga por Lotes - 20260805134326', 1, 2026, 'documentos/pst/pst_pst_prueba_carga_por_lotes___2_1785937406.pdf');
+INSERT INTO public.recursos VALUES (79, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 'documentos/pst/pst_sistema_integral_de_gesti__n_d_1785937515.pdf');
+INSERT INTO public.recursos VALUES (80, 'NUES DR. PABLO VILORIA – LA BEATRIZ SOPORTE TÉCNICO A EQUIPOS DE COMPUTACION Y USUARIOS EN CENTRO CLÍNICO “MARÍA EDELMIRA ARAUJO”, S.A. VALERA ESTADO TRUJILLO .', 1, 2023, 'documentos/pst/pst_nues_dr__pablo_viloria_____la__1785937685.pdf');
+INSERT INTO public.recursos VALUES (81, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 'documentos/pst/pst_sistema_integral_de_gesti__n_d_1785937685.pdf');
+INSERT INTO public.recursos VALUES (82, 'OPTIMIZACIÓN DEL SISTEMA DE INFORMACION PARA EL CONTROL DE MATRICULA EN EL CENTRO DE ATENCIÓN INTEGRAL PARA PERSONAS CON AUTISMO “CAIPA TRUJILLO” VERSIÓN 2.0', 1, 2026, 'documentos/pst/pst_optimizaci__n_del_sistema_de_i_1785937685.pdf');
+INSERT INTO public.recursos VALUES (83, 'SISTEMA INTELIGENTE PARA LA GESTIÓN ACADÉMICA Y ADMINISTRATIVA EN LA ESCUELA NACIONAL “ANTONIO PÉREZ CARMONA”, ESCUQUE, ESTADO TRUJILLO', 1, 2026, 'documentos/pst/pst_sistema_inteligente_para_la_ge_1785937685.pdf');
+INSERT INTO public.recursos VALUES (84, 'SOPORTE TECNICO A EQUIPOS Y USUARIOS DE LABORATORIO I EN LA E.T.C MADRE RAFOLS', 1, 2023, 'documentos/pst/pst_soporte_tecnico_a_equipos_y_us_1785937686.pdf');
+INSERT INTO public.recursos VALUES (85, 'PST Prueba Duplicados - 20260805135642', 1, 2026, 'documentos/pst/pst_pst_prueba_duplicados___202608_1785938202.pdf');
+INSERT INTO public.recursos VALUES (86, 'PST Prueba Duplicados - 20260805140204', 1, 2026, 'documentos/pst/pst_pst_prueba_duplicados___202608_1785938524.pdf');
+INSERT INTO public.recursos VALUES (87, 'PST Prueba Duplicados - 20260805143446', 1, 2026, 'documentos/pst/pst_pst_prueba_duplicados___202608_1785940486.pdf');
+INSERT INTO public.recursos VALUES (88, 'SOPORTE TÉCNICO A EQUIPOS DE COMPUTACIÓN Y USUARIOS EN CORPOELEC', 1, 2021, 'storage/documentos/pst/pst_soporte_t__cnico_a_equipos_de__1786372014_343.docx');
+INSERT INTO public.recursos VALUES (89, 'MÓDULO INTELIGENTE BASADO EN MACHINE LEARNING PARA LA GESTIÓN DE LAS LÍNEAS DE INVESTIGACIÓN PARA PROYECTOS ACADÉMICOS DE LA UPTTMBI - NÚCLEO LA BEATRIZ', 1, 2026, 'storage/documentos/pst/pst_m__dulo_inteligente_basado_en__1786372449_773.docx');
+INSERT INTO public.recursos VALUES (90, 'OPTIMIZACIÓN DEL SISTEMA DE sdasdasdINFORMACION PARA EL CONTROL DE MATRICULA EN EL CENTRO DE ATENCIÓN INTEGRAL PARA PERSONAS CON AUTISMO “CAIPA TRUJILLO” VERSIÓN 2.0', 1, 2026, NULL);
+INSERT INTO public.recursos VALUES (91, 'Sistema Inteligente de Redes Neurosdasdasdasdasdasdsadnales para la Gestión Integral de la Coordinación PNF de Contaduría Pública UPTT Mario Briceño Iragorry', 1, 2026, 'storage/documentos/pst/pst_sistema_inteligente_de_redes_n_1786373559_627.docx');
+INSERT INTO public.recursos VALUES (94, 'SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WORLD C.A.2222', 1, 2026, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_c_1786376454_286.docx');
+INSERT INTO public.recursos VALUES (93, 'Sistema Inteligente de Redes Neuronales para la Gestión Integral de la Coordinación P2222NF de Contaduría Pública UPTT Mario Briceño Iragorry', 1, 2026, 'storage/documentos/pst/pst_sistema_inteligente_de_redes_n_1786376074_943.docx');
+INSERT INTO public.recursos VALUES (92, 'SISTEMA INTELIGENTE PARA LA GESTIÓN ACADÉMICA Y ADMIN2wwdasdaISTRATIVA EN LA ESCUELA NACIONAL “ANTONIO PÉREZ CARMONA”, ESCUQUE, ESTADO TRUJILLO', 1, 2026, 'storage/documentos/pst/pst_sistema_inteligente_para_la_ge_1786376037_906.docx');
+INSERT INTO public.recursos VALUES (112, 'SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WOssssssssssssssssssRLD C.A.', 1, 2026, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_c_1787698715_771.docx');
+INSERT INTO public.recursos VALUES (97, 'Sistema Inteligente de Redes Neuronales para la Gestión Integral de la Coordinación PNF desdasdasd Contaduría Pública UPTT Mario Briceño Iragorry', 1, 2026, 'storage/documentos/pst/pst_sistema_inteligente_de_redes_n_1786377809_260.docx');
+INSERT INTO public.recursos VALUES (99, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Inves222222tigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1786378254_697.docx');
+INSERT INTO public.recursos VALUES (100, 'il para el proceso de Ascensos en la Coordin222222ación de Formación Permanente y Docencia de la UPTTMBI Docente Asesor: Dra.  María Luisa Colmenares Representante Institucional: Dra. Rossana Virgilio Representante Organizacional: Dr. Carlos Simancas', 1, 2023, NULL);
+INSERT INTO public.recursos VALUES (108, 'Sistema Integral de Gestión de Documentos Académicos para el C222222222omité Científico Investigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1786378813_891.docx');
+INSERT INTO public.recursos VALUES (109, 'SOPORTE TÉCNICO A EQUIPOS DE COMPUTACION Y USUARIOS EN CENTRO CLÍNICO “MARÍA EDELMIRA ARAUJOooo”', 1, 2023, 'storage/documentos/pst/pst_nues_dr__pablo_viloria_____la__1786457302_317.pdf');
+INSERT INTO public.recursos VALUES (110, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNsssssssF en Informática apoyado en Redes Neuronales', 1, 2025, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1787698529_393.docx');
+INSERT INTO public.recursos VALUES (111, 'SOPORTE TÉCNICO A EQUIPOS DE COMPUTACIÓN Y USUARIOS EN LssssssssssssA ESCUELA TÉCNICA COMERCIAL “MADRE RAFOLS”', 1, 2024, 'storage/documentos/pst/pst_soporte_t__cnico_a_equipos_de__1787698700_582.pdf');
+INSERT INTO public.recursos VALUES (113, 'Sistema Integral de Gestión de Documentos Académicos para el 22312312312312213123Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1787836105_952.docx');
+INSERT INTO public.recursos VALUES (114, 'SOPORTE TÉCNICO A EQUIPOS DE COMPUTACIÓN Y USUARIOS EN LA ESCUELA TÉCNICA COMERCIAL “MADRE RAFOLS”', 1, 2024, 'storage/documentos/pst/pst_soporte_t__cnico_a_equipos_de__1787840266_406.pdf');
+INSERT INTO public.recursos VALUES (116, 'SISTEMA INTELIGENTE PARA LA GESTIÓN ACADÉMICA Y ADMINISTRATIVA EN LA asdasdasdasdESCUELA NACIONAL “ANTONIO PÉREZ CARMONA”, ESCUQUE, ESTADO TRUJILLO', 1, 2026, 'storage/documentos/pst/pst_sistema_inteligente_para_la_ge_1788184014_102.docx');
+INSERT INTO public.recursos VALUES (117, 'SISTEMA DE OPTIMIZACIÓN BASADO EN ALGORITMOS GENÉTICOS PARA LA GESTIsadasdasdÓN DE HORARIOS DEL PNFI DE LA UPTTMBI, NÚCLEO LA BEATRIZ', 1, 2026, 'PST 4 David LidmarFinal.docx');
+INSERT INTO public.recursos VALUES (127, 'ACTIVIDADES ACREDITABLES IV INFORME DE MERCADEO: TIPPEN TAG', 1, 2026, 'storage/documentos/pst/pst_actividades_acreditables_iv_in_1788376198_636.docx');
+INSERT INTO public.recursos VALUES (128, 'Materia: Seguridad Informática', 1, 2026, 'storage/documentos/pst/pst_materia__seguridad_inform__tic_1788384113_508.docx');
+INSERT INTO public.recursos VALUES (132, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Casdasdasientífico Investigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1788532202_175.docx');
+INSERT INTO public.recursos VALUES (122, 'Revisión sistemática del impacto de las fibras de polipropileno en las propiedades físico-mecánicas, microestructurales y de durabilidad del Concreto', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/121649/97474');
+INSERT INTO public.recursos VALUES (121, 'Modelo matemático para el balance de calor de un techo verde en condiciones de trópico húmedo', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/123977/97473');
+INSERT INTO public.recursos VALUES (120, 'Determinantes de la aceptación del uso de la banca móvil por parte de ganaderos', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/121522/97457');
+INSERT INTO public.recursos VALUES (119, 'Entorno virtual de capacitación con EOG para manipular robots asistenciales', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/124310/98135');
+INSERT INTO public.recursos VALUES (118, 'Middleware MiSCi para ciudades inteligentes extendido con datos enlazados', 3, 2020, 'https://revistas.unal.edu.co/index.php/dyna/article/view/83226');
+INSERT INTO public.recursos VALUES (143, 'Investigación y modelado de pérdidas por corriente circulante en sistemas de puesta a tierra de torres de alta tensión', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/124890/98825');
+INSERT INTO public.recursos VALUES (146, 'Modelamiento de confort adaptativo para un trapiche panelero', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/112625/91645');
+INSERT INTO public.recursos VALUES (144, 'Propuesta de un modelo de implementación basado en aprendizaje automático para el reclutamiento de profesionales de ingeniería en una universidad pública', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/124428/98826');
+INSERT INTO public.recursos VALUES (148, 'VALERA EDO TRUJILLO Aplicación Web Móvil para el proceso de Ascensos en la Coordinación de Formación Permanente y Docencia de la UPTTMBI Docente Asesor: Dra. María Luisa Colmenares Representante Institucional: Dra. Rossana Virgilio Representante...', 1, 2023, 'storage/documentos/pst/pst_valera_edo_trujillo_aplicaci___1789088548_770.docx');
+INSERT INTO public.recursos VALUES (149, 'NUES DR. PABLO VILORIA – LA BEATRIZ SOPORTE TÉCNICO A EQUIPOS DE COMPUTACION Y USUARIOS EN CENTRO CLÍNICO “MARÍA EDELMIRA ARAUJO”, S.A. VALERA ESTADO TRUJILLO', 1, 2023, 'storage/documentos/pst/pst_nues_dr__pablo_viloria_____la__1789088547_631.pdf');
+INSERT INTO public.recursos VALUES (150, 'e', 3, 2026, 'https://www.youtube.com/');
+INSERT INTO public.recursos VALUES (151, 'e', 3, 2026, 'https://www.wikipedia.org/');
+INSERT INTO public.recursos VALUES (147, 'SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WORLD C.A', 1, 2026, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_c_1789794852.pdf');
+INSERT INTO public.recursos VALUES (49, 'Sistema de Información Automatizado para la Gestión de Inventario y Suministros Médicos', 1, 2026, 'proyecto_inventario_medico.pdf');
+INSERT INTO public.recursos VALUES (156, 'e', 3, 2026, 'https://www.wikipedia.org/');
+INSERT INTO public.recursos VALUES (158, 'PROYEC_YOHAN_-_BETSABÉ_-_MIGUEL_ TERMINADO_REVISADO', 1, 2026, NULL);
 
 
 --
@@ -2921,7 +2938,7 @@ INSERT INTO public.system_audit_log VALUES ('log_6aaee0323afa9', '2026-09-19 19:
 -- Data for Name: telemetria_cache; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.telemetria_cache VALUES (1, '{"timestamp": 1789937491, "storage_mb": 2.74, "files_count": 45}');
+INSERT INTO public.telemetria_cache VALUES (1, '{"timestamp": 1790180951, "storage_mb": 9.86, "files_count": 52}');
 
 
 --
@@ -3030,7 +3047,7 @@ SELECT pg_catalog.setval('public.accesos_recursos_id_seq', 1, true);
 -- Name: auditoria_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.auditoria_id_seq', 313, true);
+SELECT pg_catalog.setval('public.auditoria_id_seq', 321, true);
 
 
 --
@@ -3093,7 +3110,7 @@ SELECT pg_catalog.setval('public.historico_versiones_pst_id_seq', 1, true);
 -- Name: investigaciones_ofertadas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.investigaciones_ofertadas_id_seq', 2, true);
+SELECT pg_catalog.setval('public.investigaciones_ofertadas_id_seq', 3, true);
 
 
 --
@@ -3142,7 +3159,7 @@ SELECT pg_catalog.setval('public.propuestas_empresa_id_seq', 16, true);
 -- Name: recursos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.recursos_id_seq', 151, true);
+SELECT pg_catalog.setval('public.recursos_id_seq', 158, true);
 
 
 --
@@ -3958,5 +3975,5 @@ ALTER TABLE ONLY public.usuarios
 -- PostgreSQL database dump complete
 --
 
-\unrestrict rHERdmrJAg9ZVMcY7MVF4YSgn060d8bWFbyQomRKfoF87soUAQOKxMeSI1Bjeem
+\unrestrict EF3dYAL8pqieXLkoKKEssqdbnwmg5fN6WHXZvPqr2ovhphbSWg5fJJeaaCyGZS4
 

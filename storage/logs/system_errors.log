@@ -1133,3 +1133,126 @@ Trace:
 #4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
 #5 {main}
 --------------------------------------------------------------------------------
+[2026-09-23 12:09:57] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\Articulos\controllers\ArticulosController.php(244): AuditLogger::registrar('INFO', 'RevistaDigital', 'Publicar Art\xC3\xADc...', 'Nuevo art\xC3\xADculo...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ArticulosController->procesar()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('procesar-articu...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 12:10:19] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\DetallePSTController.php(661): AuditLogger::registrar('INFO', 'RepositorioPST', 'Registrar Proye...', 'Proyecto PST re...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): DetallePSTController->crear()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('agregar-documen...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 12:29:33] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\DetallePSTController.php(586): AuditLogger::registrar('WARNING', 'RepositorioPST', 'Eliminar Proyec...', 'Proyecto PST ID...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): DetallePSTController->crear()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('agregar-documen...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 12:29:52] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\DetallePSTController.php(388): AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Extrac...', 'Error al cargar...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): DetallePSTController->crear()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('agregar-documen...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 12:31:22] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(392): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo elimin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->eliminarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('eliminar-backup', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 12:31:25] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(392): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo elimin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->eliminarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('eliminar-backup', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 12:31:28] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\services\BackupService.php(72): AuditLogger::registrar('INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo backup...')
+#2 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(237): BackupService::crearBackup('sql.gz', false)
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->generarBackup()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('generar-backup', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 12:31:30] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(392): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo elimin...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->eliminarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('eliminar-backup', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 12:31:33] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\services\BackupService.php(72): AuditLogger::registrar('INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo backup...')
+#2 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(237): BackupService::crearBackup('sql', false)
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->generarBackup()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('generar-backup', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 12:41:13] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\DetallePSTController.php(595): AuditLogger::registrar('WARNING', 'RepositorioPST', 'Eliminar Proyec...', 'Proyecto PST ID...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): DetallePSTController->crear()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('agregar-documen...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 12:41:23] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "hash_registro" does not exist
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\DetallePSTController.php(388): AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Extrac...', 'Error al cargar...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): DetallePSTController->crear()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('agregar-documen...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
