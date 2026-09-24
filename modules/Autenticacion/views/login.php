@@ -23,6 +23,14 @@
                     <?= htmlspecialchars($error) ?>
                 </div>
             <?php endif; ?>
+
+            <?php if (isset($exito) && !empty($exito)): ?>
+                <div style="background: rgba(16, 185, 129, 0.12); color: #047857; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.85rem 1rem; border-radius: 6px; margin-bottom: 1.25rem; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+                    <i class="ph-bold ph-check-circle" style="font-size: 1.2rem; flex-shrink: 0;"></i>
+                    <span><?= htmlspecialchars($exito) ?></span>
+                </div>
+            <?php endif; ?>
+
             <?php
             require_once CORE_PATH . 'Security/CaptchaService.php';
             $segData = CaptchaService::generarCamposSeguridad();
@@ -34,8 +42,8 @@
                 <input type="hidden" name="_form_ts" value="<?= $segData['timestamp'] ?>">
 
                 <div class="login-flat-group">
-                    <label for="cedula">Cédula:</label>
-                    <input type="number" id="cedula" name="cedula" class="login-flat-input" required autocomplete="off">
+                    <label for="cedula">Cédula de Identidad:</label>
+                    <input type="text" id="cedula" name="cedula" class="login-flat-input" placeholder="Ej: 12345678 o V-12345678" required autocomplete="off">
                 </div>
 
                 <div class="login-flat-group">

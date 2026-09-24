@@ -1,5 +1,55 @@
 [
     {
+        "id": "mail_6ab4a7ab3349e",
+        "fecha": "2026-09-24 00:31:39",
+        "destino_email": "andrusramirez2020@gmail.com",
+        "destino_nombre": "Andrus Ramirez",
+        "asunto": "Invitación Oficial - Registro de Cuenta Docente CIIDI",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6ab4a15296346",
+        "fecha": "2026-09-24 00:04:34",
+        "destino_email": "andrusramirez2020@gmail.com",
+        "destino_nombre": "Administrador de Prueba",
+        "asunto": "Prueba de Conexión SMTP - CIIDI UPTTMBI",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6ab4a0d27baca",
+        "fecha": "2026-09-24 04:02:26",
+        "destino_email": "orlando5711666@gmail.com",
+        "destino_nombre": "Admin Test",
+        "asunto": "Test Final Integracion Cifrado",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6ab49f7e83e37",
+        "fecha": "2026-09-24 03:56:46",
+        "destino_email": "andrusramirez2020@gmail.com",
+        "destino_nombre": "Andrus Ramirez",
+        "asunto": "Test Automatizado MailService",
+        "exito": true,
+        "tipo": "Directo",
+        "detalle": "Enviado correctamente vía SMTP"
+    },
+    {
+        "id": "mail_6ab499ffb626b",
+        "fecha": "2026-09-23 23:33:19",
+        "destino_email": "andrusramirez2020@gmail.com",
+        "destino_nombre": "Administrador de Prueba",
+        "asunto": "Prueba de Conexión SMTP - CIIDI UPTTMBI",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not authenticate."
+    },
+    {
         "id": "mail_6ab04495d1751",
         "fecha": "2026-09-20 20:39:49",
         "destino_email": "andrusramirez2020@gmail.com",

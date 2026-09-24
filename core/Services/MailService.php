@@ -2,6 +2,7 @@
 // core/Services/MailService.php
 
 require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../Security/Crypto.php';
 require_once __DIR__ . '/../../modules/SuperAdmin/services/SystemConfigService.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
@@ -162,11 +163,12 @@ class MailService {
         $host     = trim($configSmtp['host'] ?? '');
         $port     = (int)($configSmtp['port'] ?? 587);
         $user     = trim($configSmtp['user'] ?? '');
-        $pass     = trim($configSmtp['pass'] ?? '');
+        $passRaw  = trim($configSmtp['pass'] ?? '');
+        $pass     = str_replace(' ', '', Crypto::decrypt($passRaw));
         $fromEmail= trim($configSmtp['from_email'] ?? $user);
 
         if (empty($fromEmail)) {
-            $fromEmail = 'no-reply@upttmbi.edu.ve';
+            $fromEmail = !empty($user) ? $user : 'no-reply@upttmbi.edu.ve';
         }
 
         $mail = new PHPMailer(true);
@@ -183,8 +185,8 @@ class MailService {
             $mail->SMTPSecure = ($port === 465) ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = $port;
             
-            // OPTIMIZACIÓN LENTITUD: Reducir Timeout de conexión TCP a 3s para evitar congelamientos de servidor
-            $mail->Timeout    = 3;
+            // Timeout de conexión TCP adecuado para DNS y TLS (15 segundos)
+            $mail->Timeout    = 15;
 
             $mail->setFrom($fromEmail, 'Sistema CIIDI - UPTTMBI');
             $mail->addAddress($destinoEmail, $destinoNombre);
@@ -202,8 +204,12 @@ class MailService {
             if (class_exists('Connection')) Connection::logSystemError($e);
             
             $appDebug = class_exists('Env') ? Env::get('APP_DEBUG', false) : false;
-            $msg = $appDebug ? 'Error al enviar correo vía SMTP: ' . $mail->ErrorInfo : 'No se pudo entregar el correo en este momento. Intente más tarde.';
-            return ['exito' => false, 'mensaje' => $msg];
+            $msg = $appDebug ? 'Error al enviar correo vía SMTP: ' . $mail->ErrorInfo : 'No se pudo entregar el correo en este momento (' . $mail->ErrorInfo . ').';
+            return [
+                'exito' => false, 
+                'mensaje' => $msg,
+                'error_detalle' => $mail->ErrorInfo
+            ];
         }
     }
 

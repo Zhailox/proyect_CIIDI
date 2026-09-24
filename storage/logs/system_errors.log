@@ -1603,3 +1603,15 @@ Trace:
 #1 Command line code(1): AuditLogger::registrar('INFO', 'RepositorioPST', 'Prueba', 'Detalle de prue...')
 #2 {main}
 --------------------------------------------------------------------------------
+[2026-09-23 23:33:19] ERROR: SMTP Error: Could not authenticate. en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2444
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Wed, 23 S...', '--b1=_jV3IPexUU...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(197): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ConfiguracionController.php(312): MailService::enviar('andrusramirez20...', 'Administrador d...', 'Prueba de Conex...', '\r\n             ...')
+#5 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ConfiguracionController->probarSmtp()
+#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('probar-smtp', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------

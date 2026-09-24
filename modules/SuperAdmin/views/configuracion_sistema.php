@@ -12,7 +12,7 @@
             </p>
         </div>
         <div style="display: flex; gap: 0.5rem;">
-            <a href="sudoadmin" class="btn btn-outline" style="border-color: var(--color-secundario); color: var(--color-secundario) !important; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">
+            <a href="sudoadmin" class="sa-btn sa-btn-outline">
                 <i class="ph-bold ph-arrow-left"></i> Volver al Dashboard
             </a>
         </div>
@@ -20,14 +20,14 @@
 </div>
 
 <?php if (!empty($mensajeExito)): ?>
-    <div style="background: rgba(16,185,129,0.12); color: #047857; border: 1px solid rgba(16,185,129,0.3); padding: 0.85rem 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-        <i class="ph-bold ph-check-circle" style="font-size: 1.2rem;"></i> <?= htmlspecialchars($mensajeExito) ?>
+    <div class="sa-alert sa-alert-success">
+        <i class="ph-bold ph-check-circle"></i> <?= htmlspecialchars($mensajeExito) ?>
     </div>
 <?php endif; ?>
 
 <?php if (!empty($mensajeError)): ?>
-    <div style="background: rgba(239,68,68,0.12); color: #b91c1c; border: 1px solid rgba(239,68,68,0.3); padding: 0.85rem 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-        <i class="ph-bold ph-warning-circle" style="font-size: 1.2rem;"></i> <?= htmlspecialchars($mensajeError) ?>
+    <div class="sa-alert sa-alert-error">
+        <i class="ph-bold ph-warning-circle"></i> <?= htmlspecialchars($mensajeError) ?>
     </div>
 <?php endif; ?>
 
@@ -210,7 +210,7 @@
     </div>
 
     <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
-        <button type="submit" class="btn sa-btn-primary" style="background: var(--color-secundario) !important; color: #ffffff !important; padding: 10px 24px; border-radius: 6px; font-weight: 700; font-size: 0.9rem; cursor: pointer; border: none;">
+        <button type="submit" class="sa-btn sa-btn-primary">
             <i class="ph-bold ph-floppy-disk"></i> Aplicar Cambios Globales
         </button>
     </div>

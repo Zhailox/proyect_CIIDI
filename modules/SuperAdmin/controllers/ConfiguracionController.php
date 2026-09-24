@@ -1,5 +1,6 @@
 <?php
 require_once CORE_PATH . 'Security/Auth.php';
+require_once CORE_PATH . 'Security/Crypto.php';
 require_once __DIR__ . '/../services/SystemConfigService.php'; // Asegúrate de que el nombre coincida con tu archivo
 
 class ConfiguracionController {
@@ -24,6 +25,32 @@ class ConfiguracionController {
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $config = SystemConfigService::get();
+            $origen = trim($_POST['origen'] ?? '');
+            
+            // Si la petición proviene del Gestor de Correos, solo alteramos las credenciales SMTP
+            if ($origen === 'gestor-correos') {
+                $config['smtp']['host'] = trim($_POST['smtp_host'] ?? '');
+                $config['smtp']['port'] = (int)($_POST['smtp_port'] ?? 587);
+                $config['smtp']['user'] = trim($_POST['smtp_user'] ?? '');
+                $config['smtp']['from_email'] = trim($_POST['smtp_from'] ?? '');
+
+                if (!empty($_POST['smtp_pass'])) {
+                    $cleanPass = str_replace(' ', '', trim($_POST['smtp_pass']));
+                    $config['smtp']['pass'] = Crypto::encrypt($cleanPass);
+                }
+
+                if (session_status() === PHP_SESSION_NONE) session_start();
+
+                if (SystemConfigService::save($config)) {
+                    AuditLogger::registrar('INFO', 'SuperAdmin', 'Configurar SMTP', 'Se actualizaron las credenciales del servidor SMTP institucional (cifrado AES-256).');
+                    $_SESSION['mensaje_mail_exito'] = "Credenciales SMTP guardadas y aseguradas con cifrado AES-256 exitosamente.";
+                } else {
+                    $_SESSION['mensaje_mail_error'] = "Error al intentar escribir la configuración en storage/system_config.json.";
+                }
+
+                header("Location: gestor-correos?tab=tabConexionSmtp");
+                exit;
+            }
             
             // Paginación
             $config['paginacion']['logs'] = max(1, (int)($_POST['pag_logs'] ?? 50));
@@ -71,7 +98,8 @@ class ConfiguracionController {
 
             // Solo actualizamos la contraseña si se escribió una nueva
             if (!empty($_POST['smtp_pass'])) {
-                $config['smtp']['pass'] = trim($_POST['smtp_pass']);
+                $cleanPass = str_replace(' ', '', trim($_POST['smtp_pass']));
+                $config['smtp']['pass'] = Crypto::encrypt($cleanPass);
             }
 
             if (session_status() === PHP_SESSION_NONE) session_start();
@@ -263,8 +291,10 @@ class ConfiguracionController {
 
             if ($fallidos === 0) {
                 $_SESSION['mensaje_mail_exito'] = "Correo enviado exitosamente a {$enviados} destinatario(s).";
-            } else {
+            } elseif ($enviados > 0) {
                 $_SESSION['mensaje_mail_exito'] = "Proceso completado: {$enviados} enviados correctamente, {$fallidos} con fallas.";
+            } else {
+                $_SESSION['mensaje_mail_error'] = "No se pudo enviar el correo a ningún destinatario ({$fallidos} fallidos). Verifique la conectividad del servidor SMTP o revise el Historial de Envíos.";
             }
 
             header("Location: gestor-correos");
@@ -283,7 +313,7 @@ class ConfiguracionController {
 
             if (empty($emailPrueba)) {
                 $_SESSION['mensaje_mail_error'] = "Debe proporcionar una dirección de correo válida para realizar la prueba.";
-                header("Location: gestor-correos");
+                header("Location: gestor-correos?tab=tabConexionSmtp");
                 exit;
             }
 
@@ -295,7 +325,8 @@ class ConfiguracionController {
                     foreach (($tpl['variables'] ?? []) as $v) {
                         $varsPrueba[$v] = "[VALOR_PRUEBA_{$v}]";
                     }
-                    $resultado = MailService::enviarEvento($templateKey, $emailPrueba, $varsPrueba, 'Usuario de Prueba');
+                    // $async = false para obtener resultado inmediato y fidedigno
+                    $resultado = MailService::enviarEvento($templateKey, $emailPrueba, $varsPrueba, 'Usuario de Prueba', false);
                 } else {
                     $resultado = ['exito' => false, 'mensaje' => 'La plantilla elegida para la prueba no existe.'];
                 }
@@ -305,7 +336,7 @@ class ConfiguracionController {
                     <h2 style='color:#121a3e; margin-top:0;'>Test de Conectividad SMTP Exitoso</h2>
                     <p>Este es un correo de prueba enviado desde el panel de SuperAdmin del <strong>Sistema CIIDI UPTTMBI</strong>.</p>
                     <div style='background-color:#ecfdf5; border-left:4px solid #10b981; padding:12px; border-radius:4px; margin:15px 0; color:#065f46;'>
-                        <strong>Estado del Servidor:</strong> Enlace SMTP con TLS/SSL funcionando al 100%.
+                        <strong>Estado del Servidor:</strong> Enlace SMTP con TLS/SSL y cifrado AES-256 funcionando al 100%.
                     </div>
                     <p style='font-size:0.85rem; color:#64748b;'>Fecha de emisión: " . date('d/m/Y H:i:s') . "</p>
                 ";
@@ -314,13 +345,17 @@ class ConfiguracionController {
 
             if ($resultado['exito']) {
                 AuditLogger::registrar('INFO', 'SuperAdmin', 'Prueba SMTP Exitosa', "Correo enviado a {$emailPrueba}");
-                $_SESSION['mensaje_mail_exito'] = $resultado['mensaje'];
+                $_SESSION['mensaje_mail_exito'] = $resultado['mensaje'] ?? 'Correo de prueba enviado exitosamente.';
             } else {
-                AuditLogger::registrar('ERROR', 'SuperAdmin', 'Falla de Prueba SMTP', $resultado['mensaje']);
-                $_SESSION['mensaje_mail_error'] = $resultado['mensaje'];
+                $errorMsg = $resultado['mensaje'] ?? 'Error desconocido al enviar el correo de prueba.';
+                if (!empty($resultado['error_detalle'])) {
+                    $errorMsg .= ' [Diagnóstico: ' . $resultado['error_detalle'] . ']';
+                }
+                AuditLogger::registrar('ERROR', 'SuperAdmin', 'Falla de Prueba SMTP', $errorMsg);
+                $_SESSION['mensaje_mail_error'] = $errorMsg;
             }
 
-            header("Location: gestor-correos");
+            header("Location: gestor-correos?tab=tabConexionSmtp");
             exit;
         }
     }

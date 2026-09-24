@@ -94,10 +94,10 @@
 }
 
 .ag-badge-online {
-    background: rgba(16, 185, 129, 0.1);
-    color: #059669;
-    border: 1px solid rgba(16, 185, 129, 0.25);
-    border-radius: 8px;
+    background: rgba(112, 144, 203, 0.15);
+    color: var(--color-principal);
+    border: 1px solid rgba(112, 144, 203, 0.3);
+    border-radius: var(--radius-sm);
     padding: 4px 10px;
     font-weight: 800;
     font-size: 0.72rem;
@@ -107,10 +107,10 @@
 }
 
 .ag-badge-offline {
-    background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
-    border: 1px solid rgba(239, 68, 68, 0.25);
-    border-radius: 8px;
+    background: rgba(80, 89, 132, 0.12);
+    color: var(--texto-silenciado);
+    border: 1px solid rgba(80, 89, 132, 0.25);
+    border-radius: var(--radius-sm);
     padding: 4px 10px;
     font-weight: 800;
     font-size: 0.72rem;
@@ -135,18 +135,18 @@
             </p>
         </div>
         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <a href="exportar-config-sistema" class="btn btn-outline" style="border-color: #059669; color: #059669; background: #ffffff; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.83rem; display: inline-flex; align-items: center; gap: 6px;">
+            <a href="exportar-config-sistema" class="sa-btn sa-btn-outline">
                 <i class="ph-bold ph-download-simple"></i> Exportar Config System
             </a>
 
-            <button type="button" onclick="document.getElementById('file-import-config').click()" class="btn btn-outline" style="border-color: #7c3aed; color: #7c3aed; background: #ffffff; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.83rem; display: inline-flex; align-items: center; gap: 6px;">
+            <button type="button" onclick="document.getElementById('file-import-config').click()" class="sa-btn sa-btn-outline">
                 <i class="ph-bold ph-upload-simple"></i> Importar Config
             </button>
             <form id="form-import-config" action="importar-config-sistema" method="POST" enctype="multipart/form-data" style="display: none;">
                 <input type="file" id="file-import-config" name="config_file" accept=".json" onchange="document.getElementById('form-import-config').submit()">
             </form>
 
-            <a href="sudoadmin" class="btn btn-outline" style="border-color: var(--color-secundario); color: var(--color-secundario); background: #ffffff; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; transition: all 0.2s ease;">
+            <a href="sudoadmin" class="sa-btn sa-btn-outline">
                 <i class="ph-bold ph-arrow-left"></i> Volver al Centro de Mando
             </a>
         </div>

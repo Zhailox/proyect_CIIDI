@@ -27,9 +27,9 @@ class LoginController {
         }
         
         $error = $_SESSION['error_login'] ?? null;
-        $exito = $_SESSION['exito_registro'] ?? null;
+        $exito = $_SESSION['exito_registro'] ?? $_SESSION['exito_login'] ?? null;
         
-        unset($_SESSION['error_login'], $_SESSION['exito_registro']);
+        unset($_SESSION['error_login'], $_SESSION['exito_registro'], $_SESSION['exito_login']);
         
         return ['error' => $error, 'exito' => $exito];
     }
@@ -83,7 +83,7 @@ class LoginController {
                 'NOMBRE_USUARIO'    => $usuario['nombre_completo'],
                 'ENLACE_ACCION'     => $enlaceSeguro,
                 'TIEMPO_EXPIRACION' => '15 minutos'
-            ], $usuario['nombre_completo']);
+            ], $usuario['nombre_completo'], false);
 
             if ($resMail['exito']) {
                 AuditLogger::registrar('INFO', 'Autenticacion', 'Recuperación Solicitada', "Solicitud de recuperación generada para '{$usuario['nombre_completo']}' ({$usuario['email']}).");
@@ -406,7 +406,7 @@ class LoginController {
         $hasLength  = strlen($password) >= 8;
         $hasUpper   = preg_match('/[A-Z]/', $password);
         $hasNumber  = preg_match('/[0-9]/', $password);
-        $hasSpecial = preg_match('/[@$!%*?&._\-\#\^\(\)\{\}\[\]]/', $password);
+        $hasSpecial = preg_match('/[^a-zA-Z0-9\s]/', $password);
 
         if (!$hasLength || !$hasUpper || !$hasNumber || !$hasSpecial) {
             return [
@@ -445,9 +445,39 @@ class LoginController {
                 'ENLACE_ACCESO'  => $enlaceAcceso
             ], $nombre);
 
+            // AUTO-LOGIN DIRECTO: Iniciamos sesión automáticamente para que pase al sistema
+            $usuario = $this->usuarioModel->intentarAutenticacion($cedula);
+            if ($usuario) {
+                if (session_status() === PHP_SESSION_NONE) {
+                    session_start();
+                }
+                session_regenerate_id(true);
+                $_SESSION['usuario_id'] = $usuario['id'];
+                $_SESSION['usuario_nombre'] = $usuario['nombre_completo'];
+                $_SESSION['nombre_usuario'] = $usuario['nombre_completo'];
+                $_SESSION['nombre'] = $usuario['nombre_completo'];
+                $_SESSION['usuario_cedula'] = $usuario['cedula'] ?? $cedula;
+                $_SESSION['usuario_email'] = $usuario['email'] ?? $email;
+                $_SESSION['rol_nombre'] = $usuario['nombre_rol'];
+                $_SESSION['rol'] = $usuario['nombre_rol'];
+                $_SESSION['usuario_rol'] = $usuario['nombre_rol'];
+                $_SESSION['nivel_privilegio'] = (int) $usuario['nivel_privilegio'];
+
+                try {
+                    $this->usuarioModel->registrarAcceso($usuario['id']);
+                } catch (Exception $e) {}
+
+                // ÉXITO: Mandamos los datos para la pantalla de bienvenida y pasamos directo a perfil
+                return [
+                    'es_error'       => false,
+                    'nombre_usuario' => $nombre,
+                    'rol_nombre'     => $usuario['nombre_rol'] ?? 'Estudiante',
+                    'destino'        => 'perfil'
+                ];
+            }
+
             $_SESSION['exito_registro'] = "¡Cuenta creada con éxito! Se ha enviado un mensaje de bienvenida a su correo. Ya puede iniciar sesión.";
 
-            // ÉXITO: Mandamos los datos para la pantalla de bienvenida y lo enviamos al login
             return [
                 'es_error'       => false,
                 'nombre_usuario' => $nombre,
@@ -487,10 +517,13 @@ class LoginController {
             exit;
         }
 
+        $error = $_SESSION['error_completar_registro'] ?? null;
+        unset($_SESSION['error_completar_registro']);
+
         return [
             'token'    => $rawToken,
             'profesor' => $profesor,
-            'error'    => $_SESSION['error_completar_registro'] ?? null
+            'error'    => $error
         ];
     }
 
@@ -515,6 +548,14 @@ class LoginController {
             exit;
         }
 
+        // Validación de seguridad Anti-Bot (Honeypot + Tiempo Humano + Captcha)
+        $verifCaptcha = CaptchaService::validarPeticion($_POST);
+        if (!$verifCaptcha['valido']) {
+            $_SESSION['error_completar_registro'] = $verifCaptcha['mensaje'];
+            header("Location: completar-registro?token=" . urlencode($rawToken));
+            exit;
+        }
+
         if (empty($password) || empty($passwordConfirm)) {
             $_SESSION['error_completar_registro'] = "Debe ingresar y confirmar su nueva contraseña.";
             header("Location: completar-registro?token=" . urlencode($rawToken));
@@ -527,9 +568,9 @@ class LoginController {
             exit;
         }
 
-        // Requisitos mínimos de seguridad (8+ caracteres, 1 mayúscula, 1 número, 1 símbolo)
-        if (strlen($password) < 8 || !preg_match('/[A-Z]/', $password) || !preg_match('/[0-9]/', $password) || !preg_match('/[@$!%*?&._\-\#\^\(\)\{\}\[\]]/', $password)) {
-            $_SESSION['error_completar_registro'] = "La contraseña debe tener al menos 8 caracteres, 1 mayúscula, 1 número y 1 carácter especial.";
+        // Requisitos mínimos de seguridad (8+ caracteres, 1 mayúscula, 1 número, 1 símbolo o especial como +)
+        if (strlen($password) < 8 || !preg_match('/[A-Z]/', $password) || !preg_match('/[0-9]/', $password) || !preg_match('/[^a-zA-Z0-9\s]/', $password)) {
+            $_SESSION['error_completar_registro'] = "La contraseña debe tener al menos 8 caracteres, 1 mayúscula, 1 número y 1 carácter especial o símbolo (+, @, #, $, etc.).";
             header("Location: completar-registro?token=" . urlencode($rawToken));
             exit;
         }
@@ -551,7 +592,38 @@ class LoginController {
         $exito = $stmtUpdate->execute([$hashSeguro, $profesor['id']]);
 
         if ($exito) {
-            AuditLogger::registrar('INFO', 'Autenticacion', 'Activación Docente Exitoso', "El profesor {$profesor['nombre_completo']} (C.I: {$profesor['cedula']}) activo su cuenta mediante token.");
+            AuditLogger::registrar('INFO', 'Autenticacion', 'Activación Docente Exitoso', "El profesor {$profesor['nombre_completo']} (C.I: {$profesor['cedula']}) activó su cuenta mediante token.");
+
+            // AUTO-LOGIN DIRECTO DEL PROFESOR: Entra directo al sistema sin reingresar credenciales
+            $usuario = $this->usuarioModel->intentarAutenticacion($profesor['cedula']);
+            if ($usuario) {
+                if (session_status() === PHP_SESSION_NONE) {
+                    session_start();
+                }
+                session_regenerate_id(true);
+                $_SESSION['usuario_id'] = $usuario['id'];
+                $_SESSION['usuario_nombre'] = $usuario['nombre_completo'];
+                $_SESSION['nombre_usuario'] = $usuario['nombre_completo'];
+                $_SESSION['nombre'] = $usuario['nombre_completo'];
+                $_SESSION['usuario_cedula'] = $usuario['cedula'] ?? $profesor['cedula'];
+                $_SESSION['usuario_email'] = $usuario['email'] ?? $profesor['email'];
+                $_SESSION['rol_nombre'] = $usuario['nombre_rol'];
+                $_SESSION['rol'] = $usuario['nombre_rol'];
+                $_SESSION['usuario_rol'] = $usuario['nombre_rol'];
+                $_SESSION['nivel_privilegio'] = (int) $usuario['nivel_privilegio'];
+
+                try {
+                    $this->usuarioModel->registrarAcceso($usuario['id']);
+                } catch (Exception $e) {}
+
+                // ÉXITO: Mandamos los datos para la pantalla de bienvenida y pasamos directo a perfil
+                return [
+                    'es_error'       => false,
+                    'nombre_usuario' => $profesor['nombre_completo'],
+                    'rol_nombre'     => $usuario['nombre_rol'] ?? 'Docente',
+                    'destino'        => 'perfil'
+                ];
+            }
 
             $_SESSION['exito_login'] = "¡Cuenta de profesor activada exitosamente! Ya puede iniciar sesión con sus credenciales.";
             header("Location: login");

@@ -12,13 +12,13 @@
             </p>
         </div>
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button onclick="toggleModalInvitarProfesor(true)" class="btn sa-btn-primary" style="background: #121a3e !important; color: #ffffff !important; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border: none;">
+            <button onclick="toggleModalInvitarProfesor(true)" class="sa-btn sa-btn-dark">
                 <i class="ph-bold ph-envelope-simple-open"></i> + Invitar Profesor
             </button>
-            <button onclick="toggleModalCrearUsuario(true)" class="btn sa-btn-primary" style="background: var(--color-secundario) !important; color: #ffffff !important; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border: none;">
+            <button onclick="toggleModalCrearUsuario(true)" class="sa-btn sa-btn-primary">
                 <i class="ph-bold ph-user-plus"></i> + Crear Usuario
             </button>
-            <a href="sudoadmin" class="btn btn-outline" style="border-color: var(--color-secundario); color: var(--color-secundario) !important; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">
+            <a href="sudoadmin" class="sa-btn sa-btn-outline">
                 <i class="ph-bold ph-arrow-left"></i> Volver
             </a>
         </div>
@@ -27,16 +27,16 @@
 
 <!-- ALERTAS DE ÉXITO O ERROR DE SESIÓN -->
 <?php if (isset($_SESSION['mensaje_gestor_exito'])): ?>
-    <div style="background: rgba(16,185,129,0.12); color: #047857; border: 1px solid rgba(16,185,129,0.3); padding: 0.85rem 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-        <i class="ph-bold ph-check-circle" style="font-size: 1.2rem;"></i>
+    <div class="sa-alert sa-alert-success">
+        <i class="ph-bold ph-check-circle"></i>
         <?= htmlspecialchars($_SESSION['mensaje_gestor_exito']) ?>
         <?php unset($_SESSION['mensaje_gestor_exito']); ?>
     </div>
 <?php endif; ?>
 
 <?php if (isset($_SESSION['mensaje_gestor_error'])): ?>
-    <div style="background: rgba(239,68,68,0.12); color: #b91c1c; border: 1px solid rgba(239,68,68,0.3); padding: 0.85rem 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-        <i class="ph-bold ph-warning-circle" style="font-size: 1.2rem;"></i>
+    <div class="sa-alert sa-alert-error">
+        <i class="ph-bold ph-warning-circle"></i>
         <?= htmlspecialchars($_SESSION['mensaje_gestor_error']) ?>
         <?php unset($_SESSION['mensaje_gestor_error']); ?>
     </div>
@@ -134,16 +134,15 @@ if (isset($privilegios)) {
                                     <?= !empty($usr['ultima_actividad']) ? date('d/m/Y H:i', strtotime($usr['ultima_actividad'])) : 'Sin registros' ?>
                                 </td>
                                 <td style="padding: 10px 12px;">
-                                    <span style="background: <?= $usr['activo'] ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)' ?>; color: <?= $usr['activo'] ? '#10b981' : '#ef4444' ?>; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 0.78rem;">
+                                    <span class="<?= $usr['activo'] ? 'sa-badge-active' : 'sa-badge-inactive' ?>">
                                         <?= $usr['activo'] ? 'Activo' : 'Suspendido' ?>
                                     </span>
                                 </td>
                                 <td style="padding: 10px 12px; text-align: center;">
                                     <div style="display: flex; gap: 0.4rem; justify-content: center; flex-wrap: wrap;">
                                         <button type="button"
-                                            class="btn btn-outline"
+                                            class="sa-btn-action"
                                             title="Editar Credenciales"
-                                            style="padding: 4px 8px; font-size: 0.78rem;"
                                             onclick="abrirModalEditarUsuario(<?= htmlspecialchars(json_encode([
                                                 'id' => $usr['id'],
                                                 'cedula' => $usr['cedula'],
@@ -154,32 +153,31 @@ if (isset($privilegios)) {
                                             <i class="ph-bold ph-pencil-simple"></i> Editar
                                         </button>
 
-
                                         <!-- REVOCAR -->
                                         <form action="revocar-sesion" method="POST" style="margin:0;">
-                                            <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
-                                            <button type="button" class="btn" title="Cerrar Sesión Remota" style="background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); padding: 4px 8px; font-size: 0.78rem; border-radius: 4px; cursor: pointer; font-weight: 600;" onclick="mostrarConfirmacionUsuarios(this.form, 'Revocar Sesión', '¿Expulsar a este usuario del sistema?', 'ph-power', '#ef4444')">
-                                                <i class="ph-bold ph-power"></i> Revocar
-                                            </button>
-                                        </form>
+                                             <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
+                                             <button type="button" class="sa-btn-action" title="Cerrar Sesión Remota" onclick="mostrarConfirmacionUsuarios(this.form, 'Revocar Sesión', '¿Expulsar a este usuario del sistema?', 'ph-power', 'var(--color-principal)')">
+                                                 <i class="ph-bold ph-power"></i> Revocar
+                                             </button>
+                                         </form>
 
                                         <!-- SUSPENDER / RESTAURAR -->
                                         <form action="alternar-estado-usuario" method="POST" style="margin:0;">
-                                            <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
-                                            <input type="hidden" name="cedula" value="<?= htmlspecialchars($usr['cedula']) ?>">
-                                            <input type="hidden" name="estado_actual" value="<?= $usr['activo'] ? '1' : '0' ?>">
-                                            <button type="button" class="btn" style="background: <?= $usr['activo'] ? 'rgba(245,158,11,0.12)' : 'rgba(16,185,129,0.12)' ?>; color: <?= $usr['activo'] ? '#d97706' : '#10b981' ?>; border: 1px solid <?= $usr['activo'] ? 'rgba(245,158,11,0.25)' : 'rgba(16,185,129,0.25)' ?>; padding: 4px 8px; font-size: 0.78rem; border-radius: 4px; cursor: pointer; font-weight: 600;" onclick="mostrarConfirmacionUsuarios(this.form, '<?= $usr['activo'] ? 'Suspender' : 'Restaurar' ?> Cuenta', '¿Confirma que desea <?= $usr['activo'] ? 'SUSPENDER' : 'RESTAURAR' ?> al usuario <?= htmlspecialchars($usr['nombre_completo'], ENT_QUOTES) ?>?', '<?= $usr['activo'] ? 'ph-user-minus' : 'ph-user-check' ?>', '<?= $usr['activo'] ? '#d97706' : '#10b981' ?>')">
-                                                <i class="ph-bold <?= $usr['activo'] ? 'ph-user-minus' : 'ph-user-check' ?>"></i> <?= $usr['activo'] ? 'Suspender' : 'Restaurar' ?>
-                                            </button>
-                                        </form>
+                                             <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
+                                             <input type="hidden" name="cedula" value="<?= htmlspecialchars($usr['cedula']) ?>">
+                                             <input type="hidden" name="estado_actual" value="<?= $usr['activo'] ? '1' : '0' ?>">
+                                             <button type="button" class="sa-btn-action" onclick="mostrarConfirmacionUsuarios(this.form, '<?= $usr['activo'] ? 'Suspender' : 'Restaurar' ?> Cuenta', '¿Confirma que desea <?= $usr['activo'] ? 'SUSPENDER' : 'RESTAURAR' ?> al usuario <?= htmlspecialchars($usr['nombre_completo'], ENT_QUOTES) ?>?', '<?= $usr['activo'] ? 'ph-user-minus' : 'ph-user-check' ?>', 'var(--color-secundario)')">
+                                                 <i class="ph-bold <?= $usr['activo'] ? 'ph-user-minus' : 'ph-user-check' ?>"></i> <?= $usr['activo'] ? 'Suspender' : 'Restaurar' ?>
+                                             </button>
+                                         </form>
 
                                         <!-- ELIMINAR Y LIBERAR CREDENCIALES -->
                                         <form action="eliminar-usuario" method="POST" style="margin:0;">
-                                            <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
-                                            <button type="button" class="btn" title="Eliminar Usuario y Liberar Credenciales" style="background: #dc2626; color: #ffffff; border: none; padding: 4px 8px; font-size: 0.78rem; border-radius: 4px; cursor: pointer; font-weight: 700; box-shadow: 0 2px 6px rgba(220,38,38,0.25);" onclick="mostrarConfirmacionUsuarios(this.form, 'Eliminar y Archivar Usuario', '¿Está seguro de ELIMINAR permanentemente a <?= htmlspecialchars($usr['nombre_completo'], ENT_QUOTES) ?>? Sus credenciales (Cédula y Email) se liberarán de inmediato.', 'ph-trash', '#dc2626')">
-                                                <i class="ph-bold ph-trash"></i> Eliminar
-                                            </button>
-                                        </form>
+                                             <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
+                                             <button type="button" class="sa-btn-action sa-btn-action-dark" title="Eliminar Usuario y Liberar Credenciales" onclick="mostrarConfirmacionUsuarios(this.form, 'Eliminar y Archivar Usuario', '¿Está seguro de ELIMINAR permanentemente a <?= htmlspecialchars($usr['nombre_completo'], ENT_QUOTES) ?>? Sus credenciales (Cédula y Email) se liberarán de inmediato.', 'ph-trash', 'var(--color-principal)')">
+                                                 <i class="ph-bold ph-trash"></i> Eliminar
+                                             </button>
+                                         </form>
                                     </div>
                                 </td>
                             </tr>
@@ -355,7 +353,7 @@ if (isset($privilegios)) {
                                 <i class="ph-bold ph-check"></i> Actualizar
                             </button>
                             <button type="button" class="rbac-btn rbac-btn-danger-outline"
-                                    onclick="mostrarConfirmacionUsuarios(document.getElementById('form-del-rol-<?= $rItem['id'] ?>'), 'Eliminar Rol', '¿Seguro que desea eliminar el rol <?= htmlspecialchars($rItem['nombre'], ENT_QUOTES) ?>?', 'ph-trash', '#ef4444')">
+                                    onclick="mostrarConfirmacionUsuarios(document.getElementById('form-del-rol-<?= $rItem['id'] ?>'), 'Eliminar Rol', '¿Seguro que desea eliminar el rol <?= htmlspecialchars($rItem['nombre'], ENT_QUOTES) ?>?', 'ph-trash', 'var(--color-principal)')">
                                 <i class="ph-bold ph-trash"></i> Eliminar
                             </button>
                         </div>
@@ -446,9 +444,9 @@ if (isset($privilegios)) {
                 <input type="password" name="password" class="sa-filter-input" placeholder="••••••••" required style="width: 100%; box-sizing: border-box;">
             </div>
 
-            <div style="display: flex; flex-direction: row; gap: 0.75rem; justify-content: flex-end; align-items: center; margin-top: 1.25rem;">
-                <button type="button" onclick="toggleModalCrearUsuario(false)" style="flex: 1; border: 1px solid #cbd5e1; background: #ffffff; color: #64748b; padding: 0 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700; height: 40px; line-height: 40px; text-align: center; cursor: pointer; box-sizing: border-box; margin: 0; outline: none; display: block;">Cancelar</button>
-                <button type="submit" style="flex: 1; background: var(--color-secundario, #2563eb) !important; color: #ffffff !important; border: none; padding: 0 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700; height: 40px; line-height: 40px; text-align: center; cursor: pointer; box-sizing: border-box; margin: 0; outline: none; display: block;">Guardar Usuario</button>
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end; align-items: center; margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+                <button type="button" onclick="toggleModalCrearUsuario(false)" class="sa-btn sa-btn-cancel" style="min-width: 110px;">Cancelar</button>
+                <button type="submit" class="sa-btn sa-btn-primary" style="min-width: 140px;">Guardar Usuario</button>
             </div>
         </form>
     </div>
@@ -458,7 +456,7 @@ if (isset($privilegios)) {
 
 <div id="modalEditarUsuario"
     style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center;">
-    <div style="background: #ffffff; width: 100%; max-width: 480px; border-radius: 12px; padding: 1.75rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(226, 232, 240, 0.8);">
+    <div style="background: #ffffff; width: 100%; max-width: 480px; border-radius: var(--radius-md); padding: 1.75rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(80, 89, 132, 0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
             <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--color-principal); display: flex; align-items: center; gap: 8px;">
                 <i class="ph-bold ph-user-plus" style="color: var(--color-secundario);"></i>  Editar Usuario
@@ -541,14 +539,14 @@ if (isset($privilegios)) {
                        style="width: 100%; box-sizing: border-box;">
             </div>
 
-            <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.75rem;">
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end; align-items: center; margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
                 <button type="button"
                         onclick="toggleModalEditarUsuario(false)"
-                        class="btn btn-outline" style="border-color: #cbd5e1; color: #64748b; padding: 0.65rem 1rem; border-radius: 6px; font-size: 0.85rem;">Cancelar</button>
+                        class="sa-btn sa-btn-cancel" style="min-width: 110px;">Cancelar</button>
 
                 <button type="submit"
-                        class="btn btn-solid"
-                        style="background: var(--color-secundario) !important; color: #ffffff !important; border: none;">
+                        class="sa-btn sa-btn-primary"
+                        style="min-width: 140px;">
                     Guardar Cambios
                 </button>
             </div>
@@ -558,7 +556,7 @@ if (isset($privilegios)) {
 
 <!-- MODAL PARA CREAR NUEVO ROL -->
 <div id="modalCrearRol" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center;">
-    <div style="background: #ffffff; width: 100%; max-width: 400px; border-radius: 12px; padding: 1.75rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(226, 232, 240, 0.8);">
+    <div style="background: #ffffff; width: 100%; max-width: 400px; border-radius: var(--radius-md); padding: 1.75rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(80, 89, 132, 0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
             <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--color-principal); display: flex; align-items: center; gap: 8px;">
                 <i class="ph-bold ph-shield-plus" style="color: var(--color-secundario);"></i> Crear Nuevo Rol
@@ -586,22 +584,22 @@ if (isset($privilegios)) {
                 </select>
             </div>
 
-            <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.75rem;">
-                <button type="button" onclick="toggleModalCrearRol(false)" class="btn btn-outline" style="border-color: #cbd5e1; color: #64748b; padding: 0.65rem 1rem; border-radius: 6px; font-size: 0.85rem;">Cancelar</button>
-                <button type="submit" class="btn btn-solid" style="background: var(--color-secundario) !important; color: #ffffff !important; border: none; padding: 0.65rem 1.25rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700;">Crear Rol</button>
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end; align-items: center; margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+                <button type="button" onclick="toggleModalCrearRol(false)" class="sa-btn sa-btn-cancel" style="min-width: 110px;">Cancelar</button>
+                <button type="submit" class="sa-btn sa-btn-primary" style="min-width: 120px;">Crear Rol</button>
             </div>
         </form>
     </div>
 </div>
 <!-- MODAL DE CONFIRMACIÓN UNIVERSAL -->
 <div id="modalConfirmacionUsuarios" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); z-index: 99999; align-items: center; justify-content: center;">
-    <div style="background: #ffffff; border-radius: 12px; width: 90%; max-width: 400px; padding: 2rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); text-align: center;">
+    <div style="background: #ffffff; border-radius: var(--radius-md); width: 90%; max-width: 400px; padding: 2rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); text-align: center; border: 1px solid rgba(80, 89, 132, 0.2);">
         <div id="modalConfirmIcon" style="font-size: 3.5rem; margin-bottom: 1rem;"></div>
         <h3 id="modalConfirmTitle" style="margin: 0 0 0.5rem 0; font-size: 1.2rem; color: var(--texto-titulos);"></h3>
         <p id="modalConfirmMessage" style="color: var(--texto-silenciado); font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5;"></p>
-        <div style="display: flex; justify-content: center; gap: 0.5rem;">
-            <button type="button" class="btn btn-outline" onclick="document.getElementById('modalConfirmacionUsuarios').style.display='none'" style="border-color: #cbd5e1; color: #64748b;">Cancelar</button>
-            <button type="button" id="modalConfirmBtn" class="btn btn-solid" style="color: #ffffff;">Confirmar</button>
+        <div style="display: flex; justify-content: center; gap: 0.75rem;">
+            <button type="button" class="sa-btn sa-btn-cancel" onclick="document.getElementById('modalConfirmacionUsuarios').style.display='none'" style="min-width: 110px;">Cancelar</button>
+            <button type="button" id="modalConfirmBtn" class="sa-btn sa-btn-dark" style="min-width: 110px;">Confirmar</button>
         </div>
     </div>
 </div>
@@ -774,7 +772,7 @@ function mostrarConfirmacionUsuarios(form, titulo, mensaje, icono, color) {
 function confirmarEliminacionNivel(nivel) {
     document.getElementById('inputEliminarNivel').value = nivel;
     const form = document.getElementById('formEliminarNivel');
-    mostrarConfirmacionUsuarios(form, 'Eliminar Nivel', `¿Seguro que deseas eliminar el nivel de privilegio ${nivel}? Esta acción fallará por seguridad si aún existen roles asignados a esta jerarquía.`, 'ph-trash', '#ef4444');
+    mostrarConfirmacionUsuarios(form, 'Eliminar Nivel', `¿Seguro que deseas eliminar el nivel de privilegio ${nivel}? Esta acción fallará por seguridad si aún existen roles asignados a esta jerarquía.`, 'ph-trash', 'var(--color-principal)');
 }
 function toggleModalInvitarProfesor(show) {
     const modal = document.getElementById('modalInvitarProfesor');
@@ -786,7 +784,7 @@ function toggleModalInvitarProfesor(show) {
 
 <!-- MODAL: INVITAR PROFESOR POR CORREO -->
 <div id="modalInvitarProfesor" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18, 26, 62, 0.6); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center; padding: 1rem;">
-    <div class="glass-panel" style="background: #ffffff; width: 100%; max-width: 500px; border-radius: 12px; padding: 1.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(80,89,132,0.2);">
+    <div class="glass-panel" style="background: #ffffff; width: 100%; max-width: 500px; border-radius: var(--radius-md); padding: 1.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(80,89,132,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
             <h3 style="margin: 0; font-size: 1.1rem; color: #121a3e; font-weight: 800; display: flex; align-items: center; gap: 8px;">
                 <i class="ph-bold ph-envelope-simple-open" style="color: #7090cb;"></i> Invitar Nuevo Docente / Profesor
@@ -798,6 +796,7 @@ function toggleModalInvitarProfesor(show) {
         </p>
 
         <form action="invitar-profesor" method="POST">
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
             <div style="margin-bottom: 1rem;">
                 <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 4px;">Cédula de Identidad (*):</label>
                 <input type="text" name="cedula" required class="sa-filter-input" style="width: 100%;" placeholder="Ej: V-12345678">
@@ -813,9 +812,9 @@ function toggleModalInvitarProfesor(show) {
                 <input type="email" name="email" required class="sa-filter-input" style="width: 100%;" placeholder="docente@upttmbi.edu.ve">
             </div>
 
-            <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
-                <button type="button" onclick="toggleModalInvitarProfesor(false)" style="background: #e2e8f0; color: #475569; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer;">Cancelar</button>
-                <button type="submit" style="background: #121a3e; color: #ffffff; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+                <button type="button" onclick="toggleModalInvitarProfesor(false)" class="sa-btn sa-btn-cancel" style="min-width: 110px;">Cancelar</button>
+                <button type="submit" class="sa-btn sa-btn-dark" style="min-width: 150px;">
                     <i class="ph-bold ph-paper-plane-tilt"></i> Emitir Invitación
                 </button>
             </div>
