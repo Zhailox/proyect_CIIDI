@@ -275,7 +275,7 @@ class SuperAdminModule implements ModuleContract {
                 'metodo'           => 'index',
                 'vista'            => __DIR__ . '/views/gestor_scheduler.php',
                 'titulo'           => 'Tareas Programadas & Cron - SuperAdmin',
-                'css'              => ['SuperAdmin.css']
+                'css'              => ['SuperAdmin.css', 'scheduler.css']
             ],
             'alternar-estado-tarea' => [
                 'controlador_path' => __DIR__ . '/controllers/SchedulerController.php',

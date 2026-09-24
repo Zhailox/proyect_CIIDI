@@ -1,260 +1,3 @@
-<style>
-/* ==========================================================================
-   Antigravity UI & Motion Design Expert Style Guide (estilo.md)
-   ========================================================================== */
-.ag-header-banner {
-    background: rgba(255, 255, 255, 0.92) !important;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(80, 89, 132, 0.16) !important;
-    border-radius: var(--radius-md, 16px);
-    padding: 1.6rem 2rem;
-    box-shadow: 0 16px 36px rgba(18, 26, 62, 0.05);
-    margin-bottom: 1.5rem;
-}
-
-.ag-tabs-nav {
-    display: flex;
-    gap: 0.6rem;
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(12px);
-    padding: 6px;
-    border-radius: 14px;
-    border: 1px solid rgba(80, 89, 132, 0.15);
-    margin-bottom: 1.5rem;
-}
-
-.ag-tab-btn {
-    flex: 1;
-    padding: 10px 16px;
-    border-radius: 10px;
-    border: none;
-    background: transparent;
-    color: var(--texto-silenciado, #64748b);
-    font-weight: 700;
-    font-size: 0.88rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ag-tab-btn:hover {
-    color: var(--color-secundario);
-    background: rgba(80, 89, 132, 0.08);
-}
-
-.ag-tab-btn.active {
-    background: #ffffff;
-    color: var(--color-secundario);
-    box-shadow: 0 4px 14px rgba(18, 26, 62, 0.08);
-}
-
-.ag-tab-pane {
-    display: none;
-    animation: fadeInSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.ag-tab-pane.active {
-    display: block;
-}
-
-@keyframes fadeInSlide {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.ag-glass-card {
-    background: rgba(255, 255, 255, 0.95) !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(80, 89, 132, 0.15) !important;
-    border-radius: 16px;
-    padding: 1.6rem;
-    box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04);
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ag-btn-flat {
-    background: var(--color-secundario) !important;
-    color: #ffffff !important;
-    border: none !important;
-    padding: 9px 18px !important;
-    border-radius: 8px !important;
-    font-weight: 700 !important;
-    font-size: 0.85rem !important;
-    box-shadow: 0 4px 12px rgba(80, 89, 132, 0.2);
-    transition: all 0.25s ease !important;
-    text-decoration: none !important;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-}
-
-.ag-btn-flat:hover {
-    background: var(--color-secundario-dark, rgb(60, 68, 105)) !important;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(80, 89, 132, 0.32);
-    color: #ffffff !important;
-}
-
-.ag-btn-danger-flat {
-    background: var(--color-principal) !important;
-    color: #ffffff !important;
-    border: none !important;
-    padding: 9px 18px !important;
-    border-radius: var(--radius-sm) !important;
-    font-weight: 700 !important;
-    font-size: 0.85rem !important;
-    box-shadow: 0 4px 12px rgba(18, 26, 62, 0.2);
-    transition: all 0.25s ease !important;
-    text-decoration: none !important;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-}
-
-.ag-btn-danger-flat:hover {
-    background: var(--color-secundario) !important;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(18, 26, 62, 0.32);
-    color: #ffffff !important;
-}
-
-.ag-btn-outline-flat {
-    background: #ffffff !important;
-    color: var(--texto-titulos, #0f172a) !important;
-    border: 1px solid rgba(80, 89, 132, 0.25) !important;
-    padding: 9px 18px !important;
-    border-radius: 8px !important;
-    font-weight: 700 !important;
-    font-size: 0.85rem !important;
-    transition: all 0.25s ease !important;
-    text-decoration: none !important;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-}
-
-.ag-btn-outline-flat:hover {
-    border-color: var(--color-secundario) !important;
-    color: var(--color-secundario) !important;
-    background: rgba(37, 99, 235, 0.04) !important;
-}
-
-.ag-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.85rem;
-    text-align: left;
-}
-
-.ag-table th {
-    padding: 10px 14px;
-    color: var(--texto-titulos, #0f172a);
-    font-weight: 800;
-    font-size: 0.82rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    background: rgba(241, 245, 249, 0.9);
-    border-bottom: 1px solid rgba(80, 89, 132, 0.15);
-}
-
-.ag-table td {
-    padding: 10px 14px;
-    border-bottom: 1px solid rgba(80, 89, 132, 0.08);
-    color: var(--texto-titulos, #0f172a);
-}
-
-.ag-input {
-    padding: 9px 14px;
-    font-size: 0.86rem;
-    border-radius: 8px;
-    border: 1px solid #cbd5e1;
-    background: #ffffff;
-    color: var(--texto-titulos, #0f172a);
-    transition: border-color 0.2s ease;
-}
-
-.ag-input:focus {
-    outline: none;
-    border-color: var(--color-secundario);
-}
-
-.ag-pagination-btn {
-    padding: 5px 12px;
-    border-radius: 6px;
-    border: 1px solid rgba(80,89,132,0.2);
-    background: #ffffff;
-    font-weight: 700;
-    font-size: 0.8rem;
-    color: var(--texto-titulos, #0f172a);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.ag-pagination-btn:hover:not(:disabled) {
-    border-color: var(--color-secundario);
-    color: var(--color-secundario);
-    background: rgba(37,99,235,0.04);
-}
-
-.ag-pagination-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.ag-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
-}
-
-.ag-modal-overlay.active {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.ag-modal-box {
-    background: #ffffff;
-    border: 1px solid rgba(80, 89, 132, 0.2);
-    border-radius: 16px;
-    width: 90%;
-    max-width: 480px;
-    padding: 1.8rem;
-    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
-    transform: scale(0.92);
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ag-modal-overlay.active .ag-modal-box {
-    transform: scale(1);
-}
-</style>
-
 <!-- ENCABEZADO PRINCIPAL GLASSMORPHIC -->
 <div class="ag-header-banner">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.2rem;">
@@ -291,7 +34,7 @@
                             if (diff <= 0) {
                                 clockEl.textContent = "¡En progreso / listo!";
                                 clockEl.parentElement.style.background = "rgba(80,89,132,0.15)";
-                                clockEl.parentElement.style.color = "var(--color-principal)";
+                                clockEl.parentElement.style.color = "var(--color-terciario)";
                                 return;
                             }
                             const hrs = Math.floor(diff / (1000 * 60 * 60));
@@ -339,7 +82,7 @@
         <div style="display: flex; align-items: flex-start; gap: 10px; font-weight: 700;">
             <i class="ph-bold ph-warning-circle" style="font-size: 1.4rem; color: var(--color-secundario); flex-shrink: 0; margin-top: 2px;"></i>
             <div style="flex-grow: 1;">
-                <div style="font-size: 0.95rem; font-weight: 800; color: var(--color-principal); margin-bottom: 4px;">
+                <div style="font-size: 0.95rem; font-weight: 800; color: var(--color-terciario); margin-bottom: 4px;">
                     <?= htmlspecialchars($partesErr[0]) ?>
                 </div>
                 <?php if (count($partesErr) > 1): ?>
@@ -553,7 +296,7 @@
                                         <td style="font-weight: 700; color: var(--texto-titulos, #0f172a);">
                                             <?= htmlspecialchars($nB) ?>
                                             <?php if($isGz): ?>
-                                                <span style="background: rgba(112, 144, 203, 0.15); color: var(--color-principal); border-radius: var(--radius-sm); padding: 2px 6px; font-size: 0.7rem; font-weight: 800; margin-left: 4px;">GZIP</span>
+                                                <span style="background: rgba(112, 144, 203, 0.15); color: var(--color-terciario); border-radius: var(--radius-sm); padding: 2px 6px; font-size: 0.7rem; font-weight: 800; margin-left: 4px;">GZIP</span>
                                             <?php elseif($isTxt): ?>
                                                 <span style="background: rgba(80, 89, 132, 0.12); color: var(--color-secundario); border-radius: var(--radius-sm); padding: 2px 6px; font-size: 0.7rem; font-weight: 800; margin-left: 4px;">TXT</span>
                                             <?php else: ?>
@@ -571,10 +314,10 @@
                                                     </button>
                                                 </form>
 
-                                                <a href="verificar-respaldo?archivo=<?= urlencode($nB) ?>" class="ag-btn-outline-flat" style="padding: 5px 9px !important; font-size: 0.78rem !important;" title="Verificar Integridad">
-                                                    <i class="ph-bold ph-shield-check" style="color: var(--color-principal);"></i>
+                                                <a href="verificar-respaldo?archivo=<?= urlencode($nB) ?>" class="ag-btn-danger-flat" style="padding: 5px 9px !important; font-size: 0.78rem !important;" title="Verificar Integridad">
+                                                    <i class="ph-bold ph-shield-check"></i>
                                                 </a>
-                                                <a href="descargar-backup?archivo=<?= urlencode($nB) ?>" class="ag-btn-outline-flat" style="padding: 5px 9px !important; font-size: 0.78rem !important;" title="Descargar">
+                                                <a href="descargar-backup?archivo=<?= urlencode($nB) ?>" class="ag-btn-danger-flat" style="padding: 5px 9px !important; font-size: 0.78rem !important;" title="Descargar">
                                                     <i class="ph-bold ph-download-simple"></i>
                                                 </a>
                                                 <form action="eliminar-backup" method="POST" style="margin:0;">
@@ -686,7 +429,7 @@
             </p>
 
             <?php if (!empty($emergency_data['usuario'])): ?>
-                <div style="background: rgba(112,144,203,0.1); border: 1px solid rgba(112,144,203,0.25); padding: 0.85rem 1.1rem; border-radius: var(--radius-sm); margin-bottom: 1.2rem; font-size: 0.84rem; color: var(--color-principal);">
+                <div style="background: rgba(112,144,203,0.1); border: 1px solid rgba(112,144,203,0.25); padding: 0.85rem 1.1rem; border-radius: var(--radius-sm); margin-bottom: 1.2rem; font-size: 0.84rem;">
                     <div style="font-weight: 800; display: flex; align-items: center; gap: 6px;">
                         <i class="ph-bold ph-check-circle"></i> Cuenta de Emergencia Configurada
                     </div>
@@ -721,7 +464,7 @@
                 <hr style="border: 0; border-top: 1px solid rgba(80,89,132,0.15); margin: 0.5rem 0;">
 
                 <div style="background: rgba(80,89,132,0.06); border: 1px solid rgba(80,89,132,0.2); padding: 1rem; border-radius: var(--radius-sm);">
-                    <label style="font-size: 0.82rem; font-weight: 800; color: var(--color-principal); display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                    <label style="font-size: 0.82rem; font-weight: 800; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
                         <i class="ph-bold ph-shield-check"></i> Confirmar con Tu Contraseña de SuperAdmin
                     </label>
                     <input type="password" name="admin_confirm_password" class="ag-input" placeholder="Ingresa tu contraseña actual de usuario" required style="width: 100%; border-color: rgba(80,89,132,0.4);">
@@ -769,7 +512,7 @@
                         <input type="number" name="minutos_programados" min="0" class="ag-input" placeholder="Ej: 30" style="width: 100%;">
                     </div>
                 <?php else: ?>
-                    <div style="background: rgba(80,89,132,0.12); color: var(--color-principal); border: 1px solid rgba(80,89,132,0.3); padding: 0.9rem; border-radius: var(--radius-sm); font-size: 0.88rem; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+                    <div style="background: rgba(80,89,132,0.12); border: 1px solid rgba(80,89,132,0.3); padding: 0.9rem; border-radius: var(--radius-sm); font-size: 0.88rem; font-weight: 800; display: flex; align-items: center; gap: 10px;">
                         <i class="ph-bold ph-warning-circle" style="font-size: 1.3rem; color: var(--color-secundario);"></i>
                         <div>
                             <div>Mantenimiento Actualmente ACTIVADO</div>
@@ -1010,7 +753,7 @@ function confirmarEliminacionBackup(formEl, nombreArchivo) {
         body: `Confirma que desea eliminar el archivo de respaldo '${nombreArchivo}'. Esta acción no se puede deshacer.`,
         iconClass: 'ph-bold ph-trash',
         iconBg: 'rgba(80,89,132,0.12)',
-        iconColor: 'var(--color-principal)',
+        iconColor: 'var(--color-terciario)',
         confirmText: 'Sí, Eliminar',
         confirmClass: 'ag-btn-danger-flat',
         onConfirm: () => formEl.submit()
@@ -1039,7 +782,7 @@ function confirmarRestauracionBD() {
         body: `Se verificará la sintaxis del archivo '${file.name}' (${(file.size/1024).toFixed(1)} KB), se generará una copia de seguridad automática 'pre_restore_checkpoint' y se aplicarán los cambios en PostgreSQL. ¿Deseas continuar?`,
         iconClass: 'ph-bold ph-warning-circle',
         iconBg: 'rgba(80,89,132,0.15)',
-        iconColor: 'var(--color-principal)',
+        iconColor: 'var(--color-terciario)',
         confirmText: 'Sí, Ejecutar Restauración',
         confirmClass: 'ag-btn-danger-flat',
         onConfirm: () => document.getElementById('formRestaurarBackup').submit()

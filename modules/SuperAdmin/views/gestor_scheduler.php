@@ -1,146 +1,3 @@
-<style>
-/* ==========================================================================
-   Antigravity UI & Motion Design Expert Style Guide (estilo.md) - Scheduler
-   ========================================================================== */
-.ag-btn-standard {
-    height: 38px !important;
-    padding: 0 16px !important;
-    border-radius: 8px !important;
-    font-weight: 700 !important;
-    font-size: 0.85rem !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 6px !important;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    cursor: pointer !important;
-    border: none !important;
-    text-decoration: none !important;
-    box-sizing: border-box !important;
-}
-
-.ag-btn-icon {
-    width: 34px !important;
-    height: 34px !important;
-    padding: 0 !important;
-    border-radius: 8px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    cursor: pointer !important;
-    border: 1px solid rgba(80, 89, 132, 0.2) !important;
-    background: #ffffff !important;
-    color: #334155 !important;
-}
-
-.ag-btn-icon:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(18, 26, 62, 0.1);
-    background: #f8fafc !important;
-    border-color: var(--color-secundario) !important;
-    color: var(--color-secundario) !important;
-}
-
-.ag-btn-danger-icon {
-    width: 34px !important;
-    height: 34px !important;
-    padding: 0 !important;
-    border-radius: var(--radius-sm) !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    cursor: pointer !important;
-    border: 1px solid rgba(80, 89, 132, 0.25) !important;
-    background: rgba(80, 89, 132, 0.08) !important;
-    color: var(--color-principal) !important;
-}
-
-.ag-btn-danger-icon:hover {
-    transform: translateY(-2px);
-    background: var(--color-principal) !important;
-    color: #ffffff !important;
-    box-shadow: 0 4px 12px rgba(18, 26, 62, 0.25);
-}
-
-.ag-btn-primary {
-    background: var(--color-secundario) !important;
-    color: #ffffff !important;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.2);
-}
-
-.ag-btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(80, 89, 132, 0.32);
-    background: var(--color-secundario-dark, rgb(60, 68, 105)) !important;
-}
-
-.ag-btn-secondary {
-    background: #ffffff !important;
-    color: var(--color-secundario) !important;
-    border: 1px solid rgba(80, 89, 132, 0.25) !important;
-}
-
-.ag-btn-secondary:hover {
-    transform: translateY(-2px);
-    background: #f8fafc !important;
-    border-color: var(--color-secundario) !important;
-    box-shadow: 0 4px 12px rgba(18, 26, 62, 0.06);
-}
-
-/* Glassmorphism Floating Cards */
-.ag-scheduler-card {
-    background: rgba(255, 255, 255, 0.95) !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(80, 89, 132, 0.15) !important;
-    border-radius: 14px !important;
-    padding: 1.5rem !important;
-    box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04);
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 1rem;
-}
-
-.ag-scheduler-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 40px rgba(18, 26, 62, 0.08);
-    border-color: rgba(80, 89, 132, 0.28) !important;
-}
-
-/* Estilo de Inputs y Controles Formulario Premium */
-.ag-form-input {
-    width: 100%;
-    padding: 10px 14px;
-    border-radius: 10px;
-    border: 1px solid rgba(80, 89, 132, 0.2);
-    background: rgba(248, 250, 252, 0.8);
-    font-size: 0.88rem;
-    color: #0f172a;
-    transition: all 0.25s ease-out;
-    box-sizing: border-box;
-}
-
-.ag-form-input:focus {
-    outline: none;
-    border-color: var(--color-secundario);
-    background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(80, 89, 132, 0.12);
-}
-
-.ag-form-label {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: #334155;
-    display: block;
-    margin-bottom: 6px;
-    letter-spacing: 0.2px;
-}
-</style>
-
 <div class="sa-hero-header mb-2" style="background: #ffffff !important; border: 1px solid rgba(80, 89, 132, 0.18); padding: 1.5rem 2rem; border-radius: var(--radius-md); box-shadow: 0 4px 20px rgba(18, 26, 62, 0.04);">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
@@ -185,7 +42,7 @@
 <!-- PANEL DE DIAGNÓSTICO DEL ENTORNO CRON DEL SISTEMA OPERATIVO -->
 <div class="glass-panel mb-2" style="padding: 1.25rem; border-radius: var(--radius-sm); border-left: 4px solid var(--color-secundario); background: rgba(255,255,255,0.95); backdrop-filter: blur(12px);">
     <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; font-weight: 700; color: var(--texto-titulos); display: flex; align-items: center; gap: 8px;">
-        <i class="ph-bold ph-linux-logo" style="font-size: 1.2rem; color: var(--color-principal);"></i>
+        <i class="ph-bold ph-linux-logo" style="font-size: 1.2rem;"></i>
         Estado del Programador del Sistema Operativo
     </h4>
     <p style="margin: 0 0 0.75rem 0; font-size: 0.85rem; color: #475569;">
@@ -213,7 +70,7 @@
                     <span class="<?= $tarea['estado'] === 'activo' ? 'sa-badge-active' : 'sa-badge-inactive' ?>">
                         <i class="ph-bold <?= $tarea['estado'] === 'activo' ? 'ph-check-circle' : 'ph-pause-circle' ?>"></i> <?= strtoupper($tarea['estado']) ?>
                     </span>
-                    <span style="font-family: monospace; font-size: 0.8rem; background: #f8fafc; padding: 4px 10px; border-radius: var(--radius-sm); border: 1px solid #e2e8f0; color: var(--color-principal); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                    <span style="font-family: monospace; font-size: 0.8rem; background: #f8fafc; padding: 4px 10px; border-radius: var(--radius-sm); border: 1px solid #e2e8f0; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
                         <?= htmlspecialchars($tarea['expresion_cron']) ?>
                     </span>
                 </div>
@@ -385,7 +242,7 @@
 <!-- MODAL CONFIRMACIÓN DE ELIMINACIÓN -->
 <div id="modalConfirmacionGenerico" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 10001; justify-content: center; align-items: center; padding: 1rem;">
     <div style="background: #ffffff; border-radius: var(--radius-md); max-width: 440px; width: 100%; padding: 1.75rem; box-shadow: 0 24px 48px rgba(18, 26, 62, 0.2); border: 1px solid rgba(80, 89, 132, 0.2); text-align: center;">
-        <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(80, 89, 132, 0.12); color: var(--color-principal); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 1rem auto;">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(80, 89, 132, 0.12); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 1rem auto;">
             <i class="ph-bold ph-warning"></i>
         </div>
         

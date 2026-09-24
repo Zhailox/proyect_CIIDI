@@ -183,11 +183,11 @@
                     <div style="display: flex; gap: 1rem;">
                         <div style="flex: 1;">
                             <label style="font-size: 0.75rem; font-weight: 700; color: var(--texto-silenciado);">Nivel Público (Ver)</label>
-                            <input type="number" name="accesos[<?= $slug ?>][publico]" value="<?= $valPub ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
+                            <input type="number" min="0" name="accesos[<?= $slug ?>][publico]" value="<?= $valPub ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
                         </div>
                         <div style="flex: 1;">
                             <label style="font-size: 0.75rem; font-weight: 700; color: var(--texto-silenciado);">Nivel Admin (Gestionar)</label>
-                            <input type="number" name="accesos[<?= $slug ?>][admin]" value="<?= $valAdm ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
+                            <input type="number" min="0" name="accesos[<?= $slug ?>][admin]" value="<?= $valAdm ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
                         </div>
                     </div>
                 </div>
@@ -200,7 +200,7 @@
                         <div style="flex: 1;">
                             <label style="font-size: 0.75rem; font-weight: 700; color: var(--texto-silenciado);">Nivel Login/Registro</label>
                             <!-- Límite estricto establecido a 998 visualmente -->
-                            <input type="number" max="998" name="accesos[autenticacion][publico]" value="<?= $config['accesos_modulos']['autenticacion']['publico'] ?? 998 ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
+                            <input type="number" min="0" max="998" name="accesos[autenticacion][publico]" value="<?= $config['accesos_modulos']['autenticacion']['publico'] ?? 998 ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
                         </div>
                     </div>
                 </div>

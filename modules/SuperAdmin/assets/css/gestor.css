@@ -447,14 +447,13 @@ select.sa-filter-input option, select option {
 
 .rbac-btn-danger-outline {
     background: rgba(18, 26, 62, 0.06);
-    color: var(--color-principal);
+    color: var(--color-terciario);
     border-color: rgba(18, 26, 62, 0.3);
 }
 
 .rbac-btn-danger-outline:hover {
-    background: var(--color-principal);
+    background: var(--btn-hover);
     color: #ffffff;
-    border-color: var(--color-principal);
     transform: translateY(-1px);
 }
 

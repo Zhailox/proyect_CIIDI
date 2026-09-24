@@ -9,11 +9,11 @@
         "intentos_login": 5
     },
     "smtp": {
-        "host": "smtp.gmail.com",
+        "host": "",
         "port": 587,
-        "user": "orlando5711666@gmail.com",
+        "user": "",
         "pass": "ENC:vpalvrrcawvGfnu0B7Ciz3B712P27wUZj1VF3\/w7njS78b6pnKknfy1OnMyD72tchxveuCL04AAYYeKQpl9DvjA1rUzx\/ZteaQwTNmx9vr4=",
-        "from_email": "orlando5711666@gmail.com"
+        "from_email": ""
     },
     "accesos_modulos": {
         "articulos": {
