@@ -1,6 +1,7 @@
 <?php
 // modules/Articulos/controllers/ConfiguracionController.php
 require_once CORE_PATH . 'Database/QueryBuilder.php';
+require_once CORE_PATH . 'Security/AuditLogger.php';
 require_once __DIR__ . '/../services/ConfigService.php';
 require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
 
@@ -85,11 +86,14 @@ class ConfiguracionController {
 
 
                 if (ConfigService::save($actual)) {
+                    AuditLogger::registrar('INFO', 'Articulos', 'Actualizar Configuración', 'Se actualizaron los parámetros de configuración de la Revista Digital.');
                     $mensaje = "¡Configuración de la Revista guardada exitosamente!";
                 } else {
+                    AuditLogger::registrar('ERROR', 'Articulos', 'Fallo Guardar Configuración', 'No se pudo escribir en config_articulos.json.');
                     $error = "No se pudo guardar la configuración.";
                 }
             } catch (Exception $e) {
+                AuditLogger::registrar('ERROR', 'Articulos', 'Excepción Guardar Configuración', $e->getMessage());
                 $error = "Error: " . $e->getMessage();
             }
         }
@@ -177,6 +181,7 @@ class ConfiguracionController {
             $rutaFisica = $dirUploads . DIRECTORY_SEPARATOR . $nombreImg;
             if (file_exists($rutaFisica) && is_file($rutaFisica)) {
                 if (@unlink($rutaFisica)) {
+                    AuditLogger::registrar('WARNING', 'Articulos', 'Eliminar Imagen Portada', "Imagen '{$nombreImg}' eliminada del almacenamiento.");
                     echo json_encode(['success' => true, 'mensaje' => 'Imagen eliminada del almacenamiento.']);
                     exit;
                 }

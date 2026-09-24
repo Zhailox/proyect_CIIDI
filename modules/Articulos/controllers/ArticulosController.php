@@ -1,5 +1,6 @@
 <?php
 require_once CORE_PATH . 'Security/Auth.php';
+require_once CORE_PATH . 'Security/AuditLogger.php';
 require_once __DIR__ . '/../models/ArticuloModel.php';
 require_once __DIR__ . '/../services/ConfigService.php';
 require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
@@ -241,7 +242,7 @@ class ArticulosController {
                 $etiquetas
             );
 
-            AuditLogger::registrar('INFO', 'RevistaDigital', 'Publicar Artículo', "Nuevo artículo publicado: '{$titulo}' ({$anio_publicacion}).");
+            AuditLogger::registrar('INFO', 'Articulos', 'Publicar Artículo', "Nuevo artículo publicado: '{$titulo}' ({$anio_publicacion}).");
 
             $_SESSION['mensaje_exito'] = "El artículo fue publicado correctamente en la vitrina.";
             header('Location: gestor-articulos');
@@ -251,6 +252,7 @@ class ArticulosController {
             if ($imagenFisicaCreada && file_exists($imagenFisicaCreada)) {
                 @unlink($imagenFisicaCreada);
             }
+            AuditLogger::registrar('WARNING', 'Articulos', 'Fallo al Publicar Artículo', "Error al registrar artículo '{$titulo}': " . $e->getMessage());
             $msgOriginal = $e->getMessage();
             if (strpos($msgOriginal, '23505') !== false || strpos(strtolower($msgOriginal), 'duplicate') !== false || strpos(strtolower($msgOriginal), 'ya existe') !== false) {
                 $_SESSION['mensaje_error'] = "No se pudo registrar el artículo porque la cédula de un autor o un dato único ya existe registrado en el sistema.";
@@ -276,12 +278,13 @@ class ArticulosController {
             try {
                 $this->articuloModel->eliminarArticulo($id_articulo);
                 
-                AuditLogger::registrar('WARNING', 'RevistaDigital', 'Eliminar Artículo', "Artículo ID #{$id_articulo} eliminado del catálogo.");
+                AuditLogger::registrar('WARNING', 'Articulos', 'Eliminar Artículo', "Artículo ID #{$id_articulo} eliminado del catálogo.");
 
                 if (session_status() === PHP_SESSION_NONE) session_start();
                 $_SESSION['mensaje_exito'] = "El artículo ha sido eliminado del catálogo y sus archivos liberados.";
                 
             } catch (Exception $e) {
+                AuditLogger::registrar('ERROR', 'Articulos', 'Fallo al Eliminar Artículo', "No se pudo eliminar el artículo #{$id_articulo}: " . $e->getMessage());
                 if (session_status() === PHP_SESSION_NONE) session_start();
                 $_SESSION['mensaje_error'] = "No fue posible eliminar el artículo debido a que está asociado a otros registros activos.";
             }
@@ -447,11 +450,14 @@ class ArticulosController {
                 $etiquetas
             );
 
+            AuditLogger::registrar('INFO', 'Articulos', 'Actualizar Artículo', "Artículo ID #{$id} actualizado: '{$titulo}'.");
+
             if (session_status() === PHP_SESSION_NONE) session_start();
             $_SESSION['mensaje_exito'] = 'El artículo fue actualizado correctamente.';
             header('Location: gestor-articulos');
             exit;
         } catch (Exception $e) {
+            AuditLogger::registrar('WARNING', 'Articulos', 'Fallo al Actualizar Artículo', "Error al actualizar artículo #{$id}: " . $e->getMessage());
             if (session_status() === PHP_SESSION_NONE) session_start();
             $msg = $e->getMessage();
             if (strpos($msg, '23505') !== false || strpos(strtolower($msg), 'duplicate') !== false) {
@@ -488,45 +494,65 @@ class ArticulosController {
             try {
                 if ($accion === 'crear_categoria' && $nombre !== '') {
                     $this->articuloModel->crearCategoria($nombre);
+                    AuditLogger::registrar('INFO', 'Articulos', 'Crear Categoría', "Nueva categoría: '{$nombre}'.");
                     $_SESSION['mensaje_exito'] = 'Categoría creada correctamente.';
                 } elseif ($accion === 'crear_etiqueta' && $nombre !== '') {
                     $this->articuloModel->crearEtiqueta($nombre);
+                    AuditLogger::registrar('INFO', 'Articulos', 'Crear Etiqueta', "Nueva etiqueta: '{$nombre}'.");
                     $_SESSION['mensaje_exito'] = 'Etiqueta creada correctamente.';
                 } elseif ($accion === 'crear_editorial' && $nombre !== '') {
                     $this->articuloModel->crearEditorial($nombre);
+                    AuditLogger::registrar('INFO', 'Articulos', 'Crear Editorial', "Nueva editorial/repositorio: '{$nombre}'.");
                     $_SESSION['mensaje_exito'] = 'Editorial/Repositorio creado correctamente.';
                 } elseif ($accion === 'eliminar_categoria') {
-                    $this->articuloModel->eliminarCategoria((int)($_POST['id'] ?? 0));
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->eliminarCategoria($idItem);
+                    AuditLogger::registrar('WARNING', 'Articulos', 'Eliminar Categoría', "Categoría ID #{$idItem} eliminada.");
                     $_SESSION['mensaje_exito'] = 'Categoría eliminada.';
                 } elseif ($accion === 'eliminar_etiqueta') {
-                    $this->articuloModel->eliminarEtiqueta((int)($_POST['id'] ?? 0));
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->eliminarEtiqueta($idItem);
+                    AuditLogger::registrar('WARNING', 'Articulos', 'Eliminar Etiqueta', "Etiqueta ID #{$idItem} eliminada.");
                     $_SESSION['mensaje_exito'] = 'Etiqueta eliminada.';
                 } elseif ($accion === 'eliminar_editorial') {
-                    $this->articuloModel->eliminarEditorial((int)($_POST['id'] ?? 0));
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->eliminarEditorial($idItem);
+                    AuditLogger::registrar('WARNING', 'Articulos', 'Eliminar Editorial', "Editorial ID #{$idItem} eliminada.");
                     $_SESSION['mensaje_exito'] = 'Editorial/Repositorio eliminado.';
                     
                 // --- NUEVAS ACCIONES DE EDICIÓN ---
                 } elseif ($accion === 'actualizar_categoria' && $nombre !== '') {
-                    $this->articuloModel->actualizarCategoria((int)($_POST['id'] ?? 0), $nombre);
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->actualizarCategoria($idItem, $nombre);
+                    AuditLogger::registrar('INFO', 'Articulos', 'Actualizar Categoría', "Categoría ID #{$idItem} renombrada a '{$nombre}'.");
                     $_SESSION['mensaje_exito'] = 'Categoría actualizada correctamente.';
                 } elseif ($accion === 'actualizar_etiqueta' && $nombre !== '') {
-                    $this->articuloModel->actualizarEtiqueta((int)($_POST['id'] ?? 0), $nombre);
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->actualizarEtiqueta($idItem, $nombre);
+                    AuditLogger::registrar('INFO', 'Articulos', 'Actualizar Etiqueta', "Etiqueta ID #{$idItem} renombrada a '{$nombre}'.");
                     $_SESSION['mensaje_exito'] = 'Etiqueta actualizada correctamente.';
                 } elseif ($accion === 'actualizar_editorial' && $nombre !== '') {
-                    $this->articuloModel->actualizarEditorial((int)($_POST['id'] ?? 0), $nombre);
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->actualizarEditorial($idItem, $nombre);
+                    AuditLogger::registrar('INFO', 'Articulos', 'Actualizar Editorial', "Editorial ID #{$idItem} renombrada a '{$nombre}'.");
                     $_SESSION['mensaje_exito'] = 'Editorial/Repositorio actualizado.';
                 } elseif ($accion === 'actualizar_autor') {
+                    $idItem = (int)($_POST['id'] ?? 0);
                     $nombre_autor = trim($_POST['nombre_completo'] ?? '');
                     $cedula_autor = trim($_POST['cedula'] ?? '');
                     if ($nombre_autor !== '') {
-                        $this->articuloModel->actualizarAutor((int)($_POST['id'] ?? 0), $nombre_autor, $cedula_autor);
+                        $this->articuloModel->actualizarAutor($idItem, $nombre_autor, $cedula_autor);
+                        AuditLogger::registrar('INFO', 'Articulos', 'Actualizar Autor', "Autor ID #{$idItem} actualizado: '{$nombre_autor}' ({$cedula_autor}).");
                         $_SESSION['mensaje_exito'] = 'Datos del autor actualizados correctamente.';
                     }
                 } elseif ($accion === 'eliminar_autor') {
-                    $this->articuloModel->eliminarAutor((int)($_POST['id'] ?? 0));
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->eliminarAutor($idItem);
+                    AuditLogger::registrar('WARNING', 'Articulos', 'Eliminar Autor', "Autor ID #{$idItem} eliminado.");
                     $_SESSION['mensaje_exito'] = 'Autor eliminado correctamente.';
                 }
             } catch (Exception $e) {
+                AuditLogger::registrar('WARNING', 'Articulos', 'Fallo Operación Catálogo', "Error en '{$accion}': " . $e->getMessage());
                 $msg = $e->getMessage();
                 if (strpos($msg, '23505') !== false || strpos(strtolower($msg), 'duplicate') !== false) {
                     $_SESSION['mensaje_error'] = 'Ya existe un elemento registrado con este mismo nombre o cédula.';
@@ -591,9 +617,11 @@ class ArticulosController {
         $id = (int)($_GET['id'] ?? 0);
         try {
             $this->articuloModel->cambiarEstado($id);
+            AuditLogger::registrar('INFO', 'Articulos', 'Cambio Visibilidad', "Se actualizó la visibilidad del artículo ID #{$id}.");
             if (session_status() === PHP_SESSION_NONE) session_start();
             $_SESSION['mensaje_exito'] = "El estado de visibilidad del artículo ha sido actualizado.";
         } catch (Exception $e) {
+            AuditLogger::registrar('WARNING', 'Articulos', 'Fallo Visibilidad', "Error al cambiar visibilidad del artículo ID #{$id}: " . $e->getMessage());
             if (session_status() === PHP_SESSION_NONE) session_start();
             $_SESSION['mensaje_error'] = "No se pudo cambiar la visibilidad del artículo seleccionado.";
         }

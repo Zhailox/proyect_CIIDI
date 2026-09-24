@@ -100,11 +100,14 @@ class ConfiguracionController {
 
                 if (ConfigService::save($actual)) {
                     $_SESSION['mensaje_exito'] = "¡Configuración del Repositorio guardada exitosamente!";
+                    AuditLogger::registrar('INFO', 'RepositorioPST', 'Actualizar Configuración', 'Se actualizaron los parámetros operativos del repositorio PST (límites de archivos, paginación, citas y filtros).');
                 } else {
                     $_SESSION['mensaje_error'] = "No se pudo escribir en el archivo de configuración JSON.";
+                    AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo al Guardar Configuración', 'Error de permisos o escritura en el archivo JSON de configuración.');
                 }
             } catch (Exception $e) {
                 $_SESSION['mensaje_error'] = "Error al procesar la configuración: " . $e->getMessage();
+                AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Configuración', $e->getMessage());
             }
             
             // 2. Redirección para limpiar POST y activar JS en la recarga

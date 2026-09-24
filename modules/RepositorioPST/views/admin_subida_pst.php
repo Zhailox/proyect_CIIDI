@@ -589,6 +589,10 @@ if (typeof window.mammoth === 'undefined') {
 </div>
 
 <script>
+// Límite de tamaño de archivo sincronizado con la configuración del sistema
+const MAX_FILE_SIZE_MB = <?= (int)ConfigService::get('archivos.max_size_mb', 20) ?>;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
 // JSON con todas las dimensiones operativas del sistema para el filtrado dinámico
 const todasDimensiones = <?= json_encode($lineas && $dimensiones ? $dimensiones : []) ?>;
 const activeDimensionId = <?= json_encode($_POST['dimension_id'] ?? $documento['dimension_id'] ?? '') ?>;
@@ -699,6 +703,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Interceptar envío tradicional del formulario para garantizar que exista documento cargado
+    const formSubidaPst = document.getElementById('formSubidaPst');
+    if (formSubidaPst) {
+        formSubidaPst.addEventListener('submit', (e) => {
+            const esCrear = <?= json_encode($accion === 'crear') ?>;
+            if (esCrear) {
+                const pdfHidden = document.getElementById('archivo_pdf_hidden') ? document.getElementById('archivo_pdf_hidden').value.trim() : '';
+                const fileInput = document.getElementById('input_archivo_extractor');
+                const tieneArchivoInput = (fileInput && fileInput.files && fileInput.files.length > 0);
+
+                if (!pdfHidden && !tieneArchivoInput) {
+                    e.preventDefault();
+                    mostrarModalAlerta('warning', 'Documento Requerido', 'Debe cargar y extraer un documento digital (PDF o Word) válido antes de registrar el proyecto.');
+                    return false;
+                }
+            }
+        });
+    }
 });
 
 function procesarArchivosSeleccionados(fileList) {
@@ -710,13 +733,36 @@ function procesarArchivosSeleccionados(fileList) {
         files = [files[0]];
     }
 
+    // 1. Validar extensiones de archivo permitidas
+    const invalidFormatFiles = files.filter(f => {
+        const ext = f.name.split('.').pop().toLowerCase();
+        return ext !== 'pdf' && ext !== 'docx';
+    });
+
+    if (invalidFormatFiles.length > 0) {
+        const nombresInv = invalidFormatFiles.map(f => f.name).join(', ');
+        mostrarModalAlerta('warning', 'Formato no admitido', `Solo se admiten documentos PDF (.pdf) y Microsoft Word (.docx).\n\nArchivos rechazados: ${nombresInv}`);
+        return;
+    }
+
+    // 2. Pre-validación en el cliente: Validar tamaño máximo por archivo
+    const oversizedFiles = files.filter(f => f.size > MAX_FILE_SIZE_BYTES);
+    if (oversizedFiles.length > 0) {
+        const detallesOversized = oversizedFiles.map(f => `• ${f.name} (${(f.size / (1024 * 1024)).toFixed(2)} MB)`).join('\n');
+        mostrarModalAlerta(
+            'warning',
+            'Archivo(s) Excede(n) Tamaño Máximo',
+            `El tamaño máximo permitido es de ${MAX_FILE_SIZE_MB} MB por archivo.\n\nLos siguientes archivos fueron rechazados y no serán procesados:\n${detallesOversized}`
+        );
+        return;
+    }
+
     const validFiles = files.filter(f => {
         const ext = f.name.split('.').pop().toLowerCase();
-        return ext === 'pdf' || ext === 'docx';
+        return (ext === 'pdf' || ext === 'docx') && f.size <= MAX_FILE_SIZE_BYTES;
     });
 
     if (validFiles.length === 0) {
-        mostrarModalAlerta('warning', 'Formato no admitido', 'Formato de archivo inválido. Solo se admiten documentos PDF (.pdf) y Microsoft Word (.docx).');
         return;
     }
 
@@ -766,10 +812,12 @@ function iniciarProcesamientoListaArchivos(validFiles, carreraId) {
             id: Date.now() + '_' + Math.random().toString(36).substr(2, 5),
             nombreArchivo: file.name,
             file: file,
-            estado: 'pendiente',
+            estado: 'extrayendo',
             errorMsg: '',
+            progresoPct: 0,
+            faseMsg: 'Iniciando subida...',
             data: {
-                titulo: file.name.replace(/\.[^/.]+$/, ""),
+                titulo: '',
                 id_carrera: carreraId,
                 anio_publicacion: new Date().getFullYear(),
                 fecha_defensa: new Date().toISOString().split('T')[0],
@@ -782,7 +830,8 @@ function iniciarProcesamientoListaArchivos(validFiles, carreraId) {
                 comunidad_beneficiada: '',
                 linea_id: '',
                 dimension_id: '',
-                autores: [{ cedula: '', nombre: '' }, { cedula: '', nombre: '' }, { cedula: '', nombre: '' }, { cedula: '', nombre: '' }],
+                archivo_pdf: '',
+                autores: [],
                 tutor_academico_cedula: '',
                 tutor_academico_nombre: '',
                 tutor_institucional_cedula: '',
@@ -795,18 +844,13 @@ function iniciarProcesamientoListaArchivos(validFiles, carreraId) {
         nuevosIndices.push(documentosEnCola.length - 1);
     });
 
-    // Resetear valor de input file para permitir re-seleccionar los mismos archivos
+    // Resetear valor de input file para permitir re-seleccionar los mismos archivos si es necesario
     const fileInput = document.getElementById('input_archivo_extractor');
     if (fileInput) fileInput.value = '';
 
     renderizarColaUI();
 
-    // Seleccionar automáticamente el primer documento cargado en el formulario si es el primer lote
-    if (documentoSeleccionadoIndex === -1 && documentosEnCola.length > 0) {
-        seleccionarDocumentoDeCola(0);
-    }
-
-    // Iniciar extracción para cada nuevo documento agregado
+    // Iniciar extracción asíncrona para cada documento
     nuevosIndices.forEach(idx => {
         subirYExtraerDatos(documentosEnCola[idx], idx);
     });
@@ -851,20 +895,38 @@ function subirYExtraerDatos(docItem, index) {
                     if (response.data) {
                         Object.assign(docItem.data, response.data);
                     }
-                    if (documentoSeleccionadoIndex === index) {
+                    // Si no había ningún documento seleccionado en el formulario, seleccionar este
+                    if (documentoSeleccionadoIndex === -1) {
+                        seleccionarDocumentoDeCola(index);
+                    } else if (documentoSeleccionadoIndex === index) {
                         rellenarFormulario(docItem.data);
                     }
                 } else {
                     docItem.estado = 'error';
                     docItem.errorMsg = response.message || 'Error en la extracción de metadatos.';
+                    docItem.data.titulo = '';
+                    docItem.data.archivo_pdf = '';
+                    if (documentoSeleccionadoIndex === index) {
+                        limpiarCamposFormularioSilencioso();
+                    }
                 }
             } catch (e) {
                 docItem.estado = 'error';
                 docItem.errorMsg = 'Respuesta inválida del servidor.';
+                docItem.data.titulo = '';
+                docItem.data.archivo_pdf = '';
+                if (documentoSeleccionadoIndex === index) {
+                    limpiarCamposFormularioSilencioso();
+                }
             }
         } else {
             docItem.estado = 'error';
             docItem.errorMsg = 'Error en el servidor (' + xhr.status + ').';
+            docItem.data.titulo = '';
+            docItem.data.archivo_pdf = '';
+            if (documentoSeleccionadoIndex === index) {
+                limpiarCamposFormularioSilencioso();
+            }
         }
         renderizarColaUI();
     };
@@ -872,6 +934,11 @@ function subirYExtraerDatos(docItem, index) {
     xhr.onerror = function() {
         docItem.estado = 'error';
         docItem.errorMsg = 'Error de conexión de red.';
+        docItem.data.titulo = '';
+        docItem.data.archivo_pdf = '';
+        if (documentoSeleccionadoIndex === index) {
+            limpiarCamposFormularioSilencioso();
+        }
         renderizarColaUI();
     };
 
@@ -930,10 +997,12 @@ function renderizarColaUI() {
         } else if (item.estado === 'exito') {
             statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: rgba(80, 89, 132, 0.1); color: var(--color-secundario); font-weight: 700;"><i class="ph ph-check-circle"></i> Subido</span>`;
         } else if (item.estado === 'error') {
-            statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: rgba(100, 116, 139, 0.12); color: var(--texto-silenciado); font-weight: 700;"><i class="ph ph-warning-circle"></i> Error</span>`;
+            statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: rgba(239, 68, 68, 0.12); color: #dc2626; font-weight: 700;"><i class="ph ph-warning-circle"></i> Error</span>`;
         }
 
-        const titleText = item.data.titulo ? item.data.titulo : item.nombreArchivo;
+        const titleText = (item.estado === 'listo' || item.estado === 'exito') 
+            ? (item.data.titulo ? item.data.titulo : item.nombreArchivo) 
+            : (item.estado === 'error' ? 'Extracción fallida' : 'Analizando documento...');
 
         let content = `
             <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.4rem;">
@@ -959,11 +1028,17 @@ function renderizarColaUI() {
 
         content += `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; padding-top: 0.3rem; border-top: 1px dashed rgba(169, 168, 166, 0.15);">
-                <button type="button" class="btn-action-edit" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;" onclick="event.stopPropagation(); seleccionarDocumentoDeCola(${idx});">
-                    <i class="ph ph-pencil-simple"></i> Revisar / Editar
-                </button>
+                ${item.estado === 'listo' ? `
+                    <button type="button" class="btn-action-edit" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;" onclick="event.stopPropagation(); seleccionarDocumentoDeCola(${idx});">
+                        <i class="ph ph-pencil-simple"></i> Revisar / Editar
+                    </button>
+                ` : `
+                    <span style="font-size: 0.72rem; color: var(--texto-silenciado);">
+                        ${item.estado === 'error' ? '<i class=\"ph ph-x-circle\" style=\"color:#dc2626;\"></i> No procesable' : '<i class=\"ph ph-spinner spin\"></i> En proceso'}
+                    </span>
+                `}
                 <button type="button" class="btn-action-delete" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;" onclick="event.stopPropagation(); eliminarDocumentoDeCola(${idx});">
-                    <i class="ph ph-trash"></i> Quitar
+                    <i class="ph ph-trash"></i> Descartar
                 </button>
             </div>
         `;
@@ -989,12 +1064,21 @@ function escapeHtml(str) {
 function seleccionarDocumentoDeCola(index) {
     if (index < 0 || index >= documentosEnCola.length) return;
 
+    const docItem = documentosEnCola[index];
+    if (docItem.estado === 'error') {
+        mostrarModalAlerta('warning', 'Documento no Procesado', `El archivo "${docItem.nombreArchivo}" no pudo ser procesado:\n\n${docItem.errorMsg || 'Error desconocido'}.\n\nElimine este archivo de la cola o cargue una versión que cumpla con los requisitos.`);
+        return;
+    }
+    if (docItem.estado === 'extrayendo' || docItem.estado === 'pendiente') {
+        mostrarModalAlerta('warning', 'Extracción en Proceso', `El archivo "${docItem.nombreArchivo}" aún se está procesando. Espere a que finalice la extracción.`);
+        return;
+    }
+
     if (documentoSeleccionadoIndex >= 0 && documentoSeleccionadoIndex < documentosEnCola.length && documentoSeleccionadoIndex !== index) {
         guardarDatosFormularioEnArray(documentoSeleccionadoIndex);
     }
 
     documentoSeleccionadoIndex = index;
-    const docItem = documentosEnCola[index];
     rellenarFormulario(docItem.data);
     renderizarColaUI();
 }
@@ -1108,9 +1192,23 @@ async function subirLoteABaseDeDatos() {
         guardarDatosFormularioEnArray(documentoSeleccionadoIndex);
     }
 
-    const pendientes = documentosEnCola.filter(d => d.estado !== 'exito');
-    if (pendientes.length === 0) {
-        mostrarModalAlerta('success', 'Cola Completada', 'Todos los documentos de la cola ya se han subido con éxito a la base de datos.');
+    // Verificar si hay documentos aún en extracción
+    const enProceso = documentosEnCola.filter(d => d.estado === 'extrayendo' || d.estado === 'pendiente');
+    if (enProceso.length > 0) {
+        mostrarModalAlerta('warning', 'Extracción en Proceso', 'Hay documentos que aún se están analizando y extrayendo en el servidor. Espere a que finalice su análisis.');
+        return;
+    }
+
+    // Solo procesar documentos que estén debidamente extraídos y listos
+    const listos = documentosEnCola.filter(d => d.estado === 'listo');
+    const conError = documentosEnCola.filter(d => d.estado === 'error');
+
+    if (listos.length === 0) {
+        if (conError.length > 0) {
+            mostrarModalAlerta('warning', 'Sin Documentos Listos', 'No hay documentos válidos listos para registrar. Los archivos en cola presentan errores de validación o extracción.');
+        } else {
+            mostrarModalAlerta('success', 'Cola Completada', 'Todos los documentos válidos de la cola ya se han subido con éxito a la base de datos.');
+        }
         return;
     }
 
@@ -1125,7 +1223,7 @@ async function subirLoteABaseDeDatos() {
 
     for (let i = 0; i < documentosEnCola.length; i++) {
         const item = documentosEnCola[i];
-        if (item.estado === 'exito') continue;
+        if (item.estado !== 'listo') continue;
 
         item.estado = 'subiendo';
         renderizarColaUI();

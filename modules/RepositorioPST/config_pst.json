@@ -48,7 +48,7 @@
         "permitir_descarga": false
     },
     "archivos": {
-        "max_size_mb": 20,
+        "max_size_mb": 2,
         "extensiones_permitidas": [
             ".pdf",
             ".docx"

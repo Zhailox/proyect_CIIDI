@@ -69,7 +69,17 @@
 
         <div>
             <label style="font-size: 0.78rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Módulo Originador</label>
-            <input type="text" name="modulo" class="login-flat-input" placeholder="Ej: SuperAdmin..." value="<?= htmlspecialchars($f_modulo) ?>" style="padding: 6px 10px; font-size: 0.85rem;">
+            <select name="modulo" class="login-flat-input" style="padding: 6px 10px; font-size: 0.85rem;">
+                <option value="">-- Todos los módulos --</option>
+                <?php 
+                $listaModulos = $modulos_disponibles ?? ['Articulos', 'Autenticacion', 'Cursos', 'Investigaciones', 'RepositorioPST', 'SuperAdmin', 'VinculacionEmpresarial'];
+                foreach ($listaModulos as $mod): 
+                ?>
+                    <option value="<?= htmlspecialchars($mod) ?>" <?= ($f_modulo === $mod) ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($mod) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
         </div>
 
         <div>

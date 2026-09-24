@@ -1,5 +1,6 @@
 <?php
 require_once CORE_PATH . 'Security/Auth.php';
+require_once CORE_PATH . 'Security/AuditLogger.php';
 require_once __DIR__ . '/../models/LogsModel.php';
 
 class LogsController {
@@ -13,6 +14,9 @@ class LogsController {
     public function index() {
         Auth::requierePrivilegioMinimo(0);
 
+        // Sincronizar logs en cola de contingencia antes de renderizar
+        AuditLogger::sincronizarFallback();
+
         $fNivel       = trim($_GET['nivel'] ?? '');
         $fModulo      = trim($_GET['modulo'] ?? '');
         $fFechaInicio = trim($_GET['fecha_inicio'] ?? '');
@@ -22,18 +26,20 @@ class LogsController {
         $auditoriaDB  = $this->logsModel->obtenerAuditoriaDB();
         $accesos      = $this->logsModel->obtenerAccesos();
         $resTrail     = $this->logsModel->obtenerAuditTrailPaginado($fNivel, $fModulo, $fFechaInicio, $fFechaFin, $pagina, 15);
+        $modulosAudit = $this->logsModel->obtenerModulosAudit();
 
         return [
-            'logs_db'      => $auditoriaDB,
-            'logs_auth'    => $accesos,
-            'audit_trail'  => $resTrail['data'],
-            'total_trail'  => $resTrail['total'],
-            'pagina_actual'=> $resTrail['pagina'],
-            'total_paginas'=> $resTrail['paginas'],
-            'f_nivel'      => $fNivel,
-            'f_modulo'     => $fModulo,
-            'f_fecha_init' => $fFechaInicio,
-            'f_fecha_fin'  => $fFechaFin
+            'logs_db'            => $auditoriaDB,
+            'logs_auth'          => $accesos,
+            'audit_trail'        => $resTrail['data'],
+            'total_trail'        => $resTrail['total'],
+            'pagina_actual'      => $resTrail['pagina'],
+            'total_paginas'      => $resTrail['paginas'],
+            'f_nivel'            => $fNivel,
+            'f_modulo'           => $fModulo,
+            'f_fecha_init'       => $fFechaInicio,
+            'f_fecha_fin'        => $fFechaFin,
+            'modulos_disponibles'=> $modulosAudit
         ];
     }
 

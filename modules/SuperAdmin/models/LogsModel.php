@@ -90,4 +90,29 @@ class LogsModel {
         }
         return true;
     }
+
+    public function obtenerModulosAudit(): array {
+        $modulosPorDefecto = [
+            'Articulos',
+            'Autenticacion',
+            'Cursos',
+            'Investigaciones',
+            'RepositorioPST',
+            'SuperAdmin',
+            'VinculacionEmpresarial'
+        ];
+        try {
+            $db = Connection::getInstance();
+            if ($db) {
+                $stmt = $db->query("SELECT DISTINCT modulo FROM system_audit_log WHERE modulo IS NOT NULL AND modulo != '' ORDER BY modulo ASC");
+                $dbModulos = $stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [];
+                $todos = array_unique(array_merge($modulosPorDefecto, $dbModulos));
+                sort($todos);
+                return $todos;
+            }
+        } catch (Throwable) {
+            // fallback
+        }
+        return $modulosPorDefecto;
+    }
 }

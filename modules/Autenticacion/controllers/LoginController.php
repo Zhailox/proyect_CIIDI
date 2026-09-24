@@ -2,6 +2,7 @@
 // modules/Autenticacion/controllers/LoginController.php
 require_once __DIR__ . '/../models/UsuarioModel.php';
 require_once CORE_PATH . 'Security/Auth.php';
+require_once CORE_PATH . 'Security/AuditLogger.php';
 require_once CORE_PATH . 'Security/CaptchaService.php';
 require_once CORE_PATH . 'Services/MailService.php';
 
@@ -85,14 +86,17 @@ class LoginController {
             ], $usuario['nombre_completo']);
 
             if ($resMail['exito']) {
+                AuditLogger::registrar('INFO', 'Autenticacion', 'Recuperación Solicitada', "Solicitud de recuperación generada para '{$usuario['nombre_completo']}' ({$usuario['email']}).");
                 $_SESSION['exito_recuperar'] = "Hemos enviado las instrucciones y el enlace seguro a su correo: {$usuario['email']}. Revisa tu bandeja de entrada o Spam.";
             } else {
+                AuditLogger::registrar('INFO', 'Autenticacion', 'Recuperación Solicitada', "Enlace directo de recuperación generado para '{$usuario['nombre_completo']}' ({$usuario['email']}).");
                 $_SESSION['exito_recuperar'] = "Se generó el enlace de recuperación (Servidor SMTP desconfigurado o error): {$enlaceSeguro}";
             }
 
             header("Location: recuperar-cuenta");
             exit;
         } else {
+            AuditLogger::registrar('WARNING', 'Autenticacion', 'Recuperación Fallida', "Intento de recuperación con dato no encontrado: '{$dato}' (Método: {$metodo}).");
             $_SESSION['error_recuperar'] = "No se encontró ningún usuario con ese dato, o no tiene correo asociado.";
             header("Location: recuperar-cuenta");
             exit;
@@ -160,10 +164,12 @@ class LoginController {
         $hashNueva = password_hash($password, PASSWORD_BCRYPT);
 
         if ($this->usuarioModel->restablecerPasswordConToken($tokenHash, $hashNueva)) {
+            AuditLogger::registrar('INFO', 'Autenticacion', 'Contraseña Restablecida', "Contraseña restablecida exitosamente mediante token de seguridad.");
             $_SESSION['exito_registro'] = "Su contraseña se ha actualizado correctamente. Ya puede acceder con sus nuevas credenciales.";
             header("Location: login");
             exit;
         } else {
+            AuditLogger::registrar('WARNING', 'Autenticacion', 'Fallo Restablecer Contraseña', "Intento fallido de restablecimiento de contraseña: Token inválido o expirado.");
             $_SESSION['error_recuperar'] = "No se pudo actualizar la contraseña. El enlace de token ha expirado o ya fue utilizado.";
             header("Location: recuperar-cuenta");
             exit;
@@ -179,8 +185,10 @@ class LoginController {
         }
 
         if ($this->usuarioModel->activarCuentaPorToken($tokenActivacion)) {
+            AuditLogger::registrar('INFO', 'Autenticacion', 'Cuenta Activada', "Cuenta activada exitosamente mediante token.");
             $_SESSION['exito_registro'] = "¡Su cuenta ha sido activada exitosamente! Ya puede iniciar sesión.";
         } else {
+            AuditLogger::registrar('WARNING', 'Autenticacion', 'Fallo Activación Cuenta', "Intento fallido de activación de cuenta con token inválido o ya usado.");
             $_SESSION['error_login'] = "El enlace de activación es inválido o su cuenta ya fue activada previamente.";
         }
 
@@ -221,11 +229,12 @@ class LoginController {
         if ($this->usuarioModel->verificarToken($uid, $codigo)) {
             $hash = password_hash($password, PASSWORD_BCRYPT);
             $this->usuarioModel->actualizarPassword($uid, $hash);
-            
+            AuditLogger::registrar('INFO', 'Autenticacion', 'Contraseña Actualizada por PIN', "Contraseña actualizada exitosamente con código de seguridad para usuario ID #{$uid}.");
             $_SESSION['exito_registro'] = "Tu contraseña ha sido actualizada con éxito. Ya puedes iniciar sesión.";
             header("Location: login");
             exit;
         } else {
+            AuditLogger::registrar('WARNING', 'Autenticacion', 'Código de Seguridad Inválido', "Intento fallido de verificación con código de seguridad para usuario ID #{$uid}.");
             $_SESSION['error_codigo'] = "El código de seguridad es inválido o ha expirado.";
             header("Location: ?ruta=ingresar-codigo&uid=" . $uid);
             exit;
@@ -249,6 +258,7 @@ class LoginController {
         try {
             $usuario = $this->usuarioModel->intentarAutenticacion($cedula);
         } catch (Exception $e) {
+            AuditLogger::registrar('ERROR', 'Autenticacion', 'Falla Conexión Login', "Error de base de datos al autenticar cédula '{$cedula}': " . $e->getMessage());
             return [
                 'es_error' => true,
                 'mensaje'  => 'Falla de conexión: ' . $e->getMessage(),
@@ -258,15 +268,18 @@ class LoginController {
 
         // 2. Probar si el usuario existe y si está activo
         if (!$usuario) {
+            AuditLogger::registrar('WARNING', 'Autenticacion', 'Login Fallido', "Intento de inicio de sesión con cédula no registrada: '{$cedula}'.");
             return ['es_error' => true, 'mensaje' => "No se encontró ninguna cuenta con la cédula {$cedula}.", 'destino' => 'login'];
         }
 
         if ($usuario['activo'] === false) {
+            AuditLogger::registrar('WARNING', 'Autenticacion', 'Acceso Bloqueado', "Intento de acceso a cuenta suspendida: '{$usuario['nombre_completo']}' (C.I: {$cedula}).");
             return ['es_error' => true, 'mensaje' => 'Esta cuenta se encuentra actualmente suspendida por administración.', 'destino' => 'login'];
         }
 
         // 3. Probar la contraseña
         if (!password_verify($password, $usuario['contrasena'])) {
+            AuditLogger::registrar('WARNING', 'Autenticacion', 'Login Fallido', "Contraseña incorrecta para el usuario '{$usuario['nombre_completo']}' (C.I: {$cedula}).");
             return [
                 'es_error' => true,
                 'mensaje'  => 'La contraseña ingresada es incorrecta.',
@@ -281,7 +294,7 @@ class LoginController {
                 $nivelUsuario = (int) $usuario['nivel_privilegio'];
                 // En la estructura del sistema, niveles <= 2 representan administradores/gestores (0 es SuperAdmin)
                 if ($nivelUsuario > 2) {
-                    // Error: solo administradores pueden acceder durante mantenimiento
+                    AuditLogger::registrar('WARNING', 'Autenticacion', 'Acceso Denegado Mantenimiento', "Acceso denegado por mantenimiento para '{$usuario['nombre_completo']}' (C.I: {$cedula}).");
                     $_SESSION['error_login'] = 'El sistema está en mantenimiento. Solo administradores pueden acceder.';
                     return ['es_error' => true, 'mensaje' => 'El sistema está en mantenimiento. Solo administradores pueden acceder.', 'destino' => 'login'];
                 }
@@ -310,6 +323,8 @@ class LoginController {
             // Si falla la auditoría, no detenemos el login, solo seguimos adelante
         }
 
+        AuditLogger::registrar('INFO', 'Autenticacion', 'Inicio de Sesión', "Acceso exitoso al sistema de '{$usuario['nombre_completo']}' (C.I: {$cedula}, Rol: {$usuario['nombre_rol']}).");
+
         $esSuperAdmin = (int)$usuario['nivel_privilegio'] === 0;
 
         // ÉXITO: Mandamos los datos para la pantalla de bienvenida (anillo de carga)
@@ -327,6 +342,10 @@ class LoginController {
             session_start();
         }
         
+        $nombreUser = $_SESSION['usuario_nombre'] ?? 'Usuario';
+        $idUser = $_SESSION['usuario_id'] ?? '0';
+        AuditLogger::registrar('INFO', 'Autenticacion', 'Cierre de Sesión', "El usuario '{$nombreUser}' (ID: {$idUser}) cerró su sesión voluntariamente.");
+
         // 2. Vaciamos las variables de la memoria RAM
         $_SESSION = [];
         
@@ -399,6 +418,7 @@ class LoginController {
 
         // 3. Validar duplicados en la BD
         if ($this->usuarioModel->existeUsuario($cedula, $email)) {
+            AuditLogger::registrar('WARNING', 'Autenticacion', 'Registro Duplicado', "Intento de registro con cédula o correo existente: C.I: '{$cedula}', Email: '{$email}'.");
             return [
                 'es_error' => true,
                 'mensaje'  => 'La cédula o el correo ya están registrados en nuestra base de datos.',
@@ -411,6 +431,8 @@ class LoginController {
         $creado = $this->usuarioModel->registrarUsuario($cedula, $nombre, $email, $hashSeguro, null);
 
         if ($creado) {
+            AuditLogger::registrar('INFO', 'Autenticacion', 'Registro de Usuario', "Nuevo usuario registrado exitosamente: '{$nombre}' (C.I: {$cedula}, Email: {$email}).");
+
             $protocolo = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
             $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
             $baseDir = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/\\');
@@ -433,6 +455,7 @@ class LoginController {
                 'destino'        => 'login'
             ];
         } else {
+            AuditLogger::registrar('ERROR', 'Autenticacion', 'Fallo Registro Usuario', "Error en el servidor al registrar el usuario '{$nombre}' (C.I: {$cedula}).");
             return [
                 'es_error' => true,
                 'mensaje'  => 'Ocurrió un error interno en el servidor al intentar crear la cuenta.',
@@ -534,6 +557,7 @@ class LoginController {
             header("Location: login");
             exit;
         } else {
+            AuditLogger::registrar('ERROR', 'Autenticacion', 'Fallo Activación Docente', "Error al activar la cuenta para el profesor {$profesor['nombre_completo']} (ID: {$profesor['id']}).");
             $_SESSION['error_completar_registro'] = "Error inesperado al activar la cuenta.";
             header("Location: completar-registro?token=" . urlencode($rawToken));
             exit;

@@ -283,6 +283,19 @@ class DetallePSTController {
         $accion = !empty($_GET['accion']) ? trim($_GET['accion']) : 'listar';
         $id = !empty($_GET['id']) ? (int)$_GET['id'] : null;
 
+        // Si la petición es POST y excede post_max_size, PHP vacía $_POST y $_FILES
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && empty($_FILES) && !empty($_SERVER['CONTENT_LENGTH']) && (int)$_SERVER['CONTENT_LENGTH'] > 0) {
+            $maxPostSize = ini_get('post_max_size') ?: 'desconocido';
+            if (in_array($accion, ['extraer', 'crear_ajax', 'simular_extraccion'])) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => "El archivo enviado excede el tamaño máximo permitido por el servidor (post_max_size: {$maxPostSize})."
+                ], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+        }
+
         // Si es petición AJAX, responder con JSON si no se tienen permisos en lugar de 302 redirect
         if (in_array($accion, ['extraer', 'crear_ajax', 'simular_extraccion'])) {
             if (!Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'RepositorioPST')) {
@@ -326,7 +339,24 @@ class DetallePSTController {
             try {
                 if (!isset($_FILES['archivo_pst']) || $_FILES['archivo_pst']['error'] !== UPLOAD_ERR_OK) {
                     $errorCode = $_FILES['archivo_pst']['error'] ?? 'desconocido';
-                    throw new Exception("Error al cargar el archivo en el servidor. Código: " . $errorCode);
+                    $errorMensajes = [
+                        UPLOAD_ERR_INI_SIZE   => "El archivo excede el límite máximo permitido por el servidor PHP (upload_max_filesize: " . ini_get('upload_max_filesize') . ").",
+                        UPLOAD_ERR_FORM_SIZE  => "El archivo excede el límite de tamaño especificado en el formulario.",
+                        UPLOAD_ERR_PARTIAL    => "El archivo solo fue cargado parcialmente. Intente nuevamente.",
+                        UPLOAD_ERR_NO_FILE    => "No se recibió ningún archivo para procesar.",
+                        UPLOAD_ERR_NO_TMP_DIR => "Error del servidor: Falta la carpeta temporal de subida.",
+                        UPLOAD_ERR_CANT_WRITE => "Error del servidor: Fallo al escribir el archivo temporal en disco.",
+                        UPLOAD_ERR_EXTENSION  => "Una extensión del servidor detuvo la subida del archivo."
+                    ];
+                    $msgError = $errorMensajes[$errorCode] ?? ("Error al cargar el archivo en el servidor. Código: " . $errorCode);
+                    throw new Exception($msgError);
+                }
+
+                // Validar tamaño máximo configurado en config_pst.json
+                $maxMb = (int)ConfigService::get('archivos.max_size_mb', 20);
+                $maxBytes = $maxMb * 1024 * 1024;
+                if ($_FILES['archivo_pst']['size'] > $maxBytes) {
+                    throw new Exception("El archivo excede el tamaño máximo permitido por el sistema ({$maxMb} MB).");
                 }
 
                 $fileTmpPath = $_FILES['archivo_pst']['tmp_name'];
@@ -363,7 +393,7 @@ class DetallePSTController {
                 }
 
                 if (empty(trim($text))) {
-                    throw new Exception("No se pudo extraer texto del documento. Asegúrese de que el archivo no esté protegido o vacío.");
+                    throw new Exception("No se pudo extraer texto del documento. Asegúrese de que el archivo no esté protegido o escaneado como imagen pura sin OCR.");
                 }
 
                 $datosExtraidos = ExtractorPST::analizarTexto($text, $fileName);
@@ -375,6 +405,8 @@ class DetallePSTController {
                 
                 if (move_uploaded_file($fileTmpPath, $targetFile) || copy($fileTmpPath, $targetFile)) {
                     $datosExtraidos['archivo_pdf'] = 'storage/documentos/pst/' . $savedFileName;
+                } else {
+                    throw new Exception("No se pudo guardar el archivo de forma permanente en el almacenamiento del servidor.");
                 }
 
                 echo json_encode([
@@ -492,6 +524,8 @@ class DetallePSTController {
                     }
                 }
 
+                $archivoPdf = !empty($postData['archivo_pdf']) ? trim($postData['archivo_pdf']) : null;
+
                 $datos = [
                     'titulo'                     => !empty($postData['titulo']) ? trim($postData['titulo']) : '',
                     'anio_publicacion'           => !empty($postData['anio_publicacion']) ? (int)$postData['anio_publicacion'] : (int)date('Y'),
@@ -506,13 +540,13 @@ class DetallePSTController {
                     'nivel_academico'            => $nivelPost,
                     'trayecto'                   => $trayectoPost,
                     'url_repositorio'            => $urlGitSanitizada,
-                    'archivo_pdf'                => !empty($postData['archivo_pdf']) ? trim($postData['archivo_pdf']) : null,
+                    'archivo_pdf'                => $archivoPdf,
                     'resumen'                    => !empty($postData['resumen']) ? trim($postData['resumen']) : '',
                     'obj_general'                => !empty($postData['obj_general']) ? trim($postData['obj_general']) : null,
                     'comunidad_beneficiada'      => !empty($postData['comunidad_beneficiada']) ? trim($postData['comunidad_beneficiada']) : '',
                     'palabras_clave'             => !empty($postData['palabras_clave']) ? trim($postData['palabras_clave']) : '',
                     'id_carrera'                 => !empty($postData['id_carrera']) ? (int)$postData['id_carrera'] : 1,
-                    'linea_id'                   => !empty($postData['linea_id']) ? (int)$postData['linea_id'] : 7,
+                    'linea_id'                   => !empty($postData['linea_id']) ? (int)$postData['linea_id'] : null,
                     'dimension_id'               => !empty($postData['dimension_id']) ? (int)$postData['dimension_id'] : null,
                 ];
 
@@ -521,7 +555,28 @@ class DetallePSTController {
                 }
 
                 if ($model->existePSTPorTitulo($datos['titulo'])) {
-                    throw new Exception("Ya existe un proyecto registrado con el título: " . $datos['titulo']);
+                    throw new Exception("Ya existe un proyecto registrado con el título: '" . $datos['titulo'] . "'");
+                }
+
+                if (empty($datos['archivo_pdf'])) {
+                    throw new Exception("El archivo digital del documento (PDF/DOCX) es obligatorio.");
+                }
+
+                $realFilePath = BASE_PATH . '/' . ltrim($datos['archivo_pdf'], '/');
+                if (!file_exists($realFilePath)) {
+                    throw new Exception("El archivo digital asociado no se encuentra en el almacenamiento del servidor. Extraiga el documento nuevamente.");
+                }
+
+                if (empty($datos['autores'])) {
+                    throw new Exception("Debe registrar al menos un autor principal (cédula y nombre).");
+                }
+
+                if (empty($datos['resumen'])) {
+                    throw new Exception("El resumen del proyecto es obligatorio.");
+                }
+
+                if (empty($datos['linea_id'])) {
+                    throw new Exception("Debe clasificar el proyecto bajo una línea de investigación.");
                 }
 
                 $nuevoId = $model->crearPST($datos);
@@ -671,6 +726,8 @@ class DetallePSTController {
                 $error = "El resumen del proyecto es obligatorio.";
             } elseif (empty($datos['linea_id'])) {
                 $error = "Debe clasificar el proyecto bajo una línea de investigación.";
+            } elseif (empty($datos['archivo_pdf'])) {
+                $error = "Debe adjuntar o extraer un documento digital (PDF o Word) válido para registrar el proyecto.";
             } else {
                 try {
                     $nuevoId = (int)$model->crearPST($datos);
