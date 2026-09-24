@@ -1707,3 +1707,10 @@ Trace:
 #5 [internal function]: MailService::{closure}()
 #6 {main}
 --------------------------------------------------------------------------------
+[2026-09-24 22:13:23] ERROR: could not find driver en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(170): Connection->__construct(false)
+#2 C:\Users\Chailon\.gemini\antigravity-cli\brain\0022c985-1260-4f33-89bf-97d460ae8032\scratch\test_db.php(8): Connection::getInstance()
+#3 {main}
+--------------------------------------------------------------------------------

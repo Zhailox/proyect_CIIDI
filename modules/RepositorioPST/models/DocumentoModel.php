@@ -131,7 +131,9 @@ class DocumentoModel {
             $execParams[] = (int)$filtros['anio'];
         }
         
-        if (!empty($filtros['orden']) && $filtros['orden'] === 'asc') {
+        if (!empty($filtros['orden']) && $filtros['orden'] === 'recientes') {
+            $sql .= " ORDER BY r.id DESC LIMIT ? OFFSET ?";
+        } elseif (!empty($filtros['orden']) && $filtros['orden'] === 'asc') {
             $sql .= " ORDER BY r.anio_publicacion ASC, r.id ASC LIMIT ? OFFSET ?";
         } else {
             $sql .= " ORDER BY r.anio_publicacion DESC, r.id DESC LIMIT ? OFFSET ?";
@@ -975,7 +977,8 @@ class DocumentoModel {
 
             // Limpieza del archivo físico en el servidor
             if (!empty($archivoPath)) {
-                $fullPath = ROOT_PATH . '/' . ltrim($archivoPath, '/\\');
+                $base = defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 2);
+                $fullPath = $base . '/' . ltrim($archivoPath, '/\\');
                 if (file_exists($fullPath) && is_file($fullPath)) {
                     @unlink($fullPath);
                 }

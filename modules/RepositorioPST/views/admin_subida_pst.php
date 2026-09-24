@@ -3,6 +3,23 @@ require_once CORE_PATH . 'Security/Auth.php';
 require_once __DIR__ . '/../services/ConfigService.php';
 require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
 $nivelAdminPst = SystemConfigService::get('accesos_modulos.repositorio_pst.admin', 1);
+
+$parseIniToMb = function(?string $str): float {
+    if (empty($str)) return 2.0;
+    $str = trim($str);
+    $unit = strtolower($str[strlen($str) - 1] ?? '');
+    $num = (float)$str;
+    switch ($unit) {
+        case 'g': return $num * 1024;
+        case 'm': return $num;
+        case 'k': return $num / 1024;
+        default: return $num / (1024 * 1024);
+    }
+};
+$configMaxMb = (float)ConfigService::get('archivos.max_size_mb', 20);
+$phpUploadMaxMb = $parseIniToMb(ini_get('upload_max_filesize'));
+$phpPostMaxMb = $parseIniToMb(ini_get('post_max_size'));
+$maxMbEfectivo = round(min($configMaxMb, $phpUploadMaxMb, $phpPostMaxMb), 2);
 ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script>
@@ -280,7 +297,7 @@ if (typeof window.mammoth === 'undefined') {
                                     </svg>
                                 </div>
                                 <?php 
-                                $maxMb = (int)ConfigService::get('archivos.max_size_mb', 20);
+                                $maxMb = $maxMbEfectivo;
                                 if ($accion === 'editar'): 
                                 ?>
                                     <h3 class="drag-title">Sustitución de Documento Digital</h3>
@@ -589,9 +606,9 @@ if (typeof window.mammoth === 'undefined') {
 </div>
 
 <script>
-// Límite de tamaño de archivo sincronizado con la configuración del sistema
-const MAX_FILE_SIZE_MB = <?= (int)ConfigService::get('archivos.max_size_mb', 20) ?>;
-const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+// Límite de tamaño de archivo sincronizado con la configuración del sistema y límites del servidor
+const MAX_FILE_SIZE_MB = <?= json_encode($maxMbEfectivo) ?>;
+const MAX_FILE_SIZE_BYTES = Math.floor(MAX_FILE_SIZE_MB * 1024 * 1024);
 
 // JSON con todas las dimensiones operativas del sistema para el filtrado dinámico
 const todasDimensiones = <?= json_encode($lineas && $dimensiones ? $dimensiones : []) ?>;
@@ -733,34 +750,51 @@ function procesarArchivosSeleccionados(fileList) {
         files = [files[0]];
     }
 
-    // 1. Validar extensiones de archivo permitidas
+    // 1. Filtrar extensiones no admitidas
     const invalidFormatFiles = files.filter(f => {
         const ext = f.name.split('.').pop().toLowerCase();
         return ext !== 'pdf' && ext !== 'docx';
     });
 
-    if (invalidFormatFiles.length > 0) {
-        const nombresInv = invalidFormatFiles.map(f => f.name).join(', ');
-        mostrarModalAlerta('warning', 'Formato no admitido', `Solo se admiten documentos PDF (.pdf) y Microsoft Word (.docx).\n\nArchivos rechazados: ${nombresInv}`);
-        return;
-    }
+    // 2. Filtrar archivos que exceden el tamaño máximo por archivo
+    const oversizedFiles = files.filter(f => {
+        const ext = f.name.split('.').pop().toLowerCase();
+        return (ext === 'pdf' || ext === 'docx') && f.size > MAX_FILE_SIZE_BYTES;
+    });
 
-    // 2. Pre-validación en el cliente: Validar tamaño máximo por archivo
-    const oversizedFiles = files.filter(f => f.size > MAX_FILE_SIZE_BYTES);
-    if (oversizedFiles.length > 0) {
-        const detallesOversized = oversizedFiles.map(f => `• ${f.name} (${(f.size / (1024 * 1024)).toFixed(2)} MB)`).join('\n');
-        mostrarModalAlerta(
-            'warning',
-            'Archivo(s) Excede(n) Tamaño Máximo',
-            `El tamaño máximo permitido es de ${MAX_FILE_SIZE_MB} MB por archivo.\n\nLos siguientes archivos fueron rechazados y no serán procesados:\n${detallesOversized}`
-        );
-        return;
-    }
-
+    // 3. Archivos válidos que cumplen formato y tamaño
     const validFiles = files.filter(f => {
         const ext = f.name.split('.').pop().toLowerCase();
         return (ext === 'pdf' || ext === 'docx') && f.size <= MAX_FILE_SIZE_BYTES;
     });
+
+    // Notificar al usuario si hubo archivos rechazados, sin descartar los válidos
+    const avisosRechazo = [];
+    if (invalidFormatFiles.length > 0) {
+        const nombresInv = invalidFormatFiles.map(f => f.name).join(', ');
+        avisosRechazo.push(`Formato no admitido (solo .pdf y .docx):\n• ${nombresInv}`);
+    }
+    if (oversizedFiles.length > 0) {
+        const detallesOversized = oversizedFiles.map(f => `• ${f.name} (${(f.size / (1024 * 1024)).toFixed(2)} MB)`).join('\n');
+        avisosRechazo.push(`Excede(n) el tamaño máximo permitido (${MAX_FILE_SIZE_MB} MB):\n${detallesOversized}`);
+    }
+
+    if (avisosRechazo.length > 0) {
+        if (validFiles.length > 0) {
+            mostrarModalAlerta(
+                'warning',
+                'Algunos Archivos Fueron Omitidos',
+                `Se procesarán ${validFiles.length} archivo(s) válido(s).\n\nLos siguientes archivos fueron omitidos:\n\n${avisosRechazo.join('\n\n')}`
+            );
+        } else {
+            mostrarModalAlerta(
+                'warning',
+                'Archivos Rechazados',
+                `Ninguno de los archivos seleccionados pudo ser cargado:\n\n${avisosRechazo.join('\n\n')}`
+            );
+            return;
+        }
+    }
 
     if (validFiles.length === 0) {
         return;
@@ -1262,12 +1296,31 @@ async function subirLoteABaseDeDatos() {
         btnSubir.innerHTML = '<i class="ph ph-cloud-arrow-up" style="font-size: 1.1rem;"></i> Subir Lote a Base de Datos';
     }
 
+    if (exitosos === 0 && fallidos === 0) {
+        mostrarModalAlerta('warning', 'Sin Documentos Procesados', 'No se procesó ningún documento de la cola.');
+        return;
+    }
+
     let msj = `Proceso de subida en lote finalizado.\n\n• Documentos registrados con éxito: ${exitosos}.`;
     if (fallidos > 0) {
         msj += `\n• Documentos con error: ${fallidos}.\nRevise los ítems marcados en la cola para corregirlos.`;
-        mostrarModalAlerta('warning', 'Resumen de Carga', msj);
+        if (exitosos > 0) {
+            confirmarAccionModal(
+                'warning',
+                'Carga Parcial Finalizada',
+                msj + '\n\n¿Desea ir al catálogo para ver los proyectos registrados o permanecer aquí para revisar los que tuvieron error?',
+                'Ver Catálogo',
+                () => {
+                    window.location.href = '?ruta=agregar-documento&msg=created';
+                }
+            );
+        } else {
+            mostrarModalAlerta('warning', 'Resumen de Carga', msj);
+        }
     } else {
-        mostrarModalAlerta('success', 'Carga Completada', msj);
+        mostrarModalAlerta('success', 'Carga Completada', msj + '\n\nPresione Aceptar para ver los proyectos registrados en el catálogo.', () => {
+            window.location.href = '?ruta=agregar-documento&msg=created';
+        });
     }
 }
 
@@ -1371,7 +1424,7 @@ function limpiarFormularioPst() {
 }
 
 // SISTEMA REUTILIZABLE DE MODALES (ÉXITO, ADVERTENCIA, ERROR Y CONFIRMACIÓN)
-function mostrarModalAlerta(tipo, titulo, mensaje) {
+function mostrarModalAlerta(tipo, titulo, mensaje, onAccept = null) {
     const modal = document.getElementById('pstSystemModal');
     const iconWrapper = document.getElementById('modalPstIconWrapper');
     const titleElem = document.getElementById('modalPstTitle');
@@ -1381,7 +1434,12 @@ function mostrarModalAlerta(tipo, titulo, mensaje) {
 
     btnCancel.style.display = 'none';
     btnConfirm.textContent = 'Aceptar';
-    btnConfirm.onclick = cerrarModalAlertaPst;
+    btnConfirm.onclick = () => {
+        cerrarModalAlertaPst();
+        if (typeof onAccept === 'function') {
+            onAccept();
+        }
+    };
 
     if (tipo === 'success') {
         iconWrapper.className = 'modal-pst-icon-box success';

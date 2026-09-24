@@ -283,10 +283,13 @@ class DetallePSTController {
         $accion = !empty($_GET['accion']) ? trim($_GET['accion']) : 'listar';
         $id = !empty($_GET['id']) ? (int)$_GET['id'] : null;
 
-        // Si la petición es POST y excede post_max_size, PHP vacía $_POST y $_FILES
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && empty($_FILES) && !empty($_SERVER['CONTENT_LENGTH']) && (int)$_SERVER['CONTENT_LENGTH'] > 0) {
+        // Si la petición es un formulario multipart/form-data o urlencoded y excede post_max_size, PHP vacía $_POST y $_FILES
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+        $isMultipartOrForm = (stripos($contentType, 'multipart/form-data') !== false || stripos($contentType, 'application/x-www-form-urlencoded') !== false);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $isMultipartOrForm && empty($_POST) && empty($_FILES) && !empty($_SERVER['CONTENT_LENGTH']) && (int)$_SERVER['CONTENT_LENGTH'] > 0) {
             $maxPostSize = ini_get('post_max_size') ?: 'desconocido';
-            if (in_array($accion, ['extraer', 'crear_ajax', 'simular_extraccion'])) {
+            if (in_array($accion, ['extraer', 'simular_extraccion'])) {
                 header('Content-Type: application/json; charset=utf-8');
                 echo json_encode([
                     'status' => 'error',
@@ -308,7 +311,13 @@ class DetallePSTController {
             }
 
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $submittedCsrf = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+                $submittedCsrf = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_SERVER['HTTP_CSRF_TOKEN'] ?? '';
+                if (empty($submittedCsrf) && stripos($contentType, 'application/json') !== false) {
+                    $jsonBody = @json_decode(file_get_contents('php://input'), true);
+                    if (is_array($jsonBody) && !empty($jsonBody['csrf_token'])) {
+                        $submittedCsrf = $jsonBody['csrf_token'];
+                    }
+                }
                 if (empty($submittedCsrf) || !hash_equals($_SESSION['csrf_token'], $submittedCsrf)) {
                     header('Content-Type: application/json; charset=utf-8');
                     echo json_encode([
@@ -327,10 +336,22 @@ class DetallePSTController {
 
         $model = new DocumentoModel();
         
-        // Directoria de destino garantizado
+        // Directorios de destino garantizados (permanente y temporal staging)
         $storageDir = BASE_PATH . '/storage/documentos/pst/';
         if (!file_exists($storageDir)) {
-            mkdir($storageDir, 0777, true);
+            @mkdir($storageDir, 0777, true);
+        }
+        $tmpDir = BASE_PATH . '/storage/documentos/tmp/';
+        if (!file_exists($tmpDir)) {
+            @mkdir($tmpDir, 0777, true);
+        } else {
+            // Limpieza automática de archivos temporales huérfanos con más de 2 horas de antigüedad
+            $ahora = time();
+            foreach (glob($tmpDir . '*') as $archViejo) {
+                if (is_file($archViejo) && ($ahora - filemtime($archViejo) > 7200)) {
+                    @unlink($archViejo);
+                }
+            }
         }
         
         // 0. Procesar Acción: EXTRAER METADATOS DE ARCHIVOS Y GUARDAR ARCHIVO (AJAX)
@@ -352,11 +373,26 @@ class DetallePSTController {
                     throw new Exception($msgError);
                 }
 
-                // Validar tamaño máximo configurado en config_pst.json
-                $maxMb = (int)ConfigService::get('archivos.max_size_mb', 20);
+                // Validar tamaño máximo configurado y permitido por el servidor
+                $parseIniToMb = function(?string $str): float {
+                    if (empty($str)) return 2.0;
+                    $str = trim($str);
+                    $unit = strtolower($str[strlen($str) - 1] ?? '');
+                    $num = (float)$str;
+                    switch ($unit) {
+                        case 'g': return $num * 1024;
+                        case 'm': return $num;
+                        case 'k': return $num / 1024;
+                        default: return $num / (1024 * 1024);
+                    }
+                };
+                $configMaxMb = (float)ConfigService::get('archivos.max_size_mb', 20);
+                $phpUploadMaxMb = $parseIniToMb(ini_get('upload_max_filesize'));
+                $phpPostMaxMb = $parseIniToMb(ini_get('post_max_size'));
+                $maxMb = round(min($configMaxMb, $phpUploadMaxMb, $phpPostMaxMb), 2);
                 $maxBytes = $maxMb * 1024 * 1024;
                 if ($_FILES['archivo_pst']['size'] > $maxBytes) {
-                    throw new Exception("El archivo excede el tamaño máximo permitido por el sistema ({$maxMb} MB).");
+                    throw new Exception("El archivo excede el tamaño máximo permitido ({$maxMb} MB).");
                 }
 
                 $fileTmpPath = $_FILES['archivo_pst']['tmp_name'];
@@ -398,15 +434,15 @@ class DetallePSTController {
 
                 $datosExtraidos = ExtractorPST::analizarTexto($text, $fileName);
 
-                // Guardar permanentemente en storage/documentos/pst/
+                // Guardar de forma provisional en el staging temporal storage/documentos/tmp/
                 $slugTitle = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($datosExtraidos['titulo'] ?? $fileName, 0, 30)));
-                $savedFileName = 'pst_' . $slugTitle . '_' . time() . '_' . mt_rand(100, 999) . '.' . $fileExtension;
-                $targetFile = $storageDir . $savedFileName;
+                $savedFileName = 'tmp_pst_' . $slugTitle . '_' . time() . '_' . mt_rand(100, 999) . '.' . $fileExtension;
+                $targetFile = $tmpDir . $savedFileName;
                 
                 if (move_uploaded_file($fileTmpPath, $targetFile) || copy($fileTmpPath, $targetFile)) {
-                    $datosExtraidos['archivo_pdf'] = 'storage/documentos/pst/' . $savedFileName;
+                    $datosExtraidos['archivo_pdf'] = 'storage/documentos/tmp/' . $savedFileName;
                 } else {
-                    throw new Exception("No se pudo guardar el archivo de forma permanente en el almacenamiento del servidor.");
+                    throw new Exception("No se pudo guardar el archivo temporal en el almacenamiento del servidor.");
                 }
 
                 echo json_encode([
@@ -494,6 +530,9 @@ class DetallePSTController {
         // 0.1 Procesar Acción: CREAR VIA AJAX (SUBIDA EN LOTE)
         if ($accion === 'crear_ajax' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Content-Type: application/json; charset=utf-8');
+            $archivoPdf = null;
+            $finalPdfPath = null;
+            $datos = [];
             try {
                 $rawInput = file_get_contents('php://input');
                 $postData = json_decode($rawInput, true);
@@ -506,8 +545,8 @@ class DetallePSTController {
                     foreach ($postData['autores'] as $autor) {
                         $ced = !empty($autor['cedula']) ? trim($autor['cedula']) : '';
                         $nom = !empty($autor['nombre']) ? trim($autor['nombre']) : (!empty($autor['nombre_completo']) ? trim($autor['nombre_completo']) : '');
-                        if ($ced !== '' && $nom !== '') {
-                            $autores[] = ['cedula' => $ced, 'nombre' => $nom];
+                        if ($nom !== '') {
+                            $autores[] = ['cedula' => $ced ?: null, 'nombre' => $nom];
                         }
                     }
                 }
@@ -526,6 +565,22 @@ class DetallePSTController {
 
                 $archivoPdf = !empty($postData['archivo_pdf']) ? trim($postData['archivo_pdf']) : null;
 
+                $idCarrera = !empty($postData['id_carrera']) ? (int)$postData['id_carrera'] : 1;
+                $lineaId = !empty($postData['linea_id']) ? (int)$postData['linea_id'] : null;
+                if (empty($lineaId)) {
+                    $lineasDisp = $model->getLineasInvestigacion($idCarrera);
+                    if (!empty($lineasDisp) && !empty($lineasDisp[0]['id'])) {
+                        $lineaId = (int)$lineasDisp[0]['id'];
+                    } else {
+                        $lineaId = 7;
+                    }
+                }
+
+                $resumen = !empty($postData['resumen']) ? trim($postData['resumen']) : '';
+                if (empty($resumen)) {
+                    $resumen = !empty($postData['obj_general']) ? trim($postData['obj_general']) : 'Proyecto Socio-Tecnológico indexado en el repositorio institucional.';
+                }
+
                 $datos = [
                     'titulo'                     => !empty($postData['titulo']) ? trim($postData['titulo']) : '',
                     'anio_publicacion'           => !empty($postData['anio_publicacion']) ? (int)$postData['anio_publicacion'] : (int)date('Y'),
@@ -541,12 +596,12 @@ class DetallePSTController {
                     'trayecto'                   => $trayectoPost,
                     'url_repositorio'            => $urlGitSanitizada,
                     'archivo_pdf'                => $archivoPdf,
-                    'resumen'                    => !empty($postData['resumen']) ? trim($postData['resumen']) : '',
+                    'resumen'                    => $resumen,
                     'obj_general'                => !empty($postData['obj_general']) ? trim($postData['obj_general']) : null,
                     'comunidad_beneficiada'      => !empty($postData['comunidad_beneficiada']) ? trim($postData['comunidad_beneficiada']) : '',
                     'palabras_clave'             => !empty($postData['palabras_clave']) ? trim($postData['palabras_clave']) : '',
-                    'id_carrera'                 => !empty($postData['id_carrera']) ? (int)$postData['id_carrera'] : 1,
-                    'linea_id'                   => !empty($postData['linea_id']) ? (int)$postData['linea_id'] : null,
+                    'id_carrera'                 => $idCarrera,
+                    'linea_id'                   => $lineaId,
                     'dimension_id'               => !empty($postData['dimension_id']) ? (int)$postData['dimension_id'] : null,
                 ];
 
@@ -564,19 +619,30 @@ class DetallePSTController {
 
                 $realFilePath = BASE_PATH . '/' . ltrim($datos['archivo_pdf'], '/');
                 if (!file_exists($realFilePath)) {
-                    throw new Exception("El archivo digital asociado no se encuentra en el almacenamiento del servidor. Extraiga el documento nuevamente.");
+                    throw new Exception("El archivo digital asociado no se encuentra en el almacenamiento temporal del servidor. Extraiga el documento nuevamente.");
                 }
 
                 if (empty($datos['autores'])) {
-                    throw new Exception("Debe registrar al menos un autor principal (cédula y nombre).");
+                    throw new Exception("Debe registrar al menos un autor para el proyecto.");
                 }
 
-                if (empty($datos['resumen'])) {
-                    throw new Exception("El resumen del proyecto es obligatorio.");
-                }
-
-                if (empty($datos['linea_id'])) {
-                    throw new Exception("Debe clasificar el proyecto bajo una línea de investigación.");
+                // Promover archivo desde storage/documentos/tmp/ a storage/documentos/pst/
+                if (strpos($archivoPdf, 'storage/documentos/tmp/') !== false) {
+                    $slug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($datos['titulo'], 0, 30)));
+                    $ext = strtolower(pathinfo($archivoPdf, PATHINFO_EXTENSION));
+                    $destName = 'pst_' . $slug . '_' . time() . '_' . mt_rand(100, 999) . '.' . $ext;
+                    $destPath = $storageDir . $destName;
+                    if (!rename($realFilePath, $destPath)) {
+                        if (copy($realFilePath, $destPath)) {
+                            @unlink($realFilePath);
+                        } else {
+                            throw new Exception("No se pudo promover el archivo temporal al almacenamiento definitivo de proyectos.");
+                        }
+                    }
+                    $finalPdfPath = 'storage/documentos/pst/' . $destName;
+                    $datos['archivo_pdf'] = $finalPdfPath;
+                } else {
+                    $finalPdfPath = $archivoPdf;
                 }
 
                 $nuevoId = $model->crearPST($datos);
@@ -587,6 +653,21 @@ class DetallePSTController {
                 ], JSON_UNESCAPED_UNICODE);
 
             } catch (Exception $e) {
+                // Si ocurrió un error y el archivo fue promovido a storage/documentos/pst/, eliminarlo para evitar huérfanos
+                if (!empty($finalPdfPath) && $finalPdfPath !== $archivoPdf) {
+                    $promotedPath = BASE_PATH . '/' . ltrim($finalPdfPath, '/');
+                    if (file_exists($promotedPath)) {
+                        @unlink($promotedPath);
+                    }
+                }
+                // Si la creación falló, también eliminamos el archivo temporal si existe
+                if (!empty($archivoPdf)) {
+                    $tmpPath = BASE_PATH . '/' . ltrim($archivoPdf, '/');
+                    if (file_exists($tmpPath)) {
+                        @unlink($tmpPath);
+                    }
+                }
+
                 require_once CORE_PATH . 'Security/Auth.php';
                 $tituloFallo = !empty($datos['titulo']) ? $datos['titulo'] : 'Proyecto Sin Título';
                 AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Extracción Masiva', "Error al intentar guardar el PST '{$tituloFallo}': " . $e->getMessage());
@@ -659,38 +740,60 @@ class DetallePSTController {
                 for ($i = 0; $i < count($_POST['autor_cedula']); $i++) {
                     $ced = !empty($_POST['autor_cedula'][$i]) ? trim($_POST['autor_cedula'][$i]) : '';
                     $nom = !empty($_POST['autor_nombre'][$i]) ? trim($_POST['autor_nombre'][$i]) : '';
-                    if ($ced !== '' && $nom !== '') {
-                        $autores[] = ['cedula' => $ced, 'nombre' => $nom];
+                    if ($nom !== '') {
+                        $autores[] = ['cedula' => $ced ?: null, 'nombre' => $nom];
                     }
                 }
             }
 
-            // Manejo de archivo adjunto si se subió en el form tradicional
+            // Manejo de archivo adjunto si se subió en el form tradicional o se extrajo previamente
             $archivoPath = null;
-            if (isset($_FILES['archivo_pst'])) {
-                if ($_FILES['archivo_pst']['error'] === UPLOAD_ERR_OK) {
-                    $ext = strtolower(pathinfo($_FILES['archivo_pst']['name'], PATHINFO_EXTENSION));
-                    if (in_array($ext, ['pdf', 'docx'])) {
+            $promotedTmpPath = null;
+            if (isset($_FILES['archivo_pst']) && $_FILES['archivo_pst']['error'] === UPLOAD_ERR_OK) {
+                $ext = strtolower(pathinfo($_FILES['archivo_pst']['name'], PATHINFO_EXTENSION));
+                if (in_array($ext, ['pdf', 'docx'])) {
+                    $slug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($_POST['titulo'] ?? 'pst', 0, 30)));
+                    $destName = 'pst_' . $slug . '_' . time() . '_' . mt_rand(100, 999) . '.' . $ext;
+                    if (move_uploaded_file($_FILES['archivo_pst']['tmp_name'], $storageDir . $destName)) {
+                        $archivoPath = 'storage/documentos/pst/' . $destName;
+                    } else {
+                        AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo de Escritura', "El archivo para el proyecto se recibió pero el servidor no pudo guardarlo en el disco.");
+                    }
+                } else {
+                    AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo de Formato', "Intento de subir un archivo con extensión no permitida (.{$ext}). Archivo ignorado.");
+                }
+            } elseif (!empty($_POST['archivo_pdf'])) {
+                $rawPdf = trim($_POST['archivo_pdf']);
+                $sourceFilePath = BASE_PATH . '/' . ltrim($rawPdf, '/');
+                if (file_exists($sourceFilePath)) {
+                    if (strpos($rawPdf, 'storage/documentos/tmp/') !== false) {
                         $slug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($_POST['titulo'] ?? 'pst', 0, 30)));
-                        $destName = 'pst_' . $slug . '_' . time() . '.' . $ext;
-                        if (move_uploaded_file($_FILES['archivo_pst']['tmp_name'], $storageDir . $destName)) {
+                        $ext = strtolower(pathinfo($rawPdf, PATHINFO_EXTENSION));
+                        $destName = 'pst_' . $slug . '_' . time() . '_' . mt_rand(100, 999) . '.' . $ext;
+                        $destPath = $storageDir . $destName;
+                        if (rename($sourceFilePath, $destPath) || copy($sourceFilePath, $destPath)) {
+                            @unlink($sourceFilePath);
                             $archivoPath = 'storage/documentos/pst/' . $destName;
-                        } else {
-                            AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo de Escritura', "El archivo para el proyecto se recibió pero el servidor no pudo guardarlo en el disco.");
+                            $promotedTmpPath = $destPath;
                         }
                     } else {
-                        AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo de Formato', "Intento de subir un archivo con extensión no permitida (.{$ext}). Archivo ignorado.");
+                        $archivoPath = $rawPdf;
                     }
-                } elseif ($_FILES['archivo_pst']['error'] !== UPLOAD_ERR_NO_FILE) {
-                    $codigoError = $_FILES['archivo_pst']['error'];
-                    $tituloTemporal = !empty($_POST['titulo']) ? trim($_POST['titulo']) : 'Sin Título';
-                    AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Subida de Archivo', "El PST '{$tituloTemporal}' se procesó, pero el documento fue rechazado (Código: {$codigoError}).");
                 }
             }
 
             $nivelPost = !empty($_POST['nivel_academico']) ? trim($_POST['nivel_academico']) : 'Pregrado';
             $trayectoPost = ($nivelPost === 'Pregrado') ? (!empty($_POST['trayecto']) ? trim($_POST['trayecto']) : 'Trayecto I') : null;
-            $finalPdfPath = $archivoPath ? $archivoPath : (!empty($_POST['archivo_pdf']) ? trim($_POST['archivo_pdf']) : null);
+            $idCarrera = !empty($_POST['id_carrera']) ? (int)$_POST['id_carrera'] : 1;
+            $lineaId = !empty($_POST['linea_id']) ? (int)$_POST['linea_id'] : null;
+            if (empty($lineaId)) {
+                $lineasDisp = $model->getLineasInvestigacion($idCarrera);
+                if (!empty($lineasDisp) && !empty($lineasDisp[0]['id'])) {
+                    $lineaId = (int)$lineasDisp[0]['id'];
+                } else {
+                    $lineaId = 7;
+                }
+            }
 
             $datos = [
                 'titulo'                     => !empty($_POST['titulo']) ? trim($_POST['titulo']) : '',
@@ -706,13 +809,13 @@ class DetallePSTController {
                 'nivel_academico'            => $nivelPost,
                 'trayecto'                   => $trayectoPost,
                 'url_repositorio'            => !empty($_POST['url_repositorio']) ? trim($_POST['url_repositorio']) : null,
-                'archivo_pdf'                => $finalPdfPath,
+                'archivo_pdf'                => $archivoPath,
                 'resumen'                    => !empty($_POST['resumen']) ? trim($_POST['resumen']) : '',
                 'obj_general'                => !empty($_POST['obj_general']) ? trim($_POST['obj_general']) : null,
                 'comunidad_beneficiada'      => !empty($_POST['comunidad_beneficiada']) ? trim($_POST['comunidad_beneficiada']) : '',
                 'palabras_clave'             => !empty($_POST['palabras_clave']) ? trim($_POST['palabras_clave']) : '',
-                'id_carrera'                 => !empty($_POST['id_carrera']) ? (int)$_POST['id_carrera'] : 1,
-                'linea_id'                   => !empty($_POST['linea_id']) ? (int)$_POST['linea_id'] : null,
+                'id_carrera'                 => $idCarrera,
+                'linea_id'                   => $lineaId,
                 'dimension_id'               => !empty($_POST['dimension_id']) ? (int)$_POST['dimension_id'] : null,
             ];
             
@@ -721,11 +824,9 @@ class DetallePSTController {
             } elseif ($model->existePSTPorTitulo($datos['titulo'])) {
                 $error = "Ya existe un proyecto registrado con este título en el repositorio.";
             } elseif (empty($datos['autores'])) {
-                $error = "Debe registrar al menos un autor principal (cédula y nombre).";
+                $error = "Debe registrar al menos un autor para el proyecto.";
             } elseif (empty($datos['resumen'])) {
                 $error = "El resumen del proyecto es obligatorio.";
-            } elseif (empty($datos['linea_id'])) {
-                $error = "Debe clasificar el proyecto bajo una línea de investigación.";
             } elseif (empty($datos['archivo_pdf'])) {
                 $error = "Debe adjuntar o extraer un documento digital (PDF o Word) válido para registrar el proyecto.";
             } else {
@@ -733,13 +834,21 @@ class DetallePSTController {
                     $nuevoId = (int)$model->crearPST($datos);
                     if ($nuevoId > 0) {
                         AuditLogger::registrar('INFO', 'RepositorioPST', 'Registrar Proyecto', "Proyecto PST registrado exitosamente: '{$datos['titulo']}' (ID: #{$nuevoId}).");
-                        header("Location: ?ruta=agregar-documento&accion=crear&msg=created");
+                        header("Location: ?ruta=agregar-documento&msg=created");
                         exit;
                     } else {
                         $error = "Ocurrió un error interno en la base de datos al registrar el recurso.";
                     }
                 } catch (Exception $e) {
                     $error = "Error de Base de Datos: " . $e->getMessage();
+                }
+            }
+
+            // Si falló el registro, limpiar el archivo definitivo recién creado para no dejar huérfanos
+            if (!empty($error) && !empty($archivoPath)) {
+                $realErrFile = BASE_PATH . '/' . ltrim($archivoPath, '/');
+                if (file_exists($realErrFile)) {
+                    @unlink($realErrFile);
                 }
             }
         }
@@ -765,8 +874,8 @@ class DetallePSTController {
                         for ($i = 0; $i < count($_POST['autor_cedula']); $i++) {
                             $ced = !empty($_POST['autor_cedula'][$i]) ? trim($_POST['autor_cedula'][$i]) : '';
                             $nom = !empty($_POST['autor_nombre'][$i]) ? trim($_POST['autor_nombre'][$i]) : '';
-                            if ($ced !== '' && $nom !== '') {
-                                $autoresPost[] = ['cedula' => $ced, 'nombre' => $nom];
+                            if ($nom !== '') {
+                                $autoresPost[] = ['cedula' => $ced ?: null, 'nombre' => $nom];
                             }
                         }
                     }
@@ -897,7 +1006,7 @@ class DetallePSTController {
                 $documentos = $model->buscarStandard($q, ['activo' => 'todos'], $limit, $offset);
                 $totalDocs = $model->buscarStandardCount($q, ['activo' => 'todos']);
             } else {
-                $documentos = $model->getPSTDocumentos(['activo' => 'todos'], $limit, $offset);
+                $documentos = $model->getPSTDocumentos(['activo' => 'todos', 'orden' => 'recientes'], $limit, $offset);
                 $totalDocs = $model->getPSTDocumentosCount(['activo' => 'todos']);
             }
             
