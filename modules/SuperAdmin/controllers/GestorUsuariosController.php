@@ -658,73 +658,88 @@ class GestorUsuariosController {
                 exit;
             }
 
-            // Verificar si el usuario ya existe por cédula o correo en la base de datos
-            $db = Connection::getInstance();
-            $stmtCheck = $db->prepare("SELECT id, cedula, email FROM usuarios WHERE cedula = ? OR email = ?");
-            $stmtCheck->execute([$cedula, $email]);
-            $duplicado = $stmtCheck->fetch();
-
-            if ($duplicado) {
-                if (session_status() === PHP_SESSION_NONE) session_start();
-                if ($duplicado['cedula'] === $cedula) {
-                    $_SESSION['mensaje_gestor_error'] = "Ya existe un usuario registrado con la C.I. {$cedula}.";
-                } else {
-                    $_SESSION['mensaje_gestor_error'] = "El correo electrónico '{$email}' ya se encuentra registrado por otro usuario.";
-                }
-                header("Location: gestor-usuarios");
-                exit;
-            }
-
-            // Buscar el ID de Rol de Profesor (o crear si no existe)
+            // Buscar el ID de Rol de Profesor / Docentes dinámicamente
             $roles = $this->adminModel->obtenerRoles();
             $idRolProfesor = 0;
             foreach ($roles as $r) {
-                if (mb_strtolower($r['nombre']) === 'profesor' || mb_strtolower($r['nombre']) === 'docente') {
+                $nomRol = mb_strtolower($r['nombre']);
+                if (str_contains($nomRol, 'docente') || str_contains($nomRol, 'profesor')) {
                     $idRolProfesor = (int)$r['id'];
                     break;
                 }
             }
-            // Si no se encuentra un rol denominado 'Profesor', usamos el rol ID 2 por defecto
+            // Si no se encuentra, usamos el ID 4 que corresponde al rol 'Docentes'
             if ($idRolProfesor === 0) {
-                $idRolProfesor = 2;
+                $idRolProfesor = 4;
             }
+
+            $cedulaTrim = trim($cedula);
+            $soloDigitos = preg_replace('/[^0-9]/', '', $cedulaTrim);
+            $conPrefijo = 'V-' . $soloDigitos;
+
+            // Verificar si el usuario ya existe por cédula o correo en la base de datos
+            $db = Connection::getInstance();
+            $stmtCheck = $db->prepare("SELECT id, cedula, email, activo, activation_token FROM usuarios WHERE (cedula = ? OR cedula = ? OR cedula = ?) OR email = ?");
+            $stmtCheck->execute([$cedulaTrim, $soloDigitos, $conPrefijo, $email]);
+            $duplicado = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+            if (session_status() === PHP_SESSION_NONE) session_start();
 
             // Generar Token Firmado SHA-256 (validez 48 horas)
             $rawToken = bin2hex(random_bytes(32));
             $tokenHash = hash('sha256', $rawToken);
 
-            // Crear usuario en estado inactivo (esperando que establezca clave por token)
-            $hashClaveDummy = password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT);
-            $sql = "INSERT INTO usuarios (cedula, nombre_completo, email, id_rol, contrasena, activo, activation_token) VALUES (?, ?, ?, ?, ?, 'false', ?)";
-            
-            try {
-                $stmt = $db->prepare($sql);
-                $exito = $stmt->execute([$cedula, $nombre, $email, $idRolProfesor, $hashClaveDummy, $tokenHash]);
-            } catch (Throwable $e) {
-                $exito = false;
+            if ($duplicado) {
+                // Si el usuario existe pero es una invitación pendiente (activo = false y con activation_token)
+                if ($duplicado['activo'] === false && !empty($duplicado['activation_token'])) {
+                    $stmtReinv = $db->prepare("UPDATE usuarios SET activation_token = ?, nombre_completo = ?, email = ?, id_rol = ? WHERE id = ?");
+                    $exito = $stmtReinv->execute([$tokenHash, $nombre, $email, $idRolProfesor, $duplicado['id']]);
+                } else {
+                    if ($duplicado['email'] === $email) {
+                        $_SESSION['mensaje_gestor_error'] = "El correo electrónico '{$email}' ya se encuentra registrado por un usuario activo.";
+                    } else {
+                        $_SESSION['mensaje_gestor_error'] = "Ya existe un usuario activo registrado con la cédula {$cedula}.";
+                    }
+                    header("Location: gestor-usuarios");
+                    exit;
+                }
+            } else {
+                // Crear usuario en estado inactivo (esperando que establezca clave por token)
+                $hashClaveDummy = password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT);
+                $sql = "INSERT INTO usuarios (cedula, nombre_completo, email, id_rol, contrasena, activo, email_verified, activation_token) VALUES (?, ?, ?, ?, ?, false, false, ?)";
+                
+                try {
+                    $stmt = $db->prepare($sql);
+                    $exito = $stmt->execute([$cedula, $nombre, $email, $idRolProfesor, $hashClaveDummy, $tokenHash]);
+                } catch (Throwable $e) {
+                    AuditLogger::registrar('ERROR', 'SuperAdmin', 'Error Invitar Profesor', "Excepción BD: " . $e->getMessage());
+                    $exito = false;
+                }
             }
-
-            if (session_status() === PHP_SESSION_NONE) session_start();
 
             if ($exito) {
                 $protocolo = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
                 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-                $scriptName = $_SERVER['SCRIPT_NAME'] ?? '/index.php';
-                $baseDir = rtrim(dirname($scriptName), '/\\');
-                $baseUrl = "{$protocolo}://{$host}" . ($baseDir && $baseDir !== '/' ? $baseDir : '');
+                $scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/\\');
+                $baseUrl = "{$protocolo}://{$host}" . ($scriptDir && $scriptDir !== '/' ? $scriptDir : '');
                 
-                // Si la URL amigable con .htaccess falla en el entorno local, garantizamos fallback con index.php?ruta=
-                $enlaceActivacion = "{$baseUrl}/index.php?ruta=completar-registro&token={$rawToken}";
+                $enlaceActivacion = "{$baseUrl}/completar-registro?token={$rawToken}";
 
-                MailService::enviarEvento('superadmin.invitacion_profesor', $email, [
+                $resMail = MailService::enviarEvento('superadmin.invitacion_profesor', $email, [
                     'NOMBRE_PROFESOR'   => $nombre,
                     'CEDULA'            => $cedula,
                     'ENLACE_ACTIVACION' => $enlaceActivacion,
                     'TIEMPO_EXPIRACION' => '48 horas'
-                ], $nombre);
+                ], $nombre, false);
 
                 AuditLogger::registrar('INFO', 'SuperAdmin', 'Invitar Profesor', "Invitación emitida para el profesor {$nombre} (C.I: {$cedula}, Correo: {$email})");
-                $_SESSION['mensaje_gestor_exito'] = "Invitación emitida y correo de registro enviado exitosamente al profesor '{$nombre}'.";
+
+                if ($resMail['exito']) {
+                    $_SESSION['mensaje_gestor_exito'] = "Invitación emitida y correo de activación enviado exitosamente al profesor '{$nombre}'.";
+                } else {
+                    $detalleFalla = $resMail['error_detalle'] ?? $resMail['mensaje'] ?? 'Falla de entrega SMTP';
+                    $_SESSION['mensaje_gestor_error'] = "El registro del profesor fue preparado, pero falló el envío del correo ({$detalleFalla}). Enlace directo de activación: {$enlaceActivacion}";
+                }
             } else {
                 $_SESSION['mensaje_gestor_error'] = "Error al intentar guardar el registro del profesor en la base de datos.";
             }

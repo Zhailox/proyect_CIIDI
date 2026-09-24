@@ -106,13 +106,13 @@ if (empty($mod)) {
 }
 
 .ag-btn-orange {
-    background: #d97706 !important;
+    background: var(--color-secundario) !important;
     color: #ffffff !important;
     border: none !important;
-    padding: 8px 14px !important;
-    border-radius: 8px !important;
+    padding: 9px 18px !important;
+    border-radius: var(--radius-sm) !important;
     font-weight: 700 !important;
-    font-size: 0.83rem !important;
+    font-size: 0.85rem !important;
     cursor: pointer !important;
     display: inline-flex;
     align-items: center;
@@ -121,18 +121,18 @@ if (empty($mod)) {
 }
 
 .ag-btn-orange:hover {
-    background: #b45309 !important;
+    background: var(--color-principal) !important;
     transform: translateY(-1px);
 }
 
 .ag-btn-test {
-    background: #0284c7 !important;
+    background: var(--color-secundario) !important;
     color: #ffffff !important;
     border: none !important;
-    padding: 7px 12px !important;
-    border-radius: 8px !important;
+    padding: 9px 16px !important;
+    border-radius: var(--radius-sm) !important;
     font-weight: 700 !important;
-    font-size: 0.82rem !important;
+    font-size: 0.85rem !important;
     cursor: pointer !important;
     display: inline-flex;
     align-items: center;
@@ -141,15 +141,15 @@ if (empty($mod)) {
 }
 
 .ag-btn-test:hover {
-    background: #0369a1 !important;
+    background: var(--color-principal) !important;
     transform: translateY(-1px);
 }
 
 .ag-badge-core {
-    background: rgba(99, 102, 241, 0.1);
-    color: #4f46e5;
-    border: 1px solid rgba(99, 102, 241, 0.25);
-    border-radius: 8px;
+    background: rgba(112, 144, 203, 0.15);
+    color: var(--color-principal);
+    border: 1px solid rgba(112, 144, 203, 0.3);
+    border-radius: var(--radius-sm);
     padding: 5px 12px;
     font-weight: 800;
     font-size: 0.78rem;
@@ -159,10 +159,10 @@ if (empty($mod)) {
 }
 
 .ag-badge-online {
-    background: rgba(16, 185, 129, 0.1);
-    color: #059669;
-    border: 1px solid rgba(16, 185, 129, 0.25);
-    border-radius: 8px;
+    background: rgba(112, 144, 203, 0.15);
+    color: var(--color-principal);
+    border: 1px solid rgba(112, 144, 203, 0.35);
+    border-radius: var(--radius-sm);
     padding: 5px 12px;
     font-weight: 800;
     font-size: 0.78rem;
@@ -172,10 +172,10 @@ if (empty($mod)) {
 }
 
 .ag-badge-offline {
-    background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
-    border: 1px solid rgba(239, 68, 68, 0.25);
-    border-radius: 8px;
+    background: rgba(80, 89, 132, 0.12);
+    color: var(--color-secundario);
+    border: 1px solid rgba(80, 89, 132, 0.3);
+    border-radius: var(--radius-sm);
     padding: 5px 12px;
     font-weight: 800;
     font-size: 0.78rem;
@@ -243,14 +243,14 @@ if (empty($mod)) {
         <div style="font-size: 1.85rem; font-weight: 800; color: var(--texto-titulos, #0f172a); margin-top: 0.3rem;"><?= $mod['total_rutas'] ?></div>
     </div>
 
-    <div class="ag-metric-card" style="border-color: rgba(16,185,129,0.25);">
-        <div style="font-size: 0.75rem; font-weight: 800; color: #059669; text-transform: uppercase; letter-spacing: 0.5px;">Rutas Activas</div>
-        <div style="font-size: 1.85rem; font-weight: 800; color: #10b981; margin-top: 0.3rem;"><?= $mod['rutas_activas'] ?></div>
+    <div class="ag-metric-card" style="border-color: rgba(112, 144, 203, 0.3);">
+        <div style="font-size: 0.75rem; font-weight: 800; color: var(--color-terciario); text-transform: uppercase; letter-spacing: 0.5px;">Rutas Activas</div>
+        <div style="font-size: 1.85rem; font-weight: 800; color: var(--color-principal); margin-top: 0.3rem;"><?= $mod['rutas_activas'] ?></div>
     </div>
 
-    <div class="ag-metric-card" style="border-color: rgba(239,68,68,0.25);">
-        <div style="font-size: 0.75rem; font-weight: 800; color: #dc2626; text-transform: uppercase; letter-spacing: 0.5px;">Restringidas</div>
-        <div style="font-size: 1.85rem; font-weight: 800; color: #ef4444; margin-top: 0.3rem;"><?= $mod['rutas_restringidas'] ?></div>
+    <div class="ag-metric-card" style="border-color: rgba(80, 89, 132, 0.25);">
+        <div style="font-size: 0.75rem; font-weight: 800; color: var(--color-secundario); text-transform: uppercase; letter-spacing: 0.5px;">Restringidas</div>
+        <div style="font-size: 1.85rem; font-weight: 800; color: var(--color-secundario); margin-top: 0.3rem;"><?= $mod['rutas_restringidas'] ?></div>
     </div>
 
     <div class="ag-metric-card">
@@ -447,9 +447,9 @@ if (empty($mod)) {
                                 <td style="padding: 10px;">
                                     <?php
                                     $n = strtoupper($log['nivel']);
-                                    $bg = $n === 'ERROR' || $n === 'CRITICAL' ? '#ef4444' : ($n === 'WARNING' ? '#d97706' : 'rgb(80, 89, 132)');
+                                    $bg = $n === 'ERROR' || $n === 'CRITICAL' ? 'var(--color-principal)' : ($n === 'WARNING' ? 'var(--color-secundario)' : 'var(--color-terciario)');
                                     ?>
-                                    <span style="background: <?= $bg ?>; color: #ffffff; padding: 2px 7px; border-radius: 4px; font-weight: 800; font-size: 0.72rem;"><?= $n ?></span>
+                                    <span style="background: <?= $bg ?>; color: #ffffff; padding: 2px 7px; border-radius: var(--radius-sm); font-weight: 800; font-size: 0.72rem;"><?= $n ?></span>
                                 </td>
                                 <td style="padding: 10px; font-weight: 700; color: #0f172a;"><?= htmlspecialchars($log['accion']) ?></td>
                                 <td style="padding: 10px; color: #334155;"><?= htmlspecialchars($log['responsable']) ?></td>

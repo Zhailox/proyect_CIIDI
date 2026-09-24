@@ -1,260 +1,3 @@
-<style>
-/* ==========================================================================
-   Antigravity UI & Motion Design Expert Style Guide (estilo.md)
-   ========================================================================== */
-.ag-header-banner {
-    background: rgba(255, 255, 255, 0.92) !important;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(80, 89, 132, 0.16) !important;
-    border-radius: var(--radius-md, 16px);
-    padding: 1.6rem 2rem;
-    box-shadow: 0 16px 36px rgba(18, 26, 62, 0.05);
-    margin-bottom: 1.5rem;
-}
-
-.ag-tabs-nav {
-    display: flex;
-    gap: 0.6rem;
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(12px);
-    padding: 6px;
-    border-radius: 14px;
-    border: 1px solid rgba(80, 89, 132, 0.15);
-    margin-bottom: 1.5rem;
-}
-
-.ag-tab-btn {
-    flex: 1;
-    padding: 10px 16px;
-    border-radius: 10px;
-    border: none;
-    background: transparent;
-    color: var(--texto-silenciado, #64748b);
-    font-weight: 700;
-    font-size: 0.88rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ag-tab-btn:hover {
-    color: var(--color-secundario);
-    background: rgba(80, 89, 132, 0.08);
-}
-
-.ag-tab-btn.active {
-    background: #ffffff;
-    color: var(--color-secundario);
-    box-shadow: 0 4px 14px rgba(18, 26, 62, 0.08);
-}
-
-.ag-tab-pane {
-    display: none;
-    animation: fadeInSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.ag-tab-pane.active {
-    display: block;
-}
-
-@keyframes fadeInSlide {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.ag-glass-card {
-    background: rgba(255, 255, 255, 0.95) !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(80, 89, 132, 0.15) !important;
-    border-radius: 16px;
-    padding: 1.6rem;
-    box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04);
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ag-btn-flat {
-    background: var(--color-secundario) !important;
-    color: #ffffff !important;
-    border: none !important;
-    padding: 9px 18px !important;
-    border-radius: 8px !important;
-    font-weight: 700 !important;
-    font-size: 0.85rem !important;
-    box-shadow: 0 4px 12px rgba(80, 89, 132, 0.2);
-    transition: all 0.25s ease !important;
-    text-decoration: none !important;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-}
-
-.ag-btn-flat:hover {
-    background: var(--color-secundario-dark, rgb(60, 68, 105)) !important;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(80, 89, 132, 0.32);
-    color: #ffffff !important;
-}
-
-.ag-btn-danger-flat {
-    background: #dc2626 !important;
-    color: #ffffff !important;
-    border: none !important;
-    padding: 9px 18px !important;
-    border-radius: 8px !important;
-    font-weight: 700 !important;
-    font-size: 0.85rem !important;
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
-    transition: all 0.25s ease !important;
-    text-decoration: none !important;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-}
-
-.ag-btn-danger-flat:hover {
-    background: #b91c1c !important;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.32);
-    color: #ffffff !important;
-}
-
-.ag-btn-outline-flat {
-    background: #ffffff !important;
-    color: var(--texto-titulos, #0f172a) !important;
-    border: 1px solid rgba(80, 89, 132, 0.25) !important;
-    padding: 9px 18px !important;
-    border-radius: 8px !important;
-    font-weight: 700 !important;
-    font-size: 0.85rem !important;
-    transition: all 0.25s ease !important;
-    text-decoration: none !important;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-}
-
-.ag-btn-outline-flat:hover {
-    border-color: var(--color-secundario) !important;
-    color: var(--color-secundario) !important;
-    background: rgba(37, 99, 235, 0.04) !important;
-}
-
-.ag-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.85rem;
-    text-align: left;
-}
-
-.ag-table th {
-    padding: 10px 14px;
-    color: var(--texto-titulos, #0f172a);
-    font-weight: 800;
-    font-size: 0.82rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    background: rgba(241, 245, 249, 0.9);
-    border-bottom: 1px solid rgba(80, 89, 132, 0.15);
-}
-
-.ag-table td {
-    padding: 10px 14px;
-    border-bottom: 1px solid rgba(80, 89, 132, 0.08);
-    color: var(--texto-titulos, #0f172a);
-}
-
-.ag-input {
-    padding: 9px 14px;
-    font-size: 0.86rem;
-    border-radius: 8px;
-    border: 1px solid #cbd5e1;
-    background: #ffffff;
-    color: var(--texto-titulos, #0f172a);
-    transition: border-color 0.2s ease;
-}
-
-.ag-input:focus {
-    outline: none;
-    border-color: var(--color-secundario);
-}
-
-.ag-pagination-btn {
-    padding: 5px 12px;
-    border-radius: 6px;
-    border: 1px solid rgba(80,89,132,0.2);
-    background: #ffffff;
-    font-weight: 700;
-    font-size: 0.8rem;
-    color: var(--texto-titulos, #0f172a);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.ag-pagination-btn:hover:not(:disabled) {
-    border-color: var(--color-secundario);
-    color: var(--color-secundario);
-    background: rgba(37,99,235,0.04);
-}
-
-.ag-pagination-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.ag-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
-}
-
-.ag-modal-overlay.active {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.ag-modal-box {
-    background: #ffffff;
-    border: 1px solid rgba(80, 89, 132, 0.2);
-    border-radius: 16px;
-    width: 90%;
-    max-width: 480px;
-    padding: 1.8rem;
-    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
-    transform: scale(0.92);
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ag-modal-overlay.active .ag-modal-box {
-    transform: scale(1);
-}
-</style>
-
 <!-- ENCABEZADO PRINCIPAL GLASSMORPHIC -->
 <div class="ag-header-banner">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.2rem;">
@@ -272,11 +15,11 @@
                 $esFuturoProg = $isProg && !empty($dataMantHdr['fecha_inicio']) && (strtotime($dataMantHdr['fecha_inicio']) > time());
                 ?>
                 <?php if ($isAct): ?>
-                    <span style="background: rgba(239,68,68,0.12); color: #dc2626; border: 1px solid rgba(239,68,68,0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; display: inline-flex; align-items: center; gap: 5px;">
+                    <span class="sa-badge-inactive">
                         <i class="ph-bold ph-power"></i> Mantenimiento Activo
                     </span>
                 <?php elseif ($esFuturoProg): ?>
-                    <span id="ag-countdown-badge" style="background: rgba(245,158,11,0.12); color: #b45309; border: 1px solid rgba(245,158,11,0.3); padding: 4px 12px; border-radius: 20px; font-size: 0.76rem; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
+                    <span id="ag-countdown-badge" style="background: rgba(80,89,132,0.12); color: var(--color-secundario); border: 1px solid rgba(80,89,132,0.25); padding: 4px 12px; border-radius: var(--radius-sm); font-size: 0.76rem; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
                         <i class="ph-bold ph-timer"></i> Mantenimiento Programado: <span id="ag-countdown-clock" style="font-family: monospace; font-size: 0.85rem; font-weight: 800;"><?= date('H:i - d/m', strtotime($dataMantHdr['fecha_inicio'])) ?></span>
                     </span>
                     <script>
@@ -290,8 +33,8 @@
                             
                             if (diff <= 0) {
                                 clockEl.textContent = "¡En progreso / listo!";
-                                clockEl.parentElement.style.background = "rgba(239,68,68,0.15)";
-                                clockEl.parentElement.style.color = "#dc2626";
+                                clockEl.parentElement.style.background = "rgba(80,89,132,0.15)";
+                                clockEl.parentElement.style.color = "var(--color-terciario)";
                                 return;
                             }
                             const hrs = Math.floor(diff / (1000 * 60 * 60));
@@ -305,7 +48,7 @@
                     })();
                     </script>
                 <?php else: ?>
-                    <span style="background: rgba(16,185,129,0.12); color: #059669; border: 1px solid rgba(16,185,129,0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; display: inline-flex; align-items: center; gap: 5px;">
+                    <span class="sa-badge-active">
                         <i class="ph-bold ph-check-circle"></i> Plataforma Operativa
                     </span>
                 <?php endif; ?>
@@ -314,7 +57,7 @@
                 Centro unificado de exportación/importación PostgreSQL, pre-inspección de restauración y control de mantenimiento.
             </p>
         </div>
-        <a href="sudoadmin" class="ag-btn-outline-flat">
+        <a href="sudoadmin" class="sa-btn sa-btn-outline">
             <i class="ph-bold ph-arrow-left"></i> Volver al Centro de Mando
         </a>
     </div>
@@ -322,8 +65,8 @@
 
 <!-- MENSAJES DE ALERTA DE SESIÓN -->
 <?php if (isset($_SESSION['mensaje_admin_exito'])): ?>
-    <div style="background: rgba(16,185,129,0.1); color: #047857; border: 1px solid rgba(16,185,129,0.25); padding: 0.9rem 1.25rem; border-radius: 10px; margin-bottom: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 10px;">
-        <i class="ph-bold ph-check-circle" style="font-size: 1.3rem; color: #10b981;"></i>
+    <div class="sa-alert sa-alert-success">
+        <i class="ph-bold ph-check-circle"></i>
         <?= htmlspecialchars($_SESSION['mensaje_admin_exito']) ?>
         <?php unset($_SESSION['mensaje_admin_exito']); ?>
     </div>
@@ -335,11 +78,11 @@
     unset($_SESSION['mensaje_admin_error']);
     $partesErr = explode(' | ', $errRaw);
     ?>
-    <div style="background: rgba(239,68,68,0.08); color: #991b1b; border: 1px solid rgba(239,68,68,0.25); padding: 1rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem;">
+    <div class="sa-alert sa-alert-error" style="display: block;">
         <div style="display: flex; align-items: flex-start; gap: 10px; font-weight: 700;">
-            <i class="ph-bold ph-warning-circle" style="font-size: 1.4rem; color: #ef4444; flex-shrink: 0; margin-top: 2px;"></i>
+            <i class="ph-bold ph-warning-circle" style="font-size: 1.4rem; color: var(--color-secundario); flex-shrink: 0; margin-top: 2px;"></i>
             <div style="flex-grow: 1;">
-                <div style="font-size: 0.95rem; font-weight: 800; color: #991b1b; margin-bottom: 4px;">
+                <div style="font-size: 0.95rem; font-weight: 800; color: var(--color-terciario); margin-bottom: 4px;">
                     <?= htmlspecialchars($partesErr[0]) ?>
                 </div>
                 <?php if (count($partesErr) > 1): ?>
@@ -450,7 +193,7 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; flex-wrap: wrap; gap: 8px;">
                     <div>
                         <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: flex; align-items: center; gap: 8px;">
-                            <i class="ph-bold ph-lightning" style="color: #f59e0b;"></i> Optimización PostgreSQL (VACUUM)
+                            <i class="ph-bold ph-lightning" style="color: var(--color-secundario);"></i> Optimización PostgreSQL (VACUUM)
                         </h3>
                         <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: var(--texto-silenciado, #64748b);">Reclama espacio muerto y actualiza estadísticas de consulta</p>
                     </div>
@@ -553,11 +296,11 @@
                                         <td style="font-weight: 700; color: var(--texto-titulos, #0f172a);">
                                             <?= htmlspecialchars($nB) ?>
                                             <?php if($isGz): ?>
-                                                <span style="background: rgba(16,185,129,0.12); color: #059669; border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; font-weight: 800; margin-left: 4px;">GZIP</span>
+                                                <span style="background: rgba(112, 144, 203, 0.15); color: var(--color-terciario); border-radius: var(--radius-sm); padding: 2px 6px; font-size: 0.7rem; font-weight: 800; margin-left: 4px;">GZIP</span>
                                             <?php elseif($isTxt): ?>
-                                                <span style="background: rgba(59,130,246,0.12); color: #2563eb; border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; font-weight: 800; margin-left: 4px;">TXT</span>
+                                                <span style="background: rgba(80, 89, 132, 0.12); color: var(--color-secundario); border-radius: var(--radius-sm); padding: 2px 6px; font-size: 0.7rem; font-weight: 800; margin-left: 4px;">TXT</span>
                                             <?php else: ?>
-                                                <span style="background: rgba(107,114,128,0.12); color: #4b5563; border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; font-weight: 800; margin-left: 4px;">SQL</span>
+                                                <span style="background: rgba(107,114,128,0.12); color: #4b5563; border-radius: var(--radius-sm); padding: 2px 6px; font-size: 0.7rem; font-weight: 800; margin-left: 4px;">SQL</span>
                                             <?php endif; ?>
                                         </td>
                                         <td style="color: var(--texto-silenciado, #64748b); font-weight: 600;"><?= round(filesize($pathB) / 1024, 1) ?> KB</td>
@@ -571,10 +314,10 @@
                                                     </button>
                                                 </form>
 
-                                                <a href="verificar-respaldo?archivo=<?= urlencode($nB) ?>" class="ag-btn-outline-flat" style="padding: 5px 9px !important; font-size: 0.78rem !important;" title="Verificar Integridad">
-                                                    <i class="ph-bold ph-shield-check" style="color: #059669;"></i>
+                                                <a href="verificar-respaldo?archivo=<?= urlencode($nB) ?>" class="ag-btn-danger-flat" style="padding: 5px 9px !important; font-size: 0.78rem !important;" title="Verificar Integridad">
+                                                    <i class="ph-bold ph-shield-check"></i>
                                                 </a>
-                                                <a href="descargar-backup?archivo=<?= urlencode($nB) ?>" class="ag-btn-outline-flat" style="padding: 5px 9px !important; font-size: 0.78rem !important;" title="Descargar">
+                                                <a href="descargar-backup?archivo=<?= urlencode($nB) ?>" class="ag-btn-danger-flat" style="padding: 5px 9px !important; font-size: 0.78rem !important;" title="Descargar">
                                                     <i class="ph-bold ph-download-simple"></i>
                                                 </a>
                                                 <form action="eliminar-backup" method="POST" style="margin:0;">
@@ -623,7 +366,7 @@
             <h3 style="margin: 0 0 0.4rem 0; font-size: 1.15rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: flex; align-items: center; gap: 8px;">
                 <i class="ph-bold ph-database" style="color: var(--color-secundario);"></i> Conexión PostgreSQL Dinámica (.env Shield)
             </h3>
-            <div style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.2rem; font-size: 0.82rem; color: #047857; display: flex; align-items: center; gap: 8px;">
+            <div class="sa-alert sa-alert-success" style="margin-bottom: 1.2rem; font-size: 0.82rem;">
                 <i class="ph-bold ph-shield-check" style="font-size: 1.1rem;"></i>
                 <div>
                     <strong>Estado de Seguridad:</strong> Credenciales gestionadas mediante <code>.env</code> y carpeta <code>storage/</code> protegida contra accesos HTTP externos (403 Forbidden).
@@ -679,14 +422,14 @@
         <!-- TARJETA: CUENTA DE EMERGENCIA LOCAL (BREAK-GLASS ACCOUNT) -->
         <div class="ag-glass-card">
             <h3 style="margin: 0 0 0.4rem 0; font-size: 1.15rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: flex; align-items: center; gap: 8px;">
-                <i class="ph-bold ph-user-gear" style="color: #dc2626;"></i> Cuenta de Emergencia Local (Break-Glass)
+                <i class="ph-bold ph-user-gear" style="color: var(--color-secundario);"></i> Cuenta de Emergencia Local (Break-Glass)
             </h3>
             <p style="font-size: 0.86rem; color: var(--texto-silenciado, #64748b); margin-bottom: 1.4rem; line-height: 1.45;">
                 Configura una cuenta de súper acceso independiente almacenada localmente en JSON. Se usará como salvavidas si la BD PostgreSQL sufre una caída total.
             </p>
 
             <?php if (!empty($emergency_data['usuario'])): ?>
-                <div style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); padding: 0.85rem 1.1rem; border-radius: 10px; margin-bottom: 1.2rem; font-size: 0.84rem; color: #047857;">
+                <div style="background: rgba(112,144,203,0.1); border: 1px solid rgba(112,144,203,0.25); padding: 0.85rem 1.1rem; border-radius: var(--radius-sm); margin-bottom: 1.2rem; font-size: 0.84rem;">
                     <div style="font-weight: 800; display: flex; align-items: center; gap: 6px;">
                         <i class="ph-bold ph-check-circle"></i> Cuenta de Emergencia Configurada
                     </div>
@@ -696,7 +439,7 @@
                     <?php endif; ?>
                 </div>
             <?php else: ?>
-                <div style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); padding: 0.85rem 1.1rem; border-radius: 10px; margin-bottom: 1.2rem; font-size: 0.84rem; color: #b45309;">
+                <div style="background: rgba(80,89,132,0.1); border: 1px solid rgba(80,89,132,0.25); padding: 0.85rem 1.1rem; border-radius: var(--radius-sm); margin-bottom: 1.2rem; font-size: 0.84rem; color: var(--color-secundario);">
                     <i class="ph-bold ph-warning"></i> No se ha configurado una cuenta de emergencia local todavía.
                 </div>
             <?php endif; ?>
@@ -720,11 +463,11 @@
 
                 <hr style="border: 0; border-top: 1px solid rgba(80,89,132,0.15); margin: 0.5rem 0;">
 
-                <div style="background: rgba(220,38,38,0.05); border: 1px solid rgba(220,38,38,0.2); padding: 1rem; border-radius: 10px;">
-                    <label style="font-size: 0.82rem; font-weight: 800; color: #dc2626; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                <div style="background: rgba(80,89,132,0.06); border: 1px solid rgba(80,89,132,0.2); padding: 1rem; border-radius: var(--radius-sm);">
+                    <label style="font-size: 0.82rem; font-weight: 800; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
                         <i class="ph-bold ph-shield-check"></i> Confirmar con Tu Contraseña de SuperAdmin
                     </label>
-                    <input type="password" name="admin_confirm_password" class="ag-input" placeholder="Ingresa tu contraseña actual de usuario" required style="width: 100%; border-color: rgba(220,38,38,0.4);">
+                    <input type="password" name="admin_confirm_password" class="ag-input" placeholder="Ingresa tu contraseña actual de usuario" required style="width: 100%; border-color: rgba(80,89,132,0.4);">
                 </div>
 
                 <button type="submit" class="ag-btn-danger-flat" style="justify-content: center; padding: 11px !important;">
@@ -769,8 +512,8 @@
                         <input type="number" name="minutos_programados" min="0" class="ag-input" placeholder="Ej: 30" style="width: 100%;">
                     </div>
                 <?php else: ?>
-                    <div style="background: rgba(239,68,68,0.08); color: #dc2626; border: 1px solid rgba(239,68,68,0.25); padding: 0.9rem; border-radius: 10px; font-size: 0.88rem; font-weight: 800; display: flex; align-items: center; gap: 10px;">
-                        <i class="ph-bold ph-warning-circle" style="font-size: 1.3rem;"></i>
+                    <div style="background: rgba(80,89,132,0.12); border: 1px solid rgba(80,89,132,0.3); padding: 0.9rem; border-radius: var(--radius-sm); font-size: 0.88rem; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+                        <i class="ph-bold ph-warning-circle" style="font-size: 1.3rem; color: var(--color-secundario);"></i>
                         <div>
                             <div>Mantenimiento Actualmente ACTIVADO</div>
                             <?php if (!empty($dataMant['fecha_fin'])): ?>
@@ -832,7 +575,7 @@
             </div>
             <?php if (!empty($agendaMantenimientos) || !empty($dataMant['fecha_inicio'])): ?>
                 <form action="cancelar-mantenimiento" method="POST" style="margin:0;">
-                    <button type="submit" class="ag-btn-outline-flat" style="color: #dc2626 !important; border-color: rgba(220,38,38,0.3) !important; padding: 5px 12px !important; font-size: 0.78rem !important;">
+                    <button type="submit" class="sa-btn-action sa-btn-action-dark" style="padding: 6px 14px !important;">
                         <i class="ph-bold ph-x-circle"></i> Cancelar Toda la Agenda
                     </button>
                 </form>
@@ -873,15 +616,15 @@
                                 <td style="color: var(--texto-silenciado);"><?= htmlspecialchars($item['mensaje'] ?: 'Mantenimiento programado') ?></td>
                                 <td>
                                     <?php if (!empty($item['activo'])): ?>
-                                        <span style="background: rgba(220,38,38,0.1); color: #dc2626; border-radius: 4px; padding: 2px 8px; font-size: 0.72rem; font-weight: 800;">ACTIVO</span>
+                                        <span class="sa-badge-inactive">ACTIVO</span>
                                     <?php else: ?>
-                                        <span style="background: rgba(37,99,235,0.1); color: #2563eb; border-radius: 4px; padding: 2px 8px; font-size: 0.72rem; font-weight: 800;">PROGRAMADO</span>
+                                        <span class="sa-badge-active">PROGRAMADO</span>
                                     <?php endif; ?>
                                 </td>
                                 <td style="text-align: center;">
                                     <form action="cancelar-mantenimiento" method="POST" style="margin:0;">
                                         <input type="hidden" name="id_agenda" value="<?= htmlspecialchars($item['id'] ?? '') ?>">
-                                        <button type="submit" class="ag-btn-danger-flat" style="padding: 4px 8px !important; font-size: 0.76rem !important;" title="Cancelar esta ventana">
+                                        <button type="submit" class="sa-btn-action" title="Cancelar esta ventana">
                                             <i class="ph-bold ph-trash"></i> Cancelar
                                         </button>
                                     </form>
@@ -897,9 +640,9 @@
 
 <!-- MODAL DE CONFIRMACIÓN CUSTOM (ANTIGRAVITY DESIGN) -->
 <div id="ag-modal-overlay" class="ag-modal-overlay">
-    <div class="ag-modal-box">
+    <div class="ag-modal-box" style="border-radius: var(--radius-md) !important; border: 1px solid rgba(80,89,132,0.2) !important;">
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1rem;">
-            <div id="ag-modal-icon" style="width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;"></div>
+            <div id="ag-modal-icon" style="width: 44px; height: 44px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;"></div>
             <div>
                 <h3 id="ag-modal-title" style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--texto-titulos, #0f172a);"></h3>
             </div>
@@ -907,9 +650,9 @@
 
         <p id="ag-modal-body" style="font-size: 0.88rem; color: var(--texto-silenciado, #64748b); margin: 0 0 1.5rem 0; line-height: 1.5;"></p>
 
-        <div style="display: flex; justify-content: flex-end; gap: 10px;">
-            <button type="button" class="ag-btn-outline-flat" onclick="closeAGModal()">Cancelar</button>
-            <button type="button" id="ag-modal-confirm-btn" class="ag-btn-flat">Confirmar Acción</button>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+            <button type="button" class="sa-btn sa-btn-cancel" onclick="closeAGModal()" style="min-width: 110px;">Cancelar</button>
+            <button type="button" id="ag-modal-confirm-btn" class="sa-btn sa-btn-primary" style="min-width: 140px;">Confirmar Acción</button>
         </div>
     </div>
 </div>
@@ -1009,8 +752,8 @@ function confirmarEliminacionBackup(formEl, nombreArchivo) {
         title: '¿Eliminar copia de respaldo?',
         body: `Confirma que desea eliminar el archivo de respaldo '${nombreArchivo}'. Esta acción no se puede deshacer.`,
         iconClass: 'ph-bold ph-trash',
-        iconBg: 'rgba(239,68,68,0.12)',
-        iconColor: '#ef4444',
+        iconBg: 'rgba(80,89,132,0.12)',
+        iconColor: 'var(--color-terciario)',
         confirmText: 'Sí, Eliminar',
         confirmClass: 'ag-btn-danger-flat',
         onConfirm: () => formEl.submit()
@@ -1024,8 +767,8 @@ function confirmarRestauracionBD() {
             title: 'Archivo no seleccionado',
             body: 'Por favor selecciona un archivo de respaldo (.sql, .sql.gz o .txt) antes de proceder.',
             iconClass: 'ph-bold ph-warning-circle',
-            iconBg: 'rgba(245,158,11,0.12)',
-            iconColor: '#f59e0b',
+            iconBg: 'rgba(80,89,132,0.12)',
+            iconColor: 'var(--color-secundario)',
             confirmText: 'Entendido',
             confirmClass: 'ag-btn-flat',
             onConfirm: () => {}
@@ -1038,8 +781,8 @@ function confirmarRestauracionBD() {
         title: 'ADVERTENCIA: Importar & Restaurar BD',
         body: `Se verificará la sintaxis del archivo '${file.name}' (${(file.size/1024).toFixed(1)} KB), se generará una copia de seguridad automática 'pre_restore_checkpoint' y se aplicarán los cambios en PostgreSQL. ¿Deseas continuar?`,
         iconClass: 'ph-bold ph-warning-circle',
-        iconBg: 'rgba(239,68,68,0.12)',
-        iconColor: '#ef4444',
+        iconBg: 'rgba(80,89,132,0.15)',
+        iconColor: 'var(--color-terciario)',
         confirmText: 'Sí, Ejecutar Restauración',
         confirmClass: 'ag-btn-danger-flat',
         onConfirm: () => document.getElementById('formRestaurarBackup').submit()
@@ -1051,8 +794,8 @@ function confirmarRestauracionDirecta(formEl, nombreArchivo) {
         title: 'Restaurar Respaldo Local',
         body: `Se restaurará la base de datos PostgreSQL utilizando el archivo '${nombreArchivo}'. Se generará una copia de respaldo automática 'pre_restore_checkpoint' previa. ¿Deseas proceder?`,
         iconClass: 'ph-bold ph-arrows-counter-clockwise',
-        iconBg: 'rgba(37,99,235,0.12)',
-        iconColor: '#2563eb',
+        iconBg: 'rgba(112,144,203,0.12)',
+        iconColor: 'var(--color-terciario)',
         confirmText: 'Sí, Restaurar Ahora',
         confirmClass: 'ag-btn-flat',
         onConfirm: () => formEl.submit()

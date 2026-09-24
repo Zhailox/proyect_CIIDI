@@ -11,7 +11,7 @@
                 Supervisión estructurada de eventos, trazabilidad administrativa (Audit Trail) y exportación de reportes PDF/CSV.
             </p>
         </div>
-        <a href="sudoadmin" class="btn btn-outline" style="border-color: var(--color-secundario); color: var(--color-secundario); text-decoration: none; padding: 8px 14px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">
+        <a href="sudoadmin" class="sa-btn sa-btn-outline">
             <i class="ph-bold ph-arrow-left"></i> Volver al Centro de Mando
         </a>
     </div>
@@ -37,17 +37,17 @@
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
         <h3 class="log-panel-title" style="margin:0;">Histórico de Acciones Administrativas</h3>
         
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <a href="exportar-logs?formato=csv&nivel=<?= urlencode($f_nivel) ?>&modulo=<?= urlencode($f_modulo) ?>&fecha_inicio=<?= urlencode($f_fecha_init) ?>&fecha_fin=<?= urlencode($f_fecha_fin) ?>" class="btn btn-outline" style="font-size: 0.82rem; border-color: #0284c7; color: #0284c7; padding: 6px 12px; text-decoration: none;">
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+            <a href="exportar-logs?formato=csv&nivel=<?= urlencode($f_nivel) ?>&modulo=<?= urlencode($f_modulo) ?>&fecha_inicio=<?= urlencode($f_fecha_init) ?>&fecha_fin=<?= urlencode($f_fecha_fin) ?>" class="sa-btn sa-btn-outline">
                 <i class="ph-bold ph-file-csv"></i> Exportar CSV
             </a>
             
-            <a href="exportar-logs?formato=pdf&nivel=<?= urlencode($f_nivel) ?>&modulo=<?= urlencode($f_modulo) ?>&fecha_inicio=<?= urlencode($f_fecha_init) ?>&fecha_fin=<?= urlencode($f_fecha_fin) ?>" target="_blank" class="btn btn-outline" style="font-size: 0.82rem; border-color: #dc2626; color: #dc2626; padding: 6px 12px; text-decoration: none;">
+            <a href="exportar-logs?formato=pdf&nivel=<?= urlencode($f_nivel) ?>&modulo=<?= urlencode($f_modulo) ?>&fecha_inicio=<?= urlencode($f_fecha_init) ?>&fecha_fin=<?= urlencode($f_fecha_fin) ?>" target="_blank" class="sa-btn sa-btn-outline">
                 <i class="ph-bold ph-file-pdf"></i> Imprimir / PDF
             </a>
 
             <form action="limpiar-logs" method="POST" style="margin:0;">
-                <button type="submit" class="btn" style="font-size: 0.82rem; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600;" onclick="return confirm('¿Está seguro de vaciar los registros de auditoría activa?');">
+                <button type="submit" class="sa-btn sa-btn-dark" onclick="return confirm('¿Está seguro de vaciar los registros de auditoría activa?');">
                     <i class="ph-bold ph-trash"></i> Limpiar Logs
                 </button>
             </form>
@@ -69,7 +69,17 @@
 
         <div>
             <label style="font-size: 0.78rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Módulo Originador</label>
-            <input type="text" name="modulo" class="login-flat-input" placeholder="Ej: SuperAdmin..." value="<?= htmlspecialchars($f_modulo) ?>" style="padding: 6px 10px; font-size: 0.85rem;">
+            <select name="modulo" class="login-flat-input" style="padding: 6px 10px; font-size: 0.85rem;">
+                <option value="">-- Todos los módulos --</option>
+                <?php 
+                $listaModulos = $modulos_disponibles ?? ['Articulos', 'Autenticacion', 'Cursos', 'Investigaciones', 'RepositorioPST', 'SuperAdmin', 'VinculacionEmpresarial'];
+                foreach ($listaModulos as $mod): 
+                ?>
+                    <option value="<?= htmlspecialchars($mod) ?>" <?= ($f_modulo === $mod) ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($mod) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
         </div>
 
         <div>

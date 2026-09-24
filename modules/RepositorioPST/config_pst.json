@@ -33,7 +33,7 @@
     },
     "recursos": {
         "sufijo_tipo_recurso": "PST \/ Proyecto Socio-Tecnológico",
-        "mostrar_url_git": false,
+        "mostrar_url_git": true,
         "mostrar_comunidad": true,
         "mostrar_nivel_academico": true
     },
@@ -44,11 +44,11 @@
         "permitir_filtro_carrera": false
     },
     "visor_pdf": {
-        "mostrar_toolbar": false,
-        "permitir_descarga": false
+        "mostrar_toolbar": true,
+        "permitir_descarga": true
     },
     "archivos": {
-        "max_size_mb": 20,
+        "max_size_mb": 2,
         "extensiones_permitidas": [
             ".pdf",
             ".docx"
@@ -56,6 +56,6 @@
     },
     "limites_equipo": {
         "max_autores": 4,
-        "max_tutores": 3
+        "max_tutores": 5
     }
 }

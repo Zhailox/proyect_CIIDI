@@ -338,9 +338,9 @@ select.sa-filter-input option, select option {
 }
 
 .rbac-level-delete:hover {
-    background: rgba(239, 68, 68, 0.08);
-    color: #ef4444;
-    border-color: rgba(239, 68, 68, 0.22);
+    background: rgba(18, 26, 62, 0.08);
+    color: var(--color-principal);
+    border-color: rgba(18, 26, 62, 0.25);
 }
 
 .rbac-level-delete i { font-size: 1.05rem; }
@@ -446,14 +446,14 @@ select.sa-filter-input option, select option {
 }
 
 .rbac-btn-danger-outline {
-    background: rgba(239, 68, 68, 0.06);
-    color: #ef4444;
-    border-color: rgba(239, 68, 68, 0.3);
+    background: rgba(18, 26, 62, 0.06);
+    color: var(--color-terciario);
+    border-color: rgba(18, 26, 62, 0.3);
 }
 
 .rbac-btn-danger-outline:hover {
-    background: rgba(239, 68, 68, 0.12);
-    border-color: #ef4444;
+    background: var(--btn-hover);
+    color: #ffffff;
     transform: translateY(-1px);
 }
 

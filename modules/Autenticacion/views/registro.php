@@ -141,7 +141,7 @@ function evaluarFortalezaClave(val) {
     const hasLength = val.length >= 8;
     const hasUpper = /[A-Z]/.test(val);
     const hasNumber = /[0-9]/.test(val);
-    const hasSpecial = /[@$!%*?&._\-\#\^\(\)\{\}\[\]]/.test(val);
+    const hasSpecial = /[^a-zA-Z0-9\s]/.test(val);
 
     // Actualizar items de reglas
     actualizarReglaItem('ruleLength', hasLength);

@@ -15,12 +15,16 @@ class UsuarioModel {
      * Busca un usuario activo por su correo y extrae su nivel de privilegio exacto.
      */
     public function intentarAutenticacion(string $cedula) {
+        $cedulaTrim = trim($cedula);
+        $soloDigitos = preg_replace('/[^0-9]/', '', $cedulaTrim);
+        $conPrefijo = 'V-' . $soloDigitos;
+
         // Quitamos el filtro de 'activo' para poder saber el estado real de la cuenta
         return $this->qb->tabla('usuarios u')
-            ->select('u.id, u.nombre_completo, u.email, u.contrasena, u.activo, r.nombre AS nombre_rol, p.nivel_privilegio')
+            ->select('u.id, u.cedula, u.nombre_completo, u.email, u.contrasena, u.activo, r.nombre AS nombre_rol, p.nivel_privilegio')
             ->join('roles r', 'u.id_rol = r.id')
             ->join('privilegios p', 'r.privilegio_id = p.privilegio_id')
-            ->where('u.cedula', '=', $cedula) 
+            ->whereRaw('(u.cedula = ? OR u.cedula = ? OR u.cedula = ?)', [$cedulaTrim, $soloDigitos, $conPrefijo]) 
             ->first();
     }
     /**
@@ -60,10 +64,14 @@ class UsuarioModel {
      * Verifica si un usuario ya existe por cédula o correo
      */
     public function existeUsuario(string $cedula, string $email) {
+        $cedulaTrim = trim($cedula);
+        $soloDigitos = preg_replace('/[^0-9]/', '', $cedulaTrim);
+        $conPrefijo = 'V-' . $soloDigitos;
+
         $db = Connection::getInstance();
-        $sql = "SELECT id FROM usuarios WHERE cedula = ? OR email = ?";
+        $sql = "SELECT id FROM usuarios WHERE (cedula = ? OR cedula = ? OR cedula = ?) OR email = ?";
         $stmt = $db->prepare($sql);
-        $stmt->execute([$cedula, $email]);
+        $stmt->execute([$cedulaTrim, $soloDigitos, $conPrefijo, $email]);
         return $stmt->fetch() !== false; // Retorna true si ya existe
     }
 
@@ -79,7 +87,7 @@ class UsuarioModel {
             RETURNING id
         ";
         $stmt = $db->prepare($sql);
-        $stmt->execute([$cedula, $nombre, $email, $hash, $emailVerificado ? 1 : 0, $tokenActivacion]);
+        $stmt->execute([$cedula, $nombre, $email, $hash, $emailVerificado ? 'true' : 'false', $tokenActivacion]);
         return $stmt->fetch() !== false;
     }
 
@@ -91,9 +99,13 @@ class UsuarioModel {
     }
 
     public function findByCedula(string $cedula) {
+        $cedulaTrim = trim($cedula);
+        $soloDigitos = preg_replace('/[^0-9]/', '', $cedulaTrim);
+        $conPrefijo = 'V-' . $soloDigitos;
+
         $db = Connection::getInstance();
-        $stmt = $db->prepare("SELECT id, nombre_completo, email FROM usuarios WHERE cedula = ? AND activo = true");
-        $stmt->execute([$cedula]);
+        $stmt = $db->prepare("SELECT id, nombre_completo, email, cedula FROM usuarios WHERE (cedula = ? OR cedula = ? OR cedula = ?) AND activo = true");
+        $stmt->execute([$cedulaTrim, $soloDigitos, $conPrefijo]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
     

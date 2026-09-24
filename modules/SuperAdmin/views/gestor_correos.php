@@ -12,7 +12,7 @@
             </p>
         </div>
         <div style="display: flex; gap: 0.5rem;">
-            <a href="sudoadmin" class="btn btn-outline" style="border-color: var(--color-secundario); color: var(--color-secundario) !important; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">
+            <a href="sudoadmin" class="sa-btn sa-btn-outline">
                 <i class="ph-bold ph-arrow-left"></i> Volver al Dashboard
             </a>
         </div>
@@ -20,14 +20,14 @@
 </div>
 
 <?php if (!empty($mensajeExito)): ?>
-    <div style="background: rgba(16,185,129,0.12); color: #047857; border: 1px solid rgba(16,185,129,0.3); padding: 0.85rem 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-        <i class="ph-bold ph-check-circle" style="font-size: 1.2rem;"></i> <?= htmlspecialchars($mensajeExito) ?>
+    <div class="sa-alert sa-alert-success">
+        <i class="ph-bold ph-check-circle"></i> <?= htmlspecialchars($mensajeExito) ?>
     </div>
 <?php endif; ?>
 
 <?php if (!empty($mensajeError)): ?>
-    <div style="background: rgba(239,68,68,0.12); color: #b91c1c; border: 1px solid rgba(239,68,68,0.3); padding: 0.85rem 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-        <i class="ph-bold ph-warning-circle" style="font-size: 1.2rem;"></i> <?= htmlspecialchars($mensajeError) ?>
+    <div class="sa-alert sa-alert-error">
+        <i class="ph-bold ph-warning-circle"></i> <?= htmlspecialchars($mensajeError) ?>
     </div>
 <?php endif; ?>
 
@@ -324,11 +324,11 @@
                                 </td>
                                 <td style="padding: 10px 12px;">
                                     <?php if ($log['exito']): ?>
-                                        <span style="background: #d1fae5; color: #047857; font-size: 0.7rem; font-weight: 800; padding: 3px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                                        <span class="sa-badge-active">
                                             <i class="ph-bold ph-check-circle"></i> ENTREGADO
                                         </span>
                                     <?php else: ?>
-                                        <span style="background: #fee2e2; color: #b91c1c; font-size: 0.7rem; font-weight: 800; padding: 3px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                                        <span class="sa-badge-inactive">
                                             <i class="ph-bold ph-x-circle"></i> FALLIDO
                                         </span>
                                     <?php endif; ?>
@@ -374,6 +374,7 @@
             
             <form action="guardar-configuracion-sistema" method="POST">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                <input type="hidden" name="origen" value="gestor-correos">
                 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
                     <div>
@@ -596,7 +597,7 @@
                             <span style="font-size: 0.75rem; font-weight: 700; color: var(--color-terciario); text-transform: uppercase;">
                                 <?= htmlspecialchars($tpl['modulo'] ?? 'Módulo') ?>
                             </span>
-                            <span style="font-size: 0.65rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; <?= $estaActivo ? 'background:#d1fae5; color:#047857;' : 'background:#fee2e2; color:#b91c1c;' ?>">
+                            <span class="<?= $estaActivo ? 'sa-badge-active' : 'sa-badge-inactive' ?>">
                                 <?= $estaActivo ? 'ACTIVA' : 'INHABILITADA' ?>
                             </span>
                         </div>
@@ -754,13 +755,13 @@
 
 <!-- MODAL GENÉRICO DE AVISO Y NOTIFICACIÓN (REEMPLAZO DE ALERT) -->
 <div id="modalAvisoAlert" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18,26,62,0.6); backdrop-filter: blur(6px); z-index: 10000; justify-content: center; align-items: center;">
-    <div style="background: #ffffff; width: 90%; max-width: 440px; border-radius: 12px; padding: 1.5rem; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+    <div style="background: #ffffff; width: 90%; max-width: 440px; border-radius: var(--radius-md); padding: 1.75rem; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid rgba(80, 89, 132, 0.2);">
         <div id="modalAvisoIcono" style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--color-terciario);">
             <i class="ph-bold ph-info"></i>
         </div>
         <h3 id="modalAvisoTitulo" style="margin: 0 0 0.5rem 0; font-size: 1.15rem; font-weight: 800; color: var(--texto-titulos);">Notificación</h3>
         <p id="modalAvisoMensaje" style="margin: 0 0 1.25rem 0; font-size: 0.9rem; color: #475569; line-height: 1.5;"></p>
-        <button type="button" onclick="cerrarModalAviso()" class="btn" style="background-color: var(--color-secundario) !important; color: #ffffff !important; border:none; padding: 10px 24px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+        <button type="button" onclick="cerrarModalAviso()" class="sa-btn sa-btn-primary" style="min-width: 130px;">
             Aceptar
         </button>
     </div>
@@ -768,7 +769,7 @@
 
 <!-- MODAL PARA INSERTAR BOTÓN CON ENLACE (REEMPLAZO DE PROMPT) -->
 <div id="modalConfigBoton" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18,26,62,0.6); backdrop-filter: blur(6px); z-index: 10000; justify-content: center; align-items: center;">
-    <div style="background: #ffffff; width: 90%; max-width: 480px; border-radius: 12px; padding: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+    <div style="background: #ffffff; width: 90%; max-width: 480px; border-radius: var(--radius-md); padding: 1.75rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid rgba(80, 89, 132, 0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
             <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--texto-titulos); display: flex; align-items: center; gap: 8px;">
                 <i class="ph-bold ph-cursor-click" style="color: var(--color-terciario);"></i> Configurar Botón de Acción
@@ -786,11 +787,11 @@
             <input type="url" id="input_btn_url" value="https://upttmbi.edu.ve" class="sa-filter-input" style="width: 100%;">
         </div>
 
-        <div style="display: flex; justify-content: flex-end; gap: 8px;">
-            <button type="button" onclick="cerrarModalConfigBoton()" class="btn" style="background: #ffffff; color: #64748b !important; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+            <button type="button" onclick="cerrarModalConfigBoton()" class="sa-btn sa-btn-cancel" style="min-width: 110px;">
                 Cancelar
             </button>
-            <button type="button" onclick="confirmarInsertarBoton()" class="btn" style="background-color: var(--color-secundario) !important; color: #ffffff !important; border:none; padding: 8px 18px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+            <button type="button" onclick="confirmarInsertarBoton()" class="sa-btn sa-btn-primary" style="min-width: 130px;">
                 Insertar Botón
             </button>
         </div>
@@ -799,7 +800,7 @@
 
 <!-- MODAL PARA GUARDAR COMO PLANTILLA PERSONALIZADA REUTILIZABLE -->
 <div id="modalGuardarPlantilla" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18,26,62,0.6); backdrop-filter: blur(6px); z-index: 10000; justify-content: center; align-items: center;">
-    <div style="background: #ffffff; width: 90%; max-width: 480px; border-radius: 12px; padding: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+    <div style="background: #ffffff; width: 90%; max-width: 480px; border-radius: var(--radius-md); padding: 1.75rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid rgba(80, 89, 132, 0.2);">
         <form action="guardar-plantilla-personalizada" method="POST" id="formGuardarPlantillaCustom">
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
             <input type="hidden" name="cuerpo_html" id="input_modal_cuerpo_html">
@@ -817,11 +818,11 @@
                 <input type="text" name="nombre" required placeholder="Ej. Invitación a Conferencia 2026" class="sa-filter-input" style="width: 100%;">
             </div>
 
-            <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                <button type="button" onclick="cerrarModalGuardarPlantilla()" class="btn" style="background: #ffffff; color: #64748b !important; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+                <button type="button" onclick="cerrarModalGuardarPlantilla()" class="sa-btn sa-btn-cancel" style="min-width: 110px;">
                     Cancelar
                 </button>
-                <button type="submit" class="btn" style="background-color: var(--color-secundario) !important; color: #ffffff !important; border:none; padding: 8px 18px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                <button type="submit" class="sa-btn sa-btn-primary" style="min-width: 140px;">
                     Guardar Plantilla
                 </button>
             </div>
@@ -885,9 +886,9 @@ function mostrarAvisoModal(mensaje, titulo = 'Notificación', tipo = 'info') {
     elemMensaje.textContent = mensaje;
 
     if (tipo === 'error') {
-        elemIcono.innerHTML = '<i class="ph-bold ph-x-circle" style="color: #ef4444;"></i>';
+        elemIcono.innerHTML = '<i class="ph-bold ph-x-circle" style="color: var(--color-secundario);"></i>';
     } else if (tipo === 'warning') {
-        elemIcono.innerHTML = '<i class="ph-bold ph-warning" style="color: #f59e0b;"></i>';
+        elemIcono.innerHTML = '<i class="ph-bold ph-warning" style="color: var(--color-principal);"></i>';
     } else {
         elemIcono.innerHTML = '<i class="ph-bold ph-info" style="color: var(--color-terciario);"></i>';
     }
@@ -1660,5 +1661,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Inicializar paginación de logs
     renderizarPaginacionLogs();
+
+    // Activar pestaña según parámetro de URL si existe (ej. ?tab=tabConexionSmtp)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam) {
+        const btnTab = document.querySelector(`button[onclick*="'${tabParam}'"]`);
+        if (btnTab) {
+            btnTab.click();
+        }
+    }
 });
 </script>

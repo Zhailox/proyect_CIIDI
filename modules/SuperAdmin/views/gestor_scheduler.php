@@ -1,146 +1,3 @@
-<style>
-/* ==========================================================================
-   Antigravity UI & Motion Design Expert Style Guide (estilo.md) - Scheduler
-   ========================================================================== */
-.ag-btn-standard {
-    height: 38px !important;
-    padding: 0 16px !important;
-    border-radius: 8px !important;
-    font-weight: 700 !important;
-    font-size: 0.85rem !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 6px !important;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    cursor: pointer !important;
-    border: none !important;
-    text-decoration: none !important;
-    box-sizing: border-box !important;
-}
-
-.ag-btn-icon {
-    width: 34px !important;
-    height: 34px !important;
-    padding: 0 !important;
-    border-radius: 8px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    cursor: pointer !important;
-    border: 1px solid rgba(80, 89, 132, 0.2) !important;
-    background: #ffffff !important;
-    color: #334155 !important;
-}
-
-.ag-btn-icon:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(18, 26, 62, 0.1);
-    background: #f8fafc !important;
-    border-color: var(--color-secundario) !important;
-    color: var(--color-secundario) !important;
-}
-
-.ag-btn-danger-icon {
-    width: 34px !important;
-    height: 34px !important;
-    padding: 0 !important;
-    border-radius: 8px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    cursor: pointer !important;
-    border: 1px solid rgba(239, 68, 68, 0.25) !important;
-    background: rgba(239, 68, 68, 0.08) !important;
-    color: #dc2626 !important;
-}
-
-.ag-btn-danger-icon:hover {
-    transform: translateY(-2px);
-    background: #dc2626 !important;
-    color: #ffffff !important;
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
-}
-
-.ag-btn-primary {
-    background: var(--color-secundario) !important;
-    color: #ffffff !important;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.2);
-}
-
-.ag-btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(80, 89, 132, 0.32);
-    background: var(--color-secundario-dark, rgb(60, 68, 105)) !important;
-}
-
-.ag-btn-secondary {
-    background: #ffffff !important;
-    color: var(--color-secundario) !important;
-    border: 1px solid rgba(80, 89, 132, 0.25) !important;
-}
-
-.ag-btn-secondary:hover {
-    transform: translateY(-2px);
-    background: #f8fafc !important;
-    border-color: var(--color-secundario) !important;
-    box-shadow: 0 4px 12px rgba(18, 26, 62, 0.06);
-}
-
-/* Glassmorphism Floating Cards */
-.ag-scheduler-card {
-    background: rgba(255, 255, 255, 0.95) !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(80, 89, 132, 0.15) !important;
-    border-radius: 14px !important;
-    padding: 1.5rem !important;
-    box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04);
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 1rem;
-}
-
-.ag-scheduler-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 40px rgba(18, 26, 62, 0.08);
-    border-color: rgba(80, 89, 132, 0.28) !important;
-}
-
-/* Estilo de Inputs y Controles Formulario Premium */
-.ag-form-input {
-    width: 100%;
-    padding: 10px 14px;
-    border-radius: 10px;
-    border: 1px solid rgba(80, 89, 132, 0.2);
-    background: rgba(248, 250, 252, 0.8);
-    font-size: 0.88rem;
-    color: #0f172a;
-    transition: all 0.25s ease-out;
-    box-sizing: border-box;
-}
-
-.ag-form-input:focus {
-    outline: none;
-    border-color: var(--color-secundario);
-    background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(80, 89, 132, 0.12);
-}
-
-.ag-form-label {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: #334155;
-    display: block;
-    margin-bottom: 6px;
-    letter-spacing: 0.2px;
-}
-</style>
-
 <div class="sa-hero-header mb-2" style="background: #ffffff !important; border: 1px solid rgba(80, 89, 132, 0.18); padding: 1.5rem 2rem; border-radius: var(--radius-md); box-shadow: 0 4px 20px rgba(18, 26, 62, 0.04);">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
@@ -155,10 +12,10 @@
             </p>
         </div>
         <div style="display: flex; gap: 0.5rem;">
-            <button onclick="abrirModalTarea()" class="ag-btn-standard ag-btn-primary">
+            <button onclick="abrirModalTarea()" class="sa-btn sa-btn-primary">
                 <i class="ph-bold ph-plus-circle"></i> + Nueva Tarea
             </button>
-            <a href="sudoadmin" class="ag-btn-standard ag-btn-secondary">
+            <a href="sudoadmin" class="sa-btn sa-btn-outline">
                 <i class="ph-bold ph-arrow-left"></i> Volver al Centro de Mando
             </a>
         </div>
@@ -167,16 +24,16 @@
 
 <!-- ALERTAS DE ÉXITO O ERROR DE SESIÓN -->
 <?php if (isset($_SESSION['mensaje_admin_exito'])): ?>
-    <div style="background: rgba(16,185,129,0.12); color: #047857; border: 1px solid rgba(16,185,129,0.3); padding: 0.85rem 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-        <i class="ph-bold ph-check-circle" style="font-size: 1.2rem;"></i>
+    <div class="sa-alert sa-alert-success">
+        <i class="ph-bold ph-check-circle"></i>
         <?= htmlspecialchars($_SESSION['mensaje_admin_exito']) ?>
         <?php unset($_SESSION['mensaje_admin_exito']); ?>
     </div>
 <?php endif; ?>
 
 <?php if (isset($_SESSION['mensaje_admin_error'])): ?>
-    <div style="background: rgba(239,68,68,0.12); color: #b91c1c; border: 1px solid rgba(239,68,68,0.3); padding: 0.85rem 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-        <i class="ph-bold ph-warning-circle" style="font-size: 1.2rem;"></i>
+    <div class="sa-alert sa-alert-error">
+        <i class="ph-bold ph-warning-circle"></i>
         <?= htmlspecialchars($_SESSION['mensaje_admin_error']) ?>
         <?php unset($_SESSION['mensaje_admin_error']); ?>
     </div>
@@ -185,7 +42,7 @@
 <!-- PANEL DE DIAGNÓSTICO DEL ENTORNO CRON DEL SISTEMA OPERATIVO -->
 <div class="glass-panel mb-2" style="padding: 1.25rem; border-radius: var(--radius-sm); border-left: 4px solid var(--color-secundario); background: rgba(255,255,255,0.95); backdrop-filter: blur(12px);">
     <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; font-weight: 700; color: var(--texto-titulos); display: flex; align-items: center; gap: 8px;">
-        <i class="ph-bold ph-linux-logo" style="font-size: 1.2rem; color: var(--color-principal);"></i>
+        <i class="ph-bold ph-linux-logo" style="font-size: 1.2rem;"></i>
         Estado del Programador del Sistema Operativo
     </h4>
     <p style="margin: 0 0 0.75rem 0; font-size: 0.85rem; color: #475569;">
@@ -210,10 +67,10 @@
         <div class="ag-scheduler-card">
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
-                    <span style="font-weight: 800; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 10px; border-radius: 6px; <?= $tarea['estado'] === 'activo' ? 'background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25);' : 'background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0;' ?>">
+                    <span class="<?= $tarea['estado'] === 'activo' ? 'sa-badge-active' : 'sa-badge-inactive' ?>">
                         <i class="ph-bold <?= $tarea['estado'] === 'activo' ? 'ph-check-circle' : 'ph-pause-circle' ?>"></i> <?= strtoupper($tarea['estado']) ?>
                     </span>
-                    <span style="font-family: monospace; font-size: 0.8rem; background: #f8fafc; padding: 4px 10px; border-radius: 6px; border: 1px solid #e2e8f0; color: #0284c7; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                    <span style="font-family: monospace; font-size: 0.8rem; background: #f8fafc; padding: 4px 10px; border-radius: var(--radius-sm); border: 1px solid #e2e8f0; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
                         <?= htmlspecialchars($tarea['expresion_cron']) ?>
                     </span>
                 </div>
@@ -346,9 +203,9 @@
                 <textarea name="descripcion" id="form_tarea_descripcion" class="ag-form-input" style="height: 65px; resize: vertical;" placeholder="Propósito o anotaciones de esta automatización..."></textarea>
             </div>
 
-            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-                <button type="button" onclick="cerrarModalTarea()" class="ag-btn-standard ag-btn-secondary">Cancelar</button>
-                <button type="submit" class="ag-btn-standard ag-btn-primary">Guardar Configuración</button>
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+                <button type="button" onclick="cerrarModalTarea()" class="sa-btn sa-btn-cancel" style="min-width: 110px;">Cancelar</button>
+                <button type="submit" class="sa-btn sa-btn-primary" style="min-width: 150px;">Guardar Configuración</button>
             </div>
         </form>
     </div>
@@ -356,7 +213,7 @@
 
 <!-- MODAL VISOR DE LOGS DE CONSOLA (STDOUT / STDERR) -->
 <div id="modalVisorLog" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 10000; justify-content: center; align-items: center; padding: 1rem;">
-    <div style="background: #ffffff; border-radius: 16px; max-width: 720px; width: 100%; padding: 1.75rem; box-shadow: 0 24px 48px rgba(18, 26, 62, 0.2); border: 1px solid rgba(80, 89, 132, 0.2);">
+    <div style="background: #ffffff; border-radius: var(--radius-md); max-width: 720px; width: 100%; padding: 1.75rem; box-shadow: 0 24px 48px rgba(18, 26, 62, 0.2); border: 1px solid rgba(80, 89, 132, 0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
             <div>
                 <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: #121a3e; display: flex; align-items: center; gap: 8px;">
@@ -375,7 +232,7 @@
         </div>
 
         <div style="display: flex; justify-content: flex-end; margin-top: 1.25rem;">
-            <button type="button" onclick="cerrarModalLog()" class="ag-btn-standard ag-btn-secondary">
+            <button type="button" onclick="cerrarModalLog()" class="sa-btn sa-btn-cancel" style="min-width: 110px;">
                 Cerrar Visor
             </button>
         </div>
@@ -384,8 +241,8 @@
 
 <!-- MODAL CONFIRMACIÓN DE ELIMINACIÓN -->
 <div id="modalConfirmacionGenerico" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 10001; justify-content: center; align-items: center; padding: 1rem;">
-    <div style="background: #ffffff; border-radius: 16px; max-width: 440px; width: 100%; padding: 1.75rem; box-shadow: 0 24px 48px rgba(18, 26, 62, 0.2); border: 1px solid rgba(80, 89, 132, 0.2); text-align: center;">
-        <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(239, 68, 68, 0.12); color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 1rem auto;">
+    <div style="background: #ffffff; border-radius: var(--radius-md); max-width: 440px; width: 100%; padding: 1.75rem; box-shadow: 0 24px 48px rgba(18, 26, 62, 0.2); border: 1px solid rgba(80, 89, 132, 0.2); text-align: center;">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(80, 89, 132, 0.12); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 1rem auto;">
             <i class="ph-bold ph-warning"></i>
         </div>
         
@@ -398,10 +255,10 @@
         </p>
 
         <div style="display: flex; justify-content: center; gap: 0.75rem;">
-            <button type="button" onclick="cerrarModalConfirmacion()" class="ag-btn-standard ag-btn-secondary" style="min-width: 110px;">
+            <button type="button" onclick="cerrarModalConfirmacion()" class="sa-btn sa-btn-cancel" style="min-width: 110px;">
                 Cancelar
             </button>
-            <button type="button" id="btnConfirmarAccionModal" class="ag-btn-standard" style="background: #dc2626 !important; color: white !important; min-width: 110px;">
+            <button type="button" id="btnConfirmarAccionModal" class="sa-btn sa-btn-dark" style="min-width: 110px;">
                 Eliminar
             </button>
         </div>
