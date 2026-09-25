@@ -173,7 +173,7 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                 <?php foreach ($resultados as $res): ?>
                                     <div class="result-card">
                                         <div class="result-card-header">
-                                            <span class="badge-tipo"><i class="ph ph-file-text"></i> PST / Proyecto Socio-Tecnológico</span>
+                                            <span class="badge-tipo"><i class="ph ph-file-text"></i> <?= htmlspecialchars(ConfigService::get('recursos.sufijo_tipo_recurso', 'PST / Proyecto Socio-Tecnológico')) ?></span>
                                             <span class="result-year"><?= $res['anio_publicacion'] ?></span>
                                         </div>
                                         <h4 class="result-title">
@@ -214,10 +214,15 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                             <?php endif; ?>
                                         </div>
                                         
-                                        <div class="result-actions">
+                                        <div class="result-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                             <a href="?ruta=detalles-pst&id=<?= $res['id'] ?>" class="btn-view-details">
-                                                <i class="ph ph-info"></i> Ver Ficha Técnia
+                                                <i class="ph ph-info"></i> Ver Ficha Técnica
                                             </a>
+                                            <?php if (ConfigService::puedeDescargar() && !empty($res['archivo_pdf'])): ?>
+                                                <a href="?ruta=ver-pdf-pst&id=<?= $res['id'] ?>&download=1" class="btn-view-details" style="background: rgba(16, 185, 129, 0.1); color: #059669; border-color: rgba(16, 185, 129, 0.3); text-decoration: none;" target="_blank" download>
+                                                    <i class="ph ph-download-simple"></i> Descargar Adjunto
+                                                </a>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 <?php endforeach; ?>

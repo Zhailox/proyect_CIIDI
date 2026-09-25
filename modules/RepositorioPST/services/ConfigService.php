@@ -60,4 +60,51 @@ class ConfigService {
         }
         return $success;
     }
+
+    /**
+     * Determina si el usuario actual tiene autorización para visualizar el botón de descarga
+     * y descargar físicamente el documento digital según las políticas configuradas.
+     *
+     * @param int|null $nivelUsuario Nivel explícito a evaluar o null para el usuario de la sesión.
+     * @return bool
+     */
+    public static function puedeDescargar(?int $nivelUsuario = null): bool {
+        if (session_status() === PHP_SESSION_NONE) {
+            @session_start();
+        }
+
+        $nivel = $nivelUsuario !== null ? $nivelUsuario : (int)($_SESSION['nivel_privilegio'] ?? 999);
+        $estaAutenticado = isset($_SESSION['usuario_id']);
+
+        // SuperAdmin (Nivel 0) siempre tiene acceso total
+        if ($estaAutenticado && $nivel === 0) {
+            return true;
+        }
+
+        // Si la descarga está desactivada globalmente, nadie excepto SuperAdmin puede descargar
+        $permitirDescarga = (bool)self::get('visor_pdf.permitir_descarga', true);
+        if (!$permitirDescarga) {
+            return false;
+        }
+
+        $nivelMinimo = (int)self::get('visor_pdf.nivel_minimo_descarga', 999);
+
+        // Nivel 999: Público General (incluso visitantes sin inicio de sesión)
+        if ($nivelMinimo >= 999) {
+            return true;
+        }
+
+        // Si se exige al menos usuario autenticado (998) o un rol específico
+        if (!$estaAutenticado) {
+            return false;
+        }
+
+        if ($nivelMinimo === 998) {
+            return true;
+        }
+
+        // Para roles jerárquicos (menor número = mayor jerarquía en CIIDI)
+        return $nivel <= $nivelMinimo;
+    }
 }
+

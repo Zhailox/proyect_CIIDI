@@ -63,7 +63,7 @@ class InicioRepositorioController {
             'linea_id'        => !empty($_GET['linea_id']) ? (int)$_GET['linea_id'] : null,
             'dimension_id'    => !empty($_GET['dimension_id']) ? (int)$_GET['dimension_id'] : null,
             'nivel_academico' => !empty($_GET['nivel_academico']) ? trim($_GET['nivel_academico']) : null,
-            'orden'           => !empty($_GET['orden']) ? trim($_GET['orden']) : 'desc',
+            'orden'           => !empty($_GET['orden']) ? trim($_GET['orden']) : ConfigService::get('buscador.orden_predeterminado', 'anio_desc'),
         ];
 
         // Obtener proyectos paginados según la configuración

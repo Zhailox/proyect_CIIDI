@@ -32,6 +32,7 @@ class BusquedaGlobalController {
             'carrera_id'   => $carreraId,
             'linea_id'     => !empty($_GET['linea_id']) ? (int)$_GET['linea_id'] : null,
             'dimension_id' => !empty($_GET['dimension_id']) ? (int)$_GET['dimension_id'] : null,
+            'orden'        => !empty($_GET['orden']) ? trim($_GET['orden']) : ConfigService::get('buscador.orden_predeterminado', 'anio_desc'),
         ];
         
         // Búsqueda SQL estándar con paginación

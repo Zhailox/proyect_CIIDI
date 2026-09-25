@@ -133,7 +133,7 @@ if (typeof window.mammoth === 'undefined') {
                                     <div class="sub-label-header"><?= $label ?></div>
                                     <div class="grid-2-cols">
                                         <div class="upload-input-group">
-                                            <input type="text" name="autor_cedula[]" class="upload-input" value="<?= htmlspecialchars($autoresList[$i]['cedula'] ?? '') ?>" placeholder="Cédula<?= $esObligatorio ? ' (V-30123456)' : '' ?>" <?= $esObligatorio ? 'required' : '' ?>>
+                                            <input type="text" name="autor_cedula[]" class="upload-input" value="<?= htmlspecialchars($autoresList[$i]['cedula'] ?? '') ?>" placeholder="Cédula<?= $esObligatorio ? ' (V-30123456)' : '' ?>">
                                         </div>
                                         <div class="upload-input-group">
                                             <input type="text" name="autor_nombre[]" class="upload-input" value="<?= htmlspecialchars($autoresList[$i]['nombre_completo'] ?? '') ?>" placeholder="Nombres y Apellidos<?= $esObligatorio ? ' del Estudiante' : '' ?>" <?= $esObligatorio ? 'required' : '' ?>>
@@ -142,19 +142,21 @@ if (typeof window.mammoth === 'undefined') {
                                 <?php endfor; ?>
                             </div>
 
-                            <!-- Panel de 3 Tutores del PST -->
+                            <!-- Panel de Tutores del PST (respetando max_tutores) -->
+                            <?php 
+                            $maxTutores = (int)ConfigService::get('limites_equipo.max_tutores', 3);
+                            $tAcadCed = $_POST['tutor_academico_cedula'] ?? $tutores['academico']['cedula'] ?? '';
+                            $tAcadNom = $_POST['tutor_academico_nombre'] ?? $tutores['academico']['nombre'] ?? '';
+                            $tInstCed = $_POST['tutor_institucional_cedula'] ?? $tutores['institucional']['cedula'] ?? '';
+                            $tInstNom = $_POST['tutor_institucional_nombre'] ?? $tutores['institucional']['nombre'] ?? '';
+                            $tComCed = $_POST['tutor_comunitario_cedula'] ?? $tutores['comunitario']['cedula'] ?? '';
+                            $tComNom = $_POST['tutor_comunitario_nombre'] ?? $tutores['comunitario']['nombre'] ?? '';
+                            ?>
                             <h3 class="upload-section-title">
-                                <i class="ph ph-chalkboard-teacher"></i> Tutores del Proyecto (Académico, Institucional, Comunitario)
+                                <i class="ph ph-chalkboard-teacher"></i> Tutores del Proyecto (Máx. <?= $maxTutores ?>)
                             </h3>
                             <div class="tutors-container">
-                                <?php 
-                                $tAcadCed = $_POST['tutor_academico_cedula'] ?? $tutores['academico']['cedula'] ?? '';
-                                $tAcadNom = $_POST['tutor_academico_nombre'] ?? $tutores['academico']['nombre'] ?? '';
-                                $tInstCed = $_POST['tutor_institucional_cedula'] ?? $tutores['institucional']['cedula'] ?? '';
-                                $tInstNom = $_POST['tutor_institucional_nombre'] ?? $tutores['institucional']['nombre'] ?? '';
-                                $tComCed = $_POST['tutor_comunitario_cedula'] ?? $tutores['comunitario']['cedula'] ?? '';
-                                $tComNom = $_POST['tutor_comunitario_nombre'] ?? $tutores['comunitario']['nombre'] ?? '';
-                                ?>
+                                <?php if ($maxTutores >= 1): ?>
                                 <div class="sub-label-header">Tutor Académico (Asesor Docente)</div>
                                 <div class="grid-2-cols">
                                     <div class="upload-input-group">
@@ -164,7 +166,9 @@ if (typeof window.mammoth === 'undefined') {
                                         <input type="text" name="tutor_academico_nombre" class="upload-input" value="<?= htmlspecialchars($tAcadNom) ?>" placeholder="Nombre Completo del Tutor Académico">
                                     </div>
                                 </div>
+                                <?php endif; ?>
 
+                                <?php if ($maxTutores >= 2): ?>
                                 <div class="sub-label-header">Tutor Institucional (Asesor de la Organización)</div>
                                 <div class="grid-2-cols">
                                     <div class="upload-input-group">
@@ -174,7 +178,9 @@ if (typeof window.mammoth === 'undefined') {
                                         <input type="text" name="tutor_institucional_nombre" class="upload-input" value="<?= htmlspecialchars($tInstNom) ?>" placeholder="Nombre Completo del Tutor Institucional">
                                     </div>
                                 </div>
+                                <?php endif; ?>
 
+                                <?php if ($maxTutores >= 3): ?>
                                 <div class="sub-label-header">Tutor Comunitario (Líder / Representante Comunal)</div>
                                 <div class="grid-2-cols">
                                     <div class="upload-input-group">
@@ -184,6 +190,7 @@ if (typeof window.mammoth === 'undefined') {
                                         <input type="text" name="tutor_comunitario_nombre" class="upload-input" value="<?= htmlspecialchars($tComNom) ?>" placeholder="Nombre Completo del Tutor Comunitario">
                                     </div>
                                 </div>
+                                <?php endif; ?>
                             </div>
 
                             <h3 class="upload-section-title">
@@ -194,7 +201,7 @@ if (typeof window.mammoth === 'undefined') {
                                 <?php 
                                 $permitirFiltroCarrera = (bool)ConfigService::get('buscador.permitir_filtro_carrera', false);
                                 $carrerasList = $carreras ?? [];
-                                $currCarrera = $_POST['id_carrera'] ?? $documento['id_carrera'] ?? ($permitirFiltroCarrera ? '' : 1);
+                                $currCarrera = $_POST['id_carrera'] ?? $documento['id_carrera'] ?? $documento['carrera_id'] ?? ($permitirFiltroCarrera ? '' : 1);
                                 $currLinea = $_POST['linea_id'] ?? $documento['linea_id'] ?? '';
                                 $lineasParaMostrar = (!empty($currCarrera)) ? ($lineas ?? []) : [];
                                 ?>
@@ -543,19 +550,33 @@ if (typeof window.mammoth === 'undefined') {
 
                 <!-- Paginador de Gestión Documental -->
                 <?php if (!empty($pagination) && $pagination['total_pages'] > 1): ?>
-                    <div class="pst-pagination">
+                    <div class="pst-pagination" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
                         <?php 
-                        $query_params = $_GET;
-                        unset($query_params['page']); 
-                        
-                        $build_url = function($p) use ($query_params) {
-                            $query_params['page'] = $p;
-                            return '?' . http_build_query($query_params);
-                        };
-                        
-                        $curr = $pagination['current_page'];
-                        $tot = $pagination['total_pages'];
+                        $opcionesSelectorAdmin = ConfigService::get('paginacion.opciones_selector', [5, 10, 15, 20, 50]);
+                        $currLimitAdmin = (int)($_GET['limit'] ?? ConfigService::get('paginacion.limite_catalogo', 10));
                         ?>
+                        <div style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; color: var(--texto-silenciado);">
+                            <span>Mostrar:</span>
+                            <select onchange="window.location.href='?ruta=agregar-documento&limit=' + this.value + '&page=1'" style="padding: 2px 6px; font-size: 0.78rem; font-weight: 700; border-radius: 4px; border: 1px solid #cbd5e1; background: white; cursor: pointer;">
+                                <?php foreach ($opcionesSelectorAdmin as $opt): ?>
+                                    <option value="<?= $opt ?>" <?= $currLimitAdmin === (int)$opt ? 'selected' : '' ?>><?= $opt ?> por pág.</option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div>
+                            <?php 
+                            $query_params = $_GET;
+                            unset($query_params['page']); 
+                            
+                            $build_url = function($p) use ($query_params) {
+                                $query_params['page'] = $p;
+                                return '?' . http_build_query($query_params);
+                            };
+                            
+                            $curr = $pagination['current_page'];
+                            $tot = $pagination['total_pages'];
+                            ?>
                         
                         <?php if ($curr > 1): ?>
                             <a href="<?= $build_url($curr - 1) ?>" class="page-link">&laquo; Anterior</a>
@@ -808,11 +829,6 @@ function procesarArchivosSeleccionados(fileList) {
             const dt = new DataTransfer();
             dt.items.add(file);
             fileInput.files = dt.files;
-        }
-
-        const fileInputHidden = document.getElementById('archivo_pdf_hidden');
-        if (fileInputHidden) {
-            fileInputHidden.value = file.name;
         }
 
         const badge = document.getElementById('badgeArchivoSustituido');
@@ -1527,7 +1543,8 @@ function abrirModalPrevisualizacionDocumento() {
             fileName = item.nombreArchivo;
             if (item.nombreArchivo.toLowerCase().endsWith('.docx')) isDocx = true;
         } else if (item.data && item.data.archivo_pdf) {
-            fileUrl = `?ruta=ver-pdf-pst&file=${encodeURIComponent(item.data.archivo_pdf)}`;
+            const tbHash = <?= ConfigService::get('visor_pdf.mostrar_toolbar', true) ? "'#toolbar=1&navpanes=1'" : "'#toolbar=0&navpanes=0'" ?>;
+            fileUrl = `?ruta=ver-pdf-pst&file=${encodeURIComponent(item.data.archivo_pdf)}${tbHash}`;
             fileName = item.nombreArchivo || item.data.archivo_pdf.split('/').pop();
             if (fileName.toLowerCase().endsWith('.docx') || item.data.archivo_pdf.toLowerCase().endsWith('.docx')) isDocx = true;
         }
@@ -1541,12 +1558,13 @@ function abrirModalPrevisualizacionDocumento() {
     } 
     // Caso 3: Documento en edición o registrado en la base de datos
     else if (pdfHidden && pdfHidden.value) {
+        const tbHash = <?= ConfigService::get('visor_pdf.mostrar_toolbar', true) ? "'#toolbar=1&navpanes=1'" : "'#toolbar=0&navpanes=0'" ?>;
         <?php if (!empty($documento['id'])): ?>
-            fileUrl = '?ruta=ver-pdf-pst&id=<?= $documento['id'] ?>#toolbar=0&navpanes=0';
+            fileUrl = '?ruta=ver-pdf-pst&id=<?= $documento['id'] ?>' + tbHash;
             fileName = '<?= htmlspecialchars($documento['titulo'] ?? 'Documento Indexado') ?>';
             if (pdfHidden.value.toLowerCase().endsWith('.docx')) isDocx = true;
         <?php else: ?>
-            fileUrl = `?ruta=ver-pdf-pst&file=${encodeURIComponent(pdfHidden.value)}`;
+            fileUrl = `?ruta=ver-pdf-pst&file=${encodeURIComponent(pdfHidden.value)}${tbHash}`;
             fileName = pdfHidden.value.split('/').pop();
             if (pdfHidden.value.toLowerCase().endsWith('.docx')) isDocx = true;
         <?php endif; ?>

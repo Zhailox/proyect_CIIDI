@@ -12,12 +12,14 @@
             
             <div class="pst-detail-header">
                 <div style="display: flex; gap: 0.4rem; margin-bottom: 0.4rem; flex-wrap: wrap; align-items: center;">
-                    <span class="pst-badge-soft" style="background-color: rgba(112, 144, 203, 0.15); color: var(--color-secundario); font-weight: 700;"><?= htmlspecialchars($documento['nivel_academico'] ?? 'Pregrado') ?></span>
-                    <?php if (($documento['nivel_academico'] ?? 'Pregrado') === 'Pregrado' && !empty($documento['trayecto'])): ?>
-                        <span class="pst-badge-soft" style="background-color: rgba(0, 123, 255, 0.1); color: var(--color-terciario); font-weight: 700;"><?= htmlspecialchars($documento['trayecto']) ?></span>
+                    <?php if (ConfigService::get('recursos.mostrar_nivel_academico', true)): ?>
+                        <span class="pst-badge-soft" style="background-color: rgba(112, 144, 203, 0.15); color: var(--color-secundario); font-weight: 700;"><?= htmlspecialchars($documento['nivel_academico'] ?? 'Pregrado') ?></span>
+                        <?php if (($documento['nivel_academico'] ?? 'Pregrado') === 'Pregrado' && !empty($documento['trayecto'])): ?>
+                            <span class="pst-badge-soft" style="background-color: rgba(0, 123, 255, 0.1); color: var(--color-terciario); font-weight: 700;"><?= htmlspecialchars($documento['trayecto']) ?></span>
+                        <?php endif; ?>
                     <?php endif; ?>
                     <span class="pst-badge-soft" style="background-color: #f1f5f9; color: var(--texto-silenciado);">AÑO <?= $documento['anio_publicacion'] ?></span>
-                    <span class="pst-badge-soft" style="background-color: #f1f5f9; color: var(--texto-silenciado);">PNF Informática</span>
+                    <span class="pst-badge-soft" style="background-color: #f1f5f9; color: var(--texto-silenciado);"><?= htmlspecialchars(ConfigService::get('recursos.sufijo_tipo_recurso', 'PNF Informática')) ?></span>
                     <?php if (!empty($documento['url_repositorio']) && ConfigService::get('recursos.mostrar_url_git', true)): ?>
                         <a href="<?= htmlspecialchars($documento['url_repositorio']) ?>" target="_blank" class="pst-badge-soft" style="background-color: #002244; color: #ffffff; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                             <i class="ph ph-git-branch"></i> Repositorio Git
@@ -71,11 +73,14 @@
             <!-- BLOQUE UNIFICADO 2: FICHA TÉCNICA DEL PROYECTO -->
             <div class="pst-detail-meta-grid">
                 
+                <?php if (ConfigService::get('recursos.mostrar_nivel_academico', true)): ?>
                 <div class="pst-meta-item">
                     <strong>Nivel Académico / Trayecto</strong>
                     <span><?= htmlspecialchars($documento['nivel_academico'] ?? 'Pregrado') ?><?= (($documento['nivel_academico'] ?? 'Pregrado') === 'Pregrado' && !empty($documento['trayecto'])) ? ' • ' . htmlspecialchars($documento['trayecto']) : '' ?></span>
                 </div>
+                <?php endif; ?>
 
+                <?php if (ConfigService::get('recursos.mostrar_comunidad', true)): ?>
                 <div class="pst-meta-item">
                     <strong>Comunidad / Ente Beneficiario</strong>
                     <span>
@@ -93,6 +98,7 @@
                         <?php endif; ?>
                     </span>
                 </div>
+                <?php endif; ?>
 
                 <div class="pst-meta-item">
                     <strong>Línea de Investigación</strong>
@@ -159,14 +165,33 @@
             </div>
 
             <!-- TAB 2: VISOR PDF EMBEBIDO -->
+            <?php 
+            $mostrarToolbar = (bool)ConfigService::get('visor_pdf.mostrar_toolbar', true);
+            $permitirDescarga = ConfigService::puedeDescargar();
+            $toolbarParam = $mostrarToolbar ? '#toolbar=1&navpanes=1' : '#toolbar=0&navpanes=0';
+            ?>
             <div id="tabVisorPdf" class="tab-content">
-                <div style="background-color: #f8fafc; border: 1px solid rgba(169, 168, 166, 0.2); border-radius: 6px; padding: 0.5rem; text-align: center;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding: 0 0.25rem;">
-                        <span style="font-size: 0.8rem; font-weight: 700; color: var(--texto-titulos);">
-                            <i class="ph ph-file-text"></i> Previsualización Oficial del Documento Digital (Lectura en Ficha)
+                <div style="background-color: #f8fafc; border: 1px solid rgba(169, 168, 166, 0.2); border-radius: 6px; padding: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem; padding: 0 0.25rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <span style="font-size: 0.82rem; font-weight: 700; color: var(--texto-titulos); display: inline-flex; align-items: center; gap: 0.4rem;">
+                            <i class="ph ph-file-text" style="color: var(--color-terciario); font-size: 1.1rem;"></i> Previsualización Oficial del Documento Digital
                         </span>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <?php if (!empty($documento['archivo_pdf']) && $permitirDescarga): ?>
+                                <a href="?ruta=ver-pdf-pst&id=<?= $documento['id'] ?>&download=1" class="btn-back" style="background-color: #f0fdf4; color: #166534; border: 1px solid rgba(22, 101, 52, 0.25); text-decoration: none; padding: 0.35rem 0.75rem; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 0.35rem;" target="_blank" download>
+                                    <i class="ph ph-download-simple"></i> Descargar Documento
+                                </a>
+                            <?php elseif (!empty($documento['archivo_pdf'])): ?>
+                                <span style="font-size: 0.75rem; color: var(--texto-silenciado); background: #f1f5f9; padding: 0.3rem 0.6rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.35rem; border: 1px solid rgba(169, 168, 166, 0.2);" title="Descarga directa restringida por política institucional">
+                                    <i class="ph ph-lock-key"></i> Solo lectura en visor
+                                </span>
+                            <?php endif; ?>
+                            <a href="?ruta=ver-pdf-pst&id=<?= $documento['id'] ?><?= $toolbarParam ?>" target="_blank" class="btn-back" style="padding: 0.35rem 0.65rem; font-size: 0.78rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem;" title="Abrir documento en ventana completa">
+                                <i class="ph ph-arrow-square-out"></i> Pantalla Completa
+                            </a>
+                        </div>
                     </div>
-                    <iframe src="?ruta=ver-pdf-pst&id=<?= $documento['id'] ?>#toolbar=0&navpanes=0" style="width: 100%; height: 580px; border: 1px solid rgba(169,168,166,0.3); border-radius: 4px; background: white;" title="Visor PDF"></iframe>
+                    <iframe src="?ruta=ver-pdf-pst&id=<?= $documento['id'] ?><?= $toolbarParam ?>" style="width: 100%; height: 580px; border: 1px solid rgba(169,168,166,0.3); border-radius: 4px; background: white;" title="Visor PDF"></iframe>
                 </div>
             </div>
 
@@ -175,7 +200,12 @@
                 <a href="?ruta=repositorio" class="btn-back">
                     <i class="ph ph-arrow-left"></i> Volver al Catálogo
                 </a>
-                <div style="display: flex; gap: 0.5rem;">
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <?php if (!empty($documento['archivo_pdf']) && $permitirDescarga): ?>
+                        <a href="?ruta=ver-pdf-pst&id=<?= $documento['id'] ?>&download=1" class="btn-back" style="background-color: #f0fdf4; color: #166534; border: 1px solid rgba(22, 101, 52, 0.25); text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem;" target="_blank" download>
+                            <i class="ph ph-download-simple"></i> Descargar Documento
+                        </a>
+                    <?php endif; ?>
                     <button type="button" class="btn-back" style="background-color: #fff1f2; color: #be123c; border: 1px solid rgba(190, 18, 60, 0.2);" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($documento['titulo'])) ?>, <?= htmlspecialchars(json_encode($documento['autores_nombres'] ?? 'Autores Varios')) ?>, <?= $documento['anio_publicacion'] ?>)">
                         <i class="ph ph-quotes"></i> Generar Cita Académica
                     </button>

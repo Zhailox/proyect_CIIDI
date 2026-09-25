@@ -45,7 +45,8 @@
     },
     "visor_pdf": {
         "mostrar_toolbar": true,
-        "permitir_descarga": true
+        "permitir_descarga": true,
+        "nivel_minimo_descarga": 998
     },
     "archivos": {
         "max_size_mb": 20,
@@ -56,6 +57,6 @@
     },
     "limites_equipo": {
         "max_autores": 4,
-        "max_tutores": 5
+        "max_tutores": 3
     }
 }

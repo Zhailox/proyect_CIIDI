@@ -2,6 +2,8 @@
 // modules/RepositorioPST/controllers/ConfiguracionController.php
 require_once __DIR__ . '/../services/ConfigService.php';
 require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
+require_once CORE_PATH . 'Security/AuditLogger.php';
+require_once CORE_PATH . 'Database/Connection.php';
 
 class ConfiguracionController {
     private int $nivelAdmin;
@@ -92,6 +94,9 @@ class ConfiguracionController {
                 // 5. Visor PDF
                 $actual['visor_pdf']['mostrar_toolbar'] = isset($_POST['mostrar_toolbar']) && $_POST['mostrar_toolbar'] === '1';
                 $actual['visor_pdf']['permitir_descarga'] = isset($_POST['permitir_descarga']) && $_POST['permitir_descarga'] === '1';
+                if (isset($_POST['nivel_minimo_descarga'])) {
+                    $actual['visor_pdf']['nivel_minimo_descarga'] = (int)$_POST['nivel_minimo_descarga'];
+                }
 
                 // 6. Archivos y Carga Documental
                 if (isset($_POST['max_size_mb'])) $actual['archivos']['max_size_mb'] = max(1, (int)$_POST['max_size_mb']);
@@ -111,16 +116,32 @@ class ConfiguracionController {
             }
             
             // 2. Redirección para limpiar POST y activar JS en la recarga
-            header('Location: configuracion-pst');
+            $redirectUrl = !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '?ruta=configuracion-pst';
+            header('Location: ' . $redirectUrl);
             exit;
+        }
+
+        $rolesDisponibles = [];
+        try {
+            $db = Connection::getInstance();
+            if ($db) {
+                $stmt = $db->query("SELECT r.id, r.nombre, p.nivel_privilegio 
+                                    FROM roles r 
+                                    JOIN privilegios p ON r.privilegio_id = p.privilegio_id 
+                                    ORDER BY p.nivel_privilegio ASC");
+                $rolesDisponibles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+        } catch (Throwable $e) {
+            $rolesDisponibles = [];
         }
 
         $config = ConfigService::get();
 
         return [
-            'config'  => $config,
-            'mensaje' => $mensaje,
-            'error'   => $error
+            'config'           => $config,
+            'rolesDisponibles' => $rolesDisponibles,
+            'mensaje'          => $mensaje,
+            'error'            => $error
         ];
     }
 }

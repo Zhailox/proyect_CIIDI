@@ -651,15 +651,22 @@ mark, .highlight-match {
             </div>
 
             <!-- TABLA PRINCIPAL DE BANCO DE PROYECTOS -->
+            <?php
+            $mostrarNivel = (bool)ConfigService::get('recursos.mostrar_nivel_academico', true);
+            $mostrarComunidad = (bool)ConfigService::get('recursos.mostrar_comunidad', true);
+            $totalColumnas = 3 + ($mostrarNivel ? 1 : 0) + ($mostrarComunidad ? 1 : 0);
+            $ordenActual = $filtrosActivos['orden'] ?? ConfigService::get('buscador.orden_predeterminado', 'anio_desc');
+            ?>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px;">
                 <span style="font-size: 1.1rem; font-weight: 800; color: var(--texto-titulos, #1E293B);">Banco General de Proyectos</span>
                 
-                <!-- ORDENAMIENTO DE PUBLICACIONES (RECIENTES VS ANTIGUOS) -->
+                <!-- ORDENAMIENTO DE PUBLICACIONES (CONFIGURABLE) -->
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 0.8rem; font-weight: 700; color: var(--texto-silenciado, #64748B);">Ordenar por:</span>
                     <select onchange="cambiarOrdenamiento(this.value)" style="font-size: 0.82rem; font-weight: 700; padding: 5px 10px; border-radius: var(--radius-sm, 6px); border: 1px solid rgba(80,89,132,0.2); background: #ffffff; cursor: pointer;">
-                        <option value="desc" <?= ($filtrosActivos['orden'] ?? 'desc') === 'desc' ? 'selected' : '' ?>>Más Recientes Primero</option>
-                        <option value="asc" <?= ($filtrosActivos['orden'] ?? 'desc') === 'asc' ? 'selected' : '' ?>>Más Antiguos Primero</option>
+                        <option value="anio_desc" <?= in_array($ordenActual, ['desc', 'anio_desc']) ? 'selected' : '' ?>>Año (Más reciente a más antiguo)</option>
+                        <option value="anio_asc" <?= in_array($ordenActual, ['asc', 'anio_asc']) ? 'selected' : '' ?>>Año (Más antiguo a más reciente)</option>
+                        <option value="titulo_asc" <?= $ordenActual === 'titulo_asc' ? 'selected' : '' ?>>Título (A - Z)</option>
                     </select>
                 </div>
             </div>
@@ -669,8 +676,12 @@ mark, .highlight-match {
                     <thead>
                         <tr>
                             <th style="width: 50%;">Proyecto / Título</th>
-                            <th>Nivel / Trayecto</th>
-                            <th>Comunidad</th>
+                            <?php if ($mostrarNivel): ?>
+                                <th>Nivel / Trayecto</th>
+                            <?php endif; ?>
+                            <?php if ($mostrarComunidad): ?>
+                                <th>Comunidad</th>
+                            <?php endif; ?>
                             <th>Año</th>
                             <th style="text-align: center;">Acciones</th>
                         </tr>
@@ -678,7 +689,7 @@ mark, .highlight-match {
                     <tbody id="agPstTableBody">
                         <?php if (empty($documentos)): ?>
                             <tr>
-                                <td colspan="5" style="text-align: center; padding: 2rem; color: var(--texto-silenciado);">
+                                <td colspan="<?= $totalColumnas ?>" style="text-align: center; padding: 2rem; color: var(--texto-silenciado);">
                                     <i class="ph-bold ph-folder-open" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
                                     No se encontraron proyectos Socio-Tecnológicos bajo los criterios seleccionados.
                                 </td>
@@ -694,6 +705,7 @@ mark, .highlight-match {
                                             Autores: <?= htmlspecialchars($doc['autores_nombres'] ?? 'No especificados') ?>
                                         </div>
                                     </td>
+                                    <?php if ($mostrarNivel): ?>
                                     <td>
                                         <span class="ag-badge-trayecto"><?= htmlspecialchars($doc['nivel_academico'] ?? 'Pregrado') ?></span>
                                         <?php if (!empty($doc['trayecto'])): ?>
@@ -702,15 +714,21 @@ mark, .highlight-match {
                                             </span>
                                         <?php endif; ?>
                                     </td>
+                                    <?php endif; ?>
+                                    <?php if ($mostrarComunidad): ?>
                                     <td style="color: var(--texto-titulos, #1E293B); font-weight: 600; font-size: 0.85rem;">
                                         <?= htmlspecialchars($doc['comunidad_beneficiada'] ?? 'Comunidad Unitaria') ?>
                                     </td>
+                                    <?php endif; ?>
                                     <td style="font-weight: 700; font-size: 0.88rem; color: var(--texto-titulos, #1E293B);">
                                         <?= htmlspecialchars($doc['anio_publicacion'] ?? '') ?>
                                     </td>
                                     <td style="text-align: center;">
-                                        <div style="display: flex; gap: 6px; justify-content: center;">
+                                        <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
                                             <a href="?ruta=detalles-pst&id=<?= $doc['id'] ?>" class="ag-page-link" style="padding: 4px 8px;" title="Ver Ficha">Ver</a>
+                                            <?php if (ConfigService::puedeDescargar() && !empty($doc['archivo_pdf'])): ?>
+                                                <a href="?ruta=ver-pdf-pst&id=<?= $doc['id'] ?>&download=1" class="ag-page-link" style="padding: 4px 8px; color: #166534;" title="Descargar Documento" target="_blank" download><i class="ph-bold ph-download-simple"></i></a>
+                                            <?php endif; ?>
                                             <button type="button" class="ag-page-link" style="padding: 4px 8px; cursor: pointer;" title="Citar" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($doc['titulo'])) ?>, <?= htmlspecialchars(json_encode($doc['autores_nombres'] ?? 'Autores Varios')) ?>, <?= $doc['anio_publicacion'] ?>)"><i class="ph-bold ph-quotes"></i></button>
                                         </div>
                                     </td>
@@ -722,22 +740,37 @@ mark, .highlight-match {
 
                 <!-- MODO DE NAVEGACIÓN DEDICADO: PAGINADOR VS LAZY LOADING -->
                 <?php if ($modoCargaActual === 'paginador' && $pag['total_pages'] > 1): ?>
-                    <div class="ag-pagination-bar">
+                    <div class="ag-pagination-bar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                         <span style="font-size: 0.82rem; font-weight: 700; color: var(--texto-silenciado, #64748B);">
                             Página <?= $pag['current_page'] ?> de <?= $pag['total_pages'] ?> (Total: <?= $pag['total_items'] ?> proyectos)
                         </span>
                         
-                        <div class="ag-pagination-pages">
-                            <?php for ($i = 1; $i <= $pag['total_pages']; $i++): ?>
-                                <?php
-                                $query = $_GET;
-                                $query['page'] = $i;
-                                $linkUrl = '?' . http_build_query($query);
-                                ?>
-                                <a href="<?= $linkUrl ?>" class="ag-page-link <?= $i === $pag['current_page'] ? 'active' : '' ?>">
-                                    <?= $i ?>
-                                </a>
-                            <?php endfor; ?>
+                        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                            <?php 
+                            $opcionesSelector = ConfigService::get('paginacion.opciones_selector', [5, 10, 15, 20, 50]);
+                            $currLimit = (int)($pag['limit'] ?? 10);
+                            ?>
+                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--texto-silenciado);">
+                                <span>Mostrar:</span>
+                                <select onchange="cambiarLimitePst(this.value)" style="padding: 3px 8px; font-size: 0.78rem; font-weight: 700; border-radius: 4px; border: 1px solid #cbd5e1; background: white; cursor: pointer;">
+                                    <?php foreach ($opcionesSelector as $opt): ?>
+                                        <option value="<?= $opt ?>" <?= $currLimit === (int)$opt ? 'selected' : '' ?>><?= $opt ?> por pág.</option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="ag-pagination-pages">
+                                <?php for ($i = 1; $i <= $pag['total_pages']; $i++): ?>
+                                    <?php
+                                    $query = $_GET;
+                                    $query['page'] = $i;
+                                    $linkUrl = '?' . http_build_query($query);
+                                    ?>
+                                    <a href="<?= $linkUrl ?>" class="ag-page-link <?= $i === $pag['current_page'] ? 'active' : '' ?>">
+                                        <?= $i ?>
+                                    </a>
+                                <?php endfor; ?>
+                            </div>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -1022,6 +1055,14 @@ function seleccionarAnioHistograma(year) {
 function cambiarOrdenamiento(val) {
     const url = new URL(window.location.href);
     url.searchParams.set('orden', val);
+    url.searchParams.set('page', 1);
+    window.location.href = url.toString();
+}
+
+function cambiarLimitePst(val) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('limit', val);
+    url.searchParams.set('page', 1);
     window.location.href = url.toString();
 }
 
