@@ -131,13 +131,8 @@ class DocumentoModel {
             $execParams[] = (int)$filtros['anio'];
         }
         
-        $orden = !empty($filtros['orden']) ? $filtros['orden'] : ConfigService::get('buscador.orden_predeterminado', 'anio_desc');
-        if (in_array($orden, ['titulo_asc', 'titulo'])) {
-            $sql .= " ORDER BY r.titulo ASC, r.id DESC LIMIT ? OFFSET ?";
-        } elseif (in_array($orden, ['asc', 'anio_asc'])) {
+        if (!empty($filtros['orden']) && $filtros['orden'] === 'asc') {
             $sql .= " ORDER BY r.anio_publicacion ASC, r.id ASC LIMIT ? OFFSET ?";
-        } elseif ($orden === 'recientes') {
-            $sql .= " ORDER BY r.id DESC LIMIT ? OFFSET ?";
         } else {
             $sql .= " ORDER BY r.anio_publicacion DESC, r.id DESC LIMIT ? OFFSET ?";
         }
@@ -657,6 +652,8 @@ class DocumentoModel {
             }
             
             // 2. Insertar los detalles específicos del proyecto (INSERTAR PRIMERO para satisfacer Fkey de tutores!)
+            //    NOTA: La columna 'vector_semantico' se omite intencionalmente → queda NULL.
+            //    El worker asíncrono (scripts/generar_embeddings.php) la procesará en segundo plano.
             $nivelAcademicoRaw = !empty($datos['nivel_academico']) ? trim($datos['nivel_academico']) : 'Pregrado';
             $nivelMap = [
                 'Especialización' => 'Especializacion',
@@ -835,8 +832,10 @@ class DocumentoModel {
             $trayectoVal = ($nivelAcademicoRaw === 'Pregrado') ? (!empty($datos['trayecto']) ? trim($datos['trayecto']) : 'Trayecto I') : null;
             $idCarrera = !empty($datos['id_carrera']) ? (int)$datos['id_carrera'] : 1;
 
+            // Invalidar el vector semántico (NULL) para que el worker lo regenere con el contenido actualizado
             $stmt = $db->prepare("UPDATE public.detalles_proyectos 
-                                  SET fecha_defensa = ?, nivel_academico = ?::public.nivel_academico_enum, trayecto = ?, url_repositorio = ?, resumen = ?, obj_general = ?, id_carrera = ?, comunidad_beneficiada = ?, palabras_clave = ? 
+                                  SET fecha_defensa = ?, nivel_academico = ?::public.nivel_academico_enum, trayecto = ?, url_repositorio = ?, resumen = ?, obj_general = ?, id_carrera = ?, comunidad_beneficiada = ?, palabras_clave = ?,
+                                      vector_semantico = NULL
                                   WHERE id_recurso = ?");
             $stmt->execute([
                 !empty($datos['fecha_defensa']) ? $datos['fecha_defensa'] : date('Y-m-d'),
@@ -862,28 +861,14 @@ class DocumentoModel {
                     if ($nom !== '') {
                         $autorId = null;
                         if ($ced) {
-                            $stmt = $db->prepare("SELECT id, nombre_completo FROM public.autores WHERE cedula = ?");
+                            $stmt = $db->prepare("SELECT id FROM public.autores WHERE cedula = ?");
                             $stmt->execute([$ced]);
-                            $rowAut = $stmt->fetch(PDO::FETCH_ASSOC);
-                            if ($rowAut) {
-                                $autorId = (int)$rowAut['id'];
-                                if (trim($rowAut['nombre_completo']) !== $nom) {
-                                    $stmtUpd = $db->prepare("UPDATE public.autores SET nombre_completo = ? WHERE id = ?");
-                                    $stmtUpd->execute([$nom, $autorId]);
-                                }
-                            }
+                            $autorId = $stmt->fetchColumn();
                         }
                         if (!$autorId) {
-                            $stmt = $db->prepare("SELECT id, cedula FROM public.autores WHERE LOWER(TRIM(nombre_completo)) = LOWER(?)");
+                            $stmt = $db->prepare("SELECT id FROM public.autores WHERE LOWER(TRIM(nombre_completo)) = LOWER(?)");
                             $stmt->execute([$nom]);
-                            $rowAut = $stmt->fetch(PDO::FETCH_ASSOC);
-                            if ($rowAut) {
-                                $autorId = (int)$rowAut['id'];
-                                if ($ced && empty($rowAut['cedula'])) {
-                                    $stmtUpd = $db->prepare("UPDATE public.autores SET cedula = ? WHERE id = ?");
-                                    $stmtUpd->execute([$ced, $autorId]);
-                                }
-                            }
+                            $autorId = $stmt->fetchColumn();
                         }
                         if (!$autorId) {
                             $stmt = $db->prepare("INSERT INTO public.autores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
@@ -918,28 +903,14 @@ class DocumentoModel {
                     $tutorId = null;
                     
                     if ($cedula) {
-                        $stmt = $db->prepare("SELECT id, nombre_completo FROM public.tutores WHERE cedula = ?");
+                        $stmt = $db->prepare("SELECT id FROM public.tutores WHERE cedula = ?");
                         $stmt->execute([$cedula]);
-                        $rowTut = $stmt->fetch(PDO::FETCH_ASSOC);
-                        if ($rowTut) {
-                            $tutorId = (int)$rowTut['id'];
-                            if (trim($rowTut['nombre_completo']) !== $nombre) {
-                                $stmtUpd = $db->prepare("UPDATE public.tutores SET nombre_completo = ? WHERE id = ?");
-                                $stmtUpd->execute([$nombre, $tutorId]);
-                            }
-                        }
+                        $tutorId = $stmt->fetchColumn();
                     }
                     if (!$tutorId) {
-                        $stmt = $db->prepare("SELECT id, cedula FROM public.tutores WHERE LOWER(TRIM(nombre_completo)) = LOWER(?)");
+                        $stmt = $db->prepare("SELECT id FROM public.tutores WHERE LOWER(TRIM(nombre_completo)) = LOWER(?)");
                         $stmt->execute([$nombre]);
-                        $rowTut = $stmt->fetch(PDO::FETCH_ASSOC);
-                        if ($rowTut) {
-                            $tutorId = (int)$rowTut['id'];
-                            if ($cedula && empty($rowTut['cedula'])) {
-                                $stmtUpd = $db->prepare("UPDATE public.tutores SET cedula = ? WHERE id = ?");
-                                $stmtUpd->execute([$cedula, $tutorId]);
-                            }
-                        }
+                        $tutorId = $stmt->fetchColumn();
                     }
                     if (!$tutorId) {
                         $stmt = $db->prepare("INSERT INTO public.tutores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
@@ -1008,8 +979,7 @@ class DocumentoModel {
 
             // Limpieza del archivo físico en el servidor
             if (!empty($archivoPath)) {
-                $base = defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 2);
-                $fullPath = $base . '/' . ltrim($archivoPath, '/\\');
+                $fullPath = ROOT_PATH . '/' . ltrim($archivoPath, '/\\');
                 if (file_exists($fullPath) && is_file($fullPath)) {
                     @unlink($fullPath);
                 }
@@ -1115,15 +1085,13 @@ class DocumentoModel {
         $stmt->execute($params);
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
                        
-        $anioMinimo = (int)ConfigService::get('buscador.anio_minimo_histograma', 2018);
-        $anioMaximo = max((int)date('Y') + 1, 2026);
         $counts = [];
-        for ($y = $anioMinimo; $y <= $anioMaximo; $y++) {
+        for ($y = 2018; $y <= 2026; $y++) {
             $counts[$y] = 0;
         }
         foreach ($results as $row) {
             $year = (int)$row['anio_publicacion'];
-            if ($year >= $anioMinimo && $year <= $anioMaximo) {
+            if ($year >= 2018 && $year <= 2026) {
                 $counts[$year] = (int)$row['total'];
             }
         }
@@ -1181,16 +1149,8 @@ class DocumentoModel {
             $qb->where('rc.id_dimension_operativa', '=', (int)$filtros['dimension_id']);
         }
         
-        $orden = !empty($filtros['orden']) ? $filtros['orden'] : ConfigService::get('buscador.orden_predeterminado', 'anio_desc');
-        if (in_array($orden, ['titulo_asc', 'titulo'])) {
-            $qb->orderBy('r.titulo', 'ASC')->orderBy('r.id', 'DESC');
-        } elseif (in_array($orden, ['asc', 'anio_asc'])) {
-            $qb->orderBy('r.anio_publicacion', 'ASC')->orderBy('r.id', 'ASC');
-        } else {
-            $qb->orderBy('r.anio_publicacion', 'DESC')->orderBy('r.id', 'DESC');
-        }
-
-        $results = $qb->limit($limit)
+        $results = $qb->orderBy('r.id', 'DESC')
+                      ->limit($limit)
                       ->offset($offset)
                       ->get();
                       

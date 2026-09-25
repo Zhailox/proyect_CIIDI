@@ -1,6 +1,53 @@
 {
     "packages": [
         {
+            "name": "ankane/onnxruntime",
+            "version": "v0.3.7",
+            "version_normalized": "0.3.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ankane/onnxruntime-php.git",
+                "reference": "9413fded84b79627465ff0f586bcfd3d3894752b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ankane/onnxruntime-php/zipball/9413fded84b79627465ff0f586bcfd3d3894752b",
+                "reference": "9413fded84b79627465ff0f586bcfd3d3894752b",
+                "shasum": ""
+            },
+            "require": {
+                "ext-ffi": ">= 8.2",
+                "php": ">= 8.2"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^11"
+            },
+            "time": "2026-09-10T19:20:37+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "OnnxRuntime\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Andrew Kane",
+                    "email": "andrew@ankane.org"
+                }
+            ],
+            "description": "Run ONNX models in PHP",
+            "support": {
+                "issues": "https://github.com/ankane/onnxruntime-php/issues",
+                "source": "https://github.com/ankane/onnxruntime-php"
+            },
+            "install-path": "../ankane/onnxruntime"
+        },
+        {
             "name": "php-ai/php-ml",
             "version": "0.10.0",
             "version_normalized": "0.10.0.0",
