@@ -1,5 +1,15 @@
 [
     {
+        "id": "mail_6ab5c70c61a6d",
+        "fecha": "2026-09-24 20:57:48",
+        "destino_email": "andrusramirez2020@gmail.com",
+        "destino_nombre": "asdasd",
+        "asunto": "Bienvenido al Sistema CIIDI - Credenciales de Acceso",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10061 Additional SMTP info: No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión"
+    },
+    {
         "id": "mail_6ab586fc7c602",
         "fecha": "2026-09-24 16:24:28",
         "destino_email": "vegeta@gmail.com",

@@ -24,6 +24,13 @@ $ruta          = $ruta ?? '';
         $privilegioExigido = $item['privilegio_minimo'] ?? 999;
         $permisoRbac = $item['permiso_rbac'] ?? null;
         $moduloRbac = $item['modulo_rbac'] ?? null;
+        $moduloOrigen = $item['modulo_origen'] ?? '';
+        $moduloEstado = $item['modulo_estado'] ?? 'online';
+
+        // Si el usuario no es SuperAdmin/Admin y el módulo está offline, omitirlo por completo
+        if (!$esAdminTotal && $moduloEstado === 'offline') {
+            continue;
+        }
 
         // Si la opción requiere un permiso específico (como 'auditar'), preguntamos si lo tiene.
         // Si no lo tiene, hacemos 'continue' para que el botón no se dibuje en pantalla.
@@ -35,10 +42,16 @@ $ruta          = $ruta ?? '';
         
         $icono_clase = $item['icono'];
         $icono_html = strpos($icono_clase, '<i') !== false ? $icono_clase : '<i class="' . $icono_clase . '"></i>';
+
+        $ocultoOffline = ($moduloEstado === 'offline');
+        $inlineStyle = $ocultoOffline ? 'display: none;' : '';
         ?>
         
         <?php if ($item['tipo'] === 'link'): ?>
-            <a href="<?php echo $item['enlace']; ?>" class="nav-item <?php echo ($ruta == $item['enlace']) ? 'active' : ''; ?>">
+            <a href="<?php echo $item['enlace']; ?>" 
+               class="nav-item <?php echo ($ruta == $item['enlace']) ? 'active' : ''; ?>"
+               data-modulo="<?php echo htmlspecialchars($moduloOrigen); ?>"
+               <?php if ($ocultoOffline): ?>style="display: none;"<?php endif; ?>>
                 <span class="nav-icon"><?php echo $icono_html; ?></span> 
                 <span class="nav-text"><?php echo $item['titulo']; ?></span>
             </a>
@@ -48,7 +61,9 @@ $ruta          = $ruta ?? '';
             $is_active_parent = in_array($ruta, $item['activadores']); 
             $tieneSubitems = !empty($item['subitems']);
         ?>
-        <div class="nav-parent <?php echo $is_active_parent ? 'open' : ''; ?>">
+        <div class="nav-parent <?php echo $is_active_parent ? 'open' : ''; ?>"
+             data-modulo="<?php echo htmlspecialchars($moduloOrigen); ?>"
+             <?php if ($ocultoOffline): ?>style="display: none;"<?php endif; ?>>
             <a href="<?php echo $item['enlace']; ?>" 
             class="nav-item nav-parent-link <?php echo $is_active_parent ? 'active' : ''; ?>">
             <span class="nav-icon"><?php echo $icono_html; ?></span> 

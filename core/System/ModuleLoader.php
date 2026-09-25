@@ -34,21 +34,34 @@ class ModuleLoader {
             $estadoActual = is_array($modConfig) ? ($modConfig['estado'] ?? 'online') : $modConfig;
             $esCore = in_array($carpeta, ['Autenticacion', 'SuperAdmin'], true);
 
-            if ($estadoActual === 'offline' && !$esCore) {
-                continue;
-            }
-
             $rutaIndexModulo = rtrim($this->modulesPath, '/\\') . '/' . $carpeta . '/index.php';
 
             if (file_exists($rutaIndexModulo)) {
-                $modulo = require_once $rutaIndexModulo;
+                $claseModulo = $carpeta . 'Module';
+                if (class_exists($claseModulo)) {
+                    $modulo = new $claseModulo();
+                } else {
+                    $modulo = require_once $rutaIndexModulo;
+                    if ($modulo === true && class_exists($claseModulo)) {
+                        $modulo = new $claseModulo();
+                    }
+                }
 
                 if ($modulo instanceof ModuleContract) {
-                    $this->modulosInstalados[$carpeta] = $modulo;
-                    $this->rutasGlobales = array_merge($this->rutasGlobales, $modulo->getRutas());
+                    // Solo registrar como activo e instalar rutas si el módulo está online o es Core
+                    if ($estadoActual !== 'offline' || $esCore) {
+                        $this->modulosInstalados[$carpeta] = $modulo;
+                        $this->rutasGlobales = array_merge($this->rutasGlobales, $modulo->getRutas());
+                    }
 
+                    // Siempre compilar el menú global etiquetado para soporte de reactivación dinámica en tiempo real
                     $configMenuModulo = $modulo->getMenuConfig();
                     if (!empty($configMenuModulo)) {
+                        foreach ($configMenuModulo as &$itemMenu) {
+                            $itemMenu['modulo_origen'] = $carpeta;
+                            $itemMenu['modulo_estado'] = $esCore ? 'online' : $estadoActual;
+                        }
+                        unset($itemMenu);
                         $this->menuGlobal = array_merge($this->menuGlobal, $configMenuModulo);
                     }
                 }

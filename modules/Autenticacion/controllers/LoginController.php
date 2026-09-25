@@ -251,6 +251,13 @@ class LoginController {
             return ['es_error' => true, 'mensaje' => $verifCaptcha['mensaje'], 'destino' => 'login'];
         }
 
+        // Verificación de Rate Limiting y Bloqueo de Intentos Fallidos
+        require_once CORE_PATH . 'Security/RateLimiter.php';
+        $estadoBloqueo = RateLimiter::estaBloqueada();
+        if ($estadoBloqueo['bloqueada']) {
+            return ['es_error' => true, 'mensaje' => $estadoBloqueo['razon'], 'destino' => 'login'];
+        }
+
         $cedula = trim($_POST['cedula'] ?? '');
         $password = trim($_POST['password'] ?? '');
 
@@ -268,8 +275,13 @@ class LoginController {
 
         // 2. Probar si el usuario existe y si está activo
         if (!$usuario) {
+            RateLimiter::registrarIntentoFallido(null, $cedula);
+            $maxIntentos = RateLimiter::getMaxIntentos();
+            $intentosActuales = RateLimiter::obtenerIntentos()[RateLimiter::obtenerIPCliente()]['intentos'] ?? 1;
+            $restantes = max(0, $maxIntentos - $intentosActuales);
             AuditLogger::registrar('WARNING', 'Autenticacion', 'Login Fallido', "Intento de inicio de sesión con cédula no registrada: '{$cedula}'.");
-            return ['es_error' => true, 'mensaje' => "No se encontró ninguna cuenta con la cédula {$cedula}.", 'destino' => 'login'];
+            $aviso = $restantes > 0 ? " (Intentos restantes: {$restantes})" : "";
+            return ['es_error' => true, 'mensaje' => "No se encontró ninguna cuenta con la cédula {$cedula}.{$aviso}", 'destino' => 'login'];
         }
 
         if ($usuario['activo'] === false) {
@@ -279,13 +291,21 @@ class LoginController {
 
         // 3. Probar la contraseña
         if (!password_verify($password, $usuario['contrasena'])) {
+            RateLimiter::registrarIntentoFallido(null, $cedula);
+            $maxIntentos = RateLimiter::getMaxIntentos();
+            $intentosActuales = RateLimiter::obtenerIntentos()[RateLimiter::obtenerIPCliente()]['intentos'] ?? 1;
+            $restantes = max(0, $maxIntentos - $intentosActuales);
             AuditLogger::registrar('WARNING', 'Autenticacion', 'Login Fallido', "Contraseña incorrecta para el usuario '{$usuario['nombre_completo']}' (C.I: {$cedula}).");
+            $aviso = $restantes > 0 ? " (Intentos restantes: {$restantes})" : " Ha superado el límite de intentos permitidos.";
             return [
                 'es_error' => true,
-                'mensaje'  => 'La contraseña ingresada es incorrecta.',
+                'mensaje'  => 'La contraseña ingresada es incorrecta.' . $aviso,
                 'destino'  => 'login'
             ];
         }
+
+        // Credenciales correctas: limpiar intentos fallidos de esta IP
+        RateLimiter::limpiarIntentosExitosa();
         // Verificar que el server no esté en mantenimiento
         $archivoMant = __DIR__ . '/../../../storage/maintenance.json';
         if (file_exists($archivoMant)) {
@@ -307,6 +327,8 @@ class LoginController {
         }
         session_regenerate_id(true);
         $_SESSION['usuario_id'] = $usuario['id'];
+        $_SESSION['login_time'] = time();
+        $this->limpiarRevocacionSesion($usuario['id']);
         $_SESSION['usuario_nombre'] = $usuario['nombre_completo'];
         $_SESSION['nombre_usuario'] = $usuario['nombre_completo'];
         $_SESSION['nombre'] = $usuario['nombre_completo'];
@@ -453,6 +475,8 @@ class LoginController {
                 }
                 session_regenerate_id(true);
                 $_SESSION['usuario_id'] = $usuario['id'];
+                $_SESSION['login_time'] = time();
+                $this->limpiarRevocacionSesion($usuario['id']);
                 $_SESSION['usuario_nombre'] = $usuario['nombre_completo'];
                 $_SESSION['nombre_usuario'] = $usuario['nombre_completo'];
                 $_SESSION['nombre'] = $usuario['nombre_completo'];
@@ -602,6 +626,8 @@ class LoginController {
                 }
                 session_regenerate_id(true);
                 $_SESSION['usuario_id'] = $usuario['id'];
+                $_SESSION['login_time'] = time();
+                $this->limpiarRevocacionSesion($usuario['id']);
                 $_SESSION['usuario_nombre'] = $usuario['nombre_completo'];
                 $_SESSION['nombre_usuario'] = $usuario['nombre_completo'];
                 $_SESSION['nombre'] = $usuario['nombre_completo'];
@@ -633,6 +659,18 @@ class LoginController {
             $_SESSION['error_completar_registro'] = "Error inesperado al activar la cuenta.";
             header("Location: completar-registro?token=" . urlencode($rawToken));
             exit;
+        }
+    }
+
+    private function limpiarRevocacionSesion($usuarioId): void {
+        $archivoSesiones = defined('STORAGE_PATH') ? STORAGE_PATH . 'revoked_sessions.json' : CORE_PATH . '../storage/revoked_sessions.json';
+        if (file_exists($archivoSesiones)) {
+            $revogadas = json_decode(file_get_contents($archivoSesiones), true) ?: [];
+            $uidStr = (string)$usuarioId;
+            if (isset($revogadas[$uidStr])) {
+                unset($revogadas[$uidStr]);
+                file_put_contents($archivoSesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
+            }
         }
     }
 }

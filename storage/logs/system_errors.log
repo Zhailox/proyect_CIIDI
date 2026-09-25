@@ -1543,7 +1543,6 @@ Trace:
 #4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
 #5 {main}
 --------------------------------------------------------------------------------
-<<<<<<< HEAD
 [2026-09-23 17:18:49] ERROR: SMTP Error: Could not connect to SMTP host. Failed to connect to server en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
 Trace:
 #0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
@@ -1563,79 +1562,6 @@ Trace:
 #4 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(150): MailService::enviar('vegeta@gmail.co...', 'Vegeta', 'Restablecer Con...', '<h2 style="colo...', '', false)
 #5 [internal function]: MailService::{closure}()
 #6 {main}
-=======
-[2026-09-23 18:15:16] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
-LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
-               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
-Trace:
-#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
-#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\services\BackupService.php(72): AuditLogger::registrar('INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo pre_re...')
-#2 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(629): BackupService::crearBackup('sql.gz', false, NULL, 'pre_restore_che...')
-#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->restaurarBackup()
-#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('restaurar-backu...', Array, Array, Array, Object(AssetResolver))
-#5 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
-#6 {main}
---------------------------------------------------------------------------------
-[2026-09-23 18:15:17] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
-LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
-               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
-Trace:
-#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
-#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(665): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Restaurar BD', 'Base de datos r...')
-#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->restaurarBackup()
-#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('restaurar-backu...', Array, Array, Array, Object(AssetResolver))
-#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
-#5 {main}
---------------------------------------------------------------------------------
-[2026-09-23 18:21:40] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
-LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
-               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
-Trace:
-#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
-#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\DetallePSTController.php(388): AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Extrac...', 'Error al cargar...')
-#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): DetallePSTController->crear()
-#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('agregar-documen...', Array, Array, Array, Object(AssetResolver))
-#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
-#5 {main}
---------------------------------------------------------------------------------
-[2026-09-23 22:04:27] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
-LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
-               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
-Trace:
-#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
-#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\DetallePSTController.php(420): AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Extrac...', 'El archivo exce...')
-#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): DetallePSTController->crear()
-#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('agregar-documen...', Array, Array, Array, Object(AssetResolver))
-#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
-#5 {main}
---------------------------------------------------------------------------------
-[2026-09-24 02:10:14] ERROR: could not find driver en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
-Trace:
-#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
-#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(170): Connection->__construct(false)
-#2 Command line code(1): Connection::getInstance()
-#3 {main}
---------------------------------------------------------------------------------
-[2026-09-24 02:11:58] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
-LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
-               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
-Trace:
-#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
-#1 Command line code(1): AuditLogger::registrar('INFO', 'RepositorioPST', 'Prueba', 'Detalle de prue...')
-#2 {main}
---------------------------------------------------------------------------------
-[2026-09-23 23:33:19] ERROR: SMTP Error: Could not authenticate. en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2444
-Trace:
-#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
-#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Wed, 23 S...', '--b1=_jV3IPexUU...')
-#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
-#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(197): PHPMailer\PHPMailer\PHPMailer->send()
-#4 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ConfiguracionController.php(312): MailService::enviar('andrusramirez20...', 'Administrador d...', 'Prueba de Conex...', '\r\n             ...')
-#5 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ConfiguracionController->probarSmtp()
-#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('probar-smtp', Array, Array, Array, Object(AssetResolver))
-#7 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
-#8 {main}
->>>>>>> cc74d4590d39870e405eb8797733324b7f81876e
 --------------------------------------------------------------------------------
 [2026-09-24 15:43:41] ERROR: SMTP Error: Could not connect to SMTP host. Failed to connect to server en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
 Trace:

@@ -25,7 +25,10 @@ class LogsController {
 
         $auditoriaDB  = $this->logsModel->obtenerAuditoriaDB();
         $accesos      = $this->logsModel->obtenerAccesos();
-        $resTrail     = $this->logsModel->obtenerAuditTrailPaginado($fNivel, $fModulo, $fFechaInicio, $fFechaFin, $pagina, 15);
+        
+        require_once __DIR__ . '/../services/SystemConfigService.php';
+        $porPagina    = max(5, (int) SystemConfigService::get('paginacion.logs', 50));
+        $resTrail     = $this->logsModel->obtenerAuditTrailPaginado($fNivel, $fModulo, $fFechaInicio, $fFechaFin, $pagina, $porPagina);
         $modulosAudit = $this->logsModel->obtenerModulosAudit();
 
         return [

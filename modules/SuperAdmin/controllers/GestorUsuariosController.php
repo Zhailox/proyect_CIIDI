@@ -37,6 +37,10 @@ class GestorUsuariosController {
 
         $accionesDisponibles = ['crear', 'editar', 'eliminar', 'auditar'];
 
+        require_once __DIR__ . '/../services/SystemConfigService.php';
+        $paginacionUsuarios = max(5, (int) SystemConfigService::get('paginacion.usuarios', 15));
+        $paginacionDocentes = max(5, (int) SystemConfigService::get('paginacion.docentes', 15));
+
         return [
             'modulosInstalados' => $modulosInstalados,
             'accionesDisponibles' => $accionesDisponibles,
@@ -47,7 +51,9 @@ class GestorUsuariosController {
             'todosLosUsuarios' => $this->adminModel->obtenerTodosLosUsuarios(),
             'matrizRBAC' => $this->obtenerMatrizRBAC(),
             'roles' => $this->adminModel->obtenerRoles(),
-            'privilegios' => $this->adminModel->obtenerPrivilegios()
+            'privilegios' => $this->adminModel->obtenerPrivilegios(),
+            'paginacionUsuarios' => $paginacionUsuarios,
+            'paginacionDocentes' => $paginacionDocentes
         ];
     }
 
@@ -113,7 +119,7 @@ class GestorUsuariosController {
 
                             foreach ($afectados as $uId) {
                                 if ((int)$uId !== $miUsuarioId) {
-                                    $revogadas[(string)$uId] = true;
+                                    $revogadas[(string)$uId] = time();
                                 }
                             }
                             file_put_contents($archivoSesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
@@ -182,7 +188,7 @@ class GestorUsuariosController {
 
                         foreach ($usuariosAfectados as $uId) {
                             if ((int)$uId !== $miUsuarioId) {
-                                $revogadas[(string)$uId] = true;
+                                $revogadas[(string)$uId] = time();
                             }
                         }
                         file_put_contents($archivoSesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
@@ -251,7 +257,7 @@ class GestorUsuariosController {
                 $archivo = CORE_PATH . '../storage/revoked_sessions.json';
                 $revogadas = file_exists($archivo) ? (json_decode(file_get_contents($archivo), true) ?: []) : [];
                 
-                $revogadas[(string)$usuarioIdAExpulsar] = true;
+                $revogadas[(string)$usuarioIdAExpulsar] = time();
                 file_put_contents($archivo, json_encode($revogadas, JSON_PRETTY_PRINT));
 
                 AuditLogger::registrar('CRITICAL', 'SuperAdmin', 'Revocar Sesión Remota', "Sesión expulsada para el Usuario ID #{$usuarioIdAExpulsar}");
@@ -297,7 +303,7 @@ class GestorUsuariosController {
                 // Expulsar cualquier sesión activa del usuario eliminado
                 $archivo = CORE_PATH . '../storage/revoked_sessions.json';
                 $revogadas = file_exists($archivo) ? (json_decode(file_get_contents($archivo), true) ?: []) : [];
-                $revogadas[(string)$usuarioIdAEliminar] = true;
+                $revogadas[(string)$usuarioIdAEliminar] = time();
                 file_put_contents($archivo, json_encode($revogadas, JSON_PRETTY_PRINT));
 
                 AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar/Archivar Usuario', "Usuario ID #{$usuarioIdAEliminar} archivado exitosamente. Credenciales liberadas.");
@@ -400,7 +406,7 @@ class GestorUsuariosController {
         if ($id > 0 && $id !== $miUsuarioId) {
             $archivoSesiones = CORE_PATH . '../storage/revoked_sessions.json';
             $revogadas = file_exists($archivoSesiones) ? (json_decode(file_get_contents($archivoSesiones), true) ?: []) : [];
-            $revogadas[(string)$id] = true;
+            $revogadas[(string)$id] = time();
             file_put_contents($archivoSesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
         }
 
@@ -433,7 +439,7 @@ class GestorUsuariosController {
             if ($estadoActual) {
                 $archivoSesiones = CORE_PATH . '../storage/revoked_sessions.json';
                 $revogadas = file_exists($archivoSesiones) ? (json_decode(file_get_contents($archivoSesiones), true) ?: []) : [];
-                $revogadas[(string)$id] = true;
+                $revogadas[(string)$id] = time();
                 file_put_contents($archivoSesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
             }
             
