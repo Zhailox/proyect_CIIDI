@@ -155,6 +155,7 @@
 .badge-success { background: rgba(112, 144, 203, 0.15); color: var(--color-secundario); }
 .badge-danger  { background: rgba(18, 26, 62, 0.12); color: var(--texto-titulos); }
 .badge-warning { background: rgba(80, 89, 132, 0.15); color: var(--color-secundario); }
+.badge-info { background: rgba(166, 174, 214, 0.15); color: var(--texto-titulos); }
 
 .log-date-col { width: 150px; }
 .log-date-primary { font-weight: 700; display: block; color: var(--color-secundario); }

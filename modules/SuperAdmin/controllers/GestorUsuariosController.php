@@ -318,30 +318,7 @@ class GestorUsuariosController {
     }
 
     // Carga la vista de edición con los datos del usuario
-    public function mostrarEdicion() {
-        Auth::requierePrivilegioMinimo(0);
-        
-        $cedula = $_GET['cedula'] ?? '';
-        $usuario = $this->adminModel->buscarPorCedula($cedula);
 
-        if (!$usuario) {
-            header("Location: gestor-usuarios");
-            exit;
-        }
-
-        // Bloqueo de seguridad: No puedes editarte a ti mismo desde aquí
-        if ($usuario['id'] === $_SESSION['usuario_id']) {
-            $_SESSION['error_gestor'] = "Para editar tus propios datos, utiliza la configuración de tu perfil personal.";
-            header("Location: gestor-usuarios?cedula=" . urlencode($cedula));
-            exit;
-        }
-
-        return [
-            'usuarioEditar' => $usuario,
-            'rolesDisponibles' => $this->adminModel->obtenerRoles(),
-            'error' => $_SESSION['error_edicion'] ?? null
-        ];
-    }
 
     // Recibe los datos del formulario de edición y los guarda
     public function procesarEdicion() {

@@ -1562,6 +1562,42 @@ Trace:
 #4 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(150): MailService::enviar('vegeta@gmail.co...', 'Vegeta', 'Restablecer Con...', '<h2 style="colo...', '', false)
 #5 [internal function]: MailService::{closure}()
 #6 {main}
+[2026-09-23 18:15:16] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\services\BackupService.php(72): AuditLogger::registrar('INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo pre_re...')
+#2 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(629): BackupService::crearBackup('sql.gz', false, NULL, 'pre_restore_che...')
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->restaurarBackup()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('restaurar-backu...', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 18:15:17] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\AdminController.php(665): AuditLogger::registrar('WARNING', 'SuperAdmin', 'Restaurar BD', 'Base de datos r...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): AdminController->restaurarBackup()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('restaurar-backu...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-09-23 18:21:40] ERROR: SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «hash_registro»
+LINE 1: SELECT hash_registro FROM system_audit_log ORDER BY fecha_ho...
+               ^ en C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php:43
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Security\AuditLogger.php(43): PDO->query('SELECT hash_reg...')
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\DetallePSTController.php(388): AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Extrac...', 'Error al cargar...')
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): DetallePSTController->crear()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('agregar-documen...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+
+
 --------------------------------------------------------------------------------
 [2026-09-24 15:43:41] ERROR: SMTP Error: Could not connect to SMTP host. Failed to connect to server en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
 Trace:

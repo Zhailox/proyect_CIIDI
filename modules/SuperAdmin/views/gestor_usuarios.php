@@ -156,7 +156,7 @@ if (isset($privilegios)) {
                                         <!-- REVOCAR -->
                                         <form action="revocar-sesion" method="POST" style="margin:0;">
                                              <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
-                                             <button type="button" class="sa-btn-action" title="Cerrar Sesión Remota" onclick="mostrarConfirmacionUsuarios(this.form, 'Revocar Sesión', '¿Expulsar a este usuario del sistema?', 'ph-power', 'var(--color-principal)')">
+                                             <button type="button" class="sa-btn-action" title="Cerrar Sesión Remota" onclick="mostrarConfirmacionUsuarios(this.form, 'Revocar Sesión', '¿Expulsar a este usuario del sistema?', 'ph-power', 'var(--warning-active)')">
                                                  <i class="ph-bold ph-power"></i> Revocar
                                              </button>
                                          </form>
@@ -166,7 +166,7 @@ if (isset($privilegios)) {
                                              <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
                                              <input type="hidden" name="cedula" value="<?= htmlspecialchars($usr['cedula']) ?>">
                                              <input type="hidden" name="estado_actual" value="<?= $usr['activo'] ? '1' : '0' ?>">
-                                             <button type="button" class="sa-btn-action" onclick="mostrarConfirmacionUsuarios(this.form, '<?= $usr['activo'] ? 'Suspender' : 'Restaurar' ?> Cuenta', '¿Confirma que desea <?= $usr['activo'] ? 'SUSPENDER' : 'RESTAURAR' ?> al usuario <?= htmlspecialchars($usr['nombre_completo'], ENT_QUOTES) ?>?', '<?= $usr['activo'] ? 'ph-user-minus' : 'ph-user-check' ?>', 'var(--color-secundario)')">
+                                             <button type="button" class="sa-btn-action" onclick="mostrarConfirmacionUsuarios(this.form, '<?= $usr['activo'] ? 'Suspender' : 'Restaurar' ?> Cuenta', '¿Confirma que desea <?= $usr['activo'] ? 'SUSPENDER' : 'RESTAURAR' ?> al usuario <?= htmlspecialchars($usr['nombre_completo'], ENT_QUOTES) ?>?', '<?= $usr['activo'] ? 'ph-user-minus' : 'ph-user-check' ?>', 'var(--warning-active)')">
                                                  <i class="ph-bold <?= $usr['activo'] ? 'ph-user-minus' : 'ph-user-check' ?>"></i> <?= $usr['activo'] ? 'Suspender' : 'Restaurar' ?>
                                              </button>
                                          </form>
@@ -174,7 +174,7 @@ if (isset($privilegios)) {
                                         <!-- ELIMINAR Y LIBERAR CREDENCIALES -->
                                         <form action="eliminar-usuario" method="POST" style="margin:0;">
                                              <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
-                                             <button type="button" class="sa-btn-action sa-btn-action-dark" title="Eliminar Usuario y Liberar Credenciales" onclick="mostrarConfirmacionUsuarios(this.form, 'Eliminar y Archivar Usuario', '¿Está seguro de ELIMINAR permanentemente a <?= htmlspecialchars($usr['nombre_completo'], ENT_QUOTES) ?>? Sus credenciales (Cédula y Email) se liberarán de inmediato.', 'ph-trash', 'var(--color-principal)')">
+                                             <button type="button" class="sa-btn-action sa-btn-action-dark" title="Eliminar Usuario y Liberar Credenciales" onclick="mostrarConfirmacionUsuarios(this.form, 'Eliminar y Archivar Usuario', '¿Está seguro de ELIMINAR permanentemente a <?= htmlspecialchars($usr['nombre_completo'], ENT_QUOTES) ?>? Sus credenciales (Cédula y Email) se liberarán de inmediato.', 'ph-trash', 'var(--alert-active)')">
                                                  <i class="ph-bold ph-trash"></i> Eliminar
                                              </button>
                                          </form>
@@ -192,7 +192,7 @@ if (isset($privilegios)) {
             <span id="userPaginationInfo" style="font-size: 0.82rem; color: #64748b; font-weight: 600;">Mostrando registros</span>
             <div style="display: flex; gap: 0.4rem; align-items: center;">
                 <button id="btnPrevUserPage" onclick="changeUserPage(-1)" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem; border-color: #cbd5e1; color: #334155;">‹ Anterior</button>
-                <span id="userPageNum" style="font-size: 0.85rem; font-weight: 700; color: var(--color-principal); padding: 0 6px;">1</span>
+                <span id="userPageNum" style="font-size: 0.85rem; font-weight: 700; padding: 0 6px;">1</span>
                 <button id="btnNextUserPage" onclick="changeUserPage(1)" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem; border-color: #cbd5e1; color: #334155;">Siguiente ›</button>
             </div>
         </div>

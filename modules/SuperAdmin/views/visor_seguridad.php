@@ -1,153 +1,3 @@
-<style>
-/* ==========================================================================
-   Antigravity UI & Motion Design Expert Style Guide - WAF Security Monitor
-   Alineado 100% a las Variables Globales CSS de CIIDI (style.css)
-   ========================================================================== */
-
-/* Banner Hero Espacial */
-.ag-sec-hero {
-    background: #ffffff !important;
-    border: 1px solid rgba(80, 89, 132, 0.16) !important;
-    padding: 1.6rem 2rem !important;
-    border-radius: var(--radius-md) !important;
-    box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04) !important;
-    margin-bottom: 2rem !important;
-}
-
-/* Tarjetas de Cristal Antigravity */
-.ag-sec-card {
-    background: rgba(255, 255, 255, 0.95) !important;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(80, 89, 132, 0.15) !important;
-    border-radius: var(--radius-md) !important;
-    padding: 1.6rem !important;
-    box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04) !important;
-    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-.ag-sec-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 40px rgba(18, 26, 62, 0.08) !important;
-    border-color: rgba(80, 89, 132, 0.28) !important;
-}
-
-/* Botones Estandarizados (Paleta Padre CIIDI) */
-.ag-btn {
-    height: 38px !important;
-    padding: 0 18px !important;
-    border-radius: var(--radius-sm) !important;
-    font-weight: 700 !important;
-    font-size: 0.85rem !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    cursor: pointer !important;
-    border: none !important;
-    text-decoration: none !important;
-    box-sizing: border-box !important;
-}
-
-.ag-btn-primary {
-    background: var(--color-secundario) !important;
-    color: #ffffff !important;
-    box-shadow: 0 4px 14px rgba(80, 89, 132, 0.25) !important;
-}
-
-.ag-btn-primary:hover {
-    transform: translateY(-2px) !important;
-    background: #3C456A !important;
-    box-shadow: 0 6px 18px rgba(80, 89, 132, 0.38) !important;
-    color: #ffffff !important;
-}
-
-.ag-btn-secondary {
-    background: #ffffff !important;
-    color: var(--color-secundario) !important;
-    border: 1px solid rgba(80, 89, 132, 0.25) !important;
-}
-
-.ag-btn-secondary:hover {
-    transform: translateY(-2px) !important;
-    background: var(--blanco) !important;
-    border-color: var(--color-secundario) !important;
-    box-shadow: 0 4px 12px rgba(18, 26, 62, 0.06) !important;
-}
-
-.ag-btn-danger {
-    background: rgba(80, 89, 132, 0.1) !important;
-    color: var(--color-principal) !important;
-    border: 1px solid rgba(80, 89, 132, 0.25) !important;
-}
-
-.ag-btn-danger:hover {
-    transform: translateY(-2px) !important;
-    background: var(--color-principal) !important;
-    color: #ffffff !important;
-    box-shadow: 0 6px 18px rgba(18, 26, 62, 0.2) !important;
-}
-
-/* Badges Armónicos */
-.ag-badge {
-    border-radius: var(--radius-sm);
-    padding: 4px 10px;
-    font-weight: 800;
-    font-size: 0.75rem;
-    letter-spacing: 0.4px;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.ag-badge-ok {
-    background: rgba(112, 144, 203, 0.15);
-    color: var(--color-principal);
-    border: 1px solid rgba(112, 144, 203, 0.3);
-}
-
-.ag-badge-warn {
-    background: rgba(80, 89, 132, 0.12);
-    color: var(--color-secundario);
-    border: 1px solid rgba(80, 89, 132, 0.25);
-}
-
-.ag-badge-danger {
-    background: rgba(80, 89, 132, 0.15);
-    color: var(--color-principal);
-    border: 1px solid rgba(80, 89, 132, 0.35);
-}
-
-/* Inputs de Formulario */
-.ag-form-input {
-    width: 100%;
-    padding: 10px 14px;
-    border-radius: 10px;
-    border: 1px solid rgba(80, 89, 132, 0.2);
-    background: rgba(248, 250, 252, 0.9);
-    font-size: 0.88rem;
-    color: var(--texto-titulos);
-    transition: all 0.25s ease-out;
-    box-sizing: border-box;
-}
-
-.ag-form-input:focus {
-    outline: none;
-    border-color: var(--color-terciario);
-    background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(112, 144, 203, 0.18);
-}
-
-.ag-form-label {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--texto-titulos);
-    display: block;
-    margin-bottom: 6px;
-}
-</style>
-
 <!-- BANNER HERO PRINCIPAL -->
 <div class="ag-sec-hero">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.25rem;">
@@ -186,7 +36,7 @@
 <?php endif; ?>
 
 <!-- PANEL DE VERIFICACIÓN DE HASH DE AUDITORÍA IMBORRABLE (TAMPER-PROOF) -->
-<div class="ag-sec-card mb-2" style="border-left: 5px solid <?= $integridad['integro'] ? 'var(--color-terciario)' : 'var(--color-principal)' ?> !important;">
+<div class="ag-sec-card mb-2" style="border-left: 5px solid <?= $integridad['integro'] ? 'var(--success-active)' : 'var(--alert-active)' ?> !important;">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
@@ -204,7 +54,7 @@
         </div>
 
         <div style="font-family: monospace; font-size: 0.82rem; background: var(--blanco); padding: 8px 16px; border-radius: var(--radius-sm); border: 1px solid rgba(80, 89, 132, 0.18); color: var(--texto-titulos);">
-            Registros Auditados: <b><?= $integridad['total'] ?></b> | Manipulados: <b style="color: <?= $integridad['corruptos'] > 0 ? 'var(--color-principal)' : 'var(--color-secundario)' ?>;"><?= $integridad['corruptos'] ?></b>
+            Registros Auditados: <b><?= $integridad['total'] ?></b> | Manipulados: <b style="color: <?= $integridad['corruptos'] > 0 ? 'var(--warning-active)' : 'var(--alert-active)' ?>;"><?= $integridad['corruptos'] ?></b>
         </div>
     </div>
 </div>
@@ -311,7 +161,7 @@ $blindajeCompleto = $hEnv && $hStorage && $hRoot;
     <!-- 2. LISTA NEGRA GLOBAL DE IPS (BLACKLIST PERMANENTE WAF / SQLi / XSS) -->
     <div class="ag-sec-card">
         <h3 style="margin: 0 0 1rem 0; font-size: 1.05rem; font-weight: 800; color: var(--texto-titulos); display: flex; align-items: center; gap: 8px;">
-            <i class="ph-bold ph-prohibit" style="color: var(--color-principal);"></i> Lista Negra WAF (Blacklist)
+            <i class="ph-bold ph-prohibit" style="color: var(--texto-titulos);"></i> Lista Negra WAF (Blacklist)
         </h3>
 
         <?php if (empty($blacklist)): ?>
@@ -332,7 +182,7 @@ $blindajeCompleto = $hEnv && $hStorage && $hRoot;
                     <tbody>
                         <?php foreach ($blacklist as $ipKey => $b): ?>
                             <tr style="border-bottom: 1px solid #f1f5f9;">
-                                <td style="padding: 10px; font-weight: 700; font-family: monospace; color: var(--color-principal);">
+                                <td style="padding: 10px; font-weight: 700; font-family: monospace; color: var(--texto-comun);">
                                     <?= htmlspecialchars($ipKey) ?>
                                 </td>
                                 <td style="padding: 10px; color: var(--texto-titulos);">
@@ -407,7 +257,7 @@ $blindajeCompleto = $hEnv && $hStorage && $hRoot;
 <div id="modalBloquearIP" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(8px); z-index: 9999; justify-content: center; align-items: center; padding: 1rem;">
     <div style="background: rgba(255, 255, 255, 0.98); border-radius: var(--radius-md); max-width: 460px; width: 100%; padding: 2rem; box-shadow: 0 24px 48px rgba(18, 26, 62, 0.18); border: 1px solid rgba(80, 89, 132, 0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--color-principal);">
+            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--texto-titulos);">
                 Añadir IP a Lista Negra Global
             </h3>
             <button type="button" onclick="cerrarModalBloquearIP()" style="background: none; border: none; font-size: 1.2rem; color: var(--texto-silenciado); cursor: pointer; padding: 4px;">

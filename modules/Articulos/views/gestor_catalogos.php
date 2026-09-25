@@ -469,7 +469,7 @@ function mostrarModalSistema(tipo, titulo, mensaje, isConfirm = false, onConfirm
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,34,68,0.8); z-index:99999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);';
     
-    let icon = tipo === 'success' ? '<i class="ph-bold ph-check-circle" style="color: #16a34a;"></i>' : '<i class="ph-bold ph-warning-circle" style="color: #dc2626;"></i>';
+    let icon = tipo === 'success' ? '<i class="ph-bold ph-check-circle" style="color: var(--success-active);"></i>' : '<i class="ph-bold ph-warning-circle" style="color: var(--alert-active);"></i>';
     let btnHtml = isConfirm 
         ? `<button type="button" class="btn btn-secondary" onclick="this.closest('div').parentElement.parentElement.remove()" style="margin-right:0.5rem;">Cancelar</button>
            <button type="button" class="btn btn-primary" id="btn-confirm-modal">Sí, proceder</button>`

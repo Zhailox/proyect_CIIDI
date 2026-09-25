@@ -20,7 +20,7 @@
     },
     "paginacion": {
         "modo_carga": "paginador",
-        "limite_catalogo": 10,
+        "limite_catalogo": 13,
         "limite_buscador": 6,
         "opciones_selector": [
             5,

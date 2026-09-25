@@ -120,8 +120,8 @@
                         <i class="ph-bold ph-toggle-left"></i> Modo Depuración (APP_DEBUG)
                     </label>
                     <select name="app_debug" class="sa-filter-input" style="width: 100%; font-weight: 600;">
-                        <option value="false" <?= !$appDebugActual ? 'selected' : '' ?>>🔴 false (Producción - Errores genéricos seguros)</option>
-                        <option value="true" <?= $appDebugActual ? 'selected' : '' ?>>🟢 true (Desarrollo - Muestra trazas de excepciones PDO)</option>
+                        <option value="false" <?= !$appDebugActual ? 'selected' : '' ?>>false (Producción - Errores genéricos seguros)</option>
+                        <option value="true" <?= $appDebugActual ? 'selected' : '' ?>>true (Desarrollo - Muestra trazas de excepciones PDO)</option>
                     </select>
                     <div style="margin-top: 8px; font-size: 0.78rem; color: var(--texto-silenciado);">
                         Si está en <code>false</code>, los usuarios recibirán un mensaje seguro de Error 500 y las trazas se guardarán silenciosamente en <code>storage/logs/system_errors.log</code>.

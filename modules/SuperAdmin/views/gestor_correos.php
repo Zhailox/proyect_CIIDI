@@ -888,7 +888,7 @@ function mostrarAvisoModal(mensaje, titulo = 'Notificación', tipo = 'info') {
     if (tipo === 'error') {
         elemIcono.innerHTML = '<i class="ph-bold ph-x-circle" style="color: var(--color-secundario);"></i>';
     } else if (tipo === 'warning') {
-        elemIcono.innerHTML = '<i class="ph-bold ph-warning" style="color: var(--color-principal);"></i>';
+        elemIcono.innerHTML = '<i class="ph-bold ph-warning" style="color: var(--texto-comun);"></i>';
     } else {
         elemIcono.innerHTML = '<i class="ph-bold ph-info" style="color: var(--color-terciario);"></i>';
     }
