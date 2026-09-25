@@ -19,21 +19,71 @@ class Auth {
             $revogadas = json_decode(file_get_contents($archivo_sesiones), true) ?: [];
             $usuarioIdStr = (string)$_SESSION['usuario_id'];
             
-            if (isset($revogadas[$usuarioIdStr]) && $revogadas[$usuarioIdStr] === true) {
-                unset($revogadas[$usuarioIdStr]);
-                file_put_contents($archivo_sesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
-                
+            if (isset($revogadas[$usuarioIdStr])) {
+                $revocadoVal = $revogadas[$usuarioIdStr];
+                $loginTime = (int)($_SESSION['login_time'] ?? 0);
+
+                // Si hay un timestamp de revocación:
+                // Solo se revoca si esta sesión se inició ANTES o DURANTE el momento de revocación.
+                // Si la sesión se inició DESPUÉS de la revocación (nuevo inicio de sesión legítimo), no se expulsa.
+                $debeRevocar = false;
+                if (is_numeric($revocadoVal)) {
+                    $revocadoTime = (int)$revocadoVal;
+                    if ($loginTime <= $revocadoTime) {
+                        $debeRevocar = true;
+                    }
+                } else {
+                    // Valor booleano legado: solo revocar si no tiene login_time reciente
+                    if ($loginTime === 0) {
+                        $debeRevocar = true;
+                    }
+                }
+
+                if ($debeRevocar) {
+                    unset($revogadas[$usuarioIdStr]);
+                    file_put_contents($archivo_sesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
+                    
+                    session_unset();
+                    session_destroy();
+                    
+                    $sessionManager->start();
+                    session_regenerate_id(true);
+                    
+                    $_SESSION['error_login'] = "Tu sesión ha sido finalizada por el administrador por razones de seguridad.";
+                    header("Location: login");
+                    exit;
+                } else {
+                    // La sesión actual es posterior a la revocación (nuevo login exitoso posterior).
+                    // Limpiamos la entrada obsoleta del JSON para no dejar pendientes.
+                    unset($revogadas[$usuarioIdStr]);
+                    file_put_contents($archivo_sesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
+                }
+            }
+        }
+
+        // --- CONTROL DE TIEMPO DE INACTIVIDAD (SESSION TIMEOUT) ---
+        $archivo_config = defined('STORAGE_PATH') ? STORAGE_PATH . 'system_config.json' : CORE_PATH . '../storage/system_config.json';
+        $timeoutMinutos = 120;
+        if (file_exists($archivo_config)) {
+            $sysCfg = json_decode(file_get_contents($archivo_config), true) ?: [];
+            $timeoutMinutos = (int)($sysCfg['seguridad']['timeout_minutos'] ?? 120);
+        }
+        $timeoutSegundos = max(300, $timeoutMinutos * 60);
+
+        $ahora = time();
+        if (isset($_SESSION['ultimo_acceso'])) {
+            $inactividad = $ahora - (int)$_SESSION['ultimo_acceso'];
+            if ($inactividad > $timeoutSegundos) {
                 session_unset();
                 session_destroy();
-                
                 $sessionManager->start();
                 session_regenerate_id(true);
-                
-                $_SESSION['error_login'] = "Tu sesión ha sido finalizada por el administrador por razones de seguridad.";
+                $_SESSION['error_login'] = "Tu sesión ha expirado por inactividad ({$timeoutMinutos} min). Por favor, inicia sesión nuevamente.";
                 header("Location: login");
                 exit;
             }
         }
+        $_SESSION['ultimo_acceso'] = $ahora;
 
         return true;
     }

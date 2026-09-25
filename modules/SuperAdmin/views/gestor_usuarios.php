@@ -383,7 +383,7 @@ if (isset($privilegios)) {
                 <p style="font-size: 0.85rem; color: #94a3b8; margin: 1rem 0;">No hay profesores o docentes registrados actualmente en la base de datos.</p>
             <?php else: ?>
                 <?php foreach ($profesores as $profe): ?>
-                    <div class="gestor-teacher-card">
+                    <div class="gestor-teacher-card teacher-card-item">
                         <div class="gestor-teacher-avatar">
                             <?= strtoupper(substr($profe['nombre_completo'], 0, 1)) ?>
                         </div>
@@ -401,6 +401,18 @@ if (isset($privilegios)) {
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
+
+        <!-- BARRAS Y CONTROLES DE PAGINACIÓN DOCENTES -->
+        <?php if (!empty($profesores)): ?>
+        <div id="teacherPaginationContainer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; flex-wrap: wrap; gap: 0.75rem; border-top: 1px solid #e2e8f0; padding-top: 0.75rem;">
+            <span id="teacherPaginationInfo" style="font-size: 0.82rem; color: #64748b; font-weight: 600;">Mostrando registros</span>
+            <div style="display: flex; gap: 0.4rem; align-items: center;">
+                <button id="btnPrevTeacherPage" onclick="changeTeacherPage(-1)" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem; border-color: #cbd5e1; color: #334155;">&lt; Anterior</button>
+                <span id="teacherPageNum" style="font-size: 0.85rem; font-weight: 700; color: var(--color-principal); padding: 0 6px;">1</span>
+                <button id="btnNextTeacherPage" onclick="changeTeacherPage(1)" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem; border-color: #cbd5e1; color: #334155;">Siguiente &gt;</button>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -629,6 +641,10 @@ function switchUserTab(tabId, btnElement) {
         btnElement.classList.add('tab-active');
     }
 
+    if (tabId === 'tab-docentes') {
+        applyTeacherPagination();
+    }
+
     sessionStorage.setItem('gestorUsuariosTab', tabId);
 }
 
@@ -640,7 +656,7 @@ function toggleModalCrearUsuario(show) {
 }
 
 let currentUserPage = 1;
-const itemsPerPage = 10;
+const itemsPerPage = <?= (int)($paginacionUsuarios ?? 15) ?>;
 
 function filterUserTable() {
     currentUserPage = 1;
@@ -717,6 +733,60 @@ function changeUserPage(dir) {
     currentUserPage += dir;
     applyPaginationAndFilter();
 }
+
+let currentTeacherPage = 1;
+const teachersPerPage = <?= (int)($paginacionDocentes ?? 15) ?>;
+
+function applyTeacherPagination() {
+    const cards = Array.from(document.querySelectorAll('.teacher-card-item'));
+    if (!cards.length) return;
+
+    cards.forEach(c => c.style.display = 'none');
+
+    const totalMatches = cards.length;
+    const totalPages = Math.ceil(totalMatches / teachersPerPage) || 1;
+
+    if (currentTeacherPage > totalPages) currentTeacherPage = totalPages;
+    if (currentTeacherPage < 1) currentTeacherPage = 1;
+
+    const startIdx = (currentTeacherPage - 1) * teachersPerPage;
+    const endIdx = startIdx + teachersPerPage;
+
+    const visibleCards = cards.slice(startIdx, endIdx);
+    visibleCards.forEach(c => c.style.display = '');
+
+    const infoSpan = document.getElementById('teacherPaginationInfo');
+    const pageNumSpan = document.getElementById('teacherPageNum');
+    const btnPrev = document.getElementById('btnPrevTeacherPage');
+    const btnNext = document.getElementById('btnNextTeacherPage');
+
+    if (infoSpan) {
+        const displayStart = startIdx + 1;
+        const displayEnd = Math.min(endIdx, totalMatches);
+        infoSpan.textContent = `Mostrando ${displayStart}-${displayEnd} de ${totalMatches} docentes registrados`;
+    }
+
+    if (pageNumSpan) {
+        pageNumSpan.textContent = `Página ${currentTeacherPage} de ${totalPages}`;
+    }
+
+    if (btnPrev) {
+        btnPrev.disabled = (currentTeacherPage <= 1);
+        btnPrev.style.opacity = (currentTeacherPage <= 1) ? '0.5' : '1';
+        btnPrev.style.cursor = (currentTeacherPage <= 1) ? 'not-allowed' : 'pointer';
+    }
+
+    if (btnNext) {
+        btnNext.disabled = (currentTeacherPage >= totalPages);
+        btnNext.style.opacity = (currentTeacherPage >= totalPages) ? '0.5' : '1';
+        btnNext.style.cursor = (currentTeacherPage >= totalPages) ? 'not-allowed' : 'pointer';
+    }
+}
+
+function changeTeacherPage(dir) {
+    currentTeacherPage += dir;
+    applyTeacherPagination();
+}
 function toggleModalEditarUsuario(show) {
     const modal = document.getElementById('modalEditarUsuario');
 
@@ -757,6 +827,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     switchUserTab(tabId, boton);
     applyPaginationAndFilter();
+    applyTeacherPagination();
 });
 function mostrarConfirmacionUsuarios(form, titulo, mensaje, icono, color) {
     document.getElementById('modalConfirmTitle').textContent = titulo;

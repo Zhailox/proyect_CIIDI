@@ -122,14 +122,23 @@ class ModulosController {
             $config['modulos'][$carpeta] = ['estado' => $nuevoEstado];
             $this->guardarConfiguracion($config);
 
-            // Obtener rutas del módulo para informar al frontend en AJAX
+            // Obtener rutas y configuración de menú del módulo para sincronización en tiempo real
             $rutasModulo = [];
+            $menuModulo = [];
             $ruta_index_mod = MODULES_PATH . $carpeta . '/index.php';
             if (file_exists($ruta_index_mod)) {
                 $claseMod = $carpeta . 'Module';
-                $modInst = class_exists($claseMod) ? new $claseMod() : require_once $ruta_index_mod;
+                if (class_exists($claseMod)) {
+                    $modInst = new $claseMod();
+                } else {
+                    $modInst = require_once $ruta_index_mod;
+                    if ($modInst === true && class_exists($claseMod)) {
+                        $modInst = new $claseMod();
+                    }
+                }
                 if ($modInst instanceof ModuleContract) {
                     $rutasModulo = array_keys($modInst->getRutas());
+                    $menuModulo = $modInst->getMenuConfig();
                 }
             }
 
@@ -142,6 +151,7 @@ class ModulosController {
                     'nuevo_estado' => $nuevoEstado,
                     'modulo' => $carpeta,
                     'rutas' => $rutasModulo,
+                    'menu' => $menuModulo,
                     'message' => "Módulo '{$carpeta}' invertido a {$nuevoEstado}"
                 ]);
                 exit;

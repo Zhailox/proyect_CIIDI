@@ -240,17 +240,89 @@ function toggleModuloAjaxGM(moduloId, inputEl) {
                 badge.className = `badge-status-${moduloId} ${nuevoEstado === 'online' ? 'ag-badge-online' : 'ag-badge-offline'}`;
             }
 
-            // Actualización dinámica del menú lateral (Sidebar)
-            if (Array.isArray(data.rutas)) {
+            // Actualización dinámica del menú lateral (Sidebar) en tiempo real
+            const targetNavs = document.querySelectorAll(`.sidebar [data-modulo="${moduloId}"]`);
+
+            if (targetNavs.length > 0) {
+                targetNavs.forEach(navEl => {
+                    if (nuevoEstado === 'offline') {
+                        navEl.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                        navEl.style.opacity = '0';
+                        navEl.style.transform = 'translateX(-10px)';
+                        setTimeout(() => {
+                            navEl.style.display = 'none';
+                            navEl.style.transform = '';
+                        }, 250);
+                    } else {
+                        navEl.style.display = '';
+                        navEl.style.opacity = '0';
+                        navEl.style.transform = 'translateX(-10px)';
+                        void navEl.offsetWidth; // Forzar reflow para animación
+                        navEl.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                        navEl.style.opacity = '1';
+                        navEl.style.transform = '';
+                    }
+                });
+            } else if (nuevoEstado === 'online' && Array.isArray(data.menu) && data.menu.length > 0) {
+                // Si el elemento no existía en el DOM al cargar la página, se inyecta dinámicamente
+                const navContainer = document.querySelector('.sidebar .nav-menu');
+                if (navContainer) {
+                    data.menu.forEach(item => {
+                        const iconoHtml = (item.icono && item.icono.includes('<i')) ? item.icono : `<i class="${item.icono || 'ph ph-app-window'}"></i>`;
+                        if (item.tipo === 'link') {
+                            const a = document.createElement('a');
+                            a.href = item.enlace;
+                            a.className = 'nav-item';
+                            a.setAttribute('data-modulo', moduloId);
+                            a.innerHTML = `<span class="nav-icon">${iconoHtml}</span><span class="nav-text">${item.titulo}</span>`;
+                            a.style.opacity = '0';
+                            a.style.transform = 'translateX(-10px)';
+                            navContainer.appendChild(a);
+                            void a.offsetWidth;
+                            a.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                            a.style.opacity = '1';
+                            a.style.transform = '';
+                        } else if (item.tipo === 'parent') {
+                            const div = document.createElement('div');
+                            div.className = 'nav-parent';
+                            div.setAttribute('data-modulo', moduloId);
+                            let subitemsHtml = '';
+                            if (Array.isArray(item.subitems)) {
+                                item.subitems.forEach(sub => {
+                                    subitemsHtml += `<a href="${sub.ruta}" class="sub-nav-item"><span class="nav-text">${sub.titulo}</span></a>`;
+                                });
+                            }
+                            div.innerHTML = `
+                                <a href="${item.enlace}" class="nav-item nav-parent-link">
+                                    <span class="nav-icon">${iconoHtml}</span>
+                                    <span class="nav-text" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                        <span>${item.titulo}</span>
+                                        ${subitemsHtml ? '<i class="ph-bold ph-caret-down nav-caret" style="font-size: 0.8rem; transition: transform 0.25s ease; cursor: pointer; padding: 4px;" onclick="toggleSidebarParent(event)"></i>' : ''}
+                                    </span>
+                                </a>
+                                ${subitemsHtml ? `<div class="sub-menu">${subitemsHtml}</div>` : ''}
+                            `;
+                            div.style.opacity = '0';
+                            div.style.transform = 'translateX(-10px)';
+                            navContainer.appendChild(div);
+                            void div.offsetWidth;
+                            div.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                            div.style.opacity = '1';
+                            div.style.transform = '';
+                        }
+                    });
+                }
+            } else if (Array.isArray(data.rutas)) {
+                // Fallback por enlaces si no se localiza por data-modulo
                 data.rutas.forEach(ruta => {
-                    const navItems = document.querySelectorAll(`a[href="${ruta}"]`);
+                    const navItems = document.querySelectorAll(`.sidebar a[href="${ruta}"]`);
                     navItems.forEach(link => {
-                        const parentNav = link.closest('.nav-item, .sub-nav-item, .nav-parent');
+                        const parentNav = link.closest('.nav-parent') || link;
                         if (parentNav) {
                             if (nuevoEstado === 'offline') {
-                                parentNav.style.transition = 'all 0.3s ease';
+                                parentNav.style.transition = 'all 0.25s ease';
                                 parentNav.style.opacity = '0';
-                                setTimeout(() => { parentNav.style.display = 'none'; }, 300);
+                                setTimeout(() => { parentNav.style.display = 'none'; }, 250);
                             } else {
                                 parentNav.style.display = '';
                                 parentNav.style.opacity = '1';

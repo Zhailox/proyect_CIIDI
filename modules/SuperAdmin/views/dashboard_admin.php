@@ -63,6 +63,16 @@ $stats = array_merge([
         </div>
     </a>
 
+    <a href="gestor-reportes" class="sa-quick-card glass-card hover-glow" style="border-radius: var(--radius-sm); text-decoration: none;">
+        <div class="sa-quick-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+            <i class="ph-bold ph-chart-line-up"></i>
+        </div>
+        <div>
+            <h4 style="margin:0; font-size: 0.95rem; font-weight: 700; color: var(--texto-titulos);">Reportes y Exportación</h4>
+            <p style="margin:3px 0 0 0; font-size: 0.78rem; color: var(--texto-silenciado);">Métricas de proyectos PST, estadísticas y descargas PDF/CSV.</p>
+        </div>
+    </a>
+
     <a href="gestor-modulos" class="sa-quick-card glass-card hover-glow" style="border-radius: var(--radius-sm); text-decoration: none;">
         <div class="sa-quick-icon" style="background: rgba(112, 144, 203, 0.15); color: var(--color-terciario);">
             <i class="ph-bold ph-squares-four"></i>

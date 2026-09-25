@@ -25,6 +25,15 @@ class RateLimiter {
         return self::getStorageDir() . 'security_whitelist.json';
     }
 
+    public static function getMaxIntentos(): int {
+        $configFile = defined('STORAGE_PATH') ? STORAGE_PATH . 'system_config.json' : __DIR__ . '/../../storage/system_config.json';
+        if (file_exists($configFile)) {
+            $cfg = json_decode(file_get_contents($configFile), true) ?: [];
+            return max(1, (int)($cfg['seguridad']['intentos_login'] ?? 5));
+        }
+        return 5;
+    }
+
     /**
      * Escribe un archivo JSON en disco de forma atómica previniendo corrupción.
      */
@@ -56,7 +65,7 @@ class RateLimiter {
         return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
     }
 
-    public static function estaBloqueada(string $ip = null): array {
+    public static function estaBloqueada(?string $ip = null): array {
         if ($ip === null) $ip = self::obtenerIPCliente();
 
         // 0. Revisar Lista Blanca (Whitelist) - Caché en memoria
@@ -81,13 +90,14 @@ class RateLimiter {
             $data = $attempts[$ip];
             $intentos = $data['intentos'] ?? 0;
             $bloqueadoHasta = $data['bloqueado_hasta'] ?? 0;
+            $maxIntentos = self::getMaxIntentos();
 
-            if ($intentos >= 5 && time() < $bloqueadoHasta) {
+            if ($intentos >= $maxIntentos && time() < $bloqueadoHasta) {
                 $segundosRestantes = $bloqueadoHasta - time();
                 $minutosRestantes = ceil($segundosRestantes / 60);
                 return [
                     'bloqueada' => true,
-                    'razon' => "IP bloqueada temporalmente por fuerza bruta. Reintente en {$minutosRestantes} minuto(s).",
+                    'razon' => "IP bloqueada temporalmente por exceso de intentos fallidos ({$intentos}/{$maxIntentos}). Reintente en {$minutosRestantes} minuto(s).",
                     'tipo' => 'rate_limit',
                     'segundos_restantes' => $segundosRestantes
                 ];
@@ -149,7 +159,7 @@ class RateLimiter {
         return ['amenaza_detectada' => false];
     }
 
-    public static function registrarIntentoFallido(string $ip = null, string $cedula = ''): void {
+    public static function registrarIntentoFallido(?string $ip = null, string $cedula = ''): void {
         if ($ip === null) $ip = self::obtenerIPCliente();
 
         $attempts = self::obtenerIntentos();
@@ -177,7 +187,8 @@ class RateLimiter {
                 $attempts[$ip]['historial_cedulas'][] = $cedula;
             }
 
-            if ($attempts[$ip]['intentos'] >= 5) {
+            $maxIntentos = self::getMaxIntentos();
+            if ($attempts[$ip]['intentos'] >= $maxIntentos) {
                 $attempts[$ip]['bloqueado_hasta'] = $ahora + 900;
                 
                 if (class_exists('AuditLogger')) {
@@ -185,7 +196,7 @@ class RateLimiter {
                         'CRITICAL',
                         'WAF_Security',
                         'Bloqueo Automático IP por Fuerza Bruta',
-                        "IP {$ip} bloqueada por 15 min tras {$attempts[$ip]['intentos']} intentos fallidos."
+                        "IP {$ip} bloqueada por 15 min tras {$attempts[$ip]['intentos']} intentos fallidos (Límite: {$maxIntentos})."
                     );
                 }
             }
@@ -194,7 +205,7 @@ class RateLimiter {
         self::guardarIntentos($attempts);
     }
 
-    public static function limpiarIntentosExitosa(string $ip = null): void {
+    public static function limpiarIntentosExitosa(?string $ip = null): void {
         if ($ip === null) $ip = self::obtenerIPCliente();
         $attempts = self::obtenerIntentos();
         if (isset($attempts[$ip])) {

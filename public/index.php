@@ -17,6 +17,18 @@ if (file_exists(BASE_PATH . '/vendor/autoload.php')) {
 require_once CORE_PATH . 'System/Env.php';
 Env::load(BASE_PATH . '/.env');
 
+// 1.7. Configuración de Depuración según APP_DEBUG (.env Shield)
+$appDebug = (bool) Env::get('APP_DEBUG', false);
+if ($appDebug) {
+    ini_set('display_errors', '1');
+    ini_set('display_startup_errors', '1');
+    error_reporting(E_ALL);
+} else {
+    ini_set('display_errors', '0');
+    ini_set('display_startup_errors', '0');
+    error_reporting(0);
+}
+
 // 2. Importar el motor del sistema (Microkernel)
 require_once CORE_PATH . 'System/Kernel.php';
 
