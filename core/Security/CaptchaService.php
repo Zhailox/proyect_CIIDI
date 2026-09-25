@@ -82,7 +82,9 @@ class CaptchaService {
         header('Content-Type: image/png');
         header('Cache-Control: no-cache, no-store, must-revalidate');
         imagepng($image);
-        imagedestroy($image);
+        if (PHP_VERSION_ID < 80500 && is_resource($image)) {
+            imagedestroy($image);
+        }
         exit;
     }
 

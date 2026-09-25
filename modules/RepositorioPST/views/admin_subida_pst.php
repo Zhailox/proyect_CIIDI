@@ -20,6 +20,8 @@ $configMaxMb = (float)ConfigService::get('archivos.max_size_mb', 20);
 $phpUploadMaxMb = $parseIniToMb(ini_get('upload_max_filesize'));
 $phpPostMaxMb = $parseIniToMb(ini_get('post_max_size'));
 $maxMbEfectivo = round(min($configMaxMb, $phpUploadMaxMb, $phpPostMaxMb), 2);
+$carrerasList = $carreras ?? [];
+$currCarrera = $_POST['id_carrera'] ?? $documento['id_carrera'] ?? $documento['carrera_id'] ?? 1;
 ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script>

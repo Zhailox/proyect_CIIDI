@@ -438,7 +438,9 @@ class DetallePSTController {
                 // 1. Validar MIME-Type binario / Magic Bytes para prevenir archivos falsos o maliciosos
                 $finfo = finfo_open(FILEINFO_MIME_TYPE);
                 $mimeType = finfo_file($finfo, $fileTmpPath);
-                finfo_close($finfo);
+                if (PHP_VERSION_ID < 80500 && is_resource($finfo)) {
+                    finfo_close($finfo);
+                }
 
                 $allowedMimeTypes = [
                     'application/pdf',
@@ -477,6 +479,7 @@ class DetallePSTController {
                     throw new Exception("No se pudo guardar el archivo temporal en el almacenamiento del servidor.");
                 }
 
+                while (ob_get_level()) ob_end_clean();
                 echo json_encode([
                     'status' => 'success',
                     'message' => 'Metadatos extraídos e indexados con éxito.',
@@ -487,6 +490,7 @@ class DetallePSTController {
                 // Registrar el fallo en la auditoría WAF antes de devolver el error al cliente
                 AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Extracción Masiva', $e->getMessage());
                 
+                while (ob_get_level()) ob_end_clean();
                 echo json_encode([
                     'status' => 'error',
                     'message' => $e->getMessage()
@@ -920,7 +924,9 @@ class DetallePSTController {
                         if (in_array($ext, ['pdf', 'docx'])) {
                             $finfo = finfo_open(FILEINFO_MIME_TYPE);
                             $mimeType = finfo_file($finfo, $_FILES['archivo_pst']['tmp_name']);
-                            finfo_close($finfo);
+                            if (PHP_VERSION_ID < 80500 && is_resource($finfo)) {
+                                finfo_close($finfo);
+                            }
 
                             $allowedMimeTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip', 'application/x-zip-compressed'];
 
