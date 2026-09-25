@@ -139,6 +139,17 @@ require_once __DIR__ . '/../services/ConfigService.php';
                             </svg>
                             <button type="submit" class="btn-search-inner-submit"><i class="ph ph-magnifying-glass"></i></button>
                         </div>
+                        
+                        <!-- Toggle de Búsqueda Semántica (IA) -->
+                        <div class="semantic-toggle-wrapper" style="margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                            <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                                <input type="checkbox" name="usar_ia" value="1" <?= !empty($_GET['usar_ia']) ? 'checked' : '' ?> onchange="this.form.submit()" style="opacity: 0; width: 0; height: 0; position: absolute;">
+                                <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: <?= !empty($_GET['usar_ia']) ? '#2563eb' : '#cbd5e1' ?>; transition: .4s; border-radius: 24px;">
+                                    <span style="position: absolute; content: ''; height: 18px; width: 18px; left: <?= !empty($_GET['usar_ia']) ? '22px' : '3px' ?>; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></span>
+                                </span>
+                            </label>
+                            <span style="font-weight: 600; font-size: 0.95rem; color: <?= !empty($_GET['usar_ia']) ? '#2563eb' : '#64748b' ?>;">Búsqueda Semántica (IA)</span>
+                        </div>
                     </form>
                 </div>
 

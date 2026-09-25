@@ -1,0 +1,10 @@
+========================================================
+REGISTRO DE EJECUCIÓN: Generar Embeddings Semánticos [tarea_1790301553_528]
+FECHA/HORA: 2026-09-24 22:33:44
+DURACIÓN: 325.13 ms | ESTADO: FAIL
+========================================================
+
+MENSAJE: Error de ejecución CLI (Código 3).
+
+--- SALIDA ESTÁNDAR / CONSOLA (STDOUT/STDERR) ---
+[Thu Sep 24 22:33:44.745872 2026] [mpm_winnt:crit] [pid 45748:tid 376] AH02965: Child: Unable to retrieve my generation from the parent
