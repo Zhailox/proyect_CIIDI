@@ -1714,3 +1714,47 @@ Trace:
 #2 C:\Users\Chailon\.gemini\antigravity-cli\brain\0022c985-1260-4f33-89bf-97d460ae8032\scratch\test_db.php(8): Connection::getInstance()
 #3 {main}
 --------------------------------------------------------------------------------
+[2026-09-24 21:24:08] ERROR: could not find driver en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(170): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Database\QueryBuilder.php(19): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\models\UsuarioModel.php(11): QueryBuilder->__construct()
+#4 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(14): UsuarioModel->__construct()
+#5 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(60): LoginController->__construct()
+#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('login', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-09-24 21:24:55] ERROR: could not find driver en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(170): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Database\QueryBuilder.php(19): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\models\UsuarioModel.php(11): QueryBuilder->__construct()
+#4 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(14): UsuarioModel->__construct()
+#5 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(60): LoginController->__construct()
+#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(67): Dispatcher->dispatch('login', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\public\index.php(25): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-09-24 21:44:01] ERROR: SMTP Error: Could not connect to SMTP host. Failed to connect to server en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Thu, 24 S...', '--b1=_PlKTiXcMQ...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(199): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(151): MailService::enviar('vegeta@gmail.co...', 'Vegeta', 'Bienvenido al S...', '<h2 style="colo...', '', false)
+#5 [internal function]: MailService::{closure:MailService::enviarAsincrono():146}()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-09-24 21:44:26] ERROR: SMTP Error: Could not connect to SMTP host. Failed to connect to server en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Thu, 24 S...', '--b1=_dmNhqRksS...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(199): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(151): MailService::enviar('vegeta@gmail.co...', 'Vegeta', 'Bienvenido al S...', '<h2 style="colo...', '', false)
+#5 [internal function]: MailService::{closure:MailService::enviarAsincrono():146}()
+#6 {main}
+--------------------------------------------------------------------------------

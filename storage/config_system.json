@@ -1,25 +1,25 @@
 {
     "modulos": {
         "Articulos": {
-            "estado": "online"
+            "estado": "offline"
         },
         "Investigaciones": {
-            "estado": "online"
+            "estado": "offline"
         },
         "ForoChatbot": {
             "estado": "online"
         },
         "Cursos": {
-            "estado": "online"
+            "estado": "offline"
         },
         "VinculacionEmpresarial": {
-            "estado": "online"
+            "estado": "offline"
         },
         "RepositorioPST": {
-            "estado": "online"
+            "estado": "offline"
         },
         "LineasInvestigacion": {
-            "estado": "online"
+            "estado": "offline"
         }
     },
     "rutas": {

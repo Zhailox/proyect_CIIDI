@@ -1,5 +1,25 @@
 [
     {
+        "id": "mail_6ab5d1fa2c484",
+        "fecha": "2026-09-24 21:44:26",
+        "destino_email": "vegeta@gmail.com",
+        "destino_nombre": "Vegeta",
+        "asunto": "Bienvenido al Sistema CIIDI - Credenciales de Acceso",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10061 Additional SMTP info: No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión"
+    },
+    {
+        "id": "mail_6ab5d1e168a69",
+        "fecha": "2026-09-24 21:44:01",
+        "destino_email": "vegeta@gmail.com",
+        "destino_nombre": "Vegeta",
+        "asunto": "Bienvenido al Sistema CIIDI - Credenciales de Acceso",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10061 Additional SMTP info: No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión"
+    },
+    {
         "id": "mail_6ab586fc7c602",
         "fecha": "2026-09-24 16:24:28",
         "destino_email": "vegeta@gmail.com",
