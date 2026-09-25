@@ -43,7 +43,10 @@ set_time_limit(120);
  * El objetivo es que CORE_PATH y BASE_PATH queden definidos y que
  * Connection::getInstance() funcione correctamente.
  */
-$basePath = dirname(__DIR__);  // Sube un nivel desde /scripts/ → raíz del proyecto
+$basePath = __DIR__;
+while (!file_exists($basePath . '/vendor/autoload.php') && $basePath !== DIRECTORY_SEPARATOR) {
+    $basePath = dirname($basePath);
+}
 
 if (!defined('BASE_PATH')) {
     define('BASE_PATH', $basePath . DIRECTORY_SEPARATOR);

@@ -1240,6 +1240,55 @@ class DocumentoModel {
         return $this->cleanArray($results);
     }
 
+    public function buscarSemantico(string $querytexto): array {
+        if (trim($querytexto) === '') return [];
+        
+        require_once __DIR__ . '/../services/EmbeddingService.php';
+        
+        try {
+            $embeddingService = new EmbeddingService();
+            $vector = $embeddingService->generarEmbedding($querytexto);
+            
+            $vectorPgFormat = '[' . implode(',', array_map(
+                fn($v) => sprintf('%.8f', $v),
+                $vector
+            )) . ']';
+
+            $db = Connection::getInstance();
+            $sql = "SELECT 
+    r.id, 
+    r.titulo, 
+    dp.resumen,
+    r.anio_publicacion,
+    (dp.vector_semantico <=> ?) AS distancia
+FROM public.recursos r
+INNER JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
+WHERE r.id_tipo_recurso = 1 
+  AND dp.vector_semantico IS NOT NULL
+  AND (dp.vector_semantico <=> ?) < 0.6 
+ORDER BY distancia ASC
+LIMIT 15";
+            
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$vectorPgFormat, $vectorPgFormat]);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Mapear campos esperados por la vista para mantener la compatibilidad
+            foreach ($rows as &$row) {
+                $row['proyecto_resumen'] = $row['resumen'];
+                
+                $stmtAutores = $db->prepare("SELECT STRING_AGG(a.nombre_completo, ', ') FROM public.recurso_autores ra JOIN public.autores a ON ra.id_autor = a.id WHERE ra.id_recurso = ?");
+                $stmtAutores->execute([$row['id']]);
+                $row['autores_nombres'] = $stmtAutores->fetchColumn() ?: 'No registrados';
+            }
+            
+            return $this->cleanArray($rows);
+        } catch (\Exception $e) {
+            error_log("Error en búsqueda semántica: " . $e->getMessage());
+            return [];
+        }
+    }
+
     /**
      * Busca el nombre completo de un autor o tutor a partir de su cédula.
      */
