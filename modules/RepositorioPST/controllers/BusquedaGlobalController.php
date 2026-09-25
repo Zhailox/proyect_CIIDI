@@ -26,6 +26,8 @@ class BusquedaGlobalController {
             $carreraId = 1; // PNF en Informática por defecto si el filtro está desactivado
         }
 
+        $usar_ia = !empty($_GET['usar_ia']) ? true : false;
+        
         // Filtros avanzados dinámicos
         $filtrosExtra = [
             'anio'         => !empty($_GET['anio']) ? (int)$_GET['anio'] : null,
@@ -35,11 +37,18 @@ class BusquedaGlobalController {
             'orden'        => !empty($_GET['orden']) ? trim($_GET['orden']) : ConfigService::get('buscador.orden_predeterminado', 'anio_desc'),
         ];
         
-        // Búsqueda SQL estándar con paginación
-        $resultados = $model->buscarPST($q, $filtrosExtra, $limit, $offset);
-        $totalResults = $model->buscarPSTCount($q, $filtrosExtra);
+        // Búsqueda
+        if ($usar_ia && $q !== '') {
+            // Modo IA: ignorar filtros tradicionales y usar búsqueda vectorial
+            $resultados = $model->buscarSemantico($q);
+            $totalResults = count($resultados);
+        } else {
+            // Modo estándar
+            $resultados = $model->buscarPST($q, $filtrosExtra, $limit, $offset);
+            $totalResults = $model->buscarPSTCount($q, $filtrosExtra);
+        }
         
-        $totalPages = ceil($totalResults / $limit);
+        $totalPages = $limit > 0 ? ceil($totalResults / $limit) : 1;
         
         // Cargar colecciones para poblar selectores
         $carreras     = $model->getCarreras();

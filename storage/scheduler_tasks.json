@@ -28,5 +28,19 @@
         "ultima_ejecucion": "2026-09-19 20:53:35",
         "resultado_ultimo": "ÉXITO (28.69ms): Optimización de logs completada. 0 registros obsoletos purgados.",
         "script": "purgarLogs"
+    },
+    "tarea_1790301553_528": {
+        "id": "tarea_1790301553_528",
+        "nombre": "Generar Embeddings Semánticos",
+        "descripcion": "Procesa proyectos sin vector semántico vía modelo ONNX (máx. 2 por ciclo)",
+        "expresion_cron": "*\/5 * * * *",
+        "tipo_ejecucion": "script_archivo",
+        "script": "limpiarTemporales",
+        "comando_custom": "",
+        "archivo_script": "script_tarea_1790301553_528.php",
+        "timeout_segundos": 60,
+        "estado": "activo",
+        "ultima_ejecucion": "2026-09-24 22:33:44",
+        "resultado_ultimo": "ERROR (325.13ms): Error de ejecución CLI (Código 3)."
     }
 }
