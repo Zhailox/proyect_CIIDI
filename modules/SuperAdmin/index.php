@@ -36,14 +36,6 @@ class SuperAdminModule implements ModuleContract {
                 'controlador'      => 'GestorUsuariosController',
                 'metodo'           => 'revocarSesion'
             ],
-            'editar-usuario' => [
-                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
-                'controlador'      => 'GestorUsuariosController',
-                'metodo'           => 'mostrarEdicion',
-                'vista'            => __DIR__ . '/views/editar_usuario.php', 
-                'titulo'           => 'Editar Usuario - Administración',
-                'css'              => ['SuperAdmin.css']
-            ],
             // Endpoint para procesar los datos de edición
             'procesar-edicion-usuario' => [
                 'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
@@ -92,7 +84,7 @@ class SuperAdminModule implements ModuleContract {
                 'metodo'           => 'index', // Este método lee el disco duro físico
                 'vista'            => __DIR__ . '/views/gestor_modulos.php', 
                 'titulo'           => 'Gestor de Módulos - Configuración',
-                'css'              => ['SuperAdmin.css']
+                'css'              => ['SuperAdmin.css', 'gestor_modulo.css']
             ],
             'alternar-modulo' => [
                 'controlador_path' => __DIR__ . '/controllers/ModulosController.php',
@@ -113,7 +105,7 @@ class SuperAdminModule implements ModuleContract {
                 'metodo'           => 'detalleModulo',
                 'vista'            => __DIR__ . '/views/detalle_modulo.php', 
                 'titulo'           => 'Gestión Individual de Módulo - SuperAdmin',
-                'css'              => ['SuperAdmin.css']
+                'css'              => ['SuperAdmin.css', 'detalle_modulo.css']
             ],
             'guardar-config-modulo' => [
                 'controlador_path' => __DIR__ . '/controllers/ModulosController.php',
@@ -309,7 +301,7 @@ class SuperAdminModule implements ModuleContract {
                 'metodo'           => 'index',
                 'vista'            => __DIR__ . '/views/visor_seguridad.php',
                 'titulo'           => 'Monitor WAF & Seguridad - SuperAdmin',
-                'css'              => ['SuperAdmin.css']
+                'css'              => ['SuperAdmin.css', 'visor_seguridad.css']
             ],
             'desbloquear-ip' => [
                 'controlador_path' => __DIR__ . '/controllers/SecurityMonitorController.php',

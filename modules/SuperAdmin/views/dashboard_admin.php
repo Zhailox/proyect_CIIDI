@@ -41,7 +41,7 @@ $stats = array_merge([
         </div>
 
         <div>
-            <button type="button" onclick="ejecutarTestCore()" class="btn btn-primary" style="background: var(--color-secundario) !important; border: none !important; color: #ffffff !important; font-weight: 700; padding: 10px 18px; border-radius: 8px; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(80,89,132,0.25); cursor: pointer; transition: all 0.25s ease;">
+            <button type="button" onclick="ejecutarTestCore()" class="btn btn-primary" style="font-weight: 700; padding: 10px 18px; border-radius: 8px; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(80,89,132,0.25); cursor: pointer; transition: all 0.25s ease;">
                 <i class="ph-bold ph-heartbeat"></i> Testear Respuesta del Core
             </button>
         </div>
@@ -64,7 +64,7 @@ $stats = array_merge([
     </a>
 
     <a href="gestor-reportes" class="sa-quick-card glass-card hover-glow" style="border-radius: var(--radius-sm); text-decoration: none;">
-        <div class="sa-quick-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+        <div class="sa-quick-icon" style="background: rgba(173, 199, 190, 0.15); color: #5065c5;">
             <i class="ph-bold ph-chart-line-up"></i>
         </div>
         <div>
@@ -104,7 +104,7 @@ $stats = array_merge([
     </a>
 
     <a href="visor-seguridad" class="sa-quick-card glass-card hover-glow" style="border-radius: var(--radius-sm); text-decoration: none;">
-        <div class="sa-quick-icon" style="background: rgba(18, 26, 62, 0.15); color: var(--color-principal);">
+        <div class="sa-quick-icon" style="background: var(--alert-inactive); color: var(--alert-active);">
             <i class="ph-bold ph-shield-warning"></i>
         </div>
         <div>
@@ -114,7 +114,7 @@ $stats = array_merge([
     </a>
 
     <a href="visor-logs" class="sa-quick-card glass-card hover-glow" style="border-radius: var(--radius-sm); text-decoration: none;">
-        <div class="sa-quick-icon" style="background: rgba(18, 26, 62, 0.15); color: var(--color-principal);">
+        <div class="sa-quick-icon" style="background: var(--success-inactive); color: var(--success-active);">
             <i class="ph-bold ph-shield-check"></i>
         </div>
         <div>
@@ -123,7 +123,7 @@ $stats = array_merge([
         </div>
     </a>
     <a href="gestor-correos" class="sa-quick-card glass-card hover-glow" style="border-radius: var(--radius-sm); text-decoration: none;">
-        <div class="sa-quick-icon" style="background: rgba(147, 51, 234, 0.15); color: #9333ea;">
+        <div class="sa-quick-icon" style="background: rgba(198, 202, 238, 0.15); color: #424ca1;">
             <i class="ph-bold ph-envelope-simple-open"></i>
         </div>
         <div>
@@ -173,7 +173,7 @@ $stats = array_merge([
     </div>
 
     <div class="sa-telemetry-card glass-card" style="border-radius: var(--radius-sm);">
-        <div class="sa-telemetry-icon" style="background: rgba(18, 26, 62, 0.15); color: var(--color-principal);">
+        <div class="sa-telemetry-icon" style="background: rgba(18, 26, 62, 0.15); color: var(--color-terciario);">
             <i class="ph-bold ph-gauge"></i>
         </div>
         <div class="sa-telemetry-info">
@@ -244,7 +244,7 @@ $stats = array_merge([
     <div class="glass-panel" style="padding: 1.25rem; border-radius: var(--radius-sm); display: flex; flex-direction: column;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
             <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--texto-titulos); display: flex; align-items: center; gap: 6px;">
-                <i class="ph-bold ph-shield-check" style="color: var(--color-principal);"></i> Eventos de Auditoría Recientes
+                <i class="ph-bold ph-shield-check" style="color: var(--texto-comun);"></i> Eventos de Auditoría Recientes
             </h4>
             <a href="visor-logs" style="font-size: 0.78rem; font-weight: 600; color: var(--color-terciario); text-decoration: none;">Ver todo →</a>
         </div>
@@ -259,9 +259,9 @@ $stats = array_merge([
                     $bgBadge = 'rgba(100, 116, 139, 0.1)';
                     $lvl = strtoupper($logItem['nivel'] ?? 'INFO');
                     if ($lvl === 'CRITICAL' || $lvl === 'ERROR') {
-                        $badgeColor = 'var(--color-principal)'; $bgBadge = 'rgba(18, 26, 62, 0.12)';
+                        $badgeColor = 'var(--alert-active)'; $bgBadge = 'rgba(18, 26, 62, 0.12)';
                     } elseif ($lvl === 'WARNING') {
-                        $badgeColor = 'var(--color-secundario)'; $bgBadge = 'rgba(80, 89, 132, 0.15)';
+                        $badgeColor = 'var(--warning-active)'; $bgBadge = 'rgba(80, 89, 132, 0.15)';
                     } elseif ($lvl === 'INFO') {
                         $badgeColor = 'var(--color-terciario)'; $bgBadge = 'rgba(112, 144, 203, 0.15)';
                     }
@@ -376,13 +376,13 @@ if (typeof Chart === 'undefined') {
 <!-- MODAL GLASSMORPHISM PARA DIAGNÓSTICO DE SALUD DEL CORE -->
 <div id="ag-core-health-modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18, 26, 62, 0.65); backdrop-filter: blur(8px); z-index: 99999; align-items: center; justify-content: center; padding: 1.5rem;">
     <div class="sa-modal-card" style="width: 100%; max-width: 640px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden; animation: agModalFade 0.25s cubic-bezier(0.16, 1, 0.3, 1);">
-        <div style="padding: 1.25rem 1.6rem; background: var(--color-principal); color: #ffffff; display: flex; justify-content: space-between; align-items: center;">
+        <div style="padding: 1.25rem 1.6rem; background: var(--color-principal); color: var(--texto-titulos); display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(112, 144, 203, 0.2); display: flex; align-items: center; justify-content: center; color: var(--color-terciario); font-size: 1.3rem;">
                     <i class="ph-bold ph-heartbeat"></i>
                 </div>
                 <div>
-                    <h3 style="margin: 0; font-weight: 800; font-size: 1.1rem; color: #ffffff;">Diagnóstico de Salud del Core</h3>
+                    <h3 style="margin: 0; font-weight: 800; font-size: 1.1rem;">Diagnóstico de Salud del Core</h3>
                     <p style="margin: 2px 0 0 0; font-size: 0.78rem; color: #94a3b8;">Prueba en tiempo real del Núcleo del Sistema</p>
                 </div>
             </div>
@@ -450,7 +450,7 @@ function ejecutarTestCore() {
             });
         }
 
-        const headerColor = data.saludable ? 'var(--color-principal)' : 'var(--color-secundario)';
+        const headerColor = data.saludable ? 'var(--success-active)' : 'var(--alert-active)';
         const statusBadge = data.saludable ? 'NÚCLEO 100% SALUDABLE' : 'ATENCIÓN: REVISAR CORRECCIONES';
 
         body.innerHTML = `

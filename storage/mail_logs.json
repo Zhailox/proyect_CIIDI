@@ -1,99 +1,12 @@
 [
     {
-<<<<<<< HEAD
-        "id": "mail_6ab5d1fa2c484",
-        "fecha": "2026-09-24 21:44:26",
-        "destino_email": "vegeta@gmail.com",
-        "destino_nombre": "Vegeta",
+        "id": "mail_6ab605a223dd9",
+        "fecha": "2026-09-25 01:24:50",
+        "destino_email": "6767677@gmail.com",
+        "destino_nombre": "wen",
         "asunto": "Bienvenido al Sistema CIIDI - Credenciales de Acceso",
         "exito": false,
         "tipo": "Directo",
         "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10061 Additional SMTP info: No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión"
-    },
-    {
-        "id": "mail_6ab5d1e168a69",
-        "fecha": "2026-09-24 21:44:01",
-        "destino_email": "vegeta@gmail.com",
-        "destino_nombre": "Vegeta",
-=======
-        "id": "mail_6ab5c70c61a6d",
-        "fecha": "2026-09-24 20:57:48",
-        "destino_email": "andrusramirez2020@gmail.com",
-        "destino_nombre": "asdasd",
->>>>>>> e576125aa9e86983b504a9bd3d6e8000941141f0
-        "asunto": "Bienvenido al Sistema CIIDI - Credenciales de Acceso",
-        "exito": false,
-        "tipo": "Directo",
-        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10061 Additional SMTP info: No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión"
-    },
-    {
-        "id": "mail_6ab586fc7c602",
-        "fecha": "2026-09-24 16:24:28",
-        "destino_email": "vegeta@gmail.com",
-        "destino_nombre": "Vegetas",
-        "asunto": "Su cuenta institucional ha sido Reactivada - CIIDI",
-        "exito": false,
-        "tipo": "Directo",
-        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
-    },
-    {
-        "id": "mail_6ab586d600119",
-        "fecha": "2026-09-24 16:23:50",
-        "destino_email": "vegeta@gmail.com",
-        "destino_nombre": "Vegetas",
-        "asunto": "Alerta de Seguridad: Su cuenta ha sido bloqueada temporalmente",
-        "exito": false,
-        "tipo": "Directo",
-        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
-    },
-    {
-        "id": "mail_6ab586bf0ea99",
-        "fecha": "2026-09-24 16:23:27",
-        "destino_email": "vegeta@gmail.com",
-        "destino_nombre": "Vegetas",
-        "asunto": "Su cuenta institucional ha sido Reactivada - CIIDI",
-        "exito": false,
-        "tipo": "Directo",
-        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
-    },
-    {
-        "id": "mail_6ab5869894f39",
-        "fecha": "2026-09-24 16:22:48",
-        "destino_email": "vegeta@gmail.com",
-        "destino_nombre": "Vegetas",
-        "asunto": "Alerta de Seguridad: Su cuenta ha sido bloqueada temporalmente",
-        "exito": false,
-        "tipo": "Directo",
-        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
-    },
-    {
-        "id": "mail_6ab57e76a928e",
-        "fecha": "2026-09-24 15:48:06",
-        "destino_email": "vegeta@gmail.com",
-        "destino_nombre": "Vegeta",
-        "asunto": "¡Bienvenido a la Plataforma CIIDI UPTTMBI!",
-        "exito": false,
-        "tipo": "Directo",
-        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
-    },
-    {
-        "id": "mail_6ab57dc174ff0",
-        "fecha": "2026-09-24 15:45:05",
-        "destino_email": "7@gmail.com",
-        "destino_nombre": "e",
-        "asunto": "Bienvenido al Sistema CIIDI - Credenciales de Acceso",
-        "exito": false,
-        "tipo": "Directo",
-        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
-    },
-    {
-        "id": "mail_6ab57d6daa99f",
-        "fecha": "2026-09-24 15:43:41",
-        "destino_email": "Ereselmejorplaneta@gmail.com",
-        "destino_nombre": "Vegeta",
-        "asunto": "Bienvenido al Sistema CIIDI - Credenciales de Acceso",
-        "exito": false,
-        "tipo": "Directo",
-        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
     }
 ]

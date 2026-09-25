@@ -15,8 +15,8 @@
         "descripcion": "Genera un backup completo comprimido (.sql.gz) de la base de datos y purga respaldos antiguos.",
         "expresion_cron": "0 0 * * *",
         "estado": "inactivo",
-        "ultima_ejecucion": "2026-09-24 21:58:01",
-        "resultado_ultimo": "ÉXITO (340.58ms): Respaldo generado con éxito: auto_cron_backup_2026-09-24_21-58-01.sql.gz",
+        "ultima_ejecucion": "2026-09-25 01:14:15",
+        "resultado_ultimo": "ÉXITO (433.77ms): Respaldo generado con éxito: auto_cron_backup_2026-09-25_01-14-15.sql.gz",
         "script": "ejecutarBackupAutomatico"
     },
     "purga_logs_viejos": {

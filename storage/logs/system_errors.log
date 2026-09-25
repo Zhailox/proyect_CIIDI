@@ -1768,3 +1768,13 @@ Trace:
 #5 [internal function]: MailService::{closure:MailService::enviarAsincrono():146}()
 #6 {main}
 --------------------------------------------------------------------------------
+[2026-09-25 01:24:50] ERROR: SMTP Error: Could not connect to SMTP host. Failed to connect to server en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Fri, 25 S...', '--b1=_AIWlDxsz6...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(199): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(151): MailService::enviar('6767677@gmail.c...', 'wen', 'Bienvenido al S...', '<h2 style="colo...', '', false)
+#5 [internal function]: MailService::{closure:MailService::enviarAsincrono():146}()
+#6 {main}
+--------------------------------------------------------------------------------

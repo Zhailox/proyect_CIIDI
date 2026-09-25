@@ -60,10 +60,10 @@
             <label style="font-size: 0.78rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Nivel / Severidad</label>
             <select name="nivel" class="login-flat-input" style="padding: 6px 10px; font-size: 0.85rem;">
                 <option value="">-- Todos --</option>
-                <option value="INFO" <?= $f_nivel === 'INFO' ? 'selected' : '' ?>>🔵 INFO</option>
-                <option value="WARNING" <?= $f_nivel === 'WARNING' ? 'selected' : '' ?>>🟡 WARNING</option>
-                <option value="ERROR" <?= $f_nivel === 'ERROR' ? 'selected' : '' ?>>🔴 ERROR</option>
-                <option value="CRITICAL" <?= $f_nivel === 'CRITICAL' ? 'selected' : '' ?>>🚨 CRITICAL</option>
+                <option value="INFO" <?= $f_nivel === 'INFO' ? 'selected' : '' ?>>INFO</option>
+                <option value="WARNING" <?= $f_nivel === 'WARNING' ? 'selected' : '' ?>>WARNING</option>
+                <option value="ERROR" <?= $f_nivel === 'ERROR' ? 'selected' : '' ?>>ERROR</option>
+                <option value="CRITICAL" <?= $f_nivel === 'CRITICAL' ? 'selected' : '' ?>>CRITICAL</option>
             </select>
         </div>
 

@@ -44,6 +44,14 @@
   --texto-blanco: #FFFFFF;
   --texto-negro: #000000;
 
+  /* Colores de soporte*/
+ --success-active:   #4a7fb5;   /* Azul cielo profundo — positivo, ligero */
+--success-inactive: #d8e6f2;   /* Azul hielo muy claro */
+--warning-active:   #2f5280;   /* Azul medio — atención moderada */
+--warning-inactive: #cdd9e8;   /* Azul grisáceo claro */
+--alert-active:     #1a2d4d;   /* Azul noche — alerta severa */
+--alert-inactive:   #c5cedd;   /* Gris azulado frío */
+--fondos:           #b6c1d6;   /* intacto */
 
   /* Typography & Spacing */
   --font-family: 'Inter', system-ui, -apple-system, sans-serif;

@@ -1,0 +1,141 @@
+.ag-sec-hero {
+    background: #ffffff !important;
+    border: 1px solid rgba(80, 89, 132, 0.16) !important;
+    padding: 1.6rem 2rem !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04) !important;
+    margin-bottom: 2rem !important;
+}
+
+/* Tarjetas de Cristal Antigravity */
+.ag-sec-card {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(80, 89, 132, 0.15) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 1.6rem !important;
+    box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04) !important;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.ag-sec-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(18, 26, 62, 0.08) !important;
+    border-color: rgba(80, 89, 132, 0.28) !important;
+}
+
+/* Botones Estandarizados (Paleta Padre CIIDI) */
+.ag-btn {
+    height: 38px !important;
+    padding: 0 18px !important;
+    border-radius: var(--radius-sm) !important;
+    font-weight: 700 !important;
+    font-size: 0.85rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    cursor: pointer !important;
+    border: none !important;
+    text-decoration: none !important;
+    box-sizing: border-box !important;
+}
+
+.ag-btn-primary {
+    background: var(--color-secundario) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(80, 89, 132, 0.25) !important;
+}
+
+.ag-btn-primary:hover {
+    transform: translateY(-2px) !important;
+    background: #3C456A !important;
+    box-shadow: 0 6px 18px rgba(80, 89, 132, 0.38) !important;
+    color: #ffffff !important;
+}
+
+.ag-btn-secondary {
+    background: #ffffff !important;
+    color: var(--color-secundario) !important;
+    border: 1px solid rgba(80, 89, 132, 0.25) !important;
+}
+
+.ag-btn-secondary:hover {
+    transform: translateY(-2px) !important;
+    background: var(--blanco) !important;
+    border-color: var(--color-secundario) !important;
+    box-shadow: 0 4px 12px rgba(18, 26, 62, 0.06) !important;
+}
+
+.ag-btn-danger {
+    background: rgba(80, 89, 132, 0.1) !important;
+    color: var(--color-principal) !important;
+    border: 1px solid rgba(80, 89, 132, 0.25) !important;
+}
+
+.ag-btn-danger:hover {
+    transform: translateY(-2px) !important;
+    background: var(--color-principal) !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 18px rgba(18, 26, 62, 0.2) !important;
+}
+
+/* Badges Armónicos */
+.ag-badge {
+    border-radius: var(--radius-sm);
+    padding: 4px 10px;
+    font-weight: 800;
+    font-size: 0.75rem;
+    letter-spacing: 0.4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.ag-badge-ok {
+    background: rgba(112, 144, 203, 0.15);
+    color: var(--success-active);
+    border: 1px solid rgba(112, 144, 203, 0.3);
+}
+
+.ag-badge-warn {
+    background: rgba(80, 89, 132, 0.12);
+    color: var(--warning-active);
+    border: 1px solid rgba(80, 89, 132, 0.25);
+}
+
+.ag-badge-danger {
+    background: rgba(80, 89, 132, 0.15);
+    color: var(--alert-active);
+    border: 1px solid rgba(80, 89, 132, 0.35);
+}
+
+/* Inputs de Formulario */
+.ag-form-input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(80, 89, 132, 0.2);
+    background: rgba(248, 250, 252, 0.9);
+    font-size: 0.88rem;
+    color: var(--texto-titulos);
+    transition: all 0.25s ease-out;
+    box-sizing: border-box;
+}
+
+.ag-form-input:focus {
+    outline: none;
+    border-color: var(--color-terciario);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(112, 144, 203, 0.18);
+}
+
+.ag-form-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--texto-titulos);
+    display: block;
+    margin-bottom: 6px;
+}

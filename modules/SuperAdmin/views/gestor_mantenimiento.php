@@ -470,7 +470,7 @@
                     <input type="password" name="admin_confirm_password" class="ag-input" placeholder="Ingresa tu contraseña actual de usuario" required style="width: 100%; border-color: rgba(80,89,132,0.4);">
                 </div>
 
-                <button type="submit" class="ag-btn-danger-flat" style="justify-content: center; padding: 11px !important;">
+                <button type="submit" class="ag-btn-flat" style="justify-content: center; padding: 11px !important;">
                     <i class="ph-bold ph-key"></i> Configurar Cuenta Break-Glass
                 </button>
             </form>
@@ -523,7 +523,7 @@
                     </div>
                 <?php endif; ?>
 
-                <button type="submit" class="<?= $mantenimientoActivo ? 'ag-btn-flat' : 'ag-btn-danger-flat' ?>" style="width: 100%; justify-content: center; padding: 11px !important; font-size: 0.9rem !important;">
+                <button type="submit" class="<?= $mantenimientoActivo ? 'ag-btn-flat' : 'ag-btn-flat' ?>" style="width: 100%; justify-content: center; padding: 11px !important; font-size: 0.9rem !important;">
                     <i class="<?= $mantenimientoActivo ? 'ph-bold ph-power' : 'ph-bold ph-warning-circle' ?>"></i>
                     <?= $mantenimientoActivo ? 'Desactivar Mantenimiento (Abrir Sistema)' : 'Activar Mantenimiento Ahora' ?>
                 </button>
@@ -755,7 +755,7 @@ function confirmarEliminacionBackup(formEl, nombreArchivo) {
         iconBg: 'rgba(80,89,132,0.12)',
         iconColor: 'var(--color-terciario)',
         confirmText: 'Sí, Eliminar',
-        confirmClass: 'ag-btn-danger-flat',
+        confirmClass: 'ag-btn-flat',
         onConfirm: () => formEl.submit()
     });
 }
@@ -784,7 +784,7 @@ function confirmarRestauracionBD() {
         iconBg: 'rgba(80,89,132,0.15)',
         iconColor: 'var(--color-terciario)',
         confirmText: 'Sí, Ejecutar Restauración',
-        confirmClass: 'ag-btn-danger-flat',
+        confirmClass: 'ag-btn-flat',
         onConfirm: () => document.getElementById('formRestaurarBackup').submit()
     });
 }
