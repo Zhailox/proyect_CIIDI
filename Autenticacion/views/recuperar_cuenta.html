@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperar Cuenta - UPTTMBI</title>
+    <!-- Vinculando la hoja de estilos global -->
+    <link rel="stylesheet" href="../../../public/assets/css/style.css">
+
+    <link rel="stylesheet" href="../assets/css/recuperar_cuenta.css">
+</head>
+
+<body>
+
+    <div class="login-wrapper-new">
+
+        <!-- Lado de Formulario (Izquierda) -->
+        <div class="login-right-panel">
+            <h2>RECUPERAR CUENTA</h2>
+            <p>Enviaremos un token a su correo registrado</p>
+
+            <form action="#" method="POST" class="login-form-container-new">
+
+                <!-- Input Cédula o Correo -->
+                <div class="input-group">
+                    <!-- Icono de Correo/ID -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    <input type="text" id="cedula" placeholder="CÉDULA O CORREO" required>
+                </div>
+
+                <!-- Botón Principal -->
+                <button type="submit" class="btn-solid">ENVIAR TOKEN</button>
+
+                <!-- Footer (Volver al Login) -->
+                <div class="login-footer-new">
+                    <a href="login.html">¿Recordó su contraseña? Volver</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Lado de Imagen/Mensaje (Derecha) -->
+        <div class="login-left-panel">
+
+            <!-- SVG Ilustración para Recuperación -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" style="width: 200px; height: auto; margin-bottom: 2.5rem;">
+                <circle cx="50" cy="50" r="45" fill="rgba(255,255,255,0.15)"/>
+                <!-- Candado -->
+                <path d="M35 50 v-10 a15 15 0 0 1 30 0 v10" stroke="white" stroke-width="5" stroke-linecap="round"/>
+                <rect x="25" y="50" width="50" height="30" rx="6" fill="white"/>
+                <circle cx="50" cy="65" r="4" fill="#1e293b"/>
+                <!-- Flechas giratorias para recovery -->
+                <path d="M85 35 a35 35 0 0 1 0 30" stroke="#fcd34d" stroke-width="4" stroke-linecap="round" stroke-dasharray="6 6"/>
+                <path d="M15 65 a35 35 0 0 1 0 -30" stroke="#fcd34d" stroke-width="4" stroke-linecap="round" stroke-dasharray="6 6"/>
+            </svg>
+
+            <h2>¿Olvidó su clave?</h2>
+            <p>No se preocupe, indique sus datos y el sistema le guiará para restaurar el acceso de forma segura.</p>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

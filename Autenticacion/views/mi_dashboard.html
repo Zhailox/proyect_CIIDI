@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Dashboard - UPTTMBI</title>
+    <!-- Hoja de estilos global -->
+    <link rel="stylesheet" href="../../../public/assets/css/style.css">
+    <!-- Estilos específicos del Dashboard -->
+    <link rel="stylesheet" href="../assets/css/mi_dashboard.css">
+</head>
+
+<body>
+
+    <!-- Banner Superior con Gradiente -->
+    <div class="dashboard-banner"></div>
+
+    <!-- Main Content -->
+    <main class="dashboard-container">
+
+        <!-- Tarjeta de Perfil (se superpone al banner) -->
+        <div class="profile-card">
+            <div class="profile-info">
+                <!-- Avatar con imagen de perfil -->
+                <div class="profile-avatar">
+                    <img src="../assets/img/yeison.jpg" alt="Yeison - Investigador">
+                </div>
+                <div class="profile-text">
+                    <h1>Hola, Investigador</h1>
+                    <span>Centro de Investigación UPTTMBI</span>
+                </div>
+            </div>
+
+            <!-- Métricas en línea (como en la imagen de referencia) -->
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <div class="stat-value">04</div>
+                    <div class="stat-label">Proyectos Activos</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">02</div>
+                    <div class="stat-label">Postulaciones</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">07</div>
+                    <div class="stat-label">Documentos</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Layout de Dos Columnas -->
+        <div class="dashboard-grid">
+
+            <!-- Columna Izquierda -->
+            <div>
+
+                <!-- Resumen Rápido -->
+                <div class="dash-section">
+                    <div class="section-title">Resumen Rápido</div>
+                    <div class="dashboard-metrics">
+                        <div class="metric-box box-dark">
+                            <div class="metric-value">04</div>
+                            <div class="metric-name">Proyectos Activos</div>
+                        </div>
+                        <div class="metric-box box-light">
+                            <div class="metric-value">02</div>
+                            <div class="metric-name">En Revisión</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Columna Derecha -->
+            <div>
+
+                <!-- Actividad Reciente -->
+                <div class="dash-section">
+                    <div class="section-title">Actividad Reciente</div>
+
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-dot"></div>
+                            <div>
+                                Subida del documento PST para: <strong>Sistema Robótico Agrícola</strong>
+                            </div>
+                            <span class="activity-time">hace 2h</span>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-dot"></div>
+                            <div>
+                                Solicitud aprobada — Fase 1: <strong>Domótica UPTTMBI</strong>
+                            </div>
+                            <span class="activity-time">ayer</span>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-dot"></div>
+                            <div>
+                                Comentario en investigación: <strong>Sensor Agrícola</strong>
+                            </div>
+                            <span class="activity-time">hace 3d</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Métricas Detalladas (Abajo, con color para diferenciar) -->
+        <section class="dashboard-detailed-metrics">
+
+            <div class="detailed-card">
+                <div class="detailed-number">12</div>
+                <div class="detailed-label">Total de Proyectos Históricos</div>
+
+                <div class="detailed-breakdown">
+                    <div class="breakdown-item">
+                        <span class="breakdown-label">Completados (5)</span>
+                        <div class="breakdown-bar-bg">
+                            <div class="breakdown-bar-fill" style="width: 41%; background: #4ade80;"></div>
+                        </div>
+                    </div>
+                    <div class="breakdown-item">
+                        <span class="breakdown-label">En progreso (5)</span>
+                        <div class="breakdown-bar-bg">
+                            <div class="breakdown-bar-fill" style="width: 41%; background: #facc15;"></div>
+                        </div>
+                    </div>
+                    <div class="breakdown-item">
+                        <span class="breakdown-label">Detenidos (2)</span>
+                        <div class="breakdown-bar-bg">
+                            <div class="breakdown-bar-fill" style="width: 18%; background: #f87171;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detailed-card">
+                <div class="detailed-number">08</div>
+                <div class="detailed-label">Total de Postulaciones Enviadas</div>
+
+                <div class="detailed-breakdown">
+                    <div class="breakdown-item">
+                        <span class="breakdown-label">Aprobadas (4)</span>
+                        <div class="breakdown-bar-bg">
+                            <div class="breakdown-bar-fill" style="width: 50%; background: #4ade80;"></div>
+                        </div>
+                    </div>
+                    <div class="breakdown-item">
+                        <span class="breakdown-label">En Revisión (3)</span>
+                        <div class="breakdown-bar-bg">
+                            <div class="breakdown-bar-fill" style="width: 37%; background: #facc15;"></div>
+                        </div>
+                    </div>
+                    <div class="breakdown-item">
+                        <span class="breakdown-label">Rechazadas (1)</span>
+                        <div class="breakdown-bar-bg">
+                            <div class="breakdown-bar-fill" style="width: 13%; background: #f87171;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>
