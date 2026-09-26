@@ -503,6 +503,34 @@ class DetallePSTController {
 
                 $datosExtraidos = ExtractorPST::analizarTexto($text, $fileName);
 
+                // Si se extrajo nombre de tutor pero no su cédula, intentar resolver desde BD si ya existe
+                foreach (['academico', 'institucional', 'comunitario'] as $tKey) {
+                    $nomK = 'tutor_' . $tKey . '_nombre';
+                    $cedK = 'tutor_' . $tKey . '_cedula';
+                    if (!empty($datosExtraidos[$nomK]) && empty($datosExtraidos[$cedK])) {
+                        $cedFromDb = $model->getCedulaByNombre($datosExtraidos[$nomK], 'tutor');
+                        if ($cedFromDb) {
+                            $datosExtraidos[$cedK] = $cedFromDb;
+                        }
+                    }
+                }
+                if (!empty($datosExtraidos['autores']) && is_array($datosExtraidos['autores'])) {
+                    foreach ($datosExtraidos['autores'] as &$autItem) {
+                        if (!empty($autItem['nombre']) && empty($autItem['cedula'])) {
+                            $cedAut = $model->getCedulaByNombre($autItem['nombre'], 'autor');
+                            if ($cedAut) {
+                                $autItem['cedula'] = $cedAut;
+                            }
+                        }
+                    }
+                    unset($autItem);
+                }
+
+                // Verificar si el proyecto ya existe por título en el repositorio
+                $tituloExtraido = trim($datosExtraidos['titulo'] ?? '');
+                $yaExiste = !empty($tituloExtraido) && $model->existePSTPorTitulo($tituloExtraido);
+                $datosExtraidos['ya_existe_en_bd'] = $yaExiste;
+
                 // Guardar de forma provisional en el staging temporal storage/documentos/tmp/
                 $slugTitle = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($datosExtraidos['titulo'] ?? $fileName, 0, 30)));
                 $savedFileName = 'tmp_pst_' . $slugTitle . '_' . time() . '_' . mt_rand(100, 999) . '.' . $fileExtension;
@@ -521,7 +549,7 @@ class DetallePSTController {
                     'data' => array_merge($datosExtraidos, ['texto_raw' => $text])
                 ], JSON_UNESCAPED_UNICODE);
                 
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 // Registrar el fallo en la auditoría WAF antes de devolver el error al cliente
                 AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Extracción Masiva', $e->getMessage());
                 
@@ -559,6 +587,28 @@ class DetallePSTController {
 
                 $datosExtraidos = ExtractorPST::analizarTexto($text, $fileName);
 
+                foreach (['academico', 'institucional', 'comunitario'] as $tKey) {
+                    $nomK = 'tutor_' . $tKey . '_nombre';
+                    $cedK = 'tutor_' . $tKey . '_cedula';
+                    if (!empty($datosExtraidos[$nomK]) && empty($datosExtraidos[$cedK])) {
+                        $cedFromDb = $model->getCedulaByNombre($datosExtraidos[$nomK], 'tutor');
+                        if ($cedFromDb) {
+                            $datosExtraidos[$cedK] = $cedFromDb;
+                        }
+                    }
+                }
+                if (!empty($datosExtraidos['autores']) && is_array($datosExtraidos['autores'])) {
+                    foreach ($datosExtraidos['autores'] as &$autItem) {
+                        if (!empty($autItem['nombre']) && empty($autItem['cedula'])) {
+                            $cedAut = $model->getCedulaByNombre($autItem['nombre'], 'autor');
+                            if ($cedAut) {
+                                $autItem['cedula'] = $cedAut;
+                            }
+                        }
+                    }
+                    unset($autItem);
+                }
+
                 echo json_encode([
                     'status' => 'success',
                     'message' => 'Simulación ejecutada con éxito.',
@@ -566,7 +616,7 @@ class DetallePSTController {
                     'preview_texto' => mb_substr($text, 0, 800) . '...'
                 ], JSON_UNESCAPED_UNICODE);
 
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 echo json_encode(['status' => 'error', 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
             }
             exit;
@@ -594,6 +644,20 @@ class DetallePSTController {
             echo json_encode([
                 'status' => 'success',
                 'lineas' => $lineasCarrera
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        // 0.2.2 Procesar Acción: VERIFICAR TÍTULO DUPLICADO (AJAX en tiempo real)
+        if ($accion === 'verificar_titulo') {
+            header('Content-Type: application/json; charset=utf-8');
+            $tit = !empty($_GET['titulo']) ? trim($_GET['titulo']) : '';
+            $excluirId = !empty($_GET['id_excluir']) ? (int)$_GET['id_excluir'] : null;
+            $existe = !empty($tit) && $model->existePSTPorTitulo($tit, $excluirId);
+            echo json_encode([
+                'status' => 'success',
+                'existe' => $existe,
+                'titulo' => $tit
             ], JSON_UNESCAPED_UNICODE);
             exit;
         }
@@ -698,17 +762,14 @@ class DetallePSTController {
                 }
 
                 // Promover archivo desde storage/documentos/tmp/ a storage/documentos/pst/
+                $destPath = null;
                 if (strpos($archivoPdf, 'storage/documentos/tmp/') !== false) {
                     $slug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($datos['titulo'], 0, 30)));
                     $ext = strtolower(pathinfo($archivoPdf, PATHINFO_EXTENSION));
                     $destName = 'pst_' . $slug . '_' . time() . '_' . mt_rand(100, 999) . '.' . $ext;
                     $destPath = $storageDir . $destName;
-                    if (!rename($realFilePath, $destPath)) {
-                        if (copy($realFilePath, $destPath)) {
-                            @unlink($realFilePath);
-                        } else {
-                            throw new Exception("No se pudo promover el archivo temporal al almacenamiento definitivo de proyectos.");
-                        }
+                    if (!copy($realFilePath, $destPath)) {
+                        throw new Exception("No se pudo transferir el archivo temporal al almacenamiento definitivo de proyectos.");
                     }
                     $finalPdfPath = 'storage/documentos/pst/' . $destName;
                     $datos['archivo_pdf'] = $finalPdfPath;
@@ -717,32 +778,30 @@ class DetallePSTController {
                 }
 
                 $nuevoId = $model->crearPST($datos);
+
+                // Si la inserción fue exitosa y venía de tmp, limpiar el archivo temporal del staging
+                if (!empty($destPath) && file_exists($realFilePath)) {
+                    @unlink($realFilePath);
+                }
+
+                while (ob_get_level()) ob_end_clean();
                 echo json_encode([
                     'status' => 'success',
                     'message' => 'Proyecto cargado con éxito en el catálogo.',
                     'id' => $nuevoId
                 ], JSON_UNESCAPED_UNICODE);
 
-            } catch (Exception $e) {
-                // Si ocurrió un error y el archivo fue promovido a storage/documentos/pst/, eliminarlo para evitar huérfanos
-                if (!empty($finalPdfPath) && $finalPdfPath !== $archivoPdf) {
-                    $promotedPath = BASE_PATH . '/' . ltrim($finalPdfPath, '/');
-                    if (file_exists($promotedPath)) {
-                        @unlink($promotedPath);
-                    }
-                }
-                // Si la creación falló, también eliminamos el archivo temporal si existe
-                if (!empty($archivoPdf)) {
-                    $tmpPath = BASE_PATH . '/' . ltrim($archivoPdf, '/');
-                    if (file_exists($tmpPath)) {
-                        @unlink($tmpPath);
-                    }
+            } catch (\Throwable $e) {
+                // Si ocurrió un error y se copió a storage/documentos/pst/, eliminarlo para evitar huérfanos
+                if (!empty($destPath) && file_exists($destPath)) {
+                    @unlink($destPath);
                 }
 
                 require_once CORE_PATH . 'Security/Auth.php';
                 $tituloFallo = !empty($datos['titulo']) ? $datos['titulo'] : 'Proyecto Sin Título';
                 AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo en Extracción Masiva', "Error al intentar guardar el PST '{$tituloFallo}': " . $e->getMessage());
                 
+                while (ob_get_level()) ob_end_clean();
                 echo json_encode([
                     'status' => 'error',
                     'message' => $e->getMessage()

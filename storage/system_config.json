@@ -49,6 +49,6 @@
     },
     "entorno": {
         "app_debug": true,
-        "app_env": "development"
+        "app_env": "staging"
     }
 }

@@ -66,6 +66,9 @@ if (typeof window.mammoth === 'undefined') {
                             <div class="upload-input-group">
                                 <label for="titulo">Título de la Investigación *</label>
                                 <input type="text" id="titulo" name="titulo" class="upload-input" value="<?= htmlspecialchars($_POST['titulo'] ?? $documento['titulo'] ?? '') ?>" placeholder="Ej: Sistema Web de Gestión de Inventario para SAPNNAET" required>
+                                <div id="alerta_duplicado_titulo" style="display: none; margin-top: 0.4rem; padding: 0.4rem 0.6rem; border-radius: 4px; font-size: 0.78rem; background-color: #fffbeb; border: 1px solid #fde68a; color: #92400e;">
+                                    <i class="ph ph-warning"></i> <strong>Atención:</strong> Ya existe un proyecto registrado con este título en el repositorio. Modifique el título antes de guardar.
+                                </div>
                             </div>
 
                             <div class="grid-2-cols">
@@ -193,7 +196,7 @@ if (typeof window.mammoth === 'undefined') {
                                         </div>
                                     </div>
                                     <div class="upload-input-group">
-                                        <input type="text" name="tutor_academico_nombre" class="upload-input" value="<?= htmlspecialchars($tAcadNom) ?>" placeholder="Nombre Completo del Tutor Académico">
+                                        <input type="text" name="tutor_academico_nombre" id="tutor_academico_nombre" class="upload-input" value="<?= htmlspecialchars($tAcadNom) ?>" placeholder="Nombre Completo del Tutor Académico">
                                     </div>
                                 </div>
                                 <?php endif; ?>
@@ -215,7 +218,7 @@ if (typeof window.mammoth === 'undefined') {
                                         </div>
                                     </div>
                                     <div class="upload-input-group">
-                                        <input type="text" name="tutor_institucional_nombre" class="upload-input" value="<?= htmlspecialchars($tInstNom) ?>" placeholder="Nombre Completo del Tutor Institucional">
+                                        <input type="text" name="tutor_institucional_nombre" id="tutor_institucional_nombre" class="upload-input" value="<?= htmlspecialchars($tInstNom) ?>" placeholder="Nombre Completo del Tutor Institucional">
                                     </div>
                                 </div>
                                 <?php endif; ?>
@@ -237,7 +240,7 @@ if (typeof window.mammoth === 'undefined') {
                                         </div>
                                     </div>
                                     <div class="upload-input-group">
-                                        <input type="text" name="tutor_comunitario_nombre" class="upload-input" value="<?= htmlspecialchars($tComNom) ?>" placeholder="Nombre Completo del Tutor Comunitario">
+                                        <input type="text" name="tutor_comunitario_nombre" id="tutor_comunitario_nombre" class="upload-input" value="<?= htmlspecialchars($tComNom) ?>" placeholder="Nombre Completo del Tutor Comunitario">
                                     </div>
                                 </div>
                                 <?php endif; ?>
@@ -799,7 +802,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Interceptar envío tradicional del formulario para garantizar que exista documento cargado
+    // Interceptar envío tradicional del formulario para garantizar que exista documento cargado y no sea duplicado
     const formSubidaPst = document.getElementById('formSubidaPst');
     if (formSubidaPst) {
         formSubidaPst.addEventListener('submit', (e) => {
@@ -814,7 +817,54 @@ document.addEventListener('DOMContentLoaded', () => {
                     mostrarModalAlerta('warning', 'Documento Requerido', 'Debe cargar y extraer un documento digital (PDF o Word) válido antes de registrar el proyecto.');
                     return false;
                 }
+
+                const alertaEl = document.getElementById('alerta_duplicado_titulo');
+                if (alertaEl && alertaEl.style.display !== 'none') {
+                    e.preventDefault();
+                    mostrarModalAlerta('warning', 'Título Duplicado', 'Ya existe un proyecto registrado con este título en la base de datos. Por favor modifique el título antes de enviar el formulario.');
+                    return false;
+                }
             }
+        });
+    }
+
+    // Verificación en tiempo real de duplicidad de título al escribir
+    const tituloInput = document.getElementById('titulo');
+    if (tituloInput) {
+        let timerTitulo = null;
+        tituloInput.addEventListener('input', () => {
+            clearTimeout(timerTitulo);
+            timerTitulo = setTimeout(async () => {
+                const titVal = tituloInput.value.trim();
+                const alertaEl = document.getElementById('alerta_duplicado_titulo');
+                if (titVal.length >= 5) {
+                    try {
+                        const resp = await fetch('?ruta=agregar-documento&accion=verificar_titulo&titulo=' + encodeURIComponent(titVal));
+                        const checkData = await resp.json();
+                        if (checkData.status === 'success' && checkData.existe) {
+                            if (alertaEl) alertaEl.style.display = 'block';
+                            if (documentoSeleccionadoIndex >= 0 && documentosEnCola[documentoSeleccionadoIndex]) {
+                                documentosEnCola[documentoSeleccionadoIndex].advertencia = 'Ya existe un proyecto registrado con este título en el repositorio.';
+                                renderizarColaUI();
+                            }
+                        } else {
+                            if (alertaEl) alertaEl.style.display = 'none';
+                            if (documentoSeleccionadoIndex >= 0 && documentosEnCola[documentoSeleccionadoIndex]) {
+                                documentosEnCola[documentoSeleccionadoIndex].advertencia = '';
+                                if (documentosEnCola[documentoSeleccionadoIndex].estado === 'error' && documentosEnCola[documentoSeleccionadoIndex].data.archivo_pdf) {
+                                    documentosEnCola[documentoSeleccionadoIndex].estado = 'listo';
+                                    documentosEnCola[documentoSeleccionadoIndex].errorMsg = '';
+                                }
+                                renderizarColaUI();
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error al verificar título:', e);
+                    }
+                } else {
+                    if (alertaEl) alertaEl.style.display = 'none';
+                }
+            }, 400);
         });
     }
 });
@@ -992,34 +1042,48 @@ function subirYExtraerDatos(docItem, index) {
 
     xhr.onload = function() {
         if (xhr.status === 200) {
+            let response;
             try {
-                const response = JSON.parse(xhr.responseText);
-                if (response.status === 'success') {
-                    docItem.estado = 'listo';
-                    docItem.errorMsg = '';
-                    docItem.progresoPct = 100;
-                    docItem.faseMsg = 'Listo';
-                    if (response.data) {
-                        Object.assign(docItem.data, response.data);
+                response = JSON.parse(xhr.responseText);
+            } catch (jsonErr) {
+                console.error("Error parseando respuesta JSON del servidor:", jsonErr, xhr.responseText);
+                docItem.estado = 'error';
+                docItem.errorMsg = 'Respuesta inválida del servidor.';
+                docItem.data.titulo = '';
+                docItem.data.archivo_pdf = '';
+                if (documentoSeleccionadoIndex === index) {
+                    limpiarCamposFormularioSilencioso();
+                }
+                renderizarColaUI();
+                return;
+            }
+
+            if (response.status === 'success') {
+                docItem.estado = 'listo';
+                docItem.errorMsg = '';
+                docItem.progresoPct = 100;
+                docItem.faseMsg = 'Listo';
+                if (response.data) {
+                    Object.assign(docItem.data, response.data);
+                    if (response.data.ya_existe_en_bd) {
+                        docItem.advertencia = 'Ya existe un proyecto registrado con este título en el repositorio. Modifique el título antes de registrarlo.';
+                    } else {
+                        docItem.advertencia = '';
                     }
+                }
+                try {
                     // Si no había ningún documento seleccionado en el formulario, seleccionar este
                     if (documentoSeleccionadoIndex === -1) {
                         seleccionarDocumentoDeCola(index);
                     } else if (documentoSeleccionadoIndex === index) {
                         rellenarFormulario(docItem.data);
                     }
-                } else {
-                    docItem.estado = 'error';
-                    docItem.errorMsg = response.message || 'Error en la extracción de metadatos.';
-                    docItem.data.titulo = '';
-                    docItem.data.archivo_pdf = '';
-                    if (documentoSeleccionadoIndex === index) {
-                        limpiarCamposFormularioSilencioso();
-                    }
+                } catch (renderErr) {
+                    console.error("Error al rellenar formulario:", renderErr);
                 }
-            } catch (e) {
+            } else {
                 docItem.estado = 'error';
-                docItem.errorMsg = 'Respuesta inválida del servidor.';
+                docItem.errorMsg = response.message || 'Error en la extracción de metadatos.';
                 docItem.data.titulo = '';
                 docItem.data.archivo_pdf = '';
                 if (documentoSeleccionadoIndex === index) {
@@ -1098,7 +1162,11 @@ function renderizarColaUI() {
                 </div>
             `;
         } else if (item.estado === 'listo') {
-            statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: rgba(80, 89, 132, 0.1); color: var(--color-secundario); font-weight: 700;"><i class="ph ph-check-circle"></i> Listo</span>`;
+            if (item.advertencia) {
+                statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: rgba(245, 158, 11, 0.15); color: #b45309; font-weight: 700;"><i class="ph ph-warning"></i> Duplicado</span>`;
+            } else {
+                statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: rgba(80, 89, 132, 0.1); color: var(--color-secundario); font-weight: 700;"><i class="ph ph-check-circle"></i> Listo</span>`;
+            }
         } else if (item.estado === 'subiendo') {
             statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: rgba(112, 144, 203, 0.15); color: var(--color-terciario); font-weight: 700;"><i class="ph ph-cloud-arrow-up spin"></i> Subiendo...</span>`;
         } else if (item.estado === 'exito') {
@@ -1107,8 +1175,8 @@ function renderizarColaUI() {
             statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: rgba(239, 68, 68, 0.12); color: #dc2626; font-weight: 700;"><i class="ph ph-warning-circle"></i> Error</span>`;
         }
 
-        const titleText = (item.estado === 'listo' || item.estado === 'exito') 
-            ? (item.data.titulo ? item.data.titulo : item.nombreArchivo) 
+        const titleText = (item.estado === 'listo' || item.estado === 'exito' || (item.data && item.data.titulo)) 
+            ? (item.data && item.data.titulo ? item.data.titulo : item.nombreArchivo) 
             : (item.estado === 'error' ? 'Extracción fallida' : 'Analizando documento...');
 
         let content = `
@@ -1131,11 +1199,17 @@ function renderizarColaUI() {
                     <i class="ph ph-warning-circle"></i> ${escapeHtml(item.errorMsg)}
                 </div>
             `;
+        } else if (item.advertencia) {
+            content += `
+                <div style="margin-top: 0.4rem; margin-bottom: 0; padding: 0.35rem 0.5rem; font-size: 0.7rem; word-break: break-word; border-radius: 3px; background-color: #fffbeb; border: 1px solid #fde68a; color: #92400e;">
+                    <i class="ph ph-warning"></i> ${escapeHtml(item.advertencia)}
+                </div>
+            `;
         }
 
         content += `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; padding-top: 0.3rem; border-top: 1px dashed rgba(169, 168, 166, 0.15);">
-                ${item.estado === 'listo' ? `
+                ${(item.estado === 'listo' || (item.estado === 'error' && item.data && item.data.archivo_pdf)) ? `
                     <button type="button" class="btn-action-edit" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;" onclick="event.stopPropagation(); seleccionarDocumentoDeCola(${idx});">
                         <i class="ph ph-pencil-simple"></i> Revisar / Editar
                     </button>
@@ -1172,12 +1246,13 @@ function seleccionarDocumentoDeCola(index) {
     if (index < 0 || index >= documentosEnCola.length) return;
 
     const docItem = documentosEnCola[index];
-    if (docItem.estado === 'error') {
-        mostrarModalAlerta('warning', 'Documento no Procesado', `El archivo "${docItem.nombreArchivo}" no pudo ser procesado:\n\n${docItem.errorMsg || 'Error desconocido'}.\n\nElimine este archivo de la cola o cargue una versión que cumpla con los requisitos.`);
-        return;
-    }
     if (docItem.estado === 'extrayendo' || docItem.estado === 'pendiente') {
         mostrarModalAlerta('warning', 'Extracción en Proceso', `El archivo "${docItem.nombreArchivo}" aún se está procesando. Espere a que finalice la extracción.`);
+        return;
+    }
+
+    if (docItem.estado === 'error' && (!docItem.data || !docItem.data.archivo_pdf)) {
+        mostrarModalAlerta('warning', 'Documento no Procesado', `El archivo "${docItem.nombreArchivo}" no pudo ser procesado:\n\n${docItem.errorMsg || 'Error desconocido'}.\n\nElimine este archivo de la cola o cargue una versión que cumpla con los requisitos.`);
         return;
     }
 
@@ -1188,6 +1263,12 @@ function seleccionarDocumentoDeCola(index) {
     documentoSeleccionadoIndex = index;
     rellenarFormulario(docItem.data);
     renderizarColaUI();
+
+    if (docItem.estado === 'error' && docItem.errorMsg) {
+        mostrarModalAlerta('warning', 'Documento con Observación', `El documento "${docItem.nombreArchivo}" presentó la siguiente observación:\n\n${docItem.errorMsg}\n\nPuede modificar los datos en el formulario y pulsar "Guardar en Borrador" para prepararlo.`);
+    } else if (docItem.advertencia) {
+        mostrarModalAlerta('warning', 'Título Duplicado', `Atención: ${docItem.advertencia}`);
+    }
 }
 
 function guardarDatosFormularioEnArray(index) {
@@ -1196,16 +1277,50 @@ function guardarDatosFormularioEnArray(index) {
     Object.assign(documentosEnCola[index].data, currentData);
 }
 
-function guardarBorradorEnCola() {
+async function guardarBorradorEnCola() {
     if (documentoSeleccionadoIndex < 0 || documentoSeleccionadoIndex >= documentosEnCola.length) {
         mostrarModalAlerta('warning', 'Selección Requerida', 'Seleccione un documento de la cola para guardar sus cambios en borrador.');
         return;
     }
     guardarDatosFormularioEnArray(documentoSeleccionadoIndex);
+    const item = documentosEnCola[documentoSeleccionadoIndex];
+
+    // Verificar si el título ya existe en la base de datos
+    if (item.data && item.data.titulo) {
+        try {
+            const resp = await fetch('?ruta=agregar-documento&accion=verificar_titulo&titulo=' + encodeURIComponent(item.data.titulo));
+            const checkData = await resp.json();
+            if (checkData.status === 'success' && checkData.existe) {
+                item.advertencia = 'Ya existe un proyecto registrado con este título en el repositorio. Modifique el título antes de registrarlo.';
+                const alertaEl = document.getElementById('alerta_duplicado_titulo');
+                if (alertaEl) alertaEl.style.display = 'block';
+            } else {
+                item.advertencia = '';
+                const alertaEl = document.getElementById('alerta_duplicado_titulo');
+                if (alertaEl) alertaEl.style.display = 'none';
+                if (item.estado === 'error' && item.data.archivo_pdf) {
+                    item.estado = 'listo';
+                    item.errorMsg = '';
+                }
+            }
+        } catch (e) {
+            console.error('Error al verificar título:', e);
+        }
+    }
+
+    if (item.estado === 'error' && item.data && item.data.archivo_pdf && !item.advertencia) {
+        item.estado = 'listo';
+        item.errorMsg = '';
+    }
+
     renderizarColaUI();
 
-    const nombre = documentosEnCola[documentoSeleccionadoIndex].nombreArchivo;
-    mostrarModalAlerta('success', 'Borrador Guardado', `Borrador actualizado en cola para el archivo "${nombre}".`);
+    const nombre = item.nombreArchivo;
+    if (item.advertencia) {
+        mostrarModalAlerta('warning', 'Borrador Guardado con Advertencia', `Borrador guardado para "${nombre}". Sin embargo:\n\n${item.advertencia}`);
+    } else {
+        mostrarModalAlerta('success', 'Borrador Guardado', `Borrador actualizado en cola para el archivo "${nombre}".`);
+    }
 }
 
 function sincronizarCedulasPST() {
@@ -1313,6 +1428,10 @@ function limpiarCamposFormularioSilencioso() {
     if (!form) return;
     const inputs = form.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], textarea');
     inputs.forEach(input => { input.value = ''; });
+    const hiddenInputs = form.querySelectorAll('input[name="tutor_academico_cedula"], input[name="tutor_institucional_cedula"], input[name="tutor_comunitario_cedula"], .autor-cedula-hidden');
+    hiddenInputs.forEach(h => { h.value = ''; });
+    const selects = form.querySelectorAll('.autor-cedula-tipo, #tutor_academico_tipo, #tutor_institucional_tipo, #tutor_comunitario_tipo');
+    selects.forEach(s => { s.value = 'V-'; });
     const lineaSelect = document.getElementById('linea_id');
     if (lineaSelect) {
         lineaSelect.value = '';
@@ -1350,6 +1469,13 @@ async function subirLoteABaseDeDatos() {
         return;
     }
 
+    // Verificar si algún documento listo tiene advertencia de duplicado
+    const conDuplicado = listos.filter(d => d.advertencia);
+    if (conDuplicado.length > 0) {
+        mostrarModalAlerta('warning', 'Títulos Duplicados Detectados', 'Uno o más documentos en cola tienen títulos que ya existen en la base de datos. Por favor seleccione el documento, modifique su título y presione "Guardar en Borrador" antes de subir el lote.');
+        return;
+    }
+
     const btnSubir = document.getElementById('btnSubirLote');
     if (btnSubir) {
         btnSubir.disabled = true;
@@ -1380,6 +1506,7 @@ async function subirLoteABaseDeDatos() {
             if (json.status === 'success') {
                 item.estado = 'exito';
                 item.errorMsg = '';
+                item.advertencia = '';
                 exitosos++;
             } else {
                 item.estado = 'error';
@@ -1433,6 +1560,15 @@ function rellenarFormulario(data) {
 
     if (data.archivo_pdf !== undefined && document.getElementById('archivo_pdf_hidden')) document.getElementById('archivo_pdf_hidden').value = data.archivo_pdf || '';
     if (data.titulo !== undefined) document.getElementById('titulo').value = data.titulo || '';
+
+    const alertaEl = document.getElementById('alerta_duplicado_titulo');
+    if (alertaEl) {
+        if (data.ya_existe_en_bd || (documentoSeleccionadoIndex >= 0 && documentosEnCola[documentoSeleccionadoIndex] && documentosEnCola[documentoSeleccionadoIndex].advertencia)) {
+            alertaEl.style.display = 'block';
+        } else {
+            alertaEl.style.display = 'none';
+        }
+    }
     if (data.anio_publicacion !== undefined) document.getElementById('anio_publicacion').value = data.anio_publicacion || new Date().getFullYear();
     if (data.nivel_academico !== undefined && document.getElementById('nivel_academico')) {
         document.getElementById('nivel_academico').value = data.nivel_academico || 'Pregrado';
@@ -1500,11 +1636,16 @@ function rellenarFormulario(data) {
     };
 
     setTutorVal('tutor_academico_tipo', 'tutor_academico_num', 'tutor_academico_cedula', data.tutor_academico_cedula);
-    if (getElem('tutor_academico_nombre')) getElem('tutor_academico_nombre').value = data.tutor_academico_nombre || '';
+    const tAcadNomEl = document.getElementById('tutor_academico_nombre') || document.getElementsByName('tutor_academico_nombre')[0];
+    if (tAcadNomEl) tAcadNomEl.value = data.tutor_academico_nombre || '';
+
     setTutorVal('tutor_institucional_tipo', 'tutor_institucional_num', 'tutor_institucional_cedula', data.tutor_institucional_cedula);
-    if (getElem('tutor_institucional_nombre')) getElem('tutor_institucional_nombre').value = data.tutor_institucional_nombre || '';
+    const tInstNomEl = document.getElementById('tutor_institucional_nombre') || document.getElementsByName('tutor_institucional_nombre')[0];
+    if (tInstNomEl) tInstNomEl.value = data.tutor_institucional_nombre || '';
+
     setTutorVal('tutor_comunitario_tipo', 'tutor_comunitario_num', 'tutor_comunitario_cedula', data.tutor_comunitario_cedula);
-    if (getElem('tutor_comunitario_nombre')) getElem('tutor_comunitario_nombre').value = data.tutor_comunitario_nombre || '';
+    const tComNomEl = document.getElementById('tutor_comunitario_nombre') || document.getElementsByName('tutor_comunitario_nombre')[0];
+    if (tComNomEl) tComNomEl.value = data.tutor_comunitario_nombre || '';
 
     const carreraSelect = document.getElementById('id_carrera');
     const targetCarreraId = data.id_carrera || (carreraSelect ? carreraSelect.value : 1);
@@ -2041,14 +2182,19 @@ function simularExtraccionModal() {
     .then(data => {
         if (data.status === 'success') {
             const d = data.data;
-            const resMsj = `🔍 METADATOS DETECTADOS POR EL EXTRACTOR:\n\n` +
+            let tutoresStr = [];
+            if (d.tutor_academico_nombre) tutoresStr.push(`  - Académico: ${d.tutor_academico_nombre}${d.tutor_academico_cedula ? ' (' + d.tutor_academico_cedula + ')' : ''}`);
+            if (d.tutor_institucional_nombre) tutoresStr.push(`  - Institucional: ${d.tutor_institucional_nombre}${d.tutor_institucional_cedula ? ' (' + d.tutor_institucional_cedula + ')' : ''}`);
+            if (d.tutor_comunitario_nombre) tutoresStr.push(`  - Comunitario: ${d.tutor_comunitario_nombre}${d.tutor_comunitario_cedula ? ' (' + d.tutor_comunitario_cedula + ')' : ''}`);
+            
+            const resMsj = `METADATOS DETECTADOS POR EL EXTRACTOR:\n\n` +
                 `• Título: ${d.titulo || 'No detectado'}\n` +
                 `• Año: ${d.anio_publicacion || 's.f.'}\n` +
                 `• Nivel Académico: ${d.nivel_academico || 'Pregrado'}\n` +
-                `• Autores Extraídos: ${d.autores ? d.autores.map(a => a.nombre || a.nombre_completo).filter(Boolean).join(', ') : 'Ninguno'}\n` +
-                `• Tutor Académico: ${d.tutor_academico_nombre || 'No detectado'}\n` +
+                `• Autores Extraídos: ${d.autores ? d.autores.map(a => (a.nombre || a.nombre_completo) + (a.cedula ? ' (' + a.cedula + ')' : '')).filter(Boolean).join(', ') : 'Ninguno'}\n` +
+                `• Tutores:\n${tutoresStr.length > 0 ? tutoresStr.join('\n') : '  No detectados'}\n` +
                 `• Comunidad Beneficiada: ${d.comunidad_beneficiada || 'No detectada'}\n\n` +
-                `📝 FRAGMENTO DE TEXTO EXTRAÍDO:\n"${data.preview_texto}"`;
+                `FRAGMENTO DE TEXTO EXTRAÍDO:\n"${data.preview_texto}"`;
             mostrarModalAlerta('success', 'Resultado de Simulación', resMsj);
         } else {
             mostrarModalAlerta('error', 'Falla en Simulación', data.message || 'No se pudo procesar la simulación.');

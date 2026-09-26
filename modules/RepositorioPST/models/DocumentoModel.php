@@ -686,8 +686,10 @@ class DocumentoModel {
                     if ($nom !== '') {
                         $autorId = null;
                         if ($ced) {
-                            $stmt = $db->prepare("SELECT id FROM public.autores WHERE cedula = ?");
-                            $stmt->execute([$ced]);
+                            $cleanCed = trim($ced);
+                            $soloDigitos = preg_replace('/\D/', '', $cleanCed);
+                            $stmt = $db->prepare("SELECT id FROM public.autores WHERE LOWER(TRIM(cedula)) IN (LOWER(?), LOWER(?), LOWER(?), LOWER(?)) LIMIT 1");
+                            $stmt->execute([$cleanCed, $soloDigitos, 'V-' . $soloDigitos, 'E-' . $soloDigitos]);
                             $autorId = $stmt->fetchColumn();
                         }
                         if (!$autorId) {
@@ -738,8 +740,10 @@ class DocumentoModel {
                     $tutorId = null;
                     
                     if ($cedula) {
-                        $stmt = $db->prepare("SELECT id FROM public.tutores WHERE cedula = ?");
-                        $stmt->execute([$cedula]);
+                        $cleanCed = trim($cedula);
+                        $soloDigitos = preg_replace('/\D/', '', $cleanCed);
+                        $stmt = $db->prepare("SELECT id FROM public.tutores WHERE LOWER(TRIM(cedula)) IN (LOWER(?), LOWER(?), LOWER(?), LOWER(?)) LIMIT 1");
+                        $stmt->execute([$cleanCed, $soloDigitos, 'V-' . $soloDigitos, 'E-' . $soloDigitos]);
                         $tutorId = $stmt->fetchColumn();
                     }
                     if (!$tutorId) {
@@ -760,8 +764,13 @@ class DocumentoModel {
                         }
                     }
                     if (!$tutorId) {
-                        $stmt = $db->prepare("INSERT INTO public.tutores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
-                        $stmt->execute([$nombre, $cedula]);
+                        if (!empty($cedula)) {
+                            $stmt = $db->prepare("INSERT INTO public.tutores (nombre_completo, cedula) VALUES (?, ?) ON CONFLICT (cedula) DO UPDATE SET nombre_completo = EXCLUDED.nombre_completo RETURNING id");
+                            $stmt->execute([$nombre, $cedula]);
+                        } else {
+                            $stmt = $db->prepare("INSERT INTO public.tutores (nombre_completo, cedula) VALUES (?, NULL) RETURNING id");
+                            $stmt->execute([$nombre]);
+                        }
                         $tutorId = $stmt->fetchColumn();
                     }
                     if ($tutorId) {
@@ -1335,5 +1344,28 @@ LIMIT 20";
         $nombre = $stmt->fetchColumn();
         
         return $nombre ? $this->cleanCP850($nombre) : null;
+    }
+
+    /**
+     * Busca la cédula de un autor o tutor a partir de su nombre completo.
+     */
+    public function getCedulaByNombre(string $nombre, string $tipo = 'tutor'): ?string {
+        $db = Connection::getInstance();
+        $cleanNom = trim($nombre);
+        if (mb_strlen($cleanNom) < 4) return null;
+
+        $tabla = ($tipo === 'tutor') ? 'public.tutores' : 'public.autores';
+        
+        $stmt = $db->prepare("SELECT cedula FROM {$tabla} WHERE LOWER(TRIM(nombre_completo)) = LOWER(TRIM(?)) AND cedula IS NOT NULL AND TRIM(cedula) != '' LIMIT 1");
+        $stmt->execute([$cleanNom]);
+        $cedula = $stmt->fetchColumn();
+
+        if (!$cedula) {
+            $stmtLike = $db->prepare("SELECT cedula FROM {$tabla} WHERE LOWER(TRIM(nombre_completo)) LIKE LOWER(?) AND cedula IS NOT NULL AND TRIM(cedula) != '' LIMIT 1");
+            $stmtLike->execute(['%' . $cleanNom . '%']);
+            $cedula = $stmtLike->fetchColumn();
+        }
+
+        return $cedula ? $this->cleanCP850(trim($cedula)) : null;
     }
 }

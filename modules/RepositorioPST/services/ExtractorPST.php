@@ -1,6 +1,13 @@
 <?php
 // modules/RepositorioPST/services/ExtractorPST.php
 
+if (!class_exists('\Smalot\PdfParser\Parser')) {
+    $vendorAutoload = dirname(__DIR__, 3) . '/vendor/autoload.php';
+    if (file_exists($vendorAutoload)) {
+        require_once $vendorAutoload;
+    }
+}
+
 class ExtractorPST {
 
     /**
@@ -564,9 +571,9 @@ class ExtractorPST {
         $processedLines = [];
         $count = count($linesCover);
         for ($i = 0; $i < $count; $i++) {
-            $line = $linesCover[$i];
-            if (preg_match('/^(docente\s+asesor|tutor|representante)\b.*:$/ui', $line) && $i + 1 < $count) {
-                $line .= ' ' . $linesCover[$i + 1];
+            $line = trim($linesCover[$i]);
+            if (preg_match('/^(?:docente\s+asesor|tutor(?:\s+[a-záéíóúñ]+)?|asesor(?:\s+[a-záéíóúñ]+)?|representante(?:\s+[a-záéíóúñ]+)?|profesor\s+asesor)\b\s*:?\s*$/ui', $line) && $i + 1 < $count) {
+                $line .= ': ' . trim($linesCover[$i + 1]);
                 $i++;
             }
             $processedLines[] = $line;
@@ -582,6 +589,7 @@ class ExtractorPST {
                     $cedulaLimpia = preg_replace('/\D/', '', $matches[1]);
                     if (strlen($cedulaLimpia) < 7 || strlen($cedulaLimpia) > 9) continue;
 
+                    $prefijoCed = (stripos($matches[0], 'E-') === 0 || stripos($matches[0], 'E.') === 0 || stripos($matches[0], 'E ') === 0) ? 'E-' : 'V-';
                     $nombreCandidato = self::limpiarNombreLinea($line, $matches[0]);
                     if (mb_strlen($nombreCandidato) < 4 && $index > 0) {
                         $nombreCandidato = self::limpiarNombreLinea($processedLines[$index - 1], '');
@@ -608,18 +616,18 @@ class ExtractorPST {
 
                         if ($esTutor) {
                             if (empty($tutores[$tipoTutor]['cedula'])) {
-                                $tutores[$tipoTutor] = ['nombre' => $nombreCandidato, 'cedula' => 'V-' . $cedulaLimpia];
+                                $tutores[$tipoTutor] = ['nombre' => $nombreCandidato, 'cedula' => $prefijoCed . $cedulaLimpia];
                             }
                         } else {
                             $yaExiste = false;
                             foreach ($autores as $aut) {
-                                if ($aut['cedula'] === 'V-' . $cedulaLimpia || mb_strtolower($aut['nombre']) === mb_strtolower($nombreCandidato)) {
+                                if ($aut['cedula'] === $prefijoCed . $cedulaLimpia || mb_strtolower($aut['nombre']) === mb_strtolower($nombreCandidato)) {
                                     $yaExiste = true;
                                     break;
                                 }
                             }
                             if (!$yaExiste && count($autores) < 4) {
-                                $autores[] = ['nombre' => $nombreCandidato, 'cedula' => 'V-' . $cedulaLimpia];
+                                $autores[] = ['nombre' => $nombreCandidato, 'cedula' => $prefijoCed . $cedulaLimpia];
                             }
                         }
                     }
@@ -629,18 +637,27 @@ class ExtractorPST {
 
         // 2. Extraer tutores por etiquetas estructuradas
         $tutorPatterns = [
-            'academico'     => '/(?:docente\s+asesor|tutor\s+acad[eé]mico|tutor\s+asesor|tutor\(a\)\s+acad[eé]mico|profesor\s+asesor)\s*:\s*(.+)/ui',
-            'institucional' => '/(?:representante\s+institucional|tutor\s+institucional|tutor\(a\)\s+institucional)\s*:\s*(.+)/ui',
-            'comunitario'   => '/(?:representante\s+comunitario|tutor\s+comunitario|tutor\(a\)\s+comunitario|representante\s+organizacional)\s*:\s*(.+)/ui'
+            'academico'     => '/(?:docente\s+asesor|tutor\s+acad[eé]mico|tutor\s+asesor|tutor\(a\)\s+acad[eé]mico|profesor\s+asesor|asesor\s+acad[eé]mico|asesor\s+metodol[oó]gico|tutor\s+metodol[oó]gico|tutor(?!\s*(?:institucional|comunitario|organizacional|empresarial)))\s*:\s*(.+)/ui',
+            'institucional' => '/(?:representante\s+institucional|tutor\s+institucional|tutor\(a\)\s+institucional|asesor\s+institucional|tutor\s+empresarial|asesor\s+empresarial)\s*:\s*(.+)/ui',
+            'comunitario'   => '/(?:representante\s+comunitario|tutor\s+comunitario|tutor\(a\)\s+comunitario|representante\s+organizacional|asesor\s+comunitario)\s*:\s*(.+)/ui'
         ];
 
         foreach ($processedLines as $line) {
             foreach ($tutorPatterns as $tipo => $pattern) {
                 if (empty($tutores[$tipo]['nombre'])) {
                     if (preg_match($pattern, $line, $matches)) {
-                        $nombre = self::limpiarNombreLinea($matches[1], '');
+                        $rawCandidate = $matches[1];
+                        $cedEncontrada = '';
+                        if (preg_match($cedulaRegex, $rawCandidate, $cedM)) {
+                            $cedLimpia = preg_replace('/\D/', '', $cedM[1]);
+                            if (strlen($cedLimpia) >= 6 && strlen($cedLimpia) <= 9) {
+                                $tipoCed = (stripos($cedM[0], 'E-') === 0 || stripos($cedM[0], 'E.') === 0) ? 'E-' : 'V-';
+                                $cedEncontrada = $tipoCed . $cedLimpia;
+                            }
+                        }
+                        $nombre = self::limpiarNombreLinea($rawCandidate, $cedEncontrada);
                         if (mb_strlen($nombre) >= 4) {
-                            $tutores[$tipo] = ['nombre' => $nombre, 'cedula' => ''];
+                            $tutores[$tipo] = ['nombre' => $nombre, 'cedula' => $cedEncontrada];
                         }
                     }
                 }
@@ -687,13 +704,13 @@ class ExtractorPST {
         if ($cedulaMatch !== '') {
             $line = str_ireplace($cedulaMatch, '', $line);
         }
-        $prefixesRegex = '/\b(ing|lic|dr|dra|prof|profa|tsu|t\.s\.u\.)\.?\b/ui';
+        $prefixesRegex = '/\b(ing|lic|dr|dra|prof|profa|tsu|t\.s\.u\.|msc|m\.sc|esp|abg|econ)\.?\b/ui';
         $line = preg_replace($prefixesRegex, '', $line);
 
         $wordsToRemove = [
             'estudiante', 'estudiantes', 'bachiller', 'bachilleres',
             'autor', 'autores', 'tutor', 'tutores', 'asesor', 'asesora',
-            'representante', 'comunitario', 'institucional', 'académico', 'academico',
+            'docente', 'representante', 'comunitario', 'institucional', 'académico', 'academico',
             'nombre', 'nombres', 'apellido', 'apellidos', 'c.i', 'ci', 'v-', 'v.', 'e-', 'cedula', 'cédula'
         ];
 
