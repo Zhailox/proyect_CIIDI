@@ -1240,7 +1240,7 @@ class DocumentoModel {
         return $this->cleanArray($results);
     }
 
-    public function buscarSemantico(string $querytexto): array {
+    public function buscarSemantico(string $querytexto, array $filtros = []): array {
         if (trim($querytexto) === '') return [];
         
         require_once __DIR__ . '/../services/EmbeddingService.php';
@@ -1255,32 +1255,60 @@ class DocumentoModel {
             )) . ']';
 
             $db = Connection::getInstance();
+
+            $whereClauses = [
+                'r.id_tipo_recurso = 1',
+                'dp.vector_semantico IS NOT NULL',
+                '(dp.vector_semantico <=> ?) < 0.85'
+            ];
+            $params = [$vectorPgFormat, $vectorPgFormat];
+
+            if (!empty($filtros['anio'])) {
+                $whereClauses[] = 'r.anio_publicacion = ?';
+                $params[] = (int)$filtros['anio'];
+            }
+            if (!empty($filtros['linea_id'])) {
+                $whereClauses[] = 'rc.id_linea_investigacion = ?';
+                $params[] = (int)$filtros['linea_id'];
+            }
+            if (!empty($filtros['dimension_id'])) {
+                $whereClauses[] = 'rc.id_dimension_operativa = ?';
+                $params[] = (int)$filtros['dimension_id'];
+            }
+            if (!empty($filtros['carrera_id'])) {
+                $whereClauses[] = 'li.id_carrera = ?';
+                $params[] = (int)$filtros['carrera_id'];
+            }
+
             $sql = "SELECT 
     r.id, 
     r.titulo, 
-    dp.resumen,
     r.anio_publicacion,
-    (dp.vector_semantico <=> ?) AS distancia
+    r.archivo_pdf,
+    dp.resumen AS proyecto_resumen,
+    dp.palabras_clave AS proyecto_palabras,
+    dp.nivel_academico,
+    dp.trayecto,
+    dp.url_repositorio,
+    li.nombre AS linea_nombre,
+    dims.nombre AS dimension_nombre,
+    (dp.vector_semantico <=> ?) AS distancia,
+    (SELECT STRING_AGG(a.nombre_completo, ', ') 
+     FROM public.recurso_autores ra 
+     JOIN public.autores a ON ra.id_autor = a.id 
+     WHERE ra.id_recurso = r.id) AS autores_nombres
 FROM public.recursos r
 INNER JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
-WHERE r.id_tipo_recurso = 1 
-  AND dp.vector_semantico IS NOT NULL
-  AND (dp.vector_semantico <=> ?) < 0.6 
+LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
+LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
+LEFT JOIN public.dimensiones_operativas dims ON rc.id_dimension_operativa = dims.id
+WHERE " . implode(' AND ', $whereClauses) . "
 ORDER BY distancia ASC
-LIMIT 15";
+LIMIT 20";
             
             $stmt = $db->prepare($sql);
-            $stmt->execute([$vectorPgFormat, $vectorPgFormat]);
+            $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Mapear campos esperados por la vista para mantener la compatibilidad
-            foreach ($rows as &$row) {
-                $row['proyecto_resumen'] = $row['resumen'];
-                
-                $stmtAutores = $db->prepare("SELECT STRING_AGG(a.nombre_completo, ', ') FROM public.recurso_autores ra JOIN public.autores a ON ra.id_autor = a.id WHERE ra.id_recurso = ?");
-                $stmtAutores->execute([$row['id']]);
-                $row['autores_nombres'] = $stmtAutores->fetchColumn() ?: 'No registrados';
-            }
             
             return $this->cleanArray($rows);
         } catch (\Exception $e) {
@@ -1298,8 +1326,12 @@ LIMIT 15";
         if (empty($cleanCed)) return null;
 
         $tabla = ($tipo === 'tutor') ? 'public.tutores' : 'public.autores';
-        $stmt = $db->prepare("SELECT nombre_completo FROM {$tabla} WHERE LOWER(TRIM(cedula)) = LOWER(?) LIMIT 1");
-        $stmt->execute([$cleanCed]);
+        $soloDigitos = preg_replace('/\D/', '', $cleanCed);
+        $conPrefijoV = 'V-' . $soloDigitos;
+        $conPrefijoE = 'E-' . $soloDigitos;
+
+        $stmt = $db->prepare("SELECT nombre_completo FROM {$tabla} WHERE LOWER(TRIM(cedula)) IN (LOWER(?), LOWER(?), LOWER(?), LOWER(?)) LIMIT 1");
+        $stmt->execute([$cleanCed, $soloDigitos, $conPrefijoV, $conPrefijoE]);
         $nombre = $stmt->fetchColumn();
         
         return $nombre ? $this->cleanCP850($nombre) : null;

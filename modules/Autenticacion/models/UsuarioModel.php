@@ -18,13 +18,14 @@ class UsuarioModel {
         $cedulaTrim = trim($cedula);
         $soloDigitos = preg_replace('/[^0-9]/', '', $cedulaTrim);
         $conPrefijo = 'V-' . $soloDigitos;
+        $conPrefijoE = 'E-' . $soloDigitos;
 
         // Quitamos el filtro de 'activo' para poder saber el estado real de la cuenta
         return $this->qb->tabla('usuarios u')
             ->select('u.id, u.cedula, u.nombre_completo, u.email, u.contrasena, u.activo, r.nombre AS nombre_rol, p.nivel_privilegio')
             ->join('roles r', 'u.id_rol = r.id')
             ->join('privilegios p', 'r.privilegio_id = p.privilegio_id')
-            ->whereRaw('(u.cedula = ? OR u.cedula = ? OR u.cedula = ?)', [$cedulaTrim, $soloDigitos, $conPrefijo]) 
+            ->whereRaw('(u.cedula = ? OR u.cedula = ? OR u.cedula = ? OR u.cedula = ?)', [$cedulaTrim, $soloDigitos, $conPrefijo, $conPrefijoE]) 
             ->first();
     }
     /**
@@ -67,11 +68,12 @@ class UsuarioModel {
         $cedulaTrim = trim($cedula);
         $soloDigitos = preg_replace('/[^0-9]/', '', $cedulaTrim);
         $conPrefijo = 'V-' . $soloDigitos;
+        $conPrefijoE = 'E-' . $soloDigitos;
 
         $db = Connection::getInstance();
-        $sql = "SELECT id FROM usuarios WHERE (cedula = ? OR cedula = ? OR cedula = ?) OR email = ?";
+        $sql = "SELECT id FROM usuarios WHERE (cedula = ? OR cedula = ? OR cedula = ? OR cedula = ?) OR email = ?";
         $stmt = $db->prepare($sql);
-        $stmt->execute([$cedulaTrim, $soloDigitos, $conPrefijo, $email]);
+        $stmt->execute([$cedulaTrim, $soloDigitos, $conPrefijo, $conPrefijoE, $email]);
         return $stmt->fetch() !== false; // Retorna true si ya existe
     }
 
@@ -102,10 +104,11 @@ class UsuarioModel {
         $cedulaTrim = trim($cedula);
         $soloDigitos = preg_replace('/[^0-9]/', '', $cedulaTrim);
         $conPrefijo = 'V-' . $soloDigitos;
+        $conPrefijoE = 'E-' . $soloDigitos;
 
         $db = Connection::getInstance();
-        $stmt = $db->prepare("SELECT id, nombre_completo, email, cedula FROM usuarios WHERE (cedula = ? OR cedula = ? OR cedula = ?) AND activo = true");
-        $stmt->execute([$cedulaTrim, $soloDigitos, $conPrefijo]);
+        $stmt = $db->prepare("SELECT id, nombre_completo, email, cedula FROM usuarios WHERE (cedula = ? OR cedula = ? OR cedula = ? OR cedula = ?) AND activo = true");
+        $stmt->execute([$cedulaTrim, $soloDigitos, $conPrefijo, $conPrefijoE]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
     

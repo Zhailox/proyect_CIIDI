@@ -39,8 +39,8 @@ class BusquedaGlobalController {
         
         // Búsqueda
         if ($usar_ia && $q !== '') {
-            // Modo IA: ignorar filtros tradicionales y usar búsqueda vectorial
-            $resultados = $model->buscarSemantico($q);
+            // Modo IA: búsqueda semántica con soporte de filtros
+            $resultados = $model->buscarSemantico($q, $filtrosExtra);
             $totalResults = count($resultados);
         } else {
             // Modo estándar
@@ -59,6 +59,7 @@ class BusquedaGlobalController {
         return [
             'resultados'   => $resultados,
             'q'            => $q,
+            'usar_ia'      => $usar_ia,
             'carreras'     => $carreras,
             'lineas'       => $lineas,
             'dimensiones'  => $dimensiones,

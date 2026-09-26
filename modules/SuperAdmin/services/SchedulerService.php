@@ -396,6 +396,111 @@ class SchedulerService {
         return ((int)$pattern === $valActual);
     }
 
+    /**
+     * Traduce una expresión Cron estándar de 5 campos a un texto legible y amigable en español.
+     */
+    public static function describirCron(string $cronExpr): string {
+        $cronExpr = trim($cronExpr);
+        $partes = preg_split('/\s+/', $cronExpr);
+        if (count($partes) !== 5) {
+            return 'Expresión incompleta (' . count($partes) . '/5 campos)';
+        }
+
+        list($min, $hora, $diaM, $mes, $diaS) = $partes;
+
+        $nombresDias = [
+            '0' => 'domingo', '1' => 'lunes', '2' => 'martes', '3' => 'miércoles',
+            '4' => 'jueves', '5' => 'viernes', '6' => 'sábado', '7' => 'domingo'
+        ];
+
+        $nombresMeses = [
+            '1' => 'enero', '2' => 'febrero', '3' => 'marzo', '4' => 'abril',
+            '5' => 'mayo', '6' => 'junio', '7' => 'julio', '8' => 'agosto',
+            '9' => 'septiembre', '10' => 'octubre', '11' => 'noviembre', '12' => 'diciembre'
+        ];
+
+        $formatearHora = function($h, $m) {
+            $hNum = (int)$h;
+            $mNum = (int)$m;
+            $mStr = str_pad((string)$mNum, 2, '0', STR_PAD_LEFT);
+            if ($hNum === 0 && $mNum === 0) return '12:00 AM (Medianoche)';
+            if ($hNum === 12 && $mNum === 0) return '12:00 PM (Mediodía)';
+            $periodo = $hNum >= 12 ? 'PM' : 'AM';
+            $h12 = $hNum % 12;
+            if ($h12 === 0) $h12 = 12;
+            return sprintf('%02d:%s %s', $h12, $mStr, $periodo);
+        };
+
+        // Cada minuto
+        if ($min === '*' && $hora === '*' && $diaM === '*' && $mes === '*' && $diaS === '*') {
+            return 'Cada minuto';
+        }
+
+        // Intervalo de minutos: */N * * * *
+        if (str_starts_with($min, '*/') && $hora === '*' && $diaM === '*' && $mes === '*' && $diaS === '*') {
+            $step = substr($min, 2);
+            return "Cada {$step} minutos";
+        }
+
+        // Cada hora en punto: 0 * * * *
+        if ($min === '0' && $hora === '*' && $diaM === '*' && $mes === '*' && $diaS === '*') {
+            return 'Cada hora en punto';
+        }
+
+        // Minuto específico de cada hora: N * * * *
+        if (is_numeric($min) && $hora === '*' && $diaM === '*' && $mes === '*' && $diaS === '*') {
+            return "Cada hora en el minuto {$min}";
+        }
+
+        // Intervalo de horas: 0 */N * * *
+        if (str_starts_with($hora, '*/') && $diaM === '*' && $mes === '*' && $diaS === '*') {
+            $stepH = substr($hora, 2);
+            $minTxt = ($min === '0') ? 'en punto' : "en minuto " . str_pad($min, 2, '0', STR_PAD_LEFT);
+            return "Cada {$stepH} horas ({$minTxt})";
+        }
+
+        // Si la hora y el minuto son fijos (ej: 0 0 o 30 8)
+        if (is_numeric($min) && is_numeric($hora)) {
+            $horaTxt = $formatearHora($hora, $min);
+
+            // Todos los días: M H * * *
+            if ($diaM === '*' && $mes === '*' && $diaS === '*') {
+                return "Diario a las {$horaTxt}";
+            }
+
+            // Días de semana laborales: M H * * 1-5
+            if ($diaM === '*' && $mes === '*' && ($diaS === '1-5' || $diaS === '1,2,3,4,5')) {
+                return "Lun a Vie a las {$horaTxt}";
+            }
+
+            // Fines de semana: M H * * 6,0 o 0,6
+            if ($diaM === '*' && $mes === '*' && ($diaS === '6,0' || $diaS === '0,6' || $diaS === '6,7')) {
+                return "Fines de semana a las {$horaTxt}";
+            }
+
+            // Día de semana específico: M H * * D
+            if ($diaM === '*' && $mes === '*' && isset($nombresDias[$diaS])) {
+                $nomDia = ucfirst($nombresDias[$diaS]);
+                return "Semanal ({$nomDia}s a las {$horaTxt})";
+            }
+
+            // Días específicos del mes: M H D * *
+            if ($diaM !== '*' && $mes === '*' && $diaS === '*') {
+                return "Día {$diaM} de cada mes a las {$horaTxt}";
+            }
+
+            // Fecha anual específica: M H D M *
+            if ($diaM !== '*' && isset($nombresMeses[$mes]) && $diaS === '*') {
+                $nomMes = ucfirst($nombresMeses[$mes]);
+                return "Cada {$diaM} de {$nomMes} a las {$horaTxt}";
+            }
+
+            return "A las {$horaTxt}";
+        }
+
+        return "Cron: {$cronExpr}";
+    }
+
     // =========================================================================
     // MÉTODOS INTERNOS LEGACY DEL CORE
     // =========================================================================

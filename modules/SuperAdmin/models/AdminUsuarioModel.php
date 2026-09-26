@@ -33,6 +33,23 @@ class AdminUsuarioModel {
             ->first();
     }
 
+    // Busca un usuario individual sin importar su rol por Correo Electrónico
+    public function buscarPorEmail(string $email) {
+        $emailNormalizado = strtolower(trim($email));
+        $db = Connection::getInstance();
+        $sql = "
+            SELECT u.id, u.cedula, u.nombre_completo, u.email, u.activo, u.id_rol, r.nombre AS rol_nombre, p.nivel_privilegio
+            FROM usuarios u
+            INNER JOIN roles r ON u.id_rol = r.id
+            INNER JOIN privilegios p ON r.privilegio_id = p.privilegio_id
+            WHERE LOWER(u.email) = ? AND u.cedula NOT LIKE '%_x%' AND u.email NOT LIKE '%_deleted_%'
+            LIMIT 1
+        ";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$emailNormalizado]);
+        return $stmt->fetch();
+    }
+
     // Obtiene a todo el personal docente (por nivel de privilegio docente/profesor o coincidencia de rol)
     public function obtenerProfesores() {
         $db = Connection::getInstance();
@@ -66,19 +83,24 @@ class AdminUsuarioModel {
             ->get();
     }
 
-    // Actualiza los datos básicos y el rol de un usuario
     // Actualiza los datos básicos, rol y opcionalmente la contraseña
     public function actualizarUsuario(int $id, string $cedula, string $nombre, string $email, int $id_rol, ?string $hashClave = null) {
         $db = Connection::getInstance();
-        
-        if ($hashClave) {
-            $sql = "UPDATE usuarios SET cedula = ?, nombre_completo = ?, email = ?, id_rol = ?, contrasena = ? WHERE id = ?";
-            $stmt = $db->prepare($sql);
-            return $stmt->execute([$cedula, $nombre, $email, $id_rol, $hashClave, $id]);
-        } else {
-            $sql = "UPDATE usuarios SET cedula = ?, nombre_completo = ?, email = ?, id_rol = ? WHERE id = ?";
-            $stmt = $db->prepare($sql);
-            return $stmt->execute([$cedula, $nombre, $email, $id_rol, $id]);
+        try {
+            if ($hashClave) {
+                $sql = "UPDATE usuarios SET cedula = ?, nombre_completo = ?, email = ?, id_rol = ?, contrasena = ? WHERE id = ?";
+                $stmt = $db->prepare($sql);
+                return $stmt->execute([$cedula, $nombre, $email, $id_rol, $hashClave, $id]);
+            } else {
+                $sql = "UPDATE usuarios SET cedula = ?, nombre_completo = ?, email = ?, id_rol = ? WHERE id = ?";
+                $stmt = $db->prepare($sql);
+                return $stmt->execute([$cedula, $nombre, $email, $id_rol, $id]);
+            }
+        } catch (PDOException $e) {
+            if ($e->getCode() == '23505' || str_contains($e->getMessage(), '23505')) {
+                return false;
+            }
+            throw $e;
         }
     }
 
@@ -154,8 +176,15 @@ class AdminUsuarioModel {
     public function crearUsuario(string $cedula, string $nombre, string $email, int $id_rol, string $hashClave): bool {
         $db = Connection::getInstance();
         $sql = "INSERT INTO usuarios (cedula, nombre_completo, email, id_rol, contrasena, activo) VALUES (?, ?, ?, ?, ?, 'true')";
-        $stmt = $db->prepare($sql);
-        return $stmt->execute([$cedula, $nombre, $email, $id_rol, $hashClave]);
+        try {
+            $stmt = $db->prepare($sql);
+            return $stmt->execute([$cedula, $nombre, $email, $id_rol, $hashClave]);
+        } catch (PDOException $e) {
+            if ($e->getCode() == '23505' || str_contains($e->getMessage(), '23505')) {
+                return false;
+            }
+            throw $e;
+        }
     }
 
     // Forzar reseteo de clave por el administrador

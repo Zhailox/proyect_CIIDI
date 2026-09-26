@@ -35,8 +35,15 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="login-flat-group">
-                        <label for="cedula">Cédula:</label>
-                        <input type="text" id="cedula" name="cedula" class="login-flat-input" placeholder="V-12345678" required autocomplete="off">
+                        <label for="cedula_num">Cédula:</label>
+                        <div style="display: flex; gap: 0.5rem; align-items: stretch;">
+                            <select id="cedula_tipo" name="cedula_tipo" class="login-flat-input" style="width: 80px; flex-shrink: 0; cursor: pointer; font-weight: 700;" onchange="actualizarCedulaRegistro()">
+                                <option value="V-">V-</option>
+                                <option value="E-">E-</option>
+                            </select>
+                            <input type="text" inputmode="numeric" id="cedula_num" name="cedula_num" class="login-flat-input" placeholder="Ej: 12345678" required autocomplete="off" maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); actualizarCedulaRegistro();" style="flex: 1;">
+                            <input type="hidden" id="cedula" name="cedula">
+                        </div>
                     </div>
 
                     <div class="login-flat-group">
@@ -217,4 +224,17 @@ function validarCoincidenciaClave() {
         matchLabel.style.color = '#ef4444';
     }
 }
+
+function actualizarCedulaRegistro() {
+    const tipoEl = document.getElementById('cedula_tipo');
+    const numEl = document.getElementById('cedula_num');
+    const hiddenEl = document.getElementById('cedula');
+    if (!tipoEl || !numEl || !hiddenEl) return;
+    const num = numEl.value.trim().replace(/\D/g, '');
+    hiddenEl.value = num ? (tipoEl.value + num) : '';
+}
+
+document.querySelector('.login-flat-form')?.addEventListener('submit', function() {
+    actualizarCedulaRegistro();
+});
 </script>

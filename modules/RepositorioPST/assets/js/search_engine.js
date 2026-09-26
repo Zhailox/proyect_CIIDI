@@ -61,50 +61,46 @@ function selectYear(year) {
     }
 }
 
-// Cambia de modo (Estándar vs IA)
-function toggleSearchModeVisual() {
-    const modeInputSidebar = document.getElementById('searchModeInput');
-    const modeInputTop = document.getElementById('searchModeInputTop');
-    const slider = document.getElementById('sliderVisual');
-    
-    const currentMode = modeInputTop.value;
-    const targetMode = (currentMode === 'B') ? 'A' : 'B';
-    
-    if (modeInputSidebar) modeInputSidebar.value = targetMode;
-    if (modeInputTop) modeInputTop.value = targetMode;
-    
-    if (targetMode === 'B') {
-        slider.classList.add('checked');
-    } else {
-        slider.classList.remove('checked');
+// Maneja el toggle de búsqueda semántica (IA)
+function handleSemanticToggle(checkbox) {
+    const isChecked = checkbox.checked;
+    const hiddenInFilter = document.getElementById('searchUsarIaHidden');
+    if (hiddenInFilter) {
+        hiddenInFilter.value = isChecked ? '1' : '';
     }
     
-    updateUIForMode(targetMode === 'B');
+    const label = document.querySelector('.semantic-toggle-label');
+    if (label) {
+        if (isChecked) {
+            label.classList.add('active');
+        } else {
+            label.classList.remove('active');
+        }
+    }
     
-    // Auto submit to refresh results with the new search mode
-    submitFilterForm();
+    updateUIForMode(isChecked);
+    
+    // Si ya hay una consulta escrita, refrescamos automáticamente la búsqueda
+    const queryInput = document.getElementById('searchQueryInput');
+    if (queryInput && queryInput.value.trim() !== '') {
+        submitFilterForm();
+    }
 }
 
 // Actualiza los estilos visuales del buscador según el modo
 function updateUIForMode(isIA) {
     const searchBarContainer = document.getElementById('searchBarContainer');
     const searchInput = document.getElementById('searchQueryInput');
-    const labelA = document.getElementById('labelModeA');
-    const labelB = document.getElementById('labelModeB');
-    const wrapper = document.querySelector('.search-view-wrapper');
+    const iaHint = document.querySelector('.ia-hint');
     
     if (isIA) {
-        if (wrapper) wrapper.classList.add('ia-mode-active');
         if (searchBarContainer) searchBarContainer.classList.add('ia-mode-container');
-        if (searchInput) searchInput.placeholder = "Describe tu propuesta o componentes de investigación (Búsqueda Semántica IA)...";
-        if (labelA) labelA.classList.remove('active-label');
-        if (labelB) labelB.classList.add('active-label');
+        if (searchInput) searchInput.placeholder = "Describe tu propuesta o temática de investigación (Búsqueda Semántica con Redes Neuronales)...";
+        if (iaHint) iaHint.classList.add('visible');
     } else {
-        if (wrapper) wrapper.classList.remove('ia-mode-active');
         if (searchBarContainer) searchBarContainer.classList.remove('ia-mode-container');
         if (searchInput) searchInput.placeholder = "Buscar por títulos, palabras clave o resumen abstract...";
-        if (labelA) labelA.classList.add('active-label');
-        if (labelB) labelB.classList.remove('active-label');
+        if (iaHint) iaHint.classList.remove('visible');
     }
 }
 
@@ -113,23 +109,19 @@ function submitFilterForm() {
     const filterForm = document.getElementById('searchFilterForm');
     const queryInput = document.getElementById('searchQueryInput');
     const queryHidden = document.getElementById('searchQueryHidden');
+    const usarIaCheckbox = document.getElementById('usarIaCheckbox');
+    const usarIaHidden = document.getElementById('searchUsarIaHidden');
     
     if (filterForm) {
-        // Copiar query del top form al hidden del sidebar form para enviar todo junto
         if (queryInput && queryHidden) {
-            queryHidden.value = queryInput.value;
+            queryHidden.value = queryInput.value.trim();
         }
         
-        const modeInput = document.getElementById('searchModeInput');
-        if (modeInput && modeInput.value === 'B') {
-            const banner = document.getElementById('simulationBanner');
-            if (banner) banner.classList.add('active');
-            setTimeout(() => {
-                filterForm.submit();
-            }, 1000);
-        } else {
-            filterForm.submit();
+        if (usarIaCheckbox && usarIaHidden) {
+            usarIaHidden.value = usarIaCheckbox.checked ? '1' : '';
         }
+        
+        filterForm.submit();
     }
 }
 
@@ -143,9 +135,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Inicializar visualmente el modo
-    const modeInputTop = document.getElementById('searchModeInputTop');
-    if (modeInputTop) {
-        updateUIForMode(modeInputTop.value === 'B');
+    const usarIaCheckbox = document.getElementById('usarIaCheckbox');
+    if (usarIaCheckbox) {
+        updateUIForMode(usarIaCheckbox.checked);
     }
 });

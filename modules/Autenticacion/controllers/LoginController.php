@@ -50,6 +50,11 @@ class LoginController {
         
         $metodo = $_POST['metodo_recuperacion'] ?? '';
         $dato = trim($_POST['dato_recuperacion'] ?? '');
+        if ($metodo === 'cedula' && empty($dato) && !empty($_POST['dato_recuperacion_num'])) {
+            $tipo = $_POST['dato_recuperacion_tipo'] ?? 'V-';
+            $num = preg_replace('/\D/', '', $_POST['dato_recuperacion_num']);
+            $dato = $tipo . $num;
+        }
         
         // Validación de captcha
         $verifCaptcha = CaptchaService::validarPeticion($_POST);
@@ -259,6 +264,11 @@ class LoginController {
         }
 
         $cedula = trim($_POST['cedula'] ?? '');
+        if (empty($cedula) && !empty($_POST['cedula_num'])) {
+            $tipo = $_POST['cedula_tipo'] ?? 'V-';
+            $num = preg_replace('/\D/', '', $_POST['cedula_num']);
+            $cedula = $tipo . $num;
+        }
         $password = trim($_POST['password'] ?? '');
 
         // 1. Probar la Base de Datos
@@ -401,6 +411,11 @@ class LoginController {
         }
 
         $cedula = trim($_POST['cedula'] ?? '');
+        if (empty($cedula) && !empty($_POST['cedula_num'])) {
+            $tipo = $_POST['cedula_tipo'] ?? 'V-';
+            $num = preg_replace('/\D/', '', $_POST['cedula_num']);
+            $cedula = $tipo . $num;
+        }
         $nombre = trim($_POST['nombre'] ?? '');
         $email = filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL);
         $password = trim($_POST['password'] ?? '');

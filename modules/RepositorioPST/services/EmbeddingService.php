@@ -47,7 +47,10 @@ class EmbeddingService {
         // 1. Garantizar que el runtime nativo C++ está disponible
         // ──────────────────────────────────────────────────────────────
         if (class_exists('\OnnxRuntime\Vendor')) {
-            \OnnxRuntime\Vendor::check();
+            $dest = \OnnxRuntime\Vendor::defaultLib();
+            if (!file_exists($dest)) {
+                throw new RuntimeException("Librería de ONNX Runtime no encontrada en: {$dest}");
+            }
         }
 
         // ──────────────────────────────────────────────────────────────

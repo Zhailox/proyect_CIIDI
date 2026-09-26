@@ -726,7 +726,7 @@ mark, .highlight-match {
                                     <td style="text-align: center;">
                                         <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
                                             <a href="?ruta=detalles-pst&id=<?= $doc['id'] ?>" class="ag-page-link" style="padding: 4px 8px;" title="Ver Ficha">Ver</a>
-                                            <?php if (ConfigService::puedeDescargar() && !empty($doc['archivo_pdf'])): ?>
+                                            <?php if (ConfigService::puedeDescargarDocumento($doc['archivo_pdf'] ?? null)): ?>
                                                 <a href="?ruta=ver-pdf-pst&id=<?= $doc['id'] ?>&download=1" class="ag-page-link" style="padding: 4px 8px; color: #166534;" title="Descargar Documento" target="_blank" download><i class="ph-bold ph-download-simple"></i></a>
                                             <?php endif; ?>
                                             <button type="button" class="ag-page-link" style="padding: 4px 8px; cursor: pointer;" title="Citar" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($doc['titulo'])) ?>, <?= htmlspecialchars(json_encode($doc['autores_nombres'] ?? 'Autores Varios')) ?>, <?= $doc['anio_publicacion'] ?>)"><i class="ph-bold ph-quotes"></i></button>

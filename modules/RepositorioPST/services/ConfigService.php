@@ -106,5 +106,53 @@ class ConfigService {
         // Para roles jerárquicos (menor número = mayor jerarquía en CIIDI)
         return $nivel <= $nivelMinimo;
     }
+
+    /**
+     * Comprueba si el archivo digital existe físicamente en el almacenamiento del servidor.
+     *
+     * @param string|null $archivoRelativo
+     * @return bool
+     */
+    public static function existeArchivoFisico(?string $archivoRelativo): bool {
+        if (empty($archivoRelativo)) {
+            return false;
+        }
+
+        $relPath = ltrim(str_replace(['\\', '/'], '/', trim($archivoRelativo)), '/');
+        if (strpos($relPath, '..') !== false) {
+            return false;
+        }
+
+        $base = defined('BASE_PATH') ? BASE_PATH : dirname(dirname(dirname(__DIR__)));
+        $fullPath = $base . '/' . $relPath;
+        if (is_file($fullPath)) {
+            return true;
+        }
+
+        // Fallback: verificar en storage/documentos/pst/
+        $dir = $base . '/storage/documentos/pst/';
+        if (is_dir($dir)) {
+            $baseName = pathinfo($relPath, PATHINFO_FILENAME);
+            if ($baseName) {
+                $candidates = glob($dir . '*' . preg_replace('/[^a-zA-Z0-9_\-]/', '', $baseName) . '*');
+                if (!empty($candidates)) {
+                    foreach ($candidates as $cand) {
+                        if (is_file($cand)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Determina si el usuario tiene permiso para descargar Y el archivo existe físicamente en disco.
+     */
+    public static function puedeDescargarDocumento(?string $archivoRelativo, ?int $nivelUsuario = null): bool {
+        return self::puedeDescargar($nivelUsuario) && self::existeArchivoFisico($archivoRelativo);
+    }
 }
 

@@ -207,6 +207,13 @@ class DetallePSTController {
         }
 
         if (!is_file($fullPath)) {
+            if ($esDescarga) {
+                http_response_code(404);
+                header('Content-Type: text/html; charset=utf-8');
+                echo "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'><title>Archivo No Disponible</title><style>body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; } .card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2rem; max-width: 480px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); } h3 { color: #be123c; margin-top: 0; } p { color: #475569; font-size: 0.92rem; line-height: 1.5; } .btn { display: inline-block; margin-top: 1rem; padding: 0.5rem 1rem; background: #002244; color: white; text-decoration: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; }</style></head><body><div class='card'><h3>Documento Físico No Disponible</h3><p>Este proyecto está registrado en la base de datos pero su archivo digital no se encuentra disponible físicamente en el almacenamiento del servidor.</p><a href='javascript:history.back()' class='btn'>Regresar</a></div></body></html>";
+                exit;
+            }
+
             header('Content-Type: text/html; charset=utf-8');
             echo "<div style='font-family:sans-serif; text-align:center; padding:3rem; color:#666;'>
                     <svg width='48' height='48' viewBox='0 0 24 24' fill='none' stroke='#007bff' stroke-width='2' style='margin-bottom:1rem;'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'></path><polyline points='14 2 14 8 20 8'></polyline></svg>
@@ -264,6 +271,7 @@ class DetallePSTController {
             readfile($fullPath);
             exit;
         } elseif ($ext === 'docx') {
+            $mostrarToolbar = (bool)ConfigService::get('visor_pdf.mostrar_toolbar', true);
             require_once BASE_PATH . '/vendor/autoload.php';
             try {
                 $phpWord = \PhpOffice\PhpWord\IOFactory::load($fullPath);
@@ -272,15 +280,42 @@ class DetallePSTController {
                 header('Content-Type: text/html; charset=utf-8');
                 echo "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'>
                       <style>
-                        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 1.5rem; line-height: 1.6; user-select: none; }
-                        .paper-container { max-width: 820px; margin: 0 auto; background: #ffffff; padding: 2.5rem 3rem; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
+                        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 0; line-height: 1.6; user-select: none; }
+                        .paper-container { max-width: 840px; margin: " . ($mostrarToolbar ? "1rem auto 3rem auto" : "1.5rem auto") . "; background: #ffffff; padding: 2.5rem 3rem; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; transition: transform 0.2s ease; }
                         h1, h2, h3, h4 { color: #002244; font-weight: 800; line-height: 1.3; }
                         p { margin-bottom: 1rem; text-align: justify; font-size: 0.95rem; }
                         table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.9rem; }
                         td, th { border: 1px solid #cbd5e1; padding: 0.6rem; }
                         th { background: #f1f5f9; }
-                      </style></head><body>
-                      <div class='paper-container'>";
+                        .doc-toolbar { position: sticky; top: 0; z-index: 100; background: #ffffff; border-bottom: 1px solid #cbd5e1; padding: 0.5rem 1rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+                        .doc-toolbar-btn { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 0.35rem 0.65rem; font-size: 0.8rem; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; }
+                        .doc-toolbar-btn:hover { background: #e2e8f0; color: #002244; }
+                        @media print { .doc-toolbar { display: none !important; } body { padding: 0; background: #fff; } .paper-container { box-shadow: none; border: none; padding: 0; max-width: 100%; } }
+                      </style></head><body>";
+                if ($mostrarToolbar) {
+                    echo "<div class='doc-toolbar'>
+                            <div style='display:flex; align-items:center; gap:0.5rem;'>
+                                <span style='background:#eff6ff; color:#1d4ed8; padding:0.25rem 0.55rem; border-radius:4px; font-size:0.75rem; font-weight:700;'>Word (.docx)</span>
+                                <span style='font-size:0.8rem; color:#64748b; font-weight:600;'>" . htmlspecialchars($safeFilename) . "</span>
+                            </div>
+                            <div style='display:flex; gap:0.4rem; align-items:center;'>
+                                <button type='button' class='doc-toolbar-btn' onclick='ajustarZoom(-0.1)' title='Reducir zoom'>−</button>
+                                <span id='zoomIndicator' style='font-size:0.78rem; font-weight:700; color:#475569; min-width:40px; text-align:center;'>100%</span>
+                                <button type='button' class='doc-toolbar-btn' onclick='ajustarZoom(0.1)' title='Aumentar zoom'>+</button>
+                                <button type='button' class='doc-toolbar-btn' onclick='window.print()' title='Imprimir documento'>Imprimir</button>
+                            </div>
+                          </div>
+                          <script>
+                            let nivelZoom = 1.0;
+                            function ajustarZoom(delta) {
+                                nivelZoom = Math.min(1.8, Math.max(0.6, Math.round((nivelZoom + delta) * 10) / 10));
+                                const p = document.querySelector('.paper-container');
+                                if (p) { p.style.transform = 'scale(' + nivelZoom + ')'; p.style.transformOrigin = 'top center'; }
+                                document.getElementById('zoomIndicator').innerText = Math.round(nivelZoom * 100) + '%';
+                            }
+                          </script>";
+                }
+                echo "<div class='paper-container'>";
                 $writer->save('php://output');
                 echo "</div></body></html>";
                 exit;
@@ -1091,7 +1126,8 @@ class DetallePSTController {
         $q = !empty($_GET['q']) ? trim($_GET['q']) : '';
         
         if ($accion === 'listar') {
-            $limit = 10;
+            $limit = (int)ConfigService::get('paginacion.limite_catalogo', 10);
+            if ($limit < 1) $limit = 10;
             $page = !empty($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
             $offset = ($page - 1) * $limit;
             
@@ -1103,7 +1139,17 @@ class DetallePSTController {
                 $totalDocs = $model->getPSTDocumentosCount(['activo' => 'todos']);
             }
             
-            $totalPages = ceil($totalDocs / $limit);
+            $totalPages = max(1, (int)ceil($totalDocs / $limit));
+            if ($page > $totalPages) {
+                $page = $totalPages;
+                $offset = ($page - 1) * $limit;
+                if (!empty($q)) {
+                    $documentos = $model->buscarStandard($q, ['activo' => 'todos'], $limit, $offset);
+                } else {
+                    $documentos = $model->getPSTDocumentos(['activo' => 'todos', 'orden' => 'recientes'], $limit, $offset);
+                }
+            }
+
             $pagination = [
                 'current_page' => $page,
                 'total_pages'  => $totalPages,

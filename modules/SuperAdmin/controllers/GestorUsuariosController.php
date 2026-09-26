@@ -342,6 +342,31 @@ class GestorUsuariosController {
             exit;
         }
 
+        // Validar formato y existencia de dominio de correo (PHPMailer / RFC / DNS MX)
+        $valEmail = MailService::validarEmail($email, true);
+        if (!$valEmail['valido']) {
+            $_SESSION['error_edicion'] = $valEmail['mensaje'];
+            header("Location: editar-usuario?cedula=" . urlencode($_POST['cedula_original']));
+            exit;
+        }
+        $email = $valEmail['email'];
+
+        // Verificar si el correo ya está en uso por otro usuario
+        $usuarioConEmail = $this->adminModel->buscarPorEmail($email);
+        if ($usuarioConEmail && (int)$usuarioConEmail['id'] !== (int)$id) {
+            $_SESSION['error_edicion'] = "El correo electrónico '{$email}' ya se encuentra asignado a otro usuario en el sistema.";
+            header("Location: editar-usuario?cedula=" . urlencode($_POST['cedula_original']));
+            exit;
+        }
+
+        // Verificar si la cédula ya está en uso por otro usuario
+        $usuarioConCedula = $this->adminModel->buscarPorCedula($cedula);
+        if ($usuarioConCedula && (int)$usuarioConCedula['id'] !== (int)$id) {
+            $_SESSION['error_edicion'] = "La cédula C.I. {$cedula} ya se encuentra asignada a otro usuario en el sistema.";
+            header("Location: editar-usuario?cedula=" . urlencode($_POST['cedula_original']));
+            exit;
+        }
+
         $hashSeguro = null;
         if (!empty($password)) {
             if ($password !== $password_confirm) {
@@ -356,7 +381,12 @@ class GestorUsuariosController {
         $usuarioAnterior = $this->adminModel->buscarPorId($id);
 
         // Pasamos el hashSeguro al modelo (será null si no se llenaron los campos de clave)
-        $this->adminModel->actualizarUsuario($id, $cedula, $nombre, $email, $id_rol, $hashSeguro);
+        $resActualizar = $this->adminModel->actualizarUsuario($id, $cedula, $nombre, $email, $id_rol, $hashSeguro);
+        if (!$resActualizar) {
+            $_SESSION['error_edicion'] = "No se pudieron actualizar los datos del usuario. Verifique duplicados en la base de datos.";
+            header("Location: editar-usuario?cedula=" . urlencode($_POST['cedula_original']));
+            exit;
+        }
         
         // Evaluar ESTRICTAMENTE si hubo una modificación real en el id_rol
         if ($usuarioAnterior && isset($usuarioAnterior['id_rol']) && (int)$usuarioAnterior['id_rol'] !== (int)$id_rol) {
@@ -472,6 +502,25 @@ class GestorUsuariosController {
                 exit;
             }
 
+            // Validar formato y existencia de dominio de correo (PHPMailer / RFC / DNS MX)
+            $valEmail = MailService::validarEmail($email, true);
+            if (!$valEmail['valido']) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = $valEmail['mensaje'];
+                header("Location: gestor-usuarios");
+                exit;
+            }
+            $email = $valEmail['email'];
+
+            // Verificar si el correo ya está registrado en la base de datos
+            $existeEmail = $this->adminModel->buscarPorEmail($email);
+            if ($existeEmail) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "Ya existe un usuario registrado con el correo electrónico '{$email}'.";
+                header("Location: gestor-usuarios");
+                exit;
+            }
+
             // Verificar duplicado de cédula
             $existe = $this->adminModel->buscarPorCedula($cedula);
             if ($existe) {
@@ -482,7 +531,12 @@ class GestorUsuariosController {
             }
 
             $hashClave = password_hash($clave, PASSWORD_BCRYPT);
-            $exito = $this->adminModel->crearUsuario($cedula, $nombre, $email, $id_rol, $hashClave);
+            try {
+                $exito = $this->adminModel->crearUsuario($cedula, $nombre, $email, $id_rol, $hashClave);
+            } catch (Throwable $e) {
+                AuditLogger::registrar('ERROR', 'SuperAdmin', 'Error Crear Usuario', "Excepción BD al registrar: " . $e->getMessage());
+                $exito = false;
+            }
 
             if (session_status() === PHP_SESSION_NONE) session_start();
             if ($exito) {
@@ -641,6 +695,16 @@ class GestorUsuariosController {
                 exit;
             }
 
+            // Validar formato y existencia de dominio de correo (PHPMailer / RFC / DNS MX)
+            $valEmail = MailService::validarEmail($email, true);
+            if (!$valEmail['valido']) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = $valEmail['mensaje'];
+                header("Location: gestor-usuarios");
+                exit;
+            }
+            $email = $valEmail['email'];
+
             // Buscar el ID de Rol de Profesor / Docentes dinámicamente
             $roles = $this->adminModel->obtenerRoles();
             $idRolProfesor = 0;
@@ -730,5 +794,44 @@ class GestorUsuariosController {
             header("Location: gestor-usuarios");
             exit;
         }
+    }
+
+    /**
+     * Endpoint AJAX para verificar la validez y disponibilidad de un correo electrónico en vivo.
+     */
+    public function verificarEmailAjax() {
+        header('Content-Type: application/json; charset=utf-8');
+        $email = trim($_GET['email'] ?? $_POST['email'] ?? '');
+        $excluirId = (int)($_GET['excluir_id'] ?? $_POST['excluir_id'] ?? 0);
+
+        if (empty($email)) {
+            echo json_encode(['valido' => false, 'disponible' => false, 'mensaje' => 'El correo es obligatorio.']);
+            exit;
+        }
+
+        // 1. Validar sintaxis y dominio con PHPMailer & DNS
+        $val = MailService::validarEmail($email, true);
+        if (!$val['valido']) {
+            echo json_encode(['valido' => false, 'disponible' => false, 'mensaje' => $val['mensaje']]);
+            exit;
+        }
+
+        // 2. Verificar existencia en la base de datos
+        $existente = $this->adminModel->buscarPorEmail($val['email']);
+        if ($existente && (int)$existente['id'] !== $excluirId) {
+            echo json_encode([
+                'valido' => true,
+                'disponible' => false,
+                'mensaje' => "El correo '{$val['email']}' ya está registrado por otro usuario ({$existente['nombre_completo']})."
+            ]);
+            exit;
+        }
+
+        echo json_encode([
+            'valido' => true,
+            'disponible' => true,
+            'mensaje' => 'Correo válido y disponible.'
+        ]);
+        exit;
     }
 }

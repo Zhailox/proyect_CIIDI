@@ -168,6 +168,8 @@
             <?php 
             $mostrarToolbar = (bool)ConfigService::get('visor_pdf.mostrar_toolbar', true);
             $permitirDescarga = ConfigService::puedeDescargar();
+            $archivoExiste = ConfigService::existeArchivoFisico($documento['archivo_pdf'] ?? '');
+            $puedeDescargarArchivo = $permitirDescarga && $archivoExiste;
             $toolbarParam = $mostrarToolbar ? '#toolbar=1&navpanes=1' : '#toolbar=0&navpanes=0';
             ?>
             <div id="tabVisorPdf" class="tab-content">
@@ -177,21 +179,39 @@
                             <i class="ph ph-file-text" style="color: var(--color-terciario); font-size: 1.1rem;"></i> Previsualización Oficial del Documento Digital
                         </span>
                         <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <?php if (!empty($documento['archivo_pdf']) && $permitirDescarga): ?>
+                            <?php if ($puedeDescargarArchivo): ?>
                                 <a href="?ruta=ver-pdf-pst&id=<?= $documento['id'] ?>&download=1" class="btn-back" style="background-color: #f0fdf4; color: #166534; border: 1px solid rgba(22, 101, 52, 0.25); text-decoration: none; padding: 0.35rem 0.75rem; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 0.35rem;" target="_blank" download>
                                     <i class="ph ph-download-simple"></i> Descargar Documento
                                 </a>
-                            <?php elseif (!empty($documento['archivo_pdf'])): ?>
+                            <?php elseif ($archivoExiste): ?>
                                 <span style="font-size: 0.75rem; color: var(--texto-silenciado); background: #f1f5f9; padding: 0.3rem 0.6rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.35rem; border: 1px solid rgba(169, 168, 166, 0.2);" title="Descarga directa restringida por política institucional">
                                     <i class="ph ph-lock-key"></i> Solo lectura en visor
                                 </span>
+                            <?php else: ?>
+                                <span style="font-size: 0.75rem; color: #94a3b8; background: #f8fafc; padding: 0.3rem 0.6rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.35rem; border: 1px solid #e2e8f0;" title="El archivo físico no se encuentra cargado en el almacenamiento del servidor">
+                                    <i class="ph ph-file-x"></i> Archivo no cargado en almacenamiento
+                                </span>
                             <?php endif; ?>
-                            <a href="?ruta=ver-pdf-pst&id=<?= $documento['id'] ?><?= $toolbarParam ?>" target="_blank" class="btn-back" style="padding: 0.35rem 0.65rem; font-size: 0.78rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem;" title="Abrir documento en ventana completa">
-                                <i class="ph ph-arrow-square-out"></i> Pantalla Completa
-                            </a>
+                            <?php if ($archivoExiste): ?>
+                                <a href="?ruta=ver-pdf-pst&id=<?= $documento['id'] ?><?= $toolbarParam ?>" target="_blank" class="btn-back" style="padding: 0.35rem 0.65rem; font-size: 0.78rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem;" title="Abrir documento en ventana completa">
+                                    <i class="ph ph-arrow-square-out"></i> Pantalla Completa
+                                </a>
+                            <?php endif; ?>
                         </div>
                     </div>
-                    <iframe src="?ruta=ver-pdf-pst&id=<?= $documento['id'] ?><?= $toolbarParam ?>" style="width: 100%; height: 580px; border: 1px solid rgba(169,168,166,0.3); border-radius: 4px; background: white;" title="Visor PDF"></iframe>
+                    <?php if ($archivoExiste): ?>
+                        <iframe src="?ruta=ver-pdf-pst&id=<?= $documento['id'] ?><?= $toolbarParam ?>" style="width: 100%; height: 580px; border: 1px solid rgba(169,168,166,0.3); border-radius: 4px; background: white;" title="Visor de Documento"></iframe>
+                    <?php else: ?>
+                        <div style="background: white; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 3rem 1.5rem; text-align: center;">
+                            <div style="width: 52px; height: 52px; margin: 0 auto 1rem auto; border-radius: 50%; background: #f8fafc; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #94a3b8; border: 1px solid #e2e8f0;">
+                                <i class="ph ph-file-dashed"></i>
+                            </div>
+                            <h4 style="color: var(--texto-titulos); margin: 0 0 0.4rem 0; font-size: 1rem;">Documento Digital No Disponible en Almacenamiento</h4>
+                            <p style="color: var(--texto-silenciado); max-width: 480px; margin: 0 auto; font-size: 0.88rem; line-height: 1.5;">
+                                Esta investigación se encuentra debidamente indexada y registrada con sus metadatos en el catálogo, pero su archivo físico (.pdf / .docx) no está presente en el servidor.
+                            </p>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -201,7 +221,7 @@
                     <i class="ph ph-arrow-left"></i> Volver al Catálogo
                 </a>
                 <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <?php if (!empty($documento['archivo_pdf']) && $permitirDescarga): ?>
+                    <?php if ($puedeDescargarArchivo): ?>
                         <a href="?ruta=ver-pdf-pst&id=<?= $documento['id'] ?>&download=1" class="btn-back" style="background-color: #f0fdf4; color: #166534; border: 1px solid rgba(22, 101, 52, 0.25); text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem;" target="_blank" download>
                             <i class="ph ph-download-simple"></i> Descargar Documento
                         </a>

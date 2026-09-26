@@ -131,11 +131,29 @@ if (typeof window.mammoth === 'undefined') {
                                 for ($i = 0; $i < $maxAutores; $i++):
                                     $esObligatorio = ($i === 0);
                                     $label = 'Estudiante ' . ($i + 1) . ($esObligatorio ? ' (Autor Principal) *' : ' (Opcional)');
+                                    $cedRaw = $autoresList[$i]['cedula'] ?? '';
+                                    $cedTipo = 'V-';
+                                    $cedNum = $cedRaw;
+                                    if (stripos($cedNum, 'E-') === 0) {
+                                        $cedTipo = 'E-';
+                                        $cedNum = substr($cedNum, 2);
+                                    } elseif (stripos($cedNum, 'V-') === 0) {
+                                        $cedTipo = 'V-';
+                                        $cedNum = substr($cedNum, 2);
+                                    }
+                                    $cedNum = preg_replace('/\D/', '', $cedNum);
                                 ?>
                                     <div class="sub-label-header"><?= $label ?></div>
                                     <div class="grid-2-cols">
                                         <div class="upload-input-group">
-                                            <input type="text" name="autor_cedula[]" class="upload-input" value="<?= htmlspecialchars($autoresList[$i]['cedula'] ?? '') ?>" placeholder="Cédula<?= $esObligatorio ? ' (V-30123456)' : '' ?>">
+                                            <div style="display: flex; gap: 0.35rem; align-items: stretch;">
+                                                <select class="upload-input autor-cedula-tipo" style="width: 75px; flex-shrink: 0; cursor: pointer; font-weight: 700; padding: 0.5rem 0.4rem;" onchange="sincronizarCedulasPST()">
+                                                    <option value="V-" <?= $cedTipo === 'V-' ? 'selected' : '' ?>>V-</option>
+                                                    <option value="E-" <?= $cedTipo === 'E-' ? 'selected' : '' ?>>E-</option>
+                                                </select>
+                                                <input type="text" inputmode="numeric" class="upload-input autor-cedula-num" value="<?= htmlspecialchars($cedNum) ?>" placeholder="Cédula<?= $esObligatorio ? ' (30123456)' : '' ?>" maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); sincronizarCedulasPST();" style="flex: 1;">
+                                                <input type="hidden" name="autor_cedula[]" class="autor-cedula-hidden" value="<?= htmlspecialchars($cedRaw) ?>">
+                                            </div>
                                         </div>
                                         <div class="upload-input-group">
                                             <input type="text" name="autor_nombre[]" class="upload-input" value="<?= htmlspecialchars($autoresList[$i]['nombre_completo'] ?? '') ?>" placeholder="Nombres y Apellidos<?= $esObligatorio ? ' del Estudiante' : '' ?>" <?= $esObligatorio ? 'required' : '' ?>>
@@ -158,11 +176,21 @@ if (typeof window.mammoth === 'undefined') {
                                 <i class="ph ph-chalkboard-teacher"></i> Tutores del Proyecto (Máx. <?= $maxTutores ?>)
                             </h3>
                             <div class="tutors-container">
-                                <?php if ($maxTutores >= 1): ?>
+                                <?php if ($maxTutores >= 1): 
+                                    $tAcadTipo = (stripos($tAcadCed, 'E-') === 0) ? 'E-' : 'V-';
+                                    $tAcadNum = preg_replace('/\D/', '', (stripos($tAcadCed, 'V-') === 0 || stripos($tAcadCed, 'E-') === 0) ? substr($tAcadCed, 2) : $tAcadCed);
+                                ?>
                                 <div class="sub-label-header">Tutor Académico (Asesor Docente)</div>
                                 <div class="grid-2-cols">
                                     <div class="upload-input-group">
-                                        <input type="text" name="tutor_academico_cedula" class="upload-input" value="<?= htmlspecialchars($tAcadCed) ?>" placeholder="Cédula Tutor">
+                                        <div style="display: flex; gap: 0.35rem; align-items: stretch;">
+                                            <select id="tutor_academico_tipo" class="upload-input" style="width: 75px; flex-shrink: 0; cursor: pointer; font-weight: 700; padding: 0.5rem 0.4rem;" onchange="sincronizarCedulasPST()">
+                                                <option value="V-" <?= $tAcadTipo === 'V-' ? 'selected' : '' ?>>V-</option>
+                                                <option value="E-" <?= $tAcadTipo === 'E-' ? 'selected' : '' ?>>E-</option>
+                                            </select>
+                                            <input type="text" inputmode="numeric" id="tutor_academico_num" class="upload-input" value="<?= htmlspecialchars($tAcadNum) ?>" placeholder="Cédula Tutor" maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); sincronizarCedulasPST();" style="flex: 1;">
+                                            <input type="hidden" name="tutor_academico_cedula" id="tutor_academico_cedula" value="<?= htmlspecialchars($tAcadCed) ?>">
+                                        </div>
                                     </div>
                                     <div class="upload-input-group">
                                         <input type="text" name="tutor_academico_nombre" class="upload-input" value="<?= htmlspecialchars($tAcadNom) ?>" placeholder="Nombre Completo del Tutor Académico">
@@ -170,11 +198,21 @@ if (typeof window.mammoth === 'undefined') {
                                 </div>
                                 <?php endif; ?>
 
-                                <?php if ($maxTutores >= 2): ?>
+                                <?php if ($maxTutores >= 2): 
+                                    $tInstTipo = (stripos($tInstCed, 'E-') === 0) ? 'E-' : 'V-';
+                                    $tInstNum = preg_replace('/\D/', '', (stripos($tInstCed, 'V-') === 0 || stripos($tInstCed, 'E-') === 0) ? substr($tInstCed, 2) : $tInstCed);
+                                ?>
                                 <div class="sub-label-header">Tutor Institucional (Asesor de la Organización)</div>
                                 <div class="grid-2-cols">
                                     <div class="upload-input-group">
-                                        <input type="text" name="tutor_institucional_cedula" class="upload-input" value="<?= htmlspecialchars($tInstCed) ?>" placeholder="Cédula Tutor">
+                                        <div style="display: flex; gap: 0.35rem; align-items: stretch;">
+                                            <select id="tutor_institucional_tipo" class="upload-input" style="width: 75px; flex-shrink: 0; cursor: pointer; font-weight: 700; padding: 0.5rem 0.4rem;" onchange="sincronizarCedulasPST()">
+                                                <option value="V-" <?= $tInstTipo === 'V-' ? 'selected' : '' ?>>V-</option>
+                                                <option value="E-" <?= $tInstTipo === 'E-' ? 'selected' : '' ?>>E-</option>
+                                            </select>
+                                            <input type="text" inputmode="numeric" id="tutor_institucional_num" class="upload-input" value="<?= htmlspecialchars($tInstNum) ?>" placeholder="Cédula Tutor" maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); sincronizarCedulasPST();" style="flex: 1;">
+                                            <input type="hidden" name="tutor_institucional_cedula" id="tutor_institucional_cedula" value="<?= htmlspecialchars($tInstCed) ?>">
+                                        </div>
                                     </div>
                                     <div class="upload-input-group">
                                         <input type="text" name="tutor_institucional_nombre" class="upload-input" value="<?= htmlspecialchars($tInstNom) ?>" placeholder="Nombre Completo del Tutor Institucional">
@@ -182,11 +220,21 @@ if (typeof window.mammoth === 'undefined') {
                                 </div>
                                 <?php endif; ?>
 
-                                <?php if ($maxTutores >= 3): ?>
+                                <?php if ($maxTutores >= 3): 
+                                    $tComTipo = (stripos($tComCed, 'E-') === 0) ? 'E-' : 'V-';
+                                    $tComNum = preg_replace('/\D/', '', (stripos($tComCed, 'V-') === 0 || stripos($tComCed, 'E-') === 0) ? substr($tComCed, 2) : $tComCed);
+                                ?>
                                 <div class="sub-label-header">Tutor Comunitario (Líder / Representante Comunal)</div>
                                 <div class="grid-2-cols">
                                     <div class="upload-input-group">
-                                        <input type="text" name="tutor_comunitario_cedula" class="upload-input" value="<?= htmlspecialchars($tComCed) ?>" placeholder="Cédula Tutor">
+                                        <div style="display: flex; gap: 0.35rem; align-items: stretch;">
+                                            <select id="tutor_comunitario_tipo" class="upload-input" style="width: 75px; flex-shrink: 0; cursor: pointer; font-weight: 700; padding: 0.5rem 0.4rem;" onchange="sincronizarCedulasPST()">
+                                                <option value="V-" <?= $tComTipo === 'V-' ? 'selected' : '' ?>>V-</option>
+                                                <option value="E-" <?= $tComTipo === 'E-' ? 'selected' : '' ?>>E-</option>
+                                            </select>
+                                            <input type="text" inputmode="numeric" id="tutor_comunitario_num" class="upload-input" value="<?= htmlspecialchars($tComNum) ?>" placeholder="Cédula Tutor" maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); sincronizarCedulasPST();" style="flex: 1;">
+                                            <input type="hidden" name="tutor_comunitario_cedula" id="tutor_comunitario_cedula" value="<?= htmlspecialchars($tComCed) ?>">
+                                        </div>
                                     </div>
                                     <div class="upload-input-group">
                                         <input type="text" name="tutor_comunitario_nombre" class="upload-input" value="<?= htmlspecialchars($tComNom) ?>" placeholder="Nombre Completo del Tutor Comunitario">
@@ -471,7 +519,9 @@ if (typeof window.mammoth === 'undefined') {
                                     </td>
                                 </tr>
                             <?php else: ?>
-                                <?php foreach ($documentos as $doc): ?>
+                                <?php foreach ($documentos as $doc): 
+                                    $doc['archivo_existe'] = !empty($doc['archivo_pdf']) && ConfigService::existeArchivoFisico($doc['archivo_pdf']);
+                                ?>
                                     <tr style="background: rgba(255, 255, 255, 0.45); transition: all 0.2s ease; border-radius: 8px;">
                                          <td class="pst-td-title" style="padding: 0.85rem 1rem; border-radius: 8px 0 0 8px;">
                                              <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
@@ -518,7 +568,7 @@ if (typeof window.mammoth === 'undefined') {
                                                  </button>
 
                                                  <!-- Opción 5: Descargar Documento Adjunto -->
-                                                 <?php if (!empty($doc['archivo_pdf'])): ?>
+                                                 <?php if (!empty($doc['archivo_pdf']) && !empty($doc['archivo_existe'])): ?>
                                                      <a href="?ruta=ver-pdf-pst&id=<?= $doc['id'] ?>" target="_blank" class="btn-action-edit" style="background: rgba(80, 89, 132, 0.1); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25); border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700; text-decoration: none;" title="Descargar / Abrir Documento Digital">
                                                          <i class="ph ph-download-simple"></i> Adjunto
                                                      </a>
@@ -552,21 +602,12 @@ if (typeof window.mammoth === 'undefined') {
 
                 <!-- Paginador de Gestión Documental -->
                 <?php if (!empty($pagination) && $pagination['total_pages'] > 1): ?>
-                    <div class="pst-pagination" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-                        <?php 
-                        $opcionesSelectorAdmin = ConfigService::get('paginacion.opciones_selector', [5, 10, 15, 20, 50]);
-                        $currLimitAdmin = (int)($_GET['limit'] ?? ConfigService::get('paginacion.limite_catalogo', 10));
-                        ?>
-                        <div style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; color: var(--texto-silenciado);">
-                            <span>Mostrar:</span>
-                            <select onchange="window.location.href='?ruta=agregar-documento&limit=' + this.value + '&page=1'" style="padding: 2px 6px; font-size: 0.78rem; font-weight: 700; border-radius: 4px; border: 1px solid #cbd5e1; background: white; cursor: pointer;">
-                                <?php foreach ($opcionesSelectorAdmin as $opt): ?>
-                                    <option value="<?= $opt ?>" <?= $currLimitAdmin === (int)$opt ? 'selected' : '' ?>><?= $opt ?> por pág.</option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
+                    <div class="pst-pagination" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; padding-top: 0.75rem;">
+                        <span style="font-size: 0.82rem; font-weight: 700; color: var(--texto-silenciado, #64748B);">
+                            Página <?= $pagination['current_page'] ?> de <?= $pagination['total_pages'] ?> (Total: <?= $pagination['total_items'] ?> documentos)
+                        </span>
 
-                        <div>
+                        <div style="display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap;">
                             <?php 
                             $query_params = $_GET;
                             unset($query_params['page']); 
@@ -580,25 +621,39 @@ if (typeof window.mammoth === 'undefined') {
                             $tot = $pagination['total_pages'];
                             ?>
                         
-                        <?php if ($curr > 1): ?>
-                            <a href="<?= $build_url($curr - 1) ?>" class="page-link">&laquo; Anterior</a>
-                        <?php else: ?>
-                            <span class="page-link disabled">&laquo; Anterior</span>
-                        <?php endif; ?>
-                        
-                        <?php for ($i = 1; $i <= $tot; $i++): ?>
-                            <?php if ($i == $curr): ?>
-                                <span class="page-link active"><?= $i ?></span>
+                            <?php if ($curr > 1): ?>
+                                <a href="<?= $build_url($curr - 1) ?>" class="page-link">&laquo; Anterior</a>
                             <?php else: ?>
-                                <a href="<?= $build_url($i) ?>" class="page-link"><?= $i ?></a>
+                                <span class="page-link disabled">&laquo; Anterior</span>
                             <?php endif; ?>
-                        <?php endfor; ?>
-                        
-                        <?php if ($curr < $tot): ?>
-                            <a href="<?= $build_url($curr + 1) ?>" class="page-link">Siguiente &raquo;</a>
-                        <?php else: ?>
-                            <span class="page-link disabled">Siguiente &raquo;</span>
-                        <?php endif; ?>
+                            
+                            <?php 
+                            $rangoInicio = max(1, $curr - 2);
+                            $rangoFin = min($tot, $curr + 2);
+                            if ($rangoInicio > 1): ?>
+                                <a href="<?= $build_url(1) ?>" class="page-link">1</a>
+                                <?php if ($rangoInicio > 2): ?><span class="page-link disabled">...</span><?php endif; ?>
+                            <?php endif; ?>
+
+                            <?php for ($i = $rangoInicio; $i <= $rangoFin; $i++): ?>
+                                <?php if ($i == $curr): ?>
+                                    <span class="page-link active"><?= $i ?></span>
+                                <?php else: ?>
+                                    <a href="<?= $build_url($i) ?>" class="page-link"><?= $i ?></a>
+                                <?php endif; ?>
+                            <?php endfor; ?>
+
+                            <?php if ($rangoFin < $tot): ?>
+                                <?php if ($rangoFin < $tot - 1): ?><span class="page-link disabled">...</span><?php endif; ?>
+                                <a href="<?= $build_url($tot) ?>" class="page-link"><?= $tot ?></a>
+                            <?php endif; ?>
+                            
+                            <?php if ($curr < $tot): ?>
+                                <a href="<?= $build_url($curr + 1) ?>" class="page-link">Siguiente &raquo;</a>
+                            <?php else: ?>
+                                <span class="page-link disabled">Siguiente &raquo;</span>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 <?php endif; ?>
 
@@ -1153,7 +1208,38 @@ function guardarBorradorEnCola() {
     mostrarModalAlerta('success', 'Borrador Guardado', `Borrador actualizado en cola para el archivo "${nombre}".`);
 }
 
+function sincronizarCedulasPST() {
+    // Autores
+    const autorRows = document.querySelectorAll('.authors-container .grid-2-cols');
+    autorRows.forEach(row => {
+        const tipoEl = row.querySelector('.autor-cedula-tipo');
+        const numEl = row.querySelector('.autor-cedula-num');
+        const hiddenEl = row.querySelector('.autor-cedula-hidden');
+        if (tipoEl && numEl && hiddenEl) {
+            const num = numEl.value.trim().replace(/\D/g, '');
+            hiddenEl.value = num ? (tipoEl.value + num) : '';
+        }
+    });
+
+    // Tutores
+    const tutorPairs = [
+        ['tutor_academico_tipo', 'tutor_academico_num', 'tutor_academico_cedula'],
+        ['tutor_institucional_tipo', 'tutor_institucional_num', 'tutor_institucional_cedula'],
+        ['tutor_comunitario_tipo', 'tutor_comunitario_num', 'tutor_comunitario_cedula']
+    ];
+    tutorPairs.forEach(([tId, nId, hId]) => {
+        const tEl = document.getElementById(tId);
+        const nEl = document.getElementById(nId);
+        const hEl = document.getElementById(hId);
+        if (tEl && nEl && hEl) {
+            const num = nEl.value.trim().replace(/\D/g, '');
+            hEl.value = num ? (tEl.value + num) : '';
+        }
+    });
+}
+
 function obtenerDatosFormularioActual() {
+    sincronizarCedulasPST();
     const autores = [];
     const cedulaInputs = document.getElementsByName('autor_cedula[]');
     const nombreInputs = document.getElementsByName('autor_nombre[]');
@@ -1359,27 +1445,65 @@ function rellenarFormulario(data) {
     if (data.palabras_clave !== undefined) document.getElementById('palabras_clave').value = data.palabras_clave || '';
     if (data.comunidad_beneficiada !== undefined) document.getElementById('comunidad_beneficiada').value = data.comunidad_beneficiada || '';
 
-    const cedulaInputs = document.getElementsByName('autor_cedula[]');
+    const autorRows = document.querySelectorAll('.authors-container .grid-2-cols');
     const nombreInputs = document.getElementsByName('autor_nombre[]');
-    for (let k = 0; k < cedulaInputs.length; k++) {
-        cedulaInputs[k].value = '';
-        nombreInputs[k].value = '';
+    for (let k = 0; k < autorRows.length; k++) {
+        const tipoEl = autorRows[k].querySelector('.autor-cedula-tipo');
+        const numEl = autorRows[k].querySelector('.autor-cedula-num');
+        const hiddenEl = autorRows[k].querySelector('.autor-cedula-hidden');
+        if (tipoEl) tipoEl.value = 'V-';
+        if (numEl) numEl.value = '';
+        if (hiddenEl) hiddenEl.value = '';
+        if (nombreInputs[k]) nombreInputs[k].value = '';
     }
     if (data.autores && Array.isArray(data.autores)) {
         data.autores.forEach((autor, idx) => {
-            if (idx < cedulaInputs.length) {
-                cedulaInputs[idx].value = autor.cedula || '';
-                nombreInputs[idx].value = autor.nombre || autor.nombre_completo || '';
+            if (idx < autorRows.length) {
+                let rawCed = String(autor.cedula || '').trim();
+                let tipo = 'V-';
+                if (rawCed.toUpperCase().startsWith('E-')) {
+                    tipo = 'E-';
+                    rawCed = rawCed.substring(2);
+                } else if (rawCed.toUpperCase().startsWith('V-')) {
+                    tipo = 'V-';
+                    rawCed = rawCed.substring(2);
+                }
+                const num = rawCed.replace(/\D/g, '');
+                const tipoEl = autorRows[idx].querySelector('.autor-cedula-tipo');
+                const numEl = autorRows[idx].querySelector('.autor-cedula-num');
+                const hiddenEl = autorRows[idx].querySelector('.autor-cedula-hidden');
+                if (tipoEl) tipoEl.value = tipo;
+                if (numEl) numEl.value = num;
+                if (hiddenEl) hiddenEl.value = num ? (tipo + num) : '';
+                if (nombreInputs[idx]) nombreInputs[idx].value = autor.nombre || autor.nombre_completo || '';
             }
         });
     }
 
-    const getElem = (name) => document.getElementsByName(name)[0];
-    if (getElem('tutor_academico_cedula')) getElem('tutor_academico_cedula').value = data.tutor_academico_cedula || '';
+    const setTutorVal = (tId, nId, hId, rawVal) => {
+        let rawCed = String(rawVal || '').trim();
+        let tipo = 'V-';
+        if (rawCed.toUpperCase().startsWith('E-')) {
+            tipo = 'E-';
+            rawCed = rawCed.substring(2);
+        } else if (rawCed.toUpperCase().startsWith('V-')) {
+            tipo = 'V-';
+            rawCed = rawCed.substring(2);
+        }
+        const num = rawCed.replace(/\D/g, '');
+        const tEl = document.getElementById(tId);
+        const nEl = document.getElementById(nId);
+        const hEl = document.getElementById(hId);
+        if (tEl) tEl.value = tipo;
+        if (nEl) nEl.value = num;
+        if (hEl) hEl.value = num ? (tipo + num) : '';
+    };
+
+    setTutorVal('tutor_academico_tipo', 'tutor_academico_num', 'tutor_academico_cedula', data.tutor_academico_cedula);
     if (getElem('tutor_academico_nombre')) getElem('tutor_academico_nombre').value = data.tutor_academico_nombre || '';
-    if (getElem('tutor_institucional_cedula')) getElem('tutor_institucional_cedula').value = data.tutor_institucional_cedula || '';
+    setTutorVal('tutor_institucional_tipo', 'tutor_institucional_num', 'tutor_institucional_cedula', data.tutor_institucional_cedula);
     if (getElem('tutor_institucional_nombre')) getElem('tutor_institucional_nombre').value = data.tutor_institucional_nombre || '';
-    if (getElem('tutor_comunitario_cedula')) getElem('tutor_comunitario_cedula').value = data.tutor_comunitario_cedula || '';
+    setTutorVal('tutor_comunitario_tipo', 'tutor_comunitario_num', 'tutor_comunitario_cedula', data.tutor_comunitario_cedula);
     if (getElem('tutor_comunitario_nombre')) getElem('tutor_comunitario_nombre').value = data.tutor_comunitario_nombre || '';
 
     const carreraSelect = document.getElementById('id_carrera');
@@ -1851,11 +1975,13 @@ function cerrarModalPrevisualizacion() {
 
 // AUTOCOMPLETADO DE NOMBRES DE AUTORES Y TUTORES AL INGRESAR LA CÉDULA
 function inicializarAutocompletadoCedulas() {
-    const bindCedulaBlur = (inputElem, nomElem, tipoPersona) => {
-        if (!inputElem || !nomElem) return;
-        inputElem.addEventListener('blur', function() {
-            const ced = this.value.trim();
-            if (ced.length >= 5 && (!nomElem.value || nomElem.value.trim() === '')) {
+    const bindCedulaBlur = (tipoElem, numElem, nomElem, tipoPersona) => {
+        if (!numElem || !nomElem) return;
+        const ejecutarBusqueda = () => {
+            const num = numElem.value.trim().replace(/\D/g, '');
+            const tipo = tipoElem ? tipoElem.value : 'V-';
+            const ced = num ? (tipo + num) : '';
+            if (num.length >= 6 && (!nomElem.value || nomElem.value.trim() === '')) {
                 fetch(`?ruta=agregar-documento&accion=buscar_cedula&cedula=${encodeURIComponent(ced)}&tipo=${tipoPersona}`)
                     .then(res => res.json())
                     .then(data => {
@@ -1868,25 +1994,29 @@ function inicializarAutocompletadoCedulas() {
                     })
                     .catch(err => console.error('Error al autocompletar persona:', err));
             }
-        });
+        };
+        numElem.addEventListener('blur', ejecutarBusqueda);
     };
 
     // Autores principales
-    const cedulaInputs = document.getElementsByName('autor_cedula[]');
-    const nombreInputs = document.getElementsByName('autor_nombre[]');
-    for (let i = 0; i < cedulaInputs.length; i++) {
-        bindCedulaBlur(cedulaInputs[i], nombreInputs[i], 'autor');
-    }
+    const autorRows = document.querySelectorAll('.authors-container .grid-2-cols');
+    autorRows.forEach(row => {
+        const tipoEl = row.querySelector('.autor-cedula-tipo');
+        const numEl = row.querySelector('.autor-cedula-num');
+        const nomEl = row.querySelector('input[name="autor_nombre[]"]');
+        bindCedulaBlur(tipoEl, numEl, nomEl, 'autor');
+    });
 
     // Tutores
-    const bindTutor = (cedName, nomName) => {
-        const c = document.getElementsByName(cedName)[0];
+    const bindTutor = (tipoId, numId, nomName) => {
+        const t = document.getElementById(tipoId);
+        const c = document.getElementById(numId);
         const n = document.getElementsByName(nomName)[0];
-        if (c && n) bindCedulaBlur(c, n, 'tutor');
+        if (c && n) bindCedulaBlur(t, c, n, 'tutor');
     };
-    bindTutor('tutor_academico_cedula', 'tutor_academico_nombre');
-    bindTutor('tutor_institucional_cedula', 'tutor_institucional_nombre');
-    bindTutor('tutor_comunitario_cedula', 'tutor_comunitario_nombre');
+    bindTutor('tutor_academico_tipo', 'tutor_academico_num', 'tutor_academico_nombre');
+    bindTutor('tutor_institucional_tipo', 'tutor_institucional_num', 'tutor_institucional_nombre');
+    bindTutor('tutor_comunitario_tipo', 'tutor_comunitario_num', 'tutor_comunitario_nombre');
 }
 
 // PRUEBAS DE EXTRACCIÓN DE TEXTO (SIMULACIÓN DE EXTRACCIÓN DE METADATOS)
@@ -1932,6 +2062,14 @@ function simularExtraccionModal() {
 // Disparador de mensajes del servidor al cargar la página
 document.addEventListener('DOMContentLoaded', () => {
     inicializarAutocompletadoCedulas();
+
+    const formPst = document.getElementById('formSubidaPst');
+    if (formPst) {
+        formPst.addEventListener('submit', function() {
+            sincronizarCedulasPST();
+        });
+    }
+
     <?php if (!empty($error)): ?>
         mostrarModalAlerta('error', 'Atención / Error', <?= json_encode($error) ?>);
     <?php endif; ?>
@@ -2123,7 +2261,7 @@ function abrirModalPrevisualizarFichaAdmin(doc) {
 
     const btnAdjuntoWrapper = document.getElementById('modalFichaAdjuntoWrapper');
     const btnAdjunto = document.getElementById('btnModalFichaVerAdjunto');
-    if (doc.archivo_pdf) {
+    if (doc.archivo_pdf && doc.archivo_existe) {
         btnAdjunto.href = '?ruta=ver-pdf-pst&id=' + doc.id;
         btnAdjuntoWrapper.style.display = 'block';
     } else {

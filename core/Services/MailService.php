@@ -284,4 +284,59 @@ class MailService {
         </html>
         ";
     }
+
+    /**
+     * Valida la estructura sintáctica del correo con PHPMailer y verifica la existencia del dominio en DNS.
+     *
+     * @param string $email Correo a verificar
+     * @param bool $verificarDns Si se debe comprobar la existencia del dominio en servidores DNS
+     * @return array ['valido' => bool, 'mensaje' => string, 'email' => string]
+     */
+    public static function validarEmail(string $email, bool $verificarDns = true): array {
+        $email = strtolower(trim($email));
+
+        if (empty($email)) {
+            return ['valido' => false, 'mensaje' => 'El correo electrónico no puede estar vacío.', 'email' => ''];
+        }
+
+        // 1. Validación de sintaxis básica PHP
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['valido' => false, 'mensaje' => "El correo '{$email}' no posee un formato sintáctico válido.", 'email' => $email];
+        }
+
+        // 2. Validación estricta con PHPMailer (RFC 5322)
+        if (class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+            if (!PHPMailer::validateAddress($email, 'html5') && !PHPMailer::validateAddress($email, 'php')) {
+                return ['valido' => false, 'mensaje' => "El formato de correo no cumple con los estándares RFC.", 'email' => $email];
+            }
+        }
+
+        // 3. Comprobación del dominio y registros MX / A
+        if ($verificarDns) {
+            $partes = explode('@', $email);
+            $dominio = end($partes);
+
+            if (empty($dominio)) {
+                return ['valido' => false, 'mensaje' => 'El correo debe contener un dominio tras el símbolo @.', 'email' => $email];
+            }
+
+            // Excluir dominios locales de desarrollo
+            $dominiosLocales = ['localhost', 'local', 'test', 'example.com'];
+            if (!in_array($dominio, $dominiosLocales, true) && function_exists('checkdnsrr')) {
+                $tieneMx = @checkdnsrr($dominio, 'MX');
+                $tieneA  = @checkdnsrr($dominio, 'A');
+
+                if (!$tieneMx && !$tieneA) {
+                    return [
+                        'valido' => false,
+                        'mensaje' => "El dominio '@{$dominio}' no existe o no dispone de servidores de correo activos.",
+                        'email' => $email
+                    ];
+                }
+            }
+        }
+
+        return ['valido' => true, 'mensaje' => 'Correo válido y verificado.', 'email' => $email];
+    }
 }
+

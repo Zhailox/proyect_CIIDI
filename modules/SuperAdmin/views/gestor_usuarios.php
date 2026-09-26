@@ -426,10 +426,17 @@ if (isset($privilegios)) {
             <button type="button" onclick="toggleModalCrearUsuario(false)" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b;">✕</button>
         </div>
 
-        <form action="crear-usuario" method="POST" style="display: flex; flex-direction: column; gap: 0.85rem;">
+        <form action="crear-usuario" method="POST" style="display: flex; flex-direction: column; gap: 0.85rem;" onsubmit="actualizarCedulaCrearUsuario()">
             <div>
                 <label style="font-size: 0.78rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 4px;">Cédula de Identidad</label>
-                <input type="text" name="cedula" class="sa-filter-input" placeholder="Ej: V-12345678" required style="width: 100%; box-sizing: border-box;">
+                <div style="display: flex; gap: 0.5rem; align-items: stretch;">
+                    <select id="crear_usr_cedula_tipo" class="sa-filter-input" style="width: 80px; flex-shrink: 0; cursor: pointer; font-weight: 700;" onchange="actualizarCedulaCrearUsuario()">
+                        <option value="V-">V-</option>
+                        <option value="E-">E-</option>
+                    </select>
+                    <input type="text" inputmode="numeric" id="crear_usr_cedula_num" class="sa-filter-input" placeholder="Ej: 12345678" required maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); actualizarCedulaCrearUsuario();" style="flex: 1; box-sizing: border-box;">
+                    <input type="hidden" name="cedula" id="crear_usr_cedula_hidden">
+                </div>
             </div>
 
             <div>
@@ -439,7 +446,8 @@ if (isset($privilegios)) {
 
             <div>
                 <label style="font-size: 0.78rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 4px;">Correo Electrónico</label>
-                <input type="email" name="email" class="sa-filter-input" placeholder="ejemplo@upttmbi.edu.ve" required style="width: 100%; box-sizing: border-box;">
+                <input type="email" name="email" id="crear_usr_email" class="sa-filter-input" placeholder="ejemplo@upttmbi.edu.ve" required style="width: 100%; box-sizing: border-box;" onblur="validarEmailEnVivo(this, 'msg_email_crear')" oninput="limpiarMensajeEmail('msg_email_crear')">
+                <div id="msg_email_crear" style="font-size: 0.73rem; margin-top: 4px; display: none;"></div>
             </div>
 
             <div>
@@ -483,19 +491,22 @@ if (isset($privilegios)) {
 
         <form action="procesar-edicion-usuario"
               method="POST"
-              style="display: flex; flex-direction: column; gap: 0.85rem;">
+              style="display: flex; flex-direction: column; gap: 0.85rem;"
+              onsubmit="actualizarCedulaEditarUsuario()">
 
             <input type="hidden" name="usuario_id" id="editarUsuarioId">
             <input type="hidden" name="cedula_original" id="editarCedulaOriginal">
 
             <div>
-                <label>Cédula de Identidad</label>
-                <input type="text"
-                       name="cedula"
-                       id="editarCedula"
-                       class="sa-filter-input"
-                       required
-                       style="width: 100%; box-sizing: border-box;">
+                <label style="font-size: 0.78rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 4px;">Cédula de Identidad</label>
+                <div style="display: flex; gap: 0.5rem; align-items: stretch;">
+                    <select id="editarCedulaTipo" class="sa-filter-input" style="width: 80px; flex-shrink: 0; cursor: pointer; font-weight: 700;" onchange="actualizarCedulaEditarUsuario()">
+                        <option value="V-">V-</option>
+                        <option value="E-">E-</option>
+                    </select>
+                    <input type="text" inputmode="numeric" id="editarCedulaNum" class="sa-filter-input" placeholder="Ej: 12345678" required maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); actualizarCedulaEditarUsuario();" style="flex: 1; box-sizing: border-box;">
+                    <input type="hidden" name="cedula" id="editarCedula">
+                </div>
             </div>
 
             <div>
@@ -515,7 +526,10 @@ if (isset($privilegios)) {
                        id="editarEmail"
                        class="sa-filter-input"
                        required
-                       style="width: 100%; box-sizing: border-box;">
+                       style="width: 100%; box-sizing: border-box;"
+                       onblur="validarEmailEnVivo(this, 'msg_email_editar', document.getElementById('editarId').value)"
+                       oninput="limpiarMensajeEmail('msg_email_editar')">
+                <div id="msg_email_editar" style="font-size: 0.73rem; margin-top: 4px; display: none;"></div>
             </div>
 
             <div>
@@ -621,6 +635,48 @@ if (isset($privilegios)) {
     <input type="hidden" name="nivel" id="inputEliminarNivel" value="">
 </form>
 <script>
+function validarEmailEnVivo(inputEl, msgBoxId, excluirId = 0) {
+    const val = inputEl.value.trim();
+    const msgBox = document.getElementById(msgBoxId);
+    if (!msgBox || !val) return;
+
+    if (!val.includes('@') || !val.includes('.')) {
+        msgBox.style.display = 'block';
+        msgBox.style.color = '#dc2626';
+        msgBox.innerHTML = '<i class="ph-bold ph-warning-circle"></i> Formato de correo no válido.';
+        return;
+    }
+
+    msgBox.style.display = 'block';
+    msgBox.style.color = '#0284c7';
+    msgBox.innerHTML = '<i class="ph-bold ph-spinner"></i> Comprobando disponibilidad del correo...';
+
+    const url = 'verificar-email-usuario?email=' + encodeURIComponent(val) + (excluirId ? '&excluir_id=' + encodeURIComponent(excluirId) : '');
+
+    fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            if (!data.valido || !data.disponible) {
+                msgBox.style.color = '#dc2626';
+                msgBox.innerHTML = '<i class="ph-bold ph-x-circle"></i> ' + data.mensaje;
+            } else {
+                msgBox.style.color = '#16a34a';
+                msgBox.innerHTML = '<i class="ph-bold ph-check-circle"></i> ' + data.mensaje;
+            }
+        })
+        .catch(() => {
+            msgBox.style.display = 'none';
+        });
+}
+
+function limpiarMensajeEmail(msgBoxId) {
+    const msgBox = document.getElementById(msgBoxId);
+    if (msgBox) {
+        msgBox.style.display = 'none';
+        msgBox.innerHTML = '';
+    }
+}
+
 function switchUserTab(tabId, btnElement) {
     const tabs = document.querySelectorAll('.sa-tab-content');
     tabs.forEach(tab => {
@@ -801,10 +857,47 @@ function toggleModalCrearRol(show) {
     }
 }
 
+function actualizarCedulaCrearUsuario() {
+    const tipo = document.getElementById('crear_usr_cedula_tipo')?.value || 'V-';
+    const num = document.getElementById('crear_usr_cedula_num')?.value.trim().replace(/\D/g, '') || '';
+    const hidden = document.getElementById('crear_usr_cedula_hidden');
+    if (hidden) hidden.value = num ? (tipo + num) : '';
+}
+
+function actualizarCedulaEditarUsuario() {
+    const tipo = document.getElementById('editarCedulaTipo')?.value || 'V-';
+    const num = document.getElementById('editarCedulaNum')?.value.trim().replace(/\D/g, '') || '';
+    const hidden = document.getElementById('editarCedula');
+    if (hidden) hidden.value = num ? (tipo + num) : '';
+}
+
+function actualizarCedulaInvitarDocente() {
+    const tipo = document.getElementById('invitar_docente_tipo')?.value || 'V-';
+    const num = document.getElementById('invitar_docente_num')?.value.trim().replace(/\D/g, '') || '';
+    const hidden = document.getElementById('invitar_docente_hidden');
+    if (hidden) hidden.value = num ? (tipo + num) : '';
+}
+
 function abrirModalEditarUsuario(usuario) {
     document.getElementById('editarUsuarioId').value = usuario.id;
     document.getElementById('editarCedulaOriginal').value = usuario.cedula;
-    document.getElementById('editarCedula').value = usuario.cedula;
+
+    let rawCed = String(usuario.cedula || '').trim();
+    let tipo = 'V-';
+    if (rawCed.toUpperCase().startsWith('E-')) {
+        tipo = 'E-';
+        rawCed = rawCed.substring(2);
+    } else if (rawCed.toUpperCase().startsWith('V-')) {
+        tipo = 'V-';
+        rawCed = rawCed.substring(2);
+    }
+    const num = rawCed.replace(/\D/g, '');
+    const tipoSelect = document.getElementById('editarCedulaTipo');
+    const numInput = document.getElementById('editarCedulaNum');
+    if (tipoSelect) tipoSelect.value = tipo;
+    if (numInput) numInput.value = num;
+    document.getElementById('editarCedula').value = num ? (tipo + num) : '';
+
     document.getElementById('editarNombre').value = usuario.nombre;
     document.getElementById('editarEmail').value = usuario.email;
 
@@ -866,11 +959,18 @@ function toggleModalInvitarProfesor(show) {
             Emita un token de invitación firmado enviado al correo institucional del docente para que defina su propia contraseña y active su cuenta.
         </p>
 
-        <form action="invitar-profesor" method="POST">
+        <form action="invitar-profesor" method="POST" onsubmit="actualizarCedulaInvitarDocente()">
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
             <div style="margin-bottom: 1rem;">
                 <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 4px;">Cédula de Identidad (*):</label>
-                <input type="text" name="cedula" required class="sa-filter-input" style="width: 100%;" placeholder="Ej: V-12345678">
+                <div style="display: flex; gap: 0.5rem; align-items: stretch;">
+                    <select id="invitar_docente_tipo" class="sa-filter-input" style="width: 80px; flex-shrink: 0; cursor: pointer; font-weight: 700;" onchange="actualizarCedulaInvitarDocente()">
+                        <option value="V-">V-</option>
+                        <option value="E-">E-</option>
+                    </select>
+                    <input type="text" inputmode="numeric" id="invitar_docente_num" class="sa-filter-input" placeholder="Ej: 12345678" required maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); actualizarCedulaInvitarDocente();" style="flex: 1; box-sizing: border-box;">
+                    <input type="hidden" name="cedula" id="invitar_docente_hidden">
+                </div>
             </div>
 
             <div style="margin-bottom: 1rem;">
@@ -880,7 +980,10 @@ function toggleModalInvitarProfesor(show) {
 
             <div style="margin-bottom: 1.25rem;">
                 <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 4px;">Correo Institucional (*):</label>
-                <input type="email" name="email" required class="sa-filter-input" style="width: 100%;" placeholder="docente@upttmbi.edu.ve">
+                <input type="email" name="email" id="invitar_email" required class="sa-filter-input" style="width: 100%; box-sizing: border-box;" placeholder="docente@upttmbi.edu.ve"
+                       onblur="validarEmailEnVivo(this, 'msg_email_invitar')"
+                       oninput="limpiarMensajeEmail('msg_email_invitar')">
+                <div id="msg_email_invitar" style="font-size: 0.73rem; margin-top: 4px; display: none;"></div>
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">

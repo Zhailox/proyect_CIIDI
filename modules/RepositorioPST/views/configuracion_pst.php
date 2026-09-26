@@ -323,14 +323,14 @@
                 <div class="config-card">
                     <div class="config-card-header">
                         <h3 class="config-card-title">
-                            <i class="ph ph-file-pdf"></i> Parámetros del Visor PDF
+                            <i class="ph ph-file-text"></i> Parámetros del Visor de Documentos (PDF / Word)
                         </h3>
                     </div>
 
                     <div class="config-switch-row">
                         <label for="switch_mostrar_toolbar" class="config-switch-label" style="cursor: pointer;">
-                            <strong>Mostrar Barra de Herramientas del Visor PDF</strong>
-                            <span>Si se activa, el iframe mostrará botones de navegación, impresión y zoom nativos del navegador.</span>
+                            <strong>Mostrar Barra de Herramientas del Visor (PDF y Word)</strong>
+                            <span>Si se activa, el visor mostrará controles de navegación, zoom e impresión tanto en documentos PDF como en Word (.docx).</span>
                         </label>
                         <label class="switch-toggle">
                             <input type="checkbox" id="switch_mostrar_toolbar" name="mostrar_toolbar" value="1" <?= !empty($config['visor_pdf']['mostrar_toolbar']) ? 'checked' : '' ?>>
@@ -341,7 +341,7 @@
                     <div class="config-switch-row">
                         <label for="switch_permitir_descarga" class="config-switch-label" style="cursor: pointer;">
                             <strong>Permitir Descarga Directa del Documento</strong>
-                            <span>Habilita los botones de descarga de archivos asociados en fichas, buscador y catálogo.</span>
+                            <span>Habilita los botones de descarga en fichas, buscador y catálogo (solo si el archivo físico se encuentra en el servidor).</span>
                         </label>
                         <label class="switch-toggle">
                             <input type="checkbox" id="switch_permitir_descarga" name="permitir_descarga" value="1" <?= !empty($config['visor_pdf']['permitir_descarga']) ? 'checked' : '' ?>>
