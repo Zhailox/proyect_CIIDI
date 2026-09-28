@@ -2,7 +2,6 @@
 // modules/Investigaciones/index.php
 
 require_once CORE_PATH . 'Interfaces/ModuleContract.php';
-require_once __DIR__ . '/../SuperAdmin/services/SystemConfigService.php';
 
 class InvestigacionesModule implements ModuleContract {
 
@@ -23,12 +22,20 @@ class InvestigacionesModule implements ModuleContract {
                 'css'              => ['Investigaciones.css'],
             ],
             'postulaciones-investigacion' => [
+                'controlador_path'  => __DIR__ . '/controllers/InvestigacionController.php',
+                'controlador'       => 'InvestigacionController',
+                'metodo'            => 'mostrarPanelPostulaciones',
+                'vista'             => __DIR__ . '/views/panel_postulaciones.php',
+                'titulo'            => '¿Pueden tus ideas cambiar al mundo?',
+                'css'               => ['Investigaciones.css'],
+                'privilegio_minimo' => 1, // RBAC: solo docentes/admin, estudiantes no acceden
+            ],
+            // API interna: retorna dimensiones de una línea (uso del formulario de investigación)
+            'api-dimensiones-investigacion' => [
                 'controlador_path' => __DIR__ . '/controllers/InvestigacionController.php',
                 'controlador'      => 'InvestigacionController',
-                'metodo'           => 'mostrarPanelPostulaciones',
-                'vista'            => __DIR__ . '/views/panel_postulaciones.php',
-                'titulo'           => '¿Pueden tus ideas cambiar al mundo?',
-                'css'              => ['Investigaciones.css'],
+                'metodo'           => 'apiDimensiones',
+                'es_api'           => true,
             ],
             'investigadores' => [
                 'controlador_path' => __DIR__ . '/controllers/InvestigacionController.php',
@@ -118,26 +125,23 @@ class InvestigacionesModule implements ModuleContract {
     }
 
     public function getMenuConfig(): array {
-        $nivelAdmin = SystemConfigService::get('accesos_modulos.investigaciones.admin', 1);
-        $nivelPublico = SystemConfigService::get('accesos_modulos.investigaciones.publico', 10);
         return [
             [
                 'tipo'        => 'parent',
                 'titulo'      => 'Investigaciones',
                 'icono'       => 'ph-fill ph-flask',
                 'enlace'      => 'investigaciones',
-                'privilegio_minimo' => $nivelPublico,
                 'activadores' => [
                     'investigaciones', 'postulaciones-investigacion', 'investigadores',
                     'mis-investigaciones', 'crear-investigacion', 'editar-investigacion',
                     'mis-postulantes', 'panel-investigaciones-admin',
                 ],
                 'subitems' => [
-                    ['ruta' => 'investigaciones',             'titulo' => 'Cartelera I+D',  'privilegio_minimo' => $nivelPublico],
-                    ['ruta' => 'investigadores',              'titulo' => 'Investigadores',  'privilegio_minimo' => $nivelPublico],
-                    ['ruta' => 'mis-investigaciones',         'titulo' => 'Mis Investigaciones',  'privilegio_minimo' => $nivelAdmin],
-                    ['ruta' => 'mis-postulantes',             'titulo' => 'Mis Postulantes',  'privilegio_minimo' => $nivelAdmin],
-                    ['ruta' => 'panel-investigaciones-admin', 'titulo' => 'Panel Admin I+D',  'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'investigaciones',             'titulo' => 'Cartelera I+D'],
+                    ['ruta' => 'investigadores',              'titulo' => 'Investigadores'],
+                    ['ruta' => 'mis-investigaciones',         'titulo' => 'Mis Investigaciones',  'privilegio_minimo' => 1],
+                    ['ruta' => 'mis-postulantes',             'titulo' => 'Mis Postulantes',       'privilegio_minimo' => 1],
+                    ['ruta' => 'panel-investigaciones-admin', 'titulo' => 'Panel Admin I+D',        'privilegio_minimo' => 2],
                 ],
             ],
         ];

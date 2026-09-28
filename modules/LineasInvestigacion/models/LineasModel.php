@@ -182,6 +182,19 @@ class LineasModel extends QueryBuilder {
     /**
      * Elimina una línea de investigación por ID.
      */
+    
+    public function tieneRecursosAsociados(int $id): bool {
+        $sql = "SELECT COUNT(*) FROM recurso_clasificaciones WHERE id_linea_investigacion = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id]);
+        if ($stmt->fetchColumn() > 0) return true;
+        
+        $sql2 = "SELECT COUNT(*) FROM investigaciones_ofertadas WHERE id_linea = ?";
+        $stmt2 = $this->db->prepare($sql2);
+        $stmt2->execute([$id]);
+        return $stmt2->fetchColumn() > 0;
+    }
+
     public function eliminar(int $id): bool {
         return $this->tabla('lineas_investigacion')
                     ->where('id', '=', $id)

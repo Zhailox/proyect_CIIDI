@@ -61,7 +61,7 @@
         <!-- Controles movidos a la barra de configuraci√≥n abajo -->
     </div>
 
-    <!-- ‚Ä¢‚Äù‚Ä¢‚Ä¢ SECCI‚ÄúN 1: TENDENCIAS (SERIES TEMPORALES) ‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Äî -->
+    <!-- ‚‚Ä¢‚Äù‚‚Ä¢ê‚‚Ä¢ê SECCI√‚ÄúN 1: TENDENCIAS (SERIES TEMPORALES) ‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢‚Äî -->
     <div class="li-form-card" style="margin-bottom: 2rem;">
         <div class="li-form-header">
             <i class="ph-bold ph-chart-line-up" style="color:var(--li-emerald, #10b981);"></i>
@@ -88,14 +88,13 @@
                         <option value="2">2 Trimestres</option>
                         <option value="3">3 Trimestres (1 A√±o Acad√©mico)</option>
                         <option value="4" selected>4 Trimestres</option>
-                        <option value="5">5 Trimestres</option>
                         <option value="6">6 Trimestres (2 A√±os Acad√©micos)</option>
+                        <option value="8">8 Trimestres</option>
+                        <option value="9">9 Trimestres (3 A√±os Acad√©micos)</option>
+                        <option value="12">12 Trimestres (4 A√±os Acad√©micos)</option>
                     </select>
                     <button id="btn-proyectar" style="background: #505984; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-weight: 700; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(80, 89, 132, 0.3); transition: all 0.2s ease; transition: all 0.2s ease;" onmouseover="this.style.background=\'#3C456A\'; this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.background=\'#505984\'; this.style.transform=\'translateY(0)\'">
                         <i class="ph-bold ph-magic-wand" style="font-size: 1.1rem;"></i> Actualizar Modelo
-                    </button>
-                    <button id="btn-descargar-pdf" style="display: none; background: #e11d48; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-weight: 700; font-size: 0.95rem; cursor: pointer; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(225, 29, 72, 0.3); transition: all 0.2s ease;" onmouseover="this.style.background='#be123c'" onmouseout="this.style.background='#e11d48'">
-                        <i class="ph-bold ph-file-pdf" style="font-size: 1.1rem;"></i> Descargar en PDF
                     </button>
                 </div>
             </div>
@@ -112,7 +111,7 @@
                 
                 <!-- Columna Izquierda: Gr√°fico + Insights -->
                 <div>
-                    <!-- Grfico de Adopcin -->
+                    <!-- Gr·fico de Adopcin -->
                     <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); min-width: 0; overflow: hidden; position: relative;">
                         <div style="position: relative; width: 100%;">
                             <canvas id="tendenciasChart" height="280"></canvas>
@@ -145,8 +144,6 @@
 
 </div>
 
-<!-- Cargar html2pdf -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Cargar Chart.js desde CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- Cargar el script que maneja la UI anal√≠tica -->

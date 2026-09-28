@@ -17,7 +17,7 @@ require_once CORE_PATH . 'Security/Auth.php';
     <div class="inv-header-gestion" style="margin-bottom: 2rem;">
         <div>
             <h1 style="font-size: 2rem; font-weight: 800; color: var(--inv-dark); margin: 0; display:flex; align-items:center; gap:0.6rem;">
-                <div style="width:44px; height:44px; border-radius:10px; background: linear-gradient(135deg, #0369A1 0%, #0077BE 100%); color:white; display:flex; align-items:center; justify-content:center; font-size:1.3rem; box-shadow:0 6px 15px rgba(3,105,161,0.3);">
+                <div style="width:44px; height:44px; border-radius:10px; background: linear-gradient(135deg, var(--color-principal, #121a3e) 0%, var(--color-secundario, #505984) 100%); color:white; display:flex; align-items:center; justify-content:center; font-size:1.3rem; box-shadow:0 6px 15px rgba(80, 89, 132, 0.3);">
                     <i class="ph-fill ph-users-three"></i>
                 </div>
                 Postulantes a Mis Proyectos
@@ -30,18 +30,14 @@ require_once CORE_PATH . 'Security/Auth.php';
     </div>
 
     <!-- STATS RÁPIDAS -->
-    <?php if (!empty($postulaciones)): 
-        $pendientes = count(array_filter($postulaciones, fn($p) => $p['estado'] === 'Pendiente'));
-        $aceptados  = count(array_filter($postulaciones, fn($p) => $p['estado'] === 'Aceptado'));
-        $rechazados = count(array_filter($postulaciones, fn($p) => $p['estado'] === 'Rechazado'));
-    ?>
+    <?php if (isset($stats)): ?>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
         <div style="background: white; padding: 1.2rem 1.5rem; border-radius: 14px; border: 1px solid var(--inv-border); border-left: 4px solid #F59E0B; box-shadow: var(--inv-shadow-sm); display:flex; align-items:center; gap:1rem;">
             <div style="width:40px; height:40px; background:#FEF3C7; border-radius:10px; display:flex; align-items:center; justify-content:center;">
                 <i class="ph-fill ph-clock" style="color:#D97706; font-size:1.3rem;"></i>
             </div>
             <div>
-                <div style="font-size:2rem; font-weight:800; color:var(--inv-dark); line-height:1;"><?= $pendientes ?></div>
+                <div style="font-size:2rem; font-weight:800; color:var(--inv-dark); line-height:1;"><?= $stats['pendientes'] ?></div>
                 <div style="font-size:0.78rem; color:var(--inv-muted); font-weight:600; text-transform:uppercase;">Pendientes</div>
             </div>
         </div>
@@ -50,7 +46,7 @@ require_once CORE_PATH . 'Security/Auth.php';
                 <i class="ph-fill ph-check-circle" style="color:#059669; font-size:1.3rem;"></i>
             </div>
             <div>
-                <div style="font-size:2rem; font-weight:800; color:var(--inv-dark); line-height:1;"><?= $aceptados ?></div>
+                <div style="font-size:2rem; font-weight:800; color:var(--inv-dark); line-height:1;"><?= $stats['aceptados'] ?></div>
                 <div style="font-size:0.78rem; color:var(--inv-muted); font-weight:600; text-transform:uppercase;">Aceptados</div>
             </div>
         </div>
@@ -59,7 +55,7 @@ require_once CORE_PATH . 'Security/Auth.php';
                 <i class="ph-fill ph-x-circle" style="color:#DC2626; font-size:1.3rem;"></i>
             </div>
             <div>
-                <div style="font-size:2rem; font-weight:800; color:var(--inv-dark); line-height:1;"><?= $rechazados ?></div>
+                <div style="font-size:2rem; font-weight:800; color:var(--inv-dark); line-height:1;"><?= $stats['rechazados'] ?></div>
                 <div style="font-size:0.78rem; color:var(--inv-muted); font-weight:600; text-transform:uppercase;">Rechazados</div>
             </div>
         </div>
@@ -68,7 +64,7 @@ require_once CORE_PATH . 'Security/Auth.php';
                 <i class="ph-fill ph-users-three" style="color:var(--inv-primary); font-size:1.3rem;"></i>
             </div>
             <div>
-                <div style="font-size:2rem; font-weight:800; color:var(--inv-dark); line-height:1;"><?= count($postulaciones) ?></div>
+                <div style="font-size:2rem; font-weight:800; color:var(--inv-dark); line-height:1;"><?= $stats['total'] ?></div>
                 <div style="font-size:0.78rem; color:var(--inv-muted); font-weight:600; text-transform:uppercase;">Total</div>
             </div>
         </div>
@@ -101,7 +97,7 @@ require_once CORE_PATH . 'Security/Auth.php';
                         <!-- Columna Estudiante -->
                         <td>
                             <div style="display:flex; align-items:center; gap:0.7rem;">
-                                <div style="width:38px; height:38px; border-radius:50%; background: linear-gradient(135deg, #0369A1 0%, #0077BE 100%); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                <div style="width:38px; height:38px; border-radius:50%; background: linear-gradient(135deg, var(--color-principal, #121a3e) 0%, var(--color-secundario, #505984) 100%); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                                     <i class="ph-bold ph-user" style="color:white; font-size:1rem;"></i>
                                 </div>
                                 <div>
@@ -116,16 +112,32 @@ require_once CORE_PATH . 'Security/Auth.php';
 
                         <!-- Columna Proyecto -->
                         <td>
-                            <span style="font-weight: 600; color: #0369A1; font-size:0.9rem;">
-                                <i class="ph-fill ph-flask" style="color:#0369A1;"></i> <?= htmlspecialchars($p['investigacion_titulo']) ?>
+                            <span style="font-weight: 600; color: var(--inv-primary); font-size:0.9rem;">
+                                <i class="ph-fill ph-flask" style="color:var(--inv-primary);"></i> <?= htmlspecialchars($p['investigacion_titulo']) ?>
                             </span>
                         </td>
 
                         <!-- Columna Motivación -->
                         <td style="max-width: 280px;">
-                            <p style="font-size: 0.875rem; color: var(--inv-dark); line-height: 1.5; margin: 0; white-space: pre-wrap; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;" title="<?= htmlspecialchars($p['mensaje_motivacion']) ?>">
-                                <?= htmlspecialchars($p['mensaje_motivacion']) ?>
-                            </p>
+                            <?php 
+                                $texto = htmlspecialchars($p['mensaje_motivacion']);
+                                $separador = "Enlace al Portafolio: ";
+                                $partes = explode($separador, $texto);
+                                $motivacion = trim($partes[0]);
+                                $enlace = isset($partes[1]) ? trim($partes[1]) : '';
+                            ?>
+                            <div style="font-size: 0.875rem; color: var(--inv-dark); line-height: 1.5; margin: 0;">
+                                <div style="display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;" title="<?= $motivacion ?>">
+                                    <?= nl2br($motivacion) ?>
+                                </div>
+                                <?php if (!empty($enlace)): ?>
+                                <div style="margin-top: 0.5rem; font-size:0.8rem;">
+                                    <a href="<?= $enlace ?>" target="_blank" style="color:var(--inv-primary); font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:0.2rem; background:var(--inv-primary-light); padding:0.2rem 0.6rem; border-radius:50px;">
+                                        <i class="ph-bold ph-link"></i> Ver Portafolio
+                                    </a>
+                                </div>
+                                <?php endif; ?>
+                            </div>
                         </td>
 
                         <!-- Columna Estado -->
@@ -177,5 +189,35 @@ require_once CORE_PATH . 'Security/Auth.php';
             </tbody>
         </table>
     </div>
+
+    <!-- PAGINACIÓN -->
+    <?php if (isset($paginacion) && $paginacion['paginas'] > 1): ?>
+    <?php
+    $pagActual = $paginacion['pagina'];
+    $pagTotal  = $paginacion['paginas'];
+    $basePaginacion = "?ruta=mis-postulantes&page=";
+    ?>
+    <div class="inv-pagination">
+        <div class="inv-pag-controls">
+            <?php if ($pagActual > 1): ?>
+            <a href="<?= $basePaginacion . ($pagActual - 1) ?>" class="inv-pag-btn">
+                <i class="ph-bold ph-caret-left"></i>
+            </a>
+            <?php endif; ?>
+
+            <?php for ($i = max(1, $pagActual - 2); $i <= min($pagTotal, $pagActual + 2); $i++): ?>
+            <a href="<?= $basePaginacion . $i ?>" class="inv-pag-btn <?= $i === $pagActual ? 'inv-pag-btn--active' : '' ?>">
+                <?= $i ?>
+            </a>
+            <?php endfor; ?>
+
+            <?php if ($pagActual < $pagTotal): ?>
+            <a href="<?= $basePaginacion . ($pagActual + 1) ?>" class="inv-pag-btn">
+                <i class="ph-bold ph-caret-right"></i>
+            </a>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
 
 </div>

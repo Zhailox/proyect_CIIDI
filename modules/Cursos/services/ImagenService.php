@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // modules/Cursos/services/ImagenService.php
 // Servicio de procesamiento de imágenes para el módulo de Cursos.
 // Ahora acepta los formatos configurados en config_cursos.json.

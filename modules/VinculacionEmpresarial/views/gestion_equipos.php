@@ -1,11 +1,10 @@
+<?php require_once __DIR__ . '/../services/ConfigService.php'; ?>
 <?php
-require_once __DIR__ . '/../models/PropuestaEmpresaModel.php';
-$modelo = new PropuestaEmpresaModel();
-$postulaciones = $modelo->getPostulacionesEmpresariales();
+// Datos provienen de VinculacionController.php
 ?>
 <style>
 /* Estilos para Gestión de Equipos */
-.ge-wrapper { padding: 2rem; width: 100%; margin: 0 auto; font-family: 'Segoe UI', system-ui, sans-serif; }
+.ge-wrapper { padding: 2rem; width: 100%; margin: 0 auto; font-family: 'Inter', 'Segoe UI', sans-serif; }
 .ge-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 1rem; }
 .ge-header h2 { color: #121a3e; margin: 0; font-size: 1.8rem; }
 .ge-header p { color: #64748b; margin: 0.5rem 0 0 0; }
@@ -38,7 +37,10 @@ $postulaciones = $modelo->getPostulacionesEmpresariales();
 .ge-btn-rechazar { background: white; color: #a9a8a6; border: 1px solid #a9a8a6; padding: 0.6rem 1rem; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; width: 100%; text-align: center; }
 .ge-btn-rechazar:hover { background: #f4f7fb; }
 
-/* Tooltip eliminado, ahora usaremos SweetAlert para ver el equipo */
+.ge-pagination-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; }
+.ge-page-btn { background: #f8fafc; border: 1px solid #cbd5e1; padding: 5px 10px; cursor: pointer; border-radius: 4px; color: #475569; }
+.ge-page-btn.active { background: #121a3e; color: white; border-color: #121a3e; }
+.ge-page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>
 
 <div class="ge-wrapper">
@@ -53,27 +55,6 @@ $postulaciones = $modelo->getPostulacionesEmpresariales();
         </div>
     </div>
 
-    <?php 
-    // Extraer Trayectos y Estados únicos
-    $trayectos = [];
-    $estados = ['Pendiente' => 0, 'Aceptado' => 0, 'Rechazado' => 0];
-    foreach ($postulaciones as $p) {
-        $nivel = !empty($p['nivel_trayecto']) ? $p['nivel_trayecto'] : 'General';
-        if (!isset($trayectos[$nivel])) {
-            $trayectos[$nivel] = 0;
-        }
-        $trayectos[$nivel]++;
-        
-        $est = $p['estado'];
-        if (isset($estados[$est])) {
-            $estados[$est]++;
-        } else {
-            $estados[$est] = 1;
-        }
-    }
-    ksort($trayectos);
-    ?>
-
     <?php if (empty($postulaciones)): ?>
         <div style="text-align: center; padding: 5rem 2rem; background: white; border-radius: 12px; border: 1px dashed #cbd5e1;">
             <i class="ph-fill ph-check-circle" style="font-size: 4rem; color: #7090cb; margin-bottom: 1rem;"></i>
@@ -82,12 +63,31 @@ $postulaciones = $modelo->getPostulacionesEmpresariales();
         </div>
     <?php else: ?>
         
-        <!-- Pestañas Filtro: Trayecto -->
+        
+<?php 
+// Extraer líneas y dimensiones únicas para los filtros
+$lineasArray = [];
+$dimensionesArray = [];
+foreach ($postulaciones as $p) {
+    $ln = !empty($p['linea_nombre']) ? $p['linea_nombre'] : 'Sin Línea';
+    $dn = !empty($p['dimension_nombre']) ? $p['dimension_nombre'] : 'Sin Dimensión';
+    
+    if(!isset($lineasArray[$ln])) $lineasArray[$ln] = 0;
+    if(!isset($dimensionesArray[$dn])) $dimensionesArray[$dn] = 0;
+    
+    $lineasArray[$ln]++;
+    $dimensionesArray[$dn]++;
+}
+ksort($lineasArray);
+ksort($dimensionesArray);
+?>
+
+<!-- Pestañas Filtro: Trayecto -->
         <div class="ge-tabs" id="filtro-trayecto">
             <span style="font-size:0.85rem; color:#94a3b8; font-weight:bold; padding: 0.8rem 0; margin-right: 1rem; text-transform:uppercase;">TRAYECTO:</span>
-            <button class="ge-tab-btn active" onclick="setFilter('trayecto', 'Todas', this)">Todas <span style="background:#e2e8f0; padding:2px 6px; border-radius:10px; font-size:0.75rem; margin-left:5px;"><?php echo count($postulaciones); ?></span></button>
+            <button class="ge-tab-btn active" data-filter="trayecto" data-value="Todas">Todas <span style="background:#e2e8f0; padding:2px 6px; border-radius:10px; font-size:0.75rem; margin-left:5px;"><?php echo count($postulaciones); ?></span></button>
             <?php foreach ($trayectos as $nivel => $count): ?>
-                <button class="ge-tab-btn" onclick="setFilter('trayecto', '<?= htmlspecialchars($nivel) ?>', this)">
+                <button class="ge-tab-btn" data-filter="trayecto" data-value="<?= htmlspecialchars($nivel) ?>">
                     <?= htmlspecialchars($nivel) ?> <span style="background:#e2e8f0; padding:2px 6px; border-radius:10px; font-size:0.75rem; margin-left:5px;"><?= $count ?></span>
                 </button>
             <?php endforeach; ?>
@@ -96,17 +96,40 @@ $postulaciones = $modelo->getPostulacionesEmpresariales();
         <!-- Pestañas Filtro: Estado -->
         <div class="ge-tabs" id="filtro-estado" style="border-bottom:none; margin-top:-10px;">
             <span style="font-size:0.85rem; color:#94a3b8; font-weight:bold; padding: 0.8rem 0; margin-right: 1rem; text-transform:uppercase;">ESTADO:</span>
-            <button class="ge-tab-btn" onclick="setFilter('estado', 'Todos', this)">Todos</button>
-            <button class="ge-tab-btn active" onclick="setFilter('estado', 'Pendiente', this)">
+            <button class="ge-tab-btn" data-filter="estado" data-value="Todos">Todos</button>
+            <button class="ge-tab-btn active" data-filter="estado" data-value="Pendiente">
                 En Espera <span style="background:#e2e8f0; padding:2px 6px; border-radius:10px; font-size:0.75rem; margin-left:5px;"><?= $estados['Pendiente'] ?></span>
             </button>
-            <button class="ge-tab-btn" onclick="setFilter('estado', 'Aceptado', this)">
+            <button class="ge-tab-btn" data-filter="estado" data-value="Aceptado">
                 Aceptadas <span style="background:#f4f7fb; color:#505984; padding:2px 6px; border-radius:10px; font-size:0.75rem; margin-left:5px; border:1px solid #7090cb;"><?= $estados['Aceptado'] ?></span>
             </button>
-            <button class="ge-tab-btn" onclick="setFilter('estado', 'Rechazado', this)">
+            <button class="ge-tab-btn" data-filter="estado" data-value="Rechazado">
                 Rechazadas <span style="background:#f4f7fb; color:#a9a8a6; padding:2px 6px; border-radius:10px; font-size:0.75rem; margin-left:5px; border:1px solid #a9a8a6;"><?= $estados['Rechazado'] ?></span>
             </button>
         </div>
+
+        <!-- Filtros Extendidos -->
+        <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 250px;">
+                <label style="font-size:0.85rem; color:#94a3b8; font-weight:bold; display:block; margin-bottom:5px; text-transform:uppercase;">Línea de Investigación:</label>
+                <select id="filtro-linea" class="ge-extended-filter" style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; font-size: 0.95rem; color: #121a3e; outline:none;">
+                    <option value="Todas">Todas las Líneas</option>
+                    <?php foreach($lineasArray as $ln => $c): ?>
+                        <option value="<?= htmlspecialchars($ln) ?>"><?= htmlspecialchars($ln) ?> (<?= $c ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div style="flex: 1; min-width: 250px;">
+                <label style="font-size:0.85rem; color:#94a3b8; font-weight:bold; display:block; margin-bottom:5px; text-transform:uppercase;">Dimensión Operativa:</label>
+                <select id="filtro-dimension" class="ge-extended-filter" style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; font-size: 0.95rem; color: #121a3e; outline:none;">
+                    <option value="Todas">Todas las Dimensiones</option>
+                    <?php foreach($dimensionesArray as $dn => $c): ?>
+                        <option value="<?= htmlspecialchars($dn) ?>"><?= htmlspecialchars($dn) ?> (<?= $c ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+
 
         <!-- Tabla Única con filtrado dinámico -->
         <table class="ge-table" id="tablaEquipos">
@@ -123,7 +146,6 @@ $postulaciones = $modelo->getPostulacionesEmpresariales();
                     $nivelFila = !empty($p['nivel_trayecto']) ? $p['nivel_trayecto'] : 'General';
                     $estadoFila = $p['estado'];
                     
-                    // Construir el HTML de los integrantes centralizado para reutilizar en botón y modal
                     $listaEquipoHTML = '<div style="display:flex; flex-direction:column; gap:5px; text-align:left; margin-top:10px; background:#f8fafc; padding:15px; border-radius:6px; border:1px solid #cbd5e1;">';
                     $listaEquipoHTML .= '<strong style="color:#1e293b; border-bottom:1px solid #e2e8f0; padding-bottom:5px; margin-bottom:5px; font-size:1.1rem;">Integrantes del Proyecto</strong>';
                     $listaEquipoHTML .= '<div style="color:#1e293b; font-size:1rem; margin-top:5px;"><i class="ph-fill ph-star" style="color:#7090cb;"></i> <b>Líder:</b> ' . htmlspecialchars($p['estudiante']) . ' (C.I: ' . htmlspecialchars($p['cedula'] ?? 'N/A') . ')</div>';
@@ -143,7 +165,7 @@ $postulaciones = $modelo->getPostulacionesEmpresariales();
                     }
                     $listaEquipoHTML .= '</div>';
                 ?>
-                <tr class="equipo-row" data-trayecto="<?= htmlspecialchars($nivelFila) ?>" data-estado="<?= htmlspecialchars($estadoFila) ?>">
+                <tr class="equipo-row" data-trayecto="<?= htmlspecialchars($nivelFila) ?>" data-estado="<?= htmlspecialchars($estadoFila) ?>" data-linea="<?= htmlspecialchars(!empty($p['linea_nombre']) ? $p['linea_nombre'] : 'Sin Línea') ?>" data-dimension="<?= htmlspecialchars(!empty($p['dimension_nombre']) ? $p['dimension_nombre'] : 'Sin Dimensión') ?>">
                     <td>
                         <div class="ge-student-info">
                             <span class="ge-student-name" title="Líder del Proyecto">
@@ -154,10 +176,9 @@ $postulaciones = $modelo->getPostulacionesEmpresariales();
                             
                             <?php if ($hasCompaneros): ?>
                                 <div style="margin-top: 0.8rem;">
-                                    <span onclick="verEquipoModal(this)" style="font-size: 0.8rem; color: #505984; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; background: #f4f7fb; padding: 4px 10px; border-radius: 20px; font-weight: 600; border: 1px solid #7090cb; transition: background 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f4f7fb'">
-                                        <i class="ph-bold ph-users-three"></i> +<?= count($equipoArray) ?> Compañeros (Ver detalles)
-                                    </span>
-                                    <input type="hidden" class="equipo-info-data" value="<?php echo htmlspecialchars($listaEquipoHTML, ENT_QUOTES); ?>">
+                                    <button type="button" class="btn-ver-equipo" style="font-size: 0.8rem; color: #505984; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; background: #f4f7fb; padding: 4px 10px; border-radius: 20px; font-weight: 600; border: 1px solid #7090cb; transition: background 0.2s;" data-html="<?php echo htmlspecialchars($listaEquipoHTML, ENT_QUOTES, 'UTF-8'); ?>">
+                                        <i class="ph-bold ph-users-three"></i> +<?= count($equipoArray) ?> Compañeros
+                                    </button>
                                 </div>
                             <?php endif; ?>
                             
@@ -190,10 +211,9 @@ $postulaciones = $modelo->getPostulacionesEmpresariales();
                             $proyectoHTML .= '</div>';
                             ?>
                             <div style="margin-top: 0.8rem;">
-                                <span onclick="verProyectoModal(this)" style="font-size: 0.8rem; color: #505984; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; background: #f4f7fb; padding: 4px 10px; border-radius: 20px; font-weight: 600; border: 1px solid #a9a8a6; transition: background 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f4f7fb'">
+                                <button type="button" class="btn-ver-proyecto" style="font-size: 0.8rem; color: #505984; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; background: #f4f7fb; padding: 4px 10px; border-radius: 20px; font-weight: 600; border: 1px solid #a9a8a6; transition: background 0.2s;" data-html="<?php echo htmlspecialchars($proyectoHTML, ENT_QUOTES, 'UTF-8'); ?>">
                                     <i class="ph-bold ph-info"></i> Detalles de Empresa
-                                </span>
-                                <input type="hidden" class="proyecto-info-data" value="<?php echo htmlspecialchars($proyectoHTML, ENT_QUOTES); ?>">
+                                </button>
                             </div>
                         </div>
                     </td>
@@ -209,19 +229,19 @@ $postulaciones = $modelo->getPostulacionesEmpresariales();
                     <td>
                         <div class="ge-actions">
                             <?php if ($estadoFila === 'Pendiente'): ?>
-                                <form action="?ruta=procesar-asignacion" method="POST" onsubmit="return confirmarAprobacion(event, this);">
+                                <form action="?ruta=procesar-asignacion" method="POST" class="form-aprobar">
                                     <input type="hidden" name="id_postulacion" value="<?php echo $p['id_postulacion']; ?>">
                                     <input type="hidden" name="id_investigacion" value="<?php echo $p['id_investigacion']; ?>">
                                     <input type="hidden" name="estado" value="Aceptado">
-                                    <input type="hidden" class="equipo-html-data" value="<?php echo htmlspecialchars($listaEquipoHTML, ENT_QUOTES); ?>">
-                                    <button type="submit" class="ge-btn-aprobar" title="Aprobar y Asignar Equipo"><i class="ph-bold ph-check"></i> Asignar</button>
+                                    <button type="button" class="ge-btn-aprobar btn-aprobar-action" data-html="<?php echo htmlspecialchars($listaEquipoHTML, ENT_QUOTES, 'UTF-8'); ?>" title="Aprobar y Asignar Equipo"><i class="ph-bold ph-check"></i> Asignar</button>
                                 </form>
                                 
-                                <form action="?ruta=procesar-asignacion" method="POST">
+                                <form action="?ruta=procesar-asignacion" method="POST" id="form-rechazar-<?php echo $p['id_postulacion']; ?>">
                                     <input type="hidden" name="id_postulacion" value="<?php echo $p['id_postulacion']; ?>">
                                     <input type="hidden" name="id_investigacion" value="<?php echo $p['id_investigacion']; ?>">
                                     <input type="hidden" name="estado" value="Rechazado">
-                                    <button type="submit" class="ge-btn-rechazar" title="Rechazar Postulación"><i class="ph-bold ph-x"></i> Rechazar</button>
+                                    <input type="hidden" name="motivo_rechazo" id="motivo-rechazo-<?php echo $p['id_postulacion']; ?>" value="">
+                                    <button type="button" class="ge-btn-rechazar" title="Rechazar Postulación" onclick="confirmarRechazo(<?php echo $p['id_postulacion']; ?>)"><i class="ph-bold ph-x"></i> Rechazar</button>
                                 </form>
                             <?php elseif ($estadoFila === 'Aceptado'): ?>
                                 <div style="background:#f4f7fb; color:#505984; padding:10px; border-radius:6px; text-align:center; font-weight:bold; font-size:0.9rem; border:1px solid #505984;">
@@ -239,113 +259,247 @@ $postulaciones = $modelo->getPostulacionesEmpresariales();
             </tbody>
         </table>
         
+        <div id="ge-pagination-container" class="ge-pagination-controls"></div>
+        
     <?php endif; ?>
 </div>
 
 <script>
-let currentTrayecto = 'Todas';
-let currentEstado = 'Pendiente';
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Modales Seguros (XSS Prevented)
+    const btnsEquipo = document.querySelectorAll('.btn-ver-equipo');
+    btnsEquipo.forEach(btn => {
+        btn.addEventListener('click', function() {
+            Swal.fire({
+                title: 'Detalles del Equipo',
+                html: this.getAttribute('data-html'),
+                icon: 'info',
+                confirmButtonColor: '#505984',
+                iconColor: '#505984'
+            });
+        });
+    });
 
-function setFilter(type, value, btn) {
-    if (type === 'trayecto') {
-        currentTrayecto = value;
-        const botones = document.querySelectorAll('#filtro-trayecto .ge-tab-btn');
-        botones.forEach(b => b.classList.remove('active'));
-    } else {
-        currentEstado = value;
-        const botones = document.querySelectorAll('#filtro-estado .ge-tab-btn');
-        botones.forEach(b => b.classList.remove('active'));
+    const btnsProyecto = document.querySelectorAll('.btn-ver-proyecto');
+    btnsProyecto.forEach(btn => {
+        btn.addEventListener('click', function() {
+            Swal.fire({
+                title: 'Detalles de Empresa',
+                html: this.getAttribute('data-html'),
+                icon: 'info',
+                confirmButtonColor: '#505984',
+                iconColor: '#505984'
+            });
+        });
+    });
+
+    const btnsAprobar = document.querySelectorAll('.btn-aprobar-action');
+    btnsAprobar.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const form = this.closest('.form-aprobar');
+            const equipoHtml = this.getAttribute('data-html');
+            
+            Swal.fire({
+                title: '¿Asignar este equipo?',
+                html: `
+                    <p style="font-size:0.95rem; color:#475569; margin-bottom:15px;">
+                        Al aprobar esta postulación, los demás equipos que hayan aplicado a este mismo proyecto serán <strong>rechazados automáticamente</strong>.
+                    </p>
+                    ${equipoHtml}
+                `,
+                icon: 'warning',
+                iconColor: '#505984',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Sí, aprobar y asignar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+    });
+
+    window.confirmarRechazo = function(idPostulacion) {
+        Swal.fire({
+            title: '¿Rechazar postulación?',
+            text: 'Ingresa el motivo del rechazo para informar al equipo:',
+            input: 'textarea',
+            inputPlaceholder: 'Ej: El equipo no cumple con los requerimientos técnicos.',
+            icon: 'warning',
+            iconColor: '#e11d48',
+            showCancelButton: true,
+            confirmButtonColor: '#e11d48',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: 'Sí, rechazar',
+            cancelButtonText: 'Cancelar',
+            preConfirm: (motivo) => {
+                if (!motivo || motivo.trim() === '') {
+                    Swal.showValidationMessage('El motivo del rechazo es obligatorio');
+                }
+                return motivo;
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('motivo-rechazo-' + idPostulacion).value = result.value;
+                document.getElementById('form-rechazar-' + idPostulacion).submit();
+            }
+        });
+    };
+
+    // 2. Lógica de Paginación y Filtros (Client-Side)
+    const rows = Array.from(document.querySelectorAll('.equipo-row'));
+    let filteredRows = [...rows];
+    let currentPage = 1;
+    const itemsPerPage = <?= htmlspecialchars(VinculacionConfigService::get('paginacion_gestion', 8)) ?>;
+    const paginationContainer = document.getElementById('ge-pagination-container');
+    
+
+    let activeFilter = {
+        'trayecto': 'Todas',
+        'estado': 'Pendiente',
+        'linea': 'Todas',
+        'dimension': 'Todas'
+    };
+
+    // Listeners para selects
+    document.getElementById('filtro-linea').addEventListener('change', function() {
+        activeFilter.linea = this.value;
+        currentPage = 1;
+        renderTable();
+    });
+    
+    document.getElementById('filtro-dimension').addEventListener('change', function() {
+        activeFilter.dimension = this.value;
+        currentPage = 1;
+        renderTable();
+    });
+
+
+    function renderTable() {
+        // Calcular conteos dinámicos
+        const countsTrayecto = { 'Todas': 0 };
+        const countsEstado = { 'Todos': 0 };
+        
+        // Inicializar contadores a 0 basados en los botones existentes
+        document.querySelectorAll('.ge-tab-btn[data-filter="trayecto"]').forEach(b => {
+            countsTrayecto[b.getAttribute('data-value')] = 0;
+        });
+        document.querySelectorAll('.ge-tab-btn[data-filter="estado"]').forEach(b => {
+            countsEstado[b.getAttribute('data-value')] = 0;
+        });
+
+        // Contar las filas que harían match si se seleccionara ese filtro
+        rows.forEach(r => {
+            const tr = r.getAttribute('data-trayecto');
+            const es = r.getAttribute('data-estado');
+            
+            // Para el filtro de Trayectos (dejamos fijo el estado actual)
+            if (activeFilter.estado === 'Todos' || es === activeFilter.estado) {
+                countsTrayecto['Todas']++;
+                if (countsTrayecto[tr] !== undefined) countsTrayecto[tr]++;
+            }
+            
+            // Para el filtro de Estados (dejamos fijo el trayecto actual)
+            if (activeFilter.trayecto === 'Todas' || tr === activeFilter.trayecto) {
+                countsEstado['Todos']++;
+                if (countsEstado[es] !== undefined) countsEstado[es]++;
+            }
+        });
+
+        // Actualizar el DOM de los botones (buscar el span interno)
+        document.querySelectorAll('.ge-tab-btn[data-filter="trayecto"]').forEach(b => {
+            const val = b.getAttribute('data-value');
+            const span = b.querySelector('span');
+            if (span) {
+                span.textContent = countsTrayecto[val] || 0;
+            }
+        });
+        document.querySelectorAll('.ge-tab-btn[data-filter="estado"]').forEach(b => {
+            const val = b.getAttribute('data-value');
+            const span = b.querySelector('span');
+            if (span) {
+                span.textContent = countsEstado[val] || 0;
+            }
+        });
+
+        rows.forEach(r => r.style.display = 'none');
+        
+        filteredRows = rows.filter(r => {
+            const matchTrayecto = (activeFilter.trayecto === 'Todas') || (r.getAttribute('data-trayecto') === activeFilter.trayecto);
+            const matchEstado = (activeFilter.estado === 'Todos') || (r.getAttribute('data-estado') === activeFilter.estado);
+            const matchLinea = (activeFilter.linea === 'Todas') || (r.getAttribute('data-linea') === activeFilter.linea);
+            const matchDimension = (activeFilter.dimension === 'Todas') || (r.getAttribute('data-dimension') === activeFilter.dimension);
+            return matchTrayecto && matchEstado && matchLinea && matchDimension;
+        });
+
+        const totalPages = Math.ceil(filteredRows.length / itemsPerPage) || 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        
+        filteredRows.slice(start, end).forEach(r => {
+            r.style.display = 'table-row';
+        });
+
+        renderPagination(totalPages);
     }
-    btn.classList.add('active');
-    aplicarFiltros();
-}
 
-function aplicarFiltros() {
-    const filas = document.querySelectorAll('.equipo-row');
-    filas.forEach(fila => {
-        const filaTrayecto = fila.getAttribute('data-trayecto');
-        const filaEstado = fila.getAttribute('data-estado');
+    function renderPagination(totalPages) {
+        if (!paginationContainer) return;
         
-        let matchTrayecto = (currentTrayecto === 'Todas' || filaTrayecto === currentTrayecto);
-        let matchEstado = (currentEstado === 'Todos' || filaEstado === currentEstado);
-        
-        if (matchTrayecto && matchEstado) {
-            fila.style.display = '';
-        } else {
-            fila.style.display = 'none';
+        if (filteredRows.length === 0) {
+            paginationContainer.innerHTML = '<span style="color:#64748b; font-size:0.9rem;">No hay resultados que coincidan.</span>';
+            return;
         }
-    });
-}
 
-// Aplicar filtros por defecto (Pendientes) al cargar
-window.addEventListener('DOMContentLoaded', () => {
-    aplicarFiltros();
+        let html = `<span style="color:#64748b; font-size:0.9rem;">Página ${currentPage} de ${totalPages} &bull; ${filteredRows.length} resultados</span>`;
+        html += `<div style="display:flex; gap:5px;">`;
+        
+        html += `<button class="ge-page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="window.geGoToPage(${currentPage - 1})">Anterior</button>`;
+
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+                const active = i === currentPage ? 'active' : '';
+                html += `<button class="ge-page-btn ${active}" onclick="window.geGoToPage(${i})">${i}</button>`;
+            } else if (Math.abs(i - currentPage) === 2) {
+                html += `<span style="padding: 5px 10px; color: #94a3b8;">...</span>`;
+            }
+        }
+
+        html += `<button class="ge-page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="window.geGoToPage(${currentPage + 1})">Siguiente</button>`;
+        html += `</div>`;
+        
+        paginationContainer.innerHTML = html;
+    }
+
+    window.geGoToPage = function(page) {
+        currentPage = page;
+        renderTable();
+    };
+
+    const filterBtns = document.querySelectorAll('.ge-tab-btn');
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const filterType = this.getAttribute('data-filter');
+            const filterVal = this.getAttribute('data-value');
+            
+            const siblings = this.parentElement.querySelectorAll('.ge-tab-btn');
+            siblings.forEach(s => s.classList.remove('active'));
+            this.classList.add('active');
+            
+            activeFilter[filterType] = filterVal;
+            currentPage = 1;
+            renderTable();
+        });
+    });
+
+    renderTable();
 });
-
-function verEquipoModal(btn) {
-    const teamHTML = btn.nextElementSibling.value;
-    Swal.fire({
-        title: 'Detalles del Equipo',
-        html: teamHTML,
-        icon: 'info',
-        confirmButtonColor: '#121a3e',
-        confirmButtonText: 'Cerrar'
-    });
-}
-
-function verProyectoModal(btn) {
-    const proyectoHTML = btn.nextElementSibling.value;
-    Swal.fire({
-        title: 'Detalles del Proyecto',
-        html: proyectoHTML,
-        icon: 'info',
-        confirmButtonColor: '#121a3e',
-        confirmButtonText: 'Cerrar'
-    });
-}
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<?php if (isset($_SESSION['flash_success'])): ?>
-<script>
-    Swal.fire({
-        icon: 'success',
-        title: '¡Operación Exitosa!',
-        text: '<?= htmlspecialchars($_SESSION['flash_success'], ENT_QUOTES) ?>',
-        confirmButtonColor: '#10b981'
-    });
-</script>
-<?php unset($_SESSION['flash_success']); endif; ?>
-
-<?php if (isset($_SESSION['flash_error'])): ?>
-<script>
-    Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: '<?= htmlspecialchars($_SESSION['flash_error'], ENT_QUOTES) ?>',
-        confirmButtonColor: '#ef4444'
-    });
-</script>
-<?php unset($_SESSION['flash_error']); endif; ?>
-
-<script>
-function confirmarAprobacion(event, form) {
-    event.preventDefault();
-    let teamHTML = form.querySelector('.equipo-html-data').value;
-    Swal.fire({
-        title: '¿Confirmar Asignación?',
-        html: `Al aprobar a este equipo, el proyecto empresarial pasará a estado <b>"En Desarrollo"</b> y se cerrarán los cupos en la Cartelera de Oportunidades.<br><br>` + teamHTML,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#10b981',
-        cancelButtonColor: '#94a3b8',
-        confirmButtonText: 'Sí, asignar equipo',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            form.submit();
-        }
-    });
-    return false;
-}
-</script>

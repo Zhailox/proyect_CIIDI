@@ -79,6 +79,9 @@ class GestorLineasController {
                         if ($id === 0) {
                             $this->redirigir('gestionar-lineas', 'error', 'ID inválido para eliminar.');
                         }
+                        if ($lineasModel->tieneRecursosAsociados($id)) {
+                            $this->redirigir('gestionar-lineas', 'error', 'No se puede eliminar la línea porque tiene proyectos o investigaciones asociadas. Ocultela en su lugar.');
+                        }
                         $lineasModel->eliminar($id);
                         $this->redirigir('gestionar-lineas', 'exito', 'Línea eliminada definitivamente.');
                         break;
@@ -285,6 +288,96 @@ class GestorLineasController {
     /**
      * Redirige a una ruta con un mensaje de estado y detiene la ejecución.
      */
+    
+    public function carreras() {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'LineasInvestigacion');
+        $qb = new LineasModel();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!CSRF::validarToken($_POST['csrf_token'] ?? '')) {
+                $this->redirigir('gestionar-carreras', 'error', 'Token de seguridad inválido. Intenta de nuevo.');
+            }
+            $accion = trim($_POST['accion'] ?? '');
+            
+            if ($accion === 'crear') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'LineasInvestigacion');
+            if ($accion === 'editar') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'LineasInvestigacion');
+            if ($accion === 'eliminar') Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'LineasInvestigacion');
+
+            try {
+                switch ($accion) {
+                    case 'crear':
+                        $datos = [
+                            'nombre'      => trim($_POST['nombre'] ?? ''),
+                            'descripcion' => trim($_POST['descripcion'] ?? '')
+                        ];
+                        if (empty($datos['nombre'])) {
+                            $this->redirigir('gestionar-carreras', 'error', 'El nombre de la carrera es obligatorio.');
+                        }
+                        $qb->tabla('carreras')->insert($datos);
+                        $this->redirigir('gestionar-carreras', 'exito', 'Programa de Formación (PNF) creado correctamente.');
+                        break;
+
+                    case 'editar':
+                        $id = (int) ($_POST['id'] ?? 0);
+                        $datos = [
+                            'nombre'      => trim($_POST['nombre'] ?? ''),
+                            'descripcion' => trim($_POST['descripcion'] ?? '')
+                        ];
+                        if ($id === 0 || empty($datos['nombre'])) {
+                            $this->redirigir('gestionar-carreras', 'error', 'Datos inválidos para actualizar.');
+                        }
+                        $qb->tabla('carreras')->where('id', '=', $id)->update($datos);
+                        $this->redirigir('gestionar-carreras', 'exito', 'Programa de Formación (PNF) actualizado correctamente.');
+                        break;
+
+                    case 'eliminar':
+                        if (($_SESSION['nivel_privilegio'] ?? 999) !== 0) {
+                            $this->redirigir('gestionar-carreras', 'error', 'Solo el Dios Superadministrador puede eliminar carreras.');
+                        }
+                        $id = (int) ($_POST['id'] ?? 0);
+                        if ($id === 0) {
+                            $this->redirigir('gestionar-carreras', 'error', 'ID inválido.');
+                        }
+                        // Will fail if foreign key constraint exists, which is caught in catch block
+                        $qb->tabla('carreras')->where('id', '=', $id)->delete();
+                        $this->redirigir('gestionar-carreras', 'exito', 'Programa de Formación (PNF) eliminado correctamente.');
+                        break;
+                        
+                    default:
+                        $this->redirigir('gestionar-carreras', 'error', 'Acción no reconocida.');
+                }
+            } catch (Exception $e) {
+                $msg = $e->getMessage();
+                if (strpos($msg, '23000') !== false || strpos($msg, '23503') !== false) {
+                    $msg = 'No se puede eliminar porque esta carrera ya tiene líneas de investigación asociadas.';
+                } else {
+                    $msg = 'Error en la base de datos: ' . $msg;
+                }
+                $this->redirigir('gestionar-carreras', 'error', $msg);
+            }
+        }
+
+        // GET: cargar datos para la vista
+        $carreras = $qb->tabla('carreras')->orderBy('nombre', 'ASC')->get();
+        
+        $carrera_editar = null;
+        if (!empty($_GET['editar'])) {
+            $res = $qb->tabla('carreras')->where('id', '=', (int)$_GET['editar'])->get();
+            if(!empty($res)) $carrera_editar = $res[0];
+        }
+
+        $mensaje      = htmlspecialchars($_GET['msg'] ?? '');
+        $tipo_mensaje = htmlspecialchars($_GET['tipo'] ?? '');
+
+        return [
+            'carreras'       => $carreras,
+            'carrera_editar' => $carrera_editar,
+            'mensaje'        => $mensaje,
+            'tipo_mensaje'   => $tipo_mensaje,
+            'isSuper'        => ($_SESSION['nivel_privilegio'] ?? 999) === 0
+        ];
+    }
+
     private function redirigir(string $ruta, string $tipo, string $msg): void {
         if (!empty($_POST['redirect_to'])) {
             $ruta = $_POST['redirect_to'];
@@ -336,6 +429,104 @@ class GestorLineasController {
             ], ';');
         }
         fclose($salida);
+        exit;
+    }
+
+    
+    public function apiFiltrosPdf() {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'LineasInvestigacion');
+        header('Content-Type: application/json');
+        
+        $lineasModel = new LineasModel();
+        
+        $carreras = $this->getCarreras();
+        $lineas = $lineasModel->getTodas();
+        
+        echo json_encode([
+            'carreras' => $carreras,
+            'lineas' => $lineas
+        ]);
+        exit;
+    }
+
+    public function generarReportePdf() {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'LineasInvestigacion');
+        
+        $tipo = $_GET['tipo'] ?? 'completo';
+        $lineasModel = new LineasModel();
+        $dimModel = new DimensionesModel();
+        
+        $datos = [];
+        $tituloReporte = "Reporte de Líneas de Investigación";
+
+        $id_carrera = isset($_GET['id_carrera']) && $_GET['id_carrera'] !== '' ? (int)$_GET['id_carrera'] : null;
+        $id_linea = isset($_GET['id_linea']) && $_GET['id_linea'] !== '' ? (int)$_GET['id_linea'] : null;
+
+        // Fetch everything hierarchically to have it ready for the view to decide how to render
+        $carreras_raw = $this->getCarreras();
+        $todas_lineas = $lineasModel->getTodas();
+        $todas_dimensiones = $dimModel->getTodasConLinea();
+
+        // Aplicar filtros
+        if ($id_carrera !== null) {
+            $carreras_raw = array_filter($carreras_raw, function($c) use ($id_carrera) {
+                return $c['id'] == $id_carrera;
+            });
+        }
+        if ($id_linea !== null) {
+            $todas_lineas = array_filter($todas_lineas, function($l) use ($id_linea) {
+                return $l['id'] == $id_linea;
+            });
+        }
+
+        // Organizar datos en árbol
+        $arbol = [];
+        foreach ($carreras_raw as $c) {
+            $arbol[$c['id']] = [
+                'carrera' => $c,
+                'lineas' => []
+            ];
+        }
+        
+        // Pseudo carrera para líneas sin asignar (ID 0 o null)
+        $arbol[0] = [
+            'carrera' => ['id' => 0, 'nombre' => 'General / Sin Asignar', 'descripcion' => 'Líneas transversales'],
+            'lineas' => []
+        ];
+
+        foreach ($todas_lineas as $l) {
+            $cid = $l['id_carrera'] ?: 0;
+            if (!isset($arbol[$cid])) continue;
+            
+            // Asignar dimensiones a esta línea
+            $dims_de_linea = [];
+            foreach ($todas_dimensiones as $d) {
+                if ($d['id_linea'] == $l['id']) {
+                    $dims_de_linea[] = $d;
+                }
+            }
+            $l['dimensiones'] = $dims_de_linea;
+            $arbol[$cid]['lineas'][] = $l;
+        }
+
+        switch($tipo) {
+            case 'carreras':
+                $tituloReporte = "Estructura Académica por PNF";
+                break;
+            case 'lineas':
+                $tituloReporte = "Directorio de Líneas de Investigación";
+                break;
+            case 'dimensiones':
+                $tituloReporte = "Matriz de Dimensiones Operativas";
+                break;
+            case 'completo':
+            default:
+                $tituloReporte = "Reporte Completo: Estructura de Líneas de Investigación";
+                break;
+        }
+
+        // Render the print view directly
+        require_once __DIR__ . '/../views/reporte_pdf.php';
         exit;
     }
 

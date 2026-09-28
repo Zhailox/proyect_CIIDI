@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../services/ConfigService.php';
 // modules/VinculacionEmpresarial/controllers/VinculacionController.php
 
 require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
@@ -7,13 +8,10 @@ require_once __DIR__ . '/../models/PropuestaEmpresaModel.php';
 
 class VinculacionController
 {
-
     private int $nivelAdmin;
     private int $nivelLogueado;
     private int $nivelPublico;
-
-
-    private $modelo;
+    private PropuestaEmpresaModel $modelo;
 
     public function __construct()
     {
@@ -23,27 +21,27 @@ class VinculacionController
         $this->nivelLogueado = SystemConfigService::get('accesos_modulos.autenticacion.publico', 999);
     }
 
-    public function guardarPropuesta()
+    public function guardarPropuesta(): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $datos = [
-                'nombre_empresa' => $_POST['nombre_empresa'] ?? '',
-                'rif_empresa' => $_POST['rif_empresa'] ?? '',
-                'persona_contacto' => $_POST['persona_contacto'] ?? '',
-                'telefono_contacto' => $_POST['telefono_contacto'] ?? '',
-                'correo_contacto' => $_POST['correo_contacto'] ?? '',
-                'area_afectada' => 'Por evaluar (Se definirá al aprobar)',
-                'descripcion_problema' => $_POST['descripcion_problema'] ?? ''
+                'nombre_empresa'       => trim($_POST['nombre_empresa'] ?? ''),
+                'rif_empresa'          => trim($_POST['rif_empresa'] ?? ''),
+                'persona_contacto'     => trim($_POST['persona_contacto'] ?? ''),
+                'telefono_contacto'    => trim($_POST['telefono_contacto'] ?? ''),
+                'correo_contacto'      => trim($_POST['correo_contacto'] ?? ''),
+                'area_afectada'        => 'Por evaluar (Se definirá al aprobar)',
+                'descripcion_problema' => trim($_POST['descripcion_problema'] ?? '')
             ];
 
             // Generar código de seguimiento único
-            $codigo_seguimiento = 'CIIDI-' . date('Y') . '-' . strtoupper(substr(md5(uniqid(rand(), true)), 0, 5));
+            $codigo_seguimiento = 'CIIDI-' . date('Y') . '-' . strtoupper(substr(md5(uniqid((string)rand(), true)), 0, 5));
             $datos['codigo_seguimiento'] = $codigo_seguimiento;
 
             $id = $this->modelo->guardar($datos);
             if ($id) {
                 $_SESSION['mensaje_exito'] = "Su propuesta fue enviada correctamente.";
-                $_SESSION['codigo_seguimiento'] = $codigo_seguimiento; // Para disparar el modal
+                $_SESSION['codigo_seguimiento'] = $codigo_seguimiento;
             } else {
                 $_SESSION['mensaje_error'] = "Ocurrió un error al enviar su propuesta.";
             }
@@ -52,39 +50,37 @@ class VinculacionController
         }
     }
 
-    public function procesarPropuesta()
+    public function procesarPropuesta(): void
     {
         Auth::requierePrivilegioMinimo($this->nivelPublico);
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_propuesta'], $_POST['accion'])) {
-            $roles_permitidos = ['Profesor', 'Super Administrador', 'Comite',];
-            if (!isset($_SESSION['rol_nombre']) || !in_array($_SESSION['rol_nombre'], $roles_permitidos)) {
+            $roles_permitidos = ['Profesor', 'Super Administrador', 'Comite'];
+            if (!isset($_SESSION['rol_nombre']) || !in_array($_SESSION['rol_nombre'], $roles_permitidos, true)) {
                 die("Acceso denegado");
             }
 
-            $id = $_POST['id_propuesta'];
-            $accion = $_POST['accion'];
+            $id = (int) $_POST['id_propuesta'];
+            $accion = trim($_POST['accion']);
 
             if ($accion === 'aprobar') {
                 $nivel = $_POST['nivel_trayecto'] ?? 'Trayecto I';
-                $id_linea = $_POST['id_linea'] ?? null;
-                $id_dimension = $_POST['id_dimension'] ?? null;
-                $area_afectada = $_POST['area_afectada'] ?? null;
-                $cupos = isset($_POST['cupos_disponibles']) ? (int) $_POST['cupos_disponibles'] : 3;
+                $id_linea = !empty($_POST['id_linea']) ? (int)$_POST['id_linea'] : null;
+                $id_dimension = !empty($_POST['id_dimension']) ? (int)$_POST['id_dimension'] : null;
+                $area_afectada = trim($_POST['area_afectada'] ?? '');
+                $cupos = isset($_POST['cupos_disponibles']) && !empty($_POST['cupos_disponibles']) 
+                    ? (int) $_POST['cupos_disponibles'] 
+                    : VinculacionConfigService::get('cupos_por_defecto', 3);
 
                 $pdo = Connection::getInstance();
 
-                // Si el comité definió un área afectada, actualizarla
                 if (!empty($area_afectada)) {
                     $stmt_area = $pdo->prepare("UPDATE propuestas_empresa SET area_afectada = ? WHERE id = ?");
                     $stmt_area->execute([$area_afectada, $id]);
                 }
 
-                // Actualizar estatus en la bolsa de propuestas
                 $this->modelo->actualizarEstado($id, 'aceptada', $nivel);
 
-                // Si seleccionaron una línea, inyectarlo directo a las ofertas!
                 if ($id_linea) {
-                    // Buscamos los datos originales de la propuesta para crear la oferta
                     $stmt = $pdo->prepare("SELECT area_afectada, descripcion_problema, nombre_empresa, persona_contacto, correo_contacto, codigo_seguimiento FROM propuestas_empresa WHERE id = ?");
                     $stmt->execute([$id]);
                     $prop = $stmt->fetch();
@@ -97,7 +93,6 @@ class VinculacionController
                                        (id_profesor, id_linea, id_dimension, titulo, planteamiento_problema, objetivo_general, estado, id_propuesta_empresa, cupos_disponibles) 
                                        VALUES (?, ?, ?, ?, ?, ?, 'Abierta', ?, ?)";
                         $stmt_in = $pdo->prepare($sql_insert);
-                        // Usamos el ID del profesor/comité actual
                         $stmt_in->execute([
                             $_SESSION['usuario_id'],
                             $id_linea,
@@ -109,7 +104,6 @@ class VinculacionController
                             $cupos
                         ]);
 
-                        // ENVIAR CORREO A LA EMPRESA (PROPUESTA APROBADA)
                         if (!empty($prop['correo_contacto'])) {
                             $asunto = 'Propuesta Tecnológica Aprobada - CIIDI';
                             $cuerpo = "
@@ -146,7 +140,6 @@ class VinculacionController
 
                 $this->modelo->actualizarEstado($id, 'rechazada', null, $motivo);
 
-                // Enviar correo de rechazo a la empresa
                 $pdo = Connection::getInstance();
                 $stmt = $pdo->prepare("SELECT nombre_empresa, persona_contacto, correo_contacto FROM propuestas_empresa WHERE id = ?");
                 $stmt->execute([$id]);
@@ -181,7 +174,7 @@ class VinculacionController
         }
     }
 
-    public function postularOportunidad()
+    public function postularOportunidad(): void
     {
         Auth::requierePrivilegioMinimo(0);
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -193,7 +186,7 @@ class VinculacionController
             }
             $user = Auth::usuario();
             $id_investigacion = (int) $_POST['id_investigacion'];
-            $motivacion = trim($_POST['motivacion']);
+            $motivacion = trim($_POST['motivacion'] ?? '');
             $equipo_extra = $_POST['equipo_extra'] ?? null;
 
             try {
@@ -214,17 +207,15 @@ class VinculacionController
         }
     }
 
-    public function procesarAsignacion()
+    public function procesarAsignacion(): void
     {
         Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'VinculacionEmpresarial');
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id_postulacion = (int) $_POST['id_postulacion'];
             $id_investigacion = (int) $_POST['id_investigacion'];
-            $estado = $_POST['estado']; // 'Aceptado' o 'Rechazado'
+            $estado = $_POST['estado'];
 
             if ($this->modelo->procesarAsignacion($id_postulacion, $estado, $id_investigacion)) {
-
-                // LÓGICA DE CORREOS
                 if ($estado === 'Aceptado') {
                     $_SESSION['flash_success'] = "El equipo ha sido asignado al proyecto y ambas partes fueron notificadas.";
                     $pdo = Connection::getInstance();
@@ -241,31 +232,28 @@ class VinculacionController
                     $info = $stmt->fetch();
 
                     if ($info) {
-                        // Generar lista de estudiantes
                         $listaEstudiantes = "<ul>";
                         $listaEstudiantes .= "<li><b>Líder:</b> {$info['lider_nombre']} (C.I: {$info['lider_cedula']}, Correo: {$info['lider_email']})</li>";
                         if (!empty($info['equipo_extra'])) {
                             $equipoArray = json_decode($info['equipo_extra'], true);
                             if (is_array($equipoArray)) {
-                                foreach ($equipoArray as $comp) {
-                                    $listaEstudiantes .= "<li><b>Compañero:</b> {$comp['nombre']} (C.I: {$comp['cedula']}, Telf: {$comp['telefono']})</li>";
+                                foreach ($equipoArray as $m) {
+                                    $listaEstudiantes .= "<li><b>Compañero:</b> {$m['nombre']} (C.I: {$m['cedula']}, Télf: {$m['telefono']})</li>";
                                 }
                             }
                         }
                         $listaEstudiantes .= "</ul>";
 
-                        // 1. Correo al Estudiante
                         if (!empty($info['lider_email'])) {
-                            $asuntoEst = 'Postulación Aceptada - Proyecto Asignado';
+                            $asuntoEst = '¡Postulación Aceptada! - Proyecto Asignado';
                             $cuerpoEst = "
                             <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;'>
                                 <div style='background-color: #505984; padding: 20px; text-align: center; color: white;'>
-                                    <h2 style='margin: 0;'>¡Felicidades, Equipo Asignado!</h2>
+                                    <h2 style='margin: 0;'>¡Felicidades! Equipo Asignado</h2>
                                 </div>
                                 <div style='padding: 20px; background-color: #ffffff; color: #333333;'>
                                     <p>Hola <b>{$info['lider_nombre']}</b>,</p>
-                                    <p>Nos complace informarte que la postulación de tu equipo al requerimiento de la empresa <b>{$info['nombre_empresa']}</b> ha sido <b>APROBADA</b>.</p>
-                                    <p>Por favor, <b>dirígete con tu profesor de proyecto</b> para recibir las instrucciones y seguir avanzando con el desarrollo.</p>
+                                    <p>Tu postulación ha sido <b>SELECCIONADA</b> para desarrollar el requerimiento tecnológico de la empresa <b>{$info['nombre_empresa']}</b>.</p>
                                     <div style='background: #f4f7fb; padding: 15px; border-left: 4px solid #7090cb; margin: 20px 0;'>
                                         <h4 style='margin-top:0;'>Datos de la Organización:</h4>
                                         <p style='margin: 0 0 5px 0;'><b>Empresa:</b> {$info['nombre_empresa']}</p>
@@ -279,7 +267,6 @@ class VinculacionController
                             $this->enviarCorreoNotificacion($info['lider_email'], $info['lider_nombre'], $asuntoEst, $cuerpoEst);
                         }
 
-                        // 2. Correo a la Empresa
                         if (!empty($info['correo_contacto'])) {
                             $asuntoEmp = '¡Equipo Asignado a tu Requerimiento! - CIIDI';
                             $cuerpoEmp = "
@@ -317,7 +304,7 @@ class VinculacionController
                     $info = $stmt->fetch();
 
                     if ($info && !empty($info['lider_email'])) {
-                        $motivo = "Lamentablemente, el comité de proyectos ha determinado que tu perfil o equipo no cumple con los requerimientos técnicos actuales para abordar esta problemática.";
+                        $motivo = !empty($_POST['motivo_rechazo']) ? trim($_POST['motivo_rechazo']) : "Lamentablemente, el comité de proyectos ha determinado que tu perfil o equipo no cumple con los requerimientos técnicos actuales para abordar esta problemática.";
                         $asuntoEst = 'Actualización sobre su Postulación - CIIDI';
                         $cuerpoEst = "
                         <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;'>
@@ -348,7 +335,7 @@ class VinculacionController
         }
     }
 
-    private function enviarCorreoNotificacion($destinatarioEmail, $destinatarioNombre, $asunto, $cuerpoHtml)
+    private function enviarCorreoNotificacion(string $destinatarioEmail, string $destinatarioNombre, string $asunto, string $cuerpoHtml): bool
     {
         require_once CORE_PATH . 'Helpers/PHPMailer/Exception.php';
         require_once CORE_PATH . 'Helpers/PHPMailer/PHPMailer.php';
@@ -374,85 +361,165 @@ class VinculacionController
 
             $mail->send();
             return true;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Error enviando correo a $destinatarioEmail: " . $mail->ErrorInfo);
             return false;
         }
     }
 
     // --- METODOS DE VISTAS FRONTEND ---
-
-    public function carteleraOportunidades(): array
-    {
+    
+    public function carteleraOportunidades(): array {
         $nivelPublico = SystemConfigService::get('accesos_modulos.vinculacion_empresarial.publico', 999);
-        Auth::requierePrivilegioMinimo($nivelPublico); // 999 permite a cualquier usuario autenticado
-
+        Auth::requierePrivilegioMinimo($nivelPublico);
+        
         $oportunidades = $this->modelo->getAceptadas();
-
-        // Agrupar y extraer datos unicos para los filtros de la vista
-        $lineasUnicas = [];
-        $cuposUnicos = [];
+        
+        $lineasUnicasMap = [];
         $oportunidadesPorTrayecto = [];
-
+        $cuposUnicosMap = [];
+        
         foreach ($oportunidades as $op) {
-            $linea = $op['linea_investigacion'] ?? 'General';
-            if (!in_array($linea, $lineasUnicas)) {
-                $lineasUnicas[] = $linea;
+            if (!empty($op['linea_investigacion'])) {
+                $lineasUnicasMap[$op['linea_investigacion']] = $op['linea_investigacion'];
             }
-
-            $cupos = (int) ($op['cupos_disponibles'] ?? 1);
-            if (!in_array($cupos, $cuposUnicos)) {
-                $cuposUnicos[] = $cupos;
-            }
-
-            $trayecto = $op['nivel_trayecto'] ?? 'Sin Asignar';
-            if (!isset($oportunidadesPorTrayecto[$trayecto])) {
-                $oportunidadesPorTrayecto[$trayecto] = [];
-            }
+            $trayecto = !empty($op['nivel_trayecto']) ? $op['nivel_trayecto'] : 'Sin Trayecto Asignado';
             $oportunidadesPorTrayecto[$trayecto][] = $op;
+            
+            $cupo = (int)($op['cupos_disponibles'] ?? 3);
+            $cuposUnicosMap[$cupo] = $cupo;
         }
-
-        sort($lineasUnicas);
-        sort($cuposUnicos);
+        
+        $lineasUnicas = array_values($lineasUnicasMap);
         ksort($oportunidadesPorTrayecto);
+        
+        $cuposUnicos = array_values($cuposUnicosMap);
+        sort($cuposUnicos);
 
         $userData = [];
+        $estados_postulaciones = [];
         if (Auth::check()) {
             $pdo = \Connection::getInstance();
             $stmt = $pdo->prepare("SELECT nombre_completo, cedula, email, telefono FROM usuarios WHERE id = ?");
             $stmt->execute([$_SESSION['usuario_id']]);
             $userData = $stmt->fetch(\PDO::FETCH_ASSOC) ?: [];
+            
+            $estados_postulaciones = $this->modelo->getEstadosPostulacionesEstudiante($_SESSION['usuario_id']);
         }
-
+        
         return [
             'oportunidades' => $oportunidades,
             'userData' => $userData,
             'lineasUnicas' => $lineasUnicas,
-            'cuposUnicos' => $cuposUnicos,
-            'oportunidadesPorTrayecto' => $oportunidadesPorTrayecto
+            'estados_postulaciones' => $estados_postulaciones,
+            'oportunidadesPorTrayecto' => $oportunidadesPorTrayecto,
+            'cuposUnicos' => $cuposUnicos
         ];
     }
-
 
     public function gestionProyectos(): array
     {
         Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'VinculacionEmpresarial');
+        
         $tab = $_GET['tab'] ?? 'propuestas';
-        return [
-            'tab' => $tab
+        $pdo = Connection::getInstance();
+        
+        $datos = [
+            'tab' => $tab,
+            'todas' => [],
+            'postulaciones' => [],
+            'lineas' => [],
+            'dimensiones' => [],
+            'kpiNuevas' => 0,
+            'trayectos' => [],
+            'estados' => []
         ];
+
+        if ($tab === 'propuestas') {
+            $todas = $this->modelo->getTodas();
+            $lineas = $pdo->query("SELECT id, nombre FROM lineas_investigacion ORDER BY nombre ASC")->fetchAll(\PDO::FETCH_ASSOC);
+            $dimensiones = $pdo->query("SELECT id, id_linea, nombre FROM dimensiones_operativas ORDER BY nombre ASC")->fetchAll(\PDO::FETCH_ASSOC);
+            
+            $kpiNuevas = 0;
+            $trayectos = [];
+            $estados = ['pendiente' => 0, 'aceptada' => 0, 'rechazada' => 0];
+            
+            foreach ($todas as $p) {
+                if (($p['estado'] ?? '') === 'pendiente') $kpiNuevas++;
+                
+                $nivel = !empty($p['nivel_trayecto']) ? $p['nivel_trayecto'] : 'Sin Asignar';
+                $trayectos[$nivel] = ($trayectos[$nivel] ?? 0) + 1;
+                
+                $est = $p['estado'] ?? '';
+                $estados[$est] = ($estados[$est] ?? 0) + 1;
+            }
+            ksort($trayectos);
+            
+            $datos['todas'] = $todas;
+            $datos['lineas'] = $lineas;
+            $datos['dimensiones'] = $dimensiones;
+            $datos['kpiNuevas'] = $kpiNuevas;
+            $datos['trayectos'] = $trayectos;
+            $datos['estados'] = $estados;
+        } else {
+            $postulaciones = $this->modelo->getPostulacionesEmpresariales();
+            $trayectos = [];
+            $estados = ['Pendiente' => 0, 'Aceptado' => 0, 'Rechazado' => 0];
+            
+            foreach ($postulaciones as $p) {
+                $nivel = !empty($p['nivel_trayecto']) ? $p['nivel_trayecto'] : 'Sin Asignar';
+                $trayectos[$nivel] = ($trayectos[$nivel] ?? 0) + 1;
+                
+                $est = $p['estado'] ?? '';
+                $estados[$est] = ($estados[$est] ?? 0) + 1;
+            }
+            ksort($trayectos);
+            
+            $datos['postulaciones'] = $postulaciones;
+            $datos['trayectos'] = $trayectos;
+            $datos['estados'] = $estados;
+        }
+        
+        return $datos;
+    }
+
+    public function configuracion(): array
+    {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'VinculacionEmpresarial');
+        return VinculacionConfigService::get();
+    }
+
+    public function guardarConfiguracion(): void
+    {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'VinculacionEmpresarial');
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $configs = [
+                'paginacion_gestion'   => (int)($_POST['paginacion_gestion'] ?? 8),
+                'paginacion_cartelera' => (int)($_POST['paginacion_cartelera'] ?? 12),
+                'recepcion_activa'     => isset($_POST['recepcion_activa']),
+                'mensaje_marquee'      => trim($_POST['mensaje_marquee'] ?? '')
+            ];
+            if (VinculacionConfigService::setMultiple($configs)) {
+                $_SESSION['flash_success'] = "Configuraciones actualizadas exitosamente.";
+            } else {
+                $_SESSION['flash_error'] = "Error al guardar las configuraciones.";
+            }
+            echo "<script>window.location.href='?ruta=vinculacion-config';</script>";
+            exit;
+        }
     }
 }
 
 // Bootstrap
 $controller = new VinculacionController();
 $ruta = $_GET['ruta'] ?? '';
-if ($ruta === 'guardar-propuesta') {
-    $controller->guardarPropuesta();
-} elseif ($ruta === 'procesar-propuesta') {
-    $controller->procesarPropuesta();
-} elseif ($ruta === 'postular-oportunidad') {
-    $controller->postularOportunidad();
-} elseif ($ruta === 'procesar-asignacion') {
-    $controller->procesarAsignacion();
-}
+
+match ($ruta) {
+    'guardar-propuesta'     => $controller->guardarPropuesta(),
+    'procesar-propuesta'    => $controller->procesarPropuesta(),
+    'postular-oportunidad'  => $controller->postularOportunidad(),
+    'cartelera-oportunidades' => $controller->carteleraOportunidades(),
+    'procesar-asignacion'   => $controller->procesarAsignacion(),
+    'guardar-configuracion' => $controller->guardarConfiguracion(),
+    default                 => null
+};

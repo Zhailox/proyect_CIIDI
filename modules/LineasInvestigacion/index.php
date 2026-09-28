@@ -65,10 +65,22 @@ class LineasInvestigacionModule implements ModuleContract {
                 'metodo'           => 'detalleGestionLinea'
             ],
             // Panel Admin: Gestión CRUD de dimensiones operativas
-                        'exportar-lineas-csv' => [
+            'exportar-lineas-csv' => [
                 'controlador' => 'GestorLineasController',
                 'controlador_path' => __DIR__ . '/controllers/GestorController.php',
                 'metodo' => 'exportarCsv',
+                'oculto' => true
+            ],
+                                    'api-filtros-pdf' => [
+                'controlador' => 'GestorLineasController',
+                'controlador_path' => __DIR__ . '/controllers/GestorController.php',
+                'metodo' => 'apiFiltrosPdf',
+                'oculto' => true
+            ],
+            'reporte-pdf' => [
+                'controlador' => 'GestorLineasController',
+                'controlador_path' => __DIR__ . '/controllers/GestorController.php',
+                'metodo' => 'generarReportePdf',
                 'oculto' => true
             ],
             'imprimir-matriz' => [
@@ -76,6 +88,15 @@ class LineasInvestigacionModule implements ModuleContract {
                 'controlador_path' => __DIR__ . '/controllers/GestorController.php',
                 'metodo' => 'imprimirMatriz',
                 'oculto' => true
+            ],
+            
+            'gestionar-carreras' => [
+                'vista'            => __DIR__ . '/views/gestor_carreras.php',
+                'titulo'           => 'Gestión de Programas de Formación (PNF)',
+                'css'              => ['LineasInvestigacion.css?v=' . time()],
+                'controlador'      => 'GestorLineasController',
+                'controlador_path' => __DIR__ . '/controllers/GestorController.php',
+                'metodo'           => 'carreras'
             ],
             'gestionar-dimensiones' => [
                 'vista'            => __DIR__ . '/views/gestor_dimensiones.php',
@@ -94,15 +115,15 @@ class LineasInvestigacionModule implements ModuleContract {
         return [
             [
                 'tipo'        => 'parent',
-                'titulo'      => 'Líneas I+D',
+                'titulo' => 'Líneas de Investigación',
                 'icono'       => 'ph-fill ph-graph',
                 'enlace'      => 'lineas-investigacion',
-                'activadores' => ['lineas-investigacion', 'detalle-linea', 'gestionar-lineas', 'detalle-gestion-linea', 'gestionar-dimensiones', 'analitica'],
+                'activadores' => ['lineas-investigacion', 'detalle-linea', 'gestionar-lineas', 'detalle-gestion-linea', 'gestionar-dimensiones', 'analitica', 'gestionar-carreras'],
                 'privilegio_minimo' => $nivelPublico,
                 'subitems'    => [
                     ['ruta' => 'lineas-investigacion',  'titulo' => 'Explorar Líneas', 'privilegio_minimo' => $nivelPublico],
                     ['ruta' => 'analitica',             'titulo' => 'Analítica IA', 'privilegio_minimo' => $nivelAdmin],
-                    ['ruta' => 'gestionar-lineas',      'titulo' => 'Gestor de Líneas', 'privilegio_minimo' => $nivelAdmin]
+                    ['ruta' => 'gestionar-lineas',      'titulo' => 'Gestor Académico', 'privilegio_minimo' => $nivelAdmin]
                 ]
             ]
         ];
@@ -119,11 +140,12 @@ class LineasInvestigacionModule implements ModuleContract {
     public function getHomeConfig(): array {
         return [
             'icono' => 'ph-fill ph-graph',
-            'titulo' => 'Líneas I+D',
+            'titulo' => 'Líneas de Investigación',
             'descripcion' => 'Explorar y gestionar líneas de investigación.',
             'ruta' => 'lineas-investigacion',
-            'enlace'      => 'lineas',
-            'texto_boton' => 'EXPLORAR LÍNEAS'
+            'orden' => 3,
+            'texto_boton' => 'EXPLORAR LÍNEAS',
+            'destacado'   => false
         ];
     }
 

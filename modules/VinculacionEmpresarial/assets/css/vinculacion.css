@@ -120,7 +120,7 @@
 
 .ve-marquee-track {
     display: inline-block;
-    animation: scroll-marquee 25s linear infinite;
+    animation: scroll-marquee 30s linear infinite; will-change: transform; transform: translate3d(0, 0, 0); backface-visibility: hidden;
 }
 
 .ve-marquee-track:hover {
@@ -133,7 +133,7 @@
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--ve-gris);
-    transition: color var(--transition-fast);
+    transition: color 0.3s ease; will-change: color;
 }
 
 .ve-marquee-item:hover {
@@ -200,6 +200,8 @@
     border-top: 4px solid var(--ve-terciario);
     box-shadow: 0 6px 20px rgba(0,0,0,0.06); /* Sombra unificada para todas */
     text-align: left;
+    will-change: transform, box-shadow, background-color;
+    transform: translateZ(0);
     
     transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), 
                 background-color 0.3s ease, 
@@ -547,7 +549,7 @@
     font-size: 1.8rem;
     cursor: pointer;
     color: #cccccc;
-    transition: color var(--transition-fast);
+    transition: color 0.3s ease; will-change: color;
 }
 
 .ve-modal-close:hover {
@@ -827,3 +829,4 @@
     background-color: var(--color-principal);
     color: #ffffff;
 }
+html { scroll-behavior: smooth; }

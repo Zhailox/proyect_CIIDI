@@ -4,15 +4,18 @@ require_once __DIR__ . '/../models/CursoModel.php';
 require_once __DIR__ . '/../services/CsrfService.php';
 require_once __DIR__ . '/../services/ImagenService.php';
 require_once CORE_PATH . 'Security/Auth.php';
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
 
 class PromoController {
 
     private CursoModel $model;
     private array $cfg;
+    private int $nivelAdmin;
 
     public function __construct() {
         $this->model = new CursoModel();
         $this->cfg   = $this->model->cargarConfig();
+        $this->nivelAdmin = SystemConfigService::get('accesos_modulos.cursos.admin', 1);
     }
 
     private function limpiarTexto(string $valor, int $maxLen = 5000): string {
@@ -82,8 +85,7 @@ class PromoController {
     }
 
     public function mostrarGestion(): array {
-        $nivel_requerido = $this->cfg['roles']['nivel_crear_curso'] ?? 1;
-        Auth::requierePrivilegioMinimo($nivel_requerido);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'Cursos');
         
         $usuario_actual = Auth::usuario();
         $nivel = (int)($usuario_actual['nivel'] ?? -1);
@@ -134,7 +136,7 @@ class PromoController {
     }
 
     public function mostrarFormularioCrear(): array {
-        Auth::requierePrivilegioMinimo($this->cfg['roles']['nivel_crear_curso']);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'Cursos');
 
         $docentes    = $this->model->listarDocentes();
         $curso       = null;
@@ -151,7 +153,7 @@ class PromoController {
     }
 
     public function procesarCrear(): void {
-        Auth::requierePrivilegioMinimo($this->cfg['roles']['nivel_crear_curso']);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'Cursos');
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ?ruta=cursos-gestion'); exit;
@@ -264,7 +266,7 @@ class PromoController {
     }
 
     public function mostrarFormularioEditar(): array {
-        Auth::requierePrivilegioMinimo($this->cfg['roles']['nivel_crear_curso']);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Cursos');
 
         $id = (int)($_GET['id'] ?? 0);
         if ($id <= 0) { header('Location: ?ruta=cursos-gestion'); exit; }
@@ -296,7 +298,7 @@ class PromoController {
     }
 
     public function procesarEditar(): void {
-        Auth::requierePrivilegioMinimo($this->cfg['roles']['nivel_crear_curso']);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Cursos');
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ?ruta=cursos-gestion'); exit;
@@ -432,7 +434,7 @@ class PromoController {
     }
 
     public function procesarEliminar(): void {
-        Auth::requierePrivilegioMinimo($this->cfg['roles']['nivel_crear_curso']); // Permitimos nivel 1, luego validamos propiedad
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'Cursos'); // Permitimos acceso según RBAC, luego validamos propiedad
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ?ruta=cursos-gestion'); exit;
@@ -512,7 +514,7 @@ class PromoController {
     }
 
     public function mostrarConfig(): array {
-        Auth::requierePrivilegioMinimo($this->cfg['roles']['nivel_ver_config']);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'Cursos');
         $config_actual = $this->model->cargarConfig();
         $csrf_token    = CursosCsrfService::campoHidden();
         $mensaje_exito = $_SESSION['cur_exito'] ?? null;
@@ -522,7 +524,7 @@ class PromoController {
     }
 
     public function guardarConfig(): void {
-        Auth::requierePrivilegioMinimo($this->cfg['roles']['nivel_ver_config']);
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Cursos');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ?ruta=cursos-config'); exit;
         }

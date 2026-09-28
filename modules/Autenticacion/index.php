@@ -127,10 +127,7 @@ public function getRutas(): array {
             'procesar-completar-registro' => [
                 'controlador_path' => __DIR__ . '/controllers/LoginController.php',
                 'controlador'      => 'LoginController',
-                'metodo'           => 'procesarCompletarRegistroProfesor',
-                'vista'            => __DIR__ . '/views/transicion.php',
-                'layout'           => ['header' => false, 'sidebar' => false, 'footer' => false],
-                'css'              => ['transicion.css']
+                'metodo'           => 'procesarCompletarRegistroProfesor'
             ]
         ];
     }

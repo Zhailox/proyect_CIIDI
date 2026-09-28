@@ -1,4 +1,3 @@
-<?php require_once __DIR__ . '/../services/ConfigService.php'; ?>
 
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
@@ -80,63 +79,31 @@
 <div class="oportunidades-module" style="background-color: var(--color-fondo);">
 <main class="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
 
-
-<style>
-/* CSS NATIVO: 3D TECH GRID (OPTIMIZADO PARA RENDIMIENTO) */
-.cyber-bg-container {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; overflow: hidden; pointer-events: none; border-radius: inherit;
-    background: linear-gradient(135deg, #2b3453 0%, #43517c 100%); /* Gradiente Core exacto */
-}
-
-/* Cuadrícula 3D súper ligera (Hardware Accelerated) */
-.cyber-grid {
-    position: absolute; top: 0; left: -50%; width: 200%; height: 200%;
-    background-image: 
-        linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-    background-size: 60px 60px;
-    transform-origin: top center;
-    transform: perspective(600px) rotateX(60deg) translateZ(0);
-    animation: gridMove 10s linear infinite; /* Movimiento más lento y fluido */
-    will-change: transform; /* Fuerza a usar la Tarjeta Gráfica (GPU) */
-}
-
-/* Capa fija de difuminado que no afecta el rendimiento */
-.cyber-overlay {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: radial-gradient(circle at center, transparent 0%, #2b3453 85%);
-}
-
-@keyframes gridMove {
-    0% { transform: perspective(600px) rotateX(60deg) translateY(0) translateZ(0); }
-    100% { transform: perspective(600px) rotateX(60deg) translateY(60px) translateZ(0); }
-}
-#btn-search-hero {
-    background-color: #505984 !important;
-}
-#btn-search-hero:hover {
-    background-color: #3b4263 !important;
-}
-</style>
 <!-- BOMBTASTIC ACADEMIC HERO -->
-
-<section class="rounded-xl p-8 md:p-12 flex flex-col items-center text-center relative overflow-hidden text-white shadow-xl mb-2">
+<section class="bg-primary-container rounded-xl p-8 md:p-12 flex flex-col items-center text-center relative overflow-hidden text-white shadow-xl mb-2">
     <!-- THE AGREED GIF BACKGROUND -->
-    
-    <!-- NATIVE CSS ANIMATED BACKGROUND (OPTIMIZED) -->
-    <div class="cyber-bg-container">
-        <div class="cyber-grid"></div>
-        <div class="cyber-overlay"></div>
-    </div>
-
-    
+    <div class="absolute inset-0 z-0 bg-cover bg-center opacity-30" style="background-image: url('modules/RepositorioPST/assets/img/Rredes+neuronales+grafos.gif');"></div>
+    <div class="absolute inset-0 z-0 bg-gradient-to-t from-primary-container to-transparent opacity-60"></div>
 
     <div class="relative z-10 flex flex-col items-center w-full">
-        <h1 class="text-3xl md:text-5xl font-bold font-headline-hero tracking-tight text-white drop-shadow-md" style="margin-bottom: 2rem; margin-top: 2rem;">
+        <div class="flex flex-wrap items-center justify-center gap-2 mb-5">
+            <span class="inline-flex items-center gap-1.5 text-white font-kicker-uppercase text-[10px] tracking-widest bg-white/10 px-3 py-1 rounded-full border border-white/20 backdrop-blur-sm shadow-sm">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#7090cb] animate-pulse"></span>
+                CONVOCATORIA ACADÉMICA ACTIVA
+            </span>
+            <span class="text-white/40 font-meta-code text-[11px] px-1">•</span>
+            <span class="font-kicker-uppercase text-[10px] tracking-widest text-white/80">TRAYECTOS I AL IV</span>
+            <span class="text-white/40 font-meta-code text-[11px] px-1">•</span>
+            <span class="font-kicker-uppercase text-[10px] tracking-widest text-white/80">PERÍODO 2025-I</span>
+            <span class="text-white/40 font-meta-code text-[11px] px-1">•</span>
+            <span class="font-meta-code text-[11px] text-white/70">INTEROPERABLE OPENALEX / OAI-PMH</span>
+        </div>
+        
+        <h1 class="text-3xl md:text-5xl font-bold mb-4 font-headline-hero tracking-tight text-white drop-shadow-md">
             Banco Abierto de Proyectos y Oportunidades PST
         </h1>
         
-        <p class="text-white/80 max-w-3xl text-sm md:text-base font-body-lg leading-relaxed" style="margin-bottom: 4rem;">
+        <p class="text-white/80 max-w-3xl mb-8 text-sm md:text-base font-body-lg leading-relaxed">
             Catálogo unificado de proyectos sociotecnológicos disponibles para vinculación estudiantil comunitaria. Encuentra, postula tu equipo de trabajo y desarrolla tu PST según tu trayecto y línea temática de investigación-acción.
         </p>
         
@@ -153,14 +120,14 @@
                 <span class="material-symbols-outlined text-gray-400 text-[18px] mr-2">terminal</span>
                 <input class="w-full bg-transparent border-none p-0 text-sm md:text-base text-gray-800 placeholder:text-gray-400 focus:ring-0 outline-none" placeholder="Buscar por palabra clave, comunidad beneficiaria o tecnología..." type="text" id="search-hero">
             </div>
-            <button class="w-full sm:w-auto inline-flex items-center justify-center gap-2  text-white px-6 py-2.5 rounded-full transition-all mt-2 sm:mt-0 flex-shrink-0" id="btn-search-hero">
+            <button class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary-container hover:bg-black text-white px-6 py-2.5 rounded-full transition-all mt-2 sm:mt-0 flex-shrink-0" id="btn-search-hero">
                 <span class="text-sm font-bold font-button-text">Buscar Proyectos</span>
                 <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
             </button>
         </div>
 
         <!-- STATS INSIDE HERO -->
-        <div class="w-full max-w-4xl pt-6 border-t border-white/20 grid grid-cols-3 gap-4 text-center" style="margin-top: 4rem;">
+        <div class="w-full max-w-4xl mt-8 pt-6 border-t border-white/20 grid grid-cols-3 gap-4 text-center">
             <!-- Proyectos -->
             <div class="flex flex-col items-center gap-1">
                 <span class="material-symbols-outlined text-white/70 text-[22px]">folder_special</span>
@@ -325,7 +292,7 @@ foreach ($oportunidadesPorTrayecto as $trayecto => $ops):
   </p>
   
   <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-surface-container-highest mt-2">
-    <button class="inline-flex items-center gap-1.5 bg-[#505984] hover:bg-[#3b4263] text-white font-button-text text-button-text px-3 py-1.5 rounded transition-colors" onclick="verDetalles(<?= $op['id_investigacion'] ?>, '<?= $empresaSegura ?>', <?= $cupos ?>, '<?= $lineaSegura ?>', '<?= $areaLimpia ?>', '<?= $problemaLimpio ?>', '<?= $estadoPostulacion ?>')">
+    <button class="inline-flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white font-button-text text-button-text px-3 py-1.5 rounded transition-colors" onclick="verDetalles(<?= $op['id_investigacion'] ?>, '<?= $empresaSegura ?>', <?= $cupos ?>, '<?= $lineaSegura ?>', '<?= $areaLimpia ?>', '<?= $problemaLimpio ?>', '<?= $estadoPostulacion ?>')">
       <span class="material-symbols-outlined text-[14px]">groups</span>
       <span class="">Postular Equipo</span>
     </button>
@@ -436,7 +403,7 @@ function verDetalles(id, empresa, cupos, linea, area, problema, estadoPrevio = '
                 showCancelButton: true,
                 confirmButtonText: 'Sí, volver a postularme',
                 cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#505984'
+                confirmButtonColor: '#10b981'
             }).then((result) => {
                 if (result.isConfirmed) {
                     verDetalles(id, empresa, cupos, linea, area, problema, estadoPrevio, true);
@@ -455,24 +422,23 @@ function verDetalles(id, empresa, cupos, linea, area, problema, estadoPrevio = '
                 <p><strong>Cupos disponibles:</strong> ${cupos}</p>
                 <hr style="margin: 10px 0;">
                 <p><strong>Problema a resolver:</strong></p>
-                <p style="background: #f8fafc; padding: 10px; border-radius: 5px; border-left: 4px solid #505984;">${problema}</p>
+                <p style="background: #f8fafc; padding: 10px; border-radius: 5px; border-left: 3px solid #1d4ed8;">${problema}</p>
                 
                 <hr style="margin: 15px 0;">
-                <h4 style="margin-bottom: 5px; color:#2b3453; font-weight:bold;">Mensaje de Motivación</h4>
+                <h4 style="margin-bottom: 5px; color:#1d4ed8; font-weight:bold;">Mensaje de Motivación</h4>
                 <textarea id="swal-motivacion" class="swal2-textarea" style="width: 100%; margin: 0; padding: 10px; font-size: 0.9rem;" placeholder="¿Por qué tu equipo es ideal para este proyecto? ¿Qué habilidades tienen?"></textarea>
                 
-                <h4 style="margin-top: 15px; margin-bottom: 5px; color:#2b3453; font-weight:bold;">Integrantes del Equipo (Opcional)</h4>
-                <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 10px;">Tú ya estás incluido automáticamente como líder del proyecto. Agrega hasta ${Math.max(0, parseInt(cupos) - 1)} compañeros adicionales si vas a trabajar en grupo.</p>
+                <h4 style="margin-top: 15px; margin-bottom: 5px; color:#1d4ed8; font-weight:bold;">Integrantes del Equipo (Opcional)</h4>
+                <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 10px;">Tú ya estás incluido automáticamente como líder del proyecto. Agrega hasta 2 compañeros adicionales si vas a trabajar en grupo.</p>
                 
                 <div id="team-members-container"></div>
-                <button type="button" id="btn-add-member" style="margin-top: 10px; padding: 6px 12px; background: #f4f7fb; color: #505984; border: 1px solid #505984; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight:bold;">+ Agregar Compañero</button>
+                <button type="button" id="btn-add-member" style="margin-top: 10px; padding: 6px 12px; background: #e2e8f0; color: #475569; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight:bold;">+ Agregar Compañero</button>
             </div>
         `,
         icon: 'info',
         width: '650px',
         showCancelButton: true,
-        confirmButtonColor: '#505984',
-        iconColor: '#505984',
+        confirmButtonColor: '#1d4ed8',
         cancelButtonColor: '#475569',
         confirmButtonText: 'Enviar Postulación',
         cancelButtonText: 'Cancelar',
@@ -482,9 +448,8 @@ function verDetalles(id, empresa, cupos, linea, area, problema, estadoPrevio = '
             const btnAdd = document.getElementById('btn-add-member');
             
             btnAdd.addEventListener('click', () => {
-                let maxComps = Math.max(0, parseInt(cupos) - 1);
-                if (count >= maxComps) {
-                    Swal.showValidationMessage(`Solo puedes agregar un máximo de ${maxComps} compañeros extra.`);
+                if (count >= 2) {
+                    Swal.showValidationMessage('Solo puedes agregar un máximo de 2 compañeros extra.');
                     return;
                 }
                 count++;
@@ -494,7 +459,7 @@ function verDetalles(id, empresa, cupos, linea, area, problema, estadoPrevio = '
                     <input type="text" class="swal2-input team-name" style="margin:0; height:38px; font-size:0.85rem; width: 40%;" placeholder="Nombre completo">
                     <input type="text" class="swal2-input team-cedula" style="margin:0; height:38px; font-size:0.85rem; width: 25%;" placeholder="Cédula">
                     <input type="tel" class="swal2-input team-phone" style="margin:0; height:38px; font-size:0.85rem; width: 25%;" placeholder="Teléfono">
-                    <button type="button" style="background: #fff1f2; color: #e11d48; border: 1px solid #fda4af; transition: all 0.2s; border-radius: 4px; width: 10%; cursor: pointer; font-weight:bold;">X</button>
+                    <button type="button" style="background: #ef4444; color: white; border: none; border-radius: 4px; width: 10%; cursor: pointer; font-weight:bold;">X</button>
                 `;
                 // Add event listener to the remove button
                 div.querySelector('button').addEventListener('click', function() {
@@ -577,7 +542,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let filteredArticles = [];
     let currentPage = 1;
-    const itemsPerPage = <?= htmlspecialchars(VinculacionConfigService::get('paginacion_cartelera', 12)) ?>; // Show 5 per page like typical results
+    const itemsPerPage = 5; // Show 5 per page like typical results
 
     function applyFilters() {
         let activeLineas = Array.from(lineaCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
@@ -643,7 +608,7 @@ document.addEventListener('DOMContentLoaded', function() {
         for (let i = 1; i <= totalPages; i++) {
             if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
                 if (i === currentPage) {
-                    html += `<button class="w-8 h-8 flex items-center justify-center rounded bg-[#505984] text-white font-meta-code text-meta-code font-bold">${i}</button>`;
+                    html += `<button class="w-8 h-8 flex items-center justify-center rounded bg-[#1e293b] text-white font-meta-code text-meta-code font-bold">${i}</button>`;
                 } else {
                     html += `<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-slate-100 text-slate-700 font-meta-code text-meta-code" onclick="goToPage(${i})">${i}</button>`;
                 }

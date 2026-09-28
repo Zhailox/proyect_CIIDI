@@ -148,4 +148,85 @@
         </div>
 
     </div>
+
+    <!-- Nueva sección: Métricas de Investigaciones -->
+    <div style="margin-top: 2.5rem; margin-bottom: 2rem;">
+        <div class="db-bento-card card-large" style="width: 100%;">
+            <div class="db-card-header">
+                <h3><i class="ph-bold ph-flask"></i> Métricas de Investigaciones</h3>
+            </div>
+            
+            <style>
+                .inv-stats {
+                    display:flex;
+                    gap:1.5rem;
+                    align-items:center;
+                    flex-wrap:wrap;
+                    margin-top: 1.5rem;
+                }
+                .inv-stat-item { 
+                    text-align:center; 
+                    min-width:130px; 
+                    flex: 1;
+                    background: var(--blanco, #F4F4F4); 
+                    padding: 1.5rem; 
+                    border-radius: 8px; 
+                    border: 1px solid rgba(0,0,0,0.05); 
+                }
+                .inv-stat-value { font-size:2.2rem; font-weight:800; color:var(--color-secundario); line-height: 1; }
+                .inv-stat-label { font-size:0.75rem; color:var(--text-muted, #555); text-transform:uppercase; margin-top:0.6rem; font-weight: 600; }
+            </style>
+            
+            <div class="inv-stats">
+                <div class="inv-stat-item">
+                    <div class="inv-stat-value"><?= htmlspecialchars($metricas['proyectos_activos'] ?? 0) ?></div>
+                    <div class="inv-stat-label">Proyectos Activos</div>
+                </div>
+                <div class="inv-stat-item">
+                    <div class="inv-stat-value"><?= htmlspecialchars($metricas['proyectos_total'] ?? 0) ?></div>
+                    <div class="inv-stat-label">Proyectos Totales</div>
+                </div>
+                <div class="inv-stat-item">
+                    <div class="inv-stat-value"><?= htmlspecialchars($metricas['postulaciones_totales'] ?? 0) ?></div>
+                    <div class="inv-stat-label">Postulaciones Recibidas</div>
+                </div>
+                <div class="inv-stat-item">
+                    <div class="inv-stat-value"><?= htmlspecialchars($metricas['postulaciones_aceptadas'] ?? 0) ?></div>
+                    <div class="inv-stat-label">Aceptadas</div>
+                </div>
+                <div class="inv-stat-item">
+                    <div class="inv-stat-value"><?= htmlspecialchars($metricas['tasa_aceptacion'] ?? 0) ?>%</div>
+                    <div class="inv-stat-label">Tasa de Aceptación</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nueva sección: Métricas de Cursos -->
+    <div style="margin-bottom: 2rem;">
+        <div class="db-bento-card card-large" style="width: 100%;">
+            <div class="db-card-header">
+                <h3><i class="ph-bold ph-chalkboard-teacher"></i> Métricas de Cursos</h3>
+            </div>
+            
+            <div class="inv-stats">
+                <div class="inv-stat-item">
+                    <div class="inv-stat-value"><?= htmlspecialchars($metricas['cursos']['publicados'] ?? 0) ?></div>
+                    <div class="inv-stat-label">Cursos Publicados</div>
+                </div>
+                <div class="inv-stat-item">
+                    <div class="inv-stat-value"><?= htmlspecialchars($metricas['cursos']['borradores'] ?? 0) ?></div>
+                    <div class="inv-stat-label">En Borrador</div>
+                </div>
+                <div class="inv-stat-item">
+                    <div class="inv-stat-value"><?= htmlspecialchars($metricas['cursos']['archivados'] ?? 0) ?></div>
+                    <div class="inv-stat-label">Archivados</div>
+                </div>
+                <div class="inv-stat-item">
+                    <div class="inv-stat-value"><?= htmlspecialchars($metricas['cursos']['total'] ?? 0) ?></div>
+                    <div class="inv-stat-label">Cursos Totales</div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

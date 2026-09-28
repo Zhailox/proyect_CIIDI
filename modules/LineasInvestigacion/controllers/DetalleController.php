@@ -12,9 +12,9 @@ require_once __DIR__ . '/../models/DimensionesModel.php';
 class DetalleLineaController {
 
     public function index(): array {
-        $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+        $id = (int)($_GET['id'] ?? 0);
 
-        $lineasModel     = new LineasModel();
+        $lineasModel      = new LineasModel();
         $dimensionesModel = new DimensionesModel();
 
         // Carga la línea con datos de carrera
@@ -35,14 +35,14 @@ class DetalleLineaController {
         $dimensiones = $dimensionesModel->getPorLinea($id);
 
         // Paginación
-        $page = isset($_GET['p']) ? max(1, (int)$_GET['p']) : 1;
+        $page = max(1, (int)($_GET['p'] ?? 1));
         $limit = 10;
         $offset = ($page - 1) * $limit;
 
         // Carga proyectos clasificados bajo esta línea
         $proyectos = $lineasModel->getProyectosPorLinea($id, $limit, $offset);
         $total_proyectos = $lineasModel->countProyectosPorLinea($id);
-        $total_pages = ceil($total_proyectos / $limit);
+        $total_pages = (int) ceil($total_proyectos / $limit);
 
         // Carga investigaciones ofertadas bajo esta línea
         $investigaciones = $lineasModel->getInvestigacionesPorLinea($id);

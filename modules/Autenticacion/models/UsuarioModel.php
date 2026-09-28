@@ -15,65 +15,40 @@ class UsuarioModel {
      * Busca un usuario activo por su correo y extrae su nivel de privilegio exacto.
      */
     public function intentarAutenticacion(string $cedula) {
-        $cedulaTrim = trim($cedula);
-        $soloDigitos = preg_replace('/[^0-9]/', '', $cedulaTrim);
-        $conPrefijo = 'V-' . $soloDigitos;
-        $conPrefijoE = 'E-' . $soloDigitos;
-
         // Quitamos el filtro de 'activo' para poder saber el estado real de la cuenta
         return $this->qb->tabla('usuarios u')
-            ->select('u.id, u.cedula, u.nombre_completo, u.email, u.contrasena, u.activo, r.nombre AS nombre_rol, p.nivel_privilegio')
+            ->select('u.id, u.nombre_completo, u.email, u.contrasena, u.activo, r.nombre AS nombre_rol, p.nivel_privilegio')
             ->join('roles r', 'u.id_rol = r.id')
             ->join('privilegios p', 'r.privilegio_id = p.privilegio_id')
-            ->whereRaw('(u.cedula = ? OR u.cedula = ? OR u.cedula = ? OR u.cedula = ?)', [$cedulaTrim, $soloDigitos, $conPrefijo, $conPrefijoE]) 
+            ->where('u.cedula', '=', $cedula) 
             ->first();
     }
     /**
-     * Registra o actualiza el contador de accesos y la última actividad del usuario.
+     * Actualiza el registro de última actividad del usuario.
      */
     public function registrarAcceso(int $id_usuario) {
+        // Pedimos la conexión directa a PostgreSQL usando nuestra clase del Core
         $db = Connection::getInstance();
         
-        try {
-            // 1. Verificar si el usuario ya posee un registro de actividad
-            $stmtCheck = $db->prepare("SELECT id FROM registro_actividad WHERE id_usuario = ? LIMIT 1");
-            $stmtCheck->execute([$id_usuario]);
-            $row = $stmtCheck->fetch(PDO::FETCH_ASSOC);
-
-            if ($row) {
-                // 2. Si existe, actualizamos la fecha y sumamos 1 al contador
-                $stmtUpdate = $db->prepare("
-                    UPDATE registro_actividad 
-                    SET ultima_actividad = CURRENT_TIMESTAMP, 
-                        conteo_accesos = conteo_accesos + 1 
-                    WHERE id = ?
-                ");
-                $stmtUpdate->execute([$row['id']]);
-            } else {
-                // 3. Si no existe, creamos el primer registro de acceso para este usuario
-                $stmtInsert = $db->prepare("
-                    INSERT INTO registro_actividad (id_usuario, fecha_inicial, ultima_actividad, conteo_accesos) 
-                    VALUES (?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1)
-                ");
-                $stmtInsert->execute([$id_usuario]);
-            }
-        } catch (Throwable $e) {
-            // Manejar excepcion en silencio para evitar bloquear la experiencia del usuario
-        }
+        $sql = "
+            UPDATE registro_actividad 
+            SET ultima_actividad = CURRENT_TIMESTAMP, 
+                conteo_accesos = conteo_accesos + 1 
+            WHERE id_usuario = :id_usuario
+        ";
+        
+        // Ahora usamos $db local en lugar de $this->db
+        $stmt = $db->prepare($sql);
+        $stmt->execute(['id_usuario' => $id_usuario]);
     }
     /**
      * Verifica si un usuario ya existe por cédula o correo
      */
     public function existeUsuario(string $cedula, string $email) {
-        $cedulaTrim = trim($cedula);
-        $soloDigitos = preg_replace('/[^0-9]/', '', $cedulaTrim);
-        $conPrefijo = 'V-' . $soloDigitos;
-        $conPrefijoE = 'E-' . $soloDigitos;
-
         $db = Connection::getInstance();
-        $sql = "SELECT id FROM usuarios WHERE (cedula = ? OR cedula = ? OR cedula = ? OR cedula = ?) OR email = ?";
+        $sql = "SELECT id FROM usuarios WHERE cedula = ? OR email = ?";
         $stmt = $db->prepare($sql);
-        $stmt->execute([$cedulaTrim, $soloDigitos, $conPrefijo, $conPrefijoE, $email]);
+        $stmt->execute([$cedula, $email]);
         return $stmt->fetch() !== false; // Retorna true si ya existe
     }
 
@@ -89,7 +64,7 @@ class UsuarioModel {
             RETURNING id
         ";
         $stmt = $db->prepare($sql);
-        $stmt->execute([$cedula, $nombre, $email, $hash, $emailVerificado ? 'true' : 'false', $tokenActivacion]);
+        $stmt->execute([$cedula, $nombre, $email, $hash, $emailVerificado ? 1 : 0, $tokenActivacion]);
         return $stmt->fetch() !== false;
     }
 
@@ -101,14 +76,9 @@ class UsuarioModel {
     }
 
     public function findByCedula(string $cedula) {
-        $cedulaTrim = trim($cedula);
-        $soloDigitos = preg_replace('/[^0-9]/', '', $cedulaTrim);
-        $conPrefijo = 'V-' . $soloDigitos;
-        $conPrefijoE = 'E-' . $soloDigitos;
-
         $db = Connection::getInstance();
-        $stmt = $db->prepare("SELECT id, nombre_completo, email, cedula FROM usuarios WHERE (cedula = ? OR cedula = ? OR cedula = ? OR cedula = ?) AND activo = true");
-        $stmt->execute([$cedulaTrim, $soloDigitos, $conPrefijo, $conPrefijoE]);
+        $stmt = $db->prepare("SELECT id, nombre_completo, email FROM usuarios WHERE cedula = ? AND activo = true");
+        $stmt->execute([$cedula]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
     
