@@ -367,6 +367,56 @@ class VinculacionController
         }
     }
 
+    // --- METODOS DE VISTAS FRONTEND ---
+    
+    public function carteleraOportunidades(): array {
+        $nivelPublico = SystemConfigService::get('accesos_modulos.vinculacion_empresarial.publico', 999);
+        Auth::requierePrivilegioMinimo($nivelPublico);
+        
+        $oportunidades = $this->modelo->getAceptadas();
+        
+        $lineasUnicasMap = [];
+        $oportunidadesPorTrayecto = [];
+        $cuposUnicosMap = [];
+        
+        foreach ($oportunidades as $op) {
+            if (!empty($op['linea_investigacion'])) {
+                $lineasUnicasMap[$op['linea_investigacion']] = $op['linea_investigacion'];
+            }
+            $trayecto = !empty($op['nivel_trayecto']) ? $op['nivel_trayecto'] : 'Sin Trayecto Asignado';
+            $oportunidadesPorTrayecto[$trayecto][] = $op;
+            
+            $cupo = (int)($op['cupos_disponibles'] ?? 3);
+            $cuposUnicosMap[$cupo] = $cupo;
+        }
+        
+        $lineasUnicas = array_values($lineasUnicasMap);
+        ksort($oportunidadesPorTrayecto);
+        
+        $cuposUnicos = array_values($cuposUnicosMap);
+        sort($cuposUnicos);
+
+        $userData = [];
+        $estados_postulaciones = [];
+        if (Auth::check()) {
+            $pdo = \Connection::getInstance();
+            $stmt = $pdo->prepare("SELECT nombre_completo, cedula, email, telefono FROM usuarios WHERE id = ?");
+            $stmt->execute([$_SESSION['usuario_id']]);
+            $userData = $stmt->fetch(\PDO::FETCH_ASSOC) ?: [];
+            
+            $estados_postulaciones = $this->modelo->getEstadosPostulacionesEstudiante($_SESSION['usuario_id']);
+        }
+        
+        return [
+            'oportunidades' => $oportunidades,
+            'userData' => $userData,
+            'lineasUnicas' => $lineasUnicas,
+            'estados_postulaciones' => $estados_postulaciones,
+            'oportunidadesPorTrayecto' => $oportunidadesPorTrayecto,
+            'cuposUnicos' => $cuposUnicos
+        ];
+    }
+
     public function gestionProyectos(): array
     {
         Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'VinculacionEmpresarial');
@@ -468,6 +518,7 @@ match ($ruta) {
     'guardar-propuesta'     => $controller->guardarPropuesta(),
     'procesar-propuesta'    => $controller->procesarPropuesta(),
     'postular-oportunidad'  => $controller->postularOportunidad(),
+    'cartelera-oportunidades' => $controller->carteleraOportunidades(),
     'procesar-asignacion'   => $controller->procesarAsignacion(),
     'guardar-configuracion' => $controller->guardarConfiguracion(),
     default                 => null
