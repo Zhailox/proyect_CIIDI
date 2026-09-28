@@ -367,6 +367,29 @@ class VinculacionController
         }
     }
 
+    
+    // --- METODOS DE VISTAS FRONTEND ---
+    
+    public function carteleraOportunidades(): array {
+        $nivelPublico = SystemConfigService::get('accesos_modulos.vinculacion_empresarial.publico', 999);
+        Auth::requierePrivilegioMinimo($nivelPublico); // 999 permite a cualquier usuario autenticado
+        
+        $oportunidades = $this->modelo->getAceptadas();
+        
+        $userData = [];
+        if (Auth::check()) {
+            $pdo = \Connection::getInstance();
+            $stmt = $pdo->prepare("SELECT nombre_completo, cedula, email, telefono FROM usuarios WHERE id = ?");
+            $stmt->execute([$_SESSION['usuario_id']]);
+            $userData = $stmt->fetch(\PDO::FETCH_ASSOC) ?: [];
+        }
+        
+        return [
+            'oportunidades' => $oportunidades,
+            'userData' => $userData
+        ];
+    }
+
     public function gestionProyectos(): array
     {
         Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'VinculacionEmpresarial');
