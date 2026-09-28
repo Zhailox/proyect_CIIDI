@@ -30,7 +30,7 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
                     <?= htmlspecialchars(mb_convert_case($linea['nombre'], MB_CASE_TITLE, 'UTF-8')) ?>
                 </h1>
                 <p class="ag-header-desc">
-                    <?= htmlspecialchars($linea['descripcion']) ?>
+                    <?= htmlspecialchars(mb_convert_encoding($linea['descripcion'], 'UTF-8', 'CP850')) ?>
                 </p>
                 
                 <div style="display: flex; align-items: center; gap: 12px; margin-top: 1.5rem;">
@@ -85,7 +85,7 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
                 <div class="ag-dim-item">
                     <div style="flex:1;">
                         <div class="ag-dim-title"><?= htmlspecialchars(mb_convert_case($dim['nombre'], MB_CASE_TITLE, 'UTF-8')) ?></div>
-                        <div class="ag-dim-desc"><?= htmlspecialchars($dim['descripcion']) ?></div>
+                        <div class="ag-dim-desc"><?= htmlspecialchars(mb_convert_encoding($dim['descripcion'], 'UTF-8', 'CP850')) ?></div>
                     </div>
                     <div style="display:flex; gap:10px; margin-left:2rem;">
                         <button type="button" class="ag-btn-edit" onclick="abrirModalEditarDimension(<?= htmlspecialchars(json_encode($dim)) ?>)">
@@ -127,6 +127,7 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
 <!-- Formularios Ocultos -->
 <form id="formEliminarDimension" method="POST" action="index.php?ruta=gestionar-dimensiones" style="display:none;">
     <input type="hidden" name="accion" value="eliminar">
+        <?= CSRF::campoOculto() ?>
     <input type="hidden" name="id" id="deleteDimensionId" value="">
     <input type="hidden" name="redirect_to" value="detalle-gestion-linea&id=<?= $linea['id'] ?>">
 </form>
@@ -141,6 +142,7 @@ function abrirModalEditarLinea(linea) {
             <div style="text-align: left; margin-top: 1rem;">
                 <form id="form-edit-linea" method="POST" action="index.php?ruta=gestionar-lineas">
                     <input type="hidden" name="accion" value="editar">
+                    <?= CSRF::campoOculto() ?>
                     <input type="hidden" name="id" value="${linea.id}">
                     <input type="hidden" name="id_carrera" value="${linea.id_carrera}">
                     <input type="hidden" name="redirect_to" value="detalle-gestion-linea&id=${linea.id}">
@@ -211,6 +213,7 @@ function abrirModalCrearDimension(idLinea) {
             <div style="text-align: left; margin-top: 1rem;">
                 <form id="form-create-dim" method="POST" action="index.php?ruta=gestionar-dimensiones">
                     <input type="hidden" name="accion" value="crear">
+                    <?= CSRF::campoOculto() ?>
                     <input type="hidden" name="id_linea" value="${idLinea}">
                     <input type="hidden" name="redirect_to" value="detalle-gestion-linea&id=${idLinea}">
                     
@@ -249,6 +252,7 @@ function abrirModalEditarDimension(dim) {
             <div style="text-align: left; margin-top: 1rem;">
                 <form id="form-edit-dim" method="POST" action="index.php?ruta=gestionar-dimensiones">
                     <input type="hidden" name="accion" value="editar">
+                    <?= CSRF::campoOculto() ?>
                     <input type="hidden" name="id" value="${dim.id}">
                     <input type="hidden" name="id_linea" value="${dim.id_linea}">
                     <input type="hidden" name="redirect_to" value="detalle-gestion-linea&id=${dim.id_linea}">

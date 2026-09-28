@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderizarGraficoTendencias(data, predSteps);
                 renderizarMetricasTendencias(data, predSteps);
                 renderizarInsights(data, predSteps);
+                document.getElementById('btn-descargar-pdf').style.display = 'flex';
             }
         } catch (error) {
             metricasTendencias.innerHTML = `<p style="color:#ff4444">Error de conexión con el motor de IA.</p>`;
@@ -440,4 +441,79 @@ document.addEventListener('DOMContentLoaded', () => {
         
         container.innerHTML = html;
     }
+
+    // --- EXPORTAR A PDF ---
+    const btnDescargarPdf = document.getElementById('btn-descargar-pdf');
+    if (btnDescargarPdf) {
+        btnDescargarPdf.addEventListener('click', () => {
+            const pdfWrapper = document.createElement('div');
+            pdfWrapper.style.padding = '20px';
+            pdfWrapper.style.backgroundColor = '#ffffff';
+            pdfWrapper.style.color = '#121a3e';
+            pdfWrapper.style.fontFamily = 'Arial, sans-serif';
+            
+            const header = document.createElement('div');
+            header.innerHTML = `
+                <h1 style="color:#121a3e; text-align:center; margin-bottom: 5px; font-size:24px;">Reporte Analítico - Proyección de Demanda Empresarial</h1>
+                <p style="color:#64748b; text-align:center; font-size: 14px; margin-top:0; margin-bottom: 30px;">Generado por el Sistema CIIDI - IA Analytics</p>
+            `;
+            pdfWrapper.appendChild(header);
+
+            const canvasOriginal = document.getElementById('tendenciasChart');
+            const imgData = canvasOriginal.toDataURL('image/png');
+            const img = document.createElement('img');
+            img.src = imgData;
+            img.style.width = '100%';
+            img.style.marginBottom = '30px';
+            img.style.border = '1px solid #e2e8f0';
+            img.style.borderRadius = '8px';
+            pdfWrapper.appendChild(img);
+
+            const metricasOriginal = document.getElementById('metricas-tendencias-resultado');
+            const metricasClon = metricasOriginal.cloneNode(true);
+            metricasClon.style.marginBottom = '30px';
+            
+            const tituloMetricas = document.createElement('h3');
+            tituloMetricas.style.color = '#121a3e';
+            tituloMetricas.style.borderBottom = '1px solid #cbd5e1';
+            tituloMetricas.style.paddingBottom = '5px';
+            tituloMetricas.innerText = 'Métricas de Error y Saturación';
+            pdfWrapper.appendChild(tituloMetricas);
+            pdfWrapper.appendChild(metricasClon);
+
+            const insightsOriginal = document.getElementById('insights-tendencias');
+            const insightsClon = insightsOriginal.cloneNode(true);
+            
+            const tituloInsights = document.createElement('h3');
+            tituloInsights.style.color = '#121a3e';
+            tituloInsights.style.borderBottom = '1px solid #cbd5e1';
+            tituloInsights.style.paddingBottom = '5px';
+            tituloInsights.innerText = 'Hallazgos de IA';
+            pdfWrapper.appendChild(tituloInsights);
+            pdfWrapper.appendChild(insightsClon);
+
+            pdfWrapper.style.position = 'absolute';
+            pdfWrapper.style.left = '-9999px';
+            document.body.appendChild(pdfWrapper);
+
+            const opt = {
+                margin:       10,
+                filename:     'Reporte_Proyeccion_CIIDI.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            const iconOriginal = btnDescargarPdf.innerHTML;
+            btnDescargarPdf.innerHTML = '<i class="ph-bold ph-spinner ph-spin" style="font-size: 1.1rem;"></i> Generando...';
+            btnDescargarPdf.disabled = true;
+
+            html2pdf().set(opt).from(pdfWrapper).save().then(() => {
+                document.body.removeChild(pdfWrapper);
+                btnDescargarPdf.innerHTML = iconOriginal;
+                btnDescargarPdf.disabled = false;
+            });
+        });
+    }
 });
+

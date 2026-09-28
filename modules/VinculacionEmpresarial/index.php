@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // modules/VinculacionEmpresarial/index.php
 
 require_once CORE_PATH . 'Interfaces/ModuleContract.php';
@@ -60,7 +60,8 @@ class VinculacionEmpresarialModule implements ModuleContract {
                 'titulo' => 'Rastrea tu Propuesta - CIIDI',
                 'css'    => $css_modulo
             ],
-            'cartelera-oportunidades' => [
+            'guardar-configuracion' => ['vista' => __DIR__ . '/controllers/VinculacionController.php', 'metodo' => 'guardarConfiguracion', 'oculto' => true],
+            'vinculacion-config' => ['vista' => __DIR__ . '/views/configuracion.php', 'titulo' => 'Configuración de Vinculación', 'css' => $css_modulo, 'controlador' => 'VinculacionController', 'controlador_path' => __DIR__ . '/controllers/VinculacionController.php', 'metodo' => 'configuracion'], 'cartelera-oportunidades' => [
                 'vista'  => __DIR__ . '/views/cartelera_oportunidades.php', 
                 'titulo' => 'Cartelera de Oportunidades',
                 'css'    => $css_modulo,
@@ -98,12 +99,13 @@ class VinculacionEmpresarialModule implements ModuleContract {
                 'icono'       => 'ph-fill ph-buildings',
                 'enlace'      => 'empresas-inicio',
                 'privilegio_minimo' =>  $nivelPublico,
-                'activadores' => ['empresas-inicio', 'seguimiento-empresa', 'cartelera-oportunidades', 'gestion-proyectos', 'banco-propuestas', 'gestion-equipos'], 
+                'activadores' => ['empresas-inicio', 'seguimiento-empresa', 'cartelera-oportunidades', 'gestion-proyectos', 'banco-propuestas', 'gestion-equipos', 'vinculacion-config'], 
                 'subitems'    => [
                     ['ruta' => 'empresas-inicio', 'titulo' => 'Conócenos', 'privilegio_minimo' => $nivelPublico,],
                     ['ruta' => 'cartelera-oportunidades', 'titulo' => 'Oportunidades PST', 'privilegio_minimo' => $nivelLogueado],
                     ['ruta' => 'seguimiento-empresa', 'titulo' => 'Seguimiento', 'privilegio_minimo' => $nivelPublico,],
-                    ['ruta' => 'gestion-proyectos', 'titulo' => 'Gestión de Solicitudes', 'privilegio_minimo' => $nivelAdmin]
+                    ['ruta' => 'gestion-proyectos', 'titulo' => 'Gestión de Solicitudes', 'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'vinculacion-config', 'titulo' => 'Configuración', 'privilegio_minimo' => $nivelAdmin]
                 ]
             ]
         ];

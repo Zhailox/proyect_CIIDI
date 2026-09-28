@@ -1,15 +1,15 @@
-@import url("https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css");
+﻿@import url("https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css");
 @import url("https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/bold/style.css");
 @import url("https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css");
 
 /* ==========================================================================
-   MÓDULO LÍNEAS DE INVESTIGACIÓN - CIIDI
+   MÃ“DULO LÃNEAS DE INVESTIGACIÃ“N - CIIDI
    Paleta: variables del core (--color-principal / secundario / terciario)
    ========================================================================== */
 
-/* ─── Re-alias locales → core ────────────────────────────────────────────── */
+/* â”€â”€â”€ Re-alias locales â†’ core â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 :root {
-    /* Colores de marca → paleta institucional del core */
+    /* Colores de marca â†’ paleta institucional del core */
     --li-indigo:      var(--color-principal);   /* #121A3E */
     --li-violet:      var(--color-secundario);  /* #505984 */
     --li-cyan:        var(--color-terciario);   /* #7090CB */
@@ -19,16 +19,16 @@
     --li-emerald:     #059669;
     --li-rose:        #e11d48;
 
-    /* Layout → reutiliza radios y transición del core */
+    /* Layout â†’ reutiliza radios y transiciÃ³n del core */
     --li-card-radius: var(--radius-sm);         /* 8px */
-    --li-transition:  var(--transition-fast);
+    --li-transition:  all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* ── Aliases de texto: mapean variables faltantes al core ── */
+    /* â”€â”€ Aliases de texto: mapean variables faltantes al core â”€â”€ */
     /* --color-principal es blanco en el core actual; para texto usar --texto-titulos */
     --text-dark:      var(--texto-comun);       /* #1a1a1a */
     --text-muted:     var(--texto-silenciado);  /* #64748B */
     --text-white:     var(--texto-blanco);      /* #FFFFFF */
-    /* Color de título de sección (reemplaza usos de --color-principal en texto) */
+    /* Color de tÃ­tulo de secciÃ³n (reemplaza usos de --color-principal en texto) */
     --li-text-title:  var(--texto-titulos);     /* #1E293B */
     --li-text-accent: var(--texto-subtitulos);  /* --color-secundario = #505984 */
 
@@ -36,7 +36,7 @@
     --bg-banner: linear-gradient(135deg, #0a0f24 0%, #121A3E 50%, #1e2d5a 100%);
 }
 
-/* ─── WRAPPER GENERAL ────────────────────────────────────────────────────── */
+/* â”€â”€â”€ WRAPPER GENERAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .li-wrapper {
     padding: 0 1.5rem;
     display: flex;
@@ -44,7 +44,7 @@
     gap: 2rem;
 }
 
-/* ─── HERO BANNER ────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ HERO BANNER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .li-hero {
     background: var(--bg-banner);
     border-radius: var(--li-card-radius);
@@ -59,7 +59,7 @@
     box-shadow: var(--shadow-md);
 }
 
-/* Partículas decorativas */
+/* PartÃ­culas decorativas */
 .li-hero::before,
 .li-hero::after {
     content: '';
@@ -117,7 +117,7 @@
     margin: 0;
 }
 
-/* Estadísticas globales en el hero */
+/* EstadÃ­sticas globales en el hero */
 .li-hero-stats {
     display: flex;
     gap: 1.5rem;
@@ -158,7 +158,7 @@
     font-weight: 600;
 }
 
-/* ─── GRID DE CARDS DE LÍNEAS ─────────────────────────────────────────────── */
+/* â”€â”€â”€ GRID DE CARDS DE LÃNEAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .li-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -181,7 +181,7 @@
     box-shadow: var(--shadow-md);
 }
 
-/* Barra de color superior por índice */
+/* Barra de color superior por Ã­ndice */
 .li-card-accent {
     height: 4px;
     border-radius: var(--li-card-radius) var(--li-card-radius) 0 0;
@@ -288,7 +288,7 @@
     color: var(--li-text-title);
 }
 
-/* Botón de la card */
+/* BotÃ³n de la card */
 .li-card-footer {
     padding: 0 1.5rem 1.5rem;
 }
@@ -319,7 +319,7 @@
     text-decoration: none;
 }
 
-/* ─── VISTA DE DETALLE ────────────────────────────────────────────────────── */
+/* â”€â”€â”€ VISTA DE DETALLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .li-detail-wrapper {
     padding: 0 1.5rem;
     display: flex;
@@ -415,7 +415,7 @@
     .li-hero-stats { display: none; }
 }
 
-/* Sección de dimensiones (acordeones) */
+/* SecciÃ³n de dimensiones (acordeones) */
 .li-section-title {
     font-size: 1.05rem;
     font-weight: 700;
@@ -575,7 +575,7 @@
 .li-inv-estado.desarrollo { background: rgba(79,70,229,0.1);  color: var(--li-indigo); }
 .li-inv-estado.finalizada { background: rgba(100,116,139,0.1);color: #64748b; }
 
-/* Alerta estado vacío */
+/* Alerta estado vacÃ­o */
 .li-empty-state {
     display: flex;
     flex-direction: column;
@@ -599,7 +599,7 @@
     max-width: 300px;
 }
 
-/* ─── PANEL DE GESTIÓN (ADMIN) ───────────────────────────────────────────── */
+/* â”€â”€â”€ PANEL DE GESTIÃ“N (ADMIN) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .li-gestor-wrapper {
     padding: 0 1.5rem;
     display: flex;
@@ -631,7 +631,7 @@
     margin: 0;
 }
 
-/* Formulario de creación/edición */
+/* Formulario de creaciÃ³n/ediciÃ³n */
 .li-form-card {
     background: #fff;
     border-radius: var(--li-card-radius);
@@ -720,7 +720,7 @@
     margin-top: 1rem;
 }
 
-/* ─── TABLA DEL GESTOR ───────────────────────────────────────────────────── */
+/* â”€â”€â”€ TABLA DEL GESTOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .li-table-card {
     background: #fff;
     border-radius: var(--li-card-radius);
@@ -799,7 +799,7 @@
     color: var(--li-text-title);
 }
 
-/* Botones de acción en tabla */
+/* Botones de acciÃ³n en tabla */
 .li-tbl-actions {
     display: flex;
     gap: 0.4rem;
@@ -842,7 +842,7 @@
     color: #fff;
 }
 
-/* ─── MENSAJES DE ALERTA ─────────────────────────────────────────────────── */
+/* â”€â”€â”€ MENSAJES DE ALERTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .li-alert {
     padding: 0.9rem 1.25rem;
     border-radius: 8px;
@@ -866,7 +866,7 @@
     border: 1px solid rgba(225,29,72,0.2);
 }
 
-/* ─── MODAL DE CONFIRMACIÓN DE ELIMINACIÓN (CSS puro) ────────────────────── */
+/* â”€â”€â”€ MODAL DE CONFIRMACIÃ“N DE ELIMINACIÃ“N (CSS puro) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .li-modal-toggle { display: none; }
 
 .li-modal-overlay {
@@ -930,7 +930,7 @@
     justify-content: center;
 }
 
-/* ─── ANIMACIONES ─────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ ANIMACIONES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @keyframes li-fadeIn {
     from { opacity: 0; transform: translateY(-8px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -1091,7 +1091,7 @@
 
 .ag-modules-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2rem;
 }
@@ -1497,11 +1497,11 @@
 
 .li-wrapper {
   /* =========================================================
-     OVERRIDES DE COLORES GLOBALES PARA ESTE MÓDULO
-     El CSS generado por Stitch asume que --color-principal es índigo,
+     OVERRIDES DE COLORES GLOBALES PARA ESTE MÃ“DULO
+     El CSS generado por Stitch asume que --color-principal es Ã­ndigo,
      pero el core real lo define como blanco (rgb 255,255,255).
      ========================================================= */
-  --color-principal: rgb(80, 89, 132); /* Igual al botón Buscar PST */
+  --color-principal: rgb(80, 89, 132); /* Igual al botÃ³n Buscar PST */
   --color-secundario: rgb(30, 41, 59);
   --color-terciario: rgb(112, 144, 203);
 }
@@ -1659,7 +1659,7 @@
       max-width: 860px;
       margin: 0 auto 2.25rem auto;
       border: 2px solid transparent;
-      transition: var(--transicion);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .li-search-box:focus-within {
@@ -1724,7 +1724,7 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      transition: var(--transicion);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       white-space: nowrap;
     }
 
@@ -1733,7 +1733,7 @@
       transform: translateY(-1px);
     }
 
-    /* 4 KPIs / Estadísticas globales */
+    /* 4 KPIs / EstadÃ­sticas globales */
     .li-kpi-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -1752,7 +1752,7 @@
       display: flex;
       align-items: center;
       gap: 0.85rem;
-      transition: var(--transicion);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .li-kpi-card:hover {
@@ -1906,7 +1906,7 @@
       gap: 0.75rem;
     }
 
-    /* Botón desplegable para Filtros Avanzados */
+    /* BotÃ³n desplegable para Filtros Avanzados */
     .li-btn-filter-toggle {
       background: #ffffff;
       border: 1px solid var(--color-borde);
@@ -1919,7 +1919,7 @@
       display: inline-flex;
       align-items: center;
       gap: 0.45rem;
-      transition: var(--transicion);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .li-btn-filter-toggle:hover {
@@ -1947,7 +1947,7 @@
       font-weight: 800;
     }
 
-    /* Selector de Vistas: Cuadrícula / Lista (Requerimiento 3) */
+    /* Selector de Vistas: CuadrÃ­cula / Lista (Requerimiento 3) */
     .li-view-mode-selector {
       display: inline-flex;
       background: #ffffff;
@@ -1968,7 +1968,7 @@
       justify-content: center;
       color: var(--texto-silenciado);
       cursor: pointer;
-      transition: var(--transicion);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       font-size: 1.1rem;
     }
 
@@ -1982,7 +1982,7 @@
       box-shadow: var(--sombra-sm);
     }
 
-    /* Filtros facetados de carreras (PNF) con estados activo / próximamente */
+    /* Filtros facetados de carreras (PNF) con estados activo / prÃ³ximamente */
     .li-facet-filters {
       display: flex;
       align-items: center;
@@ -2003,7 +2003,7 @@
       display: inline-flex;
       align-items: center;
       gap: 0.45rem;
-      transition: var(--transicion);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .li-facet-chip:hover:not(.disabled) {
@@ -2120,7 +2120,7 @@
       color: var(--texto-titulos);
       outline: none;
       font-family: inherit;
-      transition: var(--transicion);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .li-af-select:focus, .li-af-input:focus {
@@ -2129,7 +2129,7 @@
       box-shadow: 0 0 0 3px rgba(112, 144, 203, 0.15);
     }
 
-    /* Barra de píldoras de filtros activos y acciones */
+    /* Barra de pÃ­ldoras de filtros activos y acciones */
     .li-af-footer {
       display: flex;
       align-items: center;
@@ -2180,7 +2180,7 @@
       cursor: pointer;
       padding: 0.45rem 0.85rem;
       border-radius: var(--radio-sm);
-      transition: var(--transicion);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .li-af-btn-clear:hover {
@@ -2200,7 +2200,7 @@
       display: inline-flex;
       align-items: center;
       gap: 0.4rem;
-      transition: var(--transicion);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .li-af-btn-apply:hover {
@@ -2283,10 +2283,10 @@
     }
 
     /* ==========================================================================
-       SISTEMA DUAL: MODO CUADRÍCULA VS MODO LISTA (REQUERIMIENTO 3)
+       SISTEMA DUAL: MODO CUADRÃCULA VS MODO LISTA (REQUERIMIENTO 3)
        ========================================================================== */
     
-    /* MODO CUADRÍCULA (Predeterminado) */
+    /* MODO CUADRÃCULA (Predeterminado) */
     .li-items-container.grid-view {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
@@ -2302,7 +2302,7 @@
       flex-direction: column;
       justify-content: space-between;
       box-shadow: var(--sombra-sm);
-      transition: var(--transicion);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
       position: relative;
     }
@@ -2332,7 +2332,7 @@
       font-size: 1.35rem;
       flex-shrink: 0;
       border: 1px solid var(--color-borde);
-      transition: var(--transicion);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .li-card:hover .li-card-icon-box {
@@ -2375,7 +2375,7 @@
       overflow: hidden;
     }
 
-    /* REGLA CRÍTICA DE RETROALIMENTACIÓN: Metadatos con flex-wrap y gap */
+    /* REGLA CRÃTICA DE RETROALIMENTACIÃ“N: Metadatos con flex-wrap y gap */
     .li-card-badges {
       display: flex;
       flex-wrap: wrap;
@@ -2463,7 +2463,7 @@
       font-weight: 700;
       color: var(--color-secundario);
       margin-top: 0.75rem;
-      transition: var(--transicion);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .li-card:hover .li-card-footer-action {
@@ -2491,7 +2491,7 @@
       align-items: center;
       gap: 1.5rem;
       box-shadow: var(--sombra-sm);
-      transition: var(--transicion);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
     }
 
@@ -2541,7 +2541,7 @@
       border-color: var(--color-principal);
     }
 
-    /* Tarjetas en estado 'Próximamente' o Deshabilitadas */
+    /* Tarjetas en estado 'PrÃ³ximamente' o Deshabilitadas */
     .li-card.card-upcoming {
       opacity: 0.78;
       background: #fafbfc;
@@ -2577,7 +2577,7 @@
     }
 
     /* ==========================================================================
-       VISTA 2: DETALLE DE LA LÍNEA Y SUBMÓDULOS (ROL CONECTOR)
+       VISTA 2: DETALLE DE LA LÃNEA Y SUBMÃ“DULOS (ROL CONECTOR)
        ========================================================================== */
     .li-detail-header-wrapper {
       background: linear-gradient(135deg, rgba(80, 89, 132, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%);
@@ -2645,7 +2645,7 @@
       align-items: center;
       gap: 0.35rem;
       font-weight: 500;
-      transition: var(--transicion);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
     }
 
@@ -2807,7 +2807,7 @@
       display: inline-flex;
       align-items: center;
       gap: 0.45rem;
-      transition: var(--transicion);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       user-select: none;
     }
 
@@ -2871,7 +2871,7 @@
       justify-content: space-between;
       gap: 1.5rem;
       box-shadow: var(--sombra-sm);
-      transition: var(--transicion);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .li-project-item:hover {
@@ -2940,7 +2940,7 @@
       display: inline-flex;
       align-items: center;
       gap: 0.45rem;
-      transition: var(--transicion);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
       white-space: nowrap;
     }
@@ -2969,7 +2969,7 @@
       align-items: center;
       gap: 0.5rem;
       text-decoration: none;
-      transition: var(--transicion);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: var(--sombra-sm);
     }
 
@@ -3030,7 +3030,7 @@
       border-radius: var(--radio-md);
       padding: 1.15rem;
       background: #ffffff;
-      transition: var(--transicion);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
@@ -3111,7 +3111,7 @@
       align-items: center;
       justify-content: center;
       gap: 0.45rem;
-      transition: var(--transicion);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       margin-top: 0.35rem;
     }
 
@@ -3173,3 +3173,266 @@
 .li-detail-header-wrapper .li-code-badge { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.3); color: #ffffff; }
 
 @media (max-width: 900px) { .li-main-layout { grid-template-columns: 1fr !important; } }
+
+
+
+/* ==========================================================================
+   COSMOS DESIGN SYSTEM v2 â€” Paleta oficial CIIDI
+   Hero: #2b3453 â†’ #505984 | Acento: #7090CB | Cards: gradientes institucionales
+   ========================================================================== */
+
+/* â”€â”€ HERO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.cosmos-hero {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #505984 0%, #1e293b 100%);
+    border-radius: 14px; padding: 3.5rem 2.5rem 2.5rem;
+    color: #fff; box-shadow: 0 20px 50px rgba(43,52,83,0.45);
+}
+
+/* Fondo animado: cuadrÃ­cula 3D en movimiento (efecto "GIF") */
+.cosmos-starfield { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+
+.cosmos-moving-grid {
+    position: absolute; top: -60%; left: -30%; width: 160%; height: 220%;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px);
+    background-size: 50px 50px;
+    transform-origin: top center;
+    transform: perspective(700px) rotateX(55deg) translateZ(0);
+    animation: cosmosGridMove 8s linear infinite;
+    will-change: transform;
+}
+@keyframes cosmosGridMove {
+    0%   { transform: perspective(700px) rotateX(55deg) translateY(0) translateZ(0); }
+    100% { transform: perspective(700px) rotateX(55deg) translateY(50px) translateZ(0); }
+}
+
+
+    100% { background-position: 0 1200px; }
+}
+
+/* PartÃ­culas/estrellas */
+.cosmos-stars {
+    position: absolute; inset: 0;
+    background-image:
+        radial-gradient(circle at 10% 20%, rgba(255,255,255,0.8) 0px, transparent 1.5px),
+        radial-gradient(circle at 25% 65%, rgba(255,255,255,0.6) 0px, transparent 1px),
+        radial-gradient(circle at 42% 10%, rgba(255,255,255,0.7) 0px, transparent 1.5px),
+        radial-gradient(circle at 55% 78%, rgba(255,255,255,0.5) 0px, transparent 1px),
+        radial-gradient(circle at 70% 28%, rgba(255,255,255,0.8) 0px, transparent 1.5px),
+        radial-gradient(circle at 80% 88%, rgba(255,255,255,0.6) 0px, transparent 1px),
+        radial-gradient(circle at 90% 15%, rgba(255,255,255,0.7) 0px, transparent 1.5px),
+        radial-gradient(circle at 15% 92%, rgba(255,255,255,0.5) 0px, transparent 1px),
+        radial-gradient(circle at 60% 50%, rgba(255,255,255,0.6) 0px, transparent 1px),
+        radial-gradient(circle at 35% 40%, rgba(255,255,255,0.7) 0px, transparent 1.5px),
+        radial-gradient(circle at 83% 55%, rgba(255,255,255,0.6) 0px, transparent 1px);
+    background-size: 600px 400px;
+}
+.cosmos-stars-sm { background-size: 260px 170px; opacity: 0.6; animation: cosmosTwinkle 9s ease-in-out infinite; }
+.cosmos-stars-md { background-size: 480px 300px; opacity: 0.3; animation: cosmosTwinkle 14s ease-in-out infinite reverse; }
+@keyframes cosmosTwinkle { 0%,100% { opacity:0.6; } 50% { opacity:0.12; } }
+
+/* Nebulosas con colores institucionales */
+.cosmos-nebula { position: absolute; border-radius: 50%; filter: blur(70px); pointer-events: none; }
+.cosmos-nebula-1 {
+    width: 400px; height: 320px;
+    background: radial-gradient(circle, rgba(112,144,203,0.22) 0%, transparent 70%);
+    top: -100px; right: -40px;
+    animation: cosmosFloat 18s ease-in-out infinite;
+}
+.cosmos-nebula-2 {
+    width: 300px; height: 280px;
+    background: radial-gradient(circle, rgba(80,89,132,0.28) 0%, transparent 70%);
+    bottom: -70px; left: 10%;
+    animation: cosmosFloat 24s ease-in-out infinite reverse;
+}
+@keyframes cosmosFloat { 0%,100% { transform: translate(0,0); } 33% { transform: translate(25px,-18px); } 66% { transform: translate(-12px,12px); } }
+
+/* Hero interior */
+.cosmos-hero-inner {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1.3rem;
+}
+
+.cosmos-hero-badge {
+    display: inline-flex; align-items: center; gap: 0.45rem;
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22);
+    backdrop-filter: blur(8px); border-radius: 50px; padding: 0.35rem 1.1rem;
+    font-size: 0.71rem; font-weight: 700; letter-spacing: 0.9px; text-transform: uppercase; color: rgba(255,255,255,0.85);
+}
+
+.cosmos-hero-title {
+    font-size: clamp(1.8rem, 4vw, 2.75rem); font-weight: 800;
+    color: #fff; line-height: 1.15; margin: 0; letter-spacing: -0.5px;
+}
+.cosmos-accent-text { color: #a8c4f0; position: relative; }
+.cosmos-accent-text::after { content: ''; position: absolute; bottom: -3px; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, #a8c4f0, transparent); border-radius: 2px; }
+
+.cosmos-hero-desc { color: rgba(255,255,255,0.7); font-size: 1rem; line-height: 1.65; max-width: 600px; margin: 0; }
+
+/* Buscador glassmorphism */
+.cosmos-search-wrap { width: 100%; max-width: 680px; }
+.cosmos-search-box { display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 50px; padding: 0.5rem 0.5rem 0.5rem 1.25rem; transition: border-color 0.3s, background 0.3s; }
+.cosmos-search-box:focus-within { border-color: rgba(168,196,240,0.6); background: rgba(255,255,255,0.14); }
+.cosmos-search-icon { font-size: 1.1rem; color: rgba(255,255,255,0.5); flex-shrink: 0; }
+.cosmos-search-input { flex: 1; background: transparent; border: none; outline: none; color: #fff; font-size: 0.92rem; box-shadow: none !important; }
+.cosmos-search-input::placeholder { color: rgba(255,255,255,0.4); }
+.cosmos-search-btn { display: inline-flex; align-items: center; gap: 0.5rem; background: #505984; color: #fff; border: none; border-radius: 50px; padding: 0.65rem 1.4rem; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: background 0.25s, transform 0.2s; white-space: nowrap; flex-shrink: 0; }
+.cosmos-search-btn:hover { background: #3b4a7a; transform: scale(1.02); }
+
+/* KPI chips */
+.cosmos-kpi-row { display: flex; align-items: stretch; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; overflow: hidden; backdrop-filter: blur(8px); width: 100%; max-width: 680px; }
+.cosmos-kpi-chip { display: flex; align-items: center; gap: 0.7rem; padding: 0.9rem 1.3rem; flex: 1; transition: background 0.2s; }
+.cosmos-kpi-chip:hover { background: rgba(255,255,255,0.07); }
+.cosmos-kpi-chip > i { font-size: 1.35rem; color: #a8c4f0; flex-shrink: 0; }
+.cosmos-kpi-data { display: flex; flex-direction: column; line-height: 1.2; }
+.cosmos-kpi-num { font-size: 1.55rem; font-weight: 800; color: #fff; }
+.cosmos-kpi-label { font-size: 0.67rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+.cosmos-kpi-sep { width: 1px; background: rgba(255,255,255,0.1); flex-shrink: 0; align-self: stretch; }
+
+/* Main layout */
+.cosmos-main-layout { display: grid; grid-template-columns: 1fr 340px; gap: 2rem; align-items: start; }
+
+/* â”€â”€ CARDS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.cosmos-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 1.2rem; }
+.cosmos-cards-grid.list-view { grid-template-columns: 1fr; }
+
+.cosmos-card {
+    position: relative; border-radius: 14px; overflow: hidden;
+    display: flex; flex-direction: column;
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), box-shadow 0.3s, border-color 0.3s;
+    cursor: pointer; min-height: 230px;
+}
+.cosmos-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 48px rgba(43,52,83,0.5), 0 0 0 1px rgba(168,196,240,0.4), 0 0 28px rgba(112,144,203,0.15);
+    border-color: rgba(168,196,240,0.45);
+}
+
+.cosmos-card-watermark { position: absolute; bottom: -12px; right: -6px; font-size: 7rem; color: rgba(255,255,255,0.05); pointer-events: none; line-height: 1; transition: color 0.3s; }
+.cosmos-card:hover .cosmos-card-watermark { color: rgba(255,255,255,0.09); }
+
+.cosmos-card-index { position: absolute; top: 1rem; right: 1.25rem; font-size: 2.2rem; font-weight: 900; color: rgba(255,255,255,0.07); line-height: 1; letter-spacing: -1px; pointer-events: none; transition: color 0.3s; }
+.cosmos-card:hover .cosmos-card-index { color: rgba(255,255,255,0.14); }
+
+.cosmos-card-body { position: relative; z-index: 1; padding: 1.4rem; display: flex; flex-direction: column; gap: 0.7rem; flex: 1; }
+
+.cosmos-card-icon-wrap { width: 40px; height: 40px; border-radius: 10px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: rgba(255,255,255,0.85); flex-shrink: 0; }
+
+.cosmos-card-title { font-size: 0.98rem; font-weight: 700; color: #fff; margin: 0; line-height: 1.3; text-transform: capitalize; }
+.cosmos-card-desc { font-size: 0.81rem; color: rgba(255,255,255,0.55); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin: 0; flex: 1; }
+
+.cosmos-card-stats { display: flex; gap: 0.45rem; flex-wrap: wrap; }
+.cosmos-stat-pill { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.22rem 0.55rem; border-radius: 50px; font-size: 0.7rem; font-weight: 600; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); transition: background 0.2s; }
+.cosmos-stat-pill i { font-size: 0.78rem; }
+.cosmos-stat-pill.cosmos-stat-active { background: rgba(5,150,105,0.15); border-color: rgba(5,150,105,0.3); color: #6ee7b7; }
+
+.cosmos-card-footer { position: relative; z-index: 1; padding: 0.7rem 1.4rem; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.12); }
+.cosmos-explore-link { display: flex; align-items: center; gap: 0.4rem; font-size: 0.81rem; font-weight: 700; color: rgba(168,196,240,0.85); letter-spacing: 0.2px; transition: color 0.2s, gap 0.2s; }
+.cosmos-card:hover .cosmos-explore-link { color: #c7dcf7; gap: 0.65rem; }
+
+/* List view */
+.list-view .cosmos-card { flex-direction: row; min-height: auto; }
+.list-view .cosmos-card-watermark { font-size: 4rem; }
+.list-view .cosmos-card-body { padding: 1rem 1.5rem; }
+.list-view .cosmos-card-footer { border-top: none; border-left: 1px solid rgba(255,255,255,0.08); background: transparent; padding: 1rem; display: flex; align-items: flex-end; justify-content: flex-end; min-width: 150px; }
+
+/* â”€â”€ SIDEBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.cosmos-sidebar-card { background: #fff; border: 1px solid rgba(80,89,132,0.14); border-radius: 14px; overflow: hidden; box-shadow: 0 4px 20px rgba(43,52,83,0.08); position: sticky; top: 1.5rem; }
+.cosmos-sidebar-header { background: linear-gradient(135deg, #505984 0%, #3b4a7a 100%); padding: 1.1rem 1.25rem; color: #fff; display: flex; align-items: center; gap: 0.6rem; }
+.cosmos-sidebar-header i { font-size: 1.15rem; color: #c7dcf7; }
+.cosmos-sidebar-header h3 { font-size: 0.92rem; font-weight: 700; margin: 0; }
+.cosmos-sidebar-body { display: flex; flex-direction: column; }
+.cosmos-sidebar-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; text-align: center; color: #94a3b8; gap: 0.5rem; }
+.cosmos-sidebar-empty i { font-size: 2rem; opacity: 0.4; }
+.cosmos-sidebar-empty p { font-size: 0.85rem; margin: 0; }
+.cosmos-oferta-item { display: flex; text-decoration: none; color: inherit; border-bottom: 1px solid rgba(0,0,0,0.05); transition: background 0.2s; background: #fff; }
+.cosmos-oferta-item:last-child { border-bottom: none; }
+.cosmos-oferta-item:hover { background: #f5f7ff; }
+.cosmos-oferta-accent-bar { width: 4px; min-height: 100%; background: linear-gradient(180deg, #059669, #34d399); flex-shrink: 0; }
+.cosmos-oferta-content { padding: 0.9rem 1rem; flex: 1; display: flex; flex-direction: column; gap: 0.3rem; }
+.cosmos-oferta-badge { display: inline-block; background: #dcfce7; color: #166534; font-size: 0.62rem; font-weight: 700; padding: 2px 7px; border-radius: 50px; text-transform: uppercase; letter-spacing: 0.4px; width: fit-content; }
+.cosmos-oferta-title { font-size: 0.88rem; font-weight: 700; color: #1e293b; margin: 0; line-height: 1.3; }
+.cosmos-oferta-meta, .cosmos-oferta-linea { display: flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; color: #64748b; }
+.cosmos-oferta-linea { background: #f1f5f9; border-radius: 4px; padding: 2px 6px; width: fit-content; }
+.cosmos-oferta-action { display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; font-weight: 700; color: #505984; margin-top: 0.3rem; }
+.cosmos-sidebar-footer-link { display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.85rem; font-size: 0.85rem; font-weight: 700; color: #505984; text-decoration: none; border-top: 1px solid rgba(0,0,0,0.06); transition: background 0.2s, color 0.2s; background: #fafbff; }
+.cosmos-sidebar-footer-link:hover { background: #505984; color: #fff; text-decoration: none; }
+
+/* â”€â”€ VISTA DETALLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.cosmos-detail-hero {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #505984 0%, #1e293b 100%);
+    border-radius: 14px; padding: 2.5rem 2.5rem 2rem;
+    color: #fff; box-shadow: 0 20px 50px rgba(43,52,83,0.45); margin-bottom: 1.5rem;
+}
+
+.cosmos-detail-hero-inner { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 1.2rem; }
+
+.cosmos-breadcrumb { display: flex; align-items: center; gap: 0.5rem; }
+.cosmos-breadcrumb-back { display: inline-flex; align-items: center; gap: 0.35rem; color: rgba(255,255,255,0.75); font-size: 0.82rem; font-weight: 700; text-decoration: none; transition: color 0.2s; padding: 0.3rem 0.75rem; background: rgba(255,255,255,0.1); border-radius: 50px; }
+.cosmos-breadcrumb-back:hover { color: #fff; background: rgba(255,255,255,0.18); text-decoration: none; }
+
+.cosmos-detail-title-area { display: flex; flex-direction: column; gap: 0.75rem; }
+.cosmos-detail-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+.cosmos-detail-title { font-size: clamp(1.5rem, 3.5vw, 2.2rem); font-weight: 800; color: #fff; margin: 0; line-height: 1.2; text-transform: capitalize; }
+.cosmos-detail-desc { color: rgba(255,255,255,0.68); font-size: 0.95rem; line-height: 1.65; max-width: 700px; margin: 0; }
+
+.cosmos-detail-stats-strip { display: flex; align-items: stretch; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; overflow: hidden; max-width: 520px; }
+.cosmos-detail-stat { display: flex; align-items: center; gap: 0.65rem; padding: 0.85rem 1.25rem; flex: 1; }
+.cosmos-detail-stat > i { font-size: 1.2rem; color: #c7dcf7; flex-shrink: 0; }
+.cosmos-detail-stat-num { display: block; font-size: 1.35rem; font-weight: 800; color: #fff; line-height: 1.1; }
+.cosmos-detail-stat-label { font-size: 0.67rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+.cosmos-detail-stat-sep { width: 1px; background: rgba(255,255,255,0.1); align-self: stretch; flex-shrink: 0; }
+
+.cosmos-detail-layout { display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; align-items: start; }
+
+.cosmos-detail-section { background: #fff; border: 1px solid rgba(80,89,132,0.12); border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 12px rgba(43,52,83,0.06); }
+
+.cosmos-detail-section-title { font-size: 1.05rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; padding-bottom: 0.65rem; border-bottom: 2px solid #7090CB; display: flex; align-items: center; gap: 0.5rem; }
+.cosmos-detail-section-title i { color: #505984; }
+
+/* Dimension cards en detalle */
+.cosmos-dim-card { display: flex; flex-direction: column; height: 100%; background: #f8faff; border: 1px solid rgba(80,89,132,0.12); border-left: 3px solid #505984; border-radius: 10px; padding: 1.1rem 1.25rem; transition: border-left-color 0.2s, box-shadow 0.2s; }
+.cosmos-dim-card:hover { border-left-color: #7090CB; box-shadow: 0 4px 12px rgba(80,89,132,0.12); }
+
+.cosmos-dim-card-top { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.6rem; }
+.cosmos-dim-icon { width: 34px; height: 34px; border-radius: 8px; background: rgba(112,144,203,0.12); border: 1px solid rgba(112,144,203,0.22); display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #505984; flex-shrink: 0; }
+.cosmos-dim-name { font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0; }
+.cosmos-dim-desc { font-size: 0.85rem; color: #64748b; line-height: 1.6; margin: 0 0 0.75rem 0; }
+.cosmos-dim-footer { display: flex; gap: 0.5rem; flex-wrap: wrap; padding-top: 0.65rem; border-top: 1px solid rgba(0,0,0,0.06); }
+/* Override stat pills for white bg context */
+.cosmos-dim-footer .cosmos-stat-pill { background: rgba(80,89,132,0.07); border-color: rgba(80,89,132,0.15); color: #475569; }
+.cosmos-dim-footer .cosmos-stat-pill.cosmos-stat-active { background: rgba(5,150,105,0.1); border-color: rgba(5,150,105,0.25); color: #059669; }
+
+/* Project cards en detalle */
+.cosmos-proj-card { background: #fff; border: 1px solid rgba(0,0,0,0.07); border-radius: 10px; padding: 1.1rem 1.25rem; border-left: 3px solid #7090CB; transition: border-left-color 0.2s, box-shadow 0.2s; }
+.cosmos-proj-card:hover { border-left-color: #505984; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+.cosmos-proj-dim-badge { display: inline-block; font-size: 0.72rem; font-weight: 700; color: #505984; background: rgba(80,89,132,0.1); border: 1px solid rgba(80,89,132,0.2); padding: 3px 8px; border-radius: 6px; margin-bottom: 0.5rem; letter-spacing: 0.5px; text-transform: uppercase; }
+.cosmos-proj-title { font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0 0 0.5rem 0; line-height: 1.35; }
+.cosmos-proj-meta { display: flex; flex-wrap: wrap; gap: 0.75rem; font-size: 0.82rem; color: #64748b; font-weight: 500; }
+.cosmos-proj-meta span { display: flex; align-items: center; gap: 4px; }
+.cosmos-pdf-btn { display: inline-flex; align-items: center; gap: 5px; margin-top: 0.6rem; background: #f8fafc; color: #334155; border: 1px solid #cbd5e1; padding: 5px 10px; border-radius: 7px; font-weight: 600; font-size: 0.82rem; text-decoration: none; transition: 0.2s; }
+.cosmos-pdf-btn:hover { background: #505984; color: #fff; border-color: #505984; text-decoration: none; }
+.cosmos-pdf-btn i { color: #ef4444; }
+.cosmos-pdf-btn:hover i { color: #fca5a5; }
+
+/* PaginaciÃ³n en detalle */
+.cosmos-pagination { display: flex; justify-content: center; align-items: center; gap: 0.75rem; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid rgba(0,0,0,0.06); }
+.cosmos-page-btn { display: inline-flex; align-items: center; gap: 4px; padding: 7px 14px; border: 1px solid rgba(80,89,132,0.25); border-radius: 8px; color: #334155; text-decoration: none; font-weight: 600; font-size: 0.88rem; background: #fff; transition: 0.2s; }
+.cosmos-page-btn:hover { background: #505984; color: #fff; border-color: #505984; text-decoration: none; }
+.cosmos-page-info { font-size: 0.88rem; font-weight: 600; color: #64748b; }
+
+/* Empty state */
+.cosmos-empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2.5rem 1rem; text-align: center; color: #94a3b8; gap: 0.5rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; }
+.cosmos-empty-state i { font-size: 2.5rem; opacity: 0.4; }
+.cosmos-empty-state p { font-size: 0.88rem; margin: 0; max-width: 380px; line-height: 1.5; }
+
+/* Responsive */
+@media (max-width: 1024px) { .cosmos-main-layout, .cosmos-detail-layout { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .cosmos-hero, .cosmos-detail-hero { padding: 2rem 1.25rem 1.75rem; } .cosmos-kpi-row { flex-wrap: wrap; } .cosmos-kpi-chip { flex: 0 0 48%; } .cosmos-kpi-sep:nth-child(2n) { display: none; } }
+@media (max-width: 480px) { .cosmos-kpi-chip { flex: 0 0 100%; } .cosmos-kpi-sep { display: none; } }
+

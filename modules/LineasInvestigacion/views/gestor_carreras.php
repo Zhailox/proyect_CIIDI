@@ -1,6 +1,6 @@
 <?php require_once __DIR__ . '/../../../core/Security/CSRF.php'; ?>
 <?php
-// modules/LineasInvestigacion/views/gestor_dimensiones.php
+// modules/LineasInvestigacion/views/gestor_carreras.php
 $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
 ?>
 
@@ -39,6 +39,7 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
     background: #ffffff;
 }
 
+/* Fix for buttons wrapping nicely */
 .ag-header-content {
     display: flex;
     justify-content: space-between;
@@ -48,7 +49,9 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
     position: relative;
     z-index: 1;
 }
-.ag-header-left { flex: 1 1 300px; }
+.ag-header-left {
+    flex: 1 1 300px;
+}
 .ag-header-right {
     display: flex;
     flex-direction: column;
@@ -58,10 +61,15 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
     flex: 1 1 100%;
 }
 @media (min-width: 900px) {
-    .ag-header-right { flex: 0 0 auto; align-items: flex-end; }
+    .ag-header-right {
+        flex: 0 0 auto;
+        align-items: flex-end;
+    }
 }
 @media (max-width: 899px) {
-    .ag-header-right { align-items: flex-start; }
+    .ag-header-right {
+        align-items: flex-start;
+    }
 }
 </style>
 
@@ -71,17 +79,18 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
     <a href="index.php?ruta=gestionar-dimensiones" class="<?= ($_GET['ruta']??'') == 'gestionar-dimensiones' ? 'active' : '' ?>"><i class="ph-bold ph-squares-four"></i> Dimensiones</a>
 </div>
 
+
     <!-- ENCABEZADO PRINCIPAL (COLORES DEL CORE) -->
     <div class="ag-header-banner">
         <canvas id="li-nodes-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.6;"></canvas>
         <div class="ag-header-content">
             <div class="ag-header-left">
                 <div class="ag-header-subtitle">
-                    <i class="ph-bold ph-squares-four"></i> ESTRUCTURA ACADÉMICA
+                    <i class="ph-bold ph-graduation-cap"></i> ESTRUCTURA ACADÉMICA
                 </div>
-                <h1 class="ag-header-title">Gestor de Dimensiones Operativas</h1>
+                <h1 class="ag-header-title">Gestor de Programas de Formación (PNF)</h1>
                 <p class="ag-header-desc">
-                    Administra las dimensiones temáticas que agrupan proyectos dentro de cada línea de investigación.
+                    Gestione las carreras o programas nacionales de formación para clasificar las líneas de investigación.
                 </p>
             </div>
             <div class="ag-header-right">
@@ -91,9 +100,10 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
                     <i class="ph-bold ph-file-pdf"></i> Exportar PDF
                 </button>
 
-                    <button type="button" onclick="abrirModalCrearDimension()" style="background: #ffffff; color: #0f172a; padding: 10px 18px; border: none; border-radius: 8px; font-weight: 800; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: 0.2s;" onmouseover="this.style.background='#f1f5f9'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'">
-                        <i class="ph-bold ph-plus-circle"></i> Nueva Dimensión
+                    <button type="button" onclick="abrirModalCrearCarrera()" style="background: #ffffff; color: #0f172a; padding: 10px 18px; border: none; border-radius: 8px; font-weight: 800; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: 0.2s;" onmouseover="this.style.background='#f1f5f9'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'">
+                        <i class="ph-bold ph-plus-circle"></i> Nuevo PNF
                     </button>
+                    
                 </div>
             </div>
         </div>
@@ -108,80 +118,49 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
     </div>
     <?php endif; ?>
 
-    
-    <!-- FILTROS Y BÚSQUEDA -->
-    <div style="margin: 2rem 2rem -0.5rem 2rem; display: flex; gap: 1rem; flex-wrap: wrap; background: #ffffff; padding: 1.2rem; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
-        <div style="flex: 1 1 250px;">
-            <label style="font-size: 0.8rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 0.3rem; display: block;"><i class="ph-bold ph-magnifying-glass"></i> Buscar Dimensión</label>
-            <input type="text" id="search-dim" placeholder="Escriba para buscar..." style="width: 100%; padding: 0.6rem 1rem; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; font-family: inherit; background: #f8fafc; color: #0f172a; font-weight: 600;">
-        </div>
-        <div style="flex: 1 1 200px;">
-            <label style="font-size: 0.8rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 0.3rem; display: block;"><i class="ph-bold ph-graduation-cap"></i> Filtrar por PNF</label>
-            <select id="filter-carrera" style="width: 100%; padding: 0.6rem 1rem; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; font-family: inherit; background: #f8fafc; color: #0f172a; font-weight: 600; cursor:pointer;">
-                <option value="">Todas las Carreras</option>
-            </select>
-        </div>
-        <div style="flex: 1 1 200px;">
-            <label style="font-size: 0.8rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 0.3rem; display: block;"><i class="ph-bold ph-graph"></i> Filtrar por Línea</label>
-            <select id="filter-linea" style="width: 100%; padding: 0.6rem 1rem; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; font-family: inherit; background: #f8fafc; color: #0f172a; font-weight: 600; cursor:pointer;">
-                <option value="">Todas las Líneas</option>
-            </select>
-        </div>
-    </div>
-    
-    <!-- TABLA DE DIMENSIONES -->
+    <!-- TABLA DE CARRERAS -->
     <div style="padding: 2rem;">
         <div style="background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.03); overflow: hidden;">
             <table style="width: 100%; border-collapse: collapse; text-align: left;">
                 <thead style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
                     <tr>
-                        <th style="padding: 1.2rem; font-weight: 800; font-size: 0.85rem; color: #64748b; text-transform: uppercase;">Dimensión Operativa</th>
-                        <th style="padding: 1.2rem; font-weight: 800; font-size: 0.85rem; color: #64748b; text-transform: uppercase;">Línea Asociada</th>
-                        <th style="padding: 1.2rem; font-weight: 800; font-size: 0.85rem; color: #64748b; text-transform: uppercase;">Programa (PNF)</th>
+                        <th style="padding: 1.2rem; font-weight: 800; font-size: 0.85rem; color: #64748b; text-transform: uppercase;">ID</th>
+                        <th style="padding: 1.2rem; font-weight: 800; font-size: 0.85rem; color: #64748b; text-transform: uppercase;">Programa de Formación (PNF)</th>
                         <th style="padding: 1.2rem; font-weight: 800; font-size: 0.85rem; color: #64748b; text-transform: uppercase;">Descripción</th>
                         <th style="padding: 1.2rem; font-weight: 800; font-size: 0.85rem; color: #64748b; text-transform: uppercase; text-align: right;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (empty($dimensiones)): ?>
+                    <?php if (empty($carreras)): ?>
                     <tr>
-                        <td colspan="5" style="padding: 3rem; text-align: center; color: #94a3b8; font-weight: 600;">
-                            <i class="ph-bold ph-squares-four" style="font-size: 3rem; opacity: 0.3; margin-bottom: 0.5rem; display: block;"></i>
-                            No hay dimensiones registradas.
+                        <td colspan="4" style="padding: 3rem; text-align: center; color: #94a3b8; font-weight: 600;">
+                            <i class="ph-bold ph-graduation-cap" style="font-size: 3rem; opacity: 0.3; margin-bottom: 0.5rem; display: block;"></i>
+                            No hay programas de formación registrados.
                         </td>
                     </tr>
                     <?php else: ?>
-                        <?php foreach ($dimensiones as $dim): ?>
-                        <tr class="dim-row" data-carrera="<?= htmlspecialchars($dim['carrera_nombre'] ?? 'General') ?>" data-linea="<?= htmlspecialchars($dim['linea_nombre'] ?? 'General') ?>" style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                        <?php foreach ($carreras as $c): ?>
+                        <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                            <td style="padding: 1.2rem; color: #64748b; font-weight: 700;">#<?= $c['id'] ?></td>
                             <td style="padding: 1.2rem;">
                                 <div style="font-weight: 800; color: #1e293b; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
-                                    <i class="ph-bold ph-cube" style="color: #505984;"></i> <?= htmlspecialchars($dim['nombre']) ?>
+                                    <i class="ph-bold ph-student" style="color: #505984;"></i> <?= htmlspecialchars($c['nombre']) ?>
                                 </div>
                             </td>
-                            <td style="padding: 1.2rem;">
-                                <span style="background: #f1f5f9; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; color: #475569; display: inline-block;">
-                                    <?= htmlspecialchars(mb_convert_case($dim['linea_nombre'] ?? 'General', MB_CASE_TITLE, 'UTF-8')) ?>
-                                </span>
-                            </td>
-                            <td style="padding: 1.2rem;">
-                                <span style="color: #64748b; font-weight: 700; font-size: 0.85rem;">
-                                    <i class="ph-bold ph-graduation-cap"></i> <?= htmlspecialchars($dim['carrera_nombre'] ?? 'General') ?>
-                                </span>
-                            </td>
                             <td style="padding: 1.2rem; color: #475569; font-size: 0.85rem; max-width: 300px;">
-                                <?= htmlspecialchars($dim['descripcion'] ?: 'Sin descripción') ?>
+                                <?= htmlspecialchars($c['descripcion'] ?: 'Sin descripción adicional') ?>
                             </td>
                             <td style="padding: 1.2rem; text-align: right;">
                                 <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-                                    <button type="button" onclick='abrirModalEditarDimension(<?= json_encode($dim) ?>)' title="Editar" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='#f1f5f9'; this.style.color='#0f172a'" onmouseout="this.style.background='#ffffff'; this.style.color='#64748b'">
+                                    <button type="button" onclick='abrirModalEditarCarrera(<?= json_encode($c) ?>)' title="Editar" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='#f1f5f9'; this.style.color='#0f172a'" onmouseout="this.style.background='#ffffff'; this.style.color='#64748b'">
                                         <i class="ph-bold ph-pencil-simple"></i>
                                     </button>
                                     
                                     <?php if ($isSuper): ?>
-                                    <form method="POST" action="index.php?ruta=gestionar-dimensiones" style="display:inline;" onsubmit="return confirm('¿Eliminar esta dimensión?');">
+                                    <form method="POST" action="index.php?ruta=gestionar-carreras" style="display:inline;" onsubmit="return confirm('¿Eliminar esta carrera? ¡Asegúrese de que no tenga líneas asociadas!');">
                                         <?= CSRF::campoOculto() ?>
                                         <input type="hidden" name="accion" value="eliminar">
-                                        <input type="hidden" name="id" value="<?= $dim['id'] ?>">
+                                        <input type="hidden" name="id" value="<?= $c['id'] ?>">
                                         <button type="submit" title="Eliminar" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #fee2e2; background: #fef2f2; color: #ef4444; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fef2f2'">
                                             <i class="ph-bold ph-trash"></i>
                                         </button>
@@ -198,95 +177,27 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
     </div>
 </div>
 
+<!-- SCRIPTS DE MODALES Y CANVAS -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-const lineasList = <?= json_encode($lineas) ?>;
-
-function getLineasOptions(selectedId = null) {
-    let opts = '<option value="">-- Seleccione una Línea --</option>';
-    lineasList.forEach(L => {
-        const isSelected = selectedId == L.id ? 'selected' : '';
-        opts += `<option value="${L.id}" ${isSelected}>${L.nombre.toUpperCase()}</option>`;
-    });
-    return opts;
-}
-
-
-// Populating filters dynamically
-document.addEventListener('DOMContentLoaded', () => {
-    const carrerasSet = new Set();
-    const lineasSet = new Set();
-    
-    document.querySelectorAll('.dim-row').forEach(row => {
-        carrerasSet.add(row.getAttribute('data-carrera'));
-        lineasSet.add(row.getAttribute('data-linea'));
-    });
-
-    const filterCarrera = document.getElementById('filter-carrera');
-    Array.from(carrerasSet).sort().forEach(c => {
-        if(c) filterCarrera.innerHTML += `<option value="${c}">${c}</option>`;
-    });
-
-    const filterLinea = document.getElementById('filter-linea');
-    Array.from(lineasSet).sort().forEach(l => {
-        if(l) filterLinea.innerHTML += `<option value="${l}">${l}</option>`;
-    });
-
-    // Event listeners
-    const searchInput = document.getElementById('search-dim');
-    
-    function updateTable() {
-        const term = searchInput.value.toLowerCase().trim();
-        const carreraVal = filterCarrera.value;
-        const lineaVal = filterLinea.value;
-        
-        document.querySelectorAll('.dim-row').forEach(row => {
-            const txt = row.textContent.toLowerCase();
-            const rowCarrera = row.getAttribute('data-carrera');
-            const rowLinea = row.getAttribute('data-linea');
-            
-            const matchSearch = term === '' || txt.includes(term);
-            const matchCarrera = carreraVal === '' || rowCarrera === carreraVal;
-            const matchLinea = lineaVal === '' || rowLinea === lineaVal;
-            
-            if (matchSearch && matchCarrera && matchLinea) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-    }
-
-    searchInput.addEventListener('input', updateTable);
-    filterCarrera.addEventListener('change', updateTable);
-    filterLinea.addEventListener('change', updateTable);
-});
-
-// Modal Crear Dimensión
-function abrirModalCrearDimension() {
+// Modal Crear Carrera
+function abrirModalCrearCarrera() {
     Swal.fire({
-        title: 'Nueva Dimensión',
+        title: 'Nuevo Programa de Formación',
         width: '600px',
         html: `
-            <form id="form-create-dim" method="POST" action="index.php?ruta=gestionar-dimensiones" style="text-align:left; margin-top:1rem;">
+            <form id="form-create-carrera" method="POST" action="index.php?ruta=gestionar-carreras" style="text-align:left; margin-top:1rem;">
                 <?= CSRF::campoOculto() ?>
                 <input type="hidden" name="accion" value="crear">
                 
                 <div style="margin-bottom:1.2rem;">
-                    <label style="display:block; font-weight:800; font-size:0.8rem; color:#64748b; margin-bottom:0.5rem; text-transform:uppercase;">Nombre de la Dimensión</label>
-                    <input type="text" name="nombre" placeholder="Ej: Bases de Datos" style="width:100%; padding:0.75rem 1rem; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit; font-size:0.9rem; box-sizing:border-box;" required>
-                </div>
-                
-                <div style="margin-bottom:1.2rem;">
-                    <label style="display:block; font-weight:800; font-size:0.8rem; color:#64748b; margin-bottom:0.5rem; text-transform:uppercase;">Línea de Investigación Asociada</label>
-                    <select name="id_linea" style="width:100%; padding:0.75rem 1rem; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit; font-size:0.9rem; box-sizing:border-box; background:#f8fafc;" required>
-                        ${getLineasOptions()}
-                    </select>
+                    <label style="display:block; font-weight:800; font-size:0.8rem; color:#64748b; margin-bottom:0.5rem; text-transform:uppercase;">Nombre del PNF</label>
+                    <input type="text" name="nombre" placeholder="Ej: PNF en Ingeniería de Software" style="width:100%; padding:0.75rem 1rem; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit; font-size:0.9rem; box-sizing:border-box;" required>
                 </div>
 
                 <div>
                     <label style="display:block; font-weight:800; font-size:0.8rem; color:#64748b; margin-bottom:0.5rem; text-transform:uppercase;">Descripción (Opcional)</label>
-                    <textarea name="descripcion" rows="3" placeholder="Información adicional..." style="width:100%; padding:0.75rem 1rem; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit; font-size:0.9rem; box-sizing:border-box; resize:vertical;"></textarea>
+                    <textarea name="descripcion" rows="3" placeholder="Información adicional sobre la carrera..." style="width:100%; padding:0.75rem 1rem; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit; font-size:0.9rem; box-sizing:border-box; resize:vertical;"></textarea>
                 </div>
             </form>
         `,
@@ -297,9 +208,9 @@ function abrirModalCrearDimension() {
         cancelButtonColor: '#94a3b8',
         customClass: { confirmButton: 'ag-swal-btn', cancelButton: 'ag-swal-btn' },
         preConfirm: () => {
-            const form = document.getElementById('form-create-dim');
-            if (!form.nombre.value.trim() || !form.id_linea.value) {
-                Swal.showValidationMessage('El nombre y la línea son obligatorios');
+            const form = document.getElementById('form-create-carrera');
+            if (!form.nombre.value.trim()) {
+                Swal.showValidationMessage('El nombre de la carrera es obligatorio');
                 return false;
             }
             form.submit();
@@ -307,32 +218,25 @@ function abrirModalCrearDimension() {
     });
 }
 
-// Modal Editar Dimensión
-function abrirModalEditarDimension(dim) {
+// Modal Editar Carrera
+function abrirModalEditarCarrera(carrera) {
     Swal.fire({
-        title: 'Editar Dimensión',
+        title: 'Editar Programa de Formación',
         width: '600px',
         html: `
-            <form id="form-edit-dim" method="POST" action="index.php?ruta=gestionar-dimensiones" style="text-align:left; margin-top:1rem;">
+            <form id="form-edit-carrera" method="POST" action="index.php?ruta=gestionar-carreras" style="text-align:left; margin-top:1rem;">
                 <?= CSRF::campoOculto() ?>
                 <input type="hidden" name="accion" value="editar">
-                <input type="hidden" name="id" value="${dim.id}">
+                <input type="hidden" name="id" value="${carrera.id}">
                 
                 <div style="margin-bottom:1.2rem;">
-                    <label style="display:block; font-weight:800; font-size:0.8rem; color:#64748b; margin-bottom:0.5rem; text-transform:uppercase;">Nombre de la Dimensión</label>
-                    <input type="text" name="nombre" value="${dim.nombre.replace(/"/g, '&quot;')}" style="width:100%; padding:0.75rem 1rem; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit; font-size:0.9rem; box-sizing:border-box;" required>
-                </div>
-                
-                <div style="margin-bottom:1.2rem;">
-                    <label style="display:block; font-weight:800; font-size:0.8rem; color:#64748b; margin-bottom:0.5rem; text-transform:uppercase;">Línea de Investigación Asociada</label>
-                    <select name="id_linea" style="width:100%; padding:0.75rem 1rem; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit; font-size:0.9rem; box-sizing:border-box; background:#f8fafc;" required>
-                        ${getLineasOptions(dim.id_linea)}
-                    </select>
+                    <label style="display:block; font-weight:800; font-size:0.8rem; color:#64748b; margin-bottom:0.5rem; text-transform:uppercase;">Nombre del PNF</label>
+                    <input type="text" name="nombre" value="${carrera.nombre.replace(/"/g, '&quot;')}" style="width:100%; padding:0.75rem 1rem; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit; font-size:0.9rem; box-sizing:border-box;" required>
                 </div>
 
                 <div>
-                    <label style="display:block; font-weight:800; font-size:0.8rem; color:#64748b; margin-bottom:0.5rem; text-transform:uppercase;">Descripción</label>
-                    <textarea name="descripcion" rows="3" style="width:100%; padding:0.75rem 1rem; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit; font-size:0.9rem; box-sizing:border-box; resize:vertical;">${dim.descripcion ? dim.descripcion.replace(/</g, '&lt;') : ''}</textarea>
+                    <label style="display:block; font-weight:800; font-size:0.8rem; color:#64748b; margin-bottom:0.5rem; text-transform:uppercase;">Descripción (Opcional)</label>
+                    <textarea name="descripcion" rows="3" style="width:100%; padding:0.75rem 1rem; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit; font-size:0.9rem; box-sizing:border-box; resize:vertical;">${carrera.descripcion ? carrera.descripcion.replace(/</g, '&lt;') : ''}</textarea>
                 </div>
             </form>
         `,
@@ -343,9 +247,9 @@ function abrirModalEditarDimension(dim) {
         cancelButtonColor: '#94a3b8',
         customClass: { confirmButton: 'ag-swal-btn', cancelButton: 'ag-swal-btn' },
         preConfirm: () => {
-            const form = document.getElementById('form-edit-dim');
-            if (!form.nombre.value.trim() || !form.id_linea.value) {
-                Swal.showValidationMessage('El nombre y la línea son obligatorios');
+            const form = document.getElementById('form-edit-carrera');
+            if (!form.nombre.value.trim()) {
+                Swal.showValidationMessage('El nombre de la carrera es obligatorio');
                 return false;
             }
             form.submit();
@@ -353,11 +257,12 @@ function abrirModalEditarDimension(dim) {
     });
 }
 
-// CANVAS BACKGROUND EFFECT
+// CANVAS BACKGROUND EFFECT (Nodes)
 document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('li-nodes-canvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
+    
     let width, height;
     let particles = [];
     
@@ -367,6 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
         canvas.width = width;
         canvas.height = height;
     }
+    
     window.addEventListener('resize', resize);
     resize();
     
@@ -396,12 +302,18 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function animate() {
         ctx.clearRect(0, 0, width, height);
-        particles.forEach(p => { p.update(); p.draw(); });
+        
+        particles.forEach(p => {
+            p.update();
+            p.draw();
+        });
+        
         for (let i = 0; i < particles.length; i++) {
             for (let j = i + 1; j < particles.length; j++) {
                 const dx = particles[i].x - particles[j].x;
                 const dy = particles[i].y - particles[j].y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
+                
                 if (dist < 100) {
                     ctx.beginPath();
                     ctx.moveTo(particles[i].x, particles[i].y);
@@ -412,8 +324,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
+        
         requestAnimationFrame(animate);
     }
+    
     animate();
 });
 </script>

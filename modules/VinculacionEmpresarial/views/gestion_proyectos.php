@@ -1,4 +1,32 @@
 <?php // Logica movida al Controlador ?>
+
+<?php if (isset($_SESSION['flash_success']) || isset($_SESSION['flash_error'])): ?>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            <?php if (isset($_SESSION['flash_success'])): ?>
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: '<?php echo addslashes($_SESSION['flash_success']); ?>',
+                    confirmButtonColor: '#10b981'
+                });
+                <?php unset($_SESSION['flash_success']); ?>
+            <?php endif; ?>
+            
+            <?php if (isset($_SESSION['flash_error'])): ?>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: '<?php echo addslashes($_SESSION['flash_error']); ?>',
+                    confirmButtonColor: '#e11d48'
+                });
+                <?php unset($_SESSION['flash_error']); ?>
+            <?php endif; ?>
+        });
+    </script>
+<?php endif; ?>
+
 <style>
 .gp-header {
     background: #ffffff;
@@ -55,6 +83,7 @@
         <a href="?ruta=gestion-proyectos&tab=equipos" class="gp-main-tab <?= $tab === 'equipos' ? 'active' : '' ?>">
             <i class="ph-bold ph-users-three"></i> Asignación de Equipo Estudiantil
         </a>
+        
     </div>
 </div>
 

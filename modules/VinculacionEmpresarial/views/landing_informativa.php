@@ -1,11 +1,22 @@
+<?php require_once __DIR__ . '/../services/ConfigService.php'; ?>
+<?php
+require_once __DIR__ . '/../models/PropuestaEmpresaModel.php';
+$propuestaModel = new PropuestaEmpresaModel();
+$empresasActivas = $propuestaModel->getAceptadas();
+$nombresEmpresas = array_unique(array_column($empresasActivas, 'nombre_empresa'));
+
+// Fallback visual si aún no hay proyectos aceptados
+if (empty($nombresEmpresas)) {
+    $nombresEmpresas = ['Venvidrio', 'Lácteos Los Andes', 'Cemento Andino', 'Alcaldía de Valera', 'Café Flor de Patria', 'Hospital Central'];
+}
+?>
 <div class="ve-wrapper">
     
     <section class="ve-hero">
         <div class="ve-hero-content">
             <h1>Innovación Tecnológica para el Sector Productivo</h1>
             <p>
-                Conectamos el talento de la UPTTMBI con las necesidades reales de las organizaciones. 
-                Si tienes un cuello de botella informático, nosotros tenemos la solución en código.
+                <?= htmlspecialchars(VinculacionConfigService::get('mensaje_marquee', 'Conectamos el talento de la UPTTMBI con las necesidades reales de las organizaciones. Si tienes un cuello de botella informático, nosotros tenemos la solución en código.')) ?>
             </p>
         </div>
         
@@ -20,18 +31,17 @@
         <h3 class="ve-marquee-title">Organizaciones que han confiado en nuestro talento</h3>
         <div class="ve-marquee-container">
             <div class="ve-marquee-track">
-                <span class="ve-marquee-item">Venvidrio</span>
-                <span class="ve-marquee-item">Lácteos Los Andes</span>
-                <span class="ve-marquee-item">Cemento Andino</span>
-                <span class="ve-marquee-item">Alcaldía de Valera</span>
-                <span class="ve-marquee-item">Café Flor de Patria</span>
-                <span class="ve-marquee-item">Hospital Central</span>
-                <span class="ve-marquee-item">Venvidrio</span>
-                <span class="ve-marquee-item">Lácteos Los Andes</span>
-                <span class="ve-marquee-item">Cemento Andino</span>
-                <span class="ve-marquee-item">Alcaldía de Valera</span>
-                <span class="ve-marquee-item">Café Flor de Patria</span>
-                <span class="ve-marquee-item">Hospital Central</span>
+                <?php foreach($nombresEmpresas as $emp): ?>
+                    <span class="ve-marquee-item"><?= htmlspecialchars($emp) ?></span>
+                <?php endforeach; ?>
+                <!-- Duplicado para el scroll infinito -->
+                <?php foreach($nombresEmpresas as $emp): ?>
+                    <span class="ve-marquee-item"><?= htmlspecialchars($emp) ?></span>
+                <?php endforeach; ?>
+                <!-- Triplicado para pantallas muy anchas -->
+                <?php foreach($nombresEmpresas as $emp): ?>
+                    <span class="ve-marquee-item"><?= htmlspecialchars($emp) ?></span>
+                <?php endforeach; ?>
             </div>
         </div>
     </section>

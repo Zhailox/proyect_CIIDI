@@ -39,10 +39,12 @@ class DimensionesModel extends QueryBuilder {
                 dim.id,
                 dim.nombre,
                 dim.descripcion,
-                dim.id_linea,
-                li.nombre  AS linea_nombre
+                dim.id_linea, dim.activo,
+                li.nombre  AS linea_nombre,
+                c.nombre   AS carrera_nombre
             FROM dimensiones_operativas dim
             INNER JOIN lineas_investigacion li ON li.id = dim.id_linea
+            LEFT JOIN carreras c ON c.id = li.id_carrera
             ORDER BY li.nombre ASC, dim.nombre ASC
         ";
         $stmt = $this->db->prepare($sql);

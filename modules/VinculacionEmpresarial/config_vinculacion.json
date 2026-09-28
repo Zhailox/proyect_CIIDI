@@ -1,0 +1,8 @@
+{
+    "paginacion_gestion": 8,
+    "paginacion_cartelera": 12,
+    "recepcion_activa": true,
+    "cupos_por_defecto": 3,
+    "mensaje_marquee": "Plataforma Oficial para la Vinculacin de Estudiantes con Proyectos Reales de la Industria",
+    "duracion_meses": 6
+}
