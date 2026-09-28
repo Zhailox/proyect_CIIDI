@@ -23,6 +23,14 @@
                     <?= htmlspecialchars($error) ?>
                 </div>
             <?php endif; ?>
+
+            <?php if (isset($exito) && !empty($exito)): ?>
+                <div style="background: rgba(16, 185, 129, 0.12); color: #047857; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.85rem 1rem; border-radius: 6px; margin-bottom: 1.25rem; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+                    <i class="ph-bold ph-check-circle" style="font-size: 1.2rem; flex-shrink: 0;"></i>
+                    <span><?= htmlspecialchars($exito) ?></span>
+                </div>
+            <?php endif; ?>
+
             <?php
             require_once CORE_PATH . 'Security/CaptchaService.php';
             $segData = CaptchaService::generarCamposSeguridad();
@@ -34,14 +42,21 @@
                 <input type="hidden" name="_form_ts" value="<?= $segData['timestamp'] ?>">
 
                 <div class="login-flat-group">
-                    <label for="cedula">Cédula:</label>
-                    <input type="number" id="cedula" name="cedula" class="login-flat-input" required autocomplete="off">
+                    <label for="cedula_num">Cédula de Identidad:</label>
+                    <div style="display: flex; gap: 0.5rem; align-items: stretch;">
+                        <select id="cedula_tipo" name="cedula_tipo" class="login-flat-input" style="width: 80px; flex-shrink: 0; cursor: pointer; font-weight: 700;" onchange="actualizarCedulaLogin()">
+                            <option value="V-">V-</option>
+                            <option value="E-">E-</option>
+                        </select>
+                        <input type="text" inputmode="numeric" id="cedula_num" name="cedula_num" class="login-flat-input" placeholder="Ej: 12345678" required autocomplete="username" maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); actualizarCedulaLogin();" style="flex: 1;">
+                        <input type="hidden" id="cedula" name="cedula">
+                    </div>
                 </div>
 
                 <div class="login-flat-group">
                     <label for="password">Contraseña:</label>
                     <div class="password-field-wrapper">
-                        <input type="password" id="password" name="password" class="login-flat-input" required>
+                        <input type="password" id="password" name="password" class="login-flat-input" required autocomplete="current-password">
                         <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('password', this)" title="Mostrar / Ocultar Contraseña" aria-label="Mostrar / Ocultar Contraseña">
                             <i class="ph-bold ph-eye"></i>
                         </button>
@@ -74,6 +89,19 @@
 </div>
 
 <script>
+function actualizarCedulaLogin() {
+    const tipoEl = document.getElementById('cedula_tipo');
+    const numEl = document.getElementById('cedula_num');
+    const hiddenEl = document.getElementById('cedula');
+    if (!tipoEl || !numEl || !hiddenEl) return;
+    const num = numEl.value.trim().replace(/\D/g, '');
+    hiddenEl.value = num ? (tipoEl.value + num) : '';
+}
+
+document.querySelector('.login-flat-form')?.addEventListener('submit', function() {
+    actualizarCedulaLogin();
+});
+
 function togglePasswordVisibility(inputId, btn) {
     const input = document.getElementById(inputId);
     const icon = btn.querySelector('i');
