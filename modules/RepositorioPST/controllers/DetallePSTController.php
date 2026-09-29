@@ -72,7 +72,7 @@ class DetallePSTController {
         
         $carreras = $model->getCarreras();
         $nivelesAcademicos = $model->getNivelesAcademicos();
-        $trayectosList = $model->getTrayectos();
+        $trayectosList = $model->getTrayectos($carreraId ?: 1);
         
         return [
             'documentos'        => $documentos,
@@ -648,6 +648,18 @@ class DetallePSTController {
             exit;
         }
 
+        // 0.2.1b Procesar Acción: OBTENER TRAYECTOS POR CARRERA (AJAX)
+        if ($accion === 'obtener_trayectos') {
+            header('Content-Type: application/json; charset=utf-8');
+            $carreraIdReq = !empty($_GET['carrera_id']) ? (int)$_GET['carrera_id'] : null;
+            $trayectosCarrera = $model->getTrayectos($carreraIdReq);
+            echo json_encode([
+                'status'    => 'success',
+                'trayectos' => $trayectosCarrera
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
         // 0.2.2 Procesar Acción: VERIFICAR TÍTULO DUPLICADO (AJAX en tiempo real)
         if ($accion === 'verificar_titulo') {
             header('Content-Type: application/json; charset=utf-8');
@@ -687,7 +699,8 @@ class DetallePSTController {
                 }
 
                 $nivelPost = !empty($postData['nivel_academico']) ? trim($postData['nivel_academico']) : 'Pregrado';
-                $trayectoPost = ($nivelPost === 'Pregrado') ? (!empty($postData['trayecto']) ? trim($postData['trayecto']) : 'Trayecto I') : null;
+                $idTrayectoPost = !empty($postData['id_trayecto']) ? (int)$postData['id_trayecto'] : null;
+                $trayectoPost = in_array($nivelPost, ['Pregrado', 'TSU']) ? (!empty($postData['trayecto']) ? trim($postData['trayecto']) : 'Trayecto I') : null;
 
                 $rawUrlGit = !empty($postData['url_repositorio']) ? trim($postData['url_repositorio']) : null;
                 $urlGitSanitizada = null;
@@ -729,6 +742,7 @@ class DetallePSTController {
                     'fecha_defensa'              => !empty($postData['fecha_defensa']) ? trim($postData['fecha_defensa']) : date('Y-m-d'),
                     'nivel_academico'            => $nivelPost,
                     'trayecto'                   => $trayectoPost,
+                    'id_trayecto'                => $idTrayectoPost,
                     'url_repositorio'            => $urlGitSanitizada,
                     'archivo_pdf'                => $archivoPdf,
                     'resumen'                    => $resumen,
@@ -913,7 +927,8 @@ class DetallePSTController {
             }
 
             $nivelPost = !empty($_POST['nivel_academico']) ? trim($_POST['nivel_academico']) : 'Pregrado';
-            $trayectoPost = ($nivelPost === 'Pregrado') ? (!empty($_POST['trayecto']) ? trim($_POST['trayecto']) : 'Trayecto I') : null;
+            $idTrayectoPost = !empty($_POST['id_trayecto']) ? (int)$_POST['id_trayecto'] : null;
+            $trayectoPost = in_array($nivelPost, ['Pregrado', 'TSU']) ? (!empty($_POST['trayecto']) ? trim($_POST['trayecto']) : 'Trayecto I') : null;
             $idCarrera = !empty($_POST['id_carrera']) ? (int)$_POST['id_carrera'] : 1;
             $lineaId = !empty($_POST['linea_id']) ? (int)$_POST['linea_id'] : null;
             if (empty($lineaId)) {
@@ -938,6 +953,7 @@ class DetallePSTController {
                 'fecha_defensa'              => !empty($_POST['fecha_defensa']) ? trim($_POST['fecha_defensa']) : date('Y-m-d'),
                 'nivel_academico'            => $nivelPost,
                 'trayecto'                   => $trayectoPost,
+                'id_trayecto'                => $idTrayectoPost,
                 'url_repositorio'            => !empty($_POST['url_repositorio']) ? trim($_POST['url_repositorio']) : null,
                 'archivo_pdf'                => $archivoPath,
                 'resumen'                    => !empty($_POST['resumen']) ? trim($_POST['resumen']) : '',
@@ -1046,7 +1062,8 @@ class DetallePSTController {
                     }
 
                     $nivelEdit = !empty($_POST['nivel_academico']) ? trim($_POST['nivel_academico']) : ($documento['nivel_academico'] ?? 'Pregrado');
-                    $trayectoEdit = ($nivelEdit === 'Pregrado') ? (!empty($_POST['trayecto']) ? trim($_POST['trayecto']) : 'Trayecto I') : null;
+                    $idTrayectoEdit = !empty($_POST['id_trayecto']) ? (int)$_POST['id_trayecto'] : null;
+                    $trayectoEdit = in_array($nivelEdit, ['Pregrado', 'TSU']) ? (!empty($_POST['trayecto']) ? trim($_POST['trayecto']) : 'Trayecto I') : null;
                     $finalEditPdf = $nuevoArchivoPath ? $nuevoArchivoPath : ($documento['archivo_pdf'] ?? null);
 
                     $rawUrlGitEdit = !empty($_POST['url_repositorio']) ? trim($_POST['url_repositorio']) : null;
@@ -1089,6 +1106,7 @@ class DetallePSTController {
                         'fecha_defensa'              => !empty($_POST['fecha_defensa']) ? trim($_POST['fecha_defensa']) : date('Y-m-d'),
                         'nivel_academico'            => $nivelEdit,
                         'trayecto'                   => $trayectoEdit,
+                        'id_trayecto'                => $idTrayectoEdit,
                         'url_repositorio'            => $urlGitEditSanitizada,
                         'archivo_pdf'                => $finalEditPdf,
                         'resumen'                    => $resumenEdit,
@@ -1221,7 +1239,8 @@ class DetallePSTController {
         $lineas = $model->getLineasInvestigacion();
         $dimensiones = $model->getDimensionesOperativas();
         $nivelesAcademicos = $model->getNivelesAcademicos();
-        $trayectosList = $model->getTrayectos();
+        $carreraFormId = !empty($documento['carrera_id']) ? (int)$documento['carrera_id'] : (!empty($documento['id_carrera']) ? (int)$documento['id_carrera'] : (!empty($_GET['carrera_id']) ? (int)$_GET['carrera_id'] : 1));
+        $trayectosList = $model->getTrayectos($carreraFormId);
         
         $statsResumen = $model->getPSTStatsResumen();
         
@@ -1242,5 +1261,20 @@ class DetallePSTController {
             'error'             => $error,
             'success'           => $success
         ];
+    }
+
+    /**
+     * Endpoint público/AJAX para consultar trayectos asociados a una carrera.
+     */
+    public function obtenerTrayectosPorCarrera(): void {
+        header('Content-Type: application/json; charset=utf-8');
+        $carreraIdReq = !empty($_GET['carrera_id']) ? (int)$_GET['carrera_id'] : 1;
+        $model = new DocumentoModel();
+        $trayectosCarrera = $model->getTrayectos($carreraIdReq);
+        echo json_encode([
+            'status'    => 'success',
+            'trayectos' => $trayectosCarrera
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
     }
 }

@@ -40,7 +40,7 @@
         "archivo_script": "script_tarea_1790301553_528.php",
         "timeout_segundos": 60,
         "estado": "activo",
-        "ultima_ejecucion": "2026-09-24 22:33:44",
-        "resultado_ultimo": "ERROR (325.13ms): Error de ejecución CLI (Código 3)."
+        "ultima_ejecucion": "2026-09-28 22:40:01",
+        "resultado_ultimo": "ERROR (429.43ms): Error de ejecución CLI (Código 3)."
     }
 }

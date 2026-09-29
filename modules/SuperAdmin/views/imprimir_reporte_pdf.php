@@ -340,6 +340,9 @@
                                     echo '<strong>' . htmlspecialchars($valRow) . '</strong>';
                                 } elseif ($colKey === 'activo') {
                                     echo $valRow ? 'ACTIVO' : 'SUSPENDIDO';
+                                } elseif ($colKey === 'nivel_academico') {
+                                    $labelsNivPdf = ['Especializacion' => 'Especialización', 'Maestria' => 'Maestría'];
+                                    echo htmlspecialchars($labelsNivPdf[$valRow] ?? $valRow);
                                 } else {
                                     echo htmlspecialchars($valRow);
                                 }

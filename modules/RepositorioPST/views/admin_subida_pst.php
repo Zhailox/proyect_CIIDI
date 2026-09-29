@@ -22,6 +22,13 @@ $phpPostMaxMb = $parseIniToMb(ini_get('post_max_size'));
 $maxMbEfectivo = round(min($configMaxMb, $phpUploadMaxMb, $phpPostMaxMb), 2);
 $carrerasList = $carreras ?? [];
 $currCarrera = $_POST['id_carrera'] ?? $documento['id_carrera'] ?? $documento['carrera_id'] ?? 1;
+$labelsNiveles = [
+    'TSU' => 'TSU',
+    'Pregrado' => 'Pregrado',
+    'Especializacion' => 'Especialización',
+    'Maestria' => 'Maestría',
+    'Doctorado' => 'Doctorado'
+];
 ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script>
@@ -88,24 +95,59 @@ if (typeof window.mammoth === 'undefined') {
                                     <select id="nivel_academico" name="nivel_academico" class="upload-input" onchange="toggleTrayectoByNivel()" required>
                                         <?php 
                                         $nivelesAcademicosDB = $nivelesAcademicos ?? ['Pregrado', 'Especialización', 'Maestría', 'Doctorado'];
-                                        $trayectosDB = $trayectosList ?? ['Trayecto I', 'Trayecto II', 'Trayecto III', 'Trayecto IV'];
+                                        $currCarreraForm = (int)($_POST['id_carrera'] ?? $documento['carrera_id'] ?? $documento['id_carrera'] ?? 1);
+                                        $trayectosDB = [];
+                                        if (!empty($trayectosList)) {
+                                            foreach ($trayectosList as $trItem) {
+                                                if (is_array($trItem) && isset($trItem['id_carrera'])) {
+                                                    if ((int)$trItem['id_carrera'] === $currCarreraForm) {
+                                                        $trayectosDB[] = $trItem;
+                                                    }
+                                                } else {
+                                                    $trayectosDB[] = $trItem;
+                                                }
+                                            }
+                                        }
+                                        // Deduplicación estricta para garantizar que nunca se repita ningún trayecto en el formulario
+                                        $dedupTrayectos = [];
+                                        $vistosNombres = [];
+                                        $listaParaFiltrar = !empty($trayectosDB) ? $trayectosDB : ($trayectosList ?? []);
+                                        foreach ($listaParaFiltrar as $trItem) {
+                                            $nom = is_array($trItem) ? ($trItem['nombre'] ?? '') : (string)$trItem;
+                                            if ($nom && !in_array($nom, $vistosNombres)) {
+                                                $vistosNombres[] = $nom;
+                                                $dedupTrayectos[] = $trItem;
+                                            }
+                                        }
+                                        $trayectosDB = !empty($dedupTrayectos) ? $dedupTrayectos : [
+                                            ['id' => 1, 'nombre' => 'Trayecto I', 'numero' => 1],
+                                            ['id' => 2, 'nombre' => 'Trayecto II', 'numero' => 2],
+                                            ['id' => 3, 'nombre' => 'Trayecto III', 'numero' => 3],
+                                            ['id' => 4, 'nombre' => 'Trayecto IV', 'numero' => 4]
+                                        ];
                                         $currNivel = $_POST['nivel_academico'] ?? $documento['nivel_academico'] ?? ($nivelesAcademicosDB[0] ?? 'Pregrado');
                                         foreach ($nivelesAcademicosDB as $nivelItem):
+                                            $labelVisible = $labelsNiveles[$nivelItem] ?? $nivelItem;
                                         ?>
-                                            <option value="<?= htmlspecialchars($nivelItem) ?>" <?= ($currNivel === $nivelItem) ? 'selected' : '' ?>><?= htmlspecialchars($nivelItem) ?></option>
+                                            <option value="<?= htmlspecialchars($nivelItem) ?>" <?= ($currNivel === $nivelItem) ? 'selected' : '' ?>><?= htmlspecialchars($labelVisible) ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-                                <div class="upload-input-group" id="container_trayecto" style="<?= ($currNivel === 'Pregrado') ? 'display: block;' : 'display: none;' ?>">
+                                <div class="upload-input-group" id="container_trayecto" style="<?= (in_array($currNivel, ['Pregrado', 'TSU'])) ? 'display: block;' : 'display: none;' ?>">
                                     <label for="trayecto">Trayecto del PNF *</label>
-                                    <select id="trayecto" name="trayecto" class="upload-input">
+                                    <select id="trayecto" name="trayecto" class="upload-input" onchange="syncIdTrayecto(this)">
                                         <?php 
-                                        $currTrayecto = $_POST['trayecto'] ?? $documento['trayecto'] ?? ($trayectosDB[0] ?? 'Trayecto I');
+                                        $currTrayecto = $_POST['trayecto'] ?? $documento['trayecto'] ?? ($trayectosDB[0]['nombre'] ?? ($trayectosDB[0] ?? 'Trayecto I'));
+                                        $currIdTrayecto = $_POST['id_trayecto'] ?? $documento['id_trayecto'] ?? ($trayectosDB[0]['id'] ?? '');
                                         foreach ($trayectosDB as $trItem):
+                                            $tNombre = is_array($trItem) ? $trItem['nombre'] : $trItem;
+                                            $tId = is_array($trItem) ? $trItem['id'] : '';
+                                            $isSelected = ($currIdTrayecto && (string)$currIdTrayecto === (string)$tId) || ($currTrayecto === $tNombre);
                                         ?>
-                                            <option value="<?= htmlspecialchars($trItem) ?>" <?= ($currTrayecto === $trItem) ? 'selected' : '' ?>><?= htmlspecialchars($trItem) ?></option>
+                                            <option value="<?= htmlspecialchars($tNombre) ?>" data-id="<?= htmlspecialchars($tId) ?>" <?= $isSelected ? 'selected' : '' ?>><?= htmlspecialchars($tNombre) ?></option>
                                         <?php endforeach; ?>
                                     </select>
+                                    <input type="hidden" id="id_trayecto" name="id_trayecto" value="<?= htmlspecialchars($currIdTrayecto) ?>">
                                 </div>
                             </div>
 
@@ -262,7 +304,7 @@ if (typeof window.mammoth === 'undefined') {
                                 <div class="upload-input-group">
                                     <label for="id_carrera"><i class="ph ph-graduation-cap"></i> Programa Académico (Carrera) *</label>
                                     <?php if ($permitirFiltroCarrera): ?>
-                                        <select id="id_carrera" name="id_carrera" class="upload-input" onchange="actualizarLineasPorCarrera(this.value)" required>
+                                        <select id="id_carrera" name="id_carrera" class="upload-input" onchange="alCambiarCarreraFormulario(this.value)" required>
                                             <option value="">Seleccione una Carrera...</option>
                                             <?php foreach ($carrerasList as $cItem): ?>
                                                 <option value="<?= $cItem['id'] ?>" <?= ((string)$currCarrera === (string)$cItem['id']) ? 'selected' : '' ?>>
@@ -527,9 +569,12 @@ if (typeof window.mammoth === 'undefined') {
                                 ?>
                                     <tr style="background: rgba(255, 255, 255, 0.45); transition: all 0.2s ease; border-radius: 8px;">
                                          <td class="pst-td-title" style="padding: 0.85rem 1rem; border-radius: 8px 0 0 8px;">
-                                             <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
-                                                 <span class="pst-badge-soft" style="background-color: rgba(80, 89, 132, 0.12); color: var(--color-secundario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(80, 89, 132, 0.2);"><?= htmlspecialchars($doc['nivel_academico'] ?? 'Pregrado') ?></span>
-                                                 <?php if (($doc['nivel_academico'] ?? 'Pregrado') === 'Pregrado' && !empty($doc['trayecto'])): ?>
+                                                 <?php 
+                                                 $nivelDoc = $doc['nivel_academico'] ?? 'Pregrado';
+                                                 $nivelDocLabel = $labelsNiveles[$nivelDoc] ?? $nivelDoc;
+                                                 ?>
+                                                 <span class="pst-badge-soft" style="background-color: rgba(80, 89, 132, 0.12); color: var(--color-secundario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(80, 89, 132, 0.2);"><?= htmlspecialchars($nivelDocLabel) ?></span>
+                                                 <?php if (in_array($nivelDoc, ['Pregrado', 'TSU']) && !empty($doc['trayecto'])): ?>
                                                      <span class="pst-badge-soft" style="background-color: rgba(112, 144, 203, 0.12); color: var(--color-terciario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(112, 144, 203, 0.2);"><?= htmlspecialchars($doc['trayecto']) ?></span>
                                                  <?php endif; ?>
                                                   <?php if (($doc['activo'] ?? true)): ?>
@@ -731,7 +776,7 @@ function toggleTrayectoByNivel() {
     const trayectoSelect = document.getElementById('trayecto');
     if (!nivelSelect || !trayectoContainer) return;
 
-    if (nivelSelect.value === 'Pregrado') {
+    if (nivelSelect.value === 'Pregrado' || nivelSelect.value === 'TSU') {
         trayectoContainer.style.display = 'block';
         if (trayectoSelect && !trayectoSelect.value) trayectoSelect.value = 'Trayecto I';
     } else {
@@ -742,6 +787,10 @@ function toggleTrayectoByNivel() {
 
 document.addEventListener('DOMContentLoaded', () => {
     toggleTrayectoByNivel();
+    const trayectoSelect = document.getElementById('trayecto');
+    if (trayectoSelect) {
+        syncIdTrayecto(trayectoSelect);
+    }
     const lineaSelect = document.getElementById('linea_id');
     if (lineaSelect) {
         if (lineaSelect.value) {
@@ -1654,6 +1703,62 @@ function rellenarFormulario(data) {
     }
 
     actualizarLineasPorCarrera(targetCarreraId, data.linea_id, data.dimension_id);
+    actualizarTrayectosPorCarrera(targetCarreraId, data.trayecto, data.id_trayecto);
+}
+
+function syncIdTrayecto(selectEl) {
+    if (!selectEl) return;
+    const opt = selectEl.options[selectEl.selectedIndex];
+    const idInput = document.getElementById('id_trayecto');
+    if (idInput && opt) {
+        idInput.value = opt.getAttribute('data-id') || '';
+    }
+}
+
+async function actualizarTrayectosPorCarrera(carreraId, selectedTrayecto = null, selectedTrayectoId = null) {
+    const trayectoSelect = document.getElementById('trayecto');
+    if (!trayectoSelect) return;
+
+    try {
+        const url = `?ruta=agregar-documento&accion=obtener_trayectos${carreraId ? '&carrera_id=' + encodeURIComponent(carreraId) : ''}`;
+        const res = await fetch(url);
+        const json = await res.json();
+        
+        if (json.status === 'success' && Array.isArray(json.trayectos) && json.trayectos.length > 0) {
+            trayectoSelect.innerHTML = '';
+            const vistos = new Set();
+            json.trayectos.forEach(t => {
+                const key = t.numero ? String(t.numero) : t.nombre;
+                if (!vistos.has(key)) {
+                    vistos.add(key);
+                    const opt = document.createElement('option');
+                    opt.value = t.nombre;
+                    opt.setAttribute('data-id', t.id);
+                    opt.textContent = t.nombre;
+                    trayectoSelect.appendChild(opt);
+                }
+            });
+            
+            if (selectedTrayectoId) {
+                for (let i = 0; i < trayectoSelect.options.length; i++) {
+                    if (trayectoSelect.options[i].getAttribute('data-id') == selectedTrayectoId) {
+                        trayectoSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+            } else if (selectedTrayecto) {
+                trayectoSelect.value = selectedTrayecto;
+            }
+            syncIdTrayecto(trayectoSelect);
+        }
+    } catch (e) {
+        console.error('Error cargando trayectos por carrera:', e);
+    }
+}
+
+function alCambiarCarreraFormulario(carreraId) {
+    actualizarLineasPorCarrera(carreraId);
+    actualizarTrayectosPorCarrera(carreraId);
 }
 
 async function actualizarLineasPorCarrera(carreraId, selectedLineaId = null, selectedDimId = null) {
@@ -2475,8 +2580,9 @@ function confirmarCarreraModalLote() {
         carreraSelectForm.value = carreraVal;
     }
 
-    // Cargar las líneas de la carrera seleccionada
+    // Cargar las líneas y trayectos de la carrera seleccionada
     actualizarLineasPorCarrera(carreraVal);
+    actualizarTrayectosPorCarrera(carreraVal);
 
     const modal = document.getElementById('modalSeleccionCarreraPst');
     if (modal) modal.style.display = 'none';

@@ -48,7 +48,10 @@ class DocumentoModel {
         $db = Connection::getInstance();
         
         $sql = "SELECT r.id, r.titulo, r.anio_publicacion, r.archivo_pdf,
-                       dp.resumen, dp.obj_general, dp.palabras_clave, dp.comunidad_beneficiada, dp.nivel_academico, dp.trayecto, dp.url_repositorio, dp.fecha_defensa, COALESCE(dp.activo, true) AS activo,
+                       dp.resumen, dp.obj_general, dp.palabras_clave, dp.comunidad_beneficiada, dp.nivel_academico, 
+                       dp.id_trayecto, t.nombre AS trayecto_nombre, t.numero AS trayecto_numero, 
+                       t.nombre AS trayecto, 
+                       dp.url_repositorio, dp.fecha_defensa, COALESCE(dp.activo, true) AS activo,
                        li.nombre AS linea_nombre, 
                        li.id AS linea_id,
                        dims.nombre AS dimension_nombre,
@@ -72,6 +75,7 @@ class DocumentoModel {
                         WHERE pt.id_recurso = r.id) AS tutores_nombres
                 FROM public.recursos r
                 LEFT JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
+                LEFT JOIN public.trayectos t ON dp.id_trayecto = t.id
                 LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
                 LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
                 LEFT JOIN public.dimensiones_operativas dims ON rc.id_dimension_operativa = dims.id
@@ -117,8 +121,15 @@ class DocumentoModel {
         }
 
         if (!empty($filtros['trayecto'])) {
-            $sql .= " AND dp.trayecto = ?";
-            $execParams[] = trim($filtros['trayecto']);
+            $trayectoParam = trim((string)$filtros['trayecto']);
+            if (is_numeric($trayectoParam)) {
+                $sql .= " AND (dp.id_trayecto = ? OR t.numero = ?)";
+                $execParams[] = (int)$trayectoParam;
+                $execParams[] = (int)$trayectoParam;
+            } else {
+                $sql .= " AND t.nombre = ?";
+                $execParams[] = $trayectoParam;
+            }
         }
 
         if (!empty($filtros['comunidad'])) {
@@ -240,6 +251,7 @@ class DocumentoModel {
         $sql = "SELECT COUNT(DISTINCT r.id) as total
                 FROM public.recursos r
                 LEFT JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
+                LEFT JOIN public.trayectos t ON dp.id_trayecto = t.id
                 LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
                 LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
                 WHERE r.id_tipo_recurso = 1";
@@ -272,8 +284,15 @@ class DocumentoModel {
             $params[] = $valNivel;
         }
         if (!empty($filtros['trayecto'])) {
-            $sql .= " AND dp.trayecto = ?";
-            $params[] = trim($filtros['trayecto']);
+            $trayectoParam = trim((string)$filtros['trayecto']);
+            if (is_numeric($trayectoParam)) {
+                $sql .= " AND (dp.id_trayecto = ? OR t.numero = ?)";
+                $params[] = (int)$trayectoParam;
+                $params[] = (int)$trayectoParam;
+            } else {
+                $sql .= " AND t.nombre = ?";
+                $params[] = $trayectoParam;
+            }
         }
         if (!empty($filtros['comunidad'])) {
             $sql .= " AND dp.comunidad_beneficiada ILIKE ?";
@@ -457,38 +476,97 @@ class DocumentoModel {
 
     public function getNivelesAcademicos(): array {
         $db = Connection::getInstance();
-        $sql = "SELECT DISTINCT nivel_academico::text AS nivel_academico 
-                FROM public.detalles_proyectos 
-                WHERE nivel_academico IS NOT NULL AND TRIM(nivel_academico::text) != '' 
-                ORDER BY nivel_academico::text ASC";
-        $stmt = $db->query($sql);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        $niveles = [];
-        foreach ($rows as $row) {
-            $clean = $this->cleanCP850($row['nivel_academico']);
-            if (!empty($clean) && !in_array($clean, $niveles)) {
-                $niveles[] = $clean;
+        try {
+            $sql = "SELECT e.enumlabel 
+                    FROM pg_enum e 
+                    JOIN pg_type t ON e.enumtypid = t.oid 
+                    WHERE t.typname = 'nivel_academico_enum' 
+                    ORDER BY e.enumsortorder ASC";
+            $stmt = $db->query($sql);
+            $rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            if (!empty($rows)) {
+                return $rows;
             }
+        } catch (\Throwable $e) {
+            error_log("Error obteniendo nivel_academico_enum: " . $e->getMessage());
         }
-        return !empty($niveles) ? $niveles : ['Pregrado', 'Especialización', 'Maestría', 'Doctorado'];
+
+        return ['TSU', 'Pregrado', 'Especializacion', 'Maestria', 'Doctorado'];
     }
 
-    public function getTrayectos(): array {
+    public function getTrayectos(?int $carreraId = null): array {
         $db = Connection::getInstance();
-        $sql = "SELECT DISTINCT trayecto::text AS trayecto 
-                FROM public.detalles_proyectos 
-                WHERE trayecto IS NOT NULL AND TRIM(trayecto::text) != '' 
-                ORDER BY trayecto::text ASC";
-        $stmt = $db->query($sql);
+        $sql = "SELECT t.id, t.nombre, t.numero, t.id_carrera, c.nombre AS carrera_nombre 
+                FROM public.trayectos t
+                JOIN public.carreras c ON t.id_carrera = c.id
+                WHERE t.activo = true";
+        $params = [];
+        if ($carreraId !== null && $carreraId > 0) {
+            $sql .= " AND t.id_carrera = ?";
+            $params[] = $carreraId;
+        }
+        $sql .= " ORDER BY t.id_carrera ASC, t.numero ASC";
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
         $trayectos = [];
         foreach ($rows as $row) {
-            $clean = $this->cleanCP850($row['trayecto']);
-            if (!empty($clean) && !in_array($clean, $trayectos)) {
-                $trayectos[] = $clean;
+            $trayectos[] = [
+                'id'             => (int)$row['id'],
+                'nombre'         => $this->cleanCP850($row['nombre']),
+                'numero'         => (int)$row['numero'],
+                'id_carrera'     => (int)$row['id_carrera'],
+                'carrera_nombre' => $this->cleanCP850($row['carrera_nombre']),
+            ];
+        }
+        return $trayectos;
+    }
+
+    public function getTrayectosNombres(?int $carreraId = null): array {
+        $trayectos = $this->getTrayectos($carreraId);
+        $nombres = [];
+        foreach ($trayectos as $t) {
+            if (!in_array($t['nombre'], $nombres)) {
+                $nombres[] = $t['nombre'];
             }
         }
-        return !empty($trayectos) ? $trayectos : ['Trayecto I', 'Trayecto II', 'Trayecto III', 'Trayecto IV'];
+        return !empty($nombres) ? $nombres : ['Trayecto I', 'Trayecto II', 'Trayecto III', 'Trayecto IV'];
+    }
+
+    public function resolverIdTrayecto(int $idCarrera, $trayectoInput): ?int {
+        if (empty($trayectoInput)) return null;
+        $db = Connection::getInstance();
+
+        if (is_numeric($trayectoInput)) {
+            $stmt = $db->prepare("SELECT id FROM public.trayectos WHERE (id = ? OR (id_carrera = ? AND numero = ?)) AND activo = true LIMIT 1");
+            $stmt->execute([(int)$trayectoInput, $idCarrera, (int)$trayectoInput]);
+            $found = $stmt->fetchColumn();
+            if ($found) return (int)$found;
+        }
+        
+        $clean = strtoupper(trim((string)$trayectoInput));
+        $num = null;
+        if (str_contains($clean, 'IV') || $clean === '4') $num = 4;
+        elseif (str_contains($clean, 'III') || $clean === '3') $num = 3;
+        elseif (str_contains($clean, 'II') || $clean === '2') $num = 2;
+        elseif (str_contains($clean, 'I') || $clean === '1') $num = 1;
+        
+        if ($num !== null) {
+            $stmt = $db->prepare("SELECT id FROM public.trayectos WHERE id_carrera = ? AND numero = ? AND activo = true LIMIT 1");
+            $stmt->execute([$idCarrera, $num]);
+            $found = $stmt->fetchColumn();
+            if ($found) return (int)$found;
+        }
+        return null;
+    }
+
+    public function resolverNombreTrayecto(int $idTrayecto): ?string {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("SELECT nombre FROM public.trayectos WHERE id = ?");
+        $stmt->execute([$idTrayecto]);
+        $val = $stmt->fetchColumn();
+        return $val ? (string)$val : null;
     }
 
     public function getPSTCountByLinea(?int $carreraId = null): array {
@@ -523,34 +601,29 @@ class DocumentoModel {
 
     public function getPSTCountByTrayecto(?int $carreraId = null): array {
         $db = Connection::getInstance();
-        $sql = "SELECT dp.trayecto::text AS trayecto, COUNT(DISTINCT r.id) AS total
+        $sql = "SELECT t.numero AS trayecto_num, 
+                COUNT(DISTINCT r.id) AS total
                 FROM public.recursos r
                 JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
+                LEFT JOIN public.trayectos t ON dp.id_trayecto = t.id
                 LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
                 LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
-                WHERE r.id_tipo_recurso = 1 
-                  AND dp.trayecto IS NOT NULL 
-                  AND TRIM(dp.trayecto::text) != ''";
+                WHERE r.id_tipo_recurso = 1";
         $params = [];
         if ($carreraId !== null && $carreraId > 0) {
             $sql .= " AND COALESCE(dp.id_carrera, li.id_carrera) = ?";
             $params[] = $carreraId;
         }
-        $sql .= " GROUP BY dp.trayecto::text ORDER BY total DESC";
+        $sql .= " GROUP BY trayecto_num ORDER BY trayecto_num ASC";
         $stmt = $db->prepare($sql);
         $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         $res = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
-        $romanMap = ['I' => 1, 'II' => 2, 'III' => 3, 'IV' => 4, '1' => 1, '2' => 2, '3' => 3, '4' => 4];
-
         foreach ($rows as $r) {
-            $val = trim($this->cleanCP850($r['trayecto']));
-            $cleanVal = strtoupper(str_replace(['Trayecto', 'TRAYECTO', ' '], '', $val));
-            if (isset($romanMap[$cleanVal])) {
-                $res[$romanMap[$cleanVal]] += (int)$r['total'];
-            } elseif (is_numeric($cleanVal) && isset($res[(int)$cleanVal])) {
-                $res[(int)$cleanVal] += (int)$r['total'];
+            $num = (int)($r['trayecto_num'] ?? 0);
+            if (isset($res[$num])) {
+                $res[$num] = (int)$r['total'];
             }
         }
         return $res;
@@ -563,7 +636,10 @@ class DocumentoModel {
         $db = Connection::getInstance();
         
         $sql = "SELECT r.id, r.titulo, r.anio_publicacion, r.archivo_pdf,
-                       dp.resumen, dp.obj_general, dp.palabras_clave, dp.comunidad_beneficiada, dp.nivel_academico, dp.trayecto, dp.url_repositorio, dp.fecha_defensa, COALESCE(dp.activo, true) AS activo,
+                       dp.resumen, dp.obj_general, dp.palabras_clave, dp.comunidad_beneficiada, dp.nivel_academico, 
+                       dp.id_trayecto, t.nombre AS trayecto_nombre, t.numero AS trayecto_numero, 
+                       t.nombre AS trayecto, 
+                       dp.url_repositorio, dp.fecha_defensa, COALESCE(dp.activo, true) AS activo,
                        li.nombre AS linea_nombre, 
                        li.id AS linea_id,
                        dims.nombre AS dimension_nombre,
@@ -587,6 +663,7 @@ class DocumentoModel {
                         WHERE pt.id_recurso = r.id) AS tutores_nombres
                 FROM public.recursos r
                 LEFT JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
+                LEFT JOIN public.trayectos t ON dp.id_trayecto = t.id
                 LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
                 LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
                 LEFT JOIN public.dimensiones_operativas dims ON rc.id_dimension_operativa = dims.id
@@ -660,16 +737,23 @@ class DocumentoModel {
                 'Maestría'        => 'Maestria'
             ];
             $nivelAcademico = $nivelMap[$nivelAcademicoRaw] ?? $nivelAcademicoRaw;
-            $trayectoVal = ($nivelAcademicoRaw === 'Pregrado') ? (!empty($datos['trayecto']) ? trim($datos['trayecto']) : 'Trayecto I') : null;
             $idCarrera = !empty($datos['id_carrera']) ? (int)$datos['id_carrera'] : 1;
 
-            $stmt = $db->prepare("INSERT INTO public.detalles_proyectos (id_recurso, fecha_defensa, nivel_academico, trayecto, url_repositorio, resumen, obj_general, id_carrera, comunidad_beneficiada, palabras_clave) 
+            $idTrayecto = !empty($datos['id_trayecto']) ? (int)$datos['id_trayecto'] : null;
+            if (!$idTrayecto && !empty($datos['trayecto']) && in_array($nivelAcademicoRaw, ['Pregrado', 'TSU'])) {
+                $idTrayecto = $this->resolverIdTrayecto($idCarrera, $datos['trayecto']);
+            }
+            if (!$idTrayecto && in_array($nivelAcademicoRaw, ['Pregrado', 'TSU'])) {
+                $idTrayecto = $this->resolverIdTrayecto($idCarrera, 'Trayecto I');
+            }
+
+            $stmt = $db->prepare("INSERT INTO public.detalles_proyectos (id_recurso, fecha_defensa, nivel_academico, id_trayecto, url_repositorio, resumen, obj_general, id_carrera, comunidad_beneficiada, palabras_clave) 
                                   VALUES (?, ?, ?::public.nivel_academico_enum, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([
                 $recursoId,
                 !empty($datos['fecha_defensa']) ? $datos['fecha_defensa'] : date('Y-m-d'),
                 $nivelAcademico,
-                $trayectoVal,
+                $idTrayecto,
                 !empty($datos['url_repositorio']) ? trim($datos['url_repositorio']) : null,
                 $datos['resumen'] ?? null,
                 $datos['obj_general'] ?? null,
@@ -838,18 +922,25 @@ class DocumentoModel {
                 'Maestría'        => 'Maestria'
             ];
             $nivelAcademico = $nivelMap[$nivelAcademicoRaw] ?? $nivelAcademicoRaw;
-            $trayectoVal = ($nivelAcademicoRaw === 'Pregrado') ? (!empty($datos['trayecto']) ? trim($datos['trayecto']) : 'Trayecto I') : null;
             $idCarrera = !empty($datos['id_carrera']) ? (int)$datos['id_carrera'] : 1;
+
+            $idTrayecto = !empty($datos['id_trayecto']) ? (int)$datos['id_trayecto'] : null;
+            if (!$idTrayecto && !empty($datos['trayecto']) && in_array($nivelAcademicoRaw, ['Pregrado', 'TSU'])) {
+                $idTrayecto = $this->resolverIdTrayecto($idCarrera, $datos['trayecto']);
+            }
+            if (!$idTrayecto && in_array($nivelAcademicoRaw, ['Pregrado', 'TSU'])) {
+                $idTrayecto = $this->resolverIdTrayecto($idCarrera, 'Trayecto I');
+            }
 
             // Invalidar el vector semántico (NULL) para que el worker lo regenere con el contenido actualizado
             $stmt = $db->prepare("UPDATE public.detalles_proyectos 
-                                  SET fecha_defensa = ?, nivel_academico = ?::public.nivel_academico_enum, trayecto = ?, url_repositorio = ?, resumen = ?, obj_general = ?, id_carrera = ?, comunidad_beneficiada = ?, palabras_clave = ?,
+                                  SET fecha_defensa = ?, nivel_academico = ?::public.nivel_academico_enum, id_trayecto = ?, url_repositorio = ?, resumen = ?, obj_general = ?, id_carrera = ?, comunidad_beneficiada = ?, palabras_clave = ?,
                                       vector_semantico = NULL
                                   WHERE id_recurso = ?");
             $stmt->execute([
                 !empty($datos['fecha_defensa']) ? $datos['fecha_defensa'] : date('Y-m-d'),
                 $nivelAcademico,
-                $trayectoVal,
+                $idTrayecto,
                 !empty($datos['url_repositorio']) ? trim($datos['url_repositorio']) : null,
                 $datos['resumen'] ?? null,
                 $datos['obj_general'] ?? null,
@@ -1047,6 +1138,7 @@ class DocumentoModel {
         $sql = "SELECT r.anio_publicacion, COUNT(DISTINCT r.id) as total
                 FROM public.recursos r
                 LEFT JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
+                LEFT JOIN public.trayectos t ON dp.id_trayecto = t.id
                 LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
                 LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
                 WHERE r.id_tipo_recurso = 1";
@@ -1082,8 +1174,15 @@ class DocumentoModel {
                 $params[] = $valNivel;
             }
             if (!empty($filtros['trayecto'])) {
-                $sql .= " AND dp.trayecto = ?";
-                $params[] = trim($filtros['trayecto']);
+                $trayectoParam = trim((string)$filtros['trayecto']);
+                if (is_numeric($trayectoParam)) {
+                    $sql .= " AND (dp.id_trayecto = ? OR t.numero = ?)";
+                    $params[] = (int)$trayectoParam;
+                    $params[] = (int)$trayectoParam;
+                } else {
+                    $sql .= " AND t.nombre = ?";
+                    $params[] = $trayectoParam;
+                }
             }
             if (!empty($filtros['comunidad'])) {
                 $sql .= " AND dp.comunidad_beneficiada ILIKE ?";
@@ -1112,7 +1211,7 @@ class DocumentoModel {
         $qb = new QueryBuilder();
         $qb->tabla('public.recursos r')
            ->select("r.id, r.titulo, r.anio_publicacion, r.archivo_pdf,
-                     dp.resumen AS proyecto_resumen, dp.palabras_clave AS proyecto_palabras, dp.nivel_academico, dp.trayecto, dp.url_repositorio,
+                     dp.resumen AS proyecto_resumen, dp.palabras_clave AS proyecto_palabras, dp.nivel_academico, t.nombre AS trayecto, dp.url_repositorio,
                      li.nombre AS linea_nombre,
                      dims.nombre AS dimension_nombre,
                      (SELECT STRING_AGG(a.nombre_completo, ', ') 
@@ -1120,6 +1219,7 @@ class DocumentoModel {
                       JOIN public.autores a ON ra.id_autor = a.id 
                       WHERE ra.id_recurso = r.id) AS autores_nombres")
            ->join('public.detalles_proyectos dp', 'r.id = dp.id_recurso', 'LEFT')
+           ->join('public.trayectos t', 'dp.id_trayecto = t.id', 'LEFT')
            ->join('public.recurso_clasificaciones rc', 'r.id = rc.id_recurso', 'LEFT')
            ->join('public.lineas_investigacion li', 'rc.id_linea_investigacion = li.id', 'LEFT')
            ->join('public.dimensiones_operativas dims', 'rc.id_dimension_operativa = dims.id', 'LEFT')
@@ -1298,7 +1398,7 @@ class DocumentoModel {
     dp.resumen AS proyecto_resumen,
     dp.palabras_clave AS proyecto_palabras,
     dp.nivel_academico,
-    dp.trayecto,
+    t.nombre AS trayecto,
     dp.url_repositorio,
     li.nombre AS linea_nombre,
     dims.nombre AS dimension_nombre,
@@ -1309,6 +1409,7 @@ class DocumentoModel {
      WHERE ra.id_recurso = r.id) AS autores_nombres
 FROM public.recursos r
 INNER JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
+LEFT JOIN public.trayectos t ON dp.id_trayecto = t.id
 LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
 LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
 LEFT JOIN public.dimensiones_operativas dims ON rc.id_dimension_operativa = dims.id

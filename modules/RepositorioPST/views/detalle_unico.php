@@ -12,9 +12,19 @@
             
             <div class="pst-detail-header">
                 <div style="display: flex; gap: 0.4rem; margin-bottom: 0.4rem; flex-wrap: wrap; align-items: center;">
-                    <?php if (ConfigService::get('recursos.mostrar_nivel_academico', true)): ?>
-                        <span class="pst-badge-soft" style="background-color: rgba(112, 144, 203, 0.15); color: var(--color-secundario); font-weight: 700;"><?= htmlspecialchars($documento['nivel_academico'] ?? 'Pregrado') ?></span>
-                        <?php if (($documento['nivel_academico'] ?? 'Pregrado') === 'Pregrado' && !empty($documento['trayecto'])): ?>
+                    <?php if (ConfigService::get('recursos.mostrar_nivel_academico', true)): 
+                        $labelsNiv = [
+                            'TSU' => 'TSU',
+                            'Pregrado' => 'Pregrado',
+                            'Especializacion' => 'Especialización',
+                            'Maestria' => 'Maestría',
+                            'Doctorado' => 'Doctorado'
+                        ];
+                        $nivDoc = $documento['nivel_academico'] ?? 'Pregrado';
+                        $nivLabel = $labelsNiv[$nivDoc] ?? $nivDoc;
+                    ?>
+                        <span class="pst-badge-soft" style="background-color: rgba(112, 144, 203, 0.15); color: var(--color-secundario); font-weight: 700;"><?= htmlspecialchars($nivLabel) ?></span>
+                        <?php if (in_array($nivDoc, ['Pregrado', 'TSU']) && !empty($documento['trayecto'])): ?>
                             <span class="pst-badge-soft" style="background-color: rgba(0, 123, 255, 0.1); color: var(--color-terciario); font-weight: 700;"><?= htmlspecialchars($documento['trayecto']) ?></span>
                         <?php endif; ?>
                     <?php endif; ?>

@@ -57,6 +57,11 @@ class RepositorioPSTModule implements ModuleContract {
                 'controlador_path' => __DIR__ . '/controllers/DetallePSTController.php',
                 'metodo' => 'verPdf'
             ],
+            'obtener-trayectos-carrera' => [
+                'controlador' => 'DetallePSTController',
+                'controlador_path' => __DIR__ . '/controllers/DetallePSTController.php',
+                'metodo' => 'obtenerTrayectosPorCarrera'
+            ],
             'configuracion-pst' => [
                 'vista'  => __DIR__ . '/views/configuracion_pst.php',
                 'controlador' => 'ConfiguracionController',

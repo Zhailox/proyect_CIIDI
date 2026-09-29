@@ -130,7 +130,8 @@
                                                     <?= htmlspecialchars($doc['linea_nombre'] ?? 'General') ?>
                                                 </span>
                                                 <small style="color: var(--color-secundario); font-weight: 700; display: block; font-size: 0.7rem; text-align: center;">
-                                                    <?= htmlspecialchars($doc['nivel_academico'] ?? 'Pregrado') ?><?= (($doc['nivel_academico'] ?? 'Pregrado') === 'Pregrado' && !empty($doc['trayecto'])) ? ' • ' . htmlspecialchars($doc['trayecto']) : '' ?>
+                                                    <?php $nivDetalle = $doc['nivel_academico'] ?? 'Pregrado'; $nivDetalleLabel = $labelsFiltro[$nivDetalle] ?? $nivDetalle; ?>
+                                                    <?= htmlspecialchars($nivDetalleLabel) ?><?= (in_array($nivDetalle, ['Pregrado', 'TSU']) && !empty($doc['trayecto'])) ? ' • ' . htmlspecialchars($doc['trayecto']) : '' ?>
                                                 </small>
                                             </td>
                                             <td><strong><?= $doc['anio_publicacion'] ?></strong></td>
@@ -228,10 +229,19 @@
                         <label for="nivel_academico">Nivel Académico</label>
                         <select name="nivel_academico" id="nivel_academico_filter" onchange="this.form.submit()">
                             <option value="">Todos los Niveles</option>
-                            <?php if (!empty($nivelesAcademicos)): ?>
-                                <?php foreach ($nivelesAcademicos as $nivel): ?>
+                            <?php if (!empty($nivelesAcademicos)): 
+                                $labelsFiltro = [
+                                    'TSU' => 'TSU',
+                                    'Pregrado' => 'Pregrado',
+                                    'Especializacion' => 'Especialización',
+                                    'Maestria' => 'Maestría',
+                                    'Doctorado' => 'Doctorado'
+                                ];
+                                foreach ($nivelesAcademicos as $nivel): 
+                                    $label = $labelsFiltro[$nivel] ?? $nivel;
+                                ?>
                                     <option value="<?= htmlspecialchars($nivel) ?>" <?= (($filtros['nivel_academico'] ?? '') === $nivel) ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($nivel) ?>
+                                        <?= htmlspecialchars($label) ?>
                                     </option>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -244,9 +254,12 @@
                         <select name="trayecto" id="trayecto_filter" onchange="this.form.submit()">
                             <option value="">Todos los Trayectos</option>
                             <?php if (!empty($trayectosList)): ?>
-                                <?php foreach ($trayectosList as $tItem): ?>
-                                    <option value="<?= htmlspecialchars($tItem) ?>" <?= (($filtros['trayecto'] ?? '') === $tItem) ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($tItem) ?>
+                                <?php foreach ($trayectosList as $tItem): 
+                                    $tNombre = is_array($tItem) ? $tItem['nombre'] : $tItem;
+                                    $tVal = is_array($tItem) ? $tItem['nombre'] : $tItem;
+                                ?>
+                                    <option value="<?= htmlspecialchars($tVal) ?>" <?= (($filtros['trayecto'] ?? '') === $tVal) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($tNombre) ?>
                                     </option>
                                 <?php endforeach; ?>
                             <?php endif; ?>

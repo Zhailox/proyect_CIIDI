@@ -705,12 +705,15 @@ mark, .highlight-match {
                                             Autores: <?= htmlspecialchars($doc['autores_nombres'] ?? 'No especificados') ?>
                                         </div>
                                     </td>
-                                    <?php if ($mostrarNivel): ?>
+                                    <?php if ($mostrarNivel): 
+                                        $nivTabla = $doc['nivel_academico'] ?? 'Pregrado';
+                                        $nivTablaLabel = $labelsNivMap[$nivTabla] ?? $nivTabla;
+                                    ?>
                                     <td>
-                                        <span class="ag-badge-trayecto"><?= htmlspecialchars($doc['nivel_academico'] ?? 'Pregrado') ?></span>
-                                        <?php if (!empty($doc['trayecto'])): ?>
+                                        <span class="ag-badge-trayecto"><?= htmlspecialchars($nivTablaLabel) ?></span>
+                                        <?php if (in_array($nivTabla, ['Pregrado', 'TSU']) && !empty($doc['trayecto'])): ?>
                                             <span style="font-size: 0.76rem; font-weight: 700; color: var(--color-secundario); display: block; margin-top: 3px;">
-                                                Trayecto <?= htmlspecialchars($doc['trayecto']) ?>
+                                                <?= htmlspecialchars(str_starts_with($doc['trayecto'], 'Trayecto') ? $doc['trayecto'] : 'Trayecto ' . $doc['trayecto']) ?>
                                             </span>
                                         <?php endif; ?>
                                     </td>
@@ -818,9 +821,19 @@ mark, .highlight-match {
                     <label>Nivel Académico</label>
                     <select name="nivel_academico" id="agNivelAcademicoSelect" class="ag-filter-select" onchange="toggleTrayectoByNivel(this.value); this.form.submit();">
                         <option value="">Todos los Niveles</option>
-                        <?php foreach ($nivelesAcademicosLista as $nivelItem): ?>
+                        <?php 
+                        $labelsNivMap = [
+                            'TSU' => 'TSU',
+                            'Pregrado' => 'Pregrado',
+                            'Especializacion' => 'Especialización',
+                            'Maestria' => 'Maestría',
+                            'Doctorado' => 'Doctorado'
+                        ];
+                        foreach ($nivelesAcademicosLista as $nivelItem): 
+                            $labelVis = $labelsNivMap[$nivelItem] ?? $nivelItem;
+                        ?>
                             <option value="<?= htmlspecialchars($nivelItem) ?>" <?= (($filtrosActivos['nivel_academico'] ?? '') === $nivelItem) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($nivelItem) ?>
+                                <?= htmlspecialchars($labelVis) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -831,9 +844,17 @@ mark, .highlight-match {
                     <label>Trayecto (Solo Pregrado)</label>
                     <select name="trayecto" id="agTrayectoSelect" class="ag-filter-select" onchange="this.form.submit()">
                         <option value="">Todos los Trayectos</option>
-                        <?php foreach ($trayectosLista as $tItem): ?>
-                            <option value="<?= htmlspecialchars($tItem) ?>" <?= (($filtrosActivos['trayecto'] ?? '') == $tItem) ? 'selected' : '' ?>>
-                                Trayecto <?= htmlspecialchars($tItem) ?>
+                        <?php 
+                        $vistosEnFiltro = [];
+                        foreach ($trayectosLista as $tItem): 
+                            $tNombre = is_array($tItem) ? $tItem['nombre'] : $tItem;
+                            if (in_array($tNombre, $vistosEnFiltro)) continue;
+                            $vistosEnFiltro[] = $tNombre;
+                            $tLabel = str_starts_with($tNombre, 'Trayecto') ? $tNombre : 'Trayecto ' . $tNombre;
+                            $tVal = is_array($tItem) ? $tItem['nombre'] : $tItem;
+                        ?>
+                            <option value="<?= htmlspecialchars($tVal) ?>" <?= (($filtrosActivos['trayecto'] ?? '') == $tVal) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($tLabel) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>

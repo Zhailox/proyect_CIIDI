@@ -1717,3 +1717,17 @@ Trace:
 #5 [internal function]: MailService::{closure:MailService::enviarAsincrono():146}()
 #6 {main}
 --------------------------------------------------------------------------------
+[2026-09-29 02:56:58] ERROR: could not find driver en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(170): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\scripts\generar_embeddings.php(106): Connection::getInstance()
+#3 {main}
+--------------------------------------------------------------------------------
+[2026-09-29 02:58:17] ERROR: could not find driver en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(170): Connection->__construct(false)
+#2 C:\Users\Chailon\.gemini\antigravity-cli\brain\fba28246-d688-495a-8101-8fc6906662c3\scratch\check_db.php(7): Connection::getInstance()
+#3 {main}
+--------------------------------------------------------------------------------

@@ -21,7 +21,7 @@ class ReportesModel {
                     r.titulo,
                     COALESCE(c.nombre, 'Informática') AS carrera,
                     COALESCE(dp.nivel_academico, 'Pregrado') AS nivel_academico,
-                    COALESCE(NULLIF(TRIM(dp.trayecto), ''), 'Sin Trayecto') AS trayecto,
+                    COALESCE(t.nombre, 'Sin Trayecto') AS trayecto,
                     r.anio_publicacion,
                     COALESCE(dp.comunidad_beneficiada, 'N/D') AS comunidad_beneficiada,
                     COALESCE(li.nombre, 'General / No Asignada') AS linea_investigacion,
@@ -30,6 +30,7 @@ class ReportesModel {
                     COALESCE(dp.resumen, 'Sin resumen registrado.') AS resumen
                 FROM public.recursos r
                 JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
+                LEFT JOIN public.trayectos t ON dp.id_trayecto = t.id
                 LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
                 LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
                 LEFT JOIN public.carreras c ON COALESCE(dp.id_carrera, li.id_carrera) = c.id
@@ -43,7 +44,7 @@ class ReportesModel {
         }
 
         if (!empty($filtros['trayecto'])) {
-            $sql .= " AND (dp.trayecto = :trayecto OR dp.trayecto = 'Trayecto ' || :trayecto)";
+            $sql .= " AND (t.nombre = :trayecto OR t.nombre = 'Trayecto ' || :trayecto OR dp.id_trayecto::text = :trayecto)";
             $params[':trayecto'] = (string)$filtros['trayecto'];
         }
 
@@ -201,11 +202,11 @@ class ReportesModel {
         try {
             if ($dominio === 'pst') {
                 if ($agruparPor === 'nivel') {
-                    $sql = "SELECT COALESCE(dp.nivel_academico, 'Pregrado') as label, COUNT(DISTINCT r.id) as cantidad 
+                    $sql = "SELECT COALESCE(dp.nivel_academico::text, 'Pregrado') as label, COUNT(DISTINCT r.id) as cantidad 
                             FROM public.recursos r 
                             JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso 
                             WHERE r.id_tipo_recurso = 1
-                            GROUP BY dp.nivel_academico ORDER BY cantidad DESC";
+                            GROUP BY dp.nivel_academico::text ORDER BY cantidad DESC";
                 } elseif ($agruparPor === 'linea') {
                     $sql = "SELECT COALESCE(li.nombre, 'Sin Línea Asignada') as label, COUNT(DISTINCT r.id) as cantidad 
                             FROM public.recursos r 
@@ -230,12 +231,13 @@ class ReportesModel {
                             WHERE r.id_tipo_recurso = 1
                             GROUP BY r.anio_publicacion ORDER BY r.anio_publicacion ASC";
                 } else {
-                    // Limpieza absoluta de trayecto directamente de los valores en base de datos ('Trayecto I', 'Trayecto II', etc.)
+                    // Agrupación por trayecto utilizando la tabla normalizada trayectos
                     $sql = "SELECT 
-                                COALESCE(NULLIF(TRIM(dp.trayecto), ''), 'Sin Trayecto Asignado') as label, 
+                                COALESCE(t.nombre, 'Sin Trayecto Asignado') as label, 
                                 COUNT(DISTINCT r.id) as cantidad 
                             FROM public.recursos r 
                             JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso 
+                            LEFT JOIN public.trayectos t ON dp.id_trayecto = t.id
                             WHERE r.id_tipo_recurso = 1
                             GROUP BY label ORDER BY label ASC";
                 }

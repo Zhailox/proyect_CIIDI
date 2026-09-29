@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict EIIc95Nbnnmj8sYMQUh9CKtaZeJVO4fcqVszJfADNLpOb9UQO2Rt0CJADZQ1Bf7
+\restrict kGlMaHpt6tb5AIMu2dKlLvMltSABO8Gcb2uEV5xSIB4AUDAVCeLQkzFnwdKXexM
 
--- Dumped from database version 18.4
--- Dumped by pg_dump version 18.4
+-- Dumped from database version 17.11 (Debian 17.11-0+deb13u1)
+-- Dumped by pg_dump version 17.11 (Debian 17.11-0+deb13u1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -63,6 +63,8 @@ DROP TRIGGER IF EXISTS tg_auditoria_recursos_insert ON public.recursos;
 DROP TRIGGER IF EXISTS tg_auditoria_recursos_delete ON public.recursos;
 DROP INDEX IF EXISTS public.idx_recurso_clasif_linea;
 DROP INDEX IF EXISTS public.idx_recurso_clasif_dimension;
+DROP INDEX IF EXISTS public.idx_detalles_vector_null;
+DROP INDEX IF EXISTS public.idx_detalles_vector_hnsw;
 DROP INDEX IF EXISTS public.idx_detalles_inv_ofertada;
 ALTER TABLE IF EXISTS ONLY public.waf_rate_limiter DROP CONSTRAINT IF EXISTS waf_rate_limiter_pkey;
 ALTER TABLE IF EXISTS ONLY public.visitantes DROP CONSTRAINT IF EXISTS visitantes_pkey;
@@ -214,8 +216,23 @@ DROP TYPE IF EXISTS public.estado_propuesta_enum;
 DROP TYPE IF EXISTS public.estado_curso_enum;
 DROP TYPE IF EXISTS public.accion_auditoria_enum;
 DROP TYPE IF EXISTS public.accion_acceso_enum;
+DROP EXTENSION IF EXISTS vector;
 --
--- Name: accion_acceso_enum; Type: TYPE; Schema: public; Owner: postgres
+-- Name: vector; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION vector; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION vector IS 'vector data type and ivfflat and hnsw access methods';
+
+
+--
+-- Name: accion_acceso_enum; Type: TYPE; Schema: public; Owner: miki
 --
 
 CREATE TYPE public.accion_acceso_enum AS ENUM (
@@ -224,10 +241,10 @@ CREATE TYPE public.accion_acceso_enum AS ENUM (
 );
 
 
-ALTER TYPE public.accion_acceso_enum OWNER TO postgres;
+ALTER TYPE public.accion_acceso_enum OWNER TO miki;
 
 --
--- Name: accion_auditoria_enum; Type: TYPE; Schema: public; Owner: postgres
+-- Name: accion_auditoria_enum; Type: TYPE; Schema: public; Owner: miki
 --
 
 CREATE TYPE public.accion_auditoria_enum AS ENUM (
@@ -237,10 +254,10 @@ CREATE TYPE public.accion_auditoria_enum AS ENUM (
 );
 
 
-ALTER TYPE public.accion_auditoria_enum OWNER TO postgres;
+ALTER TYPE public.accion_auditoria_enum OWNER TO miki;
 
 --
--- Name: estado_curso_enum; Type: TYPE; Schema: public; Owner: postgres
+-- Name: estado_curso_enum; Type: TYPE; Schema: public; Owner: miki
 --
 
 CREATE TYPE public.estado_curso_enum AS ENUM (
@@ -250,10 +267,10 @@ CREATE TYPE public.estado_curso_enum AS ENUM (
 );
 
 
-ALTER TYPE public.estado_curso_enum OWNER TO postgres;
+ALTER TYPE public.estado_curso_enum OWNER TO miki;
 
 --
--- Name: estado_propuesta_enum; Type: TYPE; Schema: public; Owner: postgres
+-- Name: estado_propuesta_enum; Type: TYPE; Schema: public; Owner: miki
 --
 
 CREATE TYPE public.estado_propuesta_enum AS ENUM (
@@ -263,10 +280,10 @@ CREATE TYPE public.estado_propuesta_enum AS ENUM (
 );
 
 
-ALTER TYPE public.estado_propuesta_enum OWNER TO postgres;
+ALTER TYPE public.estado_propuesta_enum OWNER TO miki;
 
 --
--- Name: nivel_academico_enum; Type: TYPE; Schema: public; Owner: postgres
+-- Name: nivel_academico_enum; Type: TYPE; Schema: public; Owner: miki
 --
 
 CREATE TYPE public.nivel_academico_enum AS ENUM (
@@ -278,10 +295,10 @@ CREATE TYPE public.nivel_academico_enum AS ENUM (
 );
 
 
-ALTER TYPE public.nivel_academico_enum OWNER TO postgres;
+ALTER TYPE public.nivel_academico_enum OWNER TO miki;
 
 --
--- Name: tipo_interaccion_enum; Type: TYPE; Schema: public; Owner: postgres
+-- Name: tipo_interaccion_enum; Type: TYPE; Schema: public; Owner: miki
 --
 
 CREATE TYPE public.tipo_interaccion_enum AS ENUM (
@@ -290,10 +307,10 @@ CREATE TYPE public.tipo_interaccion_enum AS ENUM (
 );
 
 
-ALTER TYPE public.tipo_interaccion_enum OWNER TO postgres;
+ALTER TYPE public.tipo_interaccion_enum OWNER TO miki;
 
 --
--- Name: tipo_interaccion_usuario_enum; Type: TYPE; Schema: public; Owner: postgres
+-- Name: tipo_interaccion_usuario_enum; Type: TYPE; Schema: public; Owner: miki
 --
 
 CREATE TYPE public.tipo_interaccion_usuario_enum AS ENUM (
@@ -302,10 +319,10 @@ CREATE TYPE public.tipo_interaccion_usuario_enum AS ENUM (
 );
 
 
-ALTER TYPE public.tipo_interaccion_usuario_enum OWNER TO postgres;
+ALTER TYPE public.tipo_interaccion_usuario_enum OWNER TO miki;
 
 --
--- Name: tipo_pregunta_enum; Type: TYPE; Schema: public; Owner: postgres
+-- Name: tipo_pregunta_enum; Type: TYPE; Schema: public; Owner: miki
 --
 
 CREATE TYPE public.tipo_pregunta_enum AS ENUM (
@@ -315,10 +332,10 @@ CREATE TYPE public.tipo_pregunta_enum AS ENUM (
 );
 
 
-ALTER TYPE public.tipo_pregunta_enum OWNER TO postgres;
+ALTER TYPE public.tipo_pregunta_enum OWNER TO miki;
 
 --
--- Name: fn_auditoria_recursos(); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: fn_auditoria_recursos(); Type: FUNCTION; Schema: public; Owner: miki
 --
 
 CREATE FUNCTION public.fn_auditoria_recursos() RETURNS trigger
@@ -344,10 +361,10 @@ END;
 $$;
 
 
-ALTER FUNCTION public.fn_auditoria_recursos() OWNER TO postgres;
+ALTER FUNCTION public.fn_auditoria_recursos() OWNER TO miki;
 
 --
--- Name: fn_auditoria_usuarios(); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: fn_auditoria_usuarios(); Type: FUNCTION; Schema: public; Owner: miki
 --
 
 CREATE FUNCTION public.fn_auditoria_usuarios() RETURNS trigger
@@ -380,10 +397,10 @@ END;
 $$;
 
 
-ALTER FUNCTION public.fn_auditoria_usuarios() OWNER TO postgres;
+ALTER FUNCTION public.fn_auditoria_usuarios() OWNER TO miki;
 
 --
--- Name: insertarproyectoaleatorio(timestamp without time zone); Type: PROCEDURE; Schema: public; Owner: postgres
+-- Name: insertarproyectoaleatorio(timestamp without time zone); Type: PROCEDURE; Schema: public; Owner: miki
 --
 
 CREATE PROCEDURE public.insertarproyectoaleatorio(IN fecha_creada timestamp without time zone)
@@ -459,14 +476,14 @@ END;
 $$;
 
 
-ALTER PROCEDURE public.insertarproyectoaleatorio(IN fecha_creada timestamp without time zone) OWNER TO postgres;
+ALTER PROCEDURE public.insertarproyectoaleatorio(IN fecha_creada timestamp without time zone) OWNER TO miki;
 
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: accesos_recursos; Type: TABLE; Schema: public; Owner: postgres
+-- Name: accesos_recursos; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.accesos_recursos (
@@ -478,10 +495,10 @@ CREATE TABLE public.accesos_recursos (
 );
 
 
-ALTER TABLE public.accesos_recursos OWNER TO postgres;
+ALTER TABLE public.accesos_recursos OWNER TO miki;
 
 --
--- Name: accesos_recursos_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: accesos_recursos_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.accesos_recursos_id_seq
@@ -493,17 +510,17 @@ CREATE SEQUENCE public.accesos_recursos_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.accesos_recursos_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.accesos_recursos_id_seq OWNER TO miki;
 
 --
--- Name: accesos_recursos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: accesos_recursos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.accesos_recursos_id_seq OWNED BY public.accesos_recursos.id;
 
 
 --
--- Name: auditoria; Type: TABLE; Schema: public; Owner: postgres
+-- Name: auditoria; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.auditoria (
@@ -519,10 +536,10 @@ CREATE TABLE public.auditoria (
 );
 
 
-ALTER TABLE public.auditoria OWNER TO postgres;
+ALTER TABLE public.auditoria OWNER TO miki;
 
 --
--- Name: auditoria_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: auditoria_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.auditoria_id_seq
@@ -534,17 +551,17 @@ CREATE SEQUENCE public.auditoria_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.auditoria_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.auditoria_id_seq OWNER TO miki;
 
 --
--- Name: auditoria_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: auditoria_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.auditoria_id_seq OWNED BY public.auditoria.id;
 
 
 --
--- Name: autores; Type: TABLE; Schema: public; Owner: postgres
+-- Name: autores; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.autores (
@@ -554,10 +571,10 @@ CREATE TABLE public.autores (
 );
 
 
-ALTER TABLE public.autores OWNER TO postgres;
+ALTER TABLE public.autores OWNER TO miki;
 
 --
--- Name: autores_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: autores_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.autores_id_seq
@@ -569,17 +586,17 @@ CREATE SEQUENCE public.autores_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.autores_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.autores_id_seq OWNER TO miki;
 
 --
--- Name: autores_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: autores_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.autores_id_seq OWNED BY public.autores.id;
 
 
 --
--- Name: carreras; Type: TABLE; Schema: public; Owner: postgres
+-- Name: carreras; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.carreras (
@@ -589,10 +606,10 @@ CREATE TABLE public.carreras (
 );
 
 
-ALTER TABLE public.carreras OWNER TO postgres;
+ALTER TABLE public.carreras OWNER TO miki;
 
 --
--- Name: carreras_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: carreras_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.carreras_id_seq
@@ -604,17 +621,17 @@ CREATE SEQUENCE public.carreras_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.carreras_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.carreras_id_seq OWNER TO miki;
 
 --
--- Name: carreras_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: carreras_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.carreras_id_seq OWNED BY public.carreras.id;
 
 
 --
--- Name: categorias; Type: TABLE; Schema: public; Owner: postgres
+-- Name: categorias; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.categorias (
@@ -623,10 +640,10 @@ CREATE TABLE public.categorias (
 );
 
 
-ALTER TABLE public.categorias OWNER TO postgres;
+ALTER TABLE public.categorias OWNER TO miki;
 
 --
--- Name: categorias_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: categorias_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.categorias_id_seq
@@ -638,17 +655,17 @@ CREATE SEQUENCE public.categorias_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.categorias_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.categorias_id_seq OWNER TO miki;
 
 --
--- Name: categorias_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: categorias_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.categorias_id_seq OWNED BY public.categorias.id;
 
 
 --
--- Name: cursos; Type: TABLE; Schema: public; Owner: postgres
+-- Name: cursos; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.cursos (
@@ -674,10 +691,10 @@ CREATE TABLE public.cursos (
 );
 
 
-ALTER TABLE public.cursos OWNER TO postgres;
+ALTER TABLE public.cursos OWNER TO miki;
 
 --
--- Name: cursos_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: cursos_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.cursos_id_seq
@@ -689,21 +706,21 @@ CREATE SEQUENCE public.cursos_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.cursos_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.cursos_id_seq OWNER TO miki;
 
 --
--- Name: cursos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: cursos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.cursos_id_seq OWNED BY public.cursos.id;
 
 
 --
--- Name: detalles_articulos; Type: TABLE; Schema: public; Owner: postgres
+-- Name: detalles_articulos; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.detalles_articulos (
-    id_recurso integer CONSTRAINT detalles_revistas_id_recurso_not_null NOT NULL,
+    id_recurso integer NOT NULL,
     id_editorial integer,
     volumen character varying(50),
     numero character varying(50),
@@ -716,10 +733,10 @@ CREATE TABLE public.detalles_articulos (
 );
 
 
-ALTER TABLE public.detalles_articulos OWNER TO postgres;
+ALTER TABLE public.detalles_articulos OWNER TO miki;
 
 --
--- Name: detalles_investigaciones; Type: TABLE; Schema: public; Owner: postgres
+-- Name: detalles_investigaciones; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.detalles_investigaciones (
@@ -731,10 +748,10 @@ CREATE TABLE public.detalles_investigaciones (
 );
 
 
-ALTER TABLE public.detalles_investigaciones OWNER TO postgres;
+ALTER TABLE public.detalles_investigaciones OWNER TO miki;
 
 --
--- Name: detalles_proyectos; Type: TABLE; Schema: public; Owner: postgres
+-- Name: detalles_proyectos; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.detalles_proyectos (
@@ -750,14 +767,15 @@ CREATE TABLE public.detalles_proyectos (
     trayecto character varying(50) DEFAULT 'Trayecto I'::character varying,
     url_repositorio text,
     obj_general text,
-    activo boolean DEFAULT true
+    activo boolean DEFAULT true,
+    vector_semantico public.vector(384)
 );
 
 
-ALTER TABLE public.detalles_proyectos OWNER TO postgres;
+ALTER TABLE public.detalles_proyectos OWNER TO miki;
 
 --
--- Name: dimensiones_operativas; Type: TABLE; Schema: public; Owner: postgres
+-- Name: dimensiones_operativas; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.dimensiones_operativas (
@@ -769,10 +787,10 @@ CREATE TABLE public.dimensiones_operativas (
 );
 
 
-ALTER TABLE public.dimensiones_operativas OWNER TO postgres;
+ALTER TABLE public.dimensiones_operativas OWNER TO miki;
 
 --
--- Name: dimensiones_operativas_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: dimensiones_operativas_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.dimensiones_operativas_id_seq
@@ -784,17 +802,17 @@ CREATE SEQUENCE public.dimensiones_operativas_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.dimensiones_operativas_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.dimensiones_operativas_id_seq OWNER TO miki;
 
 --
--- Name: dimensiones_operativas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: dimensiones_operativas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.dimensiones_operativas_id_seq OWNED BY public.dimensiones_operativas.id;
 
 
 --
--- Name: editoriales; Type: TABLE; Schema: public; Owner: postgres
+-- Name: editoriales; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.editoriales (
@@ -803,10 +821,10 @@ CREATE TABLE public.editoriales (
 );
 
 
-ALTER TABLE public.editoriales OWNER TO postgres;
+ALTER TABLE public.editoriales OWNER TO miki;
 
 --
--- Name: editoriales_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: editoriales_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.editoriales_id_seq
@@ -818,17 +836,17 @@ CREATE SEQUENCE public.editoriales_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.editoriales_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.editoriales_id_seq OWNER TO miki;
 
 --
--- Name: editoriales_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: editoriales_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.editoriales_id_seq OWNED BY public.editoriales.id;
 
 
 --
--- Name: etiquetas; Type: TABLE; Schema: public; Owner: postgres
+-- Name: etiquetas; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.etiquetas (
@@ -838,10 +856,10 @@ CREATE TABLE public.etiquetas (
 );
 
 
-ALTER TABLE public.etiquetas OWNER TO postgres;
+ALTER TABLE public.etiquetas OWNER TO miki;
 
 --
--- Name: etiquetas_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: etiquetas_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.etiquetas_id_seq
@@ -853,17 +871,17 @@ CREATE SEQUENCE public.etiquetas_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.etiquetas_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.etiquetas_id_seq OWNER TO miki;
 
 --
--- Name: etiquetas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: etiquetas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.etiquetas_id_seq OWNED BY public.etiquetas.id;
 
 
 --
--- Name: historico_versiones_pst; Type: TABLE; Schema: public; Owner: postgres
+-- Name: historico_versiones_pst; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.historico_versiones_pst (
@@ -876,10 +894,10 @@ CREATE TABLE public.historico_versiones_pst (
 );
 
 
-ALTER TABLE public.historico_versiones_pst OWNER TO postgres;
+ALTER TABLE public.historico_versiones_pst OWNER TO miki;
 
 --
--- Name: historico_versiones_pst_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: historico_versiones_pst_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.historico_versiones_pst_id_seq
@@ -891,17 +909,17 @@ CREATE SEQUENCE public.historico_versiones_pst_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.historico_versiones_pst_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.historico_versiones_pst_id_seq OWNER TO miki;
 
 --
--- Name: historico_versiones_pst_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: historico_versiones_pst_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.historico_versiones_pst_id_seq OWNED BY public.historico_versiones_pst.id;
 
 
 --
--- Name: investigaciones_ofertadas; Type: TABLE; Schema: public; Owner: postgres
+-- Name: investigaciones_ofertadas; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.investigaciones_ofertadas (
@@ -920,10 +938,10 @@ CREATE TABLE public.investigaciones_ofertadas (
 );
 
 
-ALTER TABLE public.investigaciones_ofertadas OWNER TO postgres;
+ALTER TABLE public.investigaciones_ofertadas OWNER TO miki;
 
 --
--- Name: investigaciones_ofertadas_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: investigaciones_ofertadas_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.investigaciones_ofertadas_id_seq
@@ -935,17 +953,17 @@ CREATE SEQUENCE public.investigaciones_ofertadas_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.investigaciones_ofertadas_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.investigaciones_ofertadas_id_seq OWNER TO miki;
 
 --
--- Name: investigaciones_ofertadas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: investigaciones_ofertadas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.investigaciones_ofertadas_id_seq OWNED BY public.investigaciones_ofertadas.id;
 
 
 --
--- Name: lineas_investigacion; Type: TABLE; Schema: public; Owner: postgres
+-- Name: lineas_investigacion; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.lineas_investigacion (
@@ -957,10 +975,10 @@ CREATE TABLE public.lineas_investigacion (
 );
 
 
-ALTER TABLE public.lineas_investigacion OWNER TO postgres;
+ALTER TABLE public.lineas_investigacion OWNER TO miki;
 
 --
--- Name: lineas_investigacion_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: lineas_investigacion_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.lineas_investigacion_id_seq
@@ -972,17 +990,17 @@ CREATE SEQUENCE public.lineas_investigacion_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.lineas_investigacion_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.lineas_investigacion_id_seq OWNER TO miki;
 
 --
--- Name: lineas_investigacion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: lineas_investigacion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.lineas_investigacion_id_seq OWNED BY public.lineas_investigacion.id;
 
 
 --
--- Name: matriz_rbac; Type: TABLE; Schema: public; Owner: postgres
+-- Name: matriz_rbac; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.matriz_rbac (
@@ -992,10 +1010,10 @@ CREATE TABLE public.matriz_rbac (
 );
 
 
-ALTER TABLE public.matriz_rbac OWNER TO postgres;
+ALTER TABLE public.matriz_rbac OWNER TO miki;
 
 --
--- Name: notificaciones; Type: TABLE; Schema: public; Owner: postgres
+-- Name: notificaciones; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.notificaciones (
@@ -1009,10 +1027,10 @@ CREATE TABLE public.notificaciones (
 );
 
 
-ALTER TABLE public.notificaciones OWNER TO postgres;
+ALTER TABLE public.notificaciones OWNER TO miki;
 
 --
--- Name: notificaciones_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: notificaciones_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.notificaciones_id_seq
@@ -1024,17 +1042,17 @@ CREATE SEQUENCE public.notificaciones_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.notificaciones_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.notificaciones_id_seq OWNER TO miki;
 
 --
--- Name: notificaciones_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: notificaciones_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.notificaciones_id_seq OWNED BY public.notificaciones.id;
 
 
 --
--- Name: password_resets; Type: TABLE; Schema: public; Owner: postgres
+-- Name: password_resets; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.password_resets (
@@ -1047,10 +1065,10 @@ CREATE TABLE public.password_resets (
 );
 
 
-ALTER TABLE public.password_resets OWNER TO postgres;
+ALTER TABLE public.password_resets OWNER TO miki;
 
 --
--- Name: password_resets_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: password_resets_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.password_resets_id_seq
@@ -1062,17 +1080,17 @@ CREATE SEQUENCE public.password_resets_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.password_resets_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.password_resets_id_seq OWNER TO miki;
 
 --
--- Name: password_resets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: password_resets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.password_resets_id_seq OWNED BY public.password_resets.id;
 
 
 --
--- Name: postulaciones_estudiantes; Type: TABLE; Schema: public; Owner: postgres
+-- Name: postulaciones_estudiantes; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.postulaciones_estudiantes (
@@ -1088,10 +1106,10 @@ CREATE TABLE public.postulaciones_estudiantes (
 );
 
 
-ALTER TABLE public.postulaciones_estudiantes OWNER TO postgres;
+ALTER TABLE public.postulaciones_estudiantes OWNER TO miki;
 
 --
--- Name: postulaciones_estudiantes_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: postulaciones_estudiantes_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.postulaciones_estudiantes_id_seq
@@ -1103,17 +1121,17 @@ CREATE SEQUENCE public.postulaciones_estudiantes_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.postulaciones_estudiantes_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.postulaciones_estudiantes_id_seq OWNER TO miki;
 
 --
--- Name: postulaciones_estudiantes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: postulaciones_estudiantes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.postulaciones_estudiantes_id_seq OWNED BY public.postulaciones_estudiantes.id;
 
 
 --
--- Name: preferencias_usuario; Type: TABLE; Schema: public; Owner: postgres
+-- Name: preferencias_usuario; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.preferencias_usuario (
@@ -1123,10 +1141,10 @@ CREATE TABLE public.preferencias_usuario (
 );
 
 
-ALTER TABLE public.preferencias_usuario OWNER TO postgres;
+ALTER TABLE public.preferencias_usuario OWNER TO miki;
 
 --
--- Name: privilegios; Type: TABLE; Schema: public; Owner: postgres
+-- Name: privilegios; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.privilegios (
@@ -1135,10 +1153,10 @@ CREATE TABLE public.privilegios (
 );
 
 
-ALTER TABLE public.privilegios OWNER TO postgres;
+ALTER TABLE public.privilegios OWNER TO miki;
 
 --
--- Name: privilegios_privilegio_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: privilegios_privilegio_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.privilegios_privilegio_id_seq
@@ -1150,17 +1168,17 @@ CREATE SEQUENCE public.privilegios_privilegio_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.privilegios_privilegio_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.privilegios_privilegio_id_seq OWNER TO miki;
 
 --
--- Name: privilegios_privilegio_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: privilegios_privilegio_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.privilegios_privilegio_id_seq OWNED BY public.privilegios.privilegio_id;
 
 
 --
--- Name: propuestas_empresa; Type: TABLE; Schema: public; Owner: postgres
+-- Name: propuestas_empresa; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.propuestas_empresa (
@@ -1180,10 +1198,10 @@ CREATE TABLE public.propuestas_empresa (
 );
 
 
-ALTER TABLE public.propuestas_empresa OWNER TO postgres;
+ALTER TABLE public.propuestas_empresa OWNER TO miki;
 
 --
--- Name: propuestas_empresa_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: propuestas_empresa_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.propuestas_empresa_id_seq
@@ -1195,17 +1213,17 @@ CREATE SEQUENCE public.propuestas_empresa_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.propuestas_empresa_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.propuestas_empresa_id_seq OWNER TO miki;
 
 --
--- Name: propuestas_empresa_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: propuestas_empresa_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.propuestas_empresa_id_seq OWNED BY public.propuestas_empresa.id;
 
 
 --
--- Name: proyecto_tutores; Type: TABLE; Schema: public; Owner: postgres
+-- Name: proyecto_tutores; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.proyecto_tutores (
@@ -1215,10 +1233,10 @@ CREATE TABLE public.proyecto_tutores (
 );
 
 
-ALTER TABLE public.proyecto_tutores OWNER TO postgres;
+ALTER TABLE public.proyecto_tutores OWNER TO miki;
 
 --
--- Name: recurso_autores; Type: TABLE; Schema: public; Owner: postgres
+-- Name: recurso_autores; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.recurso_autores (
@@ -1227,10 +1245,10 @@ CREATE TABLE public.recurso_autores (
 );
 
 
-ALTER TABLE public.recurso_autores OWNER TO postgres;
+ALTER TABLE public.recurso_autores OWNER TO miki;
 
 --
--- Name: recurso_categorias; Type: TABLE; Schema: public; Owner: postgres
+-- Name: recurso_categorias; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.recurso_categorias (
@@ -1239,10 +1257,10 @@ CREATE TABLE public.recurso_categorias (
 );
 
 
-ALTER TABLE public.recurso_categorias OWNER TO postgres;
+ALTER TABLE public.recurso_categorias OWNER TO miki;
 
 --
--- Name: recurso_clasificaciones; Type: TABLE; Schema: public; Owner: postgres
+-- Name: recurso_clasificaciones; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.recurso_clasificaciones (
@@ -1252,10 +1270,10 @@ CREATE TABLE public.recurso_clasificaciones (
 );
 
 
-ALTER TABLE public.recurso_clasificaciones OWNER TO postgres;
+ALTER TABLE public.recurso_clasificaciones OWNER TO miki;
 
 --
--- Name: recurso_etiquetas; Type: TABLE; Schema: public; Owner: postgres
+-- Name: recurso_etiquetas; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.recurso_etiquetas (
@@ -1264,10 +1282,10 @@ CREATE TABLE public.recurso_etiquetas (
 );
 
 
-ALTER TABLE public.recurso_etiquetas OWNER TO postgres;
+ALTER TABLE public.recurso_etiquetas OWNER TO miki;
 
 --
--- Name: recursos; Type: TABLE; Schema: public; Owner: postgres
+-- Name: recursos; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.recursos (
@@ -1279,10 +1297,10 @@ CREATE TABLE public.recursos (
 );
 
 
-ALTER TABLE public.recursos OWNER TO postgres;
+ALTER TABLE public.recursos OWNER TO miki;
 
 --
--- Name: recursos_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: recursos_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.recursos_id_seq
@@ -1294,17 +1312,17 @@ CREATE SEQUENCE public.recursos_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.recursos_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.recursos_id_seq OWNER TO miki;
 
 --
--- Name: recursos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: recursos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.recursos_id_seq OWNED BY public.recursos.id;
 
 
 --
--- Name: registro_actividad; Type: TABLE; Schema: public; Owner: postgres
+-- Name: registro_actividad; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.registro_actividad (
@@ -1317,10 +1335,10 @@ CREATE TABLE public.registro_actividad (
 );
 
 
-ALTER TABLE public.registro_actividad OWNER TO postgres;
+ALTER TABLE public.registro_actividad OWNER TO miki;
 
 --
--- Name: registro_actividad_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: registro_actividad_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.registro_actividad_id_seq
@@ -1332,30 +1350,30 @@ CREATE SEQUENCE public.registro_actividad_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.registro_actividad_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.registro_actividad_id_seq OWNER TO miki;
 
 --
--- Name: registro_actividad_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: registro_actividad_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.registro_actividad_id_seq OWNED BY public.registro_actividad.id;
 
 
 --
--- Name: roles; Type: TABLE; Schema: public; Owner: postgres
+-- Name: roles; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.roles (
     id integer NOT NULL,
     nombre character varying(50) NOT NULL,
-    privilegio_id integer DEFAULT 1 CONSTRAINT roles_privilegios_id_not_null NOT NULL
+    privilegio_id integer DEFAULT 1 NOT NULL
 );
 
 
-ALTER TABLE public.roles OWNER TO postgres;
+ALTER TABLE public.roles OWNER TO miki;
 
 --
--- Name: roles_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: roles_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.roles_id_seq
@@ -1367,17 +1385,17 @@ CREATE SEQUENCE public.roles_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.roles_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.roles_id_seq OWNER TO miki;
 
 --
--- Name: roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.roles_id_seq OWNED BY public.roles.id;
 
 
 --
--- Name: system_audit_log; Type: TABLE; Schema: public; Owner: postgres
+-- Name: system_audit_log; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.system_audit_log (
@@ -1394,10 +1412,10 @@ CREATE TABLE public.system_audit_log (
 );
 
 
-ALTER TABLE public.system_audit_log OWNER TO postgres;
+ALTER TABLE public.system_audit_log OWNER TO miki;
 
 --
--- Name: telemetria_cache; Type: TABLE; Schema: public; Owner: postgres
+-- Name: telemetria_cache; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.telemetria_cache (
@@ -1406,10 +1424,10 @@ CREATE TABLE public.telemetria_cache (
 );
 
 
-ALTER TABLE public.telemetria_cache OWNER TO postgres;
+ALTER TABLE public.telemetria_cache OWNER TO miki;
 
 --
--- Name: tipo_recurso; Type: TABLE; Schema: public; Owner: postgres
+-- Name: tipo_recurso; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.tipo_recurso (
@@ -1419,10 +1437,10 @@ CREATE TABLE public.tipo_recurso (
 );
 
 
-ALTER TABLE public.tipo_recurso OWNER TO postgres;
+ALTER TABLE public.tipo_recurso OWNER TO miki;
 
 --
--- Name: tipo_recurso_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: tipo_recurso_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.tipo_recurso_id_seq
@@ -1434,17 +1452,17 @@ CREATE SEQUENCE public.tipo_recurso_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.tipo_recurso_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.tipo_recurso_id_seq OWNER TO miki;
 
 --
--- Name: tipo_recurso_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: tipo_recurso_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.tipo_recurso_id_seq OWNED BY public.tipo_recurso.id;
 
 
 --
--- Name: tipo_tutor; Type: TABLE; Schema: public; Owner: postgres
+-- Name: tipo_tutor; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.tipo_tutor (
@@ -1454,10 +1472,10 @@ CREATE TABLE public.tipo_tutor (
 );
 
 
-ALTER TABLE public.tipo_tutor OWNER TO postgres;
+ALTER TABLE public.tipo_tutor OWNER TO miki;
 
 --
--- Name: tipo_tutor_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: tipo_tutor_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.tipo_tutor_id_seq
@@ -1469,17 +1487,17 @@ CREATE SEQUENCE public.tipo_tutor_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.tipo_tutor_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.tipo_tutor_id_seq OWNER TO miki;
 
 --
--- Name: tipo_tutor_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: tipo_tutor_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.tipo_tutor_id_seq OWNED BY public.tipo_tutor.id;
 
 
 --
--- Name: tutores; Type: TABLE; Schema: public; Owner: postgres
+-- Name: tutores; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.tutores (
@@ -1489,10 +1507,10 @@ CREATE TABLE public.tutores (
 );
 
 
-ALTER TABLE public.tutores OWNER TO postgres;
+ALTER TABLE public.tutores OWNER TO miki;
 
 --
--- Name: tutores_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: tutores_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.tutores_id_seq
@@ -1504,17 +1522,17 @@ CREATE SEQUENCE public.tutores_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.tutores_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.tutores_id_seq OWNER TO miki;
 
 --
--- Name: tutores_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: tutores_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.tutores_id_seq OWNED BY public.tutores.id;
 
 
 --
--- Name: usuarios; Type: TABLE; Schema: public; Owner: postgres
+-- Name: usuarios; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.usuarios (
@@ -1533,10 +1551,10 @@ CREATE TABLE public.usuarios (
 );
 
 
-ALTER TABLE public.usuarios OWNER TO postgres;
+ALTER TABLE public.usuarios OWNER TO miki;
 
 --
--- Name: usuarios_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: usuarios_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.usuarios_id_seq
@@ -1548,17 +1566,17 @@ CREATE SEQUENCE public.usuarios_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.usuarios_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.usuarios_id_seq OWNER TO miki;
 
 --
--- Name: usuarios_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: usuarios_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.usuarios_id_seq OWNED BY public.usuarios.id;
 
 
 --
--- Name: visitantes; Type: TABLE; Schema: public; Owner: postgres
+-- Name: visitantes; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.visitantes (
@@ -1569,10 +1587,10 @@ CREATE TABLE public.visitantes (
 );
 
 
-ALTER TABLE public.visitantes OWNER TO postgres;
+ALTER TABLE public.visitantes OWNER TO miki;
 
 --
--- Name: visitantes_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: visitantes_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
 --
 
 CREATE SEQUENCE public.visitantes_id_seq
@@ -1584,17 +1602,17 @@ CREATE SEQUENCE public.visitantes_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.visitantes_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.visitantes_id_seq OWNER TO miki;
 
 --
--- Name: visitantes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: visitantes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
 --
 
 ALTER SEQUENCE public.visitantes_id_seq OWNED BY public.visitantes.id;
 
 
 --
--- Name: waf_rate_limiter; Type: TABLE; Schema: public; Owner: postgres
+-- Name: waf_rate_limiter; Type: TABLE; Schema: public; Owner: miki
 --
 
 CREATE TABLE public.waf_rate_limiter (
@@ -1610,191 +1628,191 @@ CREATE TABLE public.waf_rate_limiter (
 );
 
 
-ALTER TABLE public.waf_rate_limiter OWNER TO postgres;
+ALTER TABLE public.waf_rate_limiter OWNER TO miki;
 
 --
--- Name: accesos_recursos id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: accesos_recursos id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.accesos_recursos ALTER COLUMN id SET DEFAULT nextval('public.accesos_recursos_id_seq'::regclass);
 
 
 --
--- Name: auditoria id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: auditoria id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.auditoria ALTER COLUMN id SET DEFAULT nextval('public.auditoria_id_seq'::regclass);
 
 
 --
--- Name: autores id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: autores id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.autores ALTER COLUMN id SET DEFAULT nextval('public.autores_id_seq'::regclass);
 
 
 --
--- Name: carreras id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: carreras id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.carreras ALTER COLUMN id SET DEFAULT nextval('public.carreras_id_seq'::regclass);
 
 
 --
--- Name: categorias id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: categorias id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.categorias ALTER COLUMN id SET DEFAULT nextval('public.categorias_id_seq'::regclass);
 
 
 --
--- Name: cursos id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: cursos id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.cursos ALTER COLUMN id SET DEFAULT nextval('public.cursos_id_seq'::regclass);
 
 
 --
--- Name: dimensiones_operativas id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: dimensiones_operativas id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.dimensiones_operativas ALTER COLUMN id SET DEFAULT nextval('public.dimensiones_operativas_id_seq'::regclass);
 
 
 --
--- Name: editoriales id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: editoriales id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.editoriales ALTER COLUMN id SET DEFAULT nextval('public.editoriales_id_seq'::regclass);
 
 
 --
--- Name: etiquetas id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: etiquetas id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.etiquetas ALTER COLUMN id SET DEFAULT nextval('public.etiquetas_id_seq'::regclass);
 
 
 --
--- Name: historico_versiones_pst id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: historico_versiones_pst id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.historico_versiones_pst ALTER COLUMN id SET DEFAULT nextval('public.historico_versiones_pst_id_seq'::regclass);
 
 
 --
--- Name: investigaciones_ofertadas id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: investigaciones_ofertadas id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.investigaciones_ofertadas ALTER COLUMN id SET DEFAULT nextval('public.investigaciones_ofertadas_id_seq'::regclass);
 
 
 --
--- Name: lineas_investigacion id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: lineas_investigacion id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.lineas_investigacion ALTER COLUMN id SET DEFAULT nextval('public.lineas_investigacion_id_seq'::regclass);
 
 
 --
--- Name: notificaciones id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: notificaciones id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.notificaciones ALTER COLUMN id SET DEFAULT nextval('public.notificaciones_id_seq'::regclass);
 
 
 --
--- Name: password_resets id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: password_resets id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.password_resets ALTER COLUMN id SET DEFAULT nextval('public.password_resets_id_seq'::regclass);
 
 
 --
--- Name: postulaciones_estudiantes id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: postulaciones_estudiantes id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.postulaciones_estudiantes ALTER COLUMN id SET DEFAULT nextval('public.postulaciones_estudiantes_id_seq'::regclass);
 
 
 --
--- Name: privilegios privilegio_id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: privilegios privilegio_id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.privilegios ALTER COLUMN privilegio_id SET DEFAULT nextval('public.privilegios_privilegio_id_seq'::regclass);
 
 
 --
--- Name: propuestas_empresa id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: propuestas_empresa id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.propuestas_empresa ALTER COLUMN id SET DEFAULT nextval('public.propuestas_empresa_id_seq'::regclass);
 
 
 --
--- Name: recursos id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: recursos id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.recursos ALTER COLUMN id SET DEFAULT nextval('public.recursos_id_seq'::regclass);
 
 
 --
--- Name: registro_actividad id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: registro_actividad id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.registro_actividad ALTER COLUMN id SET DEFAULT nextval('public.registro_actividad_id_seq'::regclass);
 
 
 --
--- Name: roles id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: roles id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.roles ALTER COLUMN id SET DEFAULT nextval('public.roles_id_seq'::regclass);
 
 
 --
--- Name: tipo_recurso id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: tipo_recurso id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.tipo_recurso ALTER COLUMN id SET DEFAULT nextval('public.tipo_recurso_id_seq'::regclass);
 
 
 --
--- Name: tipo_tutor id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: tipo_tutor id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.tipo_tutor ALTER COLUMN id SET DEFAULT nextval('public.tipo_tutor_id_seq'::regclass);
 
 
 --
--- Name: tutores id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: tutores id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.tutores ALTER COLUMN id SET DEFAULT nextval('public.tutores_id_seq'::regclass);
 
 
 --
--- Name: usuarios id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: usuarios id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.usuarios ALTER COLUMN id SET DEFAULT nextval('public.usuarios_id_seq'::regclass);
 
 
 --
--- Name: visitantes id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: visitantes id; Type: DEFAULT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.visitantes ALTER COLUMN id SET DEFAULT nextval('public.visitantes_id_seq'::regclass);
 
 
 --
--- Data for Name: accesos_recursos; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: accesos_recursos; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 
 
 --
--- Data for Name: auditoria; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: auditoria; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.auditoria VALUES (1, 'usuarios', 1, 'INSERT', NULL, NULL, NULL, '{"email": "andru@gmail.com", "id_rol": 1, "nombre": "Adrus"}', '2026-03-23 14:09:42');
@@ -2116,10 +2134,93 @@ INSERT INTO public.auditoria VALUES (358, 'usuarios', 22, 'UPDATE', NULL, NULL, 
 INSERT INTO public.auditoria VALUES (359, 'usuarios', 22, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 4, "nombre": "Vegetasa"}', '{"activo": true, "id_rol": 4, "nombre": "Vegetasaa"}', '2026-09-24 23:57:46.157723');
 INSERT INTO public.auditoria VALUES (360, 'usuarios', 22, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 4, "nombre": "Vegetasaa"}', '{"activo": true, "id_rol": 4, "nombre": "Vegeta"}', '2026-09-24 23:57:49.248695');
 INSERT INTO public.auditoria VALUES (361, 'usuarios', 17, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 2, "nombre": "adrusss"}', '{"activo": true, "id_rol": 2, "nombre": "Andrus"}', '2026-09-24 23:57:59.504575');
+INSERT INTO public.auditoria VALUES (362, 'usuarios', 23, 'INSERT', NULL, NULL, NULL, '{"email": "juanxzall0701@gmail.com", "id_rol": 4, "nombre": "Juan Salcedo"}', '2026-09-28 20:01:44.539666');
+INSERT INTO public.auditoria VALUES (363, 'usuarios', 23, 'UPDATE', NULL, NULL, '{"activo": false, "id_rol": 4, "nombre": "Juan Salcedo"}', '{"activo": false, "id_rol": 2, "nombre": "Juan Salcedo"}', '2026-09-28 20:07:26.502309');
+INSERT INTO public.auditoria VALUES (364, 'usuarios', 23, 'UPDATE', NULL, NULL, '{"activo": false, "id_rol": 2, "nombre": "Juan Salcedo"}', '{"activo": true, "id_rol": 2, "nombre": "Juan Salcedo"}', '2026-09-28 20:07:33.603881');
+INSERT INTO public.auditoria VALUES (365, 'usuarios', 24, 'INSERT', NULL, NULL, NULL, '{"email": "josealejandrorojo48@gmail.com", "id_rol": 1, "nombre": "Ale Rojo"}', '2026-09-28 20:09:30.586897');
+INSERT INTO public.auditoria VALUES (366, 'usuarios', 17, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 2, "nombre": "Andrus"}', '{"activo": true, "id_rol": 1, "nombre": "Andrus"}', '2026-09-28 20:10:11.511733');
+INSERT INTO public.auditoria VALUES (367, 'usuarios', 23, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 2, "nombre": "Juan Salcedo"}', '{"activo": true, "id_rol": 1, "nombre": "Juan Salcedo"}', '2026-09-28 20:13:52.444232');
+INSERT INTO public.auditoria VALUES (368, 'recursos', 164, 'DELETE', NULL, NULL, '{"titulo": "NUES DR. PABLO VILORIA – LA BEATRIZ Soporte técnico a equipos de computación y capacitación a usuarios del CBIT “Rafael Rangel” del municipio Valera", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:15:09.205152');
+INSERT INTO public.auditoria VALUES (369, 'recursos', 147, 'DELETE', NULL, NULL, '{"titulo": "SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WORLD C.A", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:15:50.374548');
+INSERT INTO public.auditoria VALUES (370, 'recursos', 112, 'DELETE', NULL, NULL, '{"titulo": "SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WOssssssssssssssssssRLD C.A.", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:16:30.935513');
+INSERT INTO public.auditoria VALUES (371, 'recursos', 94, 'DELETE', NULL, NULL, '{"titulo": "SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WORLD C.A.2222", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:16:52.684053');
+INSERT INTO public.auditoria VALUES (372, 'recursos', 90, 'DELETE', NULL, NULL, '{"titulo": "OPTIMIZACIÓN DEL SISTEMA DE sdasdasdINFORMACION PARA EL CONTROL DE MATRICULA EN EL CENTRO DE ATENCIÓN INTEGRAL PARA PERSONAS CON AUTISMO “CAIPA TRUJILLO” VERSIÓN 2.0", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:18:05.630144');
+INSERT INTO public.auditoria VALUES (373, 'recursos', 86, 'DELETE', NULL, NULL, '{"titulo": "PST Prueba Duplicados - 20260805140204", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:18:10.91762');
+INSERT INTO public.auditoria VALUES (374, 'recursos', 89, 'DELETE', NULL, NULL, '{"titulo": "MÓDULO INTELIGENTE BASADO EN MACHINE LEARNING PARA LA GESTIÓN DE LAS LÍNEAS DE INVESTIGACIÓN PARA PROYECTOS ACADÉMICOS DE LA UPTTMBI - NÚCLEO LA BEATRIZ", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:19:08.398769');
+INSERT INTO public.auditoria VALUES (375, 'recursos', 85, 'DELETE', NULL, NULL, '{"titulo": "PST Prueba Duplicados - 20260805135642", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:19:19.855278');
+INSERT INTO public.auditoria VALUES (376, 'recursos', 93, 'DELETE', NULL, NULL, '{"titulo": "Sistema Inteligente de Redes Neuronales para la Gestión Integral de la Coordinación P2222NF de Contaduría Pública UPTT Mario Briceño Iragorry", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:19:21.066514');
+INSERT INTO public.auditoria VALUES (377, 'recursos', 92, 'DELETE', NULL, NULL, '{"titulo": "SISTEMA INTELIGENTE PARA LA GESTIÓN ACADÉMICA Y ADMIN2wwdasdaISTRATIVA EN LA ESCUELA NACIONAL “ANTONIO PÉREZ CARMONA”, ESCUQUE, ESTADO TRUJILLO", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:19:34.091334');
+INSERT INTO public.auditoria VALUES (378, 'recursos', 91, 'DELETE', NULL, NULL, '{"titulo": "Sistema Inteligente de Redes Neurosdasdasdasdasdasdsadnales para la Gestión Integral de la Coordinación PNF de Contaduría Pública UPTT Mario Briceño Iragorry", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:19:44.318253');
+INSERT INTO public.auditoria VALUES (379, 'recursos', 87, 'DELETE', NULL, NULL, '{"titulo": "PST Prueba Duplicados - 20260805143446", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:19:58.866536');
+INSERT INTO public.auditoria VALUES (380, 'recursos', 83, 'DELETE', NULL, NULL, '{"titulo": "SISTEMA INTELIGENTE PARA LA GESTIÓN ACADÉMICA Y ADMINISTRATIVA EN LA ESCUELA NACIONAL “ANTONIO PÉREZ CARMONA”, ESCUQUE, ESTADO TRUJILLO", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:20:18.462275');
+INSERT INTO public.auditoria VALUES (381, 'recursos', 82, 'DELETE', NULL, NULL, '{"titulo": "OPTIMIZACIÓN DEL SISTEMA DE INFORMACION PARA EL CONTROL DE MATRICULA EN EL CENTRO DE ATENCIÓN INTEGRAL PARA PERSONAS CON AUTISMO “CAIPA TRUJILLO” VERSIÓN 2.0", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:20:41.547641');
+INSERT INTO public.auditoria VALUES (382, 'recursos', 78, 'DELETE', NULL, NULL, '{"titulo": "PST Prueba Carga por Lotes - 20260805134326", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:21:58.449319');
+INSERT INTO public.auditoria VALUES (383, 'recursos', 72, 'DELETE', NULL, NULL, '{"titulo": "SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WORLD C.A.", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:22:05.817914');
+INSERT INTO public.auditoria VALUES (384, 'recursos', 59, 'DELETE', NULL, NULL, '{"titulo": "SISTEMA DE OPTIMIZACIÓN BASADO EN ALGORITMOS GENÉTICOS PARA LA GESTIÓN DE HORARIOS DEL PNFI DE LA UPTTMBI, NÚCLEO LA BEATRIZ", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:22:12.769698');
+INSERT INTO public.auditoria VALUES (385, 'recursos', 57, 'DELETE', NULL, NULL, '{"titulo": "hola adios", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:22:21.890223');
+INSERT INTO public.auditoria VALUES (386, 'recursos', 52, 'DELETE', NULL, NULL, '{"titulo": "Simulador de Enrutamiento por Estado de Enlace para la Validaci¢n de Topolog¡as Complejas", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:22:28.364563');
+INSERT INTO public.auditoria VALUES (387, 'recursos', 50, 'DELETE', NULL, NULL, '{"titulo": "Software Educativo Multimedial para el Fortalecimiento del Aprendizaje de µlgebra Lineal", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:22:37.383552');
+INSERT INTO public.auditoria VALUES (388, 'recursos', 49, 'DELETE', NULL, NULL, '{"titulo": "Sistema de Información Automatizado para la Gestión de Inventario y Suministros Médicos", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:22:44.089157');
+INSERT INTO public.auditoria VALUES (389, 'recursos', 48, 'DELETE', NULL, NULL, '{"titulo": "Implementaci¢n de un Enrutador Din mico basado en Arquitectura Microkernel con PHP Puro", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:22:51.484125');
+INSERT INTO public.auditoria VALUES (390, 'recursos', 47, 'DELETE', NULL, NULL, '{"titulo": "Protocolo de Restauraci¢n y Diagn¢stico de Capacitores en Tarjetas Madre Socket 478", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:22:58.373196');
+INSERT INTO public.auditoria VALUES (391, 'recursos', 45, 'DELETE', NULL, NULL, '{"titulo": "Desarrollo de un Motor para Novelas Visuales Nativas usando Rust y Tauri", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:23:11.163705');
+INSERT INTO public.auditoria VALUES (392, 'recursos', 7, 'DELETE', NULL, NULL, '{"titulo": "Optimización de CPU en Servidores Locales - Parte 7", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:23:20.392629');
+INSERT INTO public.auditoria VALUES (393, 'recursos', 1, 'DELETE', NULL, NULL, '{"titulo": "Sistema de Reconocimiento Biométrico Facial para Comedor Universitario", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:23:27.259736');
+INSERT INTO public.auditoria VALUES (394, 'recursos', 132, 'DELETE', NULL, NULL, '{"titulo": "Sistema Integral de Gestión de Documentos Académicos para el Comité Casdasdasientífico Investigador del PNF en Informática apoyado en Redes Neuronales", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:24:18.152025');
+INSERT INTO public.auditoria VALUES (395, 'recursos', 113, 'DELETE', NULL, NULL, '{"titulo": "Sistema Integral de Gestión de Documentos Académicos para el 22312312312312213123Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:24:24.994543');
+INSERT INTO public.auditoria VALUES (396, 'recursos', 110, 'DELETE', NULL, NULL, '{"titulo": "Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNsssssssF en Informática apoyado en Redes Neuronales", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:24:31.904711');
+INSERT INTO public.auditoria VALUES (397, 'recursos', 108, 'DELETE', NULL, NULL, '{"titulo": "Sistema Integral de Gestión de Documentos Académicos para el C222222222omité Científico Investigador del PNF en Informática apoyado en Redes Neuronales", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:24:38.864652');
+INSERT INTO public.auditoria VALUES (398, 'recursos', 99, 'DELETE', NULL, NULL, '{"titulo": "Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Inves222222tigador del PNF en Informática apoyado en Redes Neuronales", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:24:44.915348');
+INSERT INTO public.auditoria VALUES (399, 'recursos', 81, 'DELETE', NULL, NULL, '{"titulo": "Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:24:51.962326');
+INSERT INTO public.auditoria VALUES (400, 'recursos', 79, 'DELETE', NULL, NULL, '{"titulo": "Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:24:56.56041');
+INSERT INTO public.auditoria VALUES (401, 'recursos', 58, 'DELETE', NULL, NULL, '{"titulo": "Sistema Integral de Gestión de Documasdasdasdasentos Académicos para el Comité Científico Investigaasdasdasdasdor del PNF en Informática apoyado en Redes Neuronales", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:25:02.481133');
+INSERT INTO public.auditoria VALUES (402, 'recursos', 51, 'DELETE', NULL, NULL, '{"titulo": "Plataforma Web bajo Arquitectura Cliente-Servidor para el Control de Citas Acad‚micas", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:25:08.771822');
+INSERT INTO public.auditoria VALUES (403, 'recursos', 46, 'DELETE', NULL, NULL, '{"titulo": "Arquitectura de L¢gica de Estados para Videojuegos en Consolas Virtuales TIC-80", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:25:15.891969');
+INSERT INTO public.auditoria VALUES (404, 'recursos', 2, 'DELETE', NULL, NULL, '{"titulo": "Prototipo de Cerradura Digital con Matriz de Teclado y Arduino", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:25:23.42679');
+INSERT INTO public.auditoria VALUES (405, 'recursos', 114, 'DELETE', NULL, NULL, '{"titulo": "SOPORTE TÉCNICO A EQUIPOS DE COMPUTACIÓN Y USUARIOS EN LA ESCUELA TÉCNICA COMERCIAL “MADRE RAFOLS”", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:25:27.034508');
+INSERT INTO public.auditoria VALUES (406, 'recursos', 111, 'DELETE', NULL, NULL, '{"titulo": "SOPORTE TÉCNICO A EQUIPOS DE COMPUTACIÓN Y USUARIOS EN LssssssssssssA ESCUELA TÉCNICA COMERCIAL “MADRE RAFOLS”", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:25:33.512409');
+INSERT INTO public.auditoria VALUES (407, 'recursos', 17, 'DELETE', NULL, NULL, '{"titulo": "Criptografía Cuántica Post-RSA - Parte 5", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:25:39.514351');
+INSERT INTO public.auditoria VALUES (408, 'recursos', 15, 'DELETE', NULL, NULL, '{"titulo": "Criptografía Cuántica Post-RSA - Parte 2", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:25:46.658992');
+INSERT INTO public.auditoria VALUES (409, 'recursos', 6, 'DELETE', NULL, NULL, '{"titulo": "Big Data en Finanzas Institucionales - Parte 9", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:25:52.520692');
+INSERT INTO public.auditoria VALUES (410, 'recursos', 149, 'DELETE', NULL, NULL, '{"titulo": "NUES DR. PABLO VILORIA – LA BEATRIZ SOPORTE TÉCNICO A EQUIPOS DE COMPUTACION Y USUARIOS EN CENTRO CLÍNICO “MARÍA EDELMIRA ARAUJO”, S.A. VALERA ESTADO TRUJILLO", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:25:58.63256');
+INSERT INTO public.auditoria VALUES (411, 'recursos', 148, 'DELETE', NULL, NULL, '{"titulo": "VALERA EDO TRUJILLO Aplicación Web Móvil para el proceso de Ascensos en la Coordinación de Formación Permanente y Docencia de la UPTTMBI Docente Asesor: Dra. María Luisa Colmenares Representante Institucional: Dra. Rossana Virgilio Representante...", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:26:05.544954');
+INSERT INTO public.auditoria VALUES (412, 'recursos', 109, 'DELETE', NULL, NULL, '{"titulo": "SOPORTE TÉCNICO A EQUIPOS DE COMPUTACION Y USUARIOS EN CENTRO CLÍNICO “MARÍA EDELMIRA ARAUJOooo”", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:26:12.597195');
+INSERT INTO public.auditoria VALUES (413, 'recursos', 100, 'DELETE', NULL, NULL, '{"titulo": "il para el proceso de Ascensos en la Coordin222222ación de Formación Permanente y Docencia de la UPTTMBI Docente Asesor: Dra.  María Luisa Colmenares Representante Institucional: Dra. Rossana Virgilio Representante Organizacional: Dr. Carlos Simancas", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:26:19.087363');
+INSERT INTO public.auditoria VALUES (414, 'recursos', 84, 'DELETE', NULL, NULL, '{"titulo": "SOPORTE TECNICO A EQUIPOS Y USUARIOS DE LABORATORIO I EN LA E.T.C MADRE RAFOLS", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:26:28.803469');
+INSERT INTO public.auditoria VALUES (415, 'recursos', 80, 'DELETE', NULL, NULL, '{"titulo": "NUES DR. PABLO VILORIA – LA BEATRIZ SOPORTE TÉCNICO A EQUIPOS DE COMPUTACION Y USUARIOS EN CENTRO CLÍNICO “MARÍA EDELMIRA ARAUJO”, S.A. VALERA ESTADO TRUJILLO .", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:26:34.841492');
+INSERT INTO public.auditoria VALUES (416, 'recursos', 69, 'DELETE', NULL, NULL, '{"titulo": "NUES DR. PABLO VILORIA – LA BEATRIZ SOPORTE TÉCNICO A EQUIPOS DE COMPUTACION Y USUARIOS EN CENTRO CLÍNICO “MARÍA EDELMIRA ARAUJO”, S.A. VALERA ESTADO TRUJILLO .", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:26:43.175565');
+INSERT INTO public.auditoria VALUES (417, 'recursos', 19, 'DELETE', NULL, NULL, '{"titulo": "Software Libre para Bibliotecas - Parte 6", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:26:50.971298');
+INSERT INTO public.auditoria VALUES (418, 'recursos', 8, 'DELETE', NULL, NULL, '{"titulo": "Sistemas de Riego Automatizado - Parte 5", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:26:58.07257');
+INSERT INTO public.auditoria VALUES (419, 'recursos', 160, 'DELETE', NULL, NULL, '{"titulo": "Edo. Trujillo Soporte Técnico A Equipos Y Usuarios De Computación Del Infocentro De Escuque", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:27:06.498734');
+INSERT INTO public.auditoria VALUES (420, 'recursos', 88, 'DELETE', NULL, NULL, '{"titulo": "SOPORTE TÉCNICO A EQUIPOS DE COMPUTACIÓN Y USUARIOS EN CORPOELEC", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:27:12.665465');
+INSERT INTO public.auditoria VALUES (421, 'recursos', 18, 'DELETE', NULL, NULL, '{"titulo": "Criptografía Cuántica Post-RSA - Parte 8", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:27:19.64899');
+INSERT INTO public.auditoria VALUES (422, 'recursos', 166, 'DELETE', NULL, NULL, '{"titulo": "NUES DR. PABLO VILORIA - LA BEATRIZ SOPORTE TÉCNICO A USUARIOS Y EQUIPOS DEL LABORATORIO 1 - INFORMÁTICA DE LA UNIVERSIDAD POLITÉCNICA TERRITORIAL DEL ESTADO TRUJILLO “MARIO BRICEÑO IRAGORRY (UPTTMBI)”", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:27:27.238791');
+INSERT INTO public.auditoria VALUES (423, 'recursos', 167, 'INSERT', NULL, NULL, NULL, '{"titulo": "TIPPENTAG", "id_tipo_recurso": 1}', '2026-09-28 20:38:05.421101');
+INSERT INTO public.auditoria VALUES (424, 'recursos', 167, 'DELETE', NULL, NULL, '{"titulo": "TIPPENTAG", "id_tipo_recurso": 1}', NULL, '2026-09-28 20:38:19.068594');
+INSERT INTO public.auditoria VALUES (425, 'recursos', 168, 'INSERT', NULL, NULL, NULL, '{"titulo": "Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales", "id_tipo_recurso": 1}', '2026-09-28 21:27:13.657327');
+INSERT INTO public.auditoria VALUES (426, 'recursos', 169, 'INSERT', NULL, NULL, NULL, '{"titulo": "OPTIMIZACIÓN DEL SISTEMA DE INFORMACION PARA EL CONTROL DE MATRICULA EN EL CENTRO DE ATENCIÓN INTEGRAL PARA PERSONAS CON AUTISMO “CAIPA TRUJILLO” VERSIÓN 2.0", "id_tipo_recurso": 1}', '2026-09-28 21:27:13.726295');
+INSERT INTO public.auditoria VALUES (427, 'recursos', 170, 'INSERT', NULL, NULL, NULL, '{"titulo": "MÓDULO INTELIGENTE BASADO EN MACHINE LEARNING PARA LA GESTIÓN DE LAS LÍNEAS DE INVESTIGACIÓN PARA PROYECTOS ACADÉMICOS DE LA UPTTMBI - NÚCLEO LA BEATRIZ", "id_tipo_recurso": 1}', '2026-09-28 21:27:13.780906');
+INSERT INTO public.auditoria VALUES (428, 'recursos', 171, 'INSERT', NULL, NULL, NULL, '{"titulo": "SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WORLD C.A", "id_tipo_recurso": 1}', '2026-09-28 21:27:13.829035');
+INSERT INTO public.auditoria VALUES (429, 'recursos', 172, 'INSERT', NULL, NULL, NULL, '{"titulo": "SISTEMA DE OPTIMIZACIÓN BASADO EN ALGORITMOS GENÉTICOS PARA LA GESTIÓN DE HORARIOS DEL PNFI DE LA UPTTMBI, NÚCLEO LA BEATRIZ", "id_tipo_recurso": 1}', '2026-09-28 21:27:13.913207');
+INSERT INTO public.auditoria VALUES (430, 'recursos', 172, 'DELETE', NULL, NULL, '{"titulo": "SISTEMA DE OPTIMIZACIÓN BASADO EN ALGORITMOS GENÉTICOS PARA LA GESTIÓN DE HORARIOS DEL PNFI DE LA UPTTMBI, NÚCLEO LA BEATRIZ", "id_tipo_recurso": 1}', NULL, '2026-09-28 21:33:41.605755');
+INSERT INTO public.auditoria VALUES (431, 'recursos', 171, 'DELETE', NULL, NULL, '{"titulo": "SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WORLD C.A", "id_tipo_recurso": 1}', NULL, '2026-09-28 21:33:44.431404');
+INSERT INTO public.auditoria VALUES (432, 'recursos', 170, 'DELETE', NULL, NULL, '{"titulo": "MÓDULO INTELIGENTE BASADO EN MACHINE LEARNING PARA LA GESTIÓN DE LAS LÍNEAS DE INVESTIGACIÓN PARA PROYECTOS ACADÉMICOS DE LA UPTTMBI - NÚCLEO LA BEATRIZ", "id_tipo_recurso": 1}', NULL, '2026-09-28 21:33:46.86506');
+INSERT INTO public.auditoria VALUES (433, 'recursos', 169, 'DELETE', NULL, NULL, '{"titulo": "OPTIMIZACIÓN DEL SISTEMA DE INFORMACION PARA EL CONTROL DE MATRICULA EN EL CENTRO DE ATENCIÓN INTEGRAL PARA PERSONAS CON AUTISMO “CAIPA TRUJILLO” VERSIÓN 2.0", "id_tipo_recurso": 1}', NULL, '2026-09-28 21:33:50.135779');
+INSERT INTO public.auditoria VALUES (434, 'recursos', 168, 'DELETE', NULL, NULL, '{"titulo": "Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales", "id_tipo_recurso": 1}', NULL, '2026-09-28 21:33:52.575746');
+INSERT INTO public.auditoria VALUES (435, 'recursos', 173, 'INSERT', NULL, NULL, NULL, '{"titulo": "Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales", "id_tipo_recurso": 1}', '2026-09-28 21:42:57.178804');
+INSERT INTO public.auditoria VALUES (436, 'recursos', 174, 'INSERT', NULL, NULL, NULL, '{"titulo": "OPTIMIZACIÓN DEL SISTEMA DE INFORMACION PARA EL CONTROL DE MATRICULA EN EL CENTRO DE ATENCIÓN INTEGRAL PARA PERSONAS CON AUTISMO “CAIPA TRUJILLO” VERSIÓN 2.0", "id_tipo_recurso": 1}', '2026-09-28 21:42:57.240697');
+INSERT INTO public.auditoria VALUES (437, 'recursos', 175, 'INSERT', NULL, NULL, NULL, '{"titulo": "MÓDULO INTELIGENTE BASADO EN MACHINE LEARNING PARA LA GESTIÓN DE LAS LÍNEAS DE INVESTIGACIÓN PARA PROYECTOS ACADÉMICOS DE LA UPTTMBI - NÚCLEO LA BEATRIZ", "id_tipo_recurso": 1}', '2026-09-28 21:42:57.295976');
+INSERT INTO public.auditoria VALUES (438, 'recursos', 176, 'INSERT', NULL, NULL, NULL, '{"titulo": "Sistema Integral de Gestión Comercial y Tienda Virtual para Smartphone World C.A.", "id_tipo_recurso": 1}', '2026-09-28 21:42:57.36464');
+INSERT INTO public.auditoria VALUES (439, 'recursos', 177, 'INSERT', NULL, NULL, NULL, '{"titulo": "Sistema de Optimización basado en Algoritmos Genéticos para la Gestión de Horarios del PNFI de la UPTTMBI, Núcleo La Beatriz", "id_tipo_recurso": 1}', '2026-09-28 21:42:57.445384');
+INSERT INTO public.auditoria VALUES (440, 'usuarios', 25, 'INSERT', NULL, NULL, NULL, '{"email": "jesusmontilla23bdv@gmail.com", "id_rol": 1, "nombre": "Jesus"}', '2026-09-28 21:45:05.236489');
+INSERT INTO public.auditoria VALUES (441, 'recursos', 178, 'INSERT', NULL, NULL, NULL, '{"titulo": "DISEÑO Y PROTOTIPO DE UNA APLICACIÓN CLIENTE-SERVIDOR QUE PERMITA EJECUTAR COMANDOS BÁSICOS EN UN SERVIDOR REMOTO DESDE UN DISPOSITIVO MÓVIL", "id_tipo_recurso": 1}', '2026-09-28 22:19:25.188154');
+INSERT INTO public.auditoria VALUES (442, 'recursos', 179, 'INSERT', NULL, NULL, NULL, '{"titulo": "CONFIGURACION E IMPLEMENTACION DE SERVIDORES INTERNET Y DISEÑO DE PAGINA WEB PARA LA EMPRESA DE TELECOMUNICACIONES DE NARIÑO TELENARIÑO", "id_tipo_recurso": 1}', '2026-09-28 22:19:26.337196');
+INSERT INTO public.auditoria VALUES (443, 'recursos', 180, 'INSERT', NULL, NULL, NULL, '{"titulo": "Aplicación web cliente-servidor para el control de inventario que indique el porcentaje de consumo de acuerdo al semáforo nutricional en la tienda ''Tuti'' del Cantón Vinces", "id_tipo_recurso": 1}', '2026-09-28 22:19:26.610302');
+INSERT INTO public.auditoria VALUES (444, 'recursos', 181, 'INSERT', NULL, NULL, NULL, '{"titulo": "SISTEMA DE INFORMACIÓN Y GESTIÓN DE PROYECTOS DE GRADO", "id_tipo_recurso": 1}', '2026-09-28 22:19:27.887982');
 
 
 --
--- Data for Name: autores; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: autores; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.autores VALUES (1, 'Prof. Andrus', 'V-11223344');
@@ -2223,10 +2324,14 @@ INSERT INTO public.autores VALUES (115, 'Jorge Rodriguez', NULL);
 INSERT INTO public.autores VALUES (116, 'López Peña Willker Gabrielci', 'V-27896359');
 INSERT INTO public.autores VALUES (117, 'Salas Vásquez Andyjosé', 'V-27888136');
 INSERT INTO public.autores VALUES (118, 'Judici Becerra Frank Starling', 'V-29739761');
+INSERT INTO public.autores VALUES (119, 'JULIE ANDREA SARMIENTO FORERO', 'V-30877998');
+INSERT INTO public.autores VALUES (120, 'MARIO ALEXANDER ROMERO RODRIGUEZ', 'V-30123654');
+INSERT INTO public.autores VALUES (121, 'Fabián Eduardo Alcoser Cantuña', 'V-20545874');
+INSERT INTO public.autores VALUES (122, 'Andrés Leal', 'V-12542222');
 
 
 --
--- Data for Name: carreras; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: carreras; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.carreras VALUES (1, 'PNF en Informática', 'Ingeniería y TSU en Informática');
@@ -2237,7 +2342,7 @@ INSERT INTO public.carreras VALUES (5, 'PNF en Construcción Civil', 'Ingenierí
 
 
 --
--- Data for Name: categorias; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: categorias; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.categorias VALUES (1, 'Tecnología');
@@ -2257,7 +2362,7 @@ INSERT INTO public.categorias VALUES (10, 'Admin');
 
 
 --
--- Data for Name: cursos; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: cursos; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.cursos VALUES (1, 4, 'Introducción a la Metodología de la Investigación', 'Curso fundamental para comprender los métodos y técnicas de investigación científica aplicados al PNF en Informática. Incluye diseño experimental, recolección de datos y análisis estadístico básico.', NULL, 'publicado', 70.00, '2026-04-03 03:28:04', '2026-04-03 03:28:04', NULL, NULL, 'Virtual', 'B sico', NULL, NULL, NULL, NULL, NULL, 'Abierta');
@@ -2269,7 +2374,7 @@ INSERT INTO public.cursos VALUES (7, 7, 'e', 'e', 'public/uploads/cursos/curso_1
 
 
 --
--- Data for Name: detalles_articulos; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: detalles_articulos; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.detalles_articulos VALUES (120, NULL, '93', '241', '0012-7353', '2026-07-09 20:16:51.643727', 'art_1783642611_6a5039f396bec.png', 'La industria de la construcción enfrenta un serio impacto ambiental por las altas emisiones del cemento, lo que impulsa la búsqueda de alternativas sostenibles como el concreto reforzado con fibras de polipropileno (FPP). Para ello se analizó su efecto en las propiedades del concreto a través de una revisión sistemática y filtrada de 66 artículos recientes entre los años 2021 y 2025 extraídos de Scopus, ScienceDirect y MDPI. Los estudios muestran que la FPP mejora la resistencia a compresión, flexión y tracción, especialmente en proporciones cercanas al 0.5%. También aumenta la durabilidad frente a agentes agresivos y mejora la microestructura al controlar grietas, aunque, puede reducir la trabajabilidad y aumentar la porosidad, efectos mitigables mediante el uso de fibras metálicas o adiciones puzolánicas. En conclusión, el uso de FPP es una opción viable para reducir el impacto ambiental del concreto y mejorar su desempeño cuando se aplica en proporciones adecuada', true, NULL);
@@ -2284,75 +2389,34 @@ INSERT INTO public.detalles_articulos VALUES (150, 7, 'e', 'e', 'e', '2026-09-11
 
 
 --
--- Data for Name: detalles_investigaciones; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: detalles_investigaciones; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 
 
 --
--- Data for Name: detalles_proyectos; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: detalles_proyectos; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
-INSERT INTO public.detalles_proyectos VALUES (46, '2025-11-20', 'Pregrado', 'Estudio de la gesti¢n de memoria y el ciclo de vida de los sprites utilizando Lua dentro del motor TIC-80. El proyecto demuestra c¢mo estructurar el c¢digo para videojuegos con est‚tica retro-tech sin saturar el l¡mite de procesamiento de la consola virtual.', 1, 'Estudiantes de Computaci¢n Gr fica', 'Lua, TIC-80, Retro, GameDev, M quina de Estados', '2026-07-05 17:21:44.350197', NULL, 'Trayecto III', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (47, '2026-07-02', 'Pregrado', 'Metodolog¡a pr ctica para revivir equipos de torre de principios de los 2000. El caso de estudio se centra en una Utech Pentium 4, abordando el reemplazo de condensadores inflados y la instalaci¢n limpia de sistemas operativos legacy para la preservaci¢n de software antiguo.', 1, 'Laboratorios de Arquitectura del Computador', 'Pentium 4, Hardware, Restauraci¢n, Condensadores, Legacy', '2026-07-05 17:21:44.350197', NULL, 'Trayecto IV', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (48, '2026-05-10', 'Pregrado', 'Creaci¢n de un n£cleo de procesamiento (Core) capaz de cargar m¢dulos MVC de forma independiente. Se detalla la construcci¢n del QueryBuilder, gesti¢n de conexiones PostgreSQL y un sistema de enrutamiento estricto para evitar acoplamientos.', 1, 'Departamento de Sistemas de la Universidad', 'Microkernel, PHP, PostgreSQL, MVC, Arquitectura', '2026-07-05 17:21:44.350197', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (50, '2026-04-22', 'Pregrado', 'Aplicaci¢n interactiva dise¤ada como medio did ctico para facilitar los procesos de ense¤anza. Combina fundamentos comunicacionales y l¢gicos mediante una interfaz interactiva de alto rendimiento.', 1, 'µrea de Ciencias B sicas de la Instituci¢n', 'Edum tica, Software Educativo, Multimedia, µlgebra', '2026-07-05 17:39:35.498485', NULL, 'Trayecto III', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (51, '2025-07-10', 'Pregrado', 'Dise¤o de un sistema distribuido cooperativo entre clientes y un servidor centralizado. Permite la gesti¢n din mica de solicitudes concurrentes controlando de manera efectiva las peticiones HTTP contra la base de datos.', 1, 'Coordinaci¢n de Control de Estudios', 'Web, Cliente-Servidor, PHP, PostgreSQL', '2026-07-05 17:39:35.498485', NULL, 'Trayecto IV', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (52, '2026-06-18', 'Pregrado', 'Herramienta de simulaci¢n orientada al testeo preventivo de la transmisi¢n de datos. Permite modelar el comportamiento de las decisiones de routing antes de iniciar el despliegue f¡sico de una infraestructura de red.', 1, 'Laboratorio de Redes y Telecomunicaciones', 'Simulaci¢n, Routing, Algoritmos, Redes, Topolog¡a', '2026-07-05 17:39:35.498485', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (57, '2026-07-05', 'Pregrado', 'ahsdhajsdhahakjfhafggfjhgfkjh', 1, 'asdasdasdasd', 'asdasdasdasdasd', '2026-07-05 18:21:33.639701', NULL, 'Trayecto II', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (59, '2026-11-10', 'Pregrado', 'El presente proyecto de investigación, desarrollado bajo el enfoque de la Investigación Acción Participativa (IAP), tiene como propósito fundamental desarrollar un sistema inteligente basado en algoritmos genéticos para la optimización automática de horarios en la Coordinación del Programa Nacional de Formación en Informática (PNFI) de la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry" Núcleo La Beatriz. A través de un diagnóstico participativo que incluyó entrevistas, observación directa y la aplicación de matrices FODA y CAME, se identificó que el proceso actual de elaboración de horarios se realiza de manera completamente manual, consumiendo entre tres y cuatro semanas por trimestre y generando frecuentes conflictos de asignación. La solución propuesta, seleccionada mediante matriz de decisión multicriterio, consiste en el desarrollo de un sistema con arquitectura web que emplea algoritmos genéticos multiobjetivo para procesar restricciones complejas, minimizando errores en un 95% y reduciendo el tiempo de planificación en un 90%. El proyecto beneficiará directamente a coordinadores, docentes y estudiantes del PNFI, contribuyendo a una gestión académica más eficiente y tecnológicamente confiable.', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry”', 'Algoritmos genéticos, horarios universitarios, optimización, sistema inteligente, Investigación Acción Participativa', '2026-08-04 09:22:58.539505', NULL, 'Trayecto IV', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (69, '2026-08-04', 'Pregrado', 'El Proyecto Socio Tecnológico realizado en el Departamento de Sistemas del Centro Clínico "María Edelmira Araujo", S.A. tiene como objetivo general ofrecer soporte técnico a usuarios y equipos de computación, utilizando mantenimiento correctivo y preventivo tanto a nivel de software como de hardware. Para la implementación del proyecto, se utilizarán técnicas de entrevista y observación como estrategias de recolección de datos, además de la realización de un inventario. Se espera mejorar la eficiencia y productividad del departamento a través de estas acciones.', 1, 'Centro Clínico “María Edelmira Araujo”', 'Soporte técnico, correctivo, preventivo, software, hardware', '2026-08-04 09:58:54.904249', NULL, 'Trayecto II', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (72, '2026-08-04', 'Pregrado', 'Ofrecer a nuestros clientes accesorios para dispositivos móviles de calidad, brindando soluciones prácticas y accesibles que protejan, complementen y mejoren la experiencia diaria con su celular, a través de una atención personalizada y un catálogo de productos variado que se adapte a las necesidades de cada usuario.', 1, 'Smarthphone World C', '', '2026-08-04 10:11:11.510708', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (78, '2026-08-05', 'Pregrado', 'Este es un resumen de prueba automatizada para verificar la carga por lotes via AJAX.', 1, 'Comunidad de Pruebas', 'Prueba, AJAX, Lotes, PHP', '2026-08-05 09:43:26.945146', NULL, 'Trayecto III', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (45, '2026-06-15', 'Pregrado', 'Dise¤o e implementaci¢n de un motor de renderizado ligero y de alto rendimiento. Se evit¢ el uso de frameworks pesados para garantizar una ejecuci¢n "metal pure", optimizando el consumo de RAM y CPU en equipos de bajos recursos.', 1, 'Comunidad de Desarrolladores Independientes', 'Rust, Tauri, Novela Visual, Nativo, Optimizaci¢n', '2026-07-05 17:21:44.350197', NULL, 'Trayecto II', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (80, '2026-08-05', 'Pregrado', 'El Proyecto Socio Tecnológico realizado en el Departamento de Sistemas del Centro Clínico "María Edelmira Araujo", S.A. tiene como objetivo general ofrecer soporte técnico a usuarios y equipos de computación, utilizando mantenimiento correctivo y preventivo tanto a nivel de software como de hardware. Para la implementación del proyecto, se utilizarán técnicas de entrevista y observación como estrategias de recolección de datos, además de la realización de un inventario. Se espera mejorar la eficiencia y productividad del departamento a través de estas acciones', 1, 'Centro Clínico “María Edelmira Araujo”, S', 'Soporte técnico, correctivo, preventivo, software, hardware', '2026-08-05 09:48:05.633265', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (88, '2026-08-10', 'Pregrado', 'Según Arboleda (2014), un proyecto representa un esfuerzo temporal diseñado para producir un resultado o entregable único de forma gradual. Para enriquecer la fundamentación, Project Management Institute (2021), lo define como un esfuerzo temporal emprendido para crear un producto, servicio o resultado único.', 1, 'Corporación Eléctrica Nacional (CORPOELEC) de Venezuela', '', '2026-08-10 10:26:58.264555', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (49, '2026-03-15', 'Pregrado', 'Desarrollo de un sistema tradicional para optimizar los métodos y procedimientos del inventario médico. Sigue un patrón arquitectónico modular para agilizar los procesos organizacionales.', 1, 'Ambulatorio Urbano Tipo II', 'Sistemas de Información, PostgreSQL, Gestión, Inventario', '2026-07-05 17:39:35.498485', NULL, 'Trayecto II', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (81, '2026-08-05', 'Pregrado', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry". Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP', '2026-08-05 09:48:05.72936', NULL, 'Trayecto II', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (82, '2026-08-05', 'Pregrado', 'Una descripción de proyectos es una visión general de alto nivel de por qué está haciendo el mismo. De igual manera el documento explica los objetivos y sus cualidades esenciales, donde la descripción es fundamental debido a que va ayudar en la realización del estudio ya que se requiere de la aplicación de varias metodologías que abordan aspectos desde la identificación del problema, hasta la selección de la alternativa más adecuada, haciendo uso de herramientas y técnicas que permiten la recolección y análisis de información de manera concreta y adecuada, aumentando así el nivel de objetividad del problema a resolver', 1, 'CAIPA Trujillo  ------------------------------------------------Naturaleza de la Comunidad: El CAIPA-Trujillo, Valera Estado Trujillo', '', '2026-08-05 09:48:05.817964', NULL, 'Trayecto III', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (83, '2026-08-05', 'Pregrado', 'La descripción del proyecto ofrece una visión general de la iniciativa que se va a desarrollar, la cual, debe incluir información clave que permita entender el contexto, los objetivos y la relevancia de la propuesta. Así que, este apartado actúa como un marco de referencia para todos los aspectos esenciales del proyecto, facilitando así, una comprensión clara de lo que se pretende lograr.', 1, 'Escuela Nacional “Antonio Pérez Carmona”, se encuentra registrada con el Registro de Información Fiscal (RIF) J-403419957', '', '2026-08-05 09:48:05.91852', NULL, 'Trayecto IV', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (84, '2026-08-05', 'Pregrado', 'El propósito principal de este proyecto es realizar soporte técnico a los equipos de la institución (Escuela Técnica Comercial Madre Rafols)del Estado Trujillo municipio Valera. Y de igual forma dictar varias sesiones de capacitación formativas a los estudiantes de dicha institución cerca de software, hardware, partes, usos adecuados de un computador, donde podamos ofrecer nuevos conocimientos a los estudiantes. Todo esto aplicando nuevas tecnologías de aprendizaje que permitan el crecimiento y desarrollo del área de informática de la institución', 1, 'Escuela Técnica Comercial Madre Rafols', '', '2026-08-05 09:48:06.00888', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (85, '2026-08-05', 'Pregrado', 'Resumen de prueba automatizada para verificación de duplicados.', 1, 'Comunidad Test', 'Prueba, Duplicados, PST', '2026-08-05 09:56:42.188313', NULL, 'Trayecto II', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (86, '2026-08-05', 'Pregrado', 'Resumen de prueba automatizada para verificación de duplicados.', 1, 'Comunidad Test', 'Prueba, Duplicados, PST', '2026-08-05 10:02:04.774776', NULL, 'Trayecto III', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (87, '2026-08-05', 'Pregrado', 'Resumen de prueba automatizada para verificación de duplicados.', 1, 'Comunidad Test', 'Prueba, Duplicados, PST', '2026-08-05 10:34:46.219889', NULL, 'Trayecto IV', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (58, '2026-07-07', 'Pregrado', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry". Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio. Palabras clave: Gestión doc', 1, 'asdasdasdasd', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP', '2026-07-07 00:01:54.74783', NULL, 'Trayecto III', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (79, '2026-08-05', 'Pregrado', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry". Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP', '2026-08-05 09:45:15.201621', NULL, 'Trayecto IV', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (89, '2018-01-10', 'Pregrado', 'El presente proyecto sociotecnológico se centra en el desarrollo de un módulo avanzado para la administración y proyección de las líneas de investigación del PNFI, en el cual la innovación principal radica en la integración de modelos de Inteligencia Artificial (Machine Learning) orientados al análisis predictivo, esta herramienta procesa el volumen y la tipología de las investigaciones registradas para identificar tendencias emergentes, predecir el crecimiento de áreas temáticas y asistir al Comité Científico Investigador en la toma de decisiones estratégicas, todo ello operando sobre la arquitectura base del Sistema Integral de Gestión.', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr', 'Líneas de investigación, PNFI, Machine Learning, Análisis predictivo, Toma de decisiones, Comité científico, Gestión del conocimiento, Sistema integral de gestión', '2026-08-10 10:35:39.007693', NULL, 'Trayecto IV', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (90, '2026-08-10', 'Pregrado', 'Una descripción de proyectos es una visión general de alto nivel de por qué está haciendo el mismo. De igual manera el documento explica los objetivos y sus cualidades esenciales, donde la descripción es fundamental debido a que va ayudar en la realización del estudio ya que se requiere de la aplicación de varias metodologías que abordan aspectos desde la identificación del problema, hasta la selección de la alternativa más adecuada, haciendo uso de herramientas y técnicas que permiten la recolección y análisis de información de manera concreta y adecuada, aumentando así el nivel de objetividad del problema a resolver', 1, 'CAIPA Trujillo', '', '2026-08-10 10:45:42.226083', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (91, '2026-08-10', 'Pregrado', 'En este sentido, el presente proyecto se desarrolla dentro de la Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry”, específicamente en el núcleo universitario “Dr. Pablo Viloria”, ubicado en la ciudad de Valera, estado Trujillo. Dentro de esta institución se encuentra el Programa Nacional de Formación en Contaduría Pública, donde se identificó la necesidad de optimizar los procesos relacionados con la gestión de los Proyectos de Investigación Comunitaria Integradora (PCI), así como el manejo de la información académica de los estudiantes vinculados a dichos proyectos. El análisis del contexto institucional permite comprender cómo se gestionan actualmente estos procesos, cuáles son las herramientas utilizadas para el registro y control de la información académica y cuáles son las limitaciones presentes en dichos procedimientos. En este sentido, la descripción del contexto se convierte en un elemento fundamental para sustentar la pertinencia del desarrollo de una solución informática orientada a mejorar la organización y gestión de la información dentro del programa académico', 1, 'Departamento del Programa Nacional de Formación (PNF) en Contaduría Pública de la Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorr', 'sistema informático, gestión académica, proyectos PCI, información académica, automatización', '2026-08-10 10:52:47.26864', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (92, '2026-08-10', 'Pregrado', 'La descripción del proyecto ofrece una visión general de la iniciativa que se va a desarrollar, la cual, debe incluir información clave que permita entender el contexto, los objetivos y la relevancia de la propuesta. Así que, este apartado actúa como un marco de referencia para todos los aspectos esenciales del proyecto, facilitando así, una comprensión clara de lo que se pretende lograr.', 1, 'Escuela Nacional “Antonio Pérez Carmona”, se encuentra registrada con el Registro de Información Fiscal (RIF) J-403419957', '', '2026-08-10 11:34:04.575523', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (93, '2026-08-10', 'Pregrado', 'En este sentido, el presente proyecto se desarrolla dentro de la Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry”, específicamente en el núcleo universitario “Dr. Pablo Viloria”, ubicado en la ciudad de Valera, estado Trujillo. Dentro de esta institución se encuentra el Programa Nacional de Formación en Contaduría Pública, donde se identificó la necesidad de optimizar los procesos relacionados con la gestión de los Proyectos de Investigación Comunitaria Integradora (PCI), así como el manejo de la información académica de los estudiantes vinculados a dichos proyectos. El análisis del contexto institucional permite comprender cómo se gestionan actualmente estos procesos, cuáles son las herramientas utilizadas para el registro y control de la información académica y cuáles son las limitaciones presentes en dichos procedimientos. En este sentido, la descripción del contexto se convierte en un elemento fundamental para sustentar la pertinencia del desarrollo de una solución informática orientada a mejorar la organización y gestión de la información dentro del programa académico', 1, 'Departamento del Programa Nacional de Formación (PNF) en Contaduría Pública de la Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorr', 'sistema informático, gestión académica, proyectos PCI, información académica, automatización', '2026-08-10 11:34:42.145006', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (94, '2026-08-10', 'Pregrado', 'Ofrecer a nuestros clientes accesorios para dispositivos móviles de calidad, brindando soluciones prácticas y accesibles que protejan, complementen y mejoren la experiencia diaria con su celular, a través de una atención personalizada y un catálogo de productos variado que se adapte a las necesidades de cada usuario.', 1, 'Smarthphone World C', '', '2026-08-10 11:40:58.141559', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (99, '2026-08-10', 'Pregrado', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry". Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP', '2026-08-10 12:10:58.390178', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (100, '2026-08-10', 'Pregrado', 'El proyecto socio tecnológico tuvo como propósito desarrollar una Aplicación Web Móvil para el proceso de ascensos en la Coordinación de Formación Permanente y Docencia de la UPTTMBI. Se destaca la importancia que tienen las aplicaciones web en la vida cotidiana, dado que facilitan obtener, modificar información inmediata, dado que las mismas se ejecutan a través de internet, los datos son procesados y almacenados dentro de la web. La metodología utilizada fue programación extrema, metodología ágil de gestión de proyectos que se centra en la velocidad y la simplicidad con ciclos de desarrollo cortos y con menos documentación. De acuerdo con los objetivos establecidos, se utilizó la entrevista, encuesta, reuniones con los actores para desarrollar las historias de usuarios, se planifico, diseño, programo y realizaron pruebas a la aplicación. Como producto resultante se desarrolló una App móvil para el apoyo de los docentes en la solicitud de los procesos manejados en la Coordinación de Formación permanente y docente de la UPTTMBI, utilizando tecnologías de software libre como son PHP, Java y como gestor de base de datos se utilizó MySQL. La aplicación web móvil tiene como finalidad automatizar procesos que permitan una adecuada administración en lo referente al proceso de ascenso y solicitud de bono didáctico por parte de los docentes de la UPTTMBI, ayudando a la coordinación obtener información inmediata en tiempo real con resultados favorables, que contribuyen al desarrollo óptimo de los procesos y dando un mejor control a las necesidades de los docentes', 1, 'Coordinación de Formación Permanente y Docencia de la Universidad Politécnica Territorial del estado Trujillo Mario Briceño Iragorry', 'App, Aplicación móvil, Coordinación, Ascensos', '2026-08-10 12:14:42.285533', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (108, '2026-08-10', 'Pregrado', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry". Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP', '2026-08-10 12:20:17.959675', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (109, '2026-08-11', 'Pregrado', 'El Proyecto Socio Tecnológico realizado en el Departamento de Sistemas del Centro Clínico "María Edelmira Araujo", S.A. tiene como objetivo general ofrecer soporte técnico a usuarios y equipos de computación, utilizando mantenimiento correctivo y preventivo tanto a nivel de software como de hardware. Para la implementación del proyecto, se utilizarán técnicas de entrevista y observación como estrategias de recolección de datos, además de la realización de un inventario. Se espera mejorar la eficiencia y productividad del departamento a través de estas acciones.', 1, 'Centro Clínico “María Edelmira Araujo”', 'Soporte técnico, correctivo, preventivo, software, hardware', '2026-08-11 10:10:03.006883', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (110, '2026-08-25', 'Pregrado', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry". Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio.', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP', '2026-08-25 19:01:06.312899', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (111, '2026-08-25', 'Pregrado', 'El objetivo general del proyecto Socio Tecnológico fue realizar Soporte Técnico a Equipos de Computación y Usuarios en la Escuela Técnica Comercial “Madre Rafols”. Se utilizó la metodología del marco lógico para determinar los problemas, causas y consecuencias, se complementó con la metodología cuantitativa. Proyecto factible, de carácter descriptiva, se realizó en tres fases. Como técnica de recolección de datos se utilizó la encuesta y como instrumento el cuestionario, La fase de la elaboración de la propuesta, consistió en un Plan de mantenimiento preventivo y correctivo a los equipos de computación, y taller al usuario. Los resultados obtenidos evidencian colocar parte de los problemas da hardware y software. Este proyecto permitió aplicar los conocimientos adquiridos en arquitectura del computador', 1, 'Escuela Técnica Comercial “Madre Rafols”', 'computadoras, mantenimiento, instalación, hardware, software', '2026-08-25 19:01:06.640902', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (147, '2026-09-11', 'Pregrado', 'Ofrecer a nuestros clientes accesorios para dispositivos móviles de calidad, brindando soluciones prácticas y accesibles que protejan, complementen y mejoren la experiencia diaria con su celular, a través de una atención personalizada y un catálogo de productos variado que se adapte a las necesidades de cada usuario.', 1, 'Smarthphone World C', '', '2026-09-10 21:02:31.80467', NULL, 'Trayecto I', NULL, 'Desarrollar un Sistema Integral de Gestión Comercial y Tienda Virtual para Smartphone World C.A., compuesto por un módulo de gestión local y una plataforma de comercio electrónico interconectados mediante una base de datos centralizada en la nube, con el fin de automatizar los procesos internos de inventario y ventas, y ampliar el alcance comercial de la empresa hacia el entorno digital.', true);
-INSERT INTO public.detalles_proyectos VALUES (113, '2026-08-27', 'Pregrado', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry". Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP', '2026-08-27 09:08:37.073105', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (114, '2026-08-27', 'Pregrado', 'El objetivo general del proyecto Socio Tecnológico fue realizar Soporte Técnico a Equipos de Computación y Usuarios en la Escuela Técnica Comercial “Madre Rafols”. Se utilizó la metodología del marco lógico para determinar los problemas, causas y consecuencias, se complementó con la metodología cuantitativa. Proyecto factible, de carácter descriptiva, se realizó en tres fases. Como técnica de recolección de datos se utilizó la encuesta y como instrumento el cuestionario, La fase de la elaboración de la propuesta, consistió en un Plan de mantenimiento preventivo y correctivo a los equipos de computación, y taller al usuario. Los resultados obtenidos evidencian colocar parte de los problemas da hardware y software. Este proyecto permitió aplicar los conocimientos adquiridos en arquitectura del computador', 1, 'Escuela Técnica Comercial “Madre Rafols”', 'computadoras, mantenimiento, instalación, hardware, software', '2026-08-27 10:17:48.017574', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (149, '2026-09-11', 'Pregrado', 'El Proyecto Socio Tecnológico realizado en el Departamento de Sistemas del Centro Clínico "María Edelmira Araujo", S.A. tiene como objetivo general ofrecer soporte técnico a usuarios y equipos de computación, utilizando mantenimiento correctivo y preventivo tanto a nivel de software como de hardware. Para la implementación del proyecto, se utilizarán técnicas de entrevista y observación como estrategias de recolección de datos, además de la realización de un inventario. Se espera mejorar la eficiencia y productividad del departamento a través de estas acciones', 1, 'Centro Clínico “María Edelmira Araujo”, S', 'Soporte técnico, correctivo, preventivo, software, hardware', '2026-09-10 21:02:32.217243', NULL, 'Trayecto I', NULL, 'Proporcionar un Soporte Técnico a Usuarios y Equipos de Computación en el Centro Clínico “María Edelmira Araujo”, S.A.', true);
-INSERT INTO public.detalles_proyectos VALUES (112, '2026-08-25', 'Pregrado', 'Ofrecer a nuestros clientes accesorios para dispositivos móviles de calidad, brindando soluciones prácticas y accesibles que protejan, complementen y mejoren la experiencia diaria con su celular, a través de una atención personalizada y un catálogo de productos variado que se adapte a las necesidades de cada usuario.', 1, 'Smarthphone World C', '', '2026-08-25 19:01:06.749048', NULL, 'Trayecto I', NULL, NULL, NULL);
-INSERT INTO public.detalles_proyectos VALUES (132, '2026-09-04', 'Pregrado', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry". Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP', '2026-09-04 10:35:11.057661', NULL, 'Trayecto I', NULL, 'Desarrollar un Sistema Integral de Gestión Documentos Académicos, basado en una arquitectura modular, para la automatización de la búsqueda híbrida de información y la centralización de recursos académicos en beneficio de la comunidad del PNF en Informática.', true);
-INSERT INTO public.detalles_proyectos VALUES (160, '2026-09-18', 'Pregrado', 'El Infocentro de Escuque fue fundado en el 2009, aunque el proyecto de los infocentro ha estado en funcionamiento desde el año 2001 y ha sido una instalación donde las personas pueden ir a buscar información mediante la tecnología', 1, 'Infocentro de Escuque', 'Soporte técnico, correctivo, preventivo, software, hardware', '2026-09-24 15:55:40.312665', NULL, 'Trayecto I', NULL, 'Ofrecer Soporte Técnico A Usuario Y Mantenimiento De Equipos De Computación Del Infocentro De Escuque Propósitos Específicos: Ayudar a los usuarios de computadoras canaimas a realizar el mantenimiento preventivo a sus equipos.', true);
-INSERT INTO public.detalles_proyectos VALUES (148, '2026-09-11', 'Pregrado', 'El proyecto socio tecnológico tuvo como propósito desarrollar una Aplicación Web Móvil para el proceso de ascensos en la Coordinación de Formación Permanente y Docencia de la UPTTMBI. Se destaca la importancia que tienen las aplicaciones web en la vida cotidiana, dado que facilitan obtener, modificar información inmediata, dado que las mismas se ejecutan a través de internet, los datos son procesados y almacenados dentro de la web. La metodología utilizada fue programación extrema, metodología ágil de gestión de proyectos que se centra en la velocidad y la simplicidad con ciclos de desarrollo cortos y con menos documentación. De acuerdo con los objetivos establecidos, se utilizó la entrevista, encuesta, reuniones con los actores para desarrollar las historias de usuarios, se planifico, diseño, programo y realizaron pruebas a la aplicación. Como producto resultante se desarrolló una App móvil para el apoyo de los docentes en la solicitud de los procesos manejados en la Coordinación de Formación permanente y docente de la UPTTMBI, utilizando tecnologías de software libre como son PHP, Java y como gestor de base de datos se utilizó MySQL. La aplicación web móvil tiene como finalidad automatizar procesos que permitan una adecuada administración en lo referente al proceso de ascenso y solicitud de bono didáctico por parte de los docentes de la UPTTMBI, ayudando a la coordinación obtener información inmediata en tiempo real con resultados favorables, que contribuyen al desarrollo óptimo de los procesos y dando un mejor control a las necesidades de los docentes', 1, 'Coordinación de Formación Permanente y Docencia de la Universidad Politécnica Territorial del estado Trujillo Mario Briceño Iragorry', 'App, Aplicación móvil, Coordinación, Ascensos', '2026-09-10 21:02:31.979685', NULL, 'Trayecto I', NULL, 'Crear y fortalecer las condiciones intelectuales y materiales para propiciar, generar, coordinar, diseminar y difundir conocimiento científico y cultural que responda al perfeccionamiento de las y los docentes en servicio, que contribuyan de manera sustancial al mejoramiento, desarrollo y crecimiento académico.', true);
-INSERT INTO public.detalles_proyectos VALUES (164, '2026-09-25', 'Pregrado', 'El presente proyecto es realizado en el Liceo Bolivariano “Rafael Rangel” de la mano con la fundación CBIT “Rafael Rangel”, ubicado en el estado Trujillo, Valera, el Centro, Tiene como objetivo Soporte Técnico a Usuarios y Equipos de Computación, para mejorar el rendimiento educativo, ya que los equipos de computación necesitaban una mejora de su rendimiento por medio del soporte técnico preventivo y correctivo, igualmente se realizó un taller de capacitación hacia los estudiante, Mediante unas visitas constantes que se realizaron en el CBIT “Rafael Rangel”, donde proporcionamos distinta información sobre el software que nos permitió la institución. Cabe destacar que también abarcamos el tema sobre, el uso correcto del internet, para no caer o ser víctimas de ataques ciberriesgos, malware, programas espías, entre otros… que son algunos de los peligros a los que se enfrentan enfrenta el usuario, así como también, Cómo utilizar una computadora y cuáles son sus partes, y el uso de software educativo . En este proyecto se realizó una investigación sobre la intimación como de sus necesidades en el área informática. Donde se realizó un diagnóstico de los fallos de los equipos del CBIT Una de las Oficinas y en la coordinación de 4to año en donde en la mayoría se realizó un mantenimiento preventivo a los equipos ya que necesitaban una limpieza en el hardware del equipo también se realizó una capacitación a un grupo de estudiantes sobre LibreOffice writ en el que se les enseño', 1, 'La institución educativa, Liceo Bolivariano “Rafael Rangel” y Los Centros Bolivarianos de Informática y Telemática (CBIT), son espacios educativos dotados de re', 'Soporte técnico, correctivo, preventivo, software, hardware', '2026-09-24 22:32:16.286518', NULL, 'Trayecto I', 'https://github.com/Zhailox/proyect_CIIDI/tree/Zhailox', 'Brindar al Liceo Bolivariano "Rafael Rangel" un soporte técnico a las computadoras de las coordinaciones y del Cbit y un taller de capacitación a usuarios a los estudiantes del grupo estable de informática.', true);
-INSERT INTO public.detalles_proyectos VALUES (166, '2026-09-24', 'Pregrado', 'Este proyecto es desarrollado en el laboratorio 1 de Informática de la Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” (UPTTMBI) ubicado en La Beatriz. Tiene como propósito brindar un eficiente soporte técnico a los equipos de laboratorio 1 de informática, mediante la revisión y el mantenimiento físico de estos; e instruir a los usuarios en el uso adecuado y correcto de los ordenadores, abordando como tema el reciclaje electrónico. Los que nos lleva a implementar una serie de entrevistas aplicadas al Ing. Ramón Santander y al Abg. Encargado del laboratorio Fabio Vera, así como también la observación directa empleada en el laboratorio 1 de Informática. La metodología aplicada en el proyecto socio-tecnológico es el marco lógico permitiendo así un eficaz diagnostico de la comunidad. A través de esta investigación fue posible hallar los problemas que presentan los equipos entre los cuales encontramos la falta de componentes, las bajas condiciones de operatividad, deficiente soporte técnico, entre otros. Se presentaron inconvenientes por lo que no fue posible ejecutar el soporte técnico a usuarios y equipos con totalidad, solo logrando ejecutar el mantenimiento preventivo en el hardware. INDICE GENERAL Pág. RESUMEN', 1, 'R: Laboratorio 1 de Informática.', '', '2026-09-24 23:18:34.716723', NULL, 'Trayecto I', NULL, 'Realizar un eficiente soporte técnico a usuarios y equipos en el Laboratorio 1 – Informática de la UPTTMBI.', true);
+INSERT INTO public.detalles_proyectos VALUES (173, '2026-09-29', 'Pregrado', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry”. Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio.', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr. Pablo Viloria”, coordinación de investigación del programa nacional', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP.', '2026-09-28 21:42:57.178804', NULL, 'Trayecto IV', 'https://github.com/Zhailox/proyect_CIIDI', 'Desarrollar un Sistema Integral de Gestión Documentos Académicos, basado en una arquitectura modular, para la automatización de la búsqueda híbrida de información y la centralización de recursos académicos en beneficio de la comunidad del PNF en Informática.', true, NULL);
+INSERT INTO public.detalles_proyectos VALUES (174, '2026-09-29', 'Pregrado', 'El proyecto tiene como propósito optimizar el Sistema de Información para el Control de Matrícula del Centro de Atención Integral para Personas con Autismo “CAIPA Trujillo”, versión 2.0, ubicado en Valera, estado Trujillo. La investigación surge de la necesidad de mejorar la organización, búsqueda y gestión de los datos de los estudiantes, así como de corregir y ampliar las funcionalidades del sistema anterior, versión 1.0, que presentaba limitaciones en registro, consulta, reportes y control administrativo. Metodológicamente se enmarca en la Investigación-Acción Participativa, con enfoque sociotecnológico, mixto y aplicado, apoyado en la metodología ágil Extreme Programming (XP). El desarrollo se realizó con PHP, MySQL, HTML5, CSS3 y JavaScript bajo arquitectura MVC, incorporando módulos para estudiantes, representantes, personal docente, administrativo y obrero, Programa de Alimentación (PMA), medicamentos, reportes PDF y configuraciones. Como resultado, se obtuvo una plataforma web más moderna, segura y eficiente, con mejoras en usabilidad, validación de datos, paginación, búsqueda y generación de fichas técnicas. Las pruebas de calidad evidenciaron avances significativos y algunas correcciones pendientes en seguridad y reportes. Se concluye que la versión 2.0 optimiza el control de matrícula, reduce tiempos de gestión y fortalece la atención educativa e inclusiva de la institución.', 1, 'CAIPA Trujillo  ------------------------------------------------Naturaleza de la Comunidad: El CAIPA-Trujillo, Valera Estado Trujillo.   ------Misión', 'Sistema de información; control de matrícula; CAIPA Trujillo; autismo; aplicación web; optimización; metodología XP; PHP; MySQL; gestión educativa; inclusión; versión 2.0.', '2026-09-28 21:42:57.240697', NULL, 'Trayecto I', NULL, 'Optimizar el sistema de información para el control de matrícula en el Centro de Atención Integral para Personas con Autismo “CAIPA TRUJILLO”. Versión 2.0.', true, NULL);
+INSERT INTO public.detalles_proyectos VALUES (175, '2026-09-29', 'Pregrado', 'El presente proyecto sociotecnológico se centra en el desarrollo de un módulo avanzado para la administración y proyección de las líneas de investigación del PNFI, en el cual la innovación principal radica en la integración de modelos de Inteligencia Artificial (Machine Learning) orientados al análisis predictivo, esta herramienta procesa el volumen y la tipología de las investigaciones registradas para identificar tendencias emergentes, predecir el crecimiento de áreas temáticas y asistir al Comité Científico Investigador en la toma de decisiones estratégicas, todo ello operando sobre la arquitectura base del Sistema Integral de Gestión.', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr. Pablo Viloria”, coordinación de investigación del programa nacional', 'Líneas de investigación, PNFI, Machine Learning, Análisis predictivo, Toma de decisiones, Comité científico, Gestión del conocimiento, Sistema integral de gestión.', '2026-09-28 21:42:57.295976', NULL, 'Trayecto IV', NULL, 'Desarrollar un Sistema de Gestión de Eventos integrado con un módulo de Inteligencia Artificial (Machine Learning) para la administración, clasificación automática y análisis predictivo de las líneas de investigación de los proyectos académicos del PNFI, adscrito al Comité Científico de la UPTTMBI - Núcleo La Beatriz.', true, NULL);
+INSERT INTO public.detalles_proyectos VALUES (176, '2026-09-29', 'Pregrado', 'Proyecto sociotecnológico orientado al diseño y desarrollo de un sistema integral para Smartphone World C.A., compuesto por un módulo de gestión local —inventario, catálogo y reportes— y una tienda virtual de comercio electrónico, interconectados mediante una base de datos centralizada en la nube. La solución busca automatizar los procesos internos de inventario y ventas, reducir errores manuales, ampliar el alcance comercial de la empresa hacia el entorno digital y mejorar la experiencia de compra. Metodológicamente se enmarca en la Investigación-Acción Participativa (IAP) y la metodología ágil Kanban.', 1, 'Smarthphone World C.A. Valera, Trujillo', 'Sistemas de información; sistemas de información web; comercio electrónico; tienda virtual; gestión de inventario; desarrollo de aplicaciones web; base de datos centralizada; Smartphone World C.A.; Investigación-Acción Participativa; Kanban.', '2026-09-28 21:42:57.36464', NULL, 'Trayecto I', NULL, 'Desarrollar un Sistema Integral de Gestión Comercial y Tienda Virtual para Smartphone World C.A., compuesto por un módulo de gestión local y una plataforma de comercio electrónico interconectados mediante una base de datos centralizada en la nube, con el fin de automatizar los procesos internos de inventario y ventas, y ampliar el alcance comercial de la empresa hacia el entorno digital.', true, NULL);
+INSERT INTO public.detalles_proyectos VALUES (177, '2026-09-29', 'Pregrado', 'El presente proyecto de investigación, desarrollado bajo el enfoque de la Investigación Acción Participativa (IAP), tiene como propósito fundamental desarrollar un sistema inteligente basado en algoritmos genéticos para la optimización automática de horarios en la Coordinación del Programa Nacional de Formación en Informática (PNFI) de la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry" Núcleo La Beatriz. A través de un diagnóstico participativo que incluyó entrevistas, observación directa y la aplicación de matrices FODA y CAME, se identificó que el proceso actual de elaboración de horarios se realiza de manera completamente manual, consumiendo entre tres y cuatro semanas por trimestre y generando frecuentes conflictos de asignación. La solución propuesta, seleccionada mediante matriz de decisión multicriterio, consiste en el desarrollo de un sistema con arquitectura web que emplea algoritmos genéticos multiobjetivo para procesar restricciones complejas, minimizando errores en un 95% y reduciendo el tiempo de planificación en un 90%. El proyecto beneficiará directamente a coordinadores, docentes y estudiantes del PNFI, contribuyendo a una gestión académica más eficiente y tecnológicamente confiable.', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” NUES Dr. Pablo Viloria – La Beatriz, Coordinación del PNF en Informática.', 'Algoritmos genéticos, horarios universitarios, optimización, sistema inteligente, Investigación Acción Participativa.', '2026-09-28 21:42:57.445384', NULL, 'Trayecto III', 'https://github.com/Zhailox/proyect_CIIDI', 'Desarrollar un sistema de optimización basado en algoritmos genéticos que mejore automáticamente la generación de horarios en la Coordinación del Programa Nacional de Formación en Informática, considerando múltiples restricciones y criterios de optimización para reducir significativamente el tiempo de planificación, minimizar los conflictos de horario y mejorar la satisfacción de la comunidad académica.', true, NULL);
+INSERT INTO public.detalles_proyectos VALUES (178, '2026-09-29', 'Pregrado', 'Las necesidades de los usuarios de telefonía móvil demandan cada vez más servicios, razón por la cual surge J2ME como tecnología para el desarrollo de software en dispositivos móviles. El asentamiento de tecnologías como GPRS ha permitido que aumente la gama de aplicaciones capaces de comunicarse con máquinas o dispositivos remotos e incluso manipularlos. Gracias a J2ME, es posible ejecutar comandos en un servidor conectado a Internet desde un dispositivo móvil, aprovechando todas las ventajas que esta tecnología ofrece para cubrir tareas específicas.', 1, 'Comunidad / Organización No Específicamente Nombrada', 'J2ME, Aplicación cliente-servidor, Dispositivo móvil, GPRS, UML, TCP/IP', '2026-09-28 22:19:25.188154', NULL, 'Trayecto III', NULL, 'Diseñar y crear un prototipo de una aplicación cliente-servidor que permita ejecutar comandos básicos en un servidor remoto desde un dispositivo móvil.', true, NULL);
+INSERT INTO public.detalles_proyectos VALUES (179, '2026-09-29', 'Especializacion', 'Este proyecto se basa en la instalación y configuración de Servidores Internet (Web, DNS, Correo Electrónico y FTP Anónimo) para la Empresa de Telecomunicaciones de Nariño TELENARIÑO, utilizando los sistemas operativos Digital Unix y Linux. Incluye el diseño de una página web y el desarrollo de un Sistema de Administración de Usuarios (SAINTEL) con acceso dinámico a bases de datos empleando PostgreSQL y la interfaz PHP.', 1, 'EMPRESA DE TELECOMUNICACIONES DE NARIÑO TELENARIÑO', 'Servidores Internet, Página Web, Base de Datos, Linux, Cliente-Servidor.', '2026-09-28 22:19:26.337196', NULL, NULL, NULL, 'Diseñar la Página Web para la empresa TELENARIÑO y configurar e implementar el servidor web HTTP, SERVIDOR DE NOMBRES DE DOMINIO DNS, CORREO ELECTRONICO, TRANSFERENCIA DE ARCHIVOS (FTP ANONIMO) y Listas de Correo Electrónico para el servicio de INTERNET TELENARIÑO utilizando Digital UNIX y Linux como sistemas operativos base.', true, NULL);
+INSERT INTO public.detalles_proyectos VALUES (180, '2026-09-29', 'Pregrado', 'El componente metodológico empleó la observación directa de los procesos internos de la tienda y la aplicación de entrevistas a los clientes, con un enfoque teórico-práctico para el diseño de la solución. Se aplicaron las etapas del desarrollo del software: especificación de requerimientos, diagramas UML, modelo entidad relación, diagrama relacional, pruebas de la caja negra. Los resultados mostraron que el sistema mejora significativamente el rendimiento de la tienda y aumenta su valor diferencial al proporcionar recomendaciones automáticas sobre el valor nutricional de los productos adquiridos.', 1, 'Tienda ''Tuti'' del Cantón Vinces', 'Aplicación Web, Consumo, Inventario, Semáforo, Cliente-Servidor', '2026-09-28 22:19:26.610302', NULL, 'Trayecto II', NULL, 'Desarrollar una aplicación web cliente-servidor para el control de inventario, que muestre el porcentaje de consumo, acorde al semáforo nutricional en la tienda ''TUTI'' del cantón Vinces.', true, NULL);
+INSERT INTO public.detalles_proyectos VALUES (181, '2026-09-29', 'Doctorado', 'Este documento es el informe final de trabajo de grado que ha dado origen al método de investigación pedagógico para el desarrollo del proyecto, Sistema de Información y gestión de proyectos de grado. Se basa en fundamentos teóricos enmarcados en las tecnologías de la información, modelos de prototipos y en el conocimiento del manejo actual del proceso que se lleva a cabo en la gestión de los trabajos de grado. A través de sus técnicas de recolección y análisis de datos, se logra adquirir conocimientos fundamentales y la elección del modelo más adecuado para analizar los datos a través de conceptos y variables.', 1, 'La Facultad de Ingeniería de la Universidad Libre', 'PROYECTO – INGENIERÍA – PROTOTIPOS-SISTEMA DE INFORMACIÓN – CONTROL- ORGANIZACIÓN', '2026-09-28 22:19:27.887982', NULL, NULL, NULL, 'Desarrollar un prototipo de sistema de gestión para controlar y administrar de manera ordenada las entregas de los trabajos de grado.', true, NULL);
 
 
 --
--- Data for Name: dimensiones_operativas; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: dimensiones_operativas; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.dimensiones_operativas VALUES (7, 7, 'Sistemas de información web', 'Son primeramente sistemas de información que para su desarrollo se debe considerar la misma disciplina de construcción de sistemas de información no Web exitosos y de calidad, sirven para integrar procesos o sistemas dentro de una sola interfaz y a ellos se puede acceder por medio de una Intranet local o por la red global Internet van m s all  de ser un conjunto de p ginas Web.', true);
 INSERT INTO public.dimensiones_operativas VALUES (8, 7, 'Sistemas de información colaborativos', 'Son sistemas donde se pueden expresar ideas, experiencias, definiciones, entre otros; los cuales constituyen una red de distribución de la información en una organización o entre organizaciones.', true);
 INSERT INTO public.dimensiones_operativas VALUES (9, 7, 'Gestión tecnológica', 'Procesos relacionados con la implantación de sistemas, tales como, verificar e instalar nuevos equipos, entrenar a los usuarios, instalar nuevas aplicaciones, agregar nuevos módulos, adem s de comprobar el correcto funcionamiento de los componentes de un sistema de información que puede abarcar auditorías, t‚cnicas de control, evaluación de la calidad.', true);
-INSERT INTO public.dimensiones_operativas VALUES (10, 8, 'Software educativo', 'Programas para el computador creados con la finalidad especáfica de ser utilizados como medio did ctico, es decir, para facilitar los procesos de ense¤anza y de aprendizaje. Combina conocimiento educacional, comunicacional e inform tico.', true);
-INSERT INTO public.dimensiones_operativas VALUES (11, 8, 'Guáas de estudio web', 'Representan un material instruccional utilizados para cursos de educación a distancia y como complemento a la educación presencial, lo cual provee una estructura para un curso.', true);
 INSERT INTO public.dimensiones_operativas VALUES (12, 8, 'Tutoriales', 'Son programas que en mayor o menor medida dirigen el trabajo de los alumnos. Pretenden que, a partir de unas informaciones y mediante la realización de ciertas actividades, los estudiantes pongan en juego determinadas capacidades.', true);
-INSERT INTO public.dimensiones_operativas VALUES (14, 8, 'Entornos interactivos de ense¤anza', 'Proyectos donde el profesor y los alumnos se encuentran en lugares fásicamente distintos. El proceso de ense¤anza-aprendizaje se lleva a cabo a trav‚s de Internet, en cualquier momento y en cualquier lugar.', true);
-INSERT INTO public.dimensiones_operativas VALUES (15, 8, 'Sistemas e-learning', 'Programas que faciliten la creación, adopción y distribución de contenidos, asá como la adaptación del ritmo de aprendizaje y la disponibilidad de las herramientas de aprendizaje independientemente de lámites horarios o geogr ficos.', true);
 INSERT INTO public.dimensiones_operativas VALUES (16, 9, 'Aplicaciones cliente - servidor', 'Sistema distribuido entre múltiples procesadores donde hay clientes que solicitan servicios y servidores que los proporcionan. Separa los servicios situando cada uno en su plataforma m s adecuada.', true);
 INSERT INTO public.dimensiones_operativas VALUES (17, 9, 'Servicios de integración para aplicaciones web', 'Medio para exponer y hacer disponible la funcionalidad de los sistemas de información mediante las tecnologáas est ndar Web, permitiendo reducción de la heterogeneidad por uso de tecnologáas est ndar.', true);
 INSERT INTO public.dimensiones_operativas VALUES (18, 10, 'Simulación y herramientas de simulación', 'Antes de iniciar el desarrollo de cualquier sistema complejo, los ingenieros suelen utilizar alguna herramienta de simulación o test donde sea posible modelizar y probar el sistema que est  desarrollando. Reduce tiempo y chequea decisiones a priori.', true);
@@ -2365,10 +2429,14 @@ INSERT INTO public.dimensiones_operativas VALUES (24, 9, 'Seguridad y auditoría
 INSERT INTO public.dimensiones_operativas VALUES (5, 7, 'Sistemas de información tradicionales', 'Est  constituido por un conjunto de elementos de naturaleza diversa que incluyen: equipos, recursos humanos (usuario), datos e información y programas y aplicaciones; que interactúan entre si dentro de una organización con el fin de apoyar las actividades y funciones que cumplan con los objetivos propuestos de la misma.', true);
 INSERT INTO public.dimensiones_operativas VALUES (6, 7, 'Sistemas de información con propiedades geogr ficas', 'Son sistemas que permiten evaluar propiedades geogr ficas de un entorno, generando información referente a una entidad geogr fica desplegando im genes e información en un hipermapa.', true);
 INSERT INTO public.dimensiones_operativas VALUES (13, 8, 'Juegos didácticos', 'El juego puede cumplir al menos tres funciones en el proceso de aprendizaje, al constituirse en un medio de exploración y expresión, un instrumento para la organización y aplicación de habilidades y, un factor de socialización e integración.', true);
+INSERT INTO public.dimensiones_operativas VALUES (14, 8, 'Entornos interactivos de enseñanza', 'Proyectos donde el profesor y los alumnos se encuentran en lugares fásicamente distintos. El proceso de enseñanza-aprendizaje se lleva a cabo a través de Internet, en cualquier momento y en cualquier lugar.', true);
+INSERT INTO public.dimensiones_operativas VALUES (15, 8, 'Sistemas e-learning', 'Programas que faciliten la creación, adopción y distribución de contenidos, asá como la adaptación del ritmo de aprendizaje y la disponibilidad de las herramientas de aprendizaje independientemente de lámites horarios o geográficos.', true);
+INSERT INTO public.dimensiones_operativas VALUES (11, 8, 'Guías de estudio web', 'Representan un material instruccional utilizados para cursos de educación a distancia y como complemento a la educación presencial, lo cual provee una estructura para un curso.', true);
+INSERT INTO public.dimensiones_operativas VALUES (10, 8, 'Software educativo', 'Programas para el computador creados con la finalidad especáfica de ser utilizados como medio did ctico, es decir, para facilitar los procesos de enseñanza y de aprendizaje. Combina conocimiento educacional, comunicacional e informático.', true);
 
 
 --
--- Data for Name: editoriales; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: editoriales; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.editoriales VALUES (1, 'IEEE');
@@ -2381,7 +2449,7 @@ INSERT INTO public.editoriales VALUES (8, 'DYNA');
 
 
 --
--- Data for Name: etiquetas; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: etiquetas; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.etiquetas VALUES (1, 'Inteligencia Artificial', '#0ea5e9');
@@ -2395,13 +2463,13 @@ INSERT INTO public.etiquetas VALUES (17, 'Machine Learning', '#0ea5e9');
 
 
 --
--- Data for Name: historico_versiones_pst; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: historico_versiones_pst; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 
 
 --
--- Data for Name: investigaciones_ofertadas; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: investigaciones_ofertadas; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.investigaciones_ofertadas VALUES (1, 7, 'asdasdasdasd', 'asdasdasdasdasdasd', 'asdasdasdasdasdasd', 9, NULL, 3, 'Abierta', '2026-09-09 23:15:22.674054', NULL);
@@ -2411,7 +2479,7 @@ INSERT INTO public.investigaciones_ofertadas VALUES (2, 7, 'Requerimiento: Siste
 
 
 --
--- Data for Name: lineas_investigacion; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: lineas_investigacion; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.lineas_investigacion VALUES (8, 'EDUMATICA', 1, 'Aplicar las Tecnologías de la Información y Comunicación (TIC) para apoyar el proceso de aprendizaje, y asá contribuir al mejoramiento de la educación en todos sus niveles.', true);
@@ -2421,7 +2489,7 @@ INSERT INTO public.lineas_investigacion VALUES (7, 'SISTEMAS DE INFORMACION Y MO
 
 
 --
--- Data for Name: matriz_rbac; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: matriz_rbac; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.matriz_rbac VALUES (1, 'Articulos', '{"crear": true, "editar": true, "auditar": true, "eliminar": true}');
@@ -2470,7 +2538,7 @@ INSERT INTO public.matriz_rbac VALUES (12, 'Sistema', '{"ver": true, "editar": f
 
 
 --
--- Data for Name: notificaciones; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: notificaciones; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.notificaciones VALUES (1, 4, 'Actualización Moderada de Cuenta', 'Su perfil fue ajustado por un administrador. Nuevo rol ID: 1. El estado de la cuenta es: completamente Activa.', true, '2026-03-23 16:14:24', '2026-03-23 20:40:28');
@@ -2482,14 +2550,14 @@ INSERT INTO public.notificaciones VALUES (6, 5, 'Actualización Moderada de Cuen
 
 
 --
--- Data for Name: password_resets; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: password_resets; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.password_resets VALUES (1, 'orlando5711666@gmail.com', '98ae6a718e630e4dffb2c144bbb36b095f55358c7299904798709c244db29659', '2026-09-17 00:03:43.94943', false, '2026-09-16 23:48:43.94943');
 
 
 --
--- Data for Name: postulaciones_estudiantes; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: postulaciones_estudiantes; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.postulaciones_estudiantes VALUES (1, 1, 7, 'asdasdasd', 'Rechazado', '2026-09-09 23:16:44.679115', '2026-09-19 02:07:44.686527', NULL);
@@ -2497,7 +2565,7 @@ INSERT INTO public.postulaciones_estudiantes VALUES (2, 2, 7, '', 'Rechazado', '
 
 
 --
--- Data for Name: preferencias_usuario; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: preferencias_usuario; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.preferencias_usuario VALUES (1, 'ocean', true);
@@ -2507,7 +2575,7 @@ INSERT INTO public.preferencias_usuario VALUES (6, 'sunset', true);
 
 
 --
--- Data for Name: privilegios; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: privilegios; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.privilegios VALUES (1, 0);
@@ -2521,7 +2589,7 @@ INSERT INTO public.privilegios VALUES (12, 6);
 
 
 --
--- Data for Name: propuestas_empresa; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: propuestas_empresa; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.propuestas_empresa VALUES (14, 'Punto Yali', '27889926', 'Miki boss', '04121609721', 'lando1609721@gmail.com', 'Sistema de Inventario', 'vbnchngfhgjfhgj', 'aceptada', '2026-09-13 22:30:07.723734', 'Trayecto I', 'CIIDI-2026-29E32', NULL);
@@ -2543,156 +2611,40 @@ INSERT INTO public.propuestas_empresa VALUES (2, '123', '123', '123', '123', '12
 
 
 --
--- Data for Name: proyecto_tutores; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: proyecto_tutores; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
-INSERT INTO public.proyecto_tutores VALUES (57, 7, 3);
-INSERT INTO public.proyecto_tutores VALUES (57, 8, 2);
-INSERT INTO public.proyecto_tutores VALUES (57, 9, 4);
-INSERT INTO public.proyecto_tutores VALUES (58, 10, 3);
-INSERT INTO public.proyecto_tutores VALUES (58, 11, 2);
-INSERT INTO public.proyecto_tutores VALUES (58, 12, 4);
-INSERT INTO public.proyecto_tutores VALUES (78, 16, 3);
-INSERT INTO public.proyecto_tutores VALUES (85, 16, 3);
-INSERT INTO public.proyecto_tutores VALUES (86, 16, 3);
-INSERT INTO public.proyecto_tutores VALUES (87, 16, 3);
-INSERT INTO public.proyecto_tutores VALUES (90, 17, 3);
-INSERT INTO public.proyecto_tutores VALUES (90, 18, 2);
-INSERT INTO public.proyecto_tutores VALUES (90, 19, 4);
-INSERT INTO public.proyecto_tutores VALUES (91, 10, 3);
-INSERT INTO public.proyecto_tutores VALUES (92, 10, 3);
-INSERT INTO public.proyecto_tutores VALUES (92, 20, 2);
-INSERT INTO public.proyecto_tutores VALUES (92, 21, 4);
-INSERT INTO public.proyecto_tutores VALUES (93, 10, 3);
-INSERT INTO public.proyecto_tutores VALUES (94, 22, 3);
-INSERT INTO public.proyecto_tutores VALUES (94, 10, 3);
-INSERT INTO public.proyecto_tutores VALUES (99, 28, 2);
-INSERT INTO public.proyecto_tutores VALUES (99, 10, 4);
-INSERT INTO public.proyecto_tutores VALUES (100, 29, 3);
-INSERT INTO public.proyecto_tutores VALUES (100, 30, 2);
-INSERT INTO public.proyecto_tutores VALUES (100, 31, 4);
-INSERT INTO public.proyecto_tutores VALUES (108, 28, 2);
-INSERT INTO public.proyecto_tutores VALUES (108, 10, 4);
-INSERT INTO public.proyecto_tutores VALUES (109, 35, 3);
-INSERT INTO public.proyecto_tutores VALUES (109, 36, 4);
-INSERT INTO public.proyecto_tutores VALUES (110, 28, 2);
-INSERT INTO public.proyecto_tutores VALUES (110, 10, 4);
-INSERT INTO public.proyecto_tutores VALUES (111, 37, 3);
-INSERT INTO public.proyecto_tutores VALUES (111, 38, 4);
-INSERT INTO public.proyecto_tutores VALUES (113, 28, 2);
-INSERT INTO public.proyecto_tutores VALUES (113, 10, 4);
-INSERT INTO public.proyecto_tutores VALUES (114, 37, 3);
-INSERT INTO public.proyecto_tutores VALUES (114, 38, 4);
-INSERT INTO public.proyecto_tutores VALUES (132, 28, 2);
-INSERT INTO public.proyecto_tutores VALUES (132, 10, 4);
-INSERT INTO public.proyecto_tutores VALUES (149, 35, 3);
-INSERT INTO public.proyecto_tutores VALUES (149, 36, 4);
-INSERT INTO public.proyecto_tutores VALUES (49, 40, 3);
-INSERT INTO public.proyecto_tutores VALUES (160, 40, 3);
-INSERT INTO public.proyecto_tutores VALUES (112, 22, 3);
-INSERT INTO public.proyecto_tutores VALUES (147, 22, 3);
-INSERT INTO public.proyecto_tutores VALUES (148, 29, 3);
-INSERT INTO public.proyecto_tutores VALUES (148, 30, 2);
-INSERT INTO public.proyecto_tutores VALUES (148, 31, 4);
-INSERT INTO public.proyecto_tutores VALUES (164, 41, 3);
-INSERT INTO public.proyecto_tutores VALUES (164, 42, 2);
-INSERT INTO public.proyecto_tutores VALUES (164, 43, 4);
-INSERT INTO public.proyecto_tutores VALUES (166, 44, 3);
-INSERT INTO public.proyecto_tutores VALUES (166, 42, 2);
-INSERT INTO public.proyecto_tutores VALUES (166, 45, 4);
+INSERT INTO public.proyecto_tutores VALUES (173, 28, 2);
+INSERT INTO public.proyecto_tutores VALUES (173, 10, 4);
+INSERT INTO public.proyecto_tutores VALUES (174, 17, 3);
+INSERT INTO public.proyecto_tutores VALUES (174, 18, 2);
+INSERT INTO public.proyecto_tutores VALUES (174, 19, 4);
+INSERT INTO public.proyecto_tutores VALUES (175, 28, 2);
+INSERT INTO public.proyecto_tutores VALUES (175, 22, 4);
+INSERT INTO public.proyecto_tutores VALUES (176, 22, 3);
+INSERT INTO public.proyecto_tutores VALUES (177, 10, 2);
+INSERT INTO public.proyecto_tutores VALUES (177, 39, 4);
 
 
 --
--- Data for Name: recurso_autores; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: recurso_autores; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.recurso_autores VALUES (3, 1);
-INSERT INTO public.recurso_autores VALUES (58, 42);
-INSERT INTO public.recurso_autores VALUES (58, 43);
-INSERT INTO public.recurso_autores VALUES (58, 44);
-INSERT INTO public.recurso_autores VALUES (58, 45);
-INSERT INTO public.recurso_autores VALUES (59, 46);
-INSERT INTO public.recurso_autores VALUES (69, 50);
-INSERT INTO public.recurso_autores VALUES (69, 51);
-INSERT INTO public.recurso_autores VALUES (72, 52);
-INSERT INTO public.recurso_autores VALUES (72, 53);
-INSERT INTO public.recurso_autores VALUES (78, 55);
-INSERT INTO public.recurso_autores VALUES (78, 56);
-INSERT INTO public.recurso_autores VALUES (79, 42);
-INSERT INTO public.recurso_autores VALUES (79, 43);
-INSERT INTO public.recurso_autores VALUES (79, 44);
-INSERT INTO public.recurso_autores VALUES (79, 45);
-INSERT INTO public.recurso_autores VALUES (80, 50);
-INSERT INTO public.recurso_autores VALUES (80, 51);
-INSERT INTO public.recurso_autores VALUES (80, 57);
-INSERT INTO public.recurso_autores VALUES (81, 42);
-INSERT INTO public.recurso_autores VALUES (81, 43);
-INSERT INTO public.recurso_autores VALUES (81, 44);
-INSERT INTO public.recurso_autores VALUES (81, 45);
-INSERT INTO public.recurso_autores VALUES (82, 58);
-INSERT INTO public.recurso_autores VALUES (82, 59);
-INSERT INTO public.recurso_autores VALUES (82, 60);
-INSERT INTO public.recurso_autores VALUES (82, 61);
-INSERT INTO public.recurso_autores VALUES (83, 62);
-INSERT INTO public.recurso_autores VALUES (83, 63);
-INSERT INTO public.recurso_autores VALUES (83, 64);
-INSERT INTO public.recurso_autores VALUES (83, 65);
-INSERT INTO public.recurso_autores VALUES (84, 66);
-INSERT INTO public.recurso_autores VALUES (84, 67);
-INSERT INTO public.recurso_autores VALUES (84, 68);
-INSERT INTO public.recurso_autores VALUES (85, 55);
-INSERT INTO public.recurso_autores VALUES (86, 55);
-INSERT INTO public.recurso_autores VALUES (87, 55);
-INSERT INTO public.recurso_autores VALUES (88, 69);
-INSERT INTO public.recurso_autores VALUES (88, 70);
-INSERT INTO public.recurso_autores VALUES (89, 34);
-INSERT INTO public.recurso_autores VALUES (89, 71);
-INSERT INTO public.recurso_autores VALUES (89, 72);
-INSERT INTO public.recurso_autores VALUES (89, 73);
-INSERT INTO public.recurso_autores VALUES (90, 58);
-INSERT INTO public.recurso_autores VALUES (90, 59);
-INSERT INTO public.recurso_autores VALUES (90, 60);
-INSERT INTO public.recurso_autores VALUES (90, 61);
-INSERT INTO public.recurso_autores VALUES (91, 74);
-INSERT INTO public.recurso_autores VALUES (91, 75);
-INSERT INTO public.recurso_autores VALUES (91, 76);
-INSERT INTO public.recurso_autores VALUES (91, 77);
-INSERT INTO public.recurso_autores VALUES (92, 62);
-INSERT INTO public.recurso_autores VALUES (92, 63);
-INSERT INTO public.recurso_autores VALUES (92, 64);
-INSERT INTO public.recurso_autores VALUES (92, 65);
-INSERT INTO public.recurso_autores VALUES (93, 74);
-INSERT INTO public.recurso_autores VALUES (93, 75);
-INSERT INTO public.recurso_autores VALUES (93, 76);
-INSERT INTO public.recurso_autores VALUES (93, 77);
-INSERT INTO public.recurso_autores VALUES (94, 52);
-INSERT INTO public.recurso_autores VALUES (94, 53);
-INSERT INTO public.recurso_autores VALUES (99, 42);
-INSERT INTO public.recurso_autores VALUES (99, 43);
-INSERT INTO public.recurso_autores VALUES (99, 44);
-INSERT INTO public.recurso_autores VALUES (99, 45);
-INSERT INTO public.recurso_autores VALUES (100, 78);
-INSERT INTO public.recurso_autores VALUES (108, 42);
-INSERT INTO public.recurso_autores VALUES (108, 43);
-INSERT INTO public.recurso_autores VALUES (108, 44);
-INSERT INTO public.recurso_autores VALUES (108, 45);
-INSERT INTO public.recurso_autores VALUES (109, 50);
-INSERT INTO public.recurso_autores VALUES (109, 51);
-INSERT INTO public.recurso_autores VALUES (109, 57);
-INSERT INTO public.recurso_autores VALUES (110, 42);
-INSERT INTO public.recurso_autores VALUES (110, 43);
-INSERT INTO public.recurso_autores VALUES (110, 44);
-INSERT INTO public.recurso_autores VALUES (110, 45);
-INSERT INTO public.recurso_autores VALUES (111, 82);
-INSERT INTO public.recurso_autores VALUES (111, 83);
-INSERT INTO public.recurso_autores VALUES (111, 84);
-INSERT INTO public.recurso_autores VALUES (113, 42);
-INSERT INTO public.recurso_autores VALUES (113, 43);
-INSERT INTO public.recurso_autores VALUES (113, 44);
-INSERT INTO public.recurso_autores VALUES (113, 45);
-INSERT INTO public.recurso_autores VALUES (114, 82);
-INSERT INTO public.recurso_autores VALUES (114, 83);
-INSERT INTO public.recurso_autores VALUES (114, 84);
+INSERT INTO public.recurso_autores VALUES (173, 42);
+INSERT INTO public.recurso_autores VALUES (173, 43);
+INSERT INTO public.recurso_autores VALUES (173, 44);
+INSERT INTO public.recurso_autores VALUES (173, 45);
+INSERT INTO public.recurso_autores VALUES (174, 58);
+INSERT INTO public.recurso_autores VALUES (174, 59);
+INSERT INTO public.recurso_autores VALUES (174, 60);
+INSERT INTO public.recurso_autores VALUES (174, 61);
+INSERT INTO public.recurso_autores VALUES (175, 34);
+INSERT INTO public.recurso_autores VALUES (175, 71);
+INSERT INTO public.recurso_autores VALUES (175, 72);
+INSERT INTO public.recurso_autores VALUES (175, 73);
+INSERT INTO public.recurso_autores VALUES (176, 52);
+INSERT INTO public.recurso_autores VALUES (176, 53);
 INSERT INTO public.recurso_autores VALUES (144, 92);
 INSERT INTO public.recurso_autores VALUES (144, 96);
 INSERT INTO public.recurso_autores VALUES (144, 97);
@@ -2700,10 +2652,6 @@ INSERT INTO public.recurso_autores VALUES (144, 102);
 INSERT INTO public.recurso_autores VALUES (146, 103);
 INSERT INTO public.recurso_autores VALUES (146, 104);
 INSERT INTO public.recurso_autores VALUES (146, 105);
-INSERT INTO public.recurso_autores VALUES (132, 42);
-INSERT INTO public.recurso_autores VALUES (132, 43);
-INSERT INTO public.recurso_autores VALUES (132, 44);
-INSERT INTO public.recurso_autores VALUES (132, 45);
 INSERT INTO public.recurso_autores VALUES (122, 57);
 INSERT INTO public.recurso_autores VALUES (122, 58);
 INSERT INTO public.recurso_autores VALUES (122, 59);
@@ -2720,31 +2668,16 @@ INSERT INTO public.recurso_autores VALUES (119, 47);
 INSERT INTO public.recurso_autores VALUES (119, 48);
 INSERT INTO public.recurso_autores VALUES (118, 44);
 INSERT INTO public.recurso_autores VALUES (143, 13);
-INSERT INTO public.recurso_autores VALUES (149, 50);
-INSERT INTO public.recurso_autores VALUES (149, 51);
-INSERT INTO public.recurso_autores VALUES (149, 57);
 INSERT INTO public.recurso_autores VALUES (150, 13);
-INSERT INTO public.recurso_autores VALUES (49, 45);
-INSERT INTO public.recurso_autores VALUES (49, 34);
-INSERT INTO public.recurso_autores VALUES (160, 108);
-INSERT INTO public.recurso_autores VALUES (160, 109);
-INSERT INTO public.recurso_autores VALUES (160, 110);
-INSERT INTO public.recurso_autores VALUES (112, 52);
-INSERT INTO public.recurso_autores VALUES (112, 53);
-INSERT INTO public.recurso_autores VALUES (147, 52);
-INSERT INTO public.recurso_autores VALUES (147, 53);
-INSERT INTO public.recurso_autores VALUES (148, 42);
-INSERT INTO public.recurso_autores VALUES (164, 111);
-INSERT INTO public.recurso_autores VALUES (164, 112);
-INSERT INTO public.recurso_autores VALUES (164, 113);
-INSERT INTO public.recurso_autores VALUES (164, 114);
-INSERT INTO public.recurso_autores VALUES (166, 116);
-INSERT INTO public.recurso_autores VALUES (166, 117);
-INSERT INTO public.recurso_autores VALUES (166, 118);
+INSERT INTO public.recurso_autores VALUES (177, 46);
+INSERT INTO public.recurso_autores VALUES (178, 119);
+INSERT INTO public.recurso_autores VALUES (179, 120);
+INSERT INTO public.recurso_autores VALUES (180, 121);
+INSERT INTO public.recurso_autores VALUES (181, 122);
 
 
 --
--- Data for Name: recurso_categorias; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: recurso_categorias; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.recurso_categorias VALUES (122, 6);
@@ -2771,55 +2704,22 @@ INSERT INTO public.recurso_categorias VALUES (150, 14);
 
 
 --
--- Data for Name: recurso_clasificaciones; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: recurso_clasificaciones; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
-INSERT INTO public.recurso_clasificaciones VALUES (50, 8, 10);
-INSERT INTO public.recurso_clasificaciones VALUES (51, 9, 16);
-INSERT INTO public.recurso_clasificaciones VALUES (52, 10, 18);
-INSERT INTO public.recurso_clasificaciones VALUES (57, 9, 17);
-INSERT INTO public.recurso_clasificaciones VALUES (58, 7, NULL);
-INSERT INTO public.recurso_clasificaciones VALUES (59, 7, 9);
-INSERT INTO public.recurso_clasificaciones VALUES (69, 8, 14);
-INSERT INTO public.recurso_clasificaciones VALUES (72, 7, 5);
-INSERT INTO public.recurso_clasificaciones VALUES (78, 9, NULL);
-INSERT INTO public.recurso_clasificaciones VALUES (79, 10, 18);
-INSERT INTO public.recurso_clasificaciones VALUES (80, 7, 5);
-INSERT INTO public.recurso_clasificaciones VALUES (81, 10, 18);
-INSERT INTO public.recurso_clasificaciones VALUES (82, 7, 9);
-INSERT INTO public.recurso_clasificaciones VALUES (83, 8, 12);
-INSERT INTO public.recurso_clasificaciones VALUES (84, 8, 10);
-INSERT INTO public.recurso_clasificaciones VALUES (85, 9, NULL);
-INSERT INTO public.recurso_clasificaciones VALUES (86, 9, NULL);
-INSERT INTO public.recurso_clasificaciones VALUES (87, 9, NULL);
-INSERT INTO public.recurso_clasificaciones VALUES (88, 7, 9);
-INSERT INTO public.recurso_clasificaciones VALUES (89, 7, 9);
-INSERT INTO public.recurso_clasificaciones VALUES (90, 7, 9);
-INSERT INTO public.recurso_clasificaciones VALUES (91, 7, 5);
-INSERT INTO public.recurso_clasificaciones VALUES (92, 8, 12);
-INSERT INTO public.recurso_clasificaciones VALUES (93, 7, 5);
-INSERT INTO public.recurso_clasificaciones VALUES (94, 7, 5);
-INSERT INTO public.recurso_clasificaciones VALUES (99, 10, 18);
-INSERT INTO public.recurso_clasificaciones VALUES (100, 9, 17);
-INSERT INTO public.recurso_clasificaciones VALUES (108, 10, 18);
-INSERT INTO public.recurso_clasificaciones VALUES (109, 7, 5);
-INSERT INTO public.recurso_clasificaciones VALUES (110, 9, NULL);
-INSERT INTO public.recurso_clasificaciones VALUES (111, 8, 13);
-INSERT INTO public.recurso_clasificaciones VALUES (113, 10, 18);
-INSERT INTO public.recurso_clasificaciones VALUES (114, 8, 13);
-INSERT INTO public.recurso_clasificaciones VALUES (132, 10, 18);
-INSERT INTO public.recurso_clasificaciones VALUES (149, 7, 5);
-INSERT INTO public.recurso_clasificaciones VALUES (49, 7, 5);
-INSERT INTO public.recurso_clasificaciones VALUES (160, 7, 9);
-INSERT INTO public.recurso_clasificaciones VALUES (112, 7, 5);
-INSERT INTO public.recurso_clasificaciones VALUES (147, 7, 5);
-INSERT INTO public.recurso_clasificaciones VALUES (148, 9, 17);
-INSERT INTO public.recurso_clasificaciones VALUES (164, 8, 13);
-INSERT INTO public.recurso_clasificaciones VALUES (166, 8, 11);
+INSERT INTO public.recurso_clasificaciones VALUES (173, 7, 7);
+INSERT INTO public.recurso_clasificaciones VALUES (174, 7, 7);
+INSERT INTO public.recurso_clasificaciones VALUES (175, 7, 7);
+INSERT INTO public.recurso_clasificaciones VALUES (176, 7, 7);
+INSERT INTO public.recurso_clasificaciones VALUES (177, 7, 7);
+INSERT INTO public.recurso_clasificaciones VALUES (178, 9, 16);
+INSERT INTO public.recurso_clasificaciones VALUES (179, 9, 16);
+INSERT INTO public.recurso_clasificaciones VALUES (180, 9, 16);
+INSERT INTO public.recurso_clasificaciones VALUES (181, 9, 16);
 
 
 --
--- Data for Name: recurso_etiquetas; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: recurso_etiquetas; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.recurso_etiquetas VALUES (143, 10);
@@ -2838,67 +2738,24 @@ INSERT INTO public.recurso_etiquetas VALUES (150, 5);
 
 
 --
--- Data for Name: recursos; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: recursos; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
-INSERT INTO public.recursos VALUES (1, 'Sistema de Reconocimiento Biométrico Facial para Comedor Universitario', 1, 2026, NULL);
-INSERT INTO public.recursos VALUES (2, 'Prototipo de Cerradura Digital con Matriz de Teclado y Arduino', 1, 2025, NULL);
+INSERT INTO public.recursos VALUES (173, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1790646177_290.docx');
+INSERT INTO public.recursos VALUES (175, 'MÓDULO INTELIGENTE BASADO EN MACHINE LEARNING PARA LA GESTIÓN DE LAS LÍNEAS DE INVESTIGACIÓN PARA PROYECTOS ACADÉMICOS DE LA UPTTMBI - NÚCLEO LA BEATRIZ', 1, 2026, 'storage/documentos/pst/pst_m__dulo_inteligente_basado_en__1790646177_217.docx');
 INSERT INTO public.recursos VALUES (3, 'Aplicación de Redes Neuronales Convolucionales para la Detección de Plagas en Cultivos Trujillanos', 2, 2026, NULL);
 INSERT INTO public.recursos VALUES (4, 'Impacto del Cambio Climático en Trujillo - Parte 8', 2, 2023, 'dummy.pdf');
 INSERT INTO public.recursos VALUES (5, 'Simulación de Cargas Estáticas en Puentes - Parte 7', 2, 2024, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (6, 'Big Data en Finanzas Institucionales - Parte 9', 1, 2024, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (7, 'Optimización de CPU en Servidores Locales - Parte 7', 1, 2026, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (8, 'Sistemas de Riego Automatizado - Parte 5', 1, 2023, 'dummy.pdf');
 INSERT INTO public.recursos VALUES (9, 'Bioinformática y Análisis de ADN - Parte 5', 3, 2025, 'dummy.pdf');
 INSERT INTO public.recursos VALUES (10, 'Inteligencia Artificial en Diagnóstico Médico - Parte 6', 2, 2025, 'dummy.pdf');
 INSERT INTO public.recursos VALUES (11, 'Robótica Educativa para Escuelas - Parte 5', 3, 2023, 'dummy.pdf');
 INSERT INTO public.recursos VALUES (12, 'Software Libre para Bibliotecas - Parte 1', 3, 2026, 'dummy.pdf');
 INSERT INTO public.recursos VALUES (13, 'E-Learning para Zonas Desfavorecidas - Parte 1', 3, 2018, 'dummy.pdf');
 INSERT INTO public.recursos VALUES (14, 'Telecomunicaciones de Fibra Óptica Rural - Parte 1', 2, 2022, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (15, 'Criptografía Cuántica Post-RSA - Parte 2', 1, 2024, 'dummy.pdf');
 INSERT INTO public.recursos VALUES (16, 'Criptografía Cuántica Post-RSA - Parte 7', 3, 2026, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (17, 'Criptografía Cuántica Post-RSA - Parte 5', 1, 2024, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (18, 'Criptografía Cuántica Post-RSA - Parte 8', 1, 2021, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (19, 'Software Libre para Bibliotecas - Parte 6', 1, 2023, 'dummy.pdf');
 INSERT INTO public.recursos VALUES (20, 'Inteligencia Artificial en Diagnóstico Médico - Parte 1', 3, 2020, 'dummy.pdf');
-INSERT INTO public.recursos VALUES (45, 'Desarrollo de un Motor para Novelas Visuales Nativas usando Rust y Tauri', 1, 2026, 'motor_rust_tauri_v1.pdf');
-INSERT INTO public.recursos VALUES (46, 'Arquitectura de L¢gica de Estados para Videojuegos en Consolas Virtuales TIC-80', 1, 2025, 'juego_aislamiento_tic80.pdf');
-INSERT INTO public.recursos VALUES (47, 'Protocolo de Restauraci¢n y Diagn¢stico de Capacitores en Tarjetas Madre Socket 478', 1, 2026, 'restauracion_pentium4.pdf');
-INSERT INTO public.recursos VALUES (48, 'Implementaci¢n de un Enrutador Din mico basado en Arquitectura Microkernel con PHP Puro', 1, 2026, 'microkernel_php_routing.pdf');
-INSERT INTO public.recursos VALUES (50, 'Software Educativo Multimedial para el Fortalecimiento del Aprendizaje de µlgebra Lineal', 1, 2026, 'software_educativo_algebra.pdf');
-INSERT INTO public.recursos VALUES (51, 'Plataforma Web bajo Arquitectura Cliente-Servidor para el Control de Citas Acad‚micas', 1, 2025, 'plataforma_web_citas.pdf');
-INSERT INTO public.recursos VALUES (52, 'Simulador de Enrutamiento por Estado de Enlace para la Validaci¢n de Topolog¡as Complejas', 1, 2026, 'simulador_routing_topologias.pdf');
-INSERT INTO public.recursos VALUES (57, 'hola adios', 1, 2026, 'documentos/pst/pst_hola_adios_1783290093.pdf');
-INSERT INTO public.recursos VALUES (58, 'Sistema Integral de Gestión de Documasdasdasdasentos Académicos para el Comité Científico Investigaasdasdasdasdor del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 'documentos/pst/pst_sistema_integral_de_gesti__n_d_1783396914.pdf');
-INSERT INTO public.recursos VALUES (59, 'SISTEMA DE OPTIMIZACIÓN BASADO EN ALGORITMOS GENÉTICOS PARA LA GESTIÓN DE HORARIOS DEL PNFI DE LA UPTTMBI, NÚCLEO LA BEATRIZ', 1, 2026, 'documentos/pst/pst_sistema_de_optimizaci__n_basad_1785849778.pdf');
-INSERT INTO public.recursos VALUES (69, 'NUES DR. PABLO VILORIA – LA BEATRIZ SOPORTE TÉCNICO A EQUIPOS DE COMPUTACION Y USUARIOS EN CENTRO CLÍNICO “MARÍA EDELMIRA ARAUJO”, S.A. VALERA ESTADO TRUJILLO .', 1, 2023, 'documentos/pst/pst_nues_dr__pablo_viloria_____la__1785851934.pdf');
-INSERT INTO public.recursos VALUES (72, 'SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WORLD C.A.', 1, 2026, 'documentos/pst/pst_sistema_integral_de_gesti__n_c_1785852671.pdf');
-INSERT INTO public.recursos VALUES (78, 'PST Prueba Carga por Lotes - 20260805134326', 1, 2026, 'documentos/pst/pst_pst_prueba_carga_por_lotes___2_1785937406.pdf');
-INSERT INTO public.recursos VALUES (79, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 'documentos/pst/pst_sistema_integral_de_gesti__n_d_1785937515.pdf');
-INSERT INTO public.recursos VALUES (80, 'NUES DR. PABLO VILORIA – LA BEATRIZ SOPORTE TÉCNICO A EQUIPOS DE COMPUTACION Y USUARIOS EN CENTRO CLÍNICO “MARÍA EDELMIRA ARAUJO”, S.A. VALERA ESTADO TRUJILLO .', 1, 2023, 'documentos/pst/pst_nues_dr__pablo_viloria_____la__1785937685.pdf');
-INSERT INTO public.recursos VALUES (81, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 'documentos/pst/pst_sistema_integral_de_gesti__n_d_1785937685.pdf');
-INSERT INTO public.recursos VALUES (82, 'OPTIMIZACIÓN DEL SISTEMA DE INFORMACION PARA EL CONTROL DE MATRICULA EN EL CENTRO DE ATENCIÓN INTEGRAL PARA PERSONAS CON AUTISMO “CAIPA TRUJILLO” VERSIÓN 2.0', 1, 2026, 'documentos/pst/pst_optimizaci__n_del_sistema_de_i_1785937685.pdf');
-INSERT INTO public.recursos VALUES (83, 'SISTEMA INTELIGENTE PARA LA GESTIÓN ACADÉMICA Y ADMINISTRATIVA EN LA ESCUELA NACIONAL “ANTONIO PÉREZ CARMONA”, ESCUQUE, ESTADO TRUJILLO', 1, 2026, 'documentos/pst/pst_sistema_inteligente_para_la_ge_1785937685.pdf');
-INSERT INTO public.recursos VALUES (84, 'SOPORTE TECNICO A EQUIPOS Y USUARIOS DE LABORATORIO I EN LA E.T.C MADRE RAFOLS', 1, 2023, 'documentos/pst/pst_soporte_tecnico_a_equipos_y_us_1785937686.pdf');
-INSERT INTO public.recursos VALUES (85, 'PST Prueba Duplicados - 20260805135642', 1, 2026, 'documentos/pst/pst_pst_prueba_duplicados___202608_1785938202.pdf');
-INSERT INTO public.recursos VALUES (86, 'PST Prueba Duplicados - 20260805140204', 1, 2026, 'documentos/pst/pst_pst_prueba_duplicados___202608_1785938524.pdf');
-INSERT INTO public.recursos VALUES (87, 'PST Prueba Duplicados - 20260805143446', 1, 2026, 'documentos/pst/pst_pst_prueba_duplicados___202608_1785940486.pdf');
-INSERT INTO public.recursos VALUES (88, 'SOPORTE TÉCNICO A EQUIPOS DE COMPUTACIÓN Y USUARIOS EN CORPOELEC', 1, 2021, 'storage/documentos/pst/pst_soporte_t__cnico_a_equipos_de__1786372014_343.docx');
-INSERT INTO public.recursos VALUES (89, 'MÓDULO INTELIGENTE BASADO EN MACHINE LEARNING PARA LA GESTIÓN DE LAS LÍNEAS DE INVESTIGACIÓN PARA PROYECTOS ACADÉMICOS DE LA UPTTMBI - NÚCLEO LA BEATRIZ', 1, 2026, 'storage/documentos/pst/pst_m__dulo_inteligente_basado_en__1786372449_773.docx');
-INSERT INTO public.recursos VALUES (90, 'OPTIMIZACIÓN DEL SISTEMA DE sdasdasdINFORMACION PARA EL CONTROL DE MATRICULA EN EL CENTRO DE ATENCIÓN INTEGRAL PARA PERSONAS CON AUTISMO “CAIPA TRUJILLO” VERSIÓN 2.0', 1, 2026, NULL);
-INSERT INTO public.recursos VALUES (91, 'Sistema Inteligente de Redes Neurosdasdasdasdasdasdsadnales para la Gestión Integral de la Coordinación PNF de Contaduría Pública UPTT Mario Briceño Iragorry', 1, 2026, 'storage/documentos/pst/pst_sistema_inteligente_de_redes_n_1786373559_627.docx');
-INSERT INTO public.recursos VALUES (94, 'SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WORLD C.A.2222', 1, 2026, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_c_1786376454_286.docx');
-INSERT INTO public.recursos VALUES (93, 'Sistema Inteligente de Redes Neuronales para la Gestión Integral de la Coordinación P2222NF de Contaduría Pública UPTT Mario Briceño Iragorry', 1, 2026, 'storage/documentos/pst/pst_sistema_inteligente_de_redes_n_1786376074_943.docx');
-INSERT INTO public.recursos VALUES (92, 'SISTEMA INTELIGENTE PARA LA GESTIÓN ACADÉMICA Y ADMIN2wwdasdaISTRATIVA EN LA ESCUELA NACIONAL “ANTONIO PÉREZ CARMONA”, ESCUQUE, ESTADO TRUJILLO', 1, 2026, 'storage/documentos/pst/pst_sistema_inteligente_para_la_ge_1786376037_906.docx');
-INSERT INTO public.recursos VALUES (99, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Inves222222tigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1786378254_697.docx');
-INSERT INTO public.recursos VALUES (100, 'il para el proceso de Ascensos en la Coordin222222ación de Formación Permanente y Docencia de la UPTTMBI Docente Asesor: Dra.  María Luisa Colmenares Representante Institucional: Dra. Rossana Virgilio Representante Organizacional: Dr. Carlos Simancas', 1, 2023, NULL);
-INSERT INTO public.recursos VALUES (108, 'Sistema Integral de Gestión de Documentos Académicos para el C222222222omité Científico Investigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1786378813_891.docx');
-INSERT INTO public.recursos VALUES (109, 'SOPORTE TÉCNICO A EQUIPOS DE COMPUTACION Y USUARIOS EN CENTRO CLÍNICO “MARÍA EDELMIRA ARAUJOooo”', 1, 2023, 'storage/documentos/pst/pst_nues_dr__pablo_viloria_____la__1786457302_317.pdf');
-INSERT INTO public.recursos VALUES (110, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNsssssssF en Informática apoyado en Redes Neuronales', 1, 2025, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1787698529_393.docx');
-INSERT INTO public.recursos VALUES (111, 'SOPORTE TÉCNICO A EQUIPOS DE COMPUTACIÓN Y USUARIOS EN LssssssssssssA ESCUELA TÉCNICA COMERCIAL “MADRE RAFOLS”', 1, 2024, 'storage/documentos/pst/pst_soporte_t__cnico_a_equipos_de__1787698700_582.pdf');
-INSERT INTO public.recursos VALUES (113, 'Sistema Integral de Gestión de Documentos Académicos para el 22312312312312213123Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1787836105_952.docx');
-INSERT INTO public.recursos VALUES (114, 'SOPORTE TÉCNICO A EQUIPOS DE COMPUTACIÓN Y USUARIOS EN LA ESCUELA TÉCNICA COMERCIAL “MADRE RAFOLS”', 1, 2024, 'storage/documentos/pst/pst_soporte_t__cnico_a_equipos_de__1787840266_406.pdf');
-INSERT INTO public.recursos VALUES (132, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Casdasdasientífico Investigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1788532202_175.docx');
+INSERT INTO public.recursos VALUES (174, 'OPTIMIZACIÓN DEL SISTEMA DE INFORMACION PARA EL CONTROL DE MATRICULA EN EL CENTRO DE ATENCIÓN INTEGRAL PARA PERSONAS CON AUTISMO “CAIPA TRUJILLO” VERSIÓN 2.0', 1, 2026, 'storage/documentos/pst/pst_optimizaci__n_del_sistema_de_i_1790646177_402.docx');
+INSERT INTO public.recursos VALUES (176, 'Sistema Integral de Gestión Comercial y Tienda Virtual para Smartphone World C.A.', 1, 2026, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_c_1790646177_161.docx');
 INSERT INTO public.recursos VALUES (122, 'Revisión sistemática del impacto de las fibras de polipropileno en las propiedades físico-mecánicas, microestructurales y de durabilidad del Concreto', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/121649/97474');
 INSERT INTO public.recursos VALUES (121, 'Modelo matemático para el balance de calor de un techo verde en condiciones de trópico húmedo', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/123977/97473');
 INSERT INTO public.recursos VALUES (120, 'Determinantes de la aceptación del uso de la banca móvil por parte de ganaderos', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/121522/97457');
@@ -2907,31 +2764,31 @@ INSERT INTO public.recursos VALUES (118, 'Middleware MiSCi para ciudades intelig
 INSERT INTO public.recursos VALUES (143, 'Investigación y modelado de pérdidas por corriente circulante en sistemas de puesta a tierra de torres de alta tensión', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/124890/98825');
 INSERT INTO public.recursos VALUES (146, 'Modelamiento de confort adaptativo para un trapiche panelero', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/112625/91645');
 INSERT INTO public.recursos VALUES (144, 'Propuesta de un modelo de implementación basado en aprendizaje automático para el reclutamiento de profesionales de ingeniería en una universidad pública', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/124428/98826');
-INSERT INTO public.recursos VALUES (149, 'NUES DR. PABLO VILORIA – LA BEATRIZ SOPORTE TÉCNICO A EQUIPOS DE COMPUTACION Y USUARIOS EN CENTRO CLÍNICO “MARÍA EDELMIRA ARAUJO”, S.A. VALERA ESTADO TRUJILLO', 1, 2023, 'storage/documentos/pst/pst_nues_dr__pablo_viloria_____la__1789088547_631.pdf');
 INSERT INTO public.recursos VALUES (150, 'e', 3, 2026, 'https://www.youtube.com/');
-INSERT INTO public.recursos VALUES (49, 'Sistema de Información Automatizado para la Gestión de Inventario y Suministros Médicos', 1, 2026, 'proyecto_inventario_medico.pdf');
-INSERT INTO public.recursos VALUES (160, 'Edo. Trujillo Soporte Técnico A Equipos Y Usuarios De Computación Del Infocentro De Escuque', 1, 2022, 'storage/documentos/pst/pst_edo__trujillo_soporte_t__cnico_1790279574_121.docx');
-INSERT INTO public.recursos VALUES (112, 'SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WOssssssssssssssssssRLD C.A.', 1, 2026, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_c_1787698715_771.docx');
-INSERT INTO public.recursos VALUES (147, 'SISTEMA INTEGRAL DE GESTIÓN COMERCIAL Y TIENDA VIRTUAL PARA SMARTPHONE WORLD C.A', 1, 2026, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_c_1789794852.pdf');
-INSERT INTO public.recursos VALUES (148, 'VALERA EDO TRUJILLO Aplicación Web Móvil para el proceso de Ascensos en la Coordinación de Formación Permanente y Docencia de la UPTTMBI Docente Asesor: Dra. María Luisa Colmenares Representante Institucional: Dra. Rossana Virgilio Representante...', 1, 2023, 'storage/documentos/pst/pst_valera_edo_trujillo_aplicaci___1789088548_770.docx');
-INSERT INTO public.recursos VALUES (164, 'NUES DR. PABLO VILORIA – LA BEATRIZ Soporte técnico a equipos de computación y capacitación a usuarios del CBIT “Rafael Rangel” del municipio Valera', 1, 2026, 'storage/documentos/pst/pst_nues_dr__pablo_viloria_____la__1790303536_984.docx');
-INSERT INTO public.recursos VALUES (166, 'NUES DR. PABLO VILORIA - LA BEATRIZ SOPORTE TÉCNICO A USUARIOS Y EQUIPOS DEL LABORATORIO 1 - INFORMÁTICA DE LA UNIVERSIDAD POLITÉCNICA TERRITORIAL DEL ESTADO TRUJILLO “MARIO BRICEÑO IRAGORRY (UPTTMBI)”', 1, 2019, 'storage/documentos/pst/pst_nues_dr__pablo_viloria___la_be_1790306314_103.docx');
+INSERT INTO public.recursos VALUES (177, 'Sistema de Optimización basado en Algoritmos Genéticos para la Gestión de Horarios del PNFI de la UPTTMBI, Núcleo La Beatriz', 1, 2026, 'storage/documentos/pst/pst_sistema_de_optimizaci__n_basad_1790646177_802.docx');
+INSERT INTO public.recursos VALUES (178, 'DISEÑO Y PROTOTIPO DE UNA APLICACIÓN CLIENTE-SERVIDOR QUE PERMITA EJECUTAR COMANDOS BÁSICOS EN UN SERVIDOR REMOTO DESDE UN DISPOSITIVO MÓVIL', 1, 2026, 'storage/documentos/pst/pst_dise__o_y_prototipo_de_una_apl_1790648365_813.pdf');
+INSERT INTO public.recursos VALUES (179, 'CONFIGURACION E IMPLEMENTACION DE SERVIDORES INTERNET Y DISEÑO DE PAGINA WEB PARA LA EMPRESA DE TELECOMUNICACIONES DE NARIÑO TELENARIÑO', 1, 2026, 'storage/documentos/pst/pst_configuracion_e_implementacion_1790648366_353.pdf');
+INSERT INTO public.recursos VALUES (180, 'Aplicación web cliente-servidor para el control de inventario que indique el porcentaje de consumo de acuerdo al semáforo nutricional en la tienda ''Tuti'' del Cantón Vinces', 1, 2025, 'storage/documentos/pst/pst_aplicaci__n_web_cliente_servid_1790648366_463.pdf');
+INSERT INTO public.recursos VALUES (181, 'SISTEMA DE INFORMACIÓN Y GESTIÓN DE PROYECTOS DE GRADO', 1, 2026, 'storage/documentos/pst/pst_sistema_de_informaci__n_y_gest_1790648367_387.pdf');
 
 
 --
--- Data for Name: registro_actividad; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: registro_actividad; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.registro_actividad VALUES (1, 1, NULL, '2026-03-23 14:49:58', '2026-03-23 14:49:58', 1);
 INSERT INTO public.registro_actividad VALUES (3, 12, NULL, '2026-09-19 14:19:44.068925', '2026-09-19 14:20:25.834661', 2);
 INSERT INTO public.registro_actividad VALUES (4, 17, NULL, '2026-09-19 14:57:43.371674', '2026-09-19 14:58:00.847148', 2);
 INSERT INTO public.registro_actividad VALUES (5, 20, NULL, '2026-09-24 15:47:51.683653', '2026-09-24 16:24:35.034052', 8);
-INSERT INTO public.registro_actividad VALUES (2, 7, NULL, '2026-09-19 13:23:18.589777', '2026-09-24 23:09:06.604365', 20);
-INSERT INTO public.registro_actividad VALUES (6, 14, NULL, '2026-09-24 23:22:14.086172', '2026-09-24 23:22:14.086172', 1);
+INSERT INTO public.registro_actividad VALUES (8, 24, NULL, '2026-09-28 20:10:12.127047', '2026-09-28 20:10:12.127047', 1);
+INSERT INTO public.registro_actividad VALUES (6, 14, NULL, '2026-09-24 23:22:14.086172', '2026-09-28 20:34:06.02631', 2);
+INSERT INTO public.registro_actividad VALUES (7, 23, NULL, '2026-09-28 20:08:25.186734', '2026-09-28 20:56:33.152445', 3);
+INSERT INTO public.registro_actividad VALUES (9, 25, NULL, '2026-09-28 21:45:25.869205', '2026-09-28 21:45:25.869205', 1);
+INSERT INTO public.registro_actividad VALUES (2, 7, NULL, '2026-09-19 13:23:18.589777', '2026-09-28 23:13:28.939665', 29);
 
 
 --
--- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.roles VALUES (1, 'Super Administrador', 1);
@@ -2942,7 +2799,7 @@ INSERT INTO public.roles VALUES (5, 'Pepe', 11);
 
 
 --
--- Data for Name: system_audit_log; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: system_audit_log; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.system_audit_log VALUES ('log_6aae33579b38a', '2026-09-19 07:01:43', 'WARNING', 'SuperAdmin', 'Modificar Matriz RBAC', 'Se actualizaron los permisos granulares por Módulo y Nivel.', 'Miguel González (ID: 7)', '::1', 'GENESIS_CIIDI_V1', '7ce1ff0dbf2ae1f6bcfd13e8e1f43e3f22eb9785c9790be455571ddfbc027aa5');
@@ -3191,17 +3048,130 @@ INSERT INTO public.system_audit_log VALUES ('log_6ab5f343edaa77.34024336', '2026
 INSERT INTO public.system_audit_log VALUES ('log_6ab5f347bc8625.33923949', '2026-09-25 00:06:31', 'WARNING', 'SuperAdmin', 'Cancelar Mantenimiento', 'Se canceló la programación de mantenimiento.', 'Miguel González (ID: 7)', '::1', '126e1a000306258ed7e2662d9d21eaeb5b86867f9f8ffacf82acd6833bfe6948', '2ff1e3a4feff04f2a610c678ba79e38fe704bd2b32b3df05e5038d8fab961cff');
 INSERT INTO public.system_audit_log VALUES ('log_6ab5f3534831e5.29511767', '2026-09-25 00:06:43', 'WARNING', 'SuperAdmin', 'Alternar Mantenimiento', 'Modo Mantenimiento cambiado a: ACTIVADO', 'Miguel González (ID: 7)', '::1', '2ff1e3a4feff04f2a610c678ba79e38fe704bd2b32b3df05e5038d8fab961cff', '11449901949cc583ad202c864084bc50b58ae286d680380611a2593f0e04a892');
 INSERT INTO public.system_audit_log VALUES ('log_6ab5f3579cd023.19225768', '2026-09-25 00:06:47', 'WARNING', 'SuperAdmin', 'Alternar Mantenimiento', 'Modo Mantenimiento cambiado a: DESACTIVADO', 'Miguel González (ID: 7)', '::1', '11449901949cc583ad202c864084bc50b58ae286d680380611a2593f0e04a892', 'bb992b5e54eb785b84d40f71dfee1544201ba7abc83304f7922170c76cb66f8f');
+INSERT INTO public.system_audit_log VALUES ('log_6abafb20509f23.77737091', '2026-09-28 19:41:20', 'WARNING', 'SuperAdmin', 'Restaurar BD', 'Base de datos restaurada exitosamente.', 'Miguel González (ID: 7)', '127.0.0.1', 'bb992b5e54eb785b84d40f71dfee1544201ba7abc83304f7922170c76cb66f8f', '65ba93ea03d70dbbbb09ef35ac99643c673e0317fe5eca952a70d16ec6916bf8');
+INSERT INTO public.system_audit_log VALUES ('log_6abafb27883992.38692579', '2026-09-28 19:41:27', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: backup_ciidi_2026-09-25_02-12-10.sql', 'Miguel González (ID: 7)', '127.0.0.1', '65ba93ea03d70dbbbb09ef35ac99643c673e0317fe5eca952a70d16ec6916bf8', 'e1f80c106a937438e413b8cfa216be861d5240fd30432fbf8db5f1195ed1083c');
+INSERT INTO public.system_audit_log VALUES ('log_6abafd7f9a7167.09980771', '2026-09-28 19:51:27', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: backup_ciidi_2026-09-25_02-12-10.sql', 'Miguel González (ID: 7)', '127.0.0.1', 'e1f80c106a937438e413b8cfa216be861d5240fd30432fbf8db5f1195ed1083c', '0420f759876b6d585f1fa53397317099f8051c129b4758bc038ff74bb230607c');
+INSERT INTO public.system_audit_log VALUES ('log_6abafd86a86805.50722947', '2026-09-28 19:51:34', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: backup_ciidi_2026-09-25_01-13-15.sql.gz', 'Miguel González (ID: 7)', '127.0.0.1', '0420f759876b6d585f1fa53397317099f8051c129b4758bc038ff74bb230607c', '1bc86de05428aa5bf3abffaa8632cc4122a001ad4a106120a6c39d7e245501fd');
+INSERT INTO public.system_audit_log VALUES ('log_6abafd8dca9f66.85861726', '2026-09-28 19:51:41', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: pre_restore_checkpoint_2026-09-24_21-37-28.sql.gz', 'Miguel González (ID: 7)', '127.0.0.1', '1bc86de05428aa5bf3abffaa8632cc4122a001ad4a106120a6c39d7e245501fd', '730bae622be83ae4acb28e64a01d0054ad440ffb9d6ce278141e692152432abd');
+INSERT INTO public.system_audit_log VALUES ('log_6abafd93c1acb3.06888969', '2026-09-28 19:51:47', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: pre_restore_checkpoint_2026-09-25_19-41-20.sql.gz', 'Miguel González (ID: 7)', '127.0.0.1', '730bae622be83ae4acb28e64a01d0054ad440ffb9d6ce278141e692152432abd', 'c63139e316d8a6f982996d44a2c0324532c67ccd83b645a065fcb1146e5b4460');
+INSERT INTO public.system_audit_log VALUES ('log_6abafd99634e06.43783007', '2026-09-28 19:51:53', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: pre_restore_checkpoint_2026-09-25_19-42-50.sql.gz', 'Miguel González (ID: 7)', '127.0.0.1', 'c63139e316d8a6f982996d44a2c0324532c67ccd83b645a065fcb1146e5b4460', 'fbadbeb097576672321203ffa4a0ef7aa6e48865913362935009c3c2a3d85bcb');
+INSERT INTO public.system_audit_log VALUES ('log_6abafda4020792.40689680', '2026-09-28 19:52:04', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: pre_restore_checkpoint_2026-09-25_20-00-40.sql.gz', 'Miguel González (ID: 7)', '127.0.0.1', 'fbadbeb097576672321203ffa4a0ef7aa6e48865913362935009c3c2a3d85bcb', 'a712226e08c88adb2216f346437da375bf5c44b6f0fd9b73cf45ea2b6062004a');
+INSERT INTO public.system_audit_log VALUES ('log_6abafdaa845626.22669072', '2026-09-28 19:52:10', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: pre_restore_checkpoint_2026-09-25_20-02-23.sql.gz', 'Miguel González (ID: 7)', '127.0.0.1', 'a712226e08c88adb2216f346437da375bf5c44b6f0fd9b73cf45ea2b6062004a', '825c96466087457b3a87d73025d2bd925c42d9ef7ad6de185aed5ad7c3bf048b');
+INSERT INTO public.system_audit_log VALUES ('log_6abafdb0764f21.09829735', '2026-09-28 19:52:16', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: backup_ciidi_2026-09-25_00-06-15.sql.gz', 'Miguel González (ID: 7)', '127.0.0.1', '825c96466087457b3a87d73025d2bd925c42d9ef7ad6de185aed5ad7c3bf048b', 'd9d3432cfb2ae694ec210977aae7164138b99b88dee380931a06e370443cf9be');
+INSERT INTO public.system_audit_log VALUES ('log_6abafdb7be60c7.87487845', '2026-09-28 19:52:23', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: auto_cron_backup_2026-09-25_01-14-15.sql.gz', 'Miguel González (ID: 7)', '127.0.0.1', 'd9d3432cfb2ae694ec210977aae7164138b99b88dee380931a06e370443cf9be', '7e927eb12aff1ed84b89cef853d00de6956fafafde448b50bf4f0bf7133c251c');
+INSERT INTO public.system_audit_log VALUES ('log_6abafdbdb03fc3.11122310', '2026-09-28 19:52:29', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: auto_cron_backup_2026-09-24_21-58-01.sql.gz', 'Miguel González (ID: 7)', '127.0.0.1', '7e927eb12aff1ed84b89cef853d00de6956fafafde448b50bf4f0bf7133c251c', 'c941c895da042587dbf72cc73264a7519a722acd16786513def03d1b88076fa6');
+INSERT INTO public.system_audit_log VALUES ('log_6abafe226d9349.31577744', '2026-09-28 19:54:10', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '100.73.154.97', 'c941c895da042587dbf72cc73264a7519a722acd16786513def03d1b88076fa6', '85a601357808bddd05ff7491b39f5a2e73913d2ec94cbd118c916a5991f51537');
+INSERT INTO public.system_audit_log VALUES ('log_6abaff048684a9.63284303', '2026-09-28 19:57:56', 'INFO', 'Autenticacion', 'Cierre de Sesión', 'El usuario ''Miguel González'' (ID: 7) cerró su sesión voluntariamente.', 'Miguel González (ID: 7)', '100.73.154.97', '85a601357808bddd05ff7491b39f5a2e73913d2ec94cbd118c916a5991f51537', 'abea458eac74bdc6c7a284e7e99c03f90af9e97e77bf278da890476d0844c772');
+INSERT INTO public.system_audit_log VALUES ('log_6abaffb7f0d4b3.76839410', '2026-09-28 20:00:55', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '100.76.167.24', 'abea458eac74bdc6c7a284e7e99c03f90af9e97e77bf278da890476d0844c772', '46f6045064fbfc1e1ed1f4bef33d7f3c45efcebf5eba0b355ef3c17dad720f57');
+INSERT INTO public.system_audit_log VALUES ('log_6abaffe88511e7.85952966', '2026-09-28 20:01:44', 'INFO', 'SuperAdmin', 'Invitar Profesor', 'Invitación emitida para el profesor Juan Salcedo (C.I: V-31008131, Correo: juanxzall0701@gmail.com)', 'Miguel González (ID: 7)', '100.76.167.24', '46f6045064fbfc1e1ed1f4bef33d7f3c45efcebf5eba0b355ef3c17dad720f57', 'f841b5c0cf10509e92252a3c5021b4fc3eb52d021bbee20746544de43f5a385c');
+INSERT INTO public.system_audit_log VALUES ('log_6abb013e7b4c24.73644346', '2026-09-28 20:07:26', 'INFO', 'SuperAdmin', 'Editar Usuario', 'Datos actualizados para el Usuario C.I. V-31008131 (Juan Salcedo). Se forzó cambio de contraseña. Sesión remota revocada.', 'Miguel González (ID: 7)', '100.76.167.24', 'f841b5c0cf10509e92252a3c5021b4fc3eb52d021bbee20746544de43f5a385c', '14d185e97667716424a517f968be779478417014205bf30e80eb77c02bebdb9e');
+INSERT INTO public.system_audit_log VALUES ('log_6abb0145949778.55947437', '2026-09-28 20:07:33', 'INFO', 'SuperAdmin', 'Restaurar Cuenta Usuario', 'Estado de la cuenta del Usuario C.I. V-31008131 cambiado a: Activo', 'Miguel González (ID: 7)', '100.76.167.24', '14d185e97667716424a517f968be779478417014205bf30e80eb77c02bebdb9e', '65ae26743839f5c7250931ba247cde0070d051b84b1b5cde53b90b5bf27bdc65');
+INSERT INTO public.system_audit_log VALUES ('log_6abb01792dca53.93192711', '2026-09-28 20:08:25', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Juan Salcedo'' (C.I: V-31008131, Rol: Comité).', 'Juan Salcedo (ID: 23)', '100.110.129.56', '65ae26743839f5c7250931ba247cde0070d051b84b1b5cde53b90b5bf27bdc65', 'c4b15d0276b37f0ddab43228e51af1fc174b77404b74f1f79fcb4800058281e9');
+INSERT INTO public.system_audit_log VALUES ('log_6abb01ba8fc586.95371056', '2026-09-28 20:09:30', 'INFO', 'SuperAdmin', 'Crear Usuario', 'Nuevo usuario registrado: Ale Rojo (C.I: V-30536364)', 'Miguel González (ID: 7)', '100.76.167.24', 'c4b15d0276b37f0ddab43228e51af1fc174b77404b74f1f79fcb4800058281e9', 'a2b9c75c32c088c0ddb47314a73d77f23b9bff4feaa6f492c98077dec1ae585a');
+INSERT INTO public.system_audit_log VALUES ('log_6abb01e37dc013.68469353', '2026-09-28 20:10:11', 'INFO', 'SuperAdmin', 'Editar Usuario', 'Datos actualizados para el Usuario C.I. V-30469331 (Andrus). Sesión remota revocada.', 'Miguel González (ID: 7)', '100.76.167.24', 'a2b9c75c32c088c0ddb47314a73d77f23b9bff4feaa6f492c98077dec1ae585a', '7e45181c4e7608be332cb62dd98492721ab434632992f4a82b2d32dbdc8e7f5b');
+INSERT INTO public.system_audit_log VALUES ('log_6abb01e41f3c68.68437889', '2026-09-28 20:10:12', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Ale Rojo'' (C.I: V-30536364, Rol: Super Administrador).', 'Ale Rojo (ID: 24)', '100.73.154.97', '7e45181c4e7608be332cb62dd98492721ab434632992f4a82b2d32dbdc8e7f5b', '0d5437aca0e2b4ee5fc7e490e0d79a2c8b2454394873ab5378696136ea005e9e');
+INSERT INTO public.system_audit_log VALUES ('log_6abb02c06d31d4.89718705', '2026-09-28 20:13:52', 'INFO', 'SuperAdmin', 'Editar Usuario', 'Datos actualizados para el Usuario C.I. V-31008131 (Juan Salcedo). Sesión remota revocada.', 'Ale Rojo (ID: 24)', '100.73.154.97', '0d5437aca0e2b4ee5fc7e490e0d79a2c8b2454394873ab5378696136ea005e9e', '47197536cc448bdd1f33060ed63d6f15ac2977677f5b0b80ead7d70aac717ce9');
+INSERT INTO public.system_audit_log VALUES ('log_6abb02e28401c8.77365144', '2026-09-28 20:14:26', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Juan Salcedo'' (C.I: V-31008131, Rol: Super Administrador).', 'Juan Salcedo (ID: 23)', '100.110.129.56', '47197536cc448bdd1f33060ed63d6f15ac2977677f5b0b80ead7d70aac717ce9', '7b1bba280c6bd4dda61e9adca1c5897d2c2915a495b41693de61b222afc023c0');
+INSERT INTO public.system_audit_log VALUES ('log_6abb032cdcfd61.89163949', '2026-09-28 20:15:40', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #164 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '7b1bba280c6bd4dda61e9adca1c5897d2c2915a495b41693de61b222afc023c0', '476d7b317872ff7190465c1fd46c7f04c22a52fda107f53541bc5fdbe1720d78');
+INSERT INTO public.system_audit_log VALUES ('log_6abb0368132dc2.77929488', '2026-09-28 20:16:40', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #112 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '476d7b317872ff7190465c1fd46c7f04c22a52fda107f53541bc5fdbe1720d78', '81a6a3e3f501e97c7a3d41b58c489e0da0edad5afa560ae3311d5f2f47044780');
+INSERT INTO public.system_audit_log VALUES ('log_6abb03bd9b73c2.72502117', '2026-09-28 20:18:05', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #90 eliminado del repositorio.', 'Miguel González (ID: 7)', '100.76.167.24', '81a6a3e3f501e97c7a3d41b58c489e0da0edad5afa560ae3311d5f2f47044780', 'fd124b9ed115aa2a012e4e7bf2da5b4de37b5e5ef6c609fe0015e66aba29b6da');
+INSERT INTO public.system_audit_log VALUES ('log_6abb03ff5804e1.51803765', '2026-09-28 20:19:11', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #89 eliminado del repositorio.', 'Miguel González (ID: 7)', '100.76.167.24', 'fd124b9ed115aa2a012e4e7bf2da5b4de37b5e5ef6c609fe0015e66aba29b6da', 'beacc0b15fab01f77d8d66df2953fa70db0d3e51b3f059aa7442149397d76f30');
+INSERT INTO public.system_audit_log VALUES ('log_6abb040e7b1654.85649396', '2026-09-28 20:19:26', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #93 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', 'beacc0b15fab01f77d8d66df2953fa70db0d3e51b3f059aa7442149397d76f30', '33a507d55f68879507c327b5f525489fadd3eeeb43cf3af29e2c207438268b2b');
+INSERT INTO public.system_audit_log VALUES ('log_6abb041b3dca19.05484779', '2026-09-28 20:19:39', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #92 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '33a507d55f68879507c327b5f525489fadd3eeeb43cf3af29e2c207438268b2b', 'dc2723acb0ed73beb28d3967572ae4fbc29eace9235c5cb09d12ff5cdc194203');
+INSERT INTO public.system_audit_log VALUES ('log_6abb04253a7f07.78644196', '2026-09-28 20:19:49', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #91 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', 'dc2723acb0ed73beb28d3967572ae4fbc29eace9235c5cb09d12ff5cdc194203', 'a977dbe8f90d6cb3039adcf282fbf39c4914a28ee41601b22dd461928eb1885d');
+INSERT INTO public.system_audit_log VALUES ('log_6abb043a715cf0.91440388', '2026-09-28 20:20:10', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #87 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', 'a977dbe8f90d6cb3039adcf282fbf39c4914a28ee41601b22dd461928eb1885d', 'baaba14f4b7fa958376842159255200062019a72f93410a36ec1b70af149c021');
+INSERT INTO public.system_audit_log VALUES ('log_6abb0445148ae3.39877782', '2026-09-28 20:20:21', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #83 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', 'baaba14f4b7fa958376842159255200062019a72f93410a36ec1b70af149c021', '7965a528e45ba0d8302e3eaa53f5e91d9268db136065a7f55a2de23f13ae6b14');
+INSERT INTO public.system_audit_log VALUES ('log_6abb045deb2de8.36347263', '2026-09-28 20:20:45', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #82 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '7965a528e45ba0d8302e3eaa53f5e91d9268db136065a7f55a2de23f13ae6b14', 'eb66db47d5f2b578f53eda4b9d42681a4c2a04db7ad1b5311828f2f1bb5f855d');
+INSERT INTO public.system_audit_log VALUES ('log_6abb04aa0f1d08.49696643', '2026-09-28 20:22:02', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #78 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', 'eb66db47d5f2b578f53eda4b9d42681a4c2a04db7ad1b5311828f2f1bb5f855d', '2e824da9b7eb5af1b62aa13cc6015c863057a2901c852a96c1c44389a66030c4');
+INSERT INTO public.system_audit_log VALUES ('log_6abb04b0c04d50.70062303', '2026-09-28 20:22:08', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #72 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '2e824da9b7eb5af1b62aa13cc6015c863057a2901c852a96c1c44389a66030c4', 'de276ce325daedcfab51e24d365f85c4ba19700ffa2d403d5ce3dd61a52bae40');
+INSERT INTO public.system_audit_log VALUES ('log_6abb04b900fb48.34213166', '2026-09-28 20:22:17', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #59 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', 'de276ce325daedcfab51e24d365f85c4ba19700ffa2d403d5ce3dd61a52bae40', 'f4c9701d372dd0eff5f4ff06cd6e3160fe175fa4f8e1d2ba1ce9f6bb9e40a37e');
+INSERT INTO public.system_audit_log VALUES ('log_6abb04c1187ee0.07611378', '2026-09-28 20:22:25', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #57 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', 'f4c9701d372dd0eff5f4ff06cd6e3160fe175fa4f8e1d2ba1ce9f6bb9e40a37e', '8cc0d2b534c1d15cab4f9652c2dc1af1d7bb4988ff976905e24815fad56dc974');
+INSERT INTO public.system_audit_log VALUES ('log_6abb04c736f944.79157377', '2026-09-28 20:22:31', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #52 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '8cc0d2b534c1d15cab4f9652c2dc1af1d7bb4988ff976905e24815fad56dc974', '2affbdf5fc1b0143ba0cae602234815c9edc8f7f7ab3e116d2446386e61b5195');
+INSERT INTO public.system_audit_log VALUES ('log_6abb04d0b593c6.97554683', '2026-09-28 20:22:40', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #50 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '2affbdf5fc1b0143ba0cae602234815c9edc8f7f7ab3e116d2446386e61b5195', 'cb8183f93a21406419ee048d143ae4693c4e998ceffe78a075fcb3940500b1fc');
+INSERT INTO public.system_audit_log VALUES ('log_6abb04d7408916.04888333', '2026-09-28 20:22:47', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #49 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', 'cb8183f93a21406419ee048d143ae4693c4e998ceffe78a075fcb3940500b1fc', '65302158159d76f855e91f3ed2fa8a2921642d680ee1004d9d2aa34aa032433c');
+INSERT INTO public.system_audit_log VALUES ('log_6abb04de0ee462.45813347', '2026-09-28 20:22:54', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #48 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '65302158159d76f855e91f3ed2fa8a2921642d680ee1004d9d2aa34aa032433c', '7f9dcf530c08fe5e1192c5bfc0c43cb8e940d495e39dc76c0280610e98bdbcbb');
+INSERT INTO public.system_audit_log VALUES ('log_6abb04e50f6df6.80633540', '2026-09-28 20:23:01', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #47 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '7f9dcf530c08fe5e1192c5bfc0c43cb8e940d495e39dc76c0280610e98bdbcbb', '42513f9b86d64f656ce030473967273cc2d3e6898da0310e3545b218c77ba88b');
+INSERT INTO public.system_audit_log VALUES ('log_6abb04f48102b4.69123568', '2026-09-28 20:23:16', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #45 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '42513f9b86d64f656ce030473967273cc2d3e6898da0310e3545b218c77ba88b', '01f10348a4ee60a7500f4950f684f6a6e81c45b4d306da460679bd683eb6889e');
+INSERT INTO public.system_audit_log VALUES ('log_6abb04fb9ef736.02342938', '2026-09-28 20:23:23', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #7 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '01f10348a4ee60a7500f4950f684f6a6e81c45b4d306da460679bd683eb6889e', '81f6f74c796b0401730c50ad063638866f37bbacfe90efa2a8e9f9f9ad814ea1');
+INSERT INTO public.system_audit_log VALUES ('log_6abb04ff40fc20.59132659', '2026-09-28 20:23:27', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #1 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '81f6f74c796b0401730c50ad063638866f37bbacfe90efa2a8e9f9f9ad814ea1', '9bf4de01f1d789a9b4c9819e55b53a07a88a6c04670c3e7dcd7a2abbbebd5d72');
+INSERT INTO public.system_audit_log VALUES ('log_6abb0534c2b876.49381584', '2026-09-28 20:24:20', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #132 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '9bf4de01f1d789a9b4c9819e55b53a07a88a6c04670c3e7dcd7a2abbbebd5d72', '179bc6ad0fe536f8cf53b99f8797755d68b0b6baaf6df47067b2e44ce1f2cf34');
+INSERT INTO public.system_audit_log VALUES ('log_6abb053c585b70.11969551', '2026-09-28 20:24:28', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #113 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '179bc6ad0fe536f8cf53b99f8797755d68b0b6baaf6df47067b2e44ce1f2cf34', '411c5185db2179de48301266ac493d076c5e9a381c5eaec1ad8520f22cdc9023');
+INSERT INTO public.system_audit_log VALUES ('log_6abb0542a61e19.92002410', '2026-09-28 20:24:34', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #110 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '411c5185db2179de48301266ac493d076c5e9a381c5eaec1ad8520f22cdc9023', 'e0e40f53fda28a38ef64bc2e0ef8708dcba74cae18715a9a6712e85c9a47529a');
+INSERT INTO public.system_audit_log VALUES ('log_6abb05497acb12.96148629', '2026-09-28 20:24:41', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #108 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', 'e0e40f53fda28a38ef64bc2e0ef8708dcba74cae18715a9a6712e85c9a47529a', '970bc1e0cdcee518e1a0860b5f4ce1c77eacefc5851b0caeeb153e2e61e628df');
+INSERT INTO public.system_audit_log VALUES ('log_6abb054fe09a91.61483108', '2026-09-28 20:24:47', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #99 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '970bc1e0cdcee518e1a0860b5f4ce1c77eacefc5851b0caeeb153e2e61e628df', 'a84d437ee76e9e429702b5a541472f46dfc1629a3e62d07c7e724011ab034a9a');
+INSERT INTO public.system_audit_log VALUES ('log_6abb055b1a3459.29037822', '2026-09-28 20:24:59', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #79 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', 'a84d437ee76e9e429702b5a541472f46dfc1629a3e62d07c7e724011ab034a9a', 'e496e4363fa822338ed76851647bb978bd15948123bfe203e7f30de30a14b7a5');
+INSERT INTO public.system_audit_log VALUES ('log_6abb05615d50d6.87310573', '2026-09-28 20:25:05', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #58 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', 'e496e4363fa822338ed76851647bb978bd15948123bfe203e7f30de30a14b7a5', '7f6d4d85af0f6fa48796147102204e8e6db7cd9618ffb2806d5ec49e9c3d7f13');
+INSERT INTO public.system_audit_log VALUES ('log_6abb056887c2c7.53681077', '2026-09-28 20:25:12', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #51 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '7f6d4d85af0f6fa48796147102204e8e6db7cd9618ffb2806d5ec49e9c3d7f13', '06eadd9c1285f34a171505971aef48dc7805b411033ed825c380e3ca3207adb4');
+INSERT INTO public.system_audit_log VALUES ('log_6abb05700e61a1.48392337', '2026-09-28 20:25:20', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #46 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '06eadd9c1285f34a171505971aef48dc7805b411033ed825c380e3ca3207adb4', '3d4784490737314600c162fcb7afde0ef6e5c34b0ec8d582c895d0e3e5bfc8b1');
+INSERT INTO public.system_audit_log VALUES ('log_6abb0573694d84.05795064', '2026-09-28 20:25:23', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #2 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '3d4784490737314600c162fcb7afde0ef6e5c34b0ec8d582c895d0e3e5bfc8b1', 'b12951e89d7116e178a16bd86e12aec1af3690b10a043a0cfdc14e88a490eec3');
+INSERT INTO public.system_audit_log VALUES ('log_6abb0579a35ff4.85657905', '2026-09-28 20:25:29', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #114 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', 'b12951e89d7116e178a16bd86e12aec1af3690b10a043a0cfdc14e88a490eec3', '499eb97ecfd2b6d6c2f72e4916c38cf4853ae5e8305e1103b929c4136766ee1f');
+INSERT INTO public.system_audit_log VALUES ('log_6abb058053bf15.97577156', '2026-09-28 20:25:36', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #111 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '499eb97ecfd2b6d6c2f72e4916c38cf4853ae5e8305e1103b929c4136766ee1f', '287eb2d88651ce1980f600afbbedbafabd4072f4f02a935748f71383988b0981');
+INSERT INTO public.system_audit_log VALUES ('log_6abb0586747261.05393016', '2026-09-28 20:25:42', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #17 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '287eb2d88651ce1980f600afbbedbafabd4072f4f02a935748f71383988b0981', '1323aa20f33adf4a1a4040ff3ef60a40b5d25d3847154493af817f92e39d9bfe');
+INSERT INTO public.system_audit_log VALUES ('log_6abb058d6fe271.94686513', '2026-09-28 20:25:49', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #15 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '1323aa20f33adf4a1a4040ff3ef60a40b5d25d3847154493af817f92e39d9bfe', '14972819812ec00c1a1a8d47410d12a7d42ade713f454d4eb1d82ea76535c696');
+INSERT INTO public.system_audit_log VALUES ('log_6abb059a21e0f7.86012631', '2026-09-28 20:26:02', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #149 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '14972819812ec00c1a1a8d47410d12a7d42ade713f454d4eb1d82ea76535c696', '8719621b5756efb85bb6df3c8cb8a99ef1b871619a58b2a53dac74ac51fcb246');
+INSERT INTO public.system_audit_log VALUES ('log_6abb05a07bd7b5.95170066', '2026-09-28 20:26:08', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #148 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '8719621b5756efb85bb6df3c8cb8a99ef1b871619a58b2a53dac74ac51fcb246', '868344c8bbe7f289ba9dd1025349d01138b98a39cf6b572142d636c5e7362231');
+INSERT INTO public.system_audit_log VALUES ('log_6abb05a74835a2.74484416', '2026-09-28 20:26:15', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #109 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '868344c8bbe7f289ba9dd1025349d01138b98a39cf6b572142d636c5e7362231', '19b63e9a74a3f0a370eec52031c8db5e45318a44b9a7b82b38beddae14a7ea7a');
+INSERT INTO public.system_audit_log VALUES ('log_6abb05ab16df28.13385146', '2026-09-28 20:26:19', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #100 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '19b63e9a74a3f0a370eec52031c8db5e45318a44b9a7b82b38beddae14a7ea7a', '0f5a78be24c16da801b9029fdd6e52664133a5e36f34657cb8fbcde6dc6f01ae');
+INSERT INTO public.system_audit_log VALUES ('log_6abb05b7748589.86163540', '2026-09-28 20:26:31', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #84 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '0f5a78be24c16da801b9029fdd6e52664133a5e36f34657cb8fbcde6dc6f01ae', '8864a5c3eab79bd7efda80cfc57f7b0942b1909673a8e3afaa9b952228b4996d');
+INSERT INTO public.system_audit_log VALUES ('log_6abb05bd676df3.62967728', '2026-09-28 20:26:37', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #80 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '8864a5c3eab79bd7efda80cfc57f7b0942b1909673a8e3afaa9b952228b4996d', '4a63553c1fd80a007d57c8068ca0d69031264486dd2c2524673185f1ff2788dd');
+INSERT INTO public.system_audit_log VALUES ('log_6abb05c7637b56.03501139', '2026-09-28 20:26:47', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #69 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '4a63553c1fd80a007d57c8068ca0d69031264486dd2c2524673185f1ff2788dd', '7b1d20b9c7a1511050d1b69aa0b2e63a135505909cf4adb5611819475acf65f7');
+INSERT INTO public.system_audit_log VALUES ('log_6abb05ce373aa9.86189057', '2026-09-28 20:26:54', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #19 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '7b1d20b9c7a1511050d1b69aa0b2e63a135505909cf4adb5611819475acf65f7', 'f0031eaa17db4526c36416656b7f47d37b71334c1d815aed749d5b4690edabdc');
+INSERT INTO public.system_audit_log VALUES ('log_6abb05d570f955.17501908', '2026-09-28 20:27:01', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #8 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', 'f0031eaa17db4526c36416656b7f47d37b71334c1d815aed749d5b4690edabdc', 'e430b14ac28f03688509e156d2e2a5cb2e8bc538b34b47b4d407e8dd6d8135be');
+INSERT INTO public.system_audit_log VALUES ('log_6abb05dd8c56c5.80992506', '2026-09-28 20:27:09', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #160 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', 'e430b14ac28f03688509e156d2e2a5cb2e8bc538b34b47b4d407e8dd6d8135be', '28321c3d3ae102b1d11ea8c28d428179d4e1f3cfd040f9ad96d3e834487eb50a');
+INSERT INTO public.system_audit_log VALUES ('log_6abb05e38ee5b8.31567336', '2026-09-28 20:27:15', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #88 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '28321c3d3ae102b1d11ea8c28d428179d4e1f3cfd040f9ad96d3e834487eb50a', '320fd9a4180f9d13e966649501f7ae04a8c51d643c9a85b209dde7909c1f4a0e');
+INSERT INTO public.system_audit_log VALUES ('log_6abb05ea73a803.26161171', '2026-09-28 20:27:22', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #18 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '320fd9a4180f9d13e966649501f7ae04a8c51d643c9a85b209dde7909c1f4a0e', '792ba6bc94e8a28c6d1bbb7a5eae3477596bb8d6ed5060a064f71417efc5c602');
+INSERT INTO public.system_audit_log VALUES ('log_6abb05f1d9db53.33150006', '2026-09-28 20:27:29', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #166 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', '792ba6bc94e8a28c6d1bbb7a5eae3477596bb8d6ed5060a064f71417efc5c602', '7df5369e612baa866ff3d99eeeaebb4a915d29cd17322d299e6276aeef507b6b');
+INSERT INTO public.system_audit_log VALUES ('log_6abb07736e75a9.88129164', '2026-09-28 20:33:55', 'WARNING', 'Autenticacion', 'Login Fallido', 'Contraseña incorrecta para el usuario ''Sixsevenaldo González'' (C.I: V-67).', 'Anónimo / Sistema', '100.112.191.78', '7df5369e612baa866ff3d99eeeaebb4a915d29cd17322d299e6276aeef507b6b', '0900c7f4a44f4f3ca39d2d623d74e23eaf578061a2085321571fb995d9f09e89');
+INSERT INTO public.system_audit_log VALUES ('log_6abb077e06a006.70628736', '2026-09-28 20:34:06', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Sixsevenaldo González'' (C.I: V-67, Rol: Estudiantes).', 'Sixsevenaldo González (ID: 14)', '100.112.191.78', '0900c7f4a44f4f3ca39d2d623d74e23eaf578061a2085321571fb995d9f09e89', '559fe6ca276b4d83f7f7d04fb84388d68bfa20e7965350febc987ddf0b4c44ad');
+INSERT INTO public.system_audit_log VALUES ('log_6abb07c4057fe2.81971896', '2026-09-28 20:35:16', 'INFO', 'Autenticacion', 'Cierre de Sesión', 'El usuario ''Sixsevenaldo González'' (ID: 14) cerró su sesión voluntariamente.', 'Sixsevenaldo González (ID: 14)', '100.112.191.78', '559fe6ca276b4d83f7f7d04fb84388d68bfa20e7965350febc987ddf0b4c44ad', '8b08e8650f3e5c2f1d8f11b4d12668b1999fd9fb12a45c2a1184813aed6ffda1');
+INSERT INTO public.system_audit_log VALUES ('log_6abb07e14e4d41.87133949', '2026-09-28 20:35:45', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '100.112.191.78', '8b08e8650f3e5c2f1d8f11b4d12668b1999fd9fb12a45c2a1184813aed6ffda1', 'f4de80d073a595d21ae33341a43c2a95ca291b2ba6b1566908579084924d0dcb');
+INSERT INTO public.system_audit_log VALUES ('log_6abb087b125270.87635045', '2026-09-28 20:38:19', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #167 eliminado del repositorio.', 'Juan Salcedo (ID: 23)', '100.110.129.56', 'f4de80d073a595d21ae33341a43c2a95ca291b2ba6b1566908579084924d0dcb', '42378b5a70a6b6dafcfd9dc18f1cae9750693a1d71d7fcb63b408ebc4169c1e4');
+INSERT INTO public.system_audit_log VALUES ('log_6abb0cc1256629.36224343', '2026-09-28 20:56:33', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Juan Salcedo'' (C.I: V-31008131, Rol: Super Administrador).', 'Juan Salcedo (ID: 23)', '100.110.129.56', '42378b5a70a6b6dafcfd9dc18f1cae9750693a1d71d7fcb63b408ebc4169c1e4', '21eae3053b2241b5989c6a5c5f18668243fa26f4ed9d0df36df70def3944c892');
+INSERT INTO public.system_audit_log VALUES ('log_6abb0cea4ba7f9.74245411', '2026-09-28 20:57:14', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '127.0.0.1', '21eae3053b2241b5989c6a5c5f18668243fa26f4ed9d0df36df70def3944c892', '19443f0345a4f9e2074b0c4ff3d235126dbeea6ebfa56399c85f52aecaba3941');
+INSERT INTO public.system_audit_log VALUES ('log_6abb1575959d51.11147653', '2026-09-28 21:33:41', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #172 eliminado del repositorio.', 'Miguel González (ID: 7)', '100.112.191.78', '19443f0345a4f9e2074b0c4ff3d235126dbeea6ebfa56399c85f52aecaba3941', '3c27d7b5c9db71fb1de5ce85187b11afc5a575bc541bae6083e51f32aa87897d');
+INSERT INTO public.system_audit_log VALUES ('log_6abb15786aef28.22783400', '2026-09-28 21:33:44', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #171 eliminado del repositorio.', 'Miguel González (ID: 7)', '100.112.191.78', '3c27d7b5c9db71fb1de5ce85187b11afc5a575bc541bae6083e51f32aa87897d', '7d3dc2d53f5c717733cff53ceab713a9869d50d4f8ba9f92e1313c24ac8a14f6');
+INSERT INTO public.system_audit_log VALUES ('log_6abb157ad51dd1.25878814', '2026-09-28 21:33:46', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #170 eliminado del repositorio.', 'Miguel González (ID: 7)', '100.112.191.78', '7d3dc2d53f5c717733cff53ceab713a9869d50d4f8ba9f92e1313c24ac8a14f6', '3010fa9c34ba23e00ce867d22d611bb3efb5c06eace2d090c5922150977802aa');
+INSERT INTO public.system_audit_log VALUES ('log_6abb157e22f957.13458377', '2026-09-28 21:33:50', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #169 eliminado del repositorio.', 'Miguel González (ID: 7)', '100.112.191.78', '3010fa9c34ba23e00ce867d22d611bb3efb5c06eace2d090c5922150977802aa', '5b085e44bc688a61c537b08584a3198b46995b00d0ac47b6e9d4bb6b347447b2');
+INSERT INTO public.system_audit_log VALUES ('log_6abb15808e5019.00997995', '2026-09-28 21:33:52', 'WARNING', 'RepositorioPST', 'Eliminar Proyecto', 'Proyecto PST ID #168 eliminado del repositorio.', 'Miguel González (ID: 7)', '100.112.191.78', '5b085e44bc688a61c537b08584a3198b46995b00d0ac47b6e9d4bb6b347447b2', '6e99bc6f045a0539ec89620699ddae79bcb070c87548dac99a3425e522666744');
+INSERT INTO public.system_audit_log VALUES ('log_6abb180a913611.11719822', '2026-09-28 21:44:42', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '127.0.0.1', '6e99bc6f045a0539ec89620699ddae79bcb070c87548dac99a3425e522666744', '3e50a917368f8375c76e1f056ae7824014c58fa22bba1dfee6d39f49289e5a26');
+INSERT INTO public.system_audit_log VALUES ('log_6abb18213a7fa5.66840799', '2026-09-28 21:45:05', 'INFO', 'SuperAdmin', 'Crear Usuario', 'Nuevo usuario registrado: Jesus (C.I: V-30866991)', 'Miguel González (ID: 7)', '100.112.191.78', '3e50a917368f8375c76e1f056ae7824014c58fa22bba1dfee6d39f49289e5a26', '6a127c68a6481cc8ec585800698e8899ca021e067e432a368b8cb30a331c3ea7');
+INSERT INTO public.system_audit_log VALUES ('log_6abb1835d49645.19130538', '2026-09-28 21:45:25', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Jesus'' (C.I: V-30866991, Rol: Super Administrador).', 'Jesus (ID: 25)', '100.75.217.103', '6a127c68a6481cc8ec585800698e8899ca021e067e432a368b8cb30a331c3ea7', 'cc93c46a27ec8ca53cd51de5507b244225e6cb17fef001ef51f2d065328a1643');
+INSERT INTO public.system_audit_log VALUES ('log_6abb1e88ed4ac0.44392050', '2026-09-28 22:12:24', 'WARNING', 'SuperAdmin', 'Restaurar BD', 'Base de datos restaurada exitosamente.', 'Miguel González (ID: 7)', '100.76.167.24', 'cc93c46a27ec8ca53cd51de5507b244225e6cb17fef001ef51f2d065328a1643', 'fcb7a732749eed4cca9148d500db5ecff8b83ab06a0fd8a02566073576eb18f6');
+INSERT INTO public.system_audit_log VALUES ('log_6abb1fb2b52af9.39609563', '2026-09-28 22:17:22', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '100.112.191.78', 'fcb7a732749eed4cca9148d500db5ecff8b83ab06a0fd8a02566073576eb18f6', 'd8dcdf393f37a5e70b8cfa13e8b742254e718e1ef548f0fff5c137e0d8ddd53e');
+INSERT INTO public.system_audit_log VALUES ('log_6abb1fe9bc3962.71172592', '2026-09-28 22:18:17', 'INFO', 'RepositorioPST', 'Modificar Proyecto', 'Proyecto PST ID #177 modificado exitosamente: ''Sistema de Optimización basado en Algoritmos Genéticos para la Gestión de Horarios del PNFI de la UPTTMBI, Núcleo La Beatriz''.', 'Miguel González (ID: 7)', '100.112.191.78', 'd8dcdf393f37a5e70b8cfa13e8b742254e718e1ef548f0fff5c137e0d8ddd53e', '67aa1af2535495e3e6b3dc049edc9fa6c2cf7ba072865e0b5ddd402396e8c736');
+INSERT INTO public.system_audit_log VALUES ('log_6abb1ff0a06b75.24642697', '2026-09-28 22:18:24', 'INFO', 'RepositorioPST', 'Modificar Proyecto', 'Proyecto PST ID #177 modificado exitosamente: ''Sistema de Optimización basado en Algoritmos Genéticos para la Gestión de Horarios del PNFI de la UPTTMBI, Núcleo La Beatriz''.', 'Miguel González (ID: 7)', '100.112.191.78', '67aa1af2535495e3e6b3dc049edc9fa6c2cf7ba072865e0b5ddd402396e8c736', '308b4778f7613ecab48a5f4704cf61991ae6d0717e9930b04a83acbf68c08447');
+INSERT INTO public.system_audit_log VALUES ('log_6abb1ff781ff08.50481175', '2026-09-28 22:18:31', 'INFO', 'RepositorioPST', 'Modificar Proyecto', 'Proyecto PST ID #177 modificado exitosamente: ''Sistema de Optimización basado en Algoritmos Genéticos para la Gestión de Horarios del PNFI de la UPTTMBI, Núcleo La Beatriz''.', 'Miguel González (ID: 7)', '100.112.191.78', '308b4778f7613ecab48a5f4704cf61991ae6d0717e9930b04a83acbf68c08447', '0e6629ed2f4a5056d6868c1b6b178a622e7e530406c8cf56e13afe2a763868c0');
+INSERT INTO public.system_audit_log VALUES ('log_6abb1ff7998616.13281156', '2026-09-28 22:18:31', 'ERROR', 'SuperAdmin', 'Ejecución Tarea Programada', 'Tarea ''Generar Embeddings Semánticos'': ERROR (68.24ms): Error de ejecución CLI (Código 1).', 'Miguel González (ID: 7)', '127.0.0.1', '0e6629ed2f4a5056d6868c1b6b178a622e7e530406c8cf56e13afe2a763868c0', 'bf242ee9a40f40470016522bd43e9dfc45d72fd7d813f4fd4f7557dfda578985');
+INSERT INTO public.system_audit_log VALUES ('log_6abb1ffe620145.59508790', '2026-09-28 22:18:38', 'ERROR', 'SuperAdmin', 'Ejecución Tarea Programada', 'Tarea ''Generar Embeddings Semánticos'': ERROR (66.43ms): Error de ejecución CLI (Código 1).', 'Miguel González (ID: 7)', '127.0.0.1', 'bf242ee9a40f40470016522bd43e9dfc45d72fd7d813f4fd4f7557dfda578985', '215b4e7d2f273e8755b86a85d9ac98f0359b7674b50ba577c5f28be1e4f2fca7');
+INSERT INTO public.system_audit_log VALUES ('log_6abb21113f7633.14936913', '2026-09-28 22:23:13', 'INFO', 'SuperAdmin', 'Guardar Tarea Programada', 'Tarea ''Generar Embeddings Semánticos'' (tarea_1790648593_320) guardada correctamente.', 'Miguel González (ID: 7)', '127.0.0.1', '215b4e7d2f273e8755b86a85d9ac98f0359b7674b50ba577c5f28be1e4f2fca7', '359d37ed2f398c54e3506e95a096d568e5b44846fcc98ec12723c1622d7871f0');
+INSERT INTO public.system_audit_log VALUES ('log_6abb2113c94400.91340721', '2026-09-28 22:23:15', 'ERROR', 'SuperAdmin', 'Ejecución Tarea Programada', 'Tarea ''Generar Embeddings Semánticos'': ERROR (68.6ms): Error de ejecución CLI (Código 1).', 'Miguel González (ID: 7)', '127.0.0.1', '359d37ed2f398c54e3506e95a096d568e5b44846fcc98ec12723c1622d7871f0', 'e3c621172a6b5cb9f28dbde59597c68c078fb0eab61d52ad2983b1a93895aa37');
+INSERT INTO public.system_audit_log VALUES ('log_6abb216fc2ca61.41716310', '2026-09-28 22:24:47', 'ERROR', 'SuperAdmin', 'Ejecución Tarea Programada', 'Tarea ''Generar Embeddings Semánticos'': ERROR (67.92ms): Error de ejecución CLI (Código 1).', 'Miguel González (ID: 7)', '127.0.0.1', 'e3c621172a6b5cb9f28dbde59597c68c078fb0eab61d52ad2983b1a93895aa37', 'c04e1635c131b4af0390523f2b0f172c40b988a69eea94a6a22f9b7dfe1ce1bb');
+INSERT INTO public.system_audit_log VALUES ('log_6abb22427b8d12.10949619', '2026-09-28 22:28:18', 'ERROR', 'SuperAdmin', 'Ejecución Tarea Programada', 'Tarea ''Generar Embeddings Semánticos'': ERROR (71.59ms): Error de ejecución CLI (Código 1).', 'Miguel González (ID: 7)', '127.0.0.1', 'c04e1635c131b4af0390523f2b0f172c40b988a69eea94a6a22f9b7dfe1ce1bb', '9fb60dbd5e66c8141c3e8e294738f2d696649288a820480a80cc46025d6f4ee4');
+INSERT INTO public.system_audit_log VALUES ('log_6abb224f81a916.97040820', '2026-09-28 22:28:31', 'INFO', 'SuperAdmin', 'Guardar Tarea Programada', 'Tarea ''Generar Embeddings Semánticos'' (tarea_1790648593_320) guardada correctamente.', 'Miguel González (ID: 7)', '127.0.0.1', '9fb60dbd5e66c8141c3e8e294738f2d696649288a820480a80cc46025d6f4ee4', 'b92040fad00d35f9dc0fcdd66d657dffa4d708c6f0c6101f4dbfa6ae23167310');
+INSERT INTO public.system_audit_log VALUES ('log_6abb22515f7d25.23919364', '2026-09-28 22:28:33', 'ERROR', 'SuperAdmin', 'Ejecución Tarea Programada', 'Tarea ''Generar Embeddings Semánticos'': ERROR (69.09ms): Error de ejecución CLI (Código 1).', 'Miguel González (ID: 7)', '127.0.0.1', 'b92040fad00d35f9dc0fcdd66d657dffa4d708c6f0c6101f4dbfa6ae23167310', '57f40af1dc3276c352f17ee25ac432d26258a4ae2368cd00dcddb1939854e0a9');
+INSERT INTO public.system_audit_log VALUES ('log_6abb22fcc75709.48506634', '2026-09-28 22:31:24', 'ERROR', 'SuperAdmin', 'Ejecución Tarea Programada', 'Tarea ''Generar Embeddings Semánticos'': ERROR (69.04ms): Error de ejecución CLI (Código 1).', 'Miguel González (ID: 7)', '127.0.0.1', '57f40af1dc3276c352f17ee25ac432d26258a4ae2368cd00dcddb1939854e0a9', 'b91a419996f59ef934ae3ae9f92d4de8bfee97dd37a6458195bb26875230d3cf');
+INSERT INTO public.system_audit_log VALUES ('log_6abb230e44ef25.74918720', '2026-09-28 22:31:42', 'INFO', 'SuperAdmin', 'Guardar Tarea Programada', 'Tarea ''Generar Embeddings Semánticos'' (tarea_1790648593_320) guardada correctamente.', 'Miguel González (ID: 7)', '127.0.0.1', 'b91a419996f59ef934ae3ae9f92d4de8bfee97dd37a6458195bb26875230d3cf', 'fd96e83053ec6912ee96f0ffaa56c7c68ae445d034210fcd789152bc814b3e85');
+INSERT INTO public.system_audit_log VALUES ('log_6abb230fdbeb62.04164479', '2026-09-28 22:31:43', 'ERROR', 'SuperAdmin', 'Ejecución Tarea Programada', 'Tarea ''Generar Embeddings Semánticos'': ERROR (67.47ms): Error de ejecución CLI (Código 1).', 'Miguel González (ID: 7)', '127.0.0.1', 'fd96e83053ec6912ee96f0ffaa56c7c68ae445d034210fcd789152bc814b3e85', '6acc2bf8546e00ddd74d432245e04a54ff2c6c0b7c810a12338b664f82f9dc01');
+INSERT INTO public.system_audit_log VALUES ('log_6abb2317b9b6e0.57624818', '2026-09-28 22:31:51', 'ERROR', 'SuperAdmin', 'Ejecución Tarea Programada', 'Tarea ''Generar Embeddings Semánticos'': ERROR (70.41ms): Error de ejecución CLI (Código 1).', 'Miguel González (ID: 7)', '127.0.0.1', '6acc2bf8546e00ddd74d432245e04a54ff2c6c0b7c810a12338b664f82f9dc01', '9a61462659bd5e8768008b65cb2f142011636a33d188377607c4228b19b683e4');
+INSERT INTO public.system_audit_log VALUES ('log_6abb2428b18566.55565843', '2026-09-28 22:36:24', 'INFO', 'Autenticacion', 'Cierre de Sesión', 'El usuario ''Miguel González'' (ID: 7) cerró su sesión voluntariamente.', 'Miguel González (ID: 7)', '127.0.0.1', '9a61462659bd5e8768008b65cb2f142011636a33d188377607c4228b19b683e4', '32248fc427a32a5de370bb595de9a501b1643e1599ddf6585cfb9c2816564b37');
+INSERT INTO public.system_audit_log VALUES ('log_6abb2432969160.98463581', '2026-09-28 22:36:34', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '127.0.0.1', '32248fc427a32a5de370bb595de9a501b1643e1599ddf6585cfb9c2816564b37', '56c025155b9b3ce4d9ec80fe77d5ff658042478a5f602c4cb536c78441e57ee7');
+INSERT INTO public.system_audit_log VALUES ('log_6abb24408883a6.00989965', '2026-09-28 22:36:48', 'INFO', 'SuperAdmin', 'Guardar Tarea Programada', 'Tarea ''Generar Embeddings Semánticos'' (tarea_1790648593_320) guardada correctamente.', 'Miguel González (ID: 7)', '127.0.0.1', '56c025155b9b3ce4d9ec80fe77d5ff658042478a5f602c4cb536c78441e57ee7', '57cefdb0197be7cc80af1b97fdd3b29a44f70276293cb165a4805b980cc8fd5c');
+INSERT INTO public.system_audit_log VALUES ('log_6abb24454953b9.71585116', '2026-09-28 22:36:53', 'ERROR', 'SuperAdmin', 'Ejecución Tarea Programada', 'Tarea ''Generar Embeddings Semánticos'': ERROR (65.04ms): Error de ejecución CLI (Código 1).', 'Miguel González (ID: 7)', '127.0.0.1', '57cefdb0197be7cc80af1b97fdd3b29a44f70276293cb165a4805b980cc8fd5c', 'a39685ec3c96a52d8771a1426269aff15c5255612b9beea0624aa54048155a16');
+INSERT INTO public.system_audit_log VALUES ('log_6abb2b902aed16.30642795', '2026-09-28 23:08:00', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '100.76.167.24', 'a39685ec3c96a52d8771a1426269aff15c5255612b9beea0624aa54048155a16', '24290be7401ab588f280ab60092c6f55027320145ee158ab160f8138f893787c');
+INSERT INTO public.system_audit_log VALUES ('log_6abb2cd8e59856.58974524', '2026-09-28 23:13:28', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '127.0.0.1', '24290be7401ab588f280ab60092c6f55027320145ee158ab160f8138f893787c', 'cfdfd20c9d82c395af33927fc1e99a19bebefee918a03bad990c3c910a8f80be');
+INSERT INTO public.system_audit_log VALUES ('log_6abb2ce8f37f29.85386586', '2026-09-28 23:13:44', 'INFO', 'SuperAdmin', 'Guardar Tarea Programada', 'Tarea ''Generar Embeddings Semánticos'' (tarea_1790648593_320) guardada correctamente.', 'Miguel González (ID: 7)', '127.0.0.1', 'cfdfd20c9d82c395af33927fc1e99a19bebefee918a03bad990c3c910a8f80be', '5ec719623cc37de3488394ef027721f868c41cb692963b4a703798e14ef2fe2b');
+INSERT INTO public.system_audit_log VALUES ('log_6abb2ceb57b360.50459065', '2026-09-28 23:13:47', 'INFO', 'SuperAdmin', 'Ejecución Tarea Programada', 'Tarea ''Generar Embeddings Semánticos'': ÉXITO (67.38ms): Comando ejecutado con éxito (Código 0).', 'Miguel González (ID: 7)', '127.0.0.1', '5ec719623cc37de3488394ef027721f868c41cb692963b4a703798e14ef2fe2b', '072baa1163e11b4d176d0cfa7caa2712dabcdbca4dee9b486ff43d9612e330ae');
 
 
 --
--- Data for Name: telemetria_cache; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: telemetria_cache; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
-INSERT INTO public.telemetria_cache VALUES (1, '{"timestamp": 1790308725, "storage_mb": 32.91, "files_count": 64}');
+INSERT INTO public.telemetria_cache VALUES (1, '{"timestamp": 1790651611, "storage_mb": 68.95, "files_count": 91}');
 
 
 --
--- Data for Name: tipo_recurso; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: tipo_recurso; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.tipo_recurso VALUES (1, 'PST / Trabajo de Grado', 'Proyectos Socio-Tecnológicos y Tesis');
@@ -3210,7 +3180,7 @@ INSERT INTO public.tipo_recurso VALUES (3, 'Material de Apoyo / Didáctico', 'Re
 
 
 --
--- Data for Name: tipo_tutor; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: tipo_tutor; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.tipo_tutor VALUES (1, 'Director', 'Director principal del proyecto');
@@ -3220,7 +3190,7 @@ INSERT INTO public.tipo_tutor VALUES (4, 'Tutor Comunitario', 'Representante de 
 
 
 --
--- Data for Name: tutores; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: tutores; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.tutores VALUES (1, 'Lando', 'V-12345678');
@@ -3266,7 +3236,7 @@ INSERT INTO public.tutores VALUES (45, 'Ramón Santander', NULL);
 
 
 --
--- Data for Name: usuarios; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: usuarios; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 INSERT INTO public.usuarios VALUES (2, 'lando', 'lando@gmail.com', '22222222', '$2y$10$o0Uk8V6gzXNSW/EZBWvd1OoC7O6UzrU3LRbDMIqxYDou2KJGRXdUa', 2, true, NULL, NULL, NULL, false, NULL);
@@ -3290,198 +3260,201 @@ INSERT INTO public.usuarios VALUES (19, '[Archivado] e', '7@gmail.com_deleted_17
 INSERT INTO public.usuarios VALUES (20, '[Archivado] Vegetas', 'vegeta@gmail.com_deleted_1790281482', '777_x0281482', '$2y$10$w2zZeID5cQrR1IScn2UgK.tXFpoJcBEqKCDTKgjhoAyymy23QyI9m', 3, false, NULL, NULL, NULL, true, NULL);
 INSERT INTO public.usuarios VALUES (21, '[Archivado] Vegeta', 'vegeta@gmail.com_deleted_1790300648', '777_x0300648', '$2y$12$mWi.6f8OA5ga6WIdadYWF.AlGpkU.KuIVeKfbBIYfNXulrYHDTOr.', 3, false, NULL, NULL, NULL, false, NULL);
 INSERT INTO public.usuarios VALUES (22, 'Vegeta', 'vegeta@gmail.com', '777', '$2y$12$/cm17kDcfIszqQl6g9JRT.O73Cr4kRTHLrgIlZsa9KK8HD.m0ftpi', 4, true, NULL, NULL, NULL, false, NULL);
-INSERT INTO public.usuarios VALUES (17, 'Andrus', 'andrusramirez2020@gmail.com', '30469331', '$2y$10$SFowO4NOxSgKqx35qYr7iOiJU2PJ6hJ.uTO2zdxSSXMQjX64sRwiu', 2, true, NULL, NULL, NULL, true, NULL);
+INSERT INTO public.usuarios VALUES (24, 'Ale Rojo', 'josealejandrorojo48@gmail.com', 'V-30536364', '$2y$12$t8kvEKWReYJR2OpVSc6myO6lEtKRJ6e5gIPMhXWpIpGewWot/aqVy', 1, true, NULL, NULL, NULL, false, NULL);
+INSERT INTO public.usuarios VALUES (17, 'Andrus', 'andrusramirez2020@gmail.com', 'V-30469331', '$2y$10$SFowO4NOxSgKqx35qYr7iOiJU2PJ6hJ.uTO2zdxSSXMQjX64sRwiu', 1, true, NULL, NULL, NULL, true, NULL);
+INSERT INTO public.usuarios VALUES (23, 'Juan Salcedo', 'juanxzall0701@gmail.com', 'V-31008131', '$2y$12$bCld3rNyhaXq7Kp7Qc79EeYpjdRJTCrjo5sT6fjC5..Z6/6VvesF2', 1, true, NULL, NULL, NULL, false, 'd446d4de1b48e4fc6673b0fc97a9eb8bb62a90cd36c2cb484bd8913a030906e4');
+INSERT INTO public.usuarios VALUES (25, 'Jesus', 'jesusmontilla23bdv@gmail.com', 'V-30866991', '$2y$12$d1AmR.8ALWa5qw.zTxtoU.J3oo2JBr0CwpEBrihGOpH/n2HdEgNVi', 1, true, NULL, NULL, NULL, false, NULL);
 
 
 --
--- Data for Name: visitantes; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-
-
---
--- Data for Name: waf_rate_limiter; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: visitantes; Type: TABLE DATA; Schema: public; Owner: miki
 --
 
 
 
 --
--- Name: accesos_recursos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Data for Name: waf_rate_limiter; Type: TABLE DATA; Schema: public; Owner: miki
+--
+
+
+
+--
+-- Name: accesos_recursos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
 SELECT pg_catalog.setval('public.accesos_recursos_id_seq', 1, true);
 
 
 --
--- Name: auditoria_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: auditoria_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
-SELECT pg_catalog.setval('public.auditoria_id_seq', 361, true);
-
-
---
--- Name: autores_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.autores_id_seq', 118, true);
+SELECT pg_catalog.setval('public.auditoria_id_seq', 444, true);
 
 
 --
--- Name: carreras_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: autores_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
+--
+
+SELECT pg_catalog.setval('public.autores_id_seq', 122, true);
+
+
+--
+-- Name: carreras_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
 SELECT pg_catalog.setval('public.carreras_id_seq', 5, true);
 
 
 --
--- Name: categorias_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: categorias_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
 SELECT pg_catalog.setval('public.categorias_id_seq', 19, true);
 
 
 --
--- Name: cursos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: cursos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
 SELECT pg_catalog.setval('public.cursos_id_seq', 7, true);
 
 
 --
--- Name: dimensiones_operativas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: dimensiones_operativas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
 SELECT pg_catalog.setval('public.dimensiones_operativas_id_seq', 24, true);
 
 
 --
--- Name: editoriales_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: editoriales_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
 SELECT pg_catalog.setval('public.editoriales_id_seq', 8, true);
 
 
 --
--- Name: etiquetas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: etiquetas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
 SELECT pg_catalog.setval('public.etiquetas_id_seq', 17, true);
 
 
 --
--- Name: historico_versiones_pst_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: historico_versiones_pst_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
 SELECT pg_catalog.setval('public.historico_versiones_pst_id_seq', 1, true);
 
 
 --
--- Name: investigaciones_ofertadas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: investigaciones_ofertadas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
 SELECT pg_catalog.setval('public.investigaciones_ofertadas_id_seq', 3, true);
 
 
 --
--- Name: lineas_investigacion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: lineas_investigacion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
 SELECT pg_catalog.setval('public.lineas_investigacion_id_seq', 11, true);
 
 
 --
--- Name: notificaciones_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: notificaciones_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
 SELECT pg_catalog.setval('public.notificaciones_id_seq', 6, true);
 
 
 --
--- Name: password_resets_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: password_resets_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
 SELECT pg_catalog.setval('public.password_resets_id_seq', 1, true);
 
 
 --
--- Name: postulaciones_estudiantes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: postulaciones_estudiantes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
 SELECT pg_catalog.setval('public.postulaciones_estudiantes_id_seq', 2, true);
 
 
 --
--- Name: privilegios_privilegio_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: privilegios_privilegio_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
 SELECT pg_catalog.setval('public.privilegios_privilegio_id_seq', 12, true);
 
 
 --
--- Name: propuestas_empresa_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: propuestas_empresa_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
 SELECT pg_catalog.setval('public.propuestas_empresa_id_seq', 16, true);
 
 
 --
--- Name: recursos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: recursos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
-SELECT pg_catalog.setval('public.recursos_id_seq', 166, true);
-
-
---
--- Name: registro_actividad_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.registro_actividad_id_seq', 6, true);
+SELECT pg_catalog.setval('public.recursos_id_seq', 181, true);
 
 
 --
--- Name: roles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: registro_actividad_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
+--
+
+SELECT pg_catalog.setval('public.registro_actividad_id_seq', 9, true);
+
+
+--
+-- Name: roles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
 SELECT pg_catalog.setval('public.roles_id_seq', 5, true);
 
 
 --
--- Name: tipo_recurso_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: tipo_recurso_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
 SELECT pg_catalog.setval('public.tipo_recurso_id_seq', 3, true);
 
 
 --
--- Name: tipo_tutor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: tipo_tutor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
 SELECT pg_catalog.setval('public.tipo_tutor_id_seq', 4, true);
 
 
 --
--- Name: tutores_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: tutores_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
 SELECT pg_catalog.setval('public.tutores_id_seq', 45, true);
 
 
 --
--- Name: usuarios_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: usuarios_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
-SELECT pg_catalog.setval('public.usuarios_id_seq', 22, true);
+SELECT pg_catalog.setval('public.usuarios_id_seq', 25, true);
 
 
 --
--- Name: visitantes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: visitantes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: miki
 --
 
 SELECT pg_catalog.setval('public.visitantes_id_seq', 1, true);
 
 
 --
--- Name: accesos_recursos accesos_recursos_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: accesos_recursos accesos_recursos_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.accesos_recursos
@@ -3489,7 +3462,7 @@ ALTER TABLE ONLY public.accesos_recursos
 
 
 --
--- Name: auditoria auditoria_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: auditoria auditoria_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.auditoria
@@ -3497,7 +3470,7 @@ ALTER TABLE ONLY public.auditoria
 
 
 --
--- Name: autores autores_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: autores autores_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.autores
@@ -3505,7 +3478,7 @@ ALTER TABLE ONLY public.autores
 
 
 --
--- Name: carreras carreras_nombre_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: carreras carreras_nombre_key; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.carreras
@@ -3513,7 +3486,7 @@ ALTER TABLE ONLY public.carreras
 
 
 --
--- Name: carreras carreras_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: carreras carreras_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.carreras
@@ -3521,7 +3494,7 @@ ALTER TABLE ONLY public.carreras
 
 
 --
--- Name: categorias categorias_nombre_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: categorias categorias_nombre_key; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.categorias
@@ -3529,7 +3502,7 @@ ALTER TABLE ONLY public.categorias
 
 
 --
--- Name: categorias categorias_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: categorias categorias_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.categorias
@@ -3537,7 +3510,7 @@ ALTER TABLE ONLY public.categorias
 
 
 --
--- Name: cursos cursos_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: cursos cursos_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.cursos
@@ -3545,7 +3518,7 @@ ALTER TABLE ONLY public.cursos
 
 
 --
--- Name: cursos cursos_slug_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: cursos cursos_slug_key; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.cursos
@@ -3553,7 +3526,7 @@ ALTER TABLE ONLY public.cursos
 
 
 --
--- Name: detalles_investigaciones detalles_investigaciones_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: detalles_investigaciones detalles_investigaciones_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.detalles_investigaciones
@@ -3561,7 +3534,7 @@ ALTER TABLE ONLY public.detalles_investigaciones
 
 
 --
--- Name: detalles_proyectos detalles_proyectos_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: detalles_proyectos detalles_proyectos_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.detalles_proyectos
@@ -3569,7 +3542,7 @@ ALTER TABLE ONLY public.detalles_proyectos
 
 
 --
--- Name: detalles_articulos detalles_revistas_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: detalles_articulos detalles_revistas_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.detalles_articulos
@@ -3577,7 +3550,7 @@ ALTER TABLE ONLY public.detalles_articulos
 
 
 --
--- Name: dimensiones_operativas dimensiones_operativas_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: dimensiones_operativas dimensiones_operativas_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.dimensiones_operativas
@@ -3585,7 +3558,7 @@ ALTER TABLE ONLY public.dimensiones_operativas
 
 
 --
--- Name: editoriales editoriales_nombre_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: editoriales editoriales_nombre_key; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.editoriales
@@ -3593,7 +3566,7 @@ ALTER TABLE ONLY public.editoriales
 
 
 --
--- Name: editoriales editoriales_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: editoriales editoriales_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.editoriales
@@ -3601,7 +3574,7 @@ ALTER TABLE ONLY public.editoriales
 
 
 --
--- Name: etiquetas etiquetas_nombre_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: etiquetas etiquetas_nombre_key; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.etiquetas
@@ -3609,7 +3582,7 @@ ALTER TABLE ONLY public.etiquetas
 
 
 --
--- Name: etiquetas etiquetas_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: etiquetas etiquetas_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.etiquetas
@@ -3617,7 +3590,7 @@ ALTER TABLE ONLY public.etiquetas
 
 
 --
--- Name: historico_versiones_pst historico_versiones_pst_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: historico_versiones_pst historico_versiones_pst_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.historico_versiones_pst
@@ -3625,7 +3598,7 @@ ALTER TABLE ONLY public.historico_versiones_pst
 
 
 --
--- Name: investigaciones_ofertadas investigaciones_ofertadas_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: investigaciones_ofertadas investigaciones_ofertadas_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.investigaciones_ofertadas
@@ -3633,7 +3606,7 @@ ALTER TABLE ONLY public.investigaciones_ofertadas
 
 
 --
--- Name: lineas_investigacion lineas_investigacion_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: lineas_investigacion lineas_investigacion_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.lineas_investigacion
@@ -3641,7 +3614,7 @@ ALTER TABLE ONLY public.lineas_investigacion
 
 
 --
--- Name: matriz_rbac matriz_rbac_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: matriz_rbac matriz_rbac_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.matriz_rbac
@@ -3649,7 +3622,7 @@ ALTER TABLE ONLY public.matriz_rbac
 
 
 --
--- Name: notificaciones notificaciones_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: notificaciones notificaciones_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.notificaciones
@@ -3657,7 +3630,7 @@ ALTER TABLE ONLY public.notificaciones
 
 
 --
--- Name: password_resets password_resets_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: password_resets password_resets_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.password_resets
@@ -3665,7 +3638,7 @@ ALTER TABLE ONLY public.password_resets
 
 
 --
--- Name: postulaciones_estudiantes postulaciones_estudiantes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: postulaciones_estudiantes postulaciones_estudiantes_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.postulaciones_estudiantes
@@ -3673,7 +3646,7 @@ ALTER TABLE ONLY public.postulaciones_estudiantes
 
 
 --
--- Name: preferencias_usuario preferencias_usuario_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: preferencias_usuario preferencias_usuario_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.preferencias_usuario
@@ -3681,7 +3654,7 @@ ALTER TABLE ONLY public.preferencias_usuario
 
 
 --
--- Name: propuestas_empresa propuestas_empresa_codigo_seguimiento_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: propuestas_empresa propuestas_empresa_codigo_seguimiento_key; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.propuestas_empresa
@@ -3689,7 +3662,7 @@ ALTER TABLE ONLY public.propuestas_empresa
 
 
 --
--- Name: propuestas_empresa propuestas_empresa_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: propuestas_empresa propuestas_empresa_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.propuestas_empresa
@@ -3697,7 +3670,7 @@ ALTER TABLE ONLY public.propuestas_empresa
 
 
 --
--- Name: proyecto_tutores proyecto_tutores_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: proyecto_tutores proyecto_tutores_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.proyecto_tutores
@@ -3705,7 +3678,7 @@ ALTER TABLE ONLY public.proyecto_tutores
 
 
 --
--- Name: recurso_autores recurso_autores_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: recurso_autores recurso_autores_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.recurso_autores
@@ -3713,7 +3686,7 @@ ALTER TABLE ONLY public.recurso_autores
 
 
 --
--- Name: recurso_categorias recurso_categorias_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: recurso_categorias recurso_categorias_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.recurso_categorias
@@ -3721,7 +3694,7 @@ ALTER TABLE ONLY public.recurso_categorias
 
 
 --
--- Name: recurso_clasificaciones recurso_clasificaciones_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: recurso_clasificaciones recurso_clasificaciones_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.recurso_clasificaciones
@@ -3729,7 +3702,7 @@ ALTER TABLE ONLY public.recurso_clasificaciones
 
 
 --
--- Name: recurso_etiquetas recurso_etiquetas_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: recurso_etiquetas recurso_etiquetas_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.recurso_etiquetas
@@ -3737,7 +3710,7 @@ ALTER TABLE ONLY public.recurso_etiquetas
 
 
 --
--- Name: recursos recursos_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: recursos recursos_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.recursos
@@ -3745,7 +3718,7 @@ ALTER TABLE ONLY public.recursos
 
 
 --
--- Name: registro_actividad registro_actividad_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: registro_actividad registro_actividad_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.registro_actividad
@@ -3753,7 +3726,7 @@ ALTER TABLE ONLY public.registro_actividad
 
 
 --
--- Name: roles roles_nombre_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: roles roles_nombre_key; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.roles
@@ -3761,7 +3734,7 @@ ALTER TABLE ONLY public.roles
 
 
 --
--- Name: roles roles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: roles roles_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.roles
@@ -3769,7 +3742,7 @@ ALTER TABLE ONLY public.roles
 
 
 --
--- Name: system_audit_log system_audit_log_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: system_audit_log system_audit_log_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.system_audit_log
@@ -3777,7 +3750,7 @@ ALTER TABLE ONLY public.system_audit_log
 
 
 --
--- Name: telemetria_cache telemetria_cache_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: telemetria_cache telemetria_cache_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.telemetria_cache
@@ -3785,7 +3758,7 @@ ALTER TABLE ONLY public.telemetria_cache
 
 
 --
--- Name: tipo_recurso tipo_recurso_nombre_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: tipo_recurso tipo_recurso_nombre_key; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.tipo_recurso
@@ -3793,7 +3766,7 @@ ALTER TABLE ONLY public.tipo_recurso
 
 
 --
--- Name: tipo_recurso tipo_recurso_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: tipo_recurso tipo_recurso_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.tipo_recurso
@@ -3801,7 +3774,7 @@ ALTER TABLE ONLY public.tipo_recurso
 
 
 --
--- Name: tipo_tutor tipo_tutor_nombre_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: tipo_tutor tipo_tutor_nombre_key; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.tipo_tutor
@@ -3809,7 +3782,7 @@ ALTER TABLE ONLY public.tipo_tutor
 
 
 --
--- Name: tipo_tutor tipo_tutor_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: tipo_tutor tipo_tutor_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.tipo_tutor
@@ -3817,7 +3790,7 @@ ALTER TABLE ONLY public.tipo_tutor
 
 
 --
--- Name: tutores tutores_cedula_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: tutores tutores_cedula_key; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.tutores
@@ -3825,7 +3798,7 @@ ALTER TABLE ONLY public.tutores
 
 
 --
--- Name: tutores tutores_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: tutores tutores_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.tutores
@@ -3833,7 +3806,7 @@ ALTER TABLE ONLY public.tutores
 
 
 --
--- Name: privilegios unique_nivel_privilegio; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: privilegios unique_nivel_privilegio; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.privilegios
@@ -3841,7 +3814,7 @@ ALTER TABLE ONLY public.privilegios
 
 
 --
--- Name: postulaciones_estudiantes unique_postulacion; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: postulaciones_estudiantes unique_postulacion; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.postulaciones_estudiantes
@@ -3849,7 +3822,7 @@ ALTER TABLE ONLY public.postulaciones_estudiantes
 
 
 --
--- Name: usuarios usuarios_cedula_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: usuarios usuarios_cedula_key; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.usuarios
@@ -3857,7 +3830,7 @@ ALTER TABLE ONLY public.usuarios
 
 
 --
--- Name: usuarios usuarios_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: usuarios usuarios_email_key; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.usuarios
@@ -3865,7 +3838,7 @@ ALTER TABLE ONLY public.usuarios
 
 
 --
--- Name: usuarios usuarios_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: usuarios usuarios_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.usuarios
@@ -3873,7 +3846,7 @@ ALTER TABLE ONLY public.usuarios
 
 
 --
--- Name: visitantes visitantes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: visitantes visitantes_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.visitantes
@@ -3881,7 +3854,7 @@ ALTER TABLE ONLY public.visitantes
 
 
 --
--- Name: waf_rate_limiter waf_rate_limiter_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: waf_rate_limiter waf_rate_limiter_pkey; Type: CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.waf_rate_limiter
@@ -3889,63 +3862,77 @@ ALTER TABLE ONLY public.waf_rate_limiter
 
 
 --
--- Name: idx_detalles_inv_ofertada; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_detalles_inv_ofertada; Type: INDEX; Schema: public; Owner: miki
 --
 
 CREATE INDEX idx_detalles_inv_ofertada ON public.detalles_investigaciones USING btree (id_investigacion_ofertada);
 
 
 --
--- Name: idx_recurso_clasif_dimension; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_detalles_vector_hnsw; Type: INDEX; Schema: public; Owner: miki
+--
+
+CREATE INDEX idx_detalles_vector_hnsw ON public.detalles_proyectos USING hnsw (vector_semantico public.vector_cosine_ops) WITH (m='16', ef_construction='64');
+
+
+--
+-- Name: idx_detalles_vector_null; Type: INDEX; Schema: public; Owner: miki
+--
+
+CREATE INDEX idx_detalles_vector_null ON public.detalles_proyectos USING btree (id_recurso) WHERE (vector_semantico IS NULL);
+
+
+--
+-- Name: idx_recurso_clasif_dimension; Type: INDEX; Schema: public; Owner: miki
 --
 
 CREATE INDEX idx_recurso_clasif_dimension ON public.recurso_clasificaciones USING btree (id_dimension_operativa);
 
 
 --
--- Name: idx_recurso_clasif_linea; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_recurso_clasif_linea; Type: INDEX; Schema: public; Owner: miki
 --
 
 CREATE INDEX idx_recurso_clasif_linea ON public.recurso_clasificaciones USING btree (id_linea_investigacion);
 
 
 --
--- Name: recursos tg_auditoria_recursos_delete; Type: TRIGGER; Schema: public; Owner: postgres
+-- Name: recursos tg_auditoria_recursos_delete; Type: TRIGGER; Schema: public; Owner: miki
 --
 
 CREATE TRIGGER tg_auditoria_recursos_delete BEFORE DELETE ON public.recursos FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria_recursos();
 
 
 --
--- Name: recursos tg_auditoria_recursos_insert; Type: TRIGGER; Schema: public; Owner: postgres
+-- Name: recursos tg_auditoria_recursos_insert; Type: TRIGGER; Schema: public; Owner: miki
 --
 
 CREATE TRIGGER tg_auditoria_recursos_insert AFTER INSERT ON public.recursos FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria_recursos();
 
 
 --
--- Name: usuarios tg_auditoria_usuarios_delete; Type: TRIGGER; Schema: public; Owner: postgres
+-- Name: usuarios tg_auditoria_usuarios_delete; Type: TRIGGER; Schema: public; Owner: miki
 --
 
 CREATE TRIGGER tg_auditoria_usuarios_delete BEFORE DELETE ON public.usuarios FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria_usuarios();
 
 
 --
--- Name: usuarios tg_auditoria_usuarios_insert; Type: TRIGGER; Schema: public; Owner: postgres
+-- Name: usuarios tg_auditoria_usuarios_insert; Type: TRIGGER; Schema: public; Owner: miki
 --
 
 CREATE TRIGGER tg_auditoria_usuarios_insert AFTER INSERT ON public.usuarios FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria_usuarios();
 
 
 --
--- Name: usuarios tg_auditoria_usuarios_update; Type: TRIGGER; Schema: public; Owner: postgres
+-- Name: usuarios tg_auditoria_usuarios_update; Type: TRIGGER; Schema: public; Owner: miki
 --
 
 CREATE TRIGGER tg_auditoria_usuarios_update AFTER UPDATE ON public.usuarios FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria_usuarios();
 
 
 --
--- Name: accesos_recursos accesos_recursos_id_recurso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: accesos_recursos accesos_recursos_id_recurso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.accesos_recursos
@@ -3953,7 +3940,7 @@ ALTER TABLE ONLY public.accesos_recursos
 
 
 --
--- Name: accesos_recursos accesos_recursos_id_registro_actividad_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: accesos_recursos accesos_recursos_id_registro_actividad_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.accesos_recursos
@@ -3961,7 +3948,7 @@ ALTER TABLE ONLY public.accesos_recursos
 
 
 --
--- Name: auditoria auditoria_usuario_responsable_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: auditoria auditoria_usuario_responsable_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.auditoria
@@ -3969,7 +3956,7 @@ ALTER TABLE ONLY public.auditoria
 
 
 --
--- Name: cursos cursos_id_docente_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: cursos cursos_id_docente_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.cursos
@@ -3977,7 +3964,7 @@ ALTER TABLE ONLY public.cursos
 
 
 --
--- Name: detalles_proyectos detalles_proyectos_id_carrera_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: detalles_proyectos detalles_proyectos_id_carrera_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.detalles_proyectos
@@ -3985,7 +3972,7 @@ ALTER TABLE ONLY public.detalles_proyectos
 
 
 --
--- Name: detalles_proyectos detalles_proyectos_id_investigacion_padre_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: detalles_proyectos detalles_proyectos_id_investigacion_padre_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.detalles_proyectos
@@ -3993,7 +3980,7 @@ ALTER TABLE ONLY public.detalles_proyectos
 
 
 --
--- Name: detalles_proyectos detalles_proyectos_id_recurso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: detalles_proyectos detalles_proyectos_id_recurso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.detalles_proyectos
@@ -4001,7 +3988,7 @@ ALTER TABLE ONLY public.detalles_proyectos
 
 
 --
--- Name: detalles_articulos detalles_revistas_id_editorial_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: detalles_articulos detalles_revistas_id_editorial_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.detalles_articulos
@@ -4009,7 +3996,7 @@ ALTER TABLE ONLY public.detalles_articulos
 
 
 --
--- Name: detalles_articulos detalles_revistas_id_recurso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: detalles_articulos detalles_revistas_id_recurso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.detalles_articulos
@@ -4017,7 +4004,7 @@ ALTER TABLE ONLY public.detalles_articulos
 
 
 --
--- Name: detalles_investigaciones fk_detalles_investigaciones_ofertada; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: detalles_investigaciones fk_detalles_investigaciones_ofertada; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.detalles_investigaciones
@@ -4025,7 +4012,7 @@ ALTER TABLE ONLY public.detalles_investigaciones
 
 
 --
--- Name: detalles_investigaciones fk_detalles_investigaciones_recurso; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: detalles_investigaciones fk_detalles_investigaciones_recurso; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.detalles_investigaciones
@@ -4033,7 +4020,7 @@ ALTER TABLE ONLY public.detalles_investigaciones
 
 
 --
--- Name: dimensiones_operativas fk_dimension_linea; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: dimensiones_operativas fk_dimension_linea; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.dimensiones_operativas
@@ -4041,7 +4028,7 @@ ALTER TABLE ONLY public.dimensiones_operativas
 
 
 --
--- Name: recurso_clasificaciones fk_dimension_operativa; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: recurso_clasificaciones fk_dimension_operativa; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.recurso_clasificaciones
@@ -4049,7 +4036,7 @@ ALTER TABLE ONLY public.recurso_clasificaciones
 
 
 --
--- Name: recurso_etiquetas fk_etiqueta_recurso; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: recurso_etiquetas fk_etiqueta_recurso; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.recurso_etiquetas
@@ -4057,7 +4044,7 @@ ALTER TABLE ONLY public.recurso_etiquetas
 
 
 --
--- Name: investigaciones_ofertadas fk_inv_dimension; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: investigaciones_ofertadas fk_inv_dimension; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.investigaciones_ofertadas
@@ -4065,7 +4052,7 @@ ALTER TABLE ONLY public.investigaciones_ofertadas
 
 
 --
--- Name: investigaciones_ofertadas fk_inv_linea; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: investigaciones_ofertadas fk_inv_linea; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.investigaciones_ofertadas
@@ -4073,7 +4060,7 @@ ALTER TABLE ONLY public.investigaciones_ofertadas
 
 
 --
--- Name: investigaciones_ofertadas fk_inv_profesor; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: investigaciones_ofertadas fk_inv_profesor; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.investigaciones_ofertadas
@@ -4081,7 +4068,7 @@ ALTER TABLE ONLY public.investigaciones_ofertadas
 
 
 --
--- Name: recurso_clasificaciones fk_linea_investigacion; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: recurso_clasificaciones fk_linea_investigacion; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.recurso_clasificaciones
@@ -4089,7 +4076,7 @@ ALTER TABLE ONLY public.recurso_clasificaciones
 
 
 --
--- Name: postulaciones_estudiantes fk_postulacion_estudiante; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: postulaciones_estudiantes fk_postulacion_estudiante; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.postulaciones_estudiantes
@@ -4097,7 +4084,7 @@ ALTER TABLE ONLY public.postulaciones_estudiantes
 
 
 --
--- Name: postulaciones_estudiantes fk_postulacion_inv; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: postulaciones_estudiantes fk_postulacion_inv; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.postulaciones_estudiantes
@@ -4105,7 +4092,7 @@ ALTER TABLE ONLY public.postulaciones_estudiantes
 
 
 --
--- Name: recurso_clasificaciones fk_recurso; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: recurso_clasificaciones fk_recurso; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.recurso_clasificaciones
@@ -4113,7 +4100,7 @@ ALTER TABLE ONLY public.recurso_clasificaciones
 
 
 --
--- Name: recurso_etiquetas fk_recurso_etiqueta; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: recurso_etiquetas fk_recurso_etiqueta; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.recurso_etiquetas
@@ -4121,7 +4108,7 @@ ALTER TABLE ONLY public.recurso_etiquetas
 
 
 --
--- Name: historico_versiones_pst fk_version_recurso; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: historico_versiones_pst fk_version_recurso; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.historico_versiones_pst
@@ -4129,7 +4116,7 @@ ALTER TABLE ONLY public.historico_versiones_pst
 
 
 --
--- Name: lineas_investigacion lineas_investigacion_id_carrera_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: lineas_investigacion lineas_investigacion_id_carrera_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.lineas_investigacion
@@ -4137,7 +4124,7 @@ ALTER TABLE ONLY public.lineas_investigacion
 
 
 --
--- Name: notificaciones notificaciones_id_usuario_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: notificaciones notificaciones_id_usuario_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.notificaciones
@@ -4145,7 +4132,7 @@ ALTER TABLE ONLY public.notificaciones
 
 
 --
--- Name: preferencias_usuario preferencias_usuario_id_usuario_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: preferencias_usuario preferencias_usuario_id_usuario_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.preferencias_usuario
@@ -4153,7 +4140,7 @@ ALTER TABLE ONLY public.preferencias_usuario
 
 
 --
--- Name: proyecto_tutores proyecto_tutores_id_recurso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: proyecto_tutores proyecto_tutores_id_recurso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.proyecto_tutores
@@ -4161,7 +4148,7 @@ ALTER TABLE ONLY public.proyecto_tutores
 
 
 --
--- Name: proyecto_tutores proyecto_tutores_id_tutor_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: proyecto_tutores proyecto_tutores_id_tutor_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.proyecto_tutores
@@ -4169,7 +4156,7 @@ ALTER TABLE ONLY public.proyecto_tutores
 
 
 --
--- Name: proyecto_tutores proyecto_tutores_tipo_tutor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: proyecto_tutores proyecto_tutores_tipo_tutor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.proyecto_tutores
@@ -4177,7 +4164,7 @@ ALTER TABLE ONLY public.proyecto_tutores
 
 
 --
--- Name: recurso_autores recurso_autores_id_autor_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: recurso_autores recurso_autores_id_autor_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.recurso_autores
@@ -4185,7 +4172,7 @@ ALTER TABLE ONLY public.recurso_autores
 
 
 --
--- Name: recurso_autores recurso_autores_id_recurso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: recurso_autores recurso_autores_id_recurso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.recurso_autores
@@ -4193,7 +4180,7 @@ ALTER TABLE ONLY public.recurso_autores
 
 
 --
--- Name: recurso_categorias recurso_categorias_id_categoria_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: recurso_categorias recurso_categorias_id_categoria_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.recurso_categorias
@@ -4201,7 +4188,7 @@ ALTER TABLE ONLY public.recurso_categorias
 
 
 --
--- Name: recurso_categorias recurso_categorias_id_recurso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: recurso_categorias recurso_categorias_id_recurso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.recurso_categorias
@@ -4209,7 +4196,7 @@ ALTER TABLE ONLY public.recurso_categorias
 
 
 --
--- Name: recursos recursos_id_tipo_recurso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: recursos recursos_id_tipo_recurso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.recursos
@@ -4217,7 +4204,7 @@ ALTER TABLE ONLY public.recursos
 
 
 --
--- Name: registro_actividad registro_actividad_id_usuario_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: registro_actividad registro_actividad_id_usuario_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.registro_actividad
@@ -4225,7 +4212,7 @@ ALTER TABLE ONLY public.registro_actividad
 
 
 --
--- Name: registro_actividad registro_actividad_id_visitante_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: registro_actividad registro_actividad_id_visitante_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.registro_actividad
@@ -4233,7 +4220,7 @@ ALTER TABLE ONLY public.registro_actividad
 
 
 --
--- Name: usuarios usuarios_id_rol_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: usuarios usuarios_id_rol_fkey; Type: FK CONSTRAINT; Schema: public; Owner: miki
 --
 
 ALTER TABLE ONLY public.usuarios
@@ -4244,5 +4231,5 @@ ALTER TABLE ONLY public.usuarios
 -- PostgreSQL database dump complete
 --
 
-\unrestrict EIIc95Nbnnmj8sYMQUh9CKtaZeJVO4fcqVszJfADNLpOb9UQO2Rt0CJADZQ1Bf7
+\unrestrict kGlMaHpt6tb5AIMu2dKlLvMltSABO8Gcb2uEV5xSIB4AUDAVCeLQkzFnwdKXexM
 

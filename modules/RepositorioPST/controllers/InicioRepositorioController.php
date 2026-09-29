@@ -77,7 +77,7 @@ class InicioRepositorioController {
         $lineasConConteo   = $model->getPSTCountByLinea($carreraId);
         $dimensiones       = $model->getDimensionesOperativas();
         $nivelesAcademicos = $model->getNivelesAcademicos();
-        $trayectosList     = $model->getTrayectos();
+        $trayectosList     = $model->getTrayectos($carreraId ?: 1);
         $anioCounts        = $model->getPSTCountByYear($filtros);
         $trayectoCountsBD  = $model->getPSTCountByTrayecto($carreraId);
         foreach ($trayectoCountsBD as $tNum => $cnt) {

@@ -236,9 +236,13 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                         
                                         <!-- Línea, Trayecto y Dimensión en los resultados -->
                                         <div class="result-classification-tags">
-                                            <?php if (!empty($res['nivel_academico']) && $res['nivel_academico'] !== 'Pregrado'): ?>
+                                            <?php 
+                                            $nivBusc = $res['nivel_academico'] ?? '';
+                                            $labelsBusc = ['Especializacion' => 'Especialización', 'Maestria' => 'Maestría'];
+                                            $nivBuscLabel = $labelsBusc[$nivBusc] ?? $nivBusc;
+                                            if (!empty($nivBusc) && !in_array($nivBusc, ['Pregrado', 'TSU'])): ?>
                                                 <span class="tag-linea" style="background-color: rgba(112, 144, 203, 0.15); color: var(--color-secundario); font-weight: 700;">
-                                                    <i class="ph ph-graduation-cap"></i> <?= htmlspecialchars($res['nivel_academico'] ?? '') ?>
+                                                    <i class="ph ph-graduation-cap"></i> <?= htmlspecialchars($nivBuscLabel) ?>
                                                 </span>
                                             <?php elseif (!empty($res['trayecto'])): ?>
                                                 <span class="tag-linea" style="background-color: rgba(0, 123, 255, 0.1); color: var(--color-terciario); font-weight: 700;">
