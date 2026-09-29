@@ -20,8 +20,8 @@
     },
     "paginacion": {
         "modo_carga": "paginador",
-        "limite_catalogo": 13,
-        "limite_buscador": 6,
+        "limite_catalogo": 1,
+        "limite_buscador": 1,
         "opciones_selector": [
             5,
             10,

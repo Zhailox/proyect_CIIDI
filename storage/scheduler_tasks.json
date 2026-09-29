@@ -5,8 +5,8 @@
         "descripcion": "Elimina archivos temporales en storage\/tmp\/, cachés expiradas y residuos de descargas.",
         "expresion_cron": "0 3 * * *",
         "estado": "inactivo",
-        "ultima_ejecucion": "2026-09-19 20:53:24",
-        "resultado_ultimo": "ÉXITO (32.79ms): Limpieza completada. Depurados 1 archivos temporales y cachés.",
+        "ultima_ejecucion": "2026-09-29 01:44:54",
+        "resultado_ultimo": "ÉXITO (55.37ms): Limpieza completada. Depurados 1 archivos temporales y cachés.",
         "script": "limpiarTemporales"
     },
     "backup_automatico_medianoche": {
@@ -40,7 +40,21 @@
         "archivo_script": "script_tarea_1790301553_528.php",
         "timeout_segundos": 60,
         "estado": "activo",
-        "ultima_ejecucion": "2026-09-28 22:40:01",
-        "resultado_ultimo": "ERROR (429.43ms): Error de ejecución CLI (Código 3)."
+        "ultima_ejecucion": "2026-09-29 01:58:49",
+        "resultado_ultimo": "ÉXITO (187.27ms): Comando ejecutado con éxito (Código 0)."
+    },
+    "tarea_1790660917_352": {
+        "id": "tarea_1790660917_352",
+        "nombre": "hola",
+        "descripcion": "",
+        "expresion_cron": "1 * * * *",
+        "tipo_ejecucion": "script_archivo",
+        "script": "limpiarTemporales",
+        "comando_custom": "",
+        "archivo_script": "script_tarea_1790660917_352.php",
+        "timeout_segundos": 60,
+        "estado": "activo",
+        "ultima_ejecucion": "2026-09-29 05:58:48",
+        "resultado_ultimo": "ÉXITO (171.64ms): Comando ejecutado con éxito (Código 0)."
     }
 }

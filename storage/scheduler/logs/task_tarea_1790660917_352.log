@@ -1,0 +1,11 @@
+========================================================
+REGISTRO DE EJECUCIÓN: hola [tarea_1790660917_352]
+FECHA/HORA: 2026-09-29 05:58:48
+DURACIÓN: 171.64 ms | ESTADO: OK
+========================================================
+
+MENSAJE: Comando ejecutado con éxito (Código 0).
+
+--- SALIDA ESTÁNDAR / CONSOLA (STDOUT/STDERR) ---
+[2026-09-29 05:58:48] [EmbeddingWorker] ═══ Iniciando ciclo de generación de embeddings ═══
+[2026-09-29 05:58:48] [EmbeddingWorker] ✓ No hay proyectos pendientes de vectorización. Fin del ciclo.

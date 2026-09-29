@@ -2,6 +2,7 @@
 // modules/SuperAdmin/services/SchedulerService.php
 
 require_once CORE_PATH . 'Security/Auth.php';
+require_once CORE_PATH . 'Security/AuditLogger.php';
 require_once __DIR__ . '/BackupService.php';
 
 class SchedulerService {
@@ -29,6 +30,78 @@ class SchedulerService {
             mkdir($dir, 0777, true);
         }
         return $dir;
+    }
+
+    /**
+     * Resuelve la ruta ejecutable real del intérprete CLI de PHP (evitando Apache httpd.exe cuando corre bajo mod_php).
+     */
+    public static function getPhpCliPath(): string {
+        $esWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+
+        if (!$esWindows) {
+            return 'php';
+        }
+
+        // Si PHP_BINARY apunta directamente a un ejecutable php.exe (no httpd.exe)
+        if (defined('PHP_BINARY') && !empty(PHP_BINARY)) {
+            $binName = strtolower(basename(PHP_BINARY));
+            if ($binName === 'php.exe' && file_exists(PHP_BINARY)) {
+                return '"' . PHP_BINARY . '"';
+            }
+        }
+
+        // Buscar en la carpeta de instalación de PHP de la versión activa en Wamp/XAMPP
+        if (defined('PHP_BINDIR') && file_exists(PHP_BINDIR . DIRECTORY_SEPARATOR . 'php.exe')) {
+            return '"' . PHP_BINDIR . DIRECTORY_SEPARATOR . 'php.exe"';
+        }
+
+        // Buscar en WampServer según la versión en ejecución (ej: php 8.5.0, 8.4.x, etc.)
+        $wampPhpVer = 'php' . PHP_VERSION;
+        $candidatosWamp = [
+            "C:\\wamp64\\bin\\php\\{$wampPhpVer}\\php.exe",
+            "C:\\wamp64\\bin\\php\\php8.5.0\\php.exe",
+            "C:\\wamp64\\bin\\php\\php8.4.15\\php.exe",
+            "C:\\wamp64\\bin\\php\\php8.3.28\\php.exe",
+            "C:\\wamp64\\bin\\php\\php8.2.29\\php.exe",
+            'C:\\xampp\\php\\php.exe',
+            'C:\\php\\php.exe'
+        ];
+
+        foreach ($candidatosWamp as $ruta) {
+            if (file_exists($ruta)) {
+                return '"' . $ruta . '"';
+            }
+        }
+
+        // Fallback al comando del PATH
+        return 'php';
+    }
+
+    /**
+     * Resuelve la ruta de Python si está disponible en el entorno
+     */
+    public static function getPythonPath(): string {
+        $esWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+        if (!$esWindows) {
+            return 'python3';
+        }
+
+        $candidatosPy = [
+            'C:\\Python312\\python.exe',
+            'C:\\Python311\\python.exe',
+            'C:\\Python310\\python.exe',
+            'C:\\Users\\Chailon\\AppData\\Local\\Programs\\Python\\Python312\\python.exe',
+            'C:\\Users\\Chailon\\AppData\\Local\\Programs\\Python\\Python311\\python.exe',
+            'C:\\Users\\Chailon\\AppData\\Local\\Programs\\Python\\Python310\\python.exe'
+        ];
+
+        foreach ($candidatosPy as $pyPath) {
+            if (file_exists($pyPath)) {
+                return '"' . $pyPath . '"';
+            }
+        }
+
+        return 'python';
     }
 
     private static function getDefaultTasks(): array {
@@ -281,11 +354,11 @@ class SchedulerService {
 
         switch ($ext) {
             case 'php':
-                $phpBin = $esWindows ? (defined('PHP_BINARY') ? '"' . PHP_BINARY . '"' : 'php') : 'php';
+                $phpBin = self::getPhpCliPath();
                 $cmd = "{$phpBin} \"{$rutaCompleta}\"";
                 break;
             case 'py':
-                $pythonBin = $esWindows ? 'python' : 'python3';
+                $pythonBin = self::getPythonPath();
                 $cmd = "{$pythonBin} \"{$rutaCompleta}\"";
                 break;
             case 'bat':
@@ -595,6 +668,7 @@ class SchedulerService {
         }
 
         $runnerPath = self::getStorageDir() . 'cron_runner.php';
+        $phpCli = self::getPhpCliPath();
 
         return [
             'es_windows' => $esWindows,
@@ -602,7 +676,7 @@ class SchedulerService {
             'detalles' => $detalles,
             'runner_path' => $runnerPath,
             'comando_sugerido_linux' => "* * * * * php {$runnerPath} >/dev/null 2>&1",
-            'comando_sugerido_windows' => "schtasks /create /tn \"CIIDI_CronRunner\" /tr \"php {$runnerPath}\" /sc minute /mo 1"
+            'comando_sugerido_windows' => "schtasks /create /tn \"CIIDI_CronRunner\" /tr \"{$phpCli} {$runnerPath}\" /sc minute /mo 1"
         ];
     }
 }
