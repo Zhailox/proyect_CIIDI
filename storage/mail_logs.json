@@ -1,5 +1,35 @@
 [
     {
+        "id": "mail_6abb00e3d58e0",
+        "fecha": "2026-09-28 20:05:55",
+        "destino_email": "juanxzall0701@gmail.com",
+        "destino_nombre": "Juan Salcedo",
+        "asunto": "Bienvenido al Sistema CIIDI - Credenciales de Acceso",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not authenticate. SMTP server error: QUIT command failed"
+    },
+    {
+        "id": "mail_6abb009e0f5a2",
+        "fecha": "2026-09-28 20:04:46",
+        "destino_email": "andrusramirez2020@gmail.com",
+        "destino_nombre": "Administrador de Prueba",
+        "asunto": "Prueba de Conexión SMTP - CIIDI UPTTMBI",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not authenticate. SMTP server error: QUIT command failed"
+    },
+    {
+        "id": "mail_6abb0086b9eb5",
+        "fecha": "2026-09-28 20:04:22",
+        "destino_email": "andrusramirez2020@gmail.com",
+        "destino_nombre": "Administrador de Prueba",
+        "asunto": "Prueba de Conexión SMTP - CIIDI UPTTMBI",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not authenticate. SMTP server error: QUIT command failed"
+    },
+    {
         "id": "mail_6ab605a223dd9",
         "fecha": "2026-09-25 01:24:50",
         "destino_email": "6767677@gmail.com",

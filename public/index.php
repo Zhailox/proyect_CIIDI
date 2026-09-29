@@ -3,6 +3,7 @@
 
 // 1. Definir rutas base absolutas del sistema (Constantes Globales)
 define('BASE_PATH', dirname(__DIR__));
+define('ROOT_PATH', BASE_PATH);
 define('CORE_PATH', BASE_PATH . '/core/');
 define('CORE_VIEWS', CORE_PATH . 'Views/');
 define('MODULES_PATH', BASE_PATH . '/modules/');

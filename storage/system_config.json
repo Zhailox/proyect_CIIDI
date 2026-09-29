@@ -9,11 +9,11 @@
         "intentos_login": 5
     },
     "smtp": {
-        "host": "",
+        "host": "smtp.gmail.com",
         "port": 587,
-        "user": "",
-        "pass": "ENC:vpalvrrcawvGfnu0B7Ciz3B712P27wUZj1VF3\/w7njS78b6pnKknfy1OnMyD72tchxveuCL04AAYYeKQpl9DvjA1rUzx\/ZteaQwTNmx9vr4=",
-        "from_email": ""
+        "user": "orlando5711666@gmail.com",
+        "pass": "ENC:A78c7oTAFAlVg0CdzY58OdKsSh6U5rhqc\/67twYLhOtcu6NSiHDB+HYQ42hJ9Hw2ixBfo8huwFxOr1X8ehtH6gRqZXbSWqS30Hx9csTBfpM=",
+        "from_email": "orlando5711666@gmail.com"
     },
     "accesos_modulos": {
         "articulos": {

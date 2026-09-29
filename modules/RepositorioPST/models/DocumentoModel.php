@@ -988,7 +988,8 @@ class DocumentoModel {
 
             // Limpieza del archivo físico en el servidor
             if (!empty($archivoPath)) {
-                $fullPath = ROOT_PATH . '/' . ltrim($archivoPath, '/\\');
+                $basePath = defined('BASE_PATH') ? BASE_PATH : (defined('ROOT_PATH') ? ROOT_PATH : dirname(__DIR__, 3));
+                $fullPath = $basePath . '/' . ltrim($archivoPath, '/\\');
                 if (file_exists($fullPath) && is_file($fullPath)) {
                     @unlink($fullPath);
                 }
