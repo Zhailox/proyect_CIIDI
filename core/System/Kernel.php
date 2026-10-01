@@ -10,6 +10,8 @@ require_once CORE_PATH . 'Installer/InstallerHook.php';
 require_once CORE_PATH . 'Services/MaintenanceService.php';
 require_once CORE_PATH . 'System/ModuleLoader.php';
 require_once CORE_PATH . 'System/AssetResolver.php';
+require_once CORE_PATH . 'Security/RateLimiter.php';
+require_once CORE_PATH . 'Security/CSRF.php';
 require_once CORE_PATH . 'Http/FeatureFlagMiddleware.php';
 require_once CORE_PATH . 'Http/Router.php';
 require_once CORE_PATH . 'Http/Dispatcher.php';
@@ -41,7 +43,55 @@ class Kernel {
     }
 
     public function run(): void {
+        // Cabeceras de Seguridad Web Estrictas (OWASP / ISO 27001 A.8.28)
+        if (!headers_sent()) {
+            header("X-Content-Type-Options: nosniff");
+            header("X-Frame-Options: SAMEORIGIN");
+            header("X-XSS-Protection: 1; mode=block");
+            header("Referrer-Policy: strict-origin-when-cross-origin");
+            header("Permissions-Policy: camera=(), microphone=(), geolocation=()");
+        }
+
         $this->sessionManager->start();
+
+        // Escudo de Seguridad Global: WAF & Rate Limiter de Capa de Aplicación
+        $bloqueo = RateLimiter::estaBloqueada();
+        if ($bloqueo['bloqueada']) {
+            http_response_code(403);
+            $tituloSeguridad  = 'Acceso Restringido por Seguridad';
+            $mensajeSeguridad = $bloqueo['razon'] ?? 'Su dirección IP ha sido temporalmente restringida por el sistema de seguridad institucional.';
+            $tipoAmenaza      = ($bloqueo['tipo'] ?? '') === 'blacklist' ? 'Lista Negra Global' : 'Límite de Intentos Excedido';
+            $parametroAmenaza = null;
+            $ipCliente        = RateLimiter::obtenerIPCliente();
+            $isStandalone     = true;
+
+            $vistaSeguridad = defined('CORE_VIEWS') ? CORE_VIEWS . 'seguridad_bloqueo.php' : __DIR__ . '/../Views/seguridad_bloqueo.php';
+            if (file_exists($vistaSeguridad)) {
+                include $vistaSeguridad;
+            } else {
+                echo "<h2>Acceso Restringido por Seguridad</h2><p>" . htmlspecialchars($mensajeSeguridad) . "</p>";
+            }
+            exit;
+        }
+
+        $amenaza = RateLimiter::inspeccionarPayloadsSeguridad();
+        if ($amenaza['amenaza_detectada']) {
+            http_response_code(403);
+            $tituloSeguridad  = 'Petición Interceptada por WAF Institucional';
+            $mensajeSeguridad = 'Se ha detectado e interceptado un patrón de ataque sospechoso en la solicitud. Su dirección IP ha sido registrada y bloqueada temporalmente para salvaguardar la integridad de la infraestructura institucional.';
+            $tipoAmenaza      = $amenaza['tipo'] ?? 'Amenaza Web';
+            $parametroAmenaza = $amenaza['parametro'] ?? null;
+            $ipCliente        = RateLimiter::obtenerIPCliente();
+            $isStandalone     = true;
+
+            $vistaSeguridad = defined('CORE_VIEWS') ? CORE_VIEWS . 'seguridad_bloqueo.php' : __DIR__ . '/../Views/seguridad_bloqueo.php';
+            if (file_exists($vistaSeguridad)) {
+                include $vistaSeguridad;
+            } else {
+                echo "<h2>Petición Bloqueada por WAF</h2><p>" . htmlspecialchars($mensajeSeguridad) . "</p>";
+            }
+            exit;
+        }
 
         $ruta = $_GET['ruta'] ?? 'inicio';
 

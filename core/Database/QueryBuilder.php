@@ -53,10 +53,16 @@ class QueryBuilder {
     }
 
     /**
-     * Añade una condición WHERE con parámetros seguros.
+     * Añade una condición WHERE con parámetros seguros y validación de operadores.
      */
     public function where(string $columna, string $operador, $valor): self {
-        $this->condiciones[] = "$columna $operador ?";
+        $operadoresValidos = ['=', '!=', '<>', '<', '>', '<=', '>=', 'LIKE', 'ILIKE', 'NOT LIKE', 'IS', 'IS NOT', 'IN', 'NOT IN'];
+        $opSanitized = strtoupper(trim($operador));
+        if (!in_array($opSanitized, $operadoresValidos, true)) {
+            $opSanitized = '=';
+        }
+        $colSanitized = preg_replace('/[^a-zA-Z0-9_\.]/', '', $columna);
+        $this->condiciones[] = "$colSanitized $opSanitized ?";
         $this->parametros[] = $valor;
         return $this;
     }
@@ -73,8 +79,11 @@ class QueryBuilder {
     }
 
     public function orderBy(string $columna, string $direccion = 'ASC'): self {
-        $direccion = strtoupper($direccion) === 'DESC' ? 'DESC' : 'ASC';
-        $this->orden = "ORDER BY $columna $direccion";
+        $direccion = strtoupper(trim($direccion)) === 'DESC' ? 'DESC' : 'ASC';
+        $colSanitized = preg_replace('/[^a-zA-Z0-9_\.]/', '', $columna);
+        if (!empty($colSanitized)) {
+            $this->orden = "ORDER BY $colSanitized $direccion";
+        }
         return $this;
     }
 
@@ -89,7 +98,10 @@ class QueryBuilder {
     }
 
     public function groupBy(string $columnas): self {
-        $this->grupo = "GROUP BY $columnas";
+        $colSanitized = preg_replace('/[^a-zA-Z0-9_,\.\s]/', '', $columnas);
+        if (!empty($colSanitized)) {
+            $this->grupo = "GROUP BY $colSanitized";
+        }
         return $this;
     }
 

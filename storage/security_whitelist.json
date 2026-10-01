@@ -1,0 +1,14 @@
+{
+    "127.0.0.1": {
+        "ip": "127.0.0.1",
+        "nota": "Desarrollador Local (Localhost IPv4)",
+        "fecha_alta": "2026-10-01 00:14:31",
+        "responsable": "SuperAdmin"
+    },
+    "::1": {
+        "ip": "::1",
+        "nota": "Desarrollador Local (Localhost IPv6)",
+        "fecha_alta": "2026-10-01 00:14:31",
+        "responsable": "SuperAdmin"
+    }
+}

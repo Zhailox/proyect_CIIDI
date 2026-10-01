@@ -150,7 +150,12 @@ class DetallePSTController {
 
         if (!empty($requestedFile)) {
             $relPath = ltrim(str_replace(['\\', '/'], '/', $requestedFile), '/');
-            if (strpos($relPath, '..') === false && (strpos($relPath, 'storage/documentos/pst/') === 0 || strpos($relPath, 'storage/') === 0)) {
+            $extPermitidas = ['pdf', 'docx', 'doc'];
+            $extReq = strtolower(pathinfo($relPath, PATHINFO_EXTENSION));
+
+            // Restricción estricta de seguridad: Solo archivos de documentos PST autorizados
+            $esRutaPermitida = (strpos($relPath, 'storage/documentos/pst/') === 0 || strpos($relPath, 'storage/documentos/tmp/') === 0);
+            if (strpos($relPath, '..') === false && $esRutaPermitida && in_array($extReq, $extPermitidas, true)) {
                 $candidate = BASE_PATH . '/' . $relPath;
                 if (is_file($candidate)) {
                     $fullPath = $candidate;
@@ -178,11 +183,13 @@ class DetallePSTController {
             
             $dbPath = !empty($doc['archivo_pdf']) ? $doc['archivo_pdf'] : '';
             $relPath = ltrim(str_replace(['\\', '/'], '/', $dbPath), '/');
+            $extDoc = strtolower(pathinfo($relPath, PATHINFO_EXTENSION));
+            $extPermitidas = ['pdf', 'docx', 'doc'];
             
-            // Prevención de Path Traversal
-            if (strpos($relPath, '..') !== false) {
+            // Prevención de Path Traversal y validación de extensión autorizada
+            if (strpos($relPath, '..') !== false || (!empty($extDoc) && !in_array($extDoc, $extPermitidas, true))) {
                 http_response_code(403);
-                die("Acceso denegado: Ruta de archivo no permitida.");
+                die("Acceso denegado: Ruta o formato de archivo no permitido.");
             }
 
             $fullPath = BASE_PATH . '/' . $relPath;

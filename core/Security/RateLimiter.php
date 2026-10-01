@@ -118,40 +118,66 @@ class RateLimiter {
         $patronesSQLi = [
             '/\b(union\s+all\s+select|union\s+select)\b/i',
             '/\b(select\s+.*\s+from|insert\s+into|delete\s+from|drop\s+table|drop\s+database|alter\s+table)\b/i',
-            '/(\'|\")\s*(or|and)\s*(\'|\")?\d+(\'|\")?\s*=\s*(\'|\")?\d+/i',
-            '/\b(exec\s*\(|execute\s*\(|pg_sleep\(|sleep\()\b/i'
+            '/(\'|\"|`|\b)\s*(or|and)\s*(\'|\"|`)?([a-zA-Z0-9_]+)(\'|\"|`)?\s*=\s*(\'|\"|`)?\4(\'|\"|`|\b)/i', // Detecta 0=0, 1=1, 'a'='a', etc.
+            '/(\'|\")\s*(or|and)\s+(\'|\")?(\d+|true)(\'|\")?\s*(--|#|\/\*)/i',
+            '/(\'|\")\s*(or|and)\s+(\'|\")?(\d+|true)/i',
+            '/\b(exec\s*\(|execute\s*\(|pg_sleep\(|sleep\(|benchmark\()\b/i',
+            '/(\'|\")\s*;\s*(--|\/\*)/i'
         ];
 
         $patronesXSS = [
-            '/<script\b[^>]*>(.*?)<\/script>/is',
+            '/<script\b[^>]*>/is',
             '/javascript\s*:/i',
-            '/onerror\s*=/i',
-            '/onload\s*=/i',
-            '/eval\s*\(/i'
+            '/\bon(error|load|click|mouseover|focus|blur|submit)\s*=/i',
+            '/\beval\s*\(/i',
+            '/<(iframe|embed|object|svg\s+onload)\b/i',
+            '/document\.(cookie|location)/i'
+        ];
+
+        $patronesLFI = [
+            '/\.\.[\/\\\\]/i',
+            '/\b(php|data|file|glob|phar):\/\//i'
         ];
 
         $datosRevisar = array_merge($_GET, $_POST);
         
         foreach ($datosRevisar as $clave => $valor) {
             if (is_array($valor)) continue;
+            $valorStr = (string)$valor;
 
             foreach ($patronesSQLi as $pattern) {
-                if (preg_match($pattern, (string)$valor)) {
-                    self::agregarListaNegra($ip, "WAF: Intento de Inyección SQL detectado en parámetro '{$clave}'");
-                    if (class_exists('AuditLogger')) {
-                        AuditLogger::registrar('CRITICAL', 'WAF_Security', 'Inyección SQL Interceptada', "IP {$ip} bloqueada por SQLi en parámetro '{$clave}': " . htmlspecialchars(substr($valor, 0, 100)));
+                if (preg_match($pattern, $valorStr)) {
+                    if (!in_array($ip, ['127.0.0.1', '::1', 'localhost'], true)) {
+                        self::agregarListaNegra($ip, "WAF: Intento de Inyección SQL detectado en parámetro '{$clave}'");
                     }
-                    return ['amenaza_detectada' => true, 'tipo' => 'SQLi', 'parametro' => $clave];
+                    if (class_exists('AuditLogger')) {
+                        AuditLogger::registrar('CRITICAL', 'WAF_Security', 'Inyección SQL Interceptada', "IP {$ip} detectada por SQLi en parámetro '{$clave}': " . htmlspecialchars(substr($valorStr, 0, 100)));
+                    }
+                    return ['amenaza_detectada' => true, 'tipo' => 'Inyección SQL (SQLi)', 'parametro' => $clave];
                 }
             }
 
             foreach ($patronesXSS as $pattern) {
-                if (preg_match($pattern, (string)$valor)) {
-                    self::agregarListaNegra($ip, "WAF: Ataque Cross-Site Scripting (XSS) detectado en '{$clave}'");
-                    if (class_exists('AuditLogger')) {
-                        AuditLogger::registrar('CRITICAL', 'WAF_Security', 'Ataque XSS Interceptado', "IP {$ip} bloqueada por XSS en parámetro '{$clave}'");
+                if (preg_match($pattern, $valorStr)) {
+                    if (!in_array($ip, ['127.0.0.1', '::1', 'localhost'], true)) {
+                        self::agregarListaNegra($ip, "WAF: Ataque Cross-Site Scripting (XSS) detectado en '{$clave}'");
                     }
-                    return ['amenaza_detectada' => true, 'tipo' => 'XSS', 'parametro' => $clave];
+                    if (class_exists('AuditLogger')) {
+                        AuditLogger::registrar('CRITICAL', 'WAF_Security', 'Ataque XSS Interceptado', "IP {$ip} detectada por XSS en parámetro '{$clave}'");
+                    }
+                    return ['amenaza_detectada' => true, 'tipo' => 'Cross-Site Scripting (XSS)', 'parametro' => $clave];
+                }
+            }
+
+            foreach ($patronesLFI as $pattern) {
+                if (preg_match($pattern, $valorStr)) {
+                    if (!in_array($ip, ['127.0.0.1', '::1', 'localhost'], true)) {
+                        self::agregarListaNegra($ip, "WAF: Intento de Path Traversal / LFI en '{$clave}'");
+                    }
+                    if (class_exists('AuditLogger')) {
+                        AuditLogger::registrar('CRITICAL', 'WAF_Security', 'Path Traversal Interceptado', "IP {$ip} detectada por Path Traversal en parámetro '{$clave}'");
+                    }
+                    return ['amenaza_detectada' => true, 'tipo' => 'Path Traversal / LFI', 'parametro' => $clave];
                 }
             }
         }

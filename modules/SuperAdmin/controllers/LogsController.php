@@ -123,18 +123,26 @@ class LogsController {
             // BOM UTF-8 para Excel
             fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
             
-            fputcsv($output, ['ID', 'Fecha Hora', 'Nivel', 'Modulo', 'Accion', 'Detalles', 'Responsable', 'IP']);
+            $sanitizeCsvField = function($val) {
+                if (is_string($val) && strlen($val) > 0) {
+                    $primerChar = $val[0];
+                    if (in_array($primerChar, ['=', '+', '-', '@', "\t", "\r"], true)) {
+                        return "'" . $val;
+                    }
+                }
+                return $val;
+            };
 
             foreach ($logs as $l) {
                 fputcsv($output, [
-                    $l['id'],
-                    $l['fecha_hora'],
-                    $l['nivel'],
-                    $l['modulo'],
-                    $l['accion'],
-                    $l['detalles'],
-                    $l['responsable'],
-                    $l['ip']
+                    $sanitizeCsvField($l['id']),
+                    $sanitizeCsvField($l['fecha_hora']),
+                    $sanitizeCsvField($l['nivel']),
+                    $sanitizeCsvField($l['modulo']),
+                    $sanitizeCsvField($l['accion']),
+                    $sanitizeCsvField($l['detalles']),
+                    $sanitizeCsvField($l['responsable']),
+                    $sanitizeCsvField($l['ip'])
                 ]);
             }
             fclose($output);
