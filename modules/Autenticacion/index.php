@@ -52,6 +52,21 @@ public function getRutas(): array {
                 'titulo'           => 'Mi Perfil - Panel de Control',
                 'css'              => ['autenticacion.css']
             ],
+            'procesar-actualizar-perfil' => [
+                'controlador_path' => __DIR__ . '/controllers/PerfilController.php',
+                'controlador'      => 'PerfilController',
+                'metodo'           => 'procesarActualizarPerfil'
+            ],
+            'procesar-cambiar-clave' => [
+                'controlador_path' => __DIR__ . '/controllers/PerfilController.php',
+                'controlador'      => 'PerfilController',
+                'metodo'           => 'procesarCambiarClave'
+            ],
+            'procesar-verificar-correo' => [
+                'controlador_path' => __DIR__ . '/controllers/PerfilController.php',
+                'controlador'      => 'PerfilController',
+                'metodo'           => 'procesarVerificacionEmail'
+            ],
             'recuperar-cuenta' => [
                 'controlador_path' => __DIR__ . '/controllers/LoginController.php',
                 'controlador'      => 'LoginController',

@@ -100,6 +100,12 @@ class UsuarioModel {
         return $stmt->rowCount() > 0;
     }
 
+    public function guardarTokenActivacion(int $id, string $token): bool {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("UPDATE usuarios SET activation_token = ? WHERE id = ?");
+        return $stmt->execute([$token, $id]);
+    }
+
     public function findByCedula(string $cedula) {
         $cedulaTrim = trim($cedula);
         $soloDigitos = preg_replace('/[^0-9]/', '', $cedulaTrim);
@@ -194,5 +200,147 @@ class UsuarioModel {
         $db = Connection::getInstance();
         $stmt = $db->prepare("UPDATE usuarios SET contrasena = ?, reset_token = NULL, reset_expires = NULL WHERE id = ?");
         $stmt->execute([$hash, $id]);
+    }
+
+    /**
+     * Obtiene los datos detallados del perfil para el panel de usuario
+     */
+    public function obtenerPerfilCompleto(int $id) {
+        $db = Connection::getInstance();
+        $sql = "
+            SELECT 
+                u.id, 
+                u.cedula, 
+                u.nombre_completo, 
+                u.email, 
+                u.telefono, 
+                u.activo, 
+                u.email_verified,
+                u.contrasena,
+                r.nombre AS nombre_rol, 
+                p.nivel_privilegio,
+                ra.fecha_inicial,
+                ra.ultima_actividad,
+                COALESCE(ra.conteo_accesos, 1) AS conteo_accesos
+            FROM usuarios u
+            LEFT JOIN roles r ON u.id_rol = r.id
+            LEFT JOIN privilegios p ON r.privilegio_id = p.privilegio_id
+            LEFT JOIN registro_actividad ra ON ra.id_usuario = u.id
+            WHERE u.id = ?
+            LIMIT 1
+        ";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Actualiza el nombre del usuario
+     */
+    public function actualizarNombreUsuario(int $id, string $nombre): bool {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("UPDATE usuarios SET nombre_completo = ? WHERE id = ?");
+        return $stmt->execute([$nombre, $id]);
+    }
+
+    /**
+     * Actualiza la cédula del usuario (solo permitido para superadmin)
+     */
+    public function actualizarCedulaUsuario(int $id, string $nuevaCedula): bool {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("UPDATE usuarios SET cedula = ? WHERE id = ?");
+        return $stmt->execute([$nuevaCedula, $id]);
+    }
+
+    /**
+     * Actualiza el correo electrónico del usuario. Si cambia, reinicia email_verified a false.
+     */
+    public function actualizarEmailUsuario(int $id, string $nuevoEmail, bool $reiniciarVerificacion = true): bool {
+        $db = Connection::getInstance();
+        if ($reiniciarVerificacion) {
+            $stmt = $db->prepare("UPDATE usuarios SET email = ?, email_verified = false, activation_token = NULL WHERE id = ?");
+        } else {
+            $stmt = $db->prepare("UPDATE usuarios SET email = ? WHERE id = ?");
+        }
+        return $stmt->execute([$nuevoEmail, $id]);
+    }
+
+    /**
+     * Verifica si un correo electrónico ya está registrado por otro usuario diferente al actual
+     */
+    public function emailEnUsoPorOtro(string $email, int $idUsuarioActual): bool {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("SELECT id FROM usuarios WHERE LOWER(email) = LOWER(?) AND id != ? LIMIT 1");
+        $stmt->execute([trim($email), $idUsuarioActual]);
+        return $stmt->fetch() !== false;
+    }
+
+    /**
+     * Verifica si una cédula ya está registrada por otro usuario diferente al actual
+     */
+    public function cedulaEnUsoPorOtro(string $cedula, int $idUsuarioActual): bool {
+        $cedulaTrim = trim($cedula);
+        $soloDigitos = preg_replace('/[^0-9]/', '', $cedulaTrim);
+        $conPrefijo = 'V-' . $soloDigitos;
+        $conPrefijoE = 'E-' . $soloDigitos;
+
+        $db = Connection::getInstance();
+        $sql = "SELECT id FROM usuarios WHERE (cedula = ? OR cedula = ? OR cedula = ? OR cedula = ?) AND id != ? LIMIT 1";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$cedulaTrim, $soloDigitos, $conPrefijo, $conPrefijoE, $idUsuarioActual]);
+        return $stmt->fetch() !== false;
+    }
+
+    /**
+     * Actualiza los datos personales modificables del usuario (nombre y teléfono)
+     */
+    public function actualizarDatosPersonales(int $id, string $nombre, ?string $telefono = null): bool {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("UPDATE usuarios SET nombre_completo = ?, telefono = ? WHERE id = ?");
+        return $stmt->execute([$nombre, $telefono, $id]);
+    }
+
+    /**
+     * Obtiene el hash actual de la contraseña del usuario
+     */
+    public function obtenerContrasenaHash(int $id): ?string {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("SELECT contrasena FROM usuarios WHERE id = ?");
+        $stmt->execute([$id]);
+        $hash = $stmt->fetchColumn();
+        return $hash ? (string)$hash : null;
+    }
+
+    /**
+     * Actualiza la contraseña del usuario mediante nuevo hash bcrypt
+     */
+    public function actualizarPasswordUsuario(int $id, string $nuevoHash): bool {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("UPDATE usuarios SET contrasena = ?, reset_token = NULL, reset_expires = NULL WHERE id = ?");
+        return $stmt->execute([$nuevoHash, $id]);
+    }
+
+    /**
+     * Obtiene los eventos recientes de auditoría vinculados al usuario
+     */
+    public function obtenerActividadRecienteUsuario(int $id, int $limite = 5): array {
+        $db = Connection::getInstance();
+        try {
+            $patternUser = "%(ID: " . $id . ")%";
+            $stmt = $db->prepare("
+                SELECT fecha_hora, nivel, modulo, accion, detalles, ip 
+                FROM system_audit_log 
+                WHERE responsable LIKE ? OR detalles LIKE ?
+                ORDER BY fecha_hora DESC 
+                LIMIT ?
+            ");
+            $stmt->bindValue(1, $patternUser, PDO::PARAM_STR);
+            $stmt->bindValue(2, $patternUser, PDO::PARAM_STR);
+            $stmt->bindValue(3, $limite, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (Throwable $e) {
+            return [];
+        }
     }
 }
