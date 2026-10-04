@@ -4,22 +4,22 @@
             "estado": "online"
         },
         "Investigaciones": {
-            "estado": "online"
+            "estado": "offline"
         },
         "ForoChatbot": {
             "estado": "online"
         },
         "Cursos": {
-            "estado": "online"
+            "estado": "offline"
         },
         "VinculacionEmpresarial": {
-            "estado": "online"
+            "estado": "offline"
         },
         "RepositorioPST": {
             "estado": "online"
         },
         "LineasInvestigacion": {
-            "estado": "online"
+            "estado": "offline"
         }
     },
     "rutas": {

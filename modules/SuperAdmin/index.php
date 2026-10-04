@@ -396,6 +396,7 @@ class SuperAdminModule implements ModuleContract {
                 'tipo'        => 'parent',
                 'titulo'      => 'SuperAdmin',
                 'icono'       => 'ph-fill ph-terminal-window',
+                'orden'       => 900,
                 'privilegio_minimo' => 0,
                 'enlace'      => 'sudoadmin',
                 // Rutas que mantienen iluminado y desplegado el panel administrativo en el Sidebar

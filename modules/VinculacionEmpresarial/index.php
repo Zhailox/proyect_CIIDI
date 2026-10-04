@@ -97,6 +97,7 @@ class VinculacionEmpresarialModule implements ModuleContract {
                 'tipo'        => 'parent',
                 'titulo'      => 'Sector Productivo',
                 'icono'       => 'ph-fill ph-buildings',
+                'orden'       => 60,
                 'enlace'      => 'empresas-inicio',
                 'privilegio_minimo' =>  $nivelPublico,
                 'activadores' => ['empresas-inicio', 'seguimiento-empresa', 'cartelera-oportunidades', 'gestion-proyectos', 'banco-propuestas', 'gestion-equipos', 'vinculacion-config'], 

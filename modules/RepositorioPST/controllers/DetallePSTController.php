@@ -80,8 +80,10 @@ class DetallePSTController {
             'dimensiones'       => $dimensiones,
             'comunidades'       => $comunidades,
             'carreras'          => $carreras,
-            'nivelesAcademicos' => $nivelesAcademicos,
-            'trayectosList'     => $trayectosList,
+            'nivelesAcademicos'  => $nivelesAcademicos,
+            'nivelesConTrayecto' => $model->getNivelesConTrayecto(),
+            'labelsNiveles'      => $model->getNivelAcademicoMap(),
+            'trayectosList'      => $trayectosList,
             'anioCounts'        => $anioCounts,
             'filtros'           => $filtros,
             'totalPSTGeneral'   => $totalPSTGeneral,
@@ -109,6 +111,16 @@ class DetallePSTController {
         if ($id) {
             $documento = $model->getPSTDocumentoById($id);
             if ($documento) {
+                // Registrar visualización única por sesión para evitar inflación por recargas (F5)
+                if (session_status() === PHP_SESSION_NONE) {
+                    @session_start();
+                }
+                if (empty($_SESSION['visto_pst_' . $id])) {
+                    $model->incrementarVistasPST($id);
+                    $_SESSION['visto_pst_' . $id] = true;
+                    $documento['vistas'] = ((int)($documento['vistas'] ?? 0)) + 1;
+                }
+
                 $lineaId = !empty($documento['linea_id']) ? (int)$documento['linea_id'] : null;
                 $maxSimilares = (int)ConfigService::get('paginacion.max_proyectos_similares', 3);
                 $proyectosSimilares = $model->getProyectosSimilares($id, $lineaId, $maxSimilares);
@@ -127,7 +139,9 @@ class DetallePSTController {
             'documento'          => $documento,
             'proyectosSimilares' => $proyectosSimilares,
             'proyectosComunidad' => $proyectosComunidad,
-            'conteoComunidad'    => $conteoComunidad
+            'conteoComunidad'    => $conteoComunidad,
+            'nivelesConTrayecto' => $model->getNivelesConTrayecto(),
+            'labelsNiveles'      => $model->getNivelAcademicoMap()
         ];
     }
 
@@ -142,10 +156,11 @@ class DetallePSTController {
 
         $id = !empty($_GET['id']) ? (int)$_GET['id'] : 0;
         $requestedFile = !empty($_GET['file']) ? trim($_GET['file']) : '';
+        $esDescarga = (!empty($_GET['download']) && $_GET['download'] === '1') || (!empty($_GET['descargar']) && $_GET['descargar'] === '1');
+        $esRaw = (!empty($_GET['raw']) && $_GET['raw'] === '1');
 
         $fullPath = '';
         $safeFilename = 'documento';
-
         $doc = null;
 
         if (!empty($requestedFile)) {
@@ -156,8 +171,8 @@ class DetallePSTController {
             // Restricción estricta de seguridad: Solo archivos de documentos PST autorizados
             $esRutaPermitida = (strpos($relPath, 'storage/documentos/pst/') === 0 || strpos($relPath, 'storage/documentos/tmp/') === 0);
             if (strpos($relPath, '..') === false && $esRutaPermitida && in_array($extReq, $extPermitidas, true)) {
-                $candidate = BASE_PATH . '/' . $relPath;
-                if (is_file($candidate)) {
+                $candidate = ConfigService::resolverRutaArchivoFisico($relPath);
+                if ($candidate && is_file($candidate)) {
                     $fullPath = $candidate;
                     $safeFilename = pathinfo($fullPath, PATHINFO_BASENAME);
                 }
@@ -192,29 +207,15 @@ class DetallePSTController {
                 die("Acceso denegado: Ruta o formato de archivo no permitido.");
             }
 
-            $fullPath = BASE_PATH . '/' . $relPath;
-            $safeFilename = pathinfo($fullPath, PATHINFO_BASENAME);
-        }
-        
-        // Fallback: Si no existe exactamente en la ruta de BD, buscar en storage por coincidencia limpia
-        if (empty($dbPath) || !is_file($fullPath)) {
-            $dir = BASE_PATH . '/storage/documentos/pst/';
-            if (is_dir($dir) && !empty($relPath)) {
-                $baseName = pathinfo($relPath, PATHINFO_FILENAME);
-                if ($baseName) {
-                    $candidates = glob($dir . '*' . preg_replace('/[^a-zA-Z0-9_\-]/', '', $baseName) . '*');
-                    foreach ($candidates as $cand) {
-                        if (is_file($cand)) {
-                            $fullPath = $cand;
-                            break;
-                        }
-                    }
-                }
+            $candidate = ConfigService::resolverRutaArchivoFisico($relPath);
+            if ($candidate && is_file($candidate)) {
+                $fullPath = $candidate;
+                $safeFilename = pathinfo($fullPath, PATHINFO_BASENAME);
             }
         }
 
-        if (!is_file($fullPath)) {
-            if ($esDescarga) {
+        if (empty($fullPath) || !is_file($fullPath)) {
+            if ($esDescarga || $esRaw) {
                 http_response_code(404);
                 header('Content-Type: text/html; charset=utf-8');
                 echo "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'><title>Archivo No Disponible</title><style>body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; } .card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2rem; max-width: 480px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); } h3 { color: #be123c; margin-top: 0; } p { color: #475569; font-size: 0.92rem; line-height: 1.5; } .btn { display: inline-block; margin-top: 1rem; padding: 0.5rem 1rem; background: #002244; color: white; text-decoration: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; }</style></head><body><div class='card'><h3>Documento Físico No Disponible</h3><p>Este proyecto está registrado en la base de datos pero su archivo digital no se encuentra disponible físicamente en el almacenamiento del servidor.</p><a href='javascript:history.back()' class='btn'>Regresar</a></div></body></html>";
@@ -236,7 +237,6 @@ class DetallePSTController {
         while (ob_get_level()) ob_end_clean();
 
         // 1. Verificación de política de descarga directa
-        $esDescarga = (!empty($_GET['download']) && $_GET['download'] === '1') || (!empty($_GET['descargar']) && $_GET['descargar'] === '1');
         $puedeDescargar = ConfigService::puedeDescargar();
 
         if ($esDescarga && !$puedeDescargar) {
@@ -245,8 +245,6 @@ class DetallePSTController {
             echo "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'><title>Descarga Restringida</title><style>body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; } .card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2rem; max-width: 480px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); } h3 { color: #be123c; margin-top: 0; } p { color: #475569; font-size: 0.92rem; line-height: 1.5; } .btn { display: inline-block; margin-top: 1rem; padding: 0.5rem 1rem; background: #002244; color: white; text-decoration: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; }</style></head><body><div class='card'><h3>Descarga Restringida</h3><p>Su nivel de usuario no cuenta con los privilegios requeridos para descargar este documento o la descarga se encuentra inhabilitada institucionalmente. Puede consultar el documento a través del visor web.</p><a href='javascript:history.back()' class='btn'>Regresar</a></div></body></html>";
             exit;
         }
-
-        $disposition = ($esDescarga && $puedeDescargar) ? 'attachment' : 'inline';
 
         if ($esDescarga && $puedeDescargar) {
             // Forzar descarga del archivo adjunto
@@ -260,6 +258,22 @@ class DetallePSTController {
             header('Content-Disposition: attachment; filename="' . $safeFilename . '"');
             header('Content-Length: ' . filesize($fullPath));
             header('Cache-Control: private, no-cache, no-store, must-revalidate');
+            readfile($fullPath);
+            exit;
+        }
+
+        // Entrega de binario puro (?raw=1) para visores cliente (Mammoth, etc.)
+        if ($esRaw) {
+            $mimeType = match($ext) {
+                'pdf' => 'application/pdf',
+                'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'doc' => 'application/msword',
+                default => 'application/octet-stream'
+            };
+            header('Content-Type: ' . $mimeType);
+            header('Content-Disposition: inline; filename="' . $safeFilename . '"');
+            header('Content-Length: ' . filesize($fullPath));
+            header('Cache-Control: public, max-age=3600');
             readfile($fullPath);
             exit;
         }
@@ -279,64 +293,93 @@ class DetallePSTController {
             exit;
         } elseif ($ext === 'docx') {
             $mostrarToolbar = (bool)ConfigService::get('visor_pdf.mostrar_toolbar', true);
-            require_once BASE_PATH . '/vendor/autoload.php';
-            try {
-                $phpWord = \PhpOffice\PhpWord\IOFactory::load($fullPath);
-                $writer = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'HTML');
-                
-                header('Content-Type: text/html; charset=utf-8');
-                echo "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'>
-                      <style>
-                        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 0; line-height: 1.6; user-select: none; }
-                        .paper-container { max-width: 840px; margin: " . ($mostrarToolbar ? "1rem auto 3rem auto" : "1.5rem auto") . "; background: #ffffff; padding: 2.5rem 3rem; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; transition: transform 0.2s ease; }
-                        h1, h2, h3, h4 { color: #002244; font-weight: 800; line-height: 1.3; }
-                        p { margin-bottom: 1rem; text-align: justify; font-size: 0.95rem; }
-                        table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.9rem; }
-                        td, th { border: 1px solid #cbd5e1; padding: 0.6rem; }
-                        th { background: #f1f5f9; }
-                        .doc-toolbar { position: sticky; top: 0; z-index: 100; background: #ffffff; border-bottom: 1px solid #cbd5e1; padding: 0.5rem 1rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-                        .doc-toolbar-btn { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 0.35rem 0.65rem; font-size: 0.8rem; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; }
-                        .doc-toolbar-btn:hover { background: #e2e8f0; color: #002244; }
-                        @media print { .doc-toolbar { display: none !important; } body { padding: 0; background: #fff; } .paper-container { box-shadow: none; border: none; padding: 0; max-width: 100%; } }
-                      </style></head><body>";
-                if ($mostrarToolbar) {
-                    echo "<div class='doc-toolbar'>
-                            <div style='display:flex; align-items:center; gap:0.5rem;'>
-                                <span style='background:#eff6ff; color:#1d4ed8; padding:0.25rem 0.55rem; border-radius:4px; font-size:0.75rem; font-weight:700;'>Word (.docx)</span>
-                                <span style='font-size:0.8rem; color:#64748b; font-weight:600;'>" . htmlspecialchars($safeFilename) . "</span>
-                            </div>
-                            <div style='display:flex; gap:0.4rem; align-items:center;'>
-                                <button type='button' class='doc-toolbar-btn' onclick='ajustarZoom(-0.1)' title='Reducir zoom'>−</button>
-                                <span id='zoomIndicator' style='font-size:0.78rem; font-weight:700; color:#475569; min-width:40px; text-align:center;'>100%</span>
-                                <button type='button' class='doc-toolbar-btn' onclick='ajustarZoom(0.1)' title='Aumentar zoom'>+</button>
-                                <button type='button' class='doc-toolbar-btn' onclick='window.print()' title='Imprimir documento'>Imprimir</button>
-                            </div>
-                          </div>
-                          <script>
-                            let nivelZoom = 1.0;
-                            function ajustarZoom(delta) {
-                                nivelZoom = Math.min(1.8, Math.max(0.6, Math.round((nivelZoom + delta) * 10) / 10));
-                                const p = document.querySelector('.paper-container');
-                                if (p) { p.style.transform = 'scale(' + nivelZoom + ')'; p.style.transformOrigin = 'top center'; }
-                                document.getElementById('zoomIndicator').innerText = Math.round(nivelZoom * 100) + '%';
-                            }
-                          </script>";
-                }
-                echo "<div class='paper-container'>";
-                $writer->save('php://output');
-                echo "</div></body></html>";
-                exit;
-            } catch (Exception $e) {
-                require_once __DIR__ . '/../services/ExtractorPST.php';
-                $text = ExtractorPST::extraerTextoDOCX($fullPath);
-                header('Content-Type: text/html; charset=utf-8');
-                echo "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'><style>
-                        body { font-family: sans-serif; background: #f8fafc; padding: 2rem; color: #1e293b; user-select: none; }
-                        .paper-container { max-width: 820px; margin: 0 auto; background: white; padding: 2rem; border-radius: 6px; border: 1px solid #cbd5e1; white-space: pre-wrap; line-height: 1.6; font-size: 0.92rem; }
-                      </style></head><body>
-                      <div class='paper-container'>" . htmlspecialchars($text ?? '') . "</div></body></html>";
-                exit;
+            $rawUrlParams = $_GET;
+            $rawUrlParams['raw'] = '1';
+            $rawUrl = '?' . http_build_query($rawUrlParams);
+
+            header('Content-Type: text/html; charset=utf-8');
+            echo "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'>
+                  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                  <title>" . htmlspecialchars($safeFilename) . "</title>
+                  <style>
+                    :root {
+                        --color-primario: #002244;
+                        --color-secundario: #505984;
+                        --color-terciario: #7090CB;
+                        --texto-titulos: #1E293B;
+                        --texto-silenciado: #64748B;
+                    }
+                    * { box-sizing: border-box; }
+                    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 0; line-height: 1.6; }
+                    .doc-toolbar { position: sticky; top: 0; z-index: 100; background: #ffffff; border-bottom: 1px solid #cbd5e1; padding: 0.5rem 1rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+                    .doc-toolbar-btn { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 0.35rem 0.65rem; font-size: 0.8rem; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; }
+                    .doc-toolbar-btn:hover { background: #e2e8f0; color: #002244; }
+                    .paper-container { max-width: 860px; margin: " . ($mostrarToolbar ? "1rem auto 3rem auto" : "1.5rem auto") . "; background: #ffffff; padding: 2.5rem 3rem; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; transition: transform 0.2s ease; transform-origin: top center; word-break: break-word; }
+                    .paper-container h1, .paper-container h2, .paper-container h3, .paper-container h4 { color: #002244; font-weight: 800; line-height: 1.3; }
+                    .paper-container p { margin-bottom: 1rem; text-align: justify; font-size: 0.95rem; }
+                    .paper-container table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.9rem; }
+                    .paper-container td, .paper-container th { border: 1px solid #cbd5e1; padding: 0.6rem; }
+                    .paper-container th { background: #f1f5f9; }
+                    .paper-container img { max-width: 100%; height: auto; display: block; margin: 1rem auto; }
+                    .doc-loader { text-align: center; padding: 3rem; color: #505984; font-weight: 600; font-size: 0.95rem; }
+                    @media print { .doc-toolbar { display: none !important; } body { padding: 0; background: #fff; } .paper-container { box-shadow: none; border: none; padding: 0; max-width: 100%; } }
+                  </style>
+                  <script src='modules/RepositorioPST/assets/js/mammoth.browser.min.js'></script>
+                  <script>
+                    if (typeof window.mammoth === 'undefined') {
+                        document.write('<script src=\"https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js\"><\/script>');
+                    }
+                  </script>
+                  </head><body>";
+            if ($mostrarToolbar) {
+                echo "<div class='doc-toolbar'>
+                        <div style='display:flex; align-items:center; gap:0.5rem;'>
+                            <span style='background:rgba(112, 144, 203, 0.15); color:var(--color-secundario); padding:0.25rem 0.55rem; border-radius:4px; font-size:0.75rem; font-weight:700;'>Word (.docx)</span>
+                            <span style='font-size:0.8rem; color:#64748b; font-weight:600;'>" . htmlspecialchars($safeFilename) . "</span>
+                        </div>
+                        <div style='display:flex; gap:0.4rem; align-items:center;'>
+                            <button type='button' class='doc-toolbar-btn' onclick='ajustarZoom(-0.1)' title='Reducir zoom'>−</button>
+                            <span id='zoomIndicator' style='font-size:0.78rem; font-weight:700; color:#475569; min-width:40px; text-align:center;'>100%</span>
+                            <button type='button' class='doc-toolbar-btn' onclick='ajustarZoom(0.1)' title='Aumentar zoom'>+</button>
+                            <button type='button' class='doc-toolbar-btn' onclick='window.print()' title='Imprimir documento'>Imprimir</button>
+                        </div>
+                      </div>";
             }
+            echo "<div class='paper-container' id='paperContent'>
+                    <div class='doc-loader' id='docLoader'>Cargando visualización del documento Word...</div>
+                  </div>
+                  <script>
+                    let nivelZoom = 1.0;
+                    function ajustarZoom(delta) {
+                        nivelZoom = Math.min(1.8, Math.max(0.6, Math.round((nivelZoom + delta) * 10) / 10));
+                        const p = document.getElementById('paperContent');
+                        if (p) p.style.transform = 'scale(' + nivelZoom + ')';
+                        const zInd = document.getElementById('zoomIndicator');
+                        if (zInd) zInd.innerText = Math.round(nivelZoom * 100) + '%';
+                    }
+
+                    fetch('" . $rawUrl . "')
+                        .then(res => {
+                            if (!res.ok) throw new Error('HTTP ' + res.status);
+                            return res.arrayBuffer();
+                        })
+                        .then(arrayBuffer => {
+                            const m = window.mammoth || (typeof mammoth !== 'undefined' ? mammoth : null);
+                            if (!m) throw new Error('Mammoth.js no está disponible');
+                            return m.convertToHtml({arrayBuffer: arrayBuffer});
+                        })
+                        .then(result => {
+                            const container = document.getElementById('paperContent');
+                            container.innerHTML = result.value || '<p><em>El documento no contiene texto legible.</em></p>';
+                        })
+                        .catch(err => {
+                            console.warn('Fallo renderizado Mammoth:', err);
+                            const container = document.getElementById('paperContent');
+                            container.innerHTML = '<div style=\"padding:1.5rem; color:#be123c;\"><p><strong>Vista previa no disponible mediante visor dinámico.</strong></p><p style=\"font-size:0.85rem; color:#64748b;\">' + (err.message || err) + '</p></div>';
+                        });
+                  </script>
+                  </body></html>";
+            exit;
         } else {
             header('Content-Type: application/octet-stream');
             readfile($fullPath);
@@ -707,7 +750,7 @@ class DetallePSTController {
 
                 $nivelPost = !empty($postData['nivel_academico']) ? trim($postData['nivel_academico']) : 'Pregrado';
                 $idTrayectoPost = !empty($postData['id_trayecto']) ? (int)$postData['id_trayecto'] : null;
-                $trayectoPost = in_array($nivelPost, ['Pregrado', 'TSU']) ? (!empty($postData['trayecto']) ? trim($postData['trayecto']) : 'Trayecto I') : null;
+                $trayectoPost = in_array($nivelPost, $model->getNivelesConTrayecto()) ? (!empty($postData['trayecto']) ? trim($postData['trayecto']) : 'Trayecto I') : null;
 
                 $rawUrlGit = !empty($postData['url_repositorio']) ? trim($postData['url_repositorio']) : null;
                 $urlGitSanitizada = null;
@@ -736,6 +779,16 @@ class DetallePSTController {
                     $resumen = !empty($postData['obj_general']) ? trim($postData['obj_general']) : 'Proyecto Socio-Tecnológico indexado en el repositorio institucional.';
                 }
 
+                $carrerasVinculadas = [];
+                if (!empty($postData['carreras_vinculadas'])) {
+                    if (is_array($postData['carreras_vinculadas'])) {
+                        $carrerasVinculadas = array_map('intval', $postData['carreras_vinculadas']);
+                    } else {
+                        $carrerasVinculadas = array_filter(array_map('intval', explode(',', (string)$postData['carreras_vinculadas'])));
+                    }
+                }
+                $carrerasVinculadas = array_values(array_unique(array_filter($carrerasVinculadas, fn($cId) => $cId > 0 && $cId !== $idCarrera)));
+
                 $datos = [
                     'titulo'                     => !empty($postData['titulo']) ? trim($postData['titulo']) : '',
                     'anio_publicacion'           => !empty($postData['anio_publicacion']) ? (int)$postData['anio_publicacion'] : (int)date('Y'),
@@ -759,6 +812,7 @@ class DetallePSTController {
                     'id_carrera'                 => $idCarrera,
                     'linea_id'                   => $lineaId,
                     'dimension_id'               => !empty($postData['dimension_id']) ? (int)$postData['dimension_id'] : null,
+                    'carreras_vinculadas'        => $carrerasVinculadas,
                 ];
 
                 if (empty($datos['titulo'])) {
@@ -935,7 +989,7 @@ class DetallePSTController {
 
             $nivelPost = !empty($_POST['nivel_academico']) ? trim($_POST['nivel_academico']) : 'Pregrado';
             $idTrayectoPost = !empty($_POST['id_trayecto']) ? (int)$_POST['id_trayecto'] : null;
-            $trayectoPost = in_array($nivelPost, ['Pregrado', 'TSU']) ? (!empty($_POST['trayecto']) ? trim($_POST['trayecto']) : 'Trayecto I') : null;
+            $trayectoPost = in_array($nivelPost, $model->getNivelesConTrayecto()) ? (!empty($_POST['trayecto']) ? trim($_POST['trayecto']) : 'Trayecto I') : null;
             $idCarrera = !empty($_POST['id_carrera']) ? (int)$_POST['id_carrera'] : 1;
             $lineaId = !empty($_POST['linea_id']) ? (int)$_POST['linea_id'] : null;
             if (empty($lineaId)) {
@@ -946,6 +1000,16 @@ class DetallePSTController {
                     $lineaId = 7;
                 }
             }
+
+            $carrerasVinculadas = [];
+            if (!empty($_POST['carreras_vinculadas'])) {
+                if (is_array($_POST['carreras_vinculadas'])) {
+                    $carrerasVinculadas = array_map('intval', $_POST['carreras_vinculadas']);
+                } else {
+                    $carrerasVinculadas = array_filter(array_map('intval', explode(',', (string)$_POST['carreras_vinculadas'])));
+                }
+            }
+            $carrerasVinculadas = array_values(array_unique(array_filter($carrerasVinculadas, fn($cId) => $cId > 0 && $cId !== $idCarrera)));
 
             $datos = [
                 'titulo'                     => !empty($_POST['titulo']) ? trim($_POST['titulo']) : '',
@@ -970,6 +1034,7 @@ class DetallePSTController {
                 'id_carrera'                 => $idCarrera,
                 'linea_id'                   => $lineaId,
                 'dimension_id'               => !empty($_POST['dimension_id']) ? (int)$_POST['dimension_id'] : null,
+                'carreras_vinculadas'        => $carrerasVinculadas,
             ];
             
             if (empty($datos['titulo'])) {
@@ -1070,7 +1135,7 @@ class DetallePSTController {
 
                     $nivelEdit = !empty($_POST['nivel_academico']) ? trim($_POST['nivel_academico']) : ($documento['nivel_academico'] ?? 'Pregrado');
                     $idTrayectoEdit = !empty($_POST['id_trayecto']) ? (int)$_POST['id_trayecto'] : null;
-                    $trayectoEdit = in_array($nivelEdit, ['Pregrado', 'TSU']) ? (!empty($_POST['trayecto']) ? trim($_POST['trayecto']) : 'Trayecto I') : null;
+                    $trayectoEdit = in_array($nivelEdit, $model->getNivelesConTrayecto()) ? (!empty($_POST['trayecto']) ? trim($_POST['trayecto']) : 'Trayecto I') : null;
                     $finalEditPdf = $nuevoArchivoPath ? $nuevoArchivoPath : ($documento['archivo_pdf'] ?? null);
 
                     $rawUrlGitEdit = !empty($_POST['url_repositorio']) ? trim($_POST['url_repositorio']) : null;
@@ -1100,6 +1165,16 @@ class DetallePSTController {
 
                     $dimensionId = !empty($_POST['dimension_id']) ? (int)$_POST['dimension_id'] : ($documento['dimension_id'] ?? null);
 
+                    $carrerasVinculadasEdit = [];
+                    if (isset($_POST['carreras_vinculadas'])) {
+                        if (is_array($_POST['carreras_vinculadas'])) {
+                            $carrerasVinculadasEdit = array_map('intval', $_POST['carreras_vinculadas']);
+                        } else {
+                            $carrerasVinculadasEdit = array_filter(array_map('intval', explode(',', (string)$_POST['carreras_vinculadas'])));
+                        }
+                    }
+                    $carrerasVinculadasEdit = array_values(array_unique(array_filter($carrerasVinculadasEdit, fn($cId) => $cId > 0 && $cId !== $idCarrera)));
+
                     $datos = [
                         'titulo'                     => !empty($_POST['titulo']) ? trim($_POST['titulo']) : '',
                         'anio_publicacion'           => !empty($_POST['anio_publicacion']) ? (int)$_POST['anio_publicacion'] : (int)date('Y'),
@@ -1123,6 +1198,7 @@ class DetallePSTController {
                         'id_carrera'                 => $idCarrera,
                         'linea_id'                   => $lineaId,
                         'dimension_id'               => $dimensionId,
+                        'carreras_vinculadas'        => $carrerasVinculadasEdit,
                     ];
                     
                     if (empty($datos['titulo'])) {
@@ -1258,10 +1334,12 @@ class DetallePSTController {
             'autores'           => $autores,
             'tutores'           => $tutores,
             'carreras'          => $carreras,
-            'lineas'            => $lineas,
-            'dimensiones'       => $dimensiones,
-            'nivelesAcademicos' => $nivelesAcademicos,
-            'trayectosList'     => $trayectosList,
+            'lineas'             => $lineas,
+            'dimensiones'        => $dimensiones,
+            'nivelesAcademicos'  => $nivelesAcademicos,
+            'nivelesConTrayecto' => $model->getNivelesConTrayecto(),
+            'labelsNiveles'      => $model->getNivelAcademicoMap(),
+            'trayectosList'      => $trayectosList,
             'pagination'        => $pagination,
             'statsResumen'      => $statsResumen,
             'q'                 => $q,

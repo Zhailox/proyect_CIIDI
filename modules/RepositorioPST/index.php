@@ -82,6 +82,7 @@ class RepositorioPSTModule implements ModuleContract {
                 'tipo'        => 'parent',
                 'titulo'      => 'Repositorio',
                 'icono'       => 'ph-fill ph-book-open-text',
+                'orden'       => 10,
                 'privilegio_minimo' => $nivelPublico,
                 'enlace'      => 'repositorio',
                 'activadores' => ['repositorio', 'detalles-pst', 'agregar-documento', 'buscador', 'configuracion-pst'],

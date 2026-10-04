@@ -1,6 +1,22 @@
 <?php
 // core/Views/home_bienvenida.php
 $seccionesHome = $this->getTarjetasInicio();
+
+// Conteo real dinámico de PSTs indexados en la base de datos
+$totalPst = 0;
+$rutaModeloPst = MODULES_PATH . 'RepositorioPST/models/DocumentoModel.php';
+if (file_exists($rutaModeloPst)) {
+    try {
+        require_once $rutaModeloPst;
+        if (class_exists('DocumentoModel')) {
+            $docModel = new DocumentoModel();
+            $totalPst = (int) $docModel->getPSTDocumentosCount(['activo' => true]);
+        }
+    } catch (\Throwable $e) {
+        $totalPst = 0;
+    }
+}
+$textoPst = ($totalPst > 0) ? "+{$totalPst} PST " . ($totalPst === 1 ? 'Indexado' : 'Indexados') : '0 PST Indexados';
 ?>
 
 <div class="landing-container">
@@ -31,15 +47,15 @@ $seccionesHome = $this->getTarjetasInicio();
                 <img src="assets/img/uptt.png" alt="Ecosistema UPTTMBI" class="landing-hero-img-spatial">
                 
                 <!-- Tarjetas Flotantes Glassmorphic (Antigravity Depth) -->
-                <div class="floating-glass-card card-top-left">
+                <a href="?ruta=repositorio" class="floating-glass-card card-top-left" style="text-decoration: none; color: inherit;">
                     <div class="floating-icon">
                         <i class="ph ph-book-open-text"></i>
                     </div>
                     <div class="floating-info">
-                        <strong>+46 PST Indexados</strong>
+                        <strong><?= htmlspecialchars($textoPst) ?></strong>
                         <span>Catálogo Institucional</span>
                     </div>
-                </div>
+                </a>
 
                 <div class="floating-glass-card card-bottom-right">
                     <div class="floating-icon">

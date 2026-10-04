@@ -544,13 +544,11 @@
 
 /* Columna de Filtros (Sidebar) */
 .search-sidebar-column {
-    background: rgba(255, 255, 255, 0.15) !important;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: #ffffff !important;
     border: 1px solid rgba(112, 144, 203, 0.25);
     border-radius: var(--radius-lg, 12px);
     padding: 1.5rem;
-    box-shadow: 0 4px 20px rgba(18, 26, 62, 0.02);
+    box-shadow: 0 4px 20px rgba(18, 26, 62, 0.04);
 }
 
 .filter-group-card {
@@ -800,13 +798,11 @@
 }
 
 .search-bar-panel {
-    background: rgba(255, 255, 255, 0.15) !important;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: #ffffff !important;
     border: 1px solid rgba(112, 144, 203, 0.25);
     border-radius: var(--radius-lg, 12px);
     padding: 1.5rem;
-    box-shadow: 0 4px 20px rgba(18, 26, 62, 0.02);
+    box-shadow: 0 4px 20px rgba(18, 26, 62, 0.04);
 }
 
 .search-mode-selector {
@@ -1073,12 +1069,10 @@
 .search-welcome-state {
     text-align: center;
     padding: 3.5rem 2rem;
-    background: rgba(255, 255, 255, 0.15) !important;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: #ffffff !important;
     border: 1px dashed rgba(112, 144, 203, 0.3);
     border-radius: var(--radius-lg, 12px);
-    box-shadow: 0 4px 20px rgba(18, 26, 62, 0.02);
+    box-shadow: 0 4px 20px rgba(18, 26, 62, 0.04);
 }
 
 .search-welcome-state h2 {
@@ -1095,15 +1089,13 @@
 }
 
 .no-results-card {
-    background: rgba(255, 255, 255, 0.15) !important;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: #ffffff !important;
     border: 1px solid rgba(112, 144, 203, 0.25);
     border-radius: var(--radius-lg, 12px);
     padding: 2.5rem;
     text-align: center;
     color: var(--texto-silenciado);
-    box-shadow: 0 4px 20px rgba(18, 26, 62, 0.02);
+    box-shadow: 0 4px 20px rgba(18, 26, 62, 0.04);
 }
 
 .no-results-card i {
@@ -1119,26 +1111,18 @@
 }
 
 .result-card {
-    background: rgba(255, 255, 255, 0.15) !important;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: #ffffff !important;
     border: 1px solid rgba(112, 144, 203, 0.25);
     border-radius: var(--radius-lg, 12px);
     padding: 1.25rem;
-    box-shadow: 0 4px 20px rgba(18, 26, 62, 0.02);
+    box-shadow: 0 4px 16px rgba(18, 26, 62, 0.04);
     transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast);
 }
 
 .result-card:hover {
     transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.35) !important;
-    box-shadow: 0 6px 20px rgba(18, 26, 62, 0.06);
-    border-color: rgba(112, 144, 203, 0.4);
-}
-
-.result-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(18, 26, 62, 0.08);
+    background: #ffffff !important;
+    box-shadow: 0 8px 24px rgba(18, 26, 62, 0.08);
     border-color: rgba(80, 89, 132, 0.35);
 }
 

@@ -13,28 +13,50 @@
             <div class="pst-detail-header">
                 <div style="display: flex; gap: 0.4rem; margin-bottom: 0.4rem; flex-wrap: wrap; align-items: center;">
                     <?php if (ConfigService::get('recursos.mostrar_nivel_academico', true)): 
-                        $labelsNiv = [
-                            'TSU' => 'TSU',
+                        $labelsNiv = !empty($labelsNiveles) ? $labelsNiveles : [
                             'Pregrado' => 'Pregrado',
                             'Especializacion' => 'Especialización',
                             'Maestria' => 'Maestría',
                             'Doctorado' => 'Doctorado'
                         ];
+                        $nivelesConTrayecto = !empty($nivelesConTrayecto) ? $nivelesConTrayecto : ['Pregrado'];
                         $nivDoc = $documento['nivel_academico'] ?? 'Pregrado';
                         $nivLabel = $labelsNiv[$nivDoc] ?? $nivDoc;
                     ?>
                         <span class="pst-badge-soft" style="background-color: rgba(112, 144, 203, 0.15); color: var(--color-secundario); font-weight: 700;"><?= htmlspecialchars($nivLabel) ?></span>
-                        <?php if (in_array($nivDoc, ['Pregrado', 'TSU']) && !empty($documento['trayecto'])): ?>
+                        <?php if (in_array($nivDoc, $nivelesConTrayecto) && !empty($documento['trayecto'])): ?>
                             <span class="pst-badge-soft" style="background-color: rgba(0, 123, 255, 0.1); color: var(--color-terciario); font-weight: 700;"><?= htmlspecialchars($documento['trayecto']) ?></span>
                         <?php endif; ?>
                     <?php endif; ?>
                     <span class="pst-badge-soft" style="background-color: #f1f5f9; color: var(--texto-silenciado);">AÑO <?= $documento['anio_publicacion'] ?></span>
                     <span class="pst-badge-soft" style="background-color: #f1f5f9; color: var(--texto-silenciado);"><?= htmlspecialchars(ConfigService::get('recursos.sufijo_tipo_recurso', 'PNF Informática')) ?></span>
+                    <?php if (!empty($documento['carreras_vinculadas_nombres'])): ?>
+                        <?php 
+                        $vinculadasLista = $documento['carreras_vinculadas_lista'] ?? [];
+                        if (empty($vinculadasLista) && !empty($documento['carreras_vinculadas_nombres'])) {
+                            foreach (explode(', ', $documento['carreras_vinculadas_nombres']) as $vNom) {
+                                $vinculadasLista[] = ['nombre' => $vNom];
+                            }
+                        }
+                        ?>
+                        <?php foreach ($vinculadasLista as $vCarrera): ?>
+                            <span class="pst-badge-soft" style="background-color: rgba(112, 144, 203, 0.15); color: var(--color-secundario); font-weight: 700; border: 1px solid rgba(112, 144, 203, 0.3);">
+                                <i class="ph ph-tag" style="color: var(--color-terciario);"></i> <?= htmlspecialchars($vCarrera['nombre']) ?>
+                            </span>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                     <?php if (!empty($documento['url_repositorio']) && ConfigService::get('recursos.mostrar_url_git', true)): ?>
                         <a href="<?= htmlspecialchars($documento['url_repositorio']) ?>" target="_blank" class="pst-badge-soft" style="background-color: #002244; color: #ffffff; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                             <i class="ph ph-git-branch"></i> Repositorio Git
                         </a>
                     <?php endif; ?>
+                    <span class="pst-badge-soft" style="background-color: #f1f5f9; color: var(--texto-silenciado); display: inline-flex; align-items: center; gap: 0.35rem;" title="Visualizaciones de esta ficha">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-secundario);">
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <span><?= number_format((int)($documento['vistas'] ?? 0)) ?> vistas</span>
+                    </span>
                 </div>
                 <h1 style="margin-bottom: 0.75rem;"><?= htmlspecialchars($documento['titulo'] ?? '') ?></h1>
 
@@ -47,7 +69,7 @@
                         <!-- Estudiantes Autores -->
                         <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 5px; padding: 0.6rem 0.8rem; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
                             <strong style="color: var(--texto-silenciado); font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 0.3rem; letter-spacing: 0.5px;">
-                                <i class="ph ph-student" style="color: var(--color-terciario);"></i> Estudiantes (Autores):
+                                <i class="ph ph-student" style="color: var(--color-terciario);"></i> Equipo de Autores:
                             </strong>
                             <span style="font-size: 0.85rem; font-weight: 700; color: var(--texto-titulos); line-height: 1.4; display: block;">
                                 <?= htmlspecialchars($documento['autores_nombres'] ?? 'No registrados') ?>
@@ -86,7 +108,7 @@
                 <?php if (ConfigService::get('recursos.mostrar_nivel_academico', true)): ?>
                 <div class="pst-meta-item">
                     <strong>Nivel Académico / Trayecto</strong>
-                    <span><?= htmlspecialchars($documento['nivel_academico'] ?? 'Pregrado') ?><?= (($documento['nivel_academico'] ?? 'Pregrado') === 'Pregrado' && !empty($documento['trayecto'])) ? ' • ' . htmlspecialchars($documento['trayecto']) : '' ?></span>
+                    <span><?= htmlspecialchars($nivLabel ?? ($documento['nivel_academico'] ?? 'Pregrado')) ?><?= (in_array($nivDoc ?? ($documento['nivel_academico'] ?? 'Pregrado'), $nivelesConTrayecto ?? ['Pregrado']) && !empty($documento['trayecto'])) ? ' • ' . htmlspecialchars($documento['trayecto']) : '' ?></span>
                 </div>
                 <?php endif; ?>
 
@@ -120,9 +142,14 @@
                     <span><?= htmlspecialchars($documento['dimension_nombre'] ?? 'Sin dimensión asociada') ?></span>
                 </div>
 
+                <div class="pst-meta-item">
+                    <strong>Programa Académico</strong>
+                    <span style="font-weight: 700; color: var(--color-secundario);"><?= htmlspecialchars($documento['carrera_nombre'] ?? 'PNF en Informática') ?></span>
+                </div>
+
                 <?php if (ConfigService::get('recursos.mostrar_url_git', true)): ?>
                 <div class="pst-meta-item">
-                    <strong>Código Fuente (Git)</strong>
+                    <strong>Código Fuente</strong>
                     <span>
                         <?php if (!empty($documento['url_repositorio'])): ?>
                             <a href="<?= htmlspecialchars($documento['url_repositorio']) ?>" target="_blank" style="color: var(--color-terciario); text-decoration: underline;">
@@ -210,7 +237,7 @@
                         </div>
                     </div>
                     <?php if ($archivoExiste): ?>
-                        <iframe src="?ruta=ver-pdf-pst&id=<?= $documento['id'] ?><?= $toolbarParam ?>" style="width: 100%; height: 580px; border: 1px solid rgba(169,168,166,0.3); border-radius: 4px; background: white;" title="Visor de Documento"></iframe>
+                        <iframe id="iframeDocViewer" data-src="?ruta=ver-pdf-pst&id=<?= $documento['id'] ?><?= $toolbarParam ?>" src="about:blank" style="width: 100%; height: 580px; border: 1px solid rgba(169,168,166,0.3); border-radius: 4px; background: white;" title="Visor de Documento"></iframe>
                     <?php else: ?>
                         <div style="background: white; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 3rem 1.5rem; text-align: center;">
                             <div style="width: 52px; height: 52px; margin: 0 auto 1rem auto; border-radius: 50%; background: #f8fafc; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #94a3b8; border: 1px solid #e2e8f0;">
@@ -218,7 +245,7 @@
                             </div>
                             <h4 style="color: var(--texto-titulos); margin: 0 0 0.4rem 0; font-size: 1rem;">Documento Digital No Disponible en Almacenamiento</h4>
                             <p style="color: var(--texto-silenciado); max-width: 480px; margin: 0 auto; font-size: 0.88rem; line-height: 1.5;">
-                                Esta investigación se encuentra debidamente indexada y registrada con sus metadatos en el catálogo, pero su archivo físico (.pdf / .docx) no está presente en el servidor.
+                                Esta investigación se encuentra debidamente indexada y registrada con sus metadatos en el catálogo, pero su archivo digital no está presente en el servidor.
                             </p>
                         </div>
                     <?php endif; ?>
@@ -246,7 +273,7 @@
             <?php if (!empty($proyectosSimilares)): ?>
                 <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(169, 168, 166, 0.2);">
                     <h3 style="font-size: 0.95rem; font-weight: 800; color: var(--texto-titulos); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem;">
-                        <i class="ph ph-git-fork" style="color: var(--color-terciario);"></i> Investigaciones Afines en la misma Línea (<?= htmlspecialchars($documento['linea_nombre'] ?? 'General') ?>)
+                        <i class="ph ph-git-fork" style="color: var(--color-terciario);"></i> Investigaciones Afines en la misma Línea: <?= htmlspecialchars($documento['linea_nombre'] ?? 'General') ?>
                     </h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.75rem;">
                         <?php foreach ($proyectosSimilares as $sim): ?>
@@ -282,9 +309,34 @@ function switchDetailTab(tabId, btn) {
     document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(tb => tb.classList.remove('active'));
     
-    document.getElementById(tabId).classList.add('active');
-    btn.classList.add('active');
+    const target = document.getElementById(tabId);
+    if (target) {
+        target.classList.add('active');
+    }
+    if (btn) {
+        btn.classList.add('active');
+    }
+
+    // Carga diferida (lazy loading) del iframe para inicializarse con dimensiones visibles
+    if (tabId === 'tabVisorPdf') {
+        const iframe = document.getElementById('iframeDocViewer');
+        if (iframe && iframe.dataset.src) {
+            const currentSrc = iframe.getAttribute('src');
+            if (!currentSrc || currentSrc === 'about:blank' || currentSrc.endsWith('about:blank')) {
+                iframe.src = iframe.dataset.src;
+            }
+        }
+    }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.hash === '#tabVisorPdf' || window.location.hash === '#visor') {
+        const btnVisor = document.querySelector('button[onclick*="tabVisorPdf"]');
+        if (btnVisor) {
+            switchDetailTab('tabVisorPdf', btnVisor);
+        }
+    }
+});
 
 // MODAL DE CITAS ACADÉMICAS DINÁMICAS (DESDE CONFIGURACIÓN JSON)
 const configuracionesCitas = <?= json_encode(ConfigService::get('citas.estilos', [])) ?>;
@@ -420,7 +472,7 @@ function cerrarModalComunidad() {
         </div>
         
         <p style="font-size: 0.78rem; color: var(--texto-silenciado); margin-bottom: 0.75rem;">
-            Se encontraron <strong><?= count($proyectosComunidad) ?></strong> investigación(es) adicional(es) realizada(s) en esta misma comunidad o institución:
+            Se encontraron <strong><?= count($proyectosComunidad) ?></strong> investigaciones adicionales realizadas en esta misma comunidad o institución:
         </p>
 
         <div style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 340px; overflow-y: auto; padding-right: 0.25rem;">

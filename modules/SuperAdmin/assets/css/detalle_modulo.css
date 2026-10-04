@@ -137,7 +137,7 @@
 
 .ag-badge-core {
     background: rgba(112, 144, 203, 0.15);
-    color: var(--color-principal);
+    color: var(--titulos);
     border: 1px solid rgba(112, 144, 203, 0.3);
     border-radius: var(--radius-sm);
     padding: 5px 12px;

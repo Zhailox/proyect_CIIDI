@@ -22,13 +22,13 @@ $phpPostMaxMb = $parseIniToMb(ini_get('post_max_size'));
 $maxMbEfectivo = round(min($configMaxMb, $phpUploadMaxMb, $phpPostMaxMb), 2);
 $carrerasList = $carreras ?? [];
 $currCarrera = $_POST['id_carrera'] ?? $documento['id_carrera'] ?? $documento['carrera_id'] ?? 1;
-$labelsNiveles = [
-    'TSU' => 'TSU',
+$labelsNiveles = !empty($labelsNiveles) ? $labelsNiveles : [
     'Pregrado' => 'Pregrado',
     'Especializacion' => 'Especialización',
     'Maestria' => 'Maestría',
     'Doctorado' => 'Doctorado'
 ];
+$nivelesConTrayecto = !empty($nivelesConTrayecto) ? $nivelesConTrayecto : ['Pregrado'];
 ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script>
@@ -133,7 +133,7 @@ if (typeof window.mammoth === 'undefined') {
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-                                <div class="upload-input-group" id="container_trayecto" style="<?= (in_array($currNivel, ['Pregrado', 'TSU'])) ? 'display: block;' : 'display: none;' ?>">
+                                <div class="upload-input-group" id="container_trayecto" style="<?= (in_array($currNivel, $nivelesConTrayecto)) ? 'display: block;' : 'display: none;' ?>">
                                     <label for="trayecto">Trayecto del PNF *</label>
                                     <select id="trayecto" name="trayecto" class="upload-input" onchange="syncIdTrayecto(this)">
                                         <?php 
@@ -225,7 +225,7 @@ if (typeof window.mammoth === 'undefined') {
                                     $tAcadTipo = (stripos($tAcadCed, 'E-') === 0) ? 'E-' : 'V-';
                                     $tAcadNum = preg_replace('/\D/', '', (stripos($tAcadCed, 'V-') === 0 || stripos($tAcadCed, 'E-') === 0) ? substr($tAcadCed, 2) : $tAcadCed);
                                 ?>
-                                <div class="sub-label-header">Tutor Académico (Asesor Docente)</div>
+                                <div class="sub-label-header">Tutor Académico</div>
                                 <div class="grid-2-cols">
                                     <div class="upload-input-group">
                                         <div style="display: flex; gap: 0.35rem; align-items: stretch;">
@@ -247,7 +247,7 @@ if (typeof window.mammoth === 'undefined') {
                                     $tInstTipo = (stripos($tInstCed, 'E-') === 0) ? 'E-' : 'V-';
                                     $tInstNum = preg_replace('/\D/', '', (stripos($tInstCed, 'V-') === 0 || stripos($tInstCed, 'E-') === 0) ? substr($tInstCed, 2) : $tInstCed);
                                 ?>
-                                <div class="sub-label-header">Tutor Institucional (Asesor de la Organización)</div>
+                                <div class="sub-label-header">Tutor Institucional</div>
                                 <div class="grid-2-cols">
                                     <div class="upload-input-group">
                                         <div style="display: flex; gap: 0.35rem; align-items: stretch;">
@@ -269,7 +269,7 @@ if (typeof window.mammoth === 'undefined') {
                                     $tComTipo = (stripos($tComCed, 'E-') === 0) ? 'E-' : 'V-';
                                     $tComNum = preg_replace('/\D/', '', (stripos($tComCed, 'V-') === 0 || stripos($tComCed, 'E-') === 0) ? substr($tComCed, 2) : $tComCed);
                                 ?>
-                                <div class="sub-label-header">Tutor Comunitario (Líder / Representante Comunal)</div>
+                                <div class="sub-label-header">Tutor Comunitario</div>
                                 <div class="grid-2-cols">
                                     <div class="upload-input-group">
                                         <div style="display: flex; gap: 0.35rem; align-items: stretch;">
@@ -302,7 +302,7 @@ if (typeof window.mammoth === 'undefined') {
                                 ?>
                                 <!-- Selector de Carrera / PNF -->
                                 <div class="upload-input-group">
-                                    <label for="id_carrera"><i class="ph ph-graduation-cap"></i> Programa Académico (Carrera) *</label>
+                                    <label for="id_carrera"><i class="ph ph-graduation-cap"></i> Programa Académico *</label>
                                     <?php if ($permitirFiltroCarrera): ?>
                                         <select id="id_carrera" name="id_carrera" class="upload-input" onchange="alCambiarCarreraFormulario(this.value)" required>
                                             <option value="">Seleccione una Carrera...</option>
@@ -345,6 +345,30 @@ if (typeof window.mammoth === 'undefined') {
                                         <option value="">Seleccione una Dimensión...</option>
                                     </select>
                                 </div>
+
+                                <!-- Selector de Carreras Vinculadas -->
+                                <div class="upload-input-group">
+                                    <label><i class="ph ph-tag"></i> Carreras Vinculadas</label>
+                                    <div class="carreras-vinculadas-container" style="display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.35rem; padding: 0.5rem 0.75rem; background: rgba(80, 89, 132, 0.05); border: 1px solid #cbd5e1; border-radius: 8px;">
+                                        <?php 
+                                        $vinculadasIds = $_POST['carreras_vinculadas'] ?? $documento['carreras_vinculadas_ids'] ?? [];
+                                        if (!is_array($vinculadasIds)) $vinculadasIds = [];
+                                        ?>
+                                        <?php foreach ($carrerasList as $cItem): ?>
+                                            <?php $esBase = ((string)$currCarrera === (string)$cItem['id']); ?>
+                                            <label class="tag-carrera-check" id="tag_carrera_label_<?= $cItem['id'] ?>" style="display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer; padding: 0.25rem 0.55rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; border: 1px solid <?= (in_array((int)$cItem['id'], array_map('intval', $vinculadasIds)) && !$esBase) ? 'var(--color-terciario)' : '#cbd5e1' ?>; background: <?= (in_array((int)$cItem['id'], array_map('intval', $vinculadasIds)) && !$esBase) ? 'rgba(112, 144, 203, 0.15)' : '#ffffff' ?>; color: var(--color-secundario); transition: all 0.2s; user-select: none; <?= $esBase ? 'opacity: 0.45; pointer-events: none;' : '' ?>">
+                                                <input type="checkbox" name="carreras_vinculadas[]" value="<?= $cItem['id'] ?>" class="check-carrera-vinculada" <?= in_array((int)$cItem['id'], array_map('intval', $vinculadasIds)) && !$esBase ? 'checked' : '' ?> <?= $esBase ? 'disabled' : '' ?> style="cursor: pointer;" onchange="actualizarEstiloTagCarrera(this)">
+                                                <span><?= htmlspecialchars($cItem['nombre']) ?></span>
+                                                <?php if ($esBase): ?>
+                                                    <span style="font-size: 0.68rem; font-style: italic; color: var(--texto-silenciado);">Base</span>
+                                                <?php endif; ?>
+                                            </label>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <span style="font-size: 0.73rem; color: var(--texto-silenciado); margin-top: 0.25rem; display: block;">
+                                        Etiquete una o varias carreras secundarias afines a esta investigación.
+                                    </span>
+                                </div>
                             </div>
 
                             <div class="grid-2-cols">
@@ -353,13 +377,13 @@ if (typeof window.mammoth === 'undefined') {
                                     <input type="text" id="comunidad_beneficiada" name="comunidad_beneficiada" class="upload-input" value="<?= htmlspecialchars($_POST['comunidad_beneficiada'] ?? $documento['comunidad_beneficiada'] ?? '') ?>" placeholder="Ej: Consejo Comunal SAPNNAET">
                                 </div>
                                 <div class="upload-input-group">
-                                    <label for="palabras_clave">Palabras Clave (Keywords)</label>
+                                    <label for="palabras_clave">Palabras Clave</label>
                                     <input type="text" id="palabras_clave" name="palabras_clave" class="upload-input" value="<?= htmlspecialchars($_POST['palabras_clave'] ?? $documento['palabras_clave'] ?? '') ?>" placeholder="Ej: Inventario, PHP, PostgreSQL, MVC">
                                 </div>
                             </div>
 
                             <div class="upload-input-group" style="margin-top: 0.25rem;">
-                                <label for="url_repositorio">URL del Repositorio de Código (Opcional - GitHub / GitLab)</label>
+                                <label for="url_repositorio">URL del Repositorio de Código</label>
                                 <input type="url" id="url_repositorio" name="url_repositorio" class="upload-input" value="<?= htmlspecialchars($_POST['url_repositorio'] ?? $documento['url_repositorio'] ?? '') ?>" placeholder="Ej: https://github.com/usuario/repositorio-pst">
                             </div>
 
@@ -403,7 +427,7 @@ if (typeof window.mammoth === 'undefined') {
                                 if ($accion === 'editar'): 
                                 ?>
                                     <h3 class="drag-title">Sustitución de Documento Digital</h3>
-                                    <p class="drag-desc">Arrastra o selecciona un nuevo archivo PDF o Word (.docx) (Máx. <?= $maxMb ?> MB) para reemplazar el documento actual.</p>
+                                    <p class="drag-desc">Arrastra o selecciona un nuevo archivo PDF o Word. Máx. <?= $maxMb ?> MB para reemplazar el documento actual.</p>
                                     <button type="button" class="btn-browse" id="btnBrowseFile">Sustituir Archivo Adjunto</button>
                                     
                                     <div id="badgeArchivoSustituido" style="display: none; margin-top: 0.75rem; background: rgba(80, 89, 132, 0.08); border: 1px solid rgba(80, 89, 132, 0.2); border-radius: 4px; padding: 0.5rem 0.75rem; text-align: left; font-size: 0.78rem; color: var(--color-secundario);">
@@ -412,7 +436,7 @@ if (typeof window.mammoth === 'undefined') {
                                     </div>
                                 <?php else: ?>
                                     <h3 class="drag-title">Carga Automática e Indexación por Lotes</h3>
-                                    <p class="drag-desc">Arrastra tus archivos PDF o Word (.docx) aquí (Máx. <?= $maxMb ?> MB por archivo) para auto-completar y gestionar la investigación.</p>
+                                    <p class="drag-desc">Arrastra tus archivos PDF o Word aquí. Máx. <?= $maxMb ?> MB por archivo para auto-completar y gestionar la investigación.</p>
                                     <button type="button" class="btn-browse" id="btnBrowseFile">Seleccionar Archivo(s)</button>
                                 <?php endif; ?>
                             </div>
@@ -574,8 +598,13 @@ if (typeof window.mammoth === 'undefined') {
                                                  $nivelDocLabel = $labelsNiveles[$nivelDoc] ?? $nivelDoc;
                                                  ?>
                                                  <span class="pst-badge-soft" style="background-color: rgba(80, 89, 132, 0.12); color: var(--color-secundario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(80, 89, 132, 0.2);"><?= htmlspecialchars($nivelDocLabel) ?></span>
-                                                 <?php if (in_array($nivelDoc, ['Pregrado', 'TSU']) && !empty($doc['trayecto'])): ?>
+                                                 <?php if (in_array($nivelDoc, $nivelesConTrayecto) && !empty($doc['trayecto'])): ?>
                                                      <span class="pst-badge-soft" style="background-color: rgba(112, 144, 203, 0.12); color: var(--color-terciario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(112, 144, 203, 0.2);"><?= htmlspecialchars($doc['trayecto']) ?></span>
+                                                 <?php endif; ?>
+                                                 <?php if (!empty($doc['carreras_vinculadas_nombres'])): ?>
+                                                     <span class="pst-badge-soft" style="background-color: rgba(112, 144, 203, 0.15); color: var(--color-secundario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 700; border: 1px solid rgba(112, 144, 203, 0.3);" title="Carreras Vinculadas: <?= htmlspecialchars($doc['carreras_vinculadas_nombres']) ?>">
+                                                         <i class="ph ph-tag"></i> <?= htmlspecialchars($doc['carreras_vinculadas_nombres']) ?>
+                                                     </span>
                                                  <?php endif; ?>
                                                   <?php if (($doc['activo'] ?? true)): ?>
                                                       <span style="background: rgba(80, 89, 132, 0.1); color: var(--color-secundario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 700; border: 1px solid rgba(80, 89, 132, 0.2); display: inline-flex; align-items: center; gap: 0.2rem;">
@@ -770,13 +799,14 @@ function updateDimensionOptions(selectedLineaId) {
     });
 }
 
+const nivelesConTrayecto = <?= json_encode($nivelesConTrayecto ?? ['Pregrado']) ?>;
 function toggleTrayectoByNivel() {
     const nivelSelect = document.getElementById('nivel_academico');
     const trayectoContainer = document.getElementById('container_trayecto');
     const trayectoSelect = document.getElementById('trayecto');
     if (!nivelSelect || !trayectoContainer) return;
 
-    if (nivelSelect.value === 'Pregrado' || nivelSelect.value === 'TSU') {
+    if (nivelesConTrayecto.includes(nivelSelect.value)) {
         trayectoContainer.style.display = 'block';
         if (trayectoSelect && !trayectoSelect.value) trayectoSelect.value = 'Trayecto I';
     } else {
@@ -1433,7 +1463,10 @@ function obtenerDatosFormularioActual() {
         tutor_institucional_cedula: document.getElementsByName('tutor_institucional_cedula')[0] ? document.getElementsByName('tutor_institucional_cedula')[0].value.trim() : '',
         tutor_institucional_nombre: document.getElementsByName('tutor_institucional_nombre')[0] ? document.getElementsByName('tutor_institucional_nombre')[0].value.trim() : '',
         tutor_comunitario_cedula: document.getElementsByName('tutor_comunitario_cedula')[0] ? document.getElementsByName('tutor_comunitario_cedula')[0].value.trim() : '',
-        tutor_comunitario_nombre: document.getElementsByName('tutor_comunitario_nombre')[0] ? document.getElementsByName('tutor_comunitario_nombre')[0].value.trim() : ''
+        tutor_comunitario_nombre: document.getElementsByName('tutor_comunitario_nombre')[0] ? document.getElementsByName('tutor_comunitario_nombre')[0].value.trim() : '',
+        carreras_vinculadas: Array.from(document.querySelectorAll('.check-carrera-vinculada:checked'))
+            .filter(chk => !chk.disabled && chk.value)
+            .map(chk => parseInt(chk.value, 10))
     };
 }
 
@@ -1702,6 +1735,21 @@ function rellenarFormulario(data) {
         carreraSelect.value = targetCarreraId;
     }
 
+    // Sincronizar carreras vinculadas (etiquetas intercarrera)
+    const vinculadasIds = (data.carreras_vinculadas || data.carreras_vinculadas_ids || []).map(v => parseInt(v, 10));
+    document.querySelectorAll('.check-carrera-vinculada').forEach(chk => {
+        const val = parseInt(chk.value, 10);
+        if (String(val) === String(targetCarreraId)) {
+            chk.checked = false;
+            chk.disabled = true;
+        } else {
+            chk.disabled = false;
+            chk.checked = vinculadasIds.includes(val);
+        }
+        actualizarEstiloTagCarrera(chk);
+    });
+    actualizarDisponibilidadCarrerasVinculadas(targetCarreraId);
+
     actualizarLineasPorCarrera(targetCarreraId, data.linea_id, data.dimension_id);
     actualizarTrayectosPorCarrera(targetCarreraId, data.trayecto, data.id_trayecto);
 }
@@ -1759,6 +1807,45 @@ async function actualizarTrayectosPorCarrera(carreraId, selectedTrayecto = null,
 function alCambiarCarreraFormulario(carreraId) {
     actualizarLineasPorCarrera(carreraId);
     actualizarTrayectosPorCarrera(carreraId);
+    actualizarDisponibilidadCarrerasVinculadas(carreraId);
+}
+
+function actualizarDisponibilidadCarrerasVinculadas(carreraBaseId) {
+    document.querySelectorAll('.check-carrera-vinculada').forEach(chk => {
+        const label = document.getElementById('tag_carrera_label_' + chk.value);
+        if (String(chk.value) === String(carreraBaseId)) {
+            chk.checked = false;
+            chk.disabled = true;
+            if (label) {
+                label.style.opacity = '0.45';
+                label.style.pointerEvents = 'none';
+                label.style.background = '#f8fafc';
+                label.style.borderColor = '#cbd5e1';
+                label.style.color = 'var(--texto-silenciado)';
+            }
+        } else {
+            chk.disabled = false;
+            if (label) {
+                label.style.opacity = '1';
+                label.style.pointerEvents = 'auto';
+                actualizarEstiloTagCarrera(chk);
+            }
+        }
+    });
+}
+
+function actualizarEstiloTagCarrera(chk) {
+    const label = document.getElementById('tag_carrera_label_' + chk.value);
+    if (!label) return;
+    if (chk.checked) {
+        label.style.background = 'rgba(112, 144, 203, 0.15)';
+        label.style.borderColor = 'var(--color-terciario)';
+        label.style.color = 'var(--color-secundario)';
+    } else {
+        label.style.background = '#ffffff';
+        label.style.borderColor = '#cbd5e1';
+        label.style.color = 'var(--color-secundario)';
+    }
 }
 
 async function actualizarLineasPorCarrera(carreraId, selectedLineaId = null, selectedDimId = null) {
@@ -1983,6 +2070,7 @@ function abrirModalPrevisualizacionDocumento() {
             iframe.srcdoc = `<p style="padding:2rem; color:#be123c;">No se encontró el objeto de archivo local ni la URL del servidor.</p>`;
         }
     } else {
+        modal.style.display = 'flex';
         iframe.removeAttribute('srcdoc');
         iframe.src = fileUrl || 'about:blank';
     }
@@ -1991,7 +2079,11 @@ function abrirModalPrevisualizacionDocumento() {
 }
 
 function fetchYRenderizarMammoth(url, iframe, fileName) {
-    fetch(url)
+    let cleanUrl = url.split('#')[0];
+    if (!cleanUrl.includes('raw=1')) {
+        cleanUrl += (cleanUrl.includes('?') ? '&' : '?') + 'raw=1';
+    }
+    fetch(cleanUrl)
         .then(res => {
             if (!res.ok) throw new Error("HTTP Error status " + res.status);
             return res.arrayBuffer();
@@ -2004,7 +2096,7 @@ function fetchYRenderizarMammoth(url, iframe, fileName) {
             iframe.srcdoc = `<div style="padding:2rem; font-family:sans-serif; color:#be123c;">
                 <h4 style="margin-top:0;">No se pudo descargar el archivo Word para previsualización</h4>
                 <p style="font-size:0.85rem; color:#334155;">Detalle técnico: ${err.message || err}</p>
-                <p style="font-size:0.8rem; color:#64748b;">Ruta solicitada: <code>${url}</code></p>
+                <p style="font-size:0.8rem; color:#64748b;">Ruta solicitada: <code>${cleanUrl}</code></p>
             </div>`;
         });
 }
@@ -2402,7 +2494,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="grid-2-cols" style="gap: 1.25rem;">
                 <div style="background: #fafbfe; padding: 1rem; border-radius: 8px; border: 1px solid rgba(112, 144, 203, 0.15);">
                     <strong style="color: var(--color-terciario); display: flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.4rem;">
-                        <i class="ph ph-users" style="font-size: 1.1rem;"></i> Autores (Estudiantes del Equipo)
+                        <i class="ph ph-users" style="font-size: 1.1rem;"></i> Equipo de Autores
                     </strong>
                     <span id="modalFichaAutores" style="font-weight: 600; color: var(--texto-titulos); line-height: 1.45; display: block;"></span>
                 </div>
@@ -2449,12 +2541,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     <strong style="color: var(--texto-titulos); font-size: 0.78rem; display: block; text-transform: uppercase; margin-bottom: 0.2rem;">Año y Fecha de Defensa:</strong>
                     <span id="modalFichaAnio" style="font-weight: 600;"></span>
                 </div>
+                <div style="grid-column: span 2;" id="modalFichaCarrerasVinculadasWrapper">
+                    <strong style="color: var(--texto-titulos); font-size: 0.78rem; display: block; text-transform: uppercase; margin-bottom: 0.2rem;"><i class="ph ph-tag"></i> Carreras Vinculadas:</strong>
+                    <span id="modalFichaCarrerasVinculadas" style="font-weight: 600; color: var(--color-secundario);"></span>
+                </div>
                 <div style="grid-column: span 2;">
-                    <strong style="color: var(--texto-titulos); font-size: 0.78rem; display: block; text-transform: uppercase; margin-bottom: 0.2rem;">Palabras Clave (Keywords):</strong>
+                    <strong style="color: var(--texto-titulos); font-size: 0.78rem; display: block; text-transform: uppercase; margin-bottom: 0.2rem;">Palabras Clave:</strong>
                     <span id="modalFichaKeywords" style="font-style: italic; color: var(--texto-silenciado);"></span>
                 </div>
                 <div id="modalFichaGitWrapper" style="grid-column: span 2;">
-                    <strong style="color: var(--texto-titulos); font-size: 0.78rem; display: block; text-transform: uppercase; margin-bottom: 0.2rem;">Código Fuente (Git):</strong>
+                    <strong style="color: var(--texto-titulos); font-size: 0.78rem; display: block; text-transform: uppercase; margin-bottom: 0.2rem;">Código Fuente:</strong>
                     <a id="modalFichaGit" href="#" target="_blank" style="color: var(--color-terciario); text-decoration: underline; font-weight: 600;"></a>
                 </div>
             </div>
@@ -2498,6 +2594,10 @@ function abrirModalPrevisualizarFichaAdmin(doc) {
     document.getElementById('modalFichaDimension').textContent = doc.dimension_nombre || 'Sin dimensión asociada';
     document.getElementById('modalFichaComunidad').textContent = doc.comunidad_beneficiada || 'No registrada';
     document.getElementById('modalFichaAnio').textContent = (doc.anio_publicacion || '') + (doc.fecha_defensa ? ' (Defensa: ' + doc.fecha_defensa + ')' : '');
+    const vincEl = document.getElementById('modalFichaCarrerasVinculadas');
+    if (vincEl) {
+        vincEl.textContent = doc.carreras_vinculadas_nombres || 'Ninguna';
+    }
     document.getElementById('modalFichaKeywords').textContent = doc.palabras_clave || 'Ninguna';
 
     const gitWrapper = document.getElementById('modalFichaGitWrapper');

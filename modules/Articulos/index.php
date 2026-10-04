@@ -114,6 +114,7 @@ public function getRutas(): array {
                 'tipo'        => 'parent',
                 'titulo'      => 'Artículos',
                 'icono'       => 'ph-fill ph-newspaper',
+                'orden'       => 20,
                 'enlace'      => 'articulos',
                 'activadores' => ['articulos', 'leer-articulo', 'gestor-articulos', 'nuevo-articulo', 'procesar-articulo', 'editar-articulo', 'actualizar-articulo', 'eliminar-articulo', 'gestor-catalogos', 'configuracion-articulos'],
                 'privilegio_minimo' => $nivelPublico,

@@ -82,7 +82,7 @@ require_once __DIR__ . '/../services/ConfigService.php';
                         </div>
                         <?php if (!empty($filtros['anio'])): ?>
                             <button type="button" class="btn-reset-year" onclick="selectYear('')">
-                                <i class="ph ph-x-circle"></i> Quitar filtro de año (<?= $filtros['anio'] ?>)
+                                <i class="ph ph-x-circle"></i> Quitar filtro de año: <?= $filtros['anio'] ?>
                             </button>
                         <?php endif; ?>
                     </div>
@@ -136,7 +136,7 @@ require_once __DIR__ . '/../services/ConfigService.php';
                         <input type="hidden" name="dimension_id" value="<?= htmlspecialchars($filtros['dimension_id'] ?? '') ?>">
 
                         <div class="google-search-bar <?= !empty($_GET['usar_ia']) ? 'ia-mode-container' : '' ?>" id="searchBarContainer">
-                            <input type="text" name="q" id="searchQueryInput" value="<?= htmlspecialchars($q ?? '') ?>" placeholder="<?= !empty($_GET['usar_ia']) ? 'Describe tu propuesta o temática de investigación (Búsqueda Semántica con Redes Neuronales)...' : 'Buscar por títulos, palabras clave o resumen abstract...' ?>" autocomplete="off">
+                            <input type="text" name="q" id="searchQueryInput" value="<?= htmlspecialchars($q ?? '') ?>" placeholder="<?= !empty($_GET['usar_ia']) ? 'Describe tu propuesta o temática de investigación: Búsqueda Semántica con Redes Neuronales...' : 'Buscar por títulos, palabras clave o resumen abstract...' ?>" autocomplete="off">
                             <svg class="google-search-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -152,11 +152,11 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                     <span class="semantic-slider"></span>
                                 </label>
                                 <label for="usarIaCheckbox" class="semantic-toggle-label <?= !empty($_GET['usar_ia']) ? 'active' : '' ?>">
-                                    <i class="ph-bold ph-sparkle"></i> Búsqueda Semántica con Redes Neuronales (IA)
+                                    <i class="ph-bold ph-sparkle"></i> Búsqueda Semántica con Redes Neuronales
                                 </label>
                             </div>
                             <div class="ia-hint <?= !empty($_GET['usar_ia']) ? 'visible' : '' ?>">
-                                <i class="ph-bold ph-info"></i> Encuentra proyectos por significado conceptual analizando resúmenes y títulos mediante embeddings vectoriales (ONNX).
+                                <i class="ph-bold ph-info"></i> Encuentra proyectos por significado conceptual analizando resúmenes y títulos mediante embeddings vectoriales.
                             </div>
                         </div>
                     </form>
@@ -169,7 +169,7 @@ require_once __DIR__ . '/../services/ConfigService.php';
                         <div class="search-welcome-state">
                             <i class="ph ph-books" style="font-size: 4rem; color: var(--color-terciario); opacity: 0.8;"></i>
                             <h2>Explora el repositorio PST</h2>
-                            <p>Escribe palabras clave o usa los filtros del panel izquierdo (como el histograma de publicaciones) para iniciar la búsqueda.</p>
+                            <p>Escribe palabras clave o usa los filtros del panel izquierdo para iniciar la búsqueda.</p>
                         </div>
                     <?php else: ?>
                         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
@@ -238,9 +238,9 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                         <div class="result-classification-tags">
                                             <?php 
                                             $nivBusc = $res['nivel_academico'] ?? '';
-                                            $labelsBusc = ['Especializacion' => 'Especialización', 'Maestria' => 'Maestría'];
+                                            $labelsBusc = !empty($labelsNiveles) ? $labelsNiveles : ['Especializacion' => 'Especialización', 'Maestria' => 'Maestría'];
                                             $nivBuscLabel = $labelsBusc[$nivBusc] ?? $nivBusc;
-                                            if (!empty($nivBusc) && !in_array($nivBusc, ['Pregrado', 'TSU'])): ?>
+                                            if (!empty($nivBusc) && ($nivBusc !== 'Pregrado')) : ?>
                                                 <span class="tag-linea" style="background-color: rgba(112, 144, 203, 0.15); color: var(--color-secundario); font-weight: 700;">
                                                     <i class="ph ph-graduation-cap"></i> <?= htmlspecialchars($nivBuscLabel) ?>
                                                 </span>
@@ -255,11 +255,21 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                             <?php if (!empty($res['dimension_nombre'])): ?>
                                                 <span class="tag-dimension"><i class="ph ph-tree-structure"></i> <?= htmlspecialchars($res['dimension_nombre'] ?? '') ?></span>
                                             <?php endif; ?>
+                                            <?php if (!empty($res['carreras_vinculadas_nombres'])): ?>
+                                                <?php foreach (explode(', ', $res['carreras_vinculadas_nombres']) as $carrVincTag): ?>
+                                                    <span class="tag-linea" style="background-color: rgba(112, 144, 203, 0.15); color: var(--color-secundario); font-weight: 700; border: 1px solid rgba(112, 144, 203, 0.3);" title="Carrera Vinculada">
+                                                        <i class="ph ph-tag" style="color: var(--color-terciario);"></i> <?= htmlspecialchars(trim($carrVincTag)) ?>
+                                                    </span>
+                                                <?php endforeach; ?>
+                                            <?php endif; ?>
                                             <?php if (!empty($res['url_repositorio']) && ConfigService::get('recursos.mostrar_url_git', true)): ?>
                                                 <a href="<?= htmlspecialchars($res['url_repositorio'] ?? '') ?>" target="_blank" class="tag-linea" style="background-color: #002244; color: #fff; text-decoration: none;">
                                                     <i class="ph ph-git-branch"></i> Git
                                                 </a>
                                             <?php endif; ?>
+                                            <span class="tag-linea" style="background-color: #f1f5f9; color: var(--texto-silenciado);" title="Visualizaciones">
+                                                <i class="ph ph-eye" style="color: var(--color-secundario);"></i> <?= number_format((int)($res['vistas'] ?? 0)) ?> vistas
+                                            </span>
                                         </div>
 
                                         <div class="result-meta">

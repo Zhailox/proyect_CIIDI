@@ -56,15 +56,22 @@ class BusquedaGlobalController {
         $dimensiones  = $model->getDimensionesOperativas();
         $anioCounts   = $model->getPSTCountByYear($filtrosExtra);
         
+        $nivelesAcademicos  = $model->getNivelesAcademicos();
+        $nivelesConTrayecto = $model->getNivelesConTrayecto();
+        $labelsNiveles      = $model->getNivelAcademicoMap();
+        
         return [
-            'resultados'   => $resultados,
-            'q'            => $q,
-            'usar_ia'      => $usar_ia,
-            'carreras'     => $carreras,
-            'lineas'       => $lineas,
-            'dimensiones'  => $dimensiones,
-            'anioCounts'   => $anioCounts,
-            'filtros'      => $filtrosExtra,
+            'resultados'         => $resultados,
+            'q'                  => $q,
+            'usar_ia'            => $usar_ia,
+            'carreras'           => $carreras,
+            'lineas'             => $lineas,
+            'dimensiones'        => $dimensiones,
+            'nivelesAcademicos'  => $nivelesAcademicos,
+            'nivelesConTrayecto' => $nivelesConTrayecto,
+            'labelsNiveles'      => $labelsNiveles,
+            'anioCounts'         => $anioCounts,
+            'filtros'            => $filtrosExtra,
             'pagination'   => [
                 'current_page' => $page,
                 'total_pages'  => $totalPages,

@@ -57,9 +57,23 @@ class ModuleLoader {
                     // Siempre compilar el menú global etiquetado para soporte de reactivación dinámica en tiempo real
                     $configMenuModulo = $modulo->getMenuConfig();
                     if (!empty($configMenuModulo)) {
+                        $prioridadDefecto = [
+                            'RepositorioPST'         => 10,
+                            'Articulos'              => 20,
+                            'Investigaciones'        => 30,
+                            'LineasInvestigacion'    => 40,
+                            'Cursos'                 => 50,
+                            'VinculacionEmpresarial' => 60,
+                            'SuperAdmin'             => 900,
+                            'Autenticacion'          => 990
+                        ];
+
                         foreach ($configMenuModulo as &$itemMenu) {
                             $itemMenu['modulo_origen'] = $carpeta;
                             $itemMenu['modulo_estado'] = $esCore ? 'online' : $estadoActual;
+                            if (!isset($itemMenu['orden'])) {
+                                $itemMenu['orden'] = $prioridadDefecto[$carpeta] ?? 100;
+                            }
                         }
                         unset($itemMenu);
                         $this->menuGlobal = array_merge($this->menuGlobal, $configMenuModulo);
@@ -96,7 +110,13 @@ class ModuleLoader {
     }
 
     public function getMenuGlobal(): array {
-        return $this->menuGlobal;
+        $menu = $this->menuGlobal;
+        usort($menu, function($a, $b) {
+            $pesoA = $a['orden'] ?? 100;
+            $pesoB = $b['orden'] ?? 100;
+            return $pesoA <=> $pesoB;
+        });
+        return $menu;
     }
 
     public function getInfoModulosAdmin(): array {

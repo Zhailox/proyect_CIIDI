@@ -52,23 +52,28 @@ class DocumentoModel {
                        dp.id_trayecto, t.nombre AS trayecto_nombre, t.numero AS trayecto_numero, 
                        t.nombre AS trayecto, 
                        dp.url_repositorio, dp.fecha_defensa, COALESCE(dp.activo, true) AS activo,
+                       COALESCE(dp.vistas, 0) AS vistas,
                        li.nombre AS linea_nombre, 
                        li.id AS linea_id,
                        dims.nombre AS dimension_nombre,
                        dims.id AS dimension_id,
                        c.nombre AS carrera_nombre,
                        c.id AS carrera_id,
+                       (SELECT STRING_AGG(c_vinc.nombre, ', ') 
+                        FROM public.proyecto_carreras_vinculadas pcv 
+                        JOIN public.carreras c_vinc ON pcv.id_carrera = c_vinc.id 
+                        WHERE pcv.id_recurso = r.id) AS carreras_vinculadas_nombres,
                        (SELECT STRING_AGG(a.nombre_completo, ', ') 
                         FROM public.recurso_autores ra 
                         JOIN public.autores a ON ra.id_autor = a.id 
                         WHERE ra.id_recurso = r.id) AS autores_nombres,
-                       (SELECT STRING_AGG(t.nombre_completo || ' (' || 
+                       (SELECT STRING_AGG(t.nombre_completo || ' - ' || 
                             CASE pt.tipo_tutor_id 
                                 WHEN 3 THEN 'Tutor Académico'
                                 WHEN 2 THEN 'Tutor Institucional'
                                 WHEN 4 THEN 'Tutor Comunitario'
                                 ELSE COALESCE(tt.nombre, 'Tutor')
-                            END || ')', ' • ') 
+                            END, ' • ') 
                         FROM public.proyecto_tutores pt 
                         JOIN public.tutores t ON pt.id_tutor = t.id 
                         LEFT JOIN public.tipo_tutor tt ON pt.tipo_tutor_id = tt.id
@@ -85,7 +90,8 @@ class DocumentoModel {
         $execParams = [];
 
         if (!empty($filtros['carrera_id'])) {
-            $sql .= " AND COALESCE(dp.id_carrera, li.id_carrera) = ?";
+            $sql .= " AND (COALESCE(dp.id_carrera, li.id_carrera) = ? OR EXISTS (SELECT 1 FROM public.proyecto_carreras_vinculadas pcv WHERE pcv.id_recurso = r.id AND pcv.id_carrera = ?))";
+            $execParams[] = (int)$filtros['carrera_id'];
             $execParams[] = (int)$filtros['carrera_id'];
         }
 
@@ -116,7 +122,7 @@ class DocumentoModel {
             ];
             $valNivel = trim($filtros['nivel_academico']);
             $valNivel = $nivelMap[$valNivel] ?? $valNivel;
-            $sql .= " AND dp.nivel_academico = ?::public.nivel_academico_enum";
+            $sql .= " AND dp.nivel_academico = ?";
             $execParams[] = $valNivel;
         }
 
@@ -262,7 +268,8 @@ class DocumentoModel {
             $params[] = ($filtros['activo'] === true || $filtros['activo'] === '1' || $filtros['activo'] === 1) ? true : false;
         }
         if (!empty($filtros['carrera_id'])) {
-            $sql .= " AND COALESCE(dp.id_carrera, li.id_carrera) = ?";
+            $sql .= " AND (COALESCE(dp.id_carrera, li.id_carrera) = ? OR EXISTS (SELECT 1 FROM public.proyecto_carreras_vinculadas pcv WHERE pcv.id_recurso = r.id AND pcv.id_carrera = ?))";
+            $params[] = (int)$filtros['carrera_id'];
             $params[] = (int)$filtros['carrera_id'];
         }
         if (!empty($filtros['linea_id'])) {
@@ -280,7 +287,7 @@ class DocumentoModel {
             ];
             $valNivel = trim($filtros['nivel_academico']);
             $valNivel = $nivelMap[$valNivel] ?? $valNivel;
-            $sql .= " AND dp.nivel_academico = ?::public.nivel_academico_enum";
+            $sql .= " AND dp.nivel_academico = ?";
             $params[] = $valNivel;
         }
         if (!empty($filtros['trayecto'])) {
@@ -339,6 +346,7 @@ class DocumentoModel {
         $sql = "SELECT r.id, r.titulo, r.anio_publicacion, r.archivo_pdf,
                        tr.nombre AS tipo_recurso_nombre,
                        dp.resumen AS proyecto_resumen, dp.palabras_clave AS proyecto_palabras,
+                       COALESCE(dp.vistas, 0) AS vistas,
                        da.resumen AS articulo_resumen,
                        (SELECT STRING_AGG(a.nombre_completo, ', ') 
                         FROM public.recurso_autores ra 
@@ -474,24 +482,216 @@ class DocumentoModel {
         return $this->cleanArray($qb->tabla('tipo_recurso')->orderBy('nombre', 'ASC')->get());
     }
 
-    public function getNivelesAcademicos(): array {
+    public function getNivelesAcademicos(bool $soloActivos = true): array {
         $db = Connection::getInstance();
         try {
-            $sql = "SELECT e.enumlabel 
-                    FROM pg_enum e 
-                    JOIN pg_type t ON e.enumtypid = t.oid 
-                    WHERE t.typname = 'nivel_academico_enum' 
-                    ORDER BY e.enumsortorder ASC";
+            $sql = "SELECT codigo FROM public.niveles_academicos";
+            if ($soloActivos) {
+                $sql .= " WHERE activo = true";
+            }
+            $sql .= " ORDER BY orden ASC, id ASC";
             $stmt = $db->query($sql);
             $rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
             if (!empty($rows)) {
                 return $rows;
             }
         } catch (\Throwable $e) {
-            error_log("Error obteniendo nivel_academico_enum: " . $e->getMessage());
+            error_log("Error obteniendo niveles_academicos: " . $e->getMessage());
         }
 
-        return ['TSU', 'Pregrado', 'Especializacion', 'Maestria', 'Doctorado'];
+        return ['Pregrado', 'Especializacion', 'Maestria', 'Doctorado'];
+    }
+
+    public function getNivelesAcademicosDetallados(): array {
+        $db = Connection::getInstance();
+        try {
+            $sql = "SELECT n.id, n.codigo, n.nombre, n.descripcion, n.requiere_trayecto, n.orden, n.activo,
+                           COUNT(dp.id_recurso) AS total_proyectos
+                    FROM public.niveles_academicos n
+                    LEFT JOIN public.detalles_proyectos dp ON dp.nivel_academico = n.codigo
+                    GROUP BY n.id, n.codigo, n.nombre, n.descripcion, n.requiere_trayecto, n.orden, n.activo
+                    ORDER BY n.orden ASC, n.id ASC";
+            $stmt = $db->query($sql);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\Throwable $e) {
+            error_log("Error obteniendo niveles académicos detallados: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getNivelAcademicoMap(): array {
+        $db = Connection::getInstance();
+        try {
+            $sql = "SELECT codigo, nombre FROM public.niveles_academicos WHERE activo = true ORDER BY orden ASC, id ASC";
+            $stmt = $db->query($sql);
+            $rows = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+            if (!empty($rows)) {
+                return $rows;
+            }
+        } catch (\Throwable $e) {
+            error_log("Error obteniendo mapa de niveles: " . $e->getMessage());
+        }
+
+        return [
+            'Pregrado' => 'Pregrado',
+            'Especializacion' => 'Especialización',
+            'Maestria' => 'Maestría',
+            'Doctorado' => 'Doctorado'
+        ];
+    }
+
+    public function getNivelesConTrayecto(): array {
+        $db = Connection::getInstance();
+        try {
+            $sql = "SELECT codigo FROM public.niveles_academicos WHERE requiere_trayecto = true AND activo = true";
+            $stmt = $db->query($sql);
+            $rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            if (!empty($rows)) {
+                return $rows;
+            }
+        } catch (\Throwable $e) {
+            error_log("Error obteniendo niveles con trayecto: " . $e->getMessage());
+        }
+
+        return ['Pregrado'];
+    }
+
+    public function crearNivelAcademico(array $datos): array {
+        $db = Connection::getInstance();
+        $nombre = trim($datos['nombre'] ?? '');
+        $codigo = trim($datos['codigo'] ?? '');
+        $descripcion = trim($datos['descripcion'] ?? '');
+        $requiereTrayecto = !empty($datos['requiere_trayecto']) ? true : false;
+        $orden = isset($datos['orden']) ? (int)$datos['orden'] : 0;
+        $activo = isset($datos['activo']) ? (bool)$datos['activo'] : true;
+
+        if (empty($nombre)) {
+            return ['success' => false, 'message' => 'El nombre del nivel académico es obligatorio.'];
+        }
+        if (empty($codigo)) {
+            $codigo = preg_replace('/[^a-zA-Z0-9]/', '', ucwords($nombre));
+        }
+        $codigo = preg_replace('/[^a-zA-Z0-9_]/', '', $codigo);
+        if (empty($codigo)) {
+            return ['success' => false, 'message' => 'El código identificador no es válido.'];
+        }
+
+        try {
+            $stmtCheck = $db->prepare("SELECT id FROM public.niveles_academicos WHERE LOWER(codigo) = LOWER(?)");
+            $stmtCheck->execute([$codigo]);
+            if ($stmtCheck->fetch()) {
+                return ['success' => false, 'message' => "Ya existe un nivel académico con el código '{$codigo}'."];
+            }
+
+            $stmt = $db->prepare("INSERT INTO public.niveles_academicos (codigo, nombre, descripcion, requiere_trayecto, orden, activo, created_at, updated_at) 
+                                  VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW()) RETURNING id");
+            $stmt->execute([$codigo, $nombre, $descripcion, $requiereTrayecto ? 'true' : 'false', $orden, $activo ? 'true' : 'false']);
+            $nuevoId = (int)$stmt->fetchColumn();
+            return ['success' => true, 'id' => $nuevoId, 'message' => "Nivel académico '{$nombre}' creado correctamente."];
+        } catch (\Throwable $e) {
+            return ['success' => false, 'message' => 'Error al crear el nivel académico: ' . $e->getMessage()];
+        }
+    }
+
+    public function actualizarNivelAcademico(int $id, array $datos): array {
+        $db = Connection::getInstance();
+        $nombre = trim($datos['nombre'] ?? '');
+        $codigoNuevo = trim($datos['codigo'] ?? '');
+        $descripcion = trim($datos['descripcion'] ?? '');
+        $requiereTrayecto = !empty($datos['requiere_trayecto']) ? true : false;
+        $orden = isset($datos['orden']) ? (int)$datos['orden'] : 0;
+        $activo = isset($datos['activo']) ? (bool)$datos['activo'] : true;
+
+        if (empty($nombre)) {
+            return ['success' => false, 'message' => 'El nombre del nivel académico es obligatorio.'];
+        }
+        if (empty($codigoNuevo)) {
+            $codigoNuevo = preg_replace('/[^a-zA-Z0-9]/', '', ucwords($nombre));
+        }
+        $codigoNuevo = preg_replace('/[^a-zA-Z0-9_]/', '', $codigoNuevo);
+
+        try {
+            $stmtCur = $db->prepare("SELECT id, codigo FROM public.niveles_academicos WHERE id = ?");
+            $stmtCur->execute([$id]);
+            $current = $stmtCur->fetch(PDO::FETCH_ASSOC);
+            if (!$current) {
+                return ['success' => false, 'message' => 'Nivel académico no encontrado.'];
+            }
+
+            $stmtCheck = $db->prepare("SELECT id FROM public.niveles_academicos WHERE LOWER(codigo) = LOWER(?) AND id != ?");
+            $stmtCheck->execute([$codigoNuevo, $id]);
+            if ($stmtCheck->fetch()) {
+                return ['success' => false, 'message' => "El código '{$codigoNuevo}' ya está asignado a otro nivel académico."];
+            }
+
+            $db->beginTransaction();
+
+            $codigoAntiguo = $current['codigo'];
+
+            $stmt = $db->prepare("UPDATE public.niveles_academicos 
+                                  SET codigo = ?, nombre = ?, descripcion = ?, requiere_trayecto = ?, orden = ?, activo = ?, updated_at = NOW() 
+                                  WHERE id = ?");
+            $stmt->execute([$codigoNuevo, $nombre, $descripcion, $requiereTrayecto ? 'true' : 'false', $orden, $activo ? 'true' : 'false', $id]);
+
+            if ($codigoAntiguo !== $codigoNuevo) {
+                $stmtCascada = $db->prepare("UPDATE public.detalles_proyectos SET nivel_academico = ? WHERE nivel_academico = ?");
+                $stmtCascada->execute([$codigoNuevo, $codigoAntiguo]);
+            }
+
+            $db->commit();
+            return ['success' => true, 'message' => "Nivel académico '{$nombre}' actualizado correctamente."];
+        } catch (\Throwable $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            return ['success' => false, 'message' => 'Error al actualizar el nivel académico: ' . $e->getMessage()];
+        }
+    }
+
+    public function eliminarNivelAcademico(int $id): array {
+        $db = Connection::getInstance();
+        try {
+            $stmtCur = $db->prepare("SELECT id, codigo, nombre FROM public.niveles_academicos WHERE id = ?");
+            $stmtCur->execute([$id]);
+            $current = $stmtCur->fetch(PDO::FETCH_ASSOC);
+            if (!$current) {
+                return ['success' => false, 'message' => 'Nivel académico no encontrado.'];
+            }
+
+            $stmtCount = $db->prepare("SELECT COUNT(*) FROM public.detalles_proyectos WHERE nivel_academico = ?");
+            $stmtCount->execute([$current['codigo']]);
+            $totalProyectos = (int)$stmtCount->fetchColumn();
+
+            if ($totalProyectos > 0) {
+                return [
+                    'success' => false, 
+                    'message' => "No se puede eliminar el nivel '{$current['nombre']}' porque tiene {$totalProyectos} proyecto(s) asociado(s). Reasigne los proyectos a otro nivel académico o desactive este nivel."
+                ];
+            }
+
+            $stmtDel = $db->prepare("DELETE FROM public.niveles_academicos WHERE id = ?");
+            $stmtDel->execute([$id]);
+
+            return ['success' => true, 'message' => "Nivel académico '{$current['nombre']}' eliminado correctamente."];
+        } catch (\Throwable $e) {
+            return ['success' => false, 'message' => 'Error al eliminar el nivel académico: ' . $e->getMessage()];
+        }
+    }
+
+    public function toggleNivelAcademico(int $id): array {
+        $db = Connection::getInstance();
+        try {
+            $stmt = $db->prepare("UPDATE public.niveles_academicos SET activo = NOT activo, updated_at = NOW() WHERE id = ? RETURNING activo, nombre");
+            $stmt->execute([$id]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                $estado = !empty($row['activo']) ? 'activado' : 'desactivado';
+                return ['success' => true, 'message' => "Nivel académico '{$row['nombre']}' {$estado} correctamente."];
+            }
+            return ['success' => false, 'message' => 'Nivel académico no encontrado.'];
+        } catch (\Throwable $e) {
+            return ['success' => false, 'message' => 'Error al cambiar estado: ' . $e->getMessage()];
+        }
     }
 
     public function getTrayectos(?int $carreraId = null): array {
@@ -640,23 +840,28 @@ class DocumentoModel {
                        dp.id_trayecto, t.nombre AS trayecto_nombre, t.numero AS trayecto_numero, 
                        t.nombre AS trayecto, 
                        dp.url_repositorio, dp.fecha_defensa, COALESCE(dp.activo, true) AS activo,
+                       COALESCE(dp.vistas, 0) AS vistas,
                        li.nombre AS linea_nombre, 
                        li.id AS linea_id,
                        dims.nombre AS dimension_nombre,
                        dims.id AS dimension_id,
                        c.nombre AS carrera_nombre,
                        c.id AS carrera_id,
+                       (SELECT STRING_AGG(c_vinc.nombre, ', ') 
+                        FROM public.proyecto_carreras_vinculadas pcv 
+                        JOIN public.carreras c_vinc ON pcv.id_carrera = c_vinc.id 
+                        WHERE pcv.id_recurso = r.id) AS carreras_vinculadas_nombres,
                        (SELECT STRING_AGG(a.nombre_completo, ', ') 
                         FROM public.recurso_autores ra 
                         JOIN public.autores a ON ra.id_autor = a.id 
                         WHERE ra.id_recurso = r.id) AS autores_nombres,
-                       (SELECT STRING_AGG(t.nombre_completo || ' (' || 
+                       (SELECT STRING_AGG(t.nombre_completo || ' - ' || 
                             CASE pt.tipo_tutor_id 
                                 WHEN 3 THEN 'Tutor Académico'
                                 WHEN 2 THEN 'Tutor Institucional'
                                 WHEN 4 THEN 'Tutor Comunitario'
                                 ELSE COALESCE(tt.nombre, 'Tutor')
-                            END || ')', ' • ') 
+                            END, ' • ') 
                         FROM public.proyecto_tutores pt 
                         JOIN public.tutores t ON pt.id_tutor = t.id 
                         LEFT JOIN public.tipo_tutor tt ON pt.tipo_tutor_id = tt.id
@@ -676,9 +881,20 @@ class DocumentoModel {
         if ($res) {
             $row = $this->cleanRow($res);
             $row['tutores_lista'] = $this->getTutoresByRecurso($id);
+            $row['carreras_vinculadas_lista'] = $this->getCarrerasVinculadasByRecurso($id);
+            $row['carreras_vinculadas_ids'] = array_column($row['carreras_vinculadas_lista'], 'id');
             return $row;
         }
         return null;
+    }
+
+    /**
+     * Incrementa en 1 el contador de visualizaciones de un proyecto PST.
+     */
+    public function incrementarVistasPST(int $idRecurso): bool {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("UPDATE public.detalles_proyectos SET vistas = COALESCE(vistas, 0) + 1 WHERE id_recurso = ?");
+        return $stmt->execute([$idRecurso]);
     }
 
     /**
@@ -740,15 +956,16 @@ class DocumentoModel {
             $idCarrera = !empty($datos['id_carrera']) ? (int)$datos['id_carrera'] : 1;
 
             $idTrayecto = !empty($datos['id_trayecto']) ? (int)$datos['id_trayecto'] : null;
-            if (!$idTrayecto && !empty($datos['trayecto']) && in_array($nivelAcademicoRaw, ['Pregrado', 'TSU'])) {
+            $nivelesConTrayecto = $this->getNivelesConTrayecto();
+            if (!$idTrayecto && !empty($datos['trayecto']) && in_array($nivelAcademicoRaw, $nivelesConTrayecto)) {
                 $idTrayecto = $this->resolverIdTrayecto($idCarrera, $datos['trayecto']);
             }
-            if (!$idTrayecto && in_array($nivelAcademicoRaw, ['Pregrado', 'TSU'])) {
+            if (!$idTrayecto && in_array($nivelAcademicoRaw, $nivelesConTrayecto)) {
                 $idTrayecto = $this->resolverIdTrayecto($idCarrera, 'Trayecto I');
             }
 
             $stmt = $db->prepare("INSERT INTO public.detalles_proyectos (id_recurso, fecha_defensa, nivel_academico, id_trayecto, url_repositorio, resumen, obj_general, id_carrera, comunidad_beneficiada, palabras_clave) 
-                                  VALUES (?, ?, ?::public.nivel_academico_enum, ?, ?, ?, ?, ?, ?, ?)");
+                                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([
                 $recursoId,
                 !empty($datos['fecha_defensa']) ? $datos['fecha_defensa'] : date('Y-m-d'),
@@ -874,6 +1091,18 @@ class DocumentoModel {
                     !empty($datos['dimension_id']) ? (int)$datos['dimension_id'] : null
                 ]);
             }
+
+            // 6. Insertar carreras vinculadas secundarias (tags de vinculación intercarrera)
+            if (!empty($datos['carreras_vinculadas']) && is_array($datos['carreras_vinculadas'])) {
+                $stmtVinc = $db->prepare("INSERT INTO public.proyecto_carreras_vinculadas (id_recurso, id_carrera) 
+                                          VALUES (?, ?) ON CONFLICT DO NOTHING");
+                foreach ($datos['carreras_vinculadas'] as $carrId) {
+                    $carrId = (int)$carrId;
+                    if ($carrId > 0 && $carrId !== $idCarrera) {
+                        $stmtVinc->execute([$recursoId, $carrId]);
+                    }
+                }
+            }
             
             $db->commit();
             return (int)$recursoId;
@@ -925,16 +1154,17 @@ class DocumentoModel {
             $idCarrera = !empty($datos['id_carrera']) ? (int)$datos['id_carrera'] : 1;
 
             $idTrayecto = !empty($datos['id_trayecto']) ? (int)$datos['id_trayecto'] : null;
-            if (!$idTrayecto && !empty($datos['trayecto']) && in_array($nivelAcademicoRaw, ['Pregrado', 'TSU'])) {
+            $nivelesConTrayecto = $this->getNivelesConTrayecto();
+            if (!$idTrayecto && !empty($datos['trayecto']) && in_array($nivelAcademicoRaw, $nivelesConTrayecto)) {
                 $idTrayecto = $this->resolverIdTrayecto($idCarrera, $datos['trayecto']);
             }
-            if (!$idTrayecto && in_array($nivelAcademicoRaw, ['Pregrado', 'TSU'])) {
+            if (!$idTrayecto && in_array($nivelAcademicoRaw, $nivelesConTrayecto)) {
                 $idTrayecto = $this->resolverIdTrayecto($idCarrera, 'Trayecto I');
             }
 
             // Invalidar el vector semántico (NULL) para que el worker lo regenere con el contenido actualizado
             $stmt = $db->prepare("UPDATE public.detalles_proyectos 
-                                  SET fecha_defensa = ?, nivel_academico = ?::public.nivel_academico_enum, id_trayecto = ?, url_repositorio = ?, resumen = ?, obj_general = ?, id_carrera = ?, comunidad_beneficiada = ?, palabras_clave = ?,
+                                  SET fecha_defensa = ?, nivel_academico = ?, id_trayecto = ?, url_repositorio = ?, resumen = ?, obj_general = ?, id_carrera = ?, comunidad_beneficiada = ?, palabras_clave = ?,
                                       vector_semantico = NULL
                                   WHERE id_recurso = ?");
             $stmt->execute([
@@ -1037,6 +1267,21 @@ class DocumentoModel {
                     !empty($datos['dimension_id']) ? (int)$datos['dimension_id'] : null
                 ]);
             }
+
+            // 6. Actualizar carreras vinculadas secundarias (tags de vinculación intercarrera)
+            $stmtDelVinc = $db->prepare("DELETE FROM public.proyecto_carreras_vinculadas WHERE id_recurso = ?");
+            $stmtDelVinc->execute([$id]);
+
+            if (!empty($datos['carreras_vinculadas']) && is_array($datos['carreras_vinculadas'])) {
+                $stmtVinc = $db->prepare("INSERT INTO public.proyecto_carreras_vinculadas (id_recurso, id_carrera) 
+                                          VALUES (?, ?) ON CONFLICT DO NOTHING");
+                foreach ($datos['carreras_vinculadas'] as $carrId) {
+                    $carrId = (int)$carrId;
+                    if ($carrId > 0 && $carrId !== $idCarrera) {
+                        $stmtVinc->execute([$id, $carrId]);
+                    }
+                }
+            }
             
             $db->commit();
             return true;
@@ -1133,6 +1378,20 @@ class DocumentoModel {
         return $this->cleanArray($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
+    /**
+     * Obtiene las carreras secundarias/interdisciplinarias vinculadas a un recurso PST.
+     */
+    public function getCarrerasVinculadasByRecurso(int $recursoId): array {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("SELECT c.id, c.nombre 
+                              FROM public.proyecto_carreras_vinculadas pcv
+                              JOIN public.carreras c ON pcv.id_carrera = c.id
+                              WHERE pcv.id_recurso = ?
+                              ORDER BY c.nombre ASC");
+        $stmt->execute([$recursoId]);
+        return $this->cleanArray($stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
     public function getPSTCountByYear($filtros = null): array {
         $db = Connection::getInstance();
         $sql = "SELECT r.anio_publicacion, COUNT(DISTINCT r.id) as total
@@ -1170,7 +1429,7 @@ class DocumentoModel {
                 ];
                 $valNivel = trim($filtros['nivel_academico']);
                 $valNivel = $nivelMap[$valNivel] ?? $valNivel;
-                $sql .= " AND dp.nivel_academico = ?::public.nivel_academico_enum";
+                $sql .= " AND dp.nivel_academico = ?";
                 $params[] = $valNivel;
             }
             if (!empty($filtros['trayecto'])) {
@@ -1214,6 +1473,10 @@ class DocumentoModel {
                      dp.resumen AS proyecto_resumen, dp.palabras_clave AS proyecto_palabras, dp.nivel_academico, t.nombre AS trayecto, dp.url_repositorio,
                      li.nombre AS linea_nombre,
                      dims.nombre AS dimension_nombre,
+                     (SELECT STRING_AGG(c_vinc.nombre, ', ') 
+                      FROM public.proyecto_carreras_vinculadas pcv 
+                      JOIN public.carreras c_vinc ON pcv.id_carrera = c_vinc.id 
+                      WHERE pcv.id_recurso = r.id) AS carreras_vinculadas_nombres,
                      (SELECT STRING_AGG(a.nombre_completo, ', ') 
                       FROM public.recurso_autores ra 
                       JOIN public.autores a ON ra.id_autor = a.id 
@@ -1244,7 +1507,8 @@ class DocumentoModel {
         }
         
         if (!empty($filtros['carrera_id'])) {
-            $qb->whereRaw("COALESCE(dp.id_carrera, li.id_carrera) = ?", [(int)$filtros['carrera_id']]);
+            $cId = (int)$filtros['carrera_id'];
+            $qb->whereRaw("(COALESCE(dp.id_carrera, li.id_carrera) = ? OR EXISTS (SELECT 1 FROM public.proyecto_carreras_vinculadas pcv WHERE pcv.id_recurso = r.id AND pcv.id_carrera = ?))", [$cId, $cId]);
         }
         
         if (!empty($filtros['anio'])) {
@@ -1294,7 +1558,8 @@ class DocumentoModel {
         }
         
         if (!empty($filtros['carrera_id'])) {
-            $qb->whereRaw("COALESCE(dp.id_carrera, li.id_carrera) = ?", [(int)$filtros['carrera_id']]);
+            $cId = (int)$filtros['carrera_id'];
+            $qb->whereRaw("(COALESCE(dp.id_carrera, li.id_carrera) = ? OR EXISTS (SELECT 1 FROM public.proyecto_carreras_vinculadas pcv WHERE pcv.id_recurso = r.id AND pcv.id_carrera = ?))", [$cId, $cId]);
         }
         
         if (!empty($filtros['anio'])) {
@@ -1386,7 +1651,8 @@ class DocumentoModel {
                 $params[] = (int)$filtros['dimension_id'];
             }
             if (!empty($filtros['carrera_id'])) {
-                $whereClauses[] = 'li.id_carrera = ?';
+                $whereClauses[] = '(li.id_carrera = ? OR EXISTS (SELECT 1 FROM public.proyecto_carreras_vinculadas pcv WHERE pcv.id_recurso = r.id AND pcv.id_carrera = ?))';
+                $params[] = (int)$filtros['carrera_id'];
                 $params[] = (int)$filtros['carrera_id'];
             }
 
@@ -1400,8 +1666,13 @@ class DocumentoModel {
     dp.nivel_academico,
     t.nombre AS trayecto,
     dp.url_repositorio,
+    COALESCE(dp.vistas, 0) AS vistas,
     li.nombre AS linea_nombre,
     dims.nombre AS dimension_nombre,
+    (SELECT STRING_AGG(c_vinc.nombre, ', ') 
+     FROM public.proyecto_carreras_vinculadas pcv 
+     JOIN public.carreras c_vinc ON pcv.id_carrera = c_vinc.id 
+     WHERE pcv.id_recurso = r.id) AS carreras_vinculadas_nombres,
     (dp.vector_semantico <=> ?) AS distancia,
     (SELECT STRING_AGG(a.nombre_completo, ', ') 
      FROM public.recurso_autores ra 

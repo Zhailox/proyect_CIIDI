@@ -108,44 +108,80 @@ class ConfigService {
     }
 
     /**
+     * Resuelve la ruta física absoluta de un archivo digital en el almacenamiento,
+     * soportando coincidencia exacta o fallback inteligente por prefijo slug.
+     *
+     * @param string|null $archivoRelativo
+     * @return string|null Ruta absoluta en disco si existe, o null
+     */
+    public static function resolverRutaArchivoFisico(?string $archivoRelativo): ?string {
+        if (empty($archivoRelativo)) {
+            return null;
+        }
+
+        $relPath = ltrim(str_replace(['\\', '/'], '/', trim($archivoRelativo)), '/');
+        if (strpos($relPath, '..') !== false) {
+            return null;
+        }
+
+        $base = defined('BASE_PATH') ? BASE_PATH : dirname(dirname(dirname(__DIR__)));
+        $fullPath = $base . '/' . $relPath;
+        if (is_file($fullPath)) {
+            return $fullPath;
+        }
+
+        // Fallback 1: Buscar en storage/documentos/pst/ o storage/documentos/tmp/
+        $carpetas = [
+            $base . '/storage/documentos/pst/',
+            $base . '/storage/documentos/tmp/'
+        ];
+
+        $baseName = pathinfo($relPath, PATHINFO_FILENAME);
+        $ext = strtolower(pathinfo($relPath, PATHINFO_EXTENSION));
+
+        foreach ($carpetas as $dir) {
+            if (!is_dir($dir)) continue;
+
+            // 1.1 Coincidencia directa con nombre base
+            if ($baseName) {
+                $candidates = glob($dir . '*' . preg_replace('/[^a-zA-Z0-9_\-]/', '', $baseName) . '*');
+                if (!empty($candidates)) {
+                    foreach ($candidates as $cand) {
+                        if (is_file($cand)) return $cand;
+                    }
+                }
+            }
+
+            // 1.2 Coincidencia por prefijo slug (removiendo timestamp _1234567890_123)
+            $cleanPrefix = preg_replace('/_[0-9]+_[0-9]+$/', '', $baseName);
+            if (!empty($cleanPrefix) && $cleanPrefix !== $baseName) {
+                $pattern = $dir . '*' . preg_replace('/[^a-zA-Z0-9_\-]/', '', $cleanPrefix) . '*';
+                $candidates = glob($pattern);
+                if (!empty($candidates)) {
+                    // Priorizar misma extensión si existe
+                    foreach ($candidates as $cand) {
+                        if (is_file($cand) && strtolower(pathinfo($cand, PATHINFO_EXTENSION)) === $ext) {
+                            return $cand;
+                        }
+                    }
+                    foreach ($candidates as $cand) {
+                        if (is_file($cand)) return $cand;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Comprueba si el archivo digital existe físicamente en el almacenamiento del servidor.
      *
      * @param string|null $archivoRelativo
      * @return bool
      */
     public static function existeArchivoFisico(?string $archivoRelativo): bool {
-        if (empty($archivoRelativo)) {
-            return false;
-        }
-
-        $relPath = ltrim(str_replace(['\\', '/'], '/', trim($archivoRelativo)), '/');
-        if (strpos($relPath, '..') !== false) {
-            return false;
-        }
-
-        $base = defined('BASE_PATH') ? BASE_PATH : dirname(dirname(dirname(__DIR__)));
-        $fullPath = $base . '/' . $relPath;
-        if (is_file($fullPath)) {
-            return true;
-        }
-
-        // Fallback: verificar en storage/documentos/pst/
-        $dir = $base . '/storage/documentos/pst/';
-        if (is_dir($dir)) {
-            $baseName = pathinfo($relPath, PATHINFO_FILENAME);
-            if ($baseName) {
-                $candidates = glob($dir . '*' . preg_replace('/[^a-zA-Z0-9_\-]/', '', $baseName) . '*');
-                if (!empty($candidates)) {
-                    foreach ($candidates as $cand) {
-                        if (is_file($cand)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-
-        return false;
+        return self::resolverRutaArchivoFisico($archivoRelativo) !== null;
     }
 
     /**

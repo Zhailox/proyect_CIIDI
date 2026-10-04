@@ -29,11 +29,57 @@ class ConfiguracionController {
         $error = $_SESSION['mensaje_error'] ?? null;
         unset($_SESSION['mensaje_exito'], $_SESSION['mensaje_error']);
 
+        require_once __DIR__ . '/../models/DocumentoModel.php';
+        $documentoModel = new DocumentoModel();
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $submittedCsrf = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
                 if (empty($submittedCsrf) || !hash_equals($_SESSION['csrf_token'], $submittedCsrf)) {
                     throw new Exception("Petición rechazada por seguridad: Token CSRF no válido o expirado.");
+                }
+
+                // A. GESTIÓN DE NIVELES ACADÉMICOS (AÑADIR, MODIFICAR, ELIMINAR, TOGGLE)
+                $accionNivel = $_POST['accion_nivel'] ?? null;
+                if (!empty($accionNivel)) {
+                    if ($accionNivel === 'crear') {
+                        $res = $documentoModel->crearNivelAcademico($_POST);
+                        if ($res['success']) {
+                            $_SESSION['mensaje_exito'] = $res['message'];
+                            AuditLogger::registrar('INFO', 'RepositorioPST', 'Crear Nivel Académico', "Se registró el nivel '{$_POST['nombre']}'.");
+                        } else {
+                            $_SESSION['mensaje_error'] = $res['message'];
+                        }
+                    } elseif ($accionNivel === 'editar') {
+                        $idNivel = (int)($_POST['id_nivel'] ?? 0);
+                        $res = $documentoModel->actualizarNivelAcademico($idNivel, $_POST);
+                        if ($res['success']) {
+                            $_SESSION['mensaje_exito'] = $res['message'];
+                            AuditLogger::registrar('INFO', 'RepositorioPST', 'Editar Nivel Académico', "Se actualizó el nivel académico ID {$idNivel}.");
+                        } else {
+                            $_SESSION['mensaje_error'] = $res['message'];
+                        }
+                    } elseif ($accionNivel === 'eliminar') {
+                        $idNivel = (int)($_POST['id_nivel'] ?? 0);
+                        $res = $documentoModel->eliminarNivelAcademico($idNivel);
+                        if ($res['success']) {
+                            $_SESSION['mensaje_exito'] = $res['message'];
+                            AuditLogger::registrar('INFO', 'RepositorioPST', 'Eliminar Nivel Académico', "Se eliminó el nivel académico ID {$idNivel}.");
+                        } else {
+                            $_SESSION['mensaje_error'] = $res['message'];
+                        }
+                    } elseif ($accionNivel === 'toggle') {
+                        $idNivel = (int)($_POST['id_nivel'] ?? 0);
+                        $res = $documentoModel->toggleNivelAcademico($idNivel);
+                        if ($res['success']) {
+                            $_SESSION['mensaje_exito'] = $res['message'];
+                        } else {
+                            $_SESSION['mensaje_error'] = $res['message'];
+                        }
+                    }
+
+                    header('Location: ?ruta=configuracion-pst&tab=tabNiveles');
+                    exit;
                 }
 
                 $actual = ConfigService::get() ?? [];
@@ -138,10 +184,12 @@ class ConfiguracionController {
         $config = ConfigService::get();
 
         return [
-            'config'           => $config,
-            'rolesDisponibles' => $rolesDisponibles,
-            'mensaje'          => $mensaje,
-            'error'            => $error
+            'config'                      => $config,
+            'rolesDisponibles'            => $rolesDisponibles,
+            'nivelesAcademicosDetallados' => $documentoModel->getNivelesAcademicosDetallados(),
+            'tabActiva'                   => $_GET['tab'] ?? 'tabCitas',
+            'mensaje'                     => $mensaje,
+            'error'                       => $error
         ];
     }
 }

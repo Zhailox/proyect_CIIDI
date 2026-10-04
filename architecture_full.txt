@@ -1,150 +1,296 @@
-/sistema_pnfi
+/proyect_CIIDI
 │
-├── public/                             # ZONA PÚBLICA EXPUESTA AL NAVEGADOR
-│   ├── index.php                       
-│   ├── .htaccess                       
-│   ├── robots.txt                      
-│   └── /assets
-│       ├── /css
-│       │   ├── variables.css           
-│       │   ├── master.css              
-│       │   └── animations.css          
-│       ├── /js
-│       │   ├── core.js                 
-│       │   └── api_client.js           
-│       ├── /img                        
-│       └── /fonts                      
+├── .env                                    # Configuración de entorno local (credenciales BD, claves secretas, flags)
+├── .env.example                            # Plantilla de variables de entorno institucional
+├── .gitignore                              # Reglas de exclusión de Git (vendor, logs, credenciales, temporales)
+├── .htaccess                               # Redirección de peticiones raíz hacia public/
+├── architecture_full.txt                   # Mapa estructural completo del ecosistema tecnológico CIIDI
+├── composer.json                           # Dependencias y autoloading de librerías del proyecto
+├── composer.lock                           # Bloqueo de versiones instaladas por Composer
+├── estilo.md                               # Guía de estilo visual y normas de UI institucional
 │
-├── core/                               # MOTOR DEL SISTEMA (Microkernel)
-│   ├── /System
-│   │   ├── Kernel.php                  
-│   │   ├── ModuleManager.php           
-│   │   └── ErrorHandler.php            
-│   ├── /Http
-│   │   ├── Router.php                 
-│   │   ├── Request.php                 
-│   │   └── Response.php                
-│   ├── /Security
-│   │   ├── Auth.php                    
-│   │   ├── RBAC.php                    
-│   │   ├── CSRFGuard.php               
-│   │   └── RateLimiter.php             
-│   ├── /Database
-│   │   ├── Connection.php              
-│   │   └── QueryBuilder.php            
-│   ├── /Interfaces
-│   │   └── ModuleContract.php          
-│   └── /Views                          # LAYOUTS MAESTROS
-│       ├── master.html                 
-│       ├── sidebar_dinamico.html       
-│       ├── header.html                 
-│       └── footer.html                 
+├── migrations/                             # ESQUEMAS Y CONTROL DE VERSIONES DE BASE DE DATOS (PostgreSQL)
+│   ├── 001_add_vector_semantico.sql        # Migración: Habilita pgvector e índice HNSW (384 dimensiones) para búsqueda semántica
+│   └── 002_actualizaciones_repositorio_pst.sql # Migración: Unificación de carreras vinculadas, contador de visitas, niveles académicos y depuración TSU
 │
-├── modules/                            # LOS PARQUETES INTEROPERABLES
+├── core/                                   # MOTOR DEL SISTEMA (Microkernel Modular Institucional)
 │   │
-│   ├── /Autenticacion                  # MÓDULO 1: ACCESO Y SEGURIDAD
-│   │   ├── index.php                   
-│   │   ├── /controllers
-│   │   │   ├── LoginController.php     
-│   │   │   ├── PerfilController.php    
-│   │   │   └── RecuperacionController.php # NUEVO: Lógica de token para olvido de clave
-│   │   ├── /models
-│   │   │   └── UsuarioModel.php        
-│   │   └── /views
-│   │       ├── login.html              
-│   │       ├── mi_dashboard.html       
-│   │       └── recuperar_cuenta.html   # NUEVO: Formulario "¿Olvidó sus credenciales?"
+│   ├── Database/                           # Capa de persistencia y abstracción de datos
+│   │   ├── Connection.php                  # Conexión Singleton PDO segura para PostgreSQL con reintentos y logs
+│   │   ├── QueryBuilder.php                # Constructor fluido de consultas SQL parametrizadas contra inyecciones
+│   │   └── Exceptions/
+│   │       └── DatabaseConnectionException.php # Excepción personalizada ante fallos de conexión o caídas del DBMS
 │   │
-│   ├── /RepositorioPST                 # MÓDULO 2: BÚSQUEDA Y ANALÍTICA (IA)
-│   │   ├── index.php
-│   │   ├── /assets
-│   │   │   ├── search_engine.js        
-│   │   │   └── charts_predictivos.js   # NUEVO: Script para pintar gráficas de predicción
-│   │   ├── /controllers
-│   │   │   ├── BusquedaGlobalController.php 
-│   │   │   ├── PstCrudController.php        
-│   │   │   ├── VisorController.php          
-│   │   │   └── AnaliticaController.php      # NUEVO: Lógica para calcular la curva predictiva
-│   │   ├── /services
-│   │   │   └── NeuralSearchClient.php       
-│   │   ├── /models
-│   │   │   ├── DocumentoModel.php           
-│   │   │   └── HistoricoModel.php           # NUEVO: Modelo de datos pasados para la IA predictiva
-│   │   └── /views
-│   │       ├── home_bienvenida.html         
-│   │       ├── buscador_unificado.html      
-│   │       ├── detalle_pst.html             
-│   │       ├── admin_subida_pst.html        
-│   │       └── dashboard_prediccion.html    # NUEVO: Vista con gráficos de estimación a meses/años
+│   ├── Helpers/                            # Clases de soporte y utilidades
+│   │   └── PHPMailer/                      # Cliente de mensajería SMTP local sin dependencias externas
+│   │       ├── Exception.php               # Manejador de excepciones en envíos SMTP
+│   │       ├── PHPMailer.php               # Motor principal de construcción y despacho de correos
+│   │       └── SMTP.php                    # Protocolo de comunicación directa con servidores de correo
 │   │
-│   ├── /Investigaciones                # MÓDULO 3: I+D UNIVERSITARIO
-│   │   ├── index.php
-│   │   ├── /controllers
-│   │   │   ├── ProyectoController.php       
-│   │   │   └── PostulacionController.php    
-│   │   ├── /models
-│   │   │   ├── InvestigacionModel.php
-│   │   │   └── PostulanteModel.php          
-│   │   └── /views
-│   │       ├── showcase_investigaciones.html # NUEVO: Vista "Top 10" e info general del módulo
-│   │       ├── cartelera.html               
-│   │       ├── ficha_investigador.html      
-│   │       ├── panel_postulaciones.html     
-│   │       └── modal_aplicar.html           
+│   ├── Http/                               # Ciclo de vida HTTP y despacho de peticiones
+│   │   ├── Dispatcher.php                  # Ejecuta controladores, resuelve dependencias CSS/JS y renderiza master.php
+│   │   ├── FeatureFlagMiddleware.php       # Interceptor de mantenimiento y módulos offline/lectura
+│   │   └── Router.php                      # Enrutador central que resuelve rutas amigables contra módulos registrados
 │   │
-│   ├── /Articulos                      # MÓDULO 4: REVISTA DIGITAL
-│   │   ├── index.php
-│   │   ├── /controllers
-│   │   │   └── RevistaController.php   
-│   │   ├── /models
-│   │   │   └── ArticuloModel.php
-│   │   └── /views
-│   │       ├── showcase_articulos.html # NUEVO: Ediciones destacadas y más leídos
-│   │       ├── grid_revista.html       
-│   │       └── leer_articulo.html      
+│   ├── Installer/                          # Asistente de instalación autónoma del sistema
+│   │   ├── InstallerController.php         # Controlador del wizard de configuración inicial (BD, SuperAdmin)
+│   │   ├── InstallerHook.php               # Hook que detecta si falta installed.lock y redirige al instalador
+│   │   ├── InstallerService.php            # Servicio de ejecución de DDL y creación de tablas iniciales
+│   │   └── views/
+│   │       └── wizard.php                  # Interfaz gráfica por pasos del instalador institucional
 │   │
-│   ├── /VinculacionEmpresarial         # MÓDULO 5: NUEVO - PUENTE SECTOR PRODUCTIVO
-│   │   ├── index.php                   # Contrato: Registra rutas /empresas/*
-│   │   ├── /controllers
-│   │   │   ├── LandingEmpresaController.php # Muestra quiénes somos y casos de éxito
-│   │   │   ├── SolicitudExternaController.php # Recibe el formulario de las empresas
-│   │   │   └── BancoPropuestasController.php  # Para que Estudiantes/Profesores vean los problemas
-│   │   ├── /models
-│   │   │   ├── EmpresaModel.php             # Datos comerciales (Rif, Nombre, Contacto)
-│   │   │   └── ProblematicaModel.php        # Descripción del problema a resolver (PST potencial)
-│   │   └── /views
-│   │       ├── landing_informativa.html     # NUEVO: "Qué somos", "Cómo funciona", "Casos de éxito"
-│   │       ├── form_aplicar_problema.html   # NUEVO: Formulario para empresas (Lácteos Los Andes, etc.)
-│   │       └── banco_propuestas.html        # NUEVO: Vista interna de solicitudes "En Espera / Aprobado"
+│   ├── Interfaces/                         # Contratos y estándares del sistema
+│   │   └── ModuleContract.php              # Interfaz obligatoria para todos los módulos (rutas, menú, home, header)
 │   │
-│   ├── /Cursos                         # MÓDULO 6: CARTELERA DE FORMACIÓN
-│   │   ├── index.php
-│   │   ├── /controllers
-│   │   │   └── PromoController.php
-│   │   ├── /models
-│   │   │   └── CursoModel.php
-│   │   └── /views
-│   │       ├── showcase_cursos.html         # NUEVO: Vista de presentación ("Aprende con nosotros")
-│   │       └── grid_cursos.html             
-│   │        
+│   ├── Security/                           # Capa de blindaje y protección perimetral (OWASP / ISO 27001)
+│   │   ├── AuditLogger.php                 # Registro estructurado de eventos de seguridad y acciones administrativas
+│   │   ├── Auth.php                        # Autenticación JWT/Sesión, roles, RBAC y control de privilegios de usuario
+│   │   ├── CaptchaService.php              # Generador y validador de captchas matemáticos anti-bots
+│   │   ├── Crypto.php                      # Cifrado simétrico AES-256-CBC para tokens y datos sensibles
+│   │   ├── CSRF.php                        # Generación y validación de tokens anti-Cross-Site Request Forgery
+│   │   ├── EmergencyRescueService.php      # Rescate de contingencia para acceso de SuperAdmin ante fallos de BD
+│   │   ├── RateLimiter.php                 # Escudo WAF, inspección de payloads maliciosos, límites de peticiones y listas negras
+│   │   └── SessionManager.php              # Gestión de sesiones blindadas con cookies SameSite, HttpOnly y Secure
 │   │
-│   └── /SuperAdmin                     # MÓDULO 8: EL DIOS DEL SISTEMA
-│       ├── index.php
-│       ├── /controllers
-│       │   ├── ModulosController.php        
-│       │   └── LogsController.php           
-│       └── /views
-│           ├── dashboard_admin.html         
-│           ├── gestor_modulos.html          
-│           └── visor_logs.html              
+│   ├── Services/                           # Servicios globales del núcleo
+│   │   ├── MailService.php                 # Servicio de envío de notificaciones y correos transaccionales
+│   │   └── MaintenanceService.php          # Control y renderizado de la ventana de mantenimiento institucional
+│   │
+│   ├── System/                             # Núcleo de orquestación y arranque
+│   │   ├── AssetResolver.php               # Resolutor e inyector dinámico de CSS, JS, widgets de header y tarjetas
+│   │   ├── Env.php                         # Parser ligero de variables de entorno desde archivo .env
+│   │   ├── Kernel.php                      # Microkernel principal: inicializa seguridad, módulos, enrutador y despachador
+│   │   └── ModuleLoader.php                # Descubridor dinámico de módulos, estados (online/offline) y menú del sidebar
+│   │
+│   └── Views/                              # Plantillas maestras y vistas del sistema
+│       ├── 403.php                         # Pantalla de acceso prohibido / privilegios insuficientes
+│       ├── 404.php                         # Pantalla de ruta no encontrada
+│       ├── 500.php                         # Pantalla de error interno del servidor
+│       ├── 503.php                         # Pantalla de servicio no disponible
+│       ├── deshabilitado.php               # Aviso de módulo fuera de línea por mantenimiento o decisión directiva
+│       ├── footer.php                      # Pie de página institucional unificado
+│       ├── header.php                      # Barra superior unificada con buscador, accesos rápidos y widget de perfil
+│       ├── home_bienvenida.php             # Pantalla de bienvenida espacial (Hero, contador dinámico de PST, métricas y franjas)
+│       ├── mantenimiento.php               # Pantalla de ventana de mantenimiento activa
+│       ├── master.php                      # Layout maestro que ensambla header, sidebar, contenido modular y footer
+│       ├── seguridad_bloqueo.php           # Pantalla de intercepción y bloqueo de seguridad por el WAF institucional
+│       └── sidebar.php                     # Barra lateral de navegación con renderizado dinámico de módulos ordenados
 │
-└── storage/                            # BÓVEDA INACCESIBLE DESDE LA WEB
-    ├── /documentos
-    │   ├── /pst                        
-    │   ├── /articulos                  
-    │   └── /respaldos_empresas         # NUEVO: Documentación técnica enviada por empresas
-    ├── /backups                        
-    ├── /logs
-    │   ├── system_errors.log           
-    │   └── access_security.log         
-    └── modules.json
+├── modules/                                # PARQUETE DE MÓDULOS INTEROPERABLES
+│   │
+│   ├── Articulos/                          # MÓDULO: REVISTA DIGITAL CIENTÍFICA
+│   │   ├── index.php                       # Implementación de ModuleContract, rutas y menú (orden: 20)
+│   │   ├── assets/                         # Hojas de estilo y scripts de frontend
+│   │   │   ├── css/ (Articulos.css, gestor_articulos.css, notificaciones.css)
+│   │   │   └── js/  (gestor_autores.js, gestor_catalogos_cache.js, gestor_portadas.js, lazy_loading.js, etc.)
+│   │   ├── controllers/
+│   │   │   ├── ArticulosController.php     # Catálogo público de la revista, lectura individual y filtrado
+│   │   │   └── ConfiguracionController.php # Gestión editorial, ajuste de parámetros y catálogos de categorías
+│   │   ├── models/
+│   │   │   └── ArticuloModel.php           # Operaciones CRUD sobre artículos, autores y clasificaciones
+│   │   ├── services/
+│   │   │   └── ConfigService.php           # Lectura/escritura de parámetros del módulo de artículos
+│   │   └── views/
+│   │       ├── btn_notificaciones.php      # Widget inyectable de alertas editoriales
+│   │       ├── configuracion_articulos.php # Panel de parámetros y personalización de la revista
+│   │       ├── editar_articulo.php         # Formulario de edición de artículos existentes
+│   │       ├── gestor_articulos.php        # Panel administrativo de artículos y estados editoriales
+│   │       ├── gestor_catalogos.php        # Administración de categorías temáticas y etiquetas
+│   │       ├── grid_revista.php            # Cuadrícula pública de publicaciones científicas
+│   │       ├── leer_articulo.php           # Lector interactivo de artículo completo con visor de citas
+│   │       ├── nuevo_articulo.php          # Formulario para registro de nuevos artículos y carga de portadas
+│   │       └── showcase_articulos.php      # Sección destacada para la página de inicio
+│   │
+│   ├── Autenticacion/                      # MÓDULO: SEGURIDAD, CONTROL DE ACCESO Y PERFIL
+│   │   ├── index.php                       # Implementación de ModuleContract, rutas y menú (orden: 990 - Perfil)
+│   │   ├── assets/                         # Logotipos y recursos visuales (css/autenticacion.css, login.css, etc.)
+│   │   ├── controllers/
+│   │   │   ├── LoginController.php         # Procesamiento de login, registro, códigos OTP y recuperación de claves
+│   │   │   └── PerfilController.php        # Edición de perfil de usuario, avatar, contraseña y verificación de correo
+│   │   ├── models/
+│   │   │   └── UsuarioModel.php            # Consulta y actualización de usuarios, credenciales, roles y tokens
+│   │   └── views/
+│   │       ├── completar_registro_profesor.php # Flujo para completar datos docentes
+│   │       ├── ingresar_codigo.php         # Pantalla para ingresar código OTP de verificación
+│   │       ├── login.php                   # Formulario principal de inicio de sesión institucional
+│   │       ├── mi_dashboard.php            # Panel de usuario logueado con resumen de actividad
+│   │       ├── perfil_header.php           # Widget inyectable en el header con avatar y datos del usuario
+│   │       ├── recuperar_cuenta.php        # Solicitud de restablecimiento de contraseña vía email
+│   │       ├── registro.php                # Formulario de registro de nuevas cuentas de usuario
+│   │       ├── restablecer_clave.php       # Formulario para introducir la nueva contraseña con token
+│   │       └── transicion.php              # Pantalla de bienvenida y redirección suave post-login
+│   │
+│   ├── Cursos/                             # MÓDULO: OFERTA FORMATIVA Y CAPACITACIÓN CONTINUA
+│   │   ├── index.php                       # Implementación de ModuleContract, rutas y menú (orden: 50)
+│   │   ├── config_cursos.json              # Configuración local de visualización e integración Moodle
+│   │   ├── assets/css/cursos.css           # Estilos de tarjetas formativas y gestión de cursos
+│   │   ├── controllers/
+│   │   │   └── PromoController.php         # Catálogo público, ficha de curso, gestión CRUD y configuración
+│   │   ├── models/
+│   │   │   └── CursoModel.php              # Modelo de datos de cursos, cupos, modalidades y facilitadores
+│   │   ├── services/
+│   │   │   ├── CsrfService.php             # Validación de formularios de cursos
+│   │   │   └── ImagenService.php           # Procesamiento y optimización de banners e imágenes promocionales
+│   │   └── views/
+│   │       ├── config_cursos.php           # Configuración del módulo de cursos
+│   │       ├── detalle_curso.php           # Ficha descriptiva del curso, temario y enlaces de inscripción
+│   │       ├── form_curso.php              # Formulario de alta y modificación de ofertas formativas
+│   │       ├── gestion_cursos.php          # Panel administrativo de cursos activos e inactivos
+│   │       ├── grid_cursos.php             # Cuadrícula pública con filtros de cursos disponibles
+│   │       └── showcase_cursos.php         # Vitrina destacada inyectada en la página de inicio
+│   │
+│   ├── Investigaciones/                    # MÓDULO: BANCO DE PROYECTOS I+D Y POSTULACIONES
+│   │   ├── index.php                       # Implementación de ModuleContract, rutas y menú (orden: 30)
+│   │   ├── assets/css/Investigaciones.css  # Estilos para cartelera de investigaciones y fichas técnicas
+│   │   ├── controllers/
+│   │   │   └── InvestigacionController.php # Cartelera I+D, directorio de investigadores, postulaciones y panel admin
+│   │   ├── models/
+│   │   │   └── InvestigacionModel.php      # Modelo de proyectos de investigación, postulantes y estados
+│   │   └── views/
+│   │       ├── cartelera.php               # Cartelera de proyectos de investigación abiertos
+│   │       ├── ficha_investigador.php      # Perfil académico e historial de proyectos del investigador
+│   │       ├── form_investigacion.php      # Formulario para registro de nuevas propuestas de investigación
+│   │       ├── mis_investigaciones.php     # Listado de proyectos creados por el docente/investigador
+│   │       ├── modal_aplicar.php           # Modal para postularse como colaborador en un proyecto I+D
+│   │       ├── panel_admin_investigaciones.php # Panel del comité para arbitraje y aprobación de proyectos
+│   │       ├── panel_postulaciones.php     # Gestión de solicitudes recibidas por proyecto
+│   │       ├── postulantes_mis_proyectos.php # Bandeja de postulantes recibidos
+│   │       └── showcase_investigaciones.php # Franja de proyectos destacados en el home
+│   │
+│   ├── LineasInvestigacion/                # MÓDULO: LÍNEAS DE INVESTIGACIÓN Y ANÁLISIS ACADÉMICO
+│   │   ├── index.php                       # Implementación de ModuleContract, rutas y menú (orden: 40)
+│   │   ├── assets/                         # Estilos, scripts de gráficos y visualización de redes (pst_network.js)
+│   │   ├── controllers/
+│   │   │   ├── AnaliticaController.php     # Métricas avanzadas, correlaciones y grafos de líneas
+│   │   │   ├── DetalleController.php       # Ficha técnica detallada de una línea de investigación
+│   │   │   ├── GestorController.php        # CRUD de líneas, carreras (PNF) y dimensiones operativas
+│   │   │   └── ShowcaseController.php      # Presentación pública de las áreas prioritarias de investigación
+│   │   ├── models/
+│   │   │   ├── DimensionesModel.php        # Persistencia de dimensiones y ámbitos institucionales
+│   │   │   └── LineasModel.php             # Persistencia de líneas, directores, estadísticas y PNF vinculados
+│   │   └── views/
+│   │       ├── dashboard_analitica.php     # Panel con histogramas y análisis de cobertura temática
+│   │       ├── detalle_gestion_linea.php   # Vista de gestión individual de una línea
+│   │       ├── detalle_linea.php           # Ficha pública de la línea con sus proyectos vinculados
+│   │       ├── gestor_carreras.php         # Gestión y alta de Programas Nacionales de Formación (PNF)
+│   │       ├── gestor_dimensiones.php      # Gestión de dimensiones operativas de investigación
+│   │       ├── gestor_lineas.php           # Administrador principal de líneas de investigación
+│   │       ├── reporte_pdf.php             # Generación de reportes imprimibles de líneas
+│   │       └── showcase_lineas.php         # Vitrina pública de líneas para la página de inicio
+│   │
+│   ├── RepositorioPST/                     # MÓDULO: REPOSITORIO DE PROYECTOS SOCIO-TECNOLÓGICOS (PST)
+│   │   ├── index.php                       # Implementación de ModuleContract, rutas y menú (orden: 10 - Repositorio)
+│   │   ├── config_pst.json                 # Almacenamiento local de reglas de citación, paginación y visor
+│   │   ├── assets/                         # Estilos (RepositorioPST.css, home_repo.css) y librerías Mammoth / Chart.js
+│   │   ├── controllers/
+│   │   │   ├── BusquedaGlobalController.php# Buscador unificado: texto completo, filtros combinados y similitud semántica
+│   │   │   ├── ConfiguracionController.php # Gestión de parámetros de citación, límites y catálogo de niveles académicos
+│   │   │   ├── DetallePSTController.php    # Ficha técnica individual, incremento de vistas, visor de PDF/DOCX y subida
+│   │   │   └── InicioRepositorioController.php # Catálogo general con histogramas, paginación e investigaciones afines
+│   │   ├── models/
+│   │   │   └── DocumentoModel.php          # Acceso a datos de recursos, detalles PST, carreras vinculadas, vistas y niveles
+│   │   ├── services/
+│   │   │   ├── ConfigService.php           # Servicio centralizado de lectura y guardado de config_pst.json
+│   │   │   ├── EmbeddingService.php        # Generación de embeddings vectoriales para búsqueda semántica inteligente
+│   │   │   ├── ExtractorPST.php            # Extracción y parsing automático de metadatos desde archivos DOCX/PDF
+│   │   │   ├── NeuralClassifier.php        # Clasificación temática asistida por red neuronal
+│   │   │   └── TokenizerService.php        # Tokenización y limpieza léxica para el procesamiento de lenguaje natural
+│   │   └── views/
+│   │       ├── admin_subida_pst.php        # Formulario de carga de proyectos PST con auto-extracción y carreras vinculadas
+│   │       ├── buscador_unificado.php      # Buscador con filtros dinámicos, ordenamiento y vista en tarjetas
+│   │       ├── configuracion_pst.php       # Pestañas de configuración: Citas, Paginación, Visor y Niveles Académicos
+│   │       ├── dashboard_prediccion.php    # Gráficas predictivas y tendencias de proyectos por línea de investigación
+│   │       ├── detalle_pst.php             # Plantilla de ficha técnica con botones de cita, código git y descarga
+│   │       ├── detalle_unico.php           # Vista contenedora única para la ficha y visor integrado
+│   │       ├── gestion_red_neuronal.php    # Monitoreo y entrenamiento del clasificador neuronal
+│   │       ├── home_seccion_repo.php       # Sección de presentación del repositorio inyectada en la página de inicio
+│   │       └── inicio_repositorio.php      # Vista principal del catálogo con filtros laterales e histograma por trayecto
+│   │
+│   ├── SuperAdmin/                         # MÓDULO: PANEL DE ADMINISTRACIÓN GLOBAL Y SEGURIDAD
+│   │   ├── index.php                       # Implementación de ModuleContract, rutas y menú (orden: 900 - SuperAdmin)
+│   │   ├── assets/                         # Estilos (SuperAdmin.css, gestor.css, visor_seguridad.css) y scripts
+│   │   ├── controllers/
+│   │   │   ├── AdminController.php         # Panel de control SuperAdmin, métricas del servidor y copias de seguridad
+│   │   │   ├── ConfiguracionController.php # Ajustes del sistema, variables de entorno, plantillas y servidor SMTP
+│   │   │   ├── GestorUsuariosController.php# CRUD de usuarios, asignación de roles y revocación de permisos
+│   │   │   ├── LogsController.php          # Visualización y depuración de registros de errores del sistema
+│   │   │   ├── ModulosController.php       # Gestor de encendido/apagado de módulos e inspección física en disco
+│   │   │   ├── ReportesController.php      # Generación de informes analíticos y exportación en formato JSON/PDF
+│   │   │   ├── SchedulerController.php     # Administrador y ejecutor de tareas programadas (Cron Jobs)
+│   │   │   └── SecurityMonitorController.php # Monitor de ataques WAF, listas blancas/negras y bloqueo de IPs
+│   │   ├── models/
+│   │   │   ├── AdminDashboardModel.php     # Estadísticas consolidadas del sistema y uso de recursos
+│   │   │   ├── AdminUsuarioModel.php       # Administración avanzada de cuentas y privilegios
+│   │   │   ├── LogsModel.php               # Lectura y filtrado de logs en storage/logs/
+│   │   │   └── ReportesModel.php           # Extracción agregada de datos para auditorías y reportes
+│   │   ├── services/
+│   │   │   ├── BackupService.php           # Generación, compresión GZ y restauración de respaldos PostgreSQL
+│   │   │   ├── SchedulerService.php        # Motor de planificación y ejecución de tareas periódicas
+│   │   │   └── SystemConfigService.php     # Gestión de accesos por rol y configuraciones guardadas en storage/
+│   │   └── views/
+│   │       ├── configuracion_sistema.php   # Interfaz para edición de variables de entorno y base de datos
+│   │       ├── dashboard_admin.php         # Tablero ejecutivo con gráficos de uso, módulos y salud del servidor
+│   │       ├── detalle_modulo.php          # Inspección técnica detallada de un módulo específico
+│   │       ├── gestor_correos.php          # Gestor de plantillas HTML y configuración de correo SMTP
+│   │       ├── gestor_mantenimiento.php    # Control de respaldos de BD, ventanas de mantenimiento y optimización
+│   │       ├── gestor_modulos.php          # Panel de interruptores de módulos activos/inactivos
+│   │       ├── gestor_reportes.php         # Centro de generación de reportes y descargas institucionales
+│   │       ├── gestor_scheduler.php        # Tablero de control de tareas programadas en segundo plano
+│   │       ├── gestor_usuarios.php         # Directorio administrativo de usuarios, cambio de roles y estados
+│   │       ├── header_mantenimiento_widget.php # Widget de alerta cuando el sistema se encuentra en mantenimiento
+│   │       ├── imprimir_reporte_pdf.php    # Plantilla de impresión formateada para reportes oficiales
+│   │       ├── visor_logs.php              # Visor en tiempo real de trazas de error y excepciones PHP
+│   │       └── visor_seguridad.php         # Monitor visual de amenazas WAF, historial de bloqueos e IPs
+│   │
+│   └── VinculacionEmpresarial/             # MÓDULO: VINCULACIÓN CON EL SECTOR PRODUCTIVO
+│       ├── index.php                       # Implementación de ModuleContract, rutas y menú (orden: 60 - Sector Productivo)
+│       ├── config_vinculacion.json         # Configuración local de visualización y límites del sector productivo
+│       ├── assets/                         # Hojas de estilo (vinculacion.css) e imágenes promocionales
+│       ├── controllers/
+│       │   ├── TransparenciaController.php # Seguimiento de convenios y verificación comunitaria
+│       │   └── VinculacionController.php   # Conócenos, cartelera de oportunidades, banco de solicitudes y gestión de equipos
+│       ├── models/
+│       │   └── PropuestaEmpresaModel.php   # Modelo de datos de empresas aliadas, requerimientos y postulaciones
+│       ├── services/
+│       │   └── ConfigService.php           # Gestión de parámetros del módulo de vinculación
+│       └── views/
+│           ├── banco_propuestas.php        # Banco de requerimientos técnicos formulados por empresas
+│           ├── cartelera_oportunidades.php # Cartelera de problemas productivos disponibles para proyectos PST
+│           ├── configuracion.php           # Ajustes de parámetros del módulo de vinculación
+│           ├── form_aplicar_problema.php   # Formulario público para que las empresas registren sus demandas tecnológicas
+│           ├── gestion_equipos.php         # Asignación de equipos de estudiantes a necesidades empresariales
+│           ├── gestion_proyectos.php       # Panel administrativo de validación y seguimiento de convenios
+│           ├── landing_informativa.php     # Portal de presentación del servicio de vinculación empresarial
+│           └── seguimiento_empresa.php     # Consulta pública del estado de solicitudes por RIF o código de trámite
+│
+├── public/                                 # RAÍZ PÚBLICA EXPUESTA AL SERVIDOR WEB
+│   ├── .htaccess                           # Reglas de reescritura mod_rewrite hacia index.php
+│   ├── index.php                           # Punto de entrada principal que inicializa el Microkernel (Kernel.php)
+│   ├── assets/                             # Archivos estáticos globales del sistema
+│   │   ├── css/                            # Hojas de estilo centrales (style.css, paletas.css, login.css, mantenimiento.css)
+│   │   ├── img/                            # Logotipos, isotipos y gráficos de error (uptt.png, 403, 404, 500, seguridad.jpg)
+│   │   └── js/                             # Librerías JavaScript universales (chart.min.js)
+│   └── uploads/                            # Directorio para archivos multimedia públicos (portadas de cursos e investigaciones)
+│
+├── scripts/                                # UTILIDADES CLI Y TAREAS DE MANTENIMIENTO
+│   ├── generar_embeddings.php              # Script CLI para procesar en lote el vector semántico de proyectos PST
+│   └── unblock_ip.php                      # Herramienta de emergencia por terminal para desbloquear IPs en el WAF
+│
+└── storage/                                # ALMACENAMIENTO PERSISTENTE PROTEGIDO (No expuesto públicamente)
+    ├── .htaccess                           # Bloqueo total 'Deny from all' para salvaguardar información interna
+    ├── config_system.json                  # Estado y feature flags de cada módulo del sistema
+    ├── db_config.json                      # Credenciales de conexión a base de datos generadas por el instalador
+    ├── system_config.json                  # Configuraciones y niveles mínimos de acceso RBAC por módulo
+    ├── installed.lock                      # Cerrojo que previene re-ejecuciones no autorizadas del instalador
+    ├── maintenance.json                    # Registro del estado y mensaje de la ventana de mantenimiento
+    ├── login_attempts.json                 # Auditoría de intentos fallidos de autenticación y bloqueos
+    ├── security_blacklist.json             # Lista negra persistente de IPs bloqueadas por el WAF
+    ├── security_whitelist.json             # Lista blanca de IPs autorizadas que eluden filtros estrictos
+    ├── scheduler_tasks.json                # Definición de tareas periódicas y cron jobs configurados
+    ├── backups/                            # Respaldos de base de datos SQL (.sql y comprimidos .sql.gz)
+    ├── cache/                              # Almacenamiento en caché de categorías, etiquetas y clasificaciones
+    ├── documentos/pst/                     # Archivos digitales primarios (PDF y DOCX) de proyectos PST
+    ├── logs/                               # Registros de auditoría, trazas y system_errors.log
+    ├── modelos_ia/                         # Scripts de entrenamiento y metadatos de los modelos neuronales
+    ├── scheduler/logs/                     # Logs de salida de cada tarea ejecutada en segundo plano
+    └── uploads/                            # Bóveda de archivos multimedia de artículos, cursos e investigaciones

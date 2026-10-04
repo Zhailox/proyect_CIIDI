@@ -106,6 +106,7 @@ class CursosModule implements ModuleContract {
                 'tipo'        => 'parent',
                 'titulo'      => 'Cursos',
                 'icono'       => 'ph-fill ph-graduation-cap',
+                'orden'       => 50,
                 'enlace'      => 'cursos',
                 'privilegio_minimo' => $nivelPublico,
                 'activadores' => ['cursos', 'cursos-gestion', 'cursos-crear', 'cursos-editar', 'cursos-config'],

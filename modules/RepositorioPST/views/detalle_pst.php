@@ -130,8 +130,8 @@
                                                     <?= htmlspecialchars($doc['linea_nombre'] ?? 'General') ?>
                                                 </span>
                                                 <small style="color: var(--color-secundario); font-weight: 700; display: block; font-size: 0.7rem; text-align: center;">
-                                                    <?php $nivDetalle = $doc['nivel_academico'] ?? 'Pregrado'; $nivDetalleLabel = $labelsFiltro[$nivDetalle] ?? $nivDetalle; ?>
-                                                    <?= htmlspecialchars($nivDetalleLabel) ?><?= (in_array($nivDetalle, ['Pregrado', 'TSU']) && !empty($doc['trayecto'])) ? ' • ' . htmlspecialchars($doc['trayecto']) : '' ?>
+                                                    <?php $nivDetalle = $doc['nivel_academico'] ?? 'Pregrado'; $nivDetalleLabel = ($labelsNiveles[$nivDetalle] ?? ($labelsFiltro[$nivDetalle] ?? $nivDetalle)); ?>
+                                                    <?= htmlspecialchars($nivDetalleLabel) ?><?= (in_array($nivDetalle, $nivelesConTrayecto ?? ['Pregrado']) && !empty($doc['trayecto'])) ? ' • ' . htmlspecialchars($doc['trayecto']) : '' ?>
                                                 </small>
                                             </td>
                                             <td><strong><?= $doc['anio_publicacion'] ?></strong></td>
@@ -230,8 +230,7 @@
                         <select name="nivel_academico" id="nivel_academico_filter" onchange="this.form.submit()">
                             <option value="">Todos los Niveles</option>
                             <?php if (!empty($nivelesAcademicos)): 
-                                $labelsFiltro = [
-                                    'TSU' => 'TSU',
+                                $labelsFiltro = !empty($labelsNiveles) ? $labelsNiveles : [
                                     'Pregrado' => 'Pregrado',
                                     'Especializacion' => 'Especialización',
                                     'Maestria' => 'Maestría',

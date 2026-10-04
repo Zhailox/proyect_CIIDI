@@ -125,6 +125,7 @@ class InvestigacionesModule implements ModuleContract {
                 'tipo'        => 'parent',
                 'titulo'      => 'Investigaciones',
                 'icono'       => 'ph-fill ph-flask',
+                'orden'       => 30,
                 'enlace'      => 'investigaciones',
                 'privilegio_minimo' => $nivelPublico,
                 'activadores' => [

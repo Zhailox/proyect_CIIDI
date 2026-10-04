@@ -8,6 +8,13 @@ $rolNombre     = $usuarioActivo ? ($usuarioActivo['rol'] ?? '') : '';
 // Es SuperAdmin si nivel es 0 O si el nombre del rol contiene "admin" o "super"
 $esAdminTotal  = ($nivelUsuario === 0) || (stripos($rolNombre, 'admin') !== false) || (stripos($rolNombre, 'super') !== false);
 $menu_dinamico = $menu_dinamico ?? [];
+if (!empty($menu_dinamico)) {
+    usort($menu_dinamico, function($a, $b) {
+        $pesoA = $a['orden'] ?? 100;
+        $pesoB = $b['orden'] ?? 100;
+        return $pesoA <=> $pesoB;
+    });
+}
 $ruta          = $ruta ?? '';
 ?>
 <aside class="sidebar">

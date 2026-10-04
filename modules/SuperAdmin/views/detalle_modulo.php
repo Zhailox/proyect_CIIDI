@@ -120,7 +120,7 @@ if (empty($mod)) {
                     Matriz de Permisos por Ruta (RBAC & Feature Flags)
                 </h3>
                 <p style="margin: 0.2rem 0 0 0; color: var(--texto-silenciado, #64748b); font-size: 0.88rem;">
-                    Configure el rol mínimo necesario, modifique estados y ejecute pings sintéticos de salud por ruta.
+                    Configure estados y ejecute pings sintéticos de salud por ruta.
                 </p>
             </div>
         </div>
@@ -150,18 +150,7 @@ if (empty($mod)) {
                                     <i class="ph-bold ph-lightning"></i> Testear Ruta
                                 </button>
 
-                                <div style="display: flex; flex-direction: column; gap: 2px;">
-                                    <span style="font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase;">Rol Mínimo Exigido</span>
-                                    <select id="rol-ruta-<?= htmlspecialchars($r['clave']) ?>" onchange="toggleRutaAjaxDM('<?= htmlspecialchars($r['clave']) ?>')" style="font-size: 0.82rem; padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 700; background: #ffffff; cursor: pointer;">
-                                        <?php if (!empty($mod['rolesDinamicos'])): ?>
-                                            <?php foreach ($mod['rolesDinamicos'] as $rolDyn): ?>
-                                                <option value="<?= $rolDyn['nivel'] ?>" <?= $r['rol_minimo'] === $rolDyn['nivel'] ? 'selected' : '' ?>>
-                                                    <?= htmlspecialchars($rolDyn['nombre']) ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
-                                    </select>
-                                </div>
+                                
 
                                 <div style="display: flex; flex-direction: column; gap: 2px;">
                                     <span style="font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase;">Estado / Feature Flag</span>

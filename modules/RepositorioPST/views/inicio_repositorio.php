@@ -558,7 +558,7 @@ mark, .highlight-match {
             </div>
             
             <h1 class="ag-pst-hero-title">
-                Proyectos Socio-Tecnológicos (PST)
+                Proyectos Socio-Tecnológicos
             </h1>
             
             <?php
@@ -664,9 +664,9 @@ mark, .highlight-match {
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 0.8rem; font-weight: 700; color: var(--texto-silenciado, #64748B);">Ordenar por:</span>
                     <select onchange="cambiarOrdenamiento(this.value)" style="font-size: 0.82rem; font-weight: 700; padding: 5px 10px; border-radius: var(--radius-sm, 6px); border: 1px solid rgba(80,89,132,0.2); background: #ffffff; cursor: pointer;">
-                        <option value="anio_desc" <?= in_array($ordenActual, ['desc', 'anio_desc']) ? 'selected' : '' ?>>Año (Más reciente a más antiguo)</option>
-                        <option value="anio_asc" <?= in_array($ordenActual, ['asc', 'anio_asc']) ? 'selected' : '' ?>>Año (Más antiguo a más reciente)</option>
-                        <option value="titulo_asc" <?= $ordenActual === 'titulo_asc' ? 'selected' : '' ?>>Título (A - Z)</option>
+                        <option value="anio_desc" <?= in_array($ordenActual, ['desc', 'anio_desc']) ? 'selected' : '' ?>>Año: Más reciente</option>
+                        <option value="anio_asc" <?= in_array($ordenActual, ['asc', 'anio_asc']) ? 'selected' : '' ?>>Año: Más antiguo</option>
+                        <option value="titulo_asc" <?= $ordenActual === 'titulo_asc' ? 'selected' : '' ?>>Título: A - Z</option>
                     </select>
                 </div>
             </div>
@@ -699,11 +699,23 @@ mark, .highlight-match {
                                 <tr>
                                     <td>
                                         <a href="?ruta=detalles-pst&id=<?= $doc['id'] ?>" class="ag-doc-link">
-                                            <?= htmlspecialchars($doc['titulo']) ?>
+                                             <?= htmlspecialchars($doc['titulo']) ?>
                                         </a>
-                                        <div style="font-size: 0.78rem; color: var(--texto-silenciado, #64748B); margin-top: 4px;">
-                                            Autores: <?= htmlspecialchars($doc['autores_nombres'] ?? 'No especificados') ?>
+                                        <div style="font-size: 0.78rem; color: var(--texto-silenciado, #64748B); margin-top: 4px; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
+                                            <span>Autores: <?= htmlspecialchars($doc['autores_nombres'] ?? 'No especificados') ?></span>
+                                            <span style="display: inline-flex; align-items: center; gap: 0.25rem;" title="Visualizaciones">
+                                                <i class="ph ph-eye" style="color: var(--color-secundario);"></i> <?= number_format((int)($doc['vistas'] ?? 0)) ?> vistas
+                                            </span>
                                         </div>
+                                        <?php if (!empty($doc['carreras_vinculadas_nombres'])): ?>
+                                            <div style="display: flex; gap: 0.3rem; flex-wrap: wrap; margin-top: 5px;">
+                                                <?php foreach (explode(', ', $doc['carreras_vinculadas_nombres']) as $carrVincTag): ?>
+                                                    <span class="ag-badge-trayecto" style="font-size: 0.68rem; padding: 2px 6px; background: rgba(112, 144, 203, 0.15); color: var(--color-secundario); border: 1px solid rgba(112, 144, 203, 0.3);" title="Carrera Vinculada">
+                                                        <i class="ph ph-tag" style="color: var(--color-terciario);"></i> <?= htmlspecialchars(trim($carrVincTag)) ?>
+                                                    </span>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php endif; ?>
                                     </td>
                                     <?php if ($mostrarNivel): 
                                         $nivTabla = $doc['nivel_academico'] ?? 'Pregrado';
@@ -711,7 +723,7 @@ mark, .highlight-match {
                                     ?>
                                     <td>
                                         <span class="ag-badge-trayecto"><?= htmlspecialchars($nivTablaLabel) ?></span>
-                                        <?php if (in_array($nivTabla, ['Pregrado', 'TSU']) && !empty($doc['trayecto'])): ?>
+                                        <?php if (($nivTabla === 'Pregrado') && !empty($doc['trayecto'])): ?>
                                             <span style="font-size: 0.76rem; font-weight: 700; color: var(--color-secundario); display: block; margin-top: 3px;">
                                                 <?= htmlspecialchars(str_starts_with($doc['trayecto'], 'Trayecto') ? $doc['trayecto'] : 'Trayecto ' . $doc['trayecto']) ?>
                                             </span>
@@ -748,32 +760,17 @@ mark, .highlight-match {
                             Página <?= $pag['current_page'] ?> de <?= $pag['total_pages'] ?> (Total: <?= $pag['total_items'] ?> proyectos)
                         </span>
                         
-                        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                            <?php 
-                            $opcionesSelector = ConfigService::get('paginacion.opciones_selector', [5, 10, 15, 20, 50]);
-                            $currLimit = (int)($pag['limit'] ?? 10);
-                            ?>
-                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--texto-silenciado);">
-                                <span>Mostrar:</span>
-                                <select onchange="cambiarLimitePst(this.value)" style="padding: 3px 8px; font-size: 0.78rem; font-weight: 700; border-radius: 4px; border: 1px solid #cbd5e1; background: white; cursor: pointer;">
-                                    <?php foreach ($opcionesSelector as $opt): ?>
-                                        <option value="<?= $opt ?>" <?= $currLimit === (int)$opt ? 'selected' : '' ?>><?= $opt ?> por pág.</option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-
-                            <div class="ag-pagination-pages">
-                                <?php for ($i = 1; $i <= $pag['total_pages']; $i++): ?>
-                                    <?php
-                                    $query = $_GET;
-                                    $query['page'] = $i;
-                                    $linkUrl = '?' . http_build_query($query);
-                                    ?>
-                                    <a href="<?= $linkUrl ?>" class="ag-page-link <?= $i === $pag['current_page'] ? 'active' : '' ?>">
-                                        <?= $i ?>
-                                    </a>
-                                <?php endfor; ?>
-                            </div>
+                        <div class="ag-pagination-pages">
+                            <?php for ($i = 1; $i <= $pag['total_pages']; $i++): ?>
+                                <?php
+                                $query = $_GET;
+                                $query['page'] = $i;
+                                $linkUrl = '?' . http_build_query($query);
+                                ?>
+                                <a href="<?= $linkUrl ?>" class="ag-page-link <?= $i === $pag['current_page'] ? 'active' : '' ?>">
+                                    <?= $i ?>
+                                </a>
+                            <?php endfor; ?>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -822,8 +819,7 @@ mark, .highlight-match {
                     <select name="nivel_academico" id="agNivelAcademicoSelect" class="ag-filter-select" onchange="toggleTrayectoByNivel(this.value); this.form.submit();">
                         <option value="">Todos los Niveles</option>
                         <?php 
-                        $labelsNivMap = [
-                            'TSU' => 'TSU',
+                        $labelsNivMap = !empty($labelsNiveles) ? $labelsNiveles : [
                             'Pregrado' => 'Pregrado',
                             'Especializacion' => 'Especialización',
                             'Maestria' => 'Maestría',
@@ -841,7 +837,7 @@ mark, .highlight-match {
 
                 <!-- Trayecto del PNF (Solo activo si Nivel = Pregrado o no seleccionado) -->
                 <div class="ag-filter-group" id="agTrayectoGroup">
-                    <label>Trayecto (Solo Pregrado)</label>
+                    <label>Trayecto</label>
                     <select name="trayecto" id="agTrayectoSelect" class="ag-filter-select" onchange="this.form.submit()">
                         <option value="">Todos los Trayectos</option>
                         <?php 
@@ -1026,12 +1022,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+const nivelesConTrayecto = <?= json_encode($nivelesConTrayecto ?? ['Pregrado']) ?>;
 function toggleTrayectoByNivel(nivelVal) {
     const group = document.getElementById('agTrayectoGroup');
     const select = document.getElementById('agTrayectoSelect');
     if (!group || !select) return;
 
-    if (nivelVal && nivelVal !== 'Pregrado') {
+    if (nivelVal && !nivelesConTrayecto.includes(nivelVal)) {
         select.value = '';
         select.disabled = true;
         group.style.opacity = '0.4';
@@ -1076,13 +1073,6 @@ function seleccionarAnioHistograma(year) {
 function cambiarOrdenamiento(val) {
     const url = new URL(window.location.href);
     url.searchParams.set('orden', val);
-    url.searchParams.set('page', 1);
-    window.location.href = url.toString();
-}
-
-function cambiarLimitePst(val) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('limit', val);
     url.searchParams.set('page', 1);
     window.location.href = url.toString();
 }

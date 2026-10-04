@@ -157,6 +157,7 @@ public function getRutas(): array {
                 'tipo'        => 'parent',
                 'titulo'      => 'Perfil',
                 'icono'       => 'ph-fill ph-user-circle',
+                'orden'       => 990,
                 'enlace'      => 'perfil',
                 'privilegio_minimo' => $nivelPublico,
                 // Estas rutas mantendrán encendido el contenedor padre en el sidebar

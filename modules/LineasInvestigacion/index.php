@@ -117,6 +117,7 @@ class LineasInvestigacionModule implements ModuleContract {
                 'tipo'        => 'parent',
                 'titulo' => 'Líneas de Investigación',
                 'icono'       => 'ph-fill ph-graph',
+                'orden'       => 40,
                 'enlace'      => 'lineas-investigacion',
                 'activadores' => ['lineas-investigacion', 'detalle-linea', 'gestionar-lineas', 'detalle-gestion-linea', 'gestionar-dimensiones', 'analitica', 'gestionar-carreras'],
                 'privilegio_minimo' => $nivelPublico,
