@@ -122,8 +122,8 @@ class ArticuloModel {
                     LEFT JOIN categorias c2 ON c2.id = rc2.id_categoria
                     WHERE rc2.id_recurso = r.id
                 ), 'Sin categoría') AS categoria,
-                COALESCE((
-                    SELECT STRING_AGG(DISTINCT a2.nombre_completo, ', ' ORDER BY a2.nombre_completo)
+               COALESCE((
+                    SELECT STRING_AGG(a2.nombre_completo || '|||' || COALESCE(a2.orcid, ''), ';;;' ORDER BY a2.nombre_completo ASC)
                     FROM recurso_autores ra2
                     JOIN autores a2 ON a2.id = ra2.id_autor
                     WHERE ra2.id_recurso = r.id
@@ -141,9 +141,19 @@ class ArticuloModel {
         $articulos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         foreach ($articulos as &$articulo) {
-            $articulo['autores'] = ($articulo['autores_text'] !== 'Autor no registrado') 
-                ? explode(', ', $articulo['autores_text']) 
-                : [];
+            $articulo['autores_data'] = [];
+            if ($articulo['autores_text'] !== 'Autor no registrado') {
+                $lista = explode(';;;', $articulo['autores_text']);
+                foreach($lista as $aut) {
+                    $partes = explode('|||', $aut);
+                    $articulo['autores_data'][] = [
+                        'nombre' => $partes[0] ?? '', 
+                        'orcid' => $partes[1] ?? ''
+                    ];
+                }
+                // Mantenemos autores_text como un string simple para el resto del sistema (citas, etc)
+                $articulo['autores_text'] = implode(', ', array_column($articulo['autores_data'], 'nombre'));
+            }
         }
 
         return $articulos;
@@ -328,7 +338,7 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
 
             $stmtDetalle = $db->prepare("INSERT INTO detalles_articulos (
         id_recurso, id_editorial, volumen, numero, issn, imagen_portada, resumen
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)");
             $stmtDetalle->execute([
                 $id_recurso, 
                 $id_editorial ?: null, 
@@ -353,7 +363,7 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
             
             // Creamos los autores nuevos ingresados al vuelo (Corrección PostgreSQL)
             if (!empty($autores_nuevos)) {
-                $stmtNewAutor = $db->prepare("INSERT INTO autores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
+               $stmtNewAutor = $db->prepare("INSERT INTO autores (nombre_completo, cedula, orcid) VALUES (?, ?, ?) RETURNING id");
                 $stmtSimilares = $db->prepare("SELECT id, nombre_completo FROM autores WHERE LOWER(nombre_completo) LIKE LOWER(?) LIMIT 50");
 
                 foreach ($autores_nuevos as $json_autor) {
@@ -361,6 +371,7 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
                     if ($datos && !empty($datos['nombre'])) {
                         $nom = trim($datos['nombre']);
                         $cedula = !empty($datos['cedula']) ? trim($datos['cedula']) : null;
+                        $orcid = !empty($datos['orcid']) ? trim($datos['orcid']) : null; // Capturamos el orcid del JS
                         $autorId = null;
 
                         // A. Búsqueda exacta por cédula
@@ -397,7 +408,7 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
 
                         // D. Si definitivamente no existe, lo insertamos
                         if (!$autorId) {
-                            $stmtNewAutor->execute([$nom, $cedula]);
+                            $stmtNewAutor->execute([$nom, $cedula, $orcid]);
                             $autorId = $stmtNewAutor->fetchColumn();
                         }
 
@@ -501,14 +512,23 @@ public function obtenerArticuloPorId($id) {
         if (!$articulo) return null;
 
         $stmtAutores = $db->prepare("
-            SELECT a.nombre_completo
+            SELECT a.nombre_completo, a.orcid
             FROM recurso_autores ra
             JOIN autores a ON a.id = ra.id_autor
             WHERE ra.id_recurso = ?
             ORDER BY a.nombre_completo ASC
         ");
         $stmtAutores->execute([(int) $id]);
-        $autores = $stmtAutores->fetchAll(PDO::FETCH_COLUMN);
+        $autoresFetch = $stmtAutores->fetchAll(PDO::FETCH_ASSOC);
+
+        $articulo['autores_data'] = [];
+        $nombresA = [];
+        foreach($autoresFetch as $af) {
+            $articulo['autores_data'][] = ['nombre' => $af['nombre_completo'], 'orcid' => $af['orcid']];
+            $nombresA[] = $af['nombre_completo'];
+        }
+
+        
 
         $stmtCategorias = $db->prepare("SELECT id_categoria FROM recurso_categorias WHERE id_recurso = ?");
         $stmtCategorias->execute([(int) $id]);
@@ -522,8 +542,8 @@ public function obtenerArticuloPorId($id) {
         ");
         $stmtEtiquetas->execute([(int) $id]);
 
-        $articulo['autores'] = $autores;
-        $articulo['autores_text'] = !empty($autores) ? implode(', ', $autores) : 'Autor no registrado';
+        $articulo['autores'] = $nombresA;
+        $articulo['autores_text'] = !empty($nombresA) ? implode(', ', $nombresA) : 'Autor no registrado';
         $articulo['categorias'] = array_map('intval', $stmtCategorias->fetchAll(PDO::FETCH_COLUMN));
         $articulo['etiquetas_nombres'] = $stmtEtiquetas->fetchAll(PDO::FETCH_COLUMN);
 
@@ -537,7 +557,12 @@ public function obtenerArticuloPorId($id) {
                        d.resumen, d.imagen_portada, d.volumen, d.numero, d.issn,
                        e.nombre AS editorial,
                        COALESCE((SELECT c2.nombre FROM recurso_categorias rc2 JOIN categorias c2 ON c2.id = rc2.id_categoria WHERE rc2.id_recurso = r.id LIMIT 1), 'Artículo') AS categoria,
-                       COALESCE((SELECT STRING_AGG(DISTINCT a2.nombre_completo, ', ' ORDER BY a2.nombre_completo) FROM recurso_autores ra2 JOIN autores a2 ON a2.id = ra2.id_autor WHERE ra2.id_recurso = r.id), 'Autor no registrado') AS autores_text
+                       COALESCE((
+                    SELECT STRING_AGG(a2.nombre_completo || '|||' || COALESCE(a2.orcid, ''), ';;;' ORDER BY a2.nombre_completo ASC)
+                    FROM recurso_autores ra2
+                    JOIN autores a2 ON a2.id = ra2.id_autor
+                    WHERE ra2.id_recurso = r.id
+                ), 'Autor no registrado') AS autores_text
                 FROM recursos r
                 JOIN detalles_articulos d ON r.id = d.id_recurso
                 LEFT JOIN editoriales e ON d.id_editorial = e.id
@@ -658,15 +683,16 @@ public function actualizarArticulo(
         }
 
         if (!empty($autores_nuevos)) {
-            $stmtNewAutor = $db->prepare("INSERT INTO autores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
+            $stmtNewAutor = $db->prepare("INSERT INTO autores (nombre_completo, cedula, orcid) VALUES (?, ?, ?) RETURNING id");
 
             foreach ($autores_nuevos as $json_autor) {
                 $datos = json_decode($json_autor, true);
 
                 if ($datos) {
                     $cedula = !empty($datos['cedula']) ? $datos['cedula'] : null;
+                    $orcid = !empty($datos['orcid']) ? trim($datos['orcid']) : null;
 
-                    $stmtNewAutor->execute([$datos['nombre'], $cedula]);
+                    $stmtNewAutor->execute([$datos['nombre'], $cedula, $orcid]);
                     $nuevo_id = $stmtNewAutor->fetchColumn();
 
                     if ($nuevo_id) {
@@ -751,7 +777,7 @@ public function obtenerCatalogoPaginado($tabla, $buscar = '', $pagina = 1, $porP
         $total = (int)$stmtTotal->fetchColumn();
 
         // 2. Extraer datos paginados
-        $sql = "SELECT id, nombre_completo, cedula FROM autores $where ORDER BY nombre_completo ASC LIMIT :limit OFFSET :offset";
+        $sql = "SELECT id, nombre_completo, cedula, orcid FROM autores $where ORDER BY nombre_completo ASC LIMIT :limit OFFSET :offset";
         $stmt = $db->prepare($sql);
         if (trim($buscar) !== '') {
             $stmt->bindValue(':b', "%" . trim($buscar) . "%", PDO::PARAM_STR);
@@ -847,11 +873,10 @@ public function obtenerCategoriasDelArticulo($id_recurso) {
         return true;
     }
 
-    public function actualizarAutor($id, $nombre, $cedula) {
+    public function actualizarAutor($id, $nombre, $cedula, $orcid = null) {
         $db = Connection::getInstance();
-        // Actualizamos nombre y cédula (si la cédula está vacía la guardamos como NULL)
-        $db->prepare("UPDATE autores SET nombre_completo = ?, cedula = ? WHERE id = ?")
-           ->execute([trim($nombre), trim($cedula) ?: null, $id]);
+        $db->prepare("UPDATE autores SET nombre_completo = ?, cedula = ?, orcid = ? WHERE id = ?")
+           ->execute([trim($nombre), trim($cedula) ?: null, trim($orcid) ?: null, $id]);
         return true;
     }
 

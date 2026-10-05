@@ -176,7 +176,7 @@
             </div>
 
             <div class="form-group mt-1">
-                <label class="font-bold">Cédula</label>
+                <label class="font-bold">Cédula (Opcional)</label>
                 <div style="display: flex; gap: 0.5rem;">
                     <select id="modal-autor-nacionalidad" class="login-flat-input p-input" style="width: 80px; flex-shrink: 0; cursor: pointer;">
                         <option value="V-">V-</option>
@@ -185,6 +185,11 @@
                     <input type="number" id="modal-autor-cedula" class="login-flat-input w-100 p-input" placeholder="Ej: 12345678" required min="1000000">
                 </div>
                 <small class="text-muted d-block mt-sm">Solo ingrese los números. La nacionalidad se añade automáticamente.</small>
+            </div>
+            <div class="form-group mt-1">
+                <label class="font-bold">ORCID (Opcional)</label>
+                <input type="text" id="modal-autor-orcid" class="login-flat-input w-100 p-input" placeholder="Ej: 0000-0002-1825-0097">
+                <small class="text-muted d-block mt-sm">Identificador abierto de investigador.</small>
             </div>
 
             <div class="mt-1-5" style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem;">

@@ -332,10 +332,15 @@ $tabActiva = $_GET['tab'] ?? 'cat';
                                     </td>
                                     <td class="text-center">
                                         <div style="display: inline-flex; gap: 0.35rem; align-items: center; justify-content: center;">
-                                            <button type="button" class="btn btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.8rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.3rem;" onclick="abrirModalEdicionAutor(<?= (int)$autor['id'] ?>, '<?= htmlspecialchars($autor['nombre_completo'], ENT_QUOTES) ?>', '<?= htmlspecialchars($autor['cedula'] ?? '', ENT_QUOTES) ?>')">
-                                                <i class="ph-bold ph-pencil-simple"></i> Editar
-                                            </button>
-
+                                        <a href="articulos?q=<?= urlencode($autor['nombre_completo']) ?>" class="btn btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.8rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.3rem;" title="Ver artículos de este autor">
+                                            <i class="ph-bold ph-magnifying-glass"></i> Ver
+                                        </a>   
+                                        <?php if (Auth::requierePrivilegioMinimo($nivelAdminArt, 'editar', 'Articulos', false)): ?> 
+                                        <button type="button" class="btn btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.8rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.3rem;" onclick="abrirModalEdicionAutor(<?= (int)$autor['id'] ?>, '<?= htmlspecialchars($autor['nombre_completo'], ENT_QUOTES) ?>', '<?= htmlspecialchars($autor['cedula'] ?? '', ENT_QUOTES) ?>', '<?= htmlspecialchars($autor['orcid'] ?? '', ENT_QUOTES) ?>')">
+                                            <i class="ph-bold ph-pencil-simple"></i> Editar
+                                        </button>
+                                            <?php endif; ?>
+                                             <?php if (Auth::requierePrivilegioMinimo($nivelAdminArt, 'eliminar', 'Articulos', false)): ?>
                                             <form action="gestor-catalogos" method="POST" style="margin: 0; display: inline;">
                                                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                                                 <input type="hidden" name="accion" value="eliminar_autor">
@@ -345,6 +350,7 @@ $tabActiva = $_GET['tab'] ?? 'cat';
                                                     <i class="ph-bold ph-trash"></i>
                                                 </button>
                                             </form>
+                                            <?php endif; ?>
                                         </div>
                                     </td>
 
@@ -421,6 +427,10 @@ $tabActiva = $_GET['tab'] ?? 'cat';
                 <label class="font-bold" style="font-size:0.85rem;">Cédula (Opcional)</label>
                 <input type="text" name="cedula" id="edit-autor-cedula" class="login-flat-input w-100 p-input" placeholder="V-12345678" style="padding: 0.55rem 0.75rem; border-radius:6px; font-size:0.875rem;">
             </div>
+            <div class="form-group mt-1">
+                <label class="font-bold" style="font-size:0.85rem;">ORCID (Opcional)</label>
+                <input type="text" name="orcid" id="edit-autor-orcid" class="login-flat-input w-100 p-input" placeholder="Ej: 0000-0002-1825-0097" style="padding: 0.55rem 0.75rem; border-radius:6px; font-size:0.875rem;">
+            </div>
 
             <div class="modal-actions mt-1-5" style="display:flex; justify-content:flex-end; gap:0.5rem;">
                 <button type="button" class="btn btn-secondary" onclick="cerrarModalEdicionAutor()" style="padding: 0.45rem 1rem; border-radius:6px; font-size:0.85rem;">Cancelar</button>
@@ -453,10 +463,11 @@ function cerrarModalEdicion() {
     document.getElementById('modal-edicion-catalogo').style.display = 'none';
 }
 
-function abrirModalEdicionAutor(id, nombre, cedula) {
+function abrirModalEdicionAutor(id, nombre, cedula, orcid) {
     document.getElementById('edit-autor-id').value = id;
     document.getElementById('edit-autor-nombre').value = nombre;
     document.getElementById('edit-autor-cedula').value = cedula;
+    document.getElementById('edit-autor-orcid').value = orcid || ''; // Setear ORCID
     document.getElementById('modal-edicion-autor').style.display = 'flex';
     setTimeout(() => document.getElementById('edit-autor-nombre').focus(), 100);
 }
