@@ -83,7 +83,9 @@ $buildUrl = function($page) use ($busquedaActual) {
                                             <span style="background: var(--alert-inactive); color: var(--alert-active); padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.68rem; font-weight: 700;">Oculto</span>
                                         <?php endif; ?>
                                     </div>
-                                    <strong><?= htmlspecialchars($art['titulo']) ?></strong>
+                                    <a href="leer-articulo?id=<?= $art['id'] ?>" style="color: var(--titulos); text-decoration: none; font-weight: 700;" title="Leer Artículo">
+                                        <?= htmlspecialchars($art['titulo']) ?>
+                                    </a>
                                 </td>
                                 <td>
                                     Vol. <?= htmlspecialchars((string) ($art['volumen'] ?? '')) ?> <br>

@@ -125,6 +125,11 @@ document.addEventListener('DOMContentLoaded', function() {
         inputNombre.value = nombreOriginal; 
         inputCedula.value = '';
         document.getElementById('modal-autor-nacionalidad').value = 'V-'; // Reseteamos el select por defecto
+        
+        // NUEVO: Limpiamos el ORCID para que no se quede pegado el del autor anterior
+        const orcidInput = document.getElementById('modal-autor-orcid');
+        if (orcidInput) orcidInput.value = '';
+
         modalAutor.style.display = 'flex';
         
         buscador.value = '';
@@ -139,6 +144,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const nombre = inputNombre.value.trim();
         const nacionalidad = document.getElementById('modal-autor-nacionalidad').value;
         const cedulaNum = inputCedula.value.trim();
+        const orcidInput = document.getElementById('modal-autor-orcid');
+        const orcidVal = orcidInput ? orcidInput.value.trim() : '';
 
         if (nombre === '') {
             alert("El nombre del autor es obligatorio.");
@@ -154,12 +161,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const pseudoId = 'nuevo_' + Date.now();
         
         // 1. Lo guardamos en la lista general con la cédula armada (o nula)
-        listaAutores.push({id: pseudoId, nombre_completo: nombre, cedula: cedulaCompleta});
+        listaAutores.push({id: pseudoId, nombre_completo: nombre, cedula: cedulaCompleta, orcid: orcidVal});
         
-        // 2. Lo guardamos en el diccionario de nuevos autores
-        autoresNuevosMap[pseudoId] = {nombre: nombre, cedula: cedulaCompleta};
+        // Lo guardamos en el diccionario incluyendo el orcid
+        autoresNuevosMap[pseudoId] = {nombre: nombre, cedula: cedulaCompleta, orcid: orcidVal};
 
-        // 3. Añadimos el ID a los seleccionados y redibujamos
         agregarAutor(pseudoId, nombre);
         cerrarModalAutor();
     };

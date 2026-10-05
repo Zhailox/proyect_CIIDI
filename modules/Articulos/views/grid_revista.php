@@ -281,7 +281,29 @@ $buildUrlRemoveParam = function($param) use ($buildUrl) {
                             </a>
 
                             <div class="art-authors-line">
-                                <i class="ph-bold ph-users"></i> <?= htmlspecialchars($art['autores_text']) ?>
+                                <i class="ph-bold ph-users"></i> 
+                                <?php if (!empty($art['autores_data'])): ?>
+                                    <?php foreach($art['autores_data'] as $autorData): ?>
+                                        <span style="display:inline-flex; align-items:center; gap:4px; background:rgba(0,0,0,0.04); padding:2px 6px; border-radius:4px; font-size:0.78rem; white-space:nowrap;">
+                                            <!-- Enlace al Buscador Interno -->
+                                            <a href="articulos?q=<?= urlencode($autorData['nombre']) ?>" style="color:var(--color-terciario); text-decoration:none; font-weight:600;" title="Buscar más artículos de <?= htmlspecialchars($autorData['nombre']) ?>">
+                                                <?php 
+                                                    $nomAutor = htmlspecialchars($autorData['nombre']);
+                                                    echo (mb_strlen($nomAutor) > 16) ? mb_substr($nomAutor, 0, 14) . '..' : $nomAutor; 
+                                                ?>
+                                            </a>
+                                            <!-- Enlace al ORCID (Solo si existe) -->
+                                            <?php if (!empty($autorData['orcid'])): ?>
+                                                <?php $orcidUrl = strpos($autorData['orcid'], 'http') === 0 ? $autorData['orcid'] : 'https://orcid.org/' . $autorData['orcid']; ?>
+                                                <a href="<?= htmlspecialchars($orcidUrl) ?>" target="_blank" title="Ver perfil ORCID" style="color:var(--color-terciario); display:flex; align-items:center;">
+                                                    <i class="ph-fill ph-identification-badge" style="font-size:1.1rem;"></i>
+                                                </a>
+                                            <?php endif; ?>
+                                        </span>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    Autor no registrado
+                                <?php endif; ?>
                             </div>
 
                             <!-- ACCIONES DE TARJETA ESTILIZADAS -->

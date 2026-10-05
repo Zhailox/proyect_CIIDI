@@ -942,10 +942,9 @@ img.loaded {
     margin-bottom: 1rem;
     display: flex;
     align-items: center;
+    flex-wrap: wrap; /* Esto hace que pasen a la línea de abajo si no caben */
     gap: 0.4rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    /* Eliminamos white-space: nowrap, overflow y text-overflow */
 }
 
 .art-card-actions {

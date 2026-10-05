@@ -131,7 +131,7 @@
 }
 
 .ag-btn-test:hover {
-    background: var(--color-principal) !important;
+    background: var(--color-terciario) !important;
     transform: translateY(-1px);
 }
 

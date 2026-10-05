@@ -540,9 +540,10 @@ class ArticulosController {
                     $idItem = (int)($_POST['id'] ?? 0);
                     $nombre_autor = trim($_POST['nombre_completo'] ?? '');
                     $cedula_autor = trim($_POST['cedula'] ?? '');
+                    $orcid_autor = trim($_POST['orcid'] ?? ''); 
                     if ($nombre_autor !== '') {
-                        $this->articuloModel->actualizarAutor($idItem, $nombre_autor, $cedula_autor);
-                        AuditLogger::registrar('INFO', 'Articulos', 'Actualizar Autor', "Autor ID #{$idItem} actualizado: '{$nombre_autor}' ({$cedula_autor}).");
+                        $this->articuloModel->actualizarAutor($idItem, $nombre_autor, $cedula_autor, $orcid_autor);
+                        AuditLogger::registrar('INFO', 'Articulos', 'Actualizar Autor', "Autor ID #{$idItem} actualizado: '{$nombre_autor}'.");
                         $_SESSION['mensaje_exito'] = 'Datos del autor actualizados correctamente.';
                     }
                 } elseif ($accion === 'eliminar_autor') {

@@ -197,6 +197,11 @@
             </div>
             <small class="text-muted d-block mt-sm">Solo ingrese los números. La nacionalidad se añade automáticamente.</small>
         </div>
+        <div class="form-group mt-1">
+                <label class="font-bold">ORCID (Opcional)</label>
+                <input type="text" id="modal-autor-orcid" class="login-flat-input w-100 p-input" placeholder="Ej: 0000-0002-1825-0097">
+                <small class="text-muted d-block mt-sm">Identificador abierto de investigador.</small>
+            </div>
         
         <div class="mt-1-5" style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem;">
             <button type="button" class="btn btn-secondary" onclick="cerrarModalAutor()">Cancelar</button>
