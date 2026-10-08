@@ -176,32 +176,28 @@
 <div id="modal-autor" class="art-modal-overlay" style="display: none;">
     <div class="art-modal-box">
         <h3 class="text-secondary mt-0" style="border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 1rem;">Registrar Nuevo Autor</h3>
-        
         <p class="text-muted mb-2">El autor se vinculará a este artículo y se guardará en la base de datos al enviar el formulario.</p>
 
         <div class="form-group mt-1">
             <label class="font-bold">Nombre Completo *</label>
             <input type="text" id="modal-autor-nombre" class="login-flat-input w-100 p-input">
         </div>
-        
+
         <div class="form-group mt-1">
-            <label class="font-bold">Cédula</label>
-            <div style="display: flex; gap: 0.5rem;">
-                <!-- Selector de Nacionalidad -->
-                <select id="modal-autor-nacionalidad" class="login-flat-input p-input" style="width: 80px; flex-shrink: 0; cursor: pointer;">
-                    <option value="V-">V-</option>
-                    <option value="E-">E-</option>
-                </select>
-                <!-- Input numérico puro -->
-                <input type="number" id="modal-autor-cedula" class="login-flat-input w-100 p-input" placeholder="Ej: 12345678" min="1000000">
-            </div>
-            <small class="text-muted d-block mt-sm">Solo ingrese los números. La nacionalidad se añade automáticamente.</small>
+            <label class="font-bold">ORCID *</label>
+            <input type="text" id="modal-autor-orcid" class="login-flat-input w-100 p-input" placeholder="Ej: 0000-0002-1825-0097" pattern="^(https?:\/\/orcid\.org\/)?\d{4}-\d{4}-\d{4}-\d{3}[0-9X]$" title="Formato válido: 0000-0000-0000-0000 o la URL completa de ORCID" required>
+            <small class="text-muted d-block mt-sm">Identificador obligatorio del investigador.</small>
         </div>
+
         <div class="form-group mt-1">
-                <label class="font-bold">ORCID (Opcional)</label>
-                <input type="text" id="modal-autor-orcid" class="login-flat-input w-100 p-input" placeholder="Ej: 0000-0002-1825-0097">
-                <small class="text-muted d-block mt-sm">Identificador abierto de investigador.</small>
-            </div>
+            <label class="font-bold">Página Web / Portafolio (Opcional)</label>
+            <input type="url" id="modal-autor-web" class="login-flat-input w-100 p-input" placeholder="https://mi-sitio.com">
+        </div>
+
+        <div class="form-group mt-1">
+            <label class="font-bold">Biografía / Resumen Académico (Opcional)</label>
+            <textarea id="modal-autor-biografia" class="login-flat-input w-100 p-input" rows="3" placeholder="Breve perfil profesional del investigador..." style="resize: vertical;"></textarea>
+        </div>
         
         <div class="mt-1-5" style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem;">
             <button type="button" class="btn btn-secondary" onclick="cerrarModalAutor()">Cancelar</button>

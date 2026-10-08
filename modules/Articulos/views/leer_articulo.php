@@ -61,7 +61,7 @@
                                 <?php foreach($articulo['autores_data'] as $autorData): ?>
                                     <span style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); padding:3px 10px; border-radius:6px; font-size:0.85rem; white-space:nowrap;">
                                         <!-- Enlace al Buscador Interno (Letra blanca para contraste) -->
-                                        <a href="articulos?q=<?= urlencode($autorData['nombre']) ?>" style="color:#ffffff; text-decoration:none; font-weight:600;" title="Buscar más artículos de <?= htmlspecialchars($autorData['nombre']) ?>">
+                                        <a href="perfil-autor?id=<?= (int)$autorData['id'] ?>" style="color:#ffffff; text-decoration:none; font-weight:600;" title="Ver perfil de <?= htmlspecialchars($autorData['nombre']) ?>">
                                             <?= htmlspecialchars($autorData['nombre']) ?>
                                         </a>
                                         <!-- Enlace al ORCID (Solo si existe) -->
@@ -226,31 +226,17 @@
 
                                 <div class="art-authors-line">
                                 <i class="ph-bold ph-users"></i> 
-                                <?php 
-                                    // Parseamos el string raw que viene de la BD para el artículo similar
-                                    $autoresDataSim = [];
-                                    if (!empty($sim['autores_text']) && $sim['autores_text'] !== 'Autor no registrado') {
-                                        $lista = explode(';;;', $sim['autores_text']);
-                                        foreach($lista as $aut) {
-                                            $partes = explode('|||', $aut);
-                                            $autoresDataSim[] = [
-                                                'nombre' => $partes[0] ?? '', 
-                                                'orcid' => $partes[1] ?? ''
-                                            ];
-                                        }
-                                    }
-                                ?>
-                                <?php if (!empty($autoresDataSim)): ?>
-                                    <?php foreach($autoresDataSim as $autorData): ?>
+                                <?php if (!empty($sim['autores_data'])): ?>
+                                    <?php foreach($sim['autores_data'] as $autorData): ?>
                                         <span style="display:inline-flex; align-items:center; gap:4px; margin-right:8px; background:rgba(0,0,0,0.04); padding:2px 6px; border-radius:4px;">
-                                            <!-- Enlace al Buscador Interno -->
-                                            <a href="articulos?q=<?= urlencode($autorData['nombre']) ?>" style="color:var(--color-terciario); text-decoration:none; font-weight:600;" title="Buscar más artículos de <?= htmlspecialchars($autorData['nombre']) ?>">
+                                            <!-- Enlace al Perfil del Autor -->
+                                            <a href="perfil-autor?id=<?= (int)$autorData['id'] ?>" style="color:var(--color-terciario); text-decoration:none; font-weight:600;" title="Ver perfil de <?= htmlspecialchars($autorData['nombre']) ?>">
                                                 <?= htmlspecialchars($autorData['nombre']) ?>
                                             </a>
-                                            <!-- Enlace al ORCID (Solo si existe) -->
+                                            <!-- Enlace al ORCID -->
                                             <?php if (!empty($autorData['orcid'])): ?>
                                                 <?php $orcidUrl = strpos($autorData['orcid'], 'http') === 0 ? $autorData['orcid'] : 'https://orcid.org/' . $autorData['orcid']; ?>
-                                                <a href="<?= htmlspecialchars($orcidUrl) ?>" target="_blank" title="Ver perfil ORCID" style="color:var(--color-terciario); display:flex; align-items:center;">
+                                                <a href="<?= htmlspecialchars($orcidUrl) ?>" target="_blank" title="Ver perfil ORCID" style="color:#A6CE39; display:flex; align-items:center;">
                                                     <i class="ph-fill ph-identification-badge" style="font-size:1.1rem;"></i>
                                                 </a>
                                             <?php endif; ?>

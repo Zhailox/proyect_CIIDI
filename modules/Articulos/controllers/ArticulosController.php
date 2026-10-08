@@ -17,9 +17,11 @@ class ArticulosController {
     }
 
     public function index() {
-        
+        $tabActiva = $_GET['tab'] ?? 'articulos';
+
         $filtros = [
             'q' => trim($_GET['q'] ?? ''),
+            'q_autor' => trim($_GET['q_autor'] ?? ''), 
             'year' => !empty($_GET['year']) ? (int) $_GET['year'] : '',
             'categorias' => array_filter(array_map('intval', $_GET['categoria'] ?? [])),
             'etiquetas' => array_filter(array_map('intval', $_GET['etiqueta'] ?? [])),
@@ -27,21 +29,42 @@ class ArticulosController {
         ];
 
         $pagina = max(1, (int) ($_GET['page'] ?? 1));
-        $porPagina = ConfigService::get('paginacion.limite_catalogo', 16); // Límite dinámico
+        $porPagina = ConfigService::get('paginacion.limite_catalogo', 16);
 
         $paginacion = $this->articuloModel->obtenerArticulosPaginados($filtros, $pagina, $porPagina);
         $categorias = $this->articuloModel->obtenerCategorias();
         $etiquetas = $this->articuloModel->obtenerEtiquetas();
+        
+        $autorPerfil = null;
+        if (!empty($filtros['q_autor'])) {
+            $autorPerfil = $this->articuloModel->obtenerAutorPorNombreExacto($filtros['q_autor']);
+        }
+
+        // ==========================================
+        // LÓGICA PARA LA PESTAÑA DE AUTORES (NUEVO)
+        // ==========================================
+        $q_autores_tab = trim($_GET['q_autores_tab'] ?? '');
+        $paginaAutores = max(1, (int) ($_GET['p_aut'] ?? 1));
+        $autoresCatalogo = [];
+        
+        if ($tabActiva === 'autores') {
+            // Reutilizamos el buscador del gestor, trayendo 12 tarjetas de autor por página
+            $autoresCatalogo = $this->articuloModel->buscarAutoresGestor($q_autores_tab, $paginaAutores, 12); 
+        }
 
         return [
+            'tabActiva' => $tabActiva,
+            'q_autores_tab' => $q_autores_tab,
+            'autoresCatalogo' => $autoresCatalogo,
+
             'articulos' => $paginacion['articulos'],
             'categorias' => $categorias,
             'etiquetas' => $etiquetas,
             'filtros' => $filtros,
-            'paginacion' => $paginacion
+            'paginacion' => $paginacion,
+            'autorPerfil' => $autorPerfil 
         ];
     }
-
     public function leer() {
         $id = (int)($_GET['id'] ?? 0);
         $maxRecomendados = ConfigService::get('paginacion.max_recomendados', 3);
@@ -539,12 +562,16 @@ class ArticulosController {
                 } elseif ($accion === 'actualizar_autor') {
                     $idItem = (int)($_POST['id'] ?? 0);
                     $nombre_autor = trim($_POST['nombre_completo'] ?? '');
-                    $cedula_autor = trim($_POST['cedula'] ?? '');
                     $orcid_autor = trim($_POST['orcid'] ?? ''); 
-                    if ($nombre_autor !== '') {
-                        $this->articuloModel->actualizarAutor($idItem, $nombre_autor, $cedula_autor, $orcid_autor);
+                    $biografia_autor = trim($_POST['biografia'] ?? ''); 
+                    $pagina_web_autor = trim($_POST['pagina_web'] ?? ''); 
+                    
+                    if ($nombre_autor !== '' && $orcid_autor !== '') {
+                        $this->articuloModel->actualizarAutor($idItem, $nombre_autor, $orcid_autor, $biografia_autor, $pagina_web_autor);
                         AuditLogger::registrar('INFO', 'Articulos', 'Actualizar Autor', "Autor ID #{$idItem} actualizado: '{$nombre_autor}'.");
                         $_SESSION['mensaje_exito'] = 'Datos del autor actualizados correctamente.';
+                    } else {
+                        $_SESSION['mensaje_error'] = 'El nombre y el ORCID son obligatorios.';
                     }
                 } elseif ($accion === 'eliminar_autor') {
                     $idItem = (int)($_POST['id'] ?? 0);
@@ -688,6 +715,40 @@ class ArticulosController {
         imagedestroy($destImg);
 
         return $exito;
+    }
+    public function perfilAutor() {
+        $idAutor = (int)($_GET['id'] ?? 0);
+        $autor = $this->articuloModel->obtenerAutorPorId($idAutor);
+        
+        if (!$autor) {
+            header('Location: articulos?tab=autores');
+            exit;
+        }
+
+        $filtros = [
+            'id_autor' => $idAutor,
+            'q' => trim($_GET['q'] ?? ''),
+            'year' => !empty($_GET['year']) ? (int) $_GET['year'] : '',
+            'categorias' => array_filter(array_map('intval', $_GET['categoria'] ?? [])),
+            'etiquetas' => array_filter(array_map('intval', $_GET['etiqueta'] ?? [])),
+            'activo' => true
+        ];
+
+        $pagina = max(1, (int) ($_GET['page'] ?? 1));
+        $porPagina = ConfigService::get('paginacion.limite_catalogo', 16);
+
+        $paginacion = $this->articuloModel->obtenerArticulosPaginados($filtros, $pagina, $porPagina);
+        $categorias = $this->articuloModel->obtenerCategorias();
+        $etiquetas = $this->articuloModel->obtenerEtiquetas();
+
+        return [
+            'autor' => $autor,
+            'articulos' => $paginacion['articulos'],
+            'categorias' => $categorias,
+            'etiquetas' => $etiquetas,
+            'filtros' => $filtros,
+            'paginacion' => $paginacion
+        ];
     }
 }
 

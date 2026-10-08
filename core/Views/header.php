@@ -6,7 +6,7 @@ $elementosCabecera = (isset($this) && method_exists($this, 'getControlesHeader')
 <header class="main-header">
   <div class="logo-container">
     <a href="inicio">
-      <i class="ph-fill ph-circles-four logo-icon"></i>
+      <img src="assets/img/SinfondoCIIDI.png" alt="CIIDI" style="height: 40px; width: auto; margin-right: 0.1rem;">
       <span class="logo-text">Repositorio</span> <span class="logo-highlight">CIIDI</span>
     </a>
   </div>

@@ -1380,6 +1380,46 @@ img.loaded {
     border-color: transparent;
     box-shadow: 0 4px 10px rgba(80, 89, 132, 0.25);
 }
+/* ========================================================
+   TABS TIPO PÍLDORA (SEGMENTED CONTROL)
+   ======================================================== */
+.art-pill-tabs-container {
+    display: flex;
+    justify-content: center; /* Centrado en el eje X */
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+.art-pill-tabs {
+    display: inline-flex;
+    background: rgba(112, 144, 203, 0.1); /* Fondo gris azulado muy suave */
+    border-radius: 50px; /* Bordes totalmente redondeados */
+    padding: 0.35rem; /* Espacio interior para que la pastilla respire */
+    border: 1px solid rgba(112, 144, 203, 0.2);
+}
+
+.art-pill-tab {
+    padding: 0.65rem 1.75rem;
+    border-radius: 50px; /* La mitad interna también redondeada */
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--texto-silenciado, #64748b);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.art-pill-tab:hover {
+    color: var(--color-secundario, #0b1a30);
+}
+
+.art-pill-tab.active {
+    background: var(--color-secundario); /* Píldora iluminada */
+    color: var(--color-principal);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* Sombrea la pestaña activa */
+}
 
 
 

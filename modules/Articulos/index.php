@@ -101,7 +101,15 @@ public function getRutas(): array {
                 'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
                 'controlador'      => 'ConfiguracionController',
                 'metodo'           => 'eliminarImagen',
-            ]
+            ],
+            'perfil-autor' => [
+                'controlador_path' => __DIR__ . '/controllers/ArticulosController.php',
+                'controlador'      => 'ArticulosController',
+                'metodo'           => 'perfilAutor',
+                'vista'            => __DIR__ . '/views/perfil_autor.php', 
+                'titulo'           => 'Perfil de Autor - UPTTMBI',
+                'css'              => ['Articulos.css']
+            ],
             
         ];
     }
