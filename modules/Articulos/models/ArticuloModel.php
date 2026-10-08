@@ -375,6 +375,7 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
             ]);
             // 3. Procesar Autores
             $autores_finales = [];
+            $autores_vinculados = [];
             
             // Los que ya existían
             if (!empty($autores)) {
@@ -409,16 +410,19 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
                     $autorId = null;
 
                     // A. Búsqueda estricta por ORCID primero
-                    $stmt = $db->prepare("SELECT id FROM autores WHERE orcid = ?");
+                    $stmt = $db->prepare("SELECT id, nombre_completo FROM autores WHERE orcid = ?");
                     $stmt->execute([$orcid]);
-                    $autorId = $stmt->fetchColumn();
+                    $autorExistente = $stmt->fetch(PDO::FETCH_ASSOC);
 
-                    // B. Si no existe, lo insertamos
-                    if (!$autorId) {
+                    if ($autorExistente) {
+                        // Si ya existe, tomamos su ID real e informamos
+                        $autorId = $autorExistente['id'];
+                        $autores_vinculados[] = $autorExistente['nombre_completo'];
+                    } else {
+                        // B. Si no existe en absoluto, lo insertamos
                         $stmtNewAutor->execute([$nom, $orcid, $biografia, $pagina_web]);
                         $autorId = $stmtNewAutor->fetchColumn();
                     }
-
                     if ($autorId) {
                         $autores_finales[] = (int)$autorId;
                     }
@@ -450,7 +454,7 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
 
             // Si todo salió bien, guardamos los cambios físicamente
             $db->commit();
-            return true;
+            return $autores_vinculados;
 
         } catch (Exception $e) {
             // Si algo explota, deshacemos todo
@@ -697,6 +701,7 @@ public function actualizarArticulo(
 
         // Insertar autores nuevos
         $autores_finales = [];
+        $autores_vinculados = [];
 
         if (!empty($autores)) {
             foreach ($autores as $id_autor) {
@@ -728,12 +733,16 @@ public function actualizarArticulo(
                     $autorId = null;
 
                     // A. Búsqueda estricta por ORCID primero
-                    $stmt = $db->prepare("SELECT id FROM autores WHERE orcid = ?");
+                    $stmt = $db->prepare("SELECT id, nombre_completo FROM autores WHERE orcid = ?");
                     $stmt->execute([$orcid]);
-                    $autorId = $stmt->fetchColumn();
+                    $autorExistente = $stmt->fetch(PDO::FETCH_ASSOC);
 
-                    // B. Si no existe, lo insertamos
-                    if (!$autorId) {
+                    if ($autorExistente) {
+                        // Si ya existe, tomamos su ID real e informamos
+                        $autorId = $autorExistente['id'];
+                        $autores_vinculados[] = $autorExistente['nombre_completo'];
+                    } else {
+                        // B. Si no existe en absoluto, lo insertamos
                         $stmtNewAutor->execute([$nom, $orcid, $biografia, $pagina_web]);
                         $autorId = $stmtNewAutor->fetchColumn();
                     }
@@ -761,7 +770,7 @@ public function actualizarArticulo(
         }
 
         $db->commit();
-        return true;
+        return $autores_vinculados;
     } catch (Exception $e) {
         $db->rollBack();
         throw $e;

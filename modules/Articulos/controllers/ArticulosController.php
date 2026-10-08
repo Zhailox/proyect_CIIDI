@@ -249,7 +249,7 @@ class ArticulosController {
 
         // 3. Mandar al modelo para insertar
         try {
-            $this->articuloModel->registrarArticulo(
+            $autores_vinculados = $this->articuloModel->registrarArticulo(
                 $titulo,
                 $resumen,
                 $categorias,
@@ -267,7 +267,12 @@ class ArticulosController {
 
             AuditLogger::registrar('INFO', 'Articulos', 'Publicar Artículo', "Nuevo artículo publicado: '{$titulo}' ({$anio_publicacion}).");
 
-            $_SESSION['mensaje_exito'] = "El artículo fue publicado correctamente en la vitrina.";
+            $msgExito = "El artículo fue publicado correctamente en la vitrina.";
+            if (!empty($autores_vinculados)) {
+                $msgExito .= " (Nota: Se vincularon automáticamente investigadores ya existentes debido a que su ORCID coincidía: " . implode(', ', array_unique($autores_vinculados)) . ").";
+            }
+
+            $_SESSION['mensaje_exito'] = $msgExito;
             header('Location: gestor-articulos');
             exit;
 
@@ -456,7 +461,7 @@ class ArticulosController {
             }
 
         try {
-            $this->articuloModel->actualizarArticulo(
+            $autores_vinculados = $this->articuloModel->actualizarArticulo(
                 $id,
                 $titulo,
                 $resumen,
@@ -475,8 +480,13 @@ class ArticulosController {
 
             AuditLogger::registrar('INFO', 'Articulos', 'Actualizar Artículo', "Artículo ID #{$id} actualizado: '{$titulo}'.");
 
+            $msgExito = 'El artículo fue actualizado correctamente.';
+            if (!empty($autores_vinculados)) {
+                $msgExito .= " (Nota: Algunos autores nuevos fueron reemplazados por sus perfiles originales registrados bajo el mismo ORCID: " . implode(', ', array_unique($autores_vinculados)) . ").";
+            }
+
             if (session_status() === PHP_SESSION_NONE) session_start();
-            $_SESSION['mensaje_exito'] = 'El artículo fue actualizado correctamente.';
+            $_SESSION['mensaje_exito'] = $msgExito;
             header('Location: gestor-articulos');
             exit;
         } catch (Exception $e) {
@@ -583,7 +593,7 @@ class ArticulosController {
                 AuditLogger::registrar('WARNING', 'Articulos', 'Fallo Operación Catálogo', "Error en '{$accion}': " . $e->getMessage());
                 $msg = $e->getMessage();
                 if (strpos($msg, '23505') !== false || strpos(strtolower($msg), 'duplicate') !== false) {
-                    $_SESSION['mensaje_error'] = 'Ya existe un elemento registrado con este mismo nombre o cédula.';
+                    $_SESSION['mensaje_error'] = 'Ya existe un elemento registrado con este mismo nombre o número de ORCID.';
                 } elseif (strpos($msg, '23503') !== false || strpos(strtolower($msg), 'foreign key') !== false) {
                     $_SESSION['mensaje_error'] = 'No se puede eliminar el registro porque está siendo utilizado por uno o más artículos.';
                 } else {
