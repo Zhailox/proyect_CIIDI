@@ -263,7 +263,7 @@
         </div>
 
         <div class="sidebar-illustration">
-            <img src="public/assets/img/500.jpg" alt="Instalador CIIDI" id="installerIlustrationImg" onerror="this.style.display='none'">
+            <img src="public/assets/img/500.webp" alt="Instalador CIIDI" id="installerIlustrationImg" onerror="this.style.display='none'">
         </div>
 
         <div style="font-size: 0.74rem; opacity: 0.75; text-align: center;">

@@ -44,7 +44,7 @@ $textoPst = ($totalPst > 0) ? "+{$totalPst} PST " . ($totalPst === 1 ? 'Indexado
 
         <div class="hero-graphic-spatial">
             <div class="hero-img-wrapper">
-                <img src="assets/img/uptt.png" alt="Ecosistema UPTTMBI" class="landing-hero-img-spatial">
+                <img src="assets/img/uptt.webp" alt="Ecosistema UPTTMBI" class="landing-hero-img-spatial">
                 
                 <!-- Tarjetas Flotantes Glassmorphic (Antigravity Depth) -->
                 <a href="?ruta=repositorio" class="floating-glass-card card-top-left" style="text-decoration: none; color: inherit;">

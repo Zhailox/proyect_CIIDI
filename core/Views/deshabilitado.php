@@ -98,7 +98,7 @@ $modoRuta = !empty($modoRuta) ? $modoRuta : 'desactivado';
 </head>
 <body>
     <div class="mantenimiento-wrapper">
-        <img src="assets/img/503.jpg" alt="503 - Funcionalidad Deshabilitada" class="mantenimiento-img">
+        <img src="assets/img/503.webp" alt="503 - Funcionalidad Deshabilitada" class="mantenimiento-img">
         
         <?php if (!empty($mensajeRutaDeshabilitada)): ?>
             <p class="mantenimiento-msg">

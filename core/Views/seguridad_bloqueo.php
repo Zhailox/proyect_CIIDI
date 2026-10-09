@@ -51,7 +51,7 @@ $fechaHora          = date('d/m/Y H:i:s');
 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 85vh; padding: 1.5rem 0; text-align: center; width: 100%;">
     
     <!-- IMAGEN ILUSTRATIVA DE SEGURIDAD (CON FORMATO IDÉNTICO A 403 / 404 / 500) -->
-    <img src="assets/img/seguridad.jpg" 
+    <img src="assets/img/seguridad.webp" 
          alt="Seguridad Institucional - Acceso Interceptado" 
          style="max-width: 850px; width: 92%; max-height: 52vh; height: auto; display: block; object-fit: contain; margin: 0 auto; filter: drop-shadow(0 12px 28px rgba(18, 26, 62, 0.12)); border-radius: 16px;">
 

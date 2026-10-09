@@ -98,7 +98,7 @@ $mensajeCustom = !empty($mensajeCustom) ? $mensajeCustom : "Estamos realizando l
 <body>
     <div class="mantenimiento-container">
         <!-- Imagen Libre Sin Contenedor Blanco Confinado -->
-        <img src="assets/img/503.jpg" alt="503 - Sistema en Mantenimiento" class="mantenimiento-img">
+        <img src="assets/img/503.webp" alt="503 - Sistema en Mantenimiento" class="mantenimiento-img">
         
         <?php if (!empty($mensajeCustom)): ?>
             <p class="mantenimiento-msg"><?= htmlspecialchars($mensajeCustom) ?></p>

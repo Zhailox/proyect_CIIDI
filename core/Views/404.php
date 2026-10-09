@@ -3,7 +3,7 @@
 ?>
 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 82vh; padding: 1rem 0; text-align: center; width: 100%;">
     <!-- Imagen Libre Sin Contenedor Confinado -->
-    <img src="assets/img/404.jpg" alt="Error 404 - Página No Encontrada" style="max-width: 900px; width: 95%; max-height: 72vh; height: auto; display: block; object-fit: contain; margin: 0 auto; filter: drop-shadow(0 12px 28px rgba(18, 26, 62, 0.12)); border-radius: 16px;">
+    <img src="assets/img/404.webp" alt="Error 404 - Página No Encontrada" style="max-width: 900px; width: 95%; max-height: 72vh; height: auto; display: block; object-fit: contain; margin: 0 auto; filter: drop-shadow(0 12px 28px rgba(18, 26, 62, 0.12)); border-radius: 16px;">
     
     <!-- Botones Flotantes de Acción -->
     <div style="margin-top: 1.5rem; display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">

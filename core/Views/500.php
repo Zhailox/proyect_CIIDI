@@ -104,7 +104,7 @@ $passCur = $currentCreds['pass'] ?? '';
 
 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 85vh; padding: 1rem 0;">
     <!-- ILUSTRACIÓN 500 ERROR LIBRE SIN CONTENEDOR CONFINANTE -->
-    <img src="assets/img/500.jpg" alt="Error 500 - Servicio No Disponible" style="max-width: 900px; width: 95%; max-height: 55vh; height: auto; border-radius: 16px; object-fit: contain; display: block; margin: 0 auto; filter: drop-shadow(0 12px 28px rgba(18, 26, 62, 0.12));">
+    <img src="assets/img/500.webp" alt="Error 500 - Servicio No Disponible" style="max-width: 900px; width: 95%; max-height: 55vh; height: auto; border-radius: 16px; object-fit: contain; display: block; margin: 0 auto; filter: drop-shadow(0 12px 28px rgba(18, 26, 62, 0.12));">
 
     <div style="max-width: 900px; width: 95%; margin-top: 1.5rem; box-sizing: border-box;">
 
