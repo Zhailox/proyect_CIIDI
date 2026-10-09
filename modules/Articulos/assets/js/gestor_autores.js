@@ -8,7 +8,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Elementos del Modal
     const modalAutor = document.getElementById('modal-autor');
     const inputNombre = document.getElementById('modal-autor-nombre');
-    const inputCedula = document.getElementById('modal-autor-cedula');
+    const inputOrcid = document.getElementById('modal-autor-orcid'); // ORCID ahora manda
+    const inputBiografia = document.getElementById('modal-autor-biografia');
+    const inputWeb = document.getElementById('modal-autor-web'); // Nueva Web
     
     const listaAutores = window.DATA_AUTORES || []; 
     let autoresSeleccionados = new Set();
@@ -35,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let filtrados = listaAutores.filter(a => 
             a.nombre_completo.toLowerCase().includes(query) || 
-            (a.cedula && a.cedula.toLowerCase().includes(query))
+            (a.orcid && a.orcid.toLowerCase().includes(query))
         );
 
         if (filtrados.length > 0) {
@@ -44,7 +46,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 let item = document.createElement('div');
                 item.className = 'autocomplete-item';
-                item.innerHTML = `<strong>${autor.nombre_completo}</strong> <span class="text-muted" style="font-size:0.8rem;">(${autor.cedula || 'Sin cédula'})</span>`;
+                let subTexto = autor.orcid ? `<i class="ph-fill ph-identification-badge" style="color:var(--color-terciario);"></i> ORCID: ${autor.orcid}` : 'Sin ORCID registrado';
+                item.innerHTML = `<strong>${autor.nombre_completo}</strong> <span class="text-muted" style="font-size:0.8rem; display: flex; align-items: center; gap: 4px;">${subTexto}</span>`;
                 
                 item.onclick = function() {
                     agregarAutor(autor.id, autor.nombre_completo);
@@ -120,14 +123,16 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // --- LÓGICA DEL MODAL ---
-    // --- LÓGICA DEL MODAL ---
+
     window.abrirModalAutor = function(nombreOriginal) {
         inputNombre.value = nombreOriginal; 
-        inputCedula.value = '';
-        document.getElementById('modal-autor-nacionalidad').value = 'V-'; // Reseteamos el select por defecto
+        if (inputOrcid) inputOrcid.value = '';
+        if (inputBiografia) inputBiografia.value = '';
+        if (inputWeb) inputWeb.value = '';
         
         // NUEVO: Limpiamos el ORCID para que no se quede pegado el del autor anterior
         const orcidInput = document.getElementById('modal-autor-orcid');
+        if (document.getElementById('modal-autor-biografia')) document.getElementById('modal-autor-biografia').value = '';
         if (orcidInput) orcidInput.value = '';
 
         modalAutor.style.display = 'flex';
@@ -142,29 +147,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.confirmarModalAutor = function() {
         const nombre = inputNombre.value.trim();
-        const nacionalidad = document.getElementById('modal-autor-nacionalidad').value;
-        const cedulaNum = inputCedula.value.trim();
         const orcidInput = document.getElementById('modal-autor-orcid');
         const orcidVal = orcidInput ? orcidInput.value.trim() : '';
+        const bioInput = document.getElementById('modal-autor-biografia');
+        const biografiaVal = bioInput ? bioInput.value.trim() : '';
+        const inputWeb = document.getElementById('modal-autor-web');
+        const webVal = inputWeb ? inputWeb.value.trim() : '';
 
-        if (nombre === '') {
-            alert("El nombre del autor es obligatorio.");
+        if (nombre === '' || orcidVal === '') {
+            alert("El nombre y el ORCID son obligatorios para registrar al investigador.");
+            return;
+        }
+        const orcidRegex = /^(https?:\/\/orcid\.org\/)?\d{4}-\d{4}-\d{4}-\d{3}[0-9X]$/i;
+        if (!orcidRegex.test(orcidVal)) {
+            alert("El ORCID no es válido. Debe tener el formato 0000-0000-0000-0000 o ser un enlace a orcid.org.");
             return;
         }
     
-        
-        // Unimos el "V-" o "E-" con los números que escribió el usuario
-       let cedulaCompleta = null;
-        if (cedulaNum !== '') {
-            cedulaCompleta = nacionalidad + cedulaNum;
-        }
+    
         const pseudoId = 'nuevo_' + Date.now();
         
         // 1. Lo guardamos en la lista general con la cédula armada (o nula)
-        listaAutores.push({id: pseudoId, nombre_completo: nombre, cedula: cedulaCompleta, orcid: orcidVal});
-        
-        // Lo guardamos en el diccionario incluyendo el orcid
-        autoresNuevosMap[pseudoId] = {nombre: nombre, cedula: cedulaCompleta, orcid: orcidVal};
+        listaAutores.push({id: pseudoId, nombre_completo: nombre, orcid: orcidVal, biografia: biografiaVal, pagina_web: webVal});
+        autoresNuevosMap[pseudoId] = {nombre: nombre, orcid: orcidVal, biografia: biografiaVal, pagina_web: webVal};
 
         agregarAutor(pseudoId, nombre);
         cerrarModalAutor();
