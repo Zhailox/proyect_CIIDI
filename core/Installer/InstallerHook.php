@@ -3,7 +3,14 @@
 
 class InstallerHook {
     private string $lockFilePath;
-    private array $installerRoutes = ['install', 'installer-test-db', 'installer-create-db', 'installer-run'];
+    private array $installerRoutes = [
+        'install', 
+        'installer-test-db', 
+        'installer-create-db', 
+        'installer-clean-db', 
+        'installer-test-smtp',
+        'installer-run'
+    ];
 
     public function __construct(?string $lockPath = null) {
         if ($lockPath !== null) {
@@ -32,6 +39,12 @@ class InstallerHook {
             } elseif ($ruta === 'installer-create-db') {
                 $installerController->createDbAjax();
                 exit;
+            } elseif ($ruta === 'installer-clean-db') {
+                $installerController->cleanDbAjax();
+                exit;
+            } elseif ($ruta === 'installer-test-smtp') {
+                $installerController->testSmtpAjax();
+                exit;
             } elseif ($ruta === 'installer-run') {
                 $installerController->installSystemAjax();
                 exit;
@@ -45,7 +58,7 @@ class InstallerHook {
             }
             return true;
         } elseif (in_array($ruta, $this->installerRoutes, true)) {
-            // Si la aplicación ya está instalada e intentan ir a /install, redirigir a login
+            // Si la aplicación ya está instalada e intentan ir a /install o rutas de instalación, redirigir a login
             header("Location: login");
             exit;
         }
