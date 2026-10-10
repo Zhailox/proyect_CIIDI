@@ -20,6 +20,7 @@ $configMaxMb = (float)ConfigService::get('archivos.max_size_mb', 20);
 $phpUploadMaxMb = $parseIniToMb(ini_get('upload_max_filesize'));
 $phpPostMaxMb = $parseIniToMb(ini_get('post_max_size'));
 $maxMbEfectivo = round(min($configMaxMb, $phpUploadMaxMb, $phpPostMaxMb), 2);
+$maxArchivosLote = (int)ConfigService::get('archivos.max_archivos_lote', 5);
 $carrerasList = $carreras ?? [];
 $currCarrera = $_POST['id_carrera'] ?? $documento['id_carrera'] ?? $documento['carrera_id'] ?? 1;
 $labelsNiveles = !empty($labelsNiveles) ? $labelsNiveles : [
@@ -436,7 +437,7 @@ if (typeof window.mammoth === 'undefined') {
                                     </div>
                                 <?php else: ?>
                                     <h3 class="drag-title">Carga Automática e Indexación por Lotes</h3>
-                                    <p class="drag-desc">Arrastra tus archivos PDF o Word aquí. Máx. <?= $maxMb ?> MB por archivo para auto-completar y gestionar la investigación.</p>
+                                    <p class="drag-desc">Arrastra tus archivos PDF o Word aquí. Máx. <?= $maxArchivosLote ?> archivos por lote y <?= $maxMb ?> MB por archivo.</p>
                                     <button type="button" class="btn-browse" id="btnBrowseFile">Seleccionar Archivo(s)</button>
                                 <?php endif; ?>
                             </div>
@@ -446,7 +447,7 @@ if (typeof window.mammoth === 'undefined') {
                             <div id="contenedorColaDocumentos" style="display: none; background: var(--bg-card, #ffffff); border: 1px solid rgba(169, 168, 166, 0.2); border-radius: 6px; padding: 0.75rem; margin-top: 0.5rem;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; border-bottom: 1px solid rgba(169, 168, 166, 0.15); padding-bottom: 0.4rem;">
                                     <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--texto-titulos); margin: 0; display: flex; align-items: center; gap: 0.35rem;">
-                                        <i class="ph ph-stack"></i> Documentos Cargados en Lote (<span id="countCola">0</span>)
+                                        <i class="ph ph-stack"></i> Documentos Cargados en Lote (<span id="countCola">0</span> / <?= $maxArchivosLote ?> máx.)
                                     </h4>
                                     <button type="button" class="btn-clear" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="limpiarColaDocumentos()">
                                         <i class="ph ph-trash"></i> Vaciar Cola
@@ -764,14 +765,16 @@ if (typeof window.mammoth === 'undefined') {
 // Límite de tamaño de archivo sincronizado con la configuración del sistema y límites del servidor
 const MAX_FILE_SIZE_MB = <?= json_encode($maxMbEfectivo) ?>;
 const MAX_FILE_SIZE_BYTES = Math.floor(MAX_FILE_SIZE_MB * 1024 * 1024);
+const MAX_ARCHIVOS_LOTE = <?= json_encode($maxArchivosLote) ?>;
 
 // JSON con todas las dimensiones operativas del sistema para el filtrado dinámico
 const todasDimensiones = <?= json_encode($lineas && $dimensiones ? $dimensiones : []) ?>;
 const activeDimensionId = <?= json_encode($_POST['dimension_id'] ?? $documento['dimension_id'] ?? '') ?>;
 
-// Estado global de la cola de documentos por lotes
+// Estado global de la cola de documentos por lotes y despachador secuencial
 let documentosEnCola = [];
 let documentoSeleccionadoIndex = -1;
+let extraccionEnCurso = false;
 
 // Función para actualizar dinámicamente el selector de dimensiones operativas
 function updateDimensionOptions(selectedLineaId) {
@@ -970,12 +973,31 @@ function procesarArchivosSeleccionados(fileList) {
     });
 
     // 3. Archivos válidos que cumplen formato y tamaño
-    const validFiles = files.filter(f => {
+    let validFiles = files.filter(f => {
         const ext = f.name.split('.').pop().toLowerCase();
         return (ext === 'pdf' || ext === 'docx') && f.size <= MAX_FILE_SIZE_BYTES;
     });
 
-    // Notificar al usuario si hubo archivos rechazados, sin descartar los válidos
+    // 4. Validar límite de archivos por lote (MAX_ARCHIVOS_LOTE)
+    let batchLimitFiles = [];
+    if (!esEditar && typeof MAX_ARCHIVOS_LOTE === 'number' && MAX_ARCHIVOS_LOTE > 0) {
+        const cuposDisponibles = Math.max(0, MAX_ARCHIVOS_LOTE - documentosEnCola.length);
+        if (cuposDisponibles <= 0) {
+            mostrarModalAlerta(
+                'warning',
+                'Límite de Lote Alcanzado',
+                `La cola ya contiene el límite máximo permitido de ${MAX_ARCHIVOS_LOTE} documentos.\n\nProcese o elimine documentos existentes en la cola antes de agregar nuevos archivos.`
+            );
+            return;
+        }
+
+        if (validFiles.length > cuposDisponibles) {
+            batchLimitFiles = validFiles.slice(cuposDisponibles);
+            validFiles = validFiles.slice(0, cuposDisponibles);
+        }
+    }
+
+    // Notificar al usuario si hubo archivos rechazados u omitidos por cupo, sin descartar los válidos
     const avisosRechazo = [];
     if (invalidFormatFiles.length > 0) {
         const nombresInv = invalidFormatFiles.map(f => f.name).join(', ');
@@ -985,12 +1007,16 @@ function procesarArchivosSeleccionados(fileList) {
         const detallesOversized = oversizedFiles.map(f => `• ${f.name} (${(f.size / (1024 * 1024)).toFixed(2)} MB)`).join('\n');
         avisosRechazo.push(`Excede(n) el tamaño máximo permitido (${MAX_FILE_SIZE_MB} MB):\n${detallesOversized}`);
     }
+    if (batchLimitFiles.length > 0) {
+        const nombresLimit = batchLimitFiles.map(f => f.name).join(', ');
+        avisosRechazo.push(`Excede(n) el cupo máximo por lote (${MAX_ARCHIVOS_LOTE} archivos máx. en cola):\n• ${nombresLimit}`);
+    }
 
     if (avisosRechazo.length > 0) {
         if (validFiles.length > 0) {
             mostrarModalAlerta(
                 'warning',
-                'Algunos Archivos Fueron Omitidos',
+                'Aviso de Carga por Lotes',
                 `Se procesarán ${validFiles.length} archivo(s) válido(s).\n\nLos siguientes archivos fueron omitidos:\n\n${avisosRechazo.join('\n\n')}`
             );
         } else {
@@ -1042,16 +1068,16 @@ function procesarArchivosSeleccionados(fileList) {
 }
 
 function iniciarProcesamientoListaArchivos(validFiles, carreraId) {
-    const nuevosIndices = [];
     validFiles.forEach(file => {
         const docObj = {
             id: Date.now() + '_' + Math.random().toString(36).substr(2, 5),
             nombreArchivo: file.name,
             file: file,
-            estado: 'extrayendo',
+            estado: 'pendiente',
             errorMsg: '',
             progresoPct: 0,
-            faseMsg: 'Iniciando subida...',
+            faseMsg: 'En cola de espera...',
+            xhr: null,
             data: {
                 titulo: '',
                 id_carrera: carreraId,
@@ -1077,7 +1103,6 @@ function iniciarProcesamientoListaArchivos(validFiles, carreraId) {
             }
         };
         documentosEnCola.push(docObj);
-        nuevosIndices.push(documentosEnCola.length - 1);
     });
 
     // Resetear valor de input file para permitir re-seleccionar los mismos archivos si es necesario
@@ -1086,10 +1111,20 @@ function iniciarProcesamientoListaArchivos(validFiles, carreraId) {
 
     renderizarColaUI();
 
-    // Iniciar extracción asíncrona para cada documento
-    nuevosIndices.forEach(idx => {
-        subirYExtraerDatos(documentosEnCola[idx], idx);
-    });
+    // Iniciar procesamiento secuencial de la cola (concurrencia controlada = 1)
+    procesarSiguienteEnCola();
+}
+
+function procesarSiguienteEnCola() {
+    if (extraccionEnCurso) return;
+
+    const siguienteIdx = documentosEnCola.findIndex(d => d.estado === 'pendiente');
+    if (siguienteIdx === -1) {
+        return;
+    }
+
+    extraccionEnCurso = true;
+    subirYExtraerDatos(documentosEnCola[siguienteIdx], siguienteIdx);
 }
 
 function subirYExtraerDatos(docItem, index) {
@@ -1103,6 +1138,7 @@ function subirYExtraerDatos(docItem, index) {
     formData.append('csrf_token', window.CSRF_TOKEN || '');
 
     const xhr = new XMLHttpRequest();
+    docItem.xhr = xhr;
     xhr.open('POST', '?ruta=agregar-documento&accion=extraer', true);
     xhr.setRequestHeader('X-CSRF-Token', window.CSRF_TOKEN || '');
 
@@ -1120,6 +1156,7 @@ function subirYExtraerDatos(docItem, index) {
     };
 
     xhr.onload = function() {
+        docItem.xhr = null;
         if (xhr.status === 200) {
             let response;
             try {
@@ -1134,6 +1171,8 @@ function subirYExtraerDatos(docItem, index) {
                     limpiarCamposFormularioSilencioso();
                 }
                 renderizarColaUI();
+                extraccionEnCurso = false;
+                procesarSiguienteEnCola();
                 return;
             }
 
@@ -1179,9 +1218,12 @@ function subirYExtraerDatos(docItem, index) {
             }
         }
         renderizarColaUI();
+        extraccionEnCurso = false;
+        procesarSiguienteEnCola();
     };
 
     xhr.onerror = function() {
+        docItem.xhr = null;
         docItem.estado = 'error';
         docItem.errorMsg = 'Error de conexión de red.';
         docItem.data.titulo = '';
@@ -1190,6 +1232,8 @@ function subirYExtraerDatos(docItem, index) {
             limpiarCamposFormularioSilencioso();
         }
         renderizarColaUI();
+        extraccionEnCurso = false;
+        procesarSiguienteEnCola();
     };
 
     xhr.send(formData);
@@ -1473,6 +1517,14 @@ function obtenerDatosFormularioActual() {
 function eliminarDocumentoDeCola(index) {
     if (index < 0 || index >= documentosEnCola.length) return;
     
+    const eliminado = documentosEnCola[index];
+    if (eliminado && eliminado.xhr && typeof eliminado.xhr.abort === 'function') {
+        try {
+            eliminado.xhr.abort();
+        } catch(e) {}
+    }
+    const eraExtrayendo = (eliminado && eliminado.estado === 'extrayendo');
+
     documentosEnCola.splice(index, 1);
     
     if (documentoSeleccionadoIndex === index) {
@@ -1486,7 +1538,12 @@ function eliminarDocumentoDeCola(index) {
         documentoSeleccionadoIndex--;
     }
     
+    if (eraExtrayendo) {
+        extraccionEnCurso = false;
+    }
+
     renderizarColaUI();
+    procesarSiguienteEnCola();
 }
 
 function limpiarColaDocumentos() {
@@ -1497,6 +1554,12 @@ function limpiarColaDocumentos() {
         '¿Desea vaciar completamente la cola de documentos extraídos?',
         'Sí, vaciar cola',
         () => {
+            documentosEnCola.forEach(doc => {
+                if (doc.xhr && typeof doc.xhr.abort === 'function') {
+                    try { doc.xhr.abort(); } catch(e) {}
+                }
+            });
+            extraccionEnCurso = false;
             documentosEnCola = [];
             documentoSeleccionadoIndex = -1;
             limpiarCamposFormularioSilencioso();

@@ -8,10 +8,18 @@ if (!class_exists('\Smalot\PdfParser\Parser')) {
     }
 }
 
+if (!class_exists('ConfigService')) {
+    $cfgFile = __DIR__ . '/ConfigService.php';
+    if (file_exists($cfgFile)) {
+        require_once $cfgFile;
+    }
+}
+
 class ExtractorPST {
 
     /**
      * Extrae texto de un archivo PDF usando la librería Smalot\PdfParser con configuración de descompresión de memoria.
+     * Implementa extracción acotada a las primeras N páginas (donde residen metadatos académicos) para prevenir saturación de RAM.
      * Incluye fallback de seguridad contra archivos encriptados o truncos.
      */
     public static function extraerTextoPDF(string $filePath): string {
@@ -26,7 +34,40 @@ class ExtractorPST {
             
             $parser = new \Smalot\PdfParser\Parser([], $config);
             $pdf = $parser->parseFile($filePath);
-            return $pdf->getText() ?? '';
+
+            $maxPaginas = class_exists('ConfigService') 
+                ? (int)ConfigService::get('archivos.max_paginas_analisis', 15) 
+                : 15;
+
+            $pages = $pdf->getPages();
+            $totalPages = count($pages);
+
+            if ($totalPages === 0) {
+                $raw = $pdf->getText();
+                unset($pdf, $parser);
+                return $raw ?? '';
+            }
+
+            $pagesToRead = ($maxPaginas > 0) ? min($totalPages, $maxPaginas) : $totalPages;
+
+            $textParts = [];
+            for ($i = 0; $i < $pagesToRead; $i++) {
+                try {
+                    $pageText = $pages[$i]->getText();
+                    if (!empty($pageText)) {
+                        $textParts[] = $pageText;
+                    }
+                } catch (\Throwable $pe) {
+                    error_log("Error extrayendo texto en página PDF {$i}: " . $pe->getMessage());
+                }
+            }
+
+            unset($pages, $pdf, $parser);
+            if (function_exists('gc_collect_cycles')) {
+                gc_collect_cycles();
+            }
+
+            return implode("\n", $textParts);
         } catch (\Throwable $e) {
             error_log("Error al extraer texto PDF: " . $e->getMessage());
             return ''; // Retornar vacío en lugar de romper la ejecución
@@ -35,6 +76,7 @@ class ExtractorPST {
 
     /**
      * Extrae texto de un archivo Word (.docx) leyendo directamente el XML interno.
+     * Incorpora protección contra bombas de descompresión y lectura acotada de párrafos iniciales.
      */
     public static function extraerTextoDOCX(string $filePath): string {
         if (!file_exists($filePath)) {
@@ -45,6 +87,16 @@ class ExtractorPST {
         if ($zip->open($filePath) === true) {
             $index = $zip->locateName('word/document.xml');
             if ($index !== false) {
+                // Protección contra descompresión excesiva (Zip Bomb / Memory Saturation)
+                $stat = $zip->statIndex($index);
+                $maxXmlMb = class_exists('ConfigService') 
+                    ? (int)ConfigService::get('archivos.max_xml_descomprimido_mb', 15) 
+                    : 15;
+                if ($stat !== false && isset($stat['size']) && $stat['size'] > ($maxXmlMb * 1024 * 1024)) {
+                    $zip->close();
+                    throw new Exception("El contenido de texto del documento Word excede el límite permitido ({$maxXmlMb}MB descomprimido).");
+                }
+
                 $data = $zip->getFromIndex($index);
                 $zip->close();
                 
@@ -58,7 +110,14 @@ class ExtractorPST {
 
                 $nodes = $xpath->query('//w:p');
                 $lines = [];
+                // Lectura acotada: primeras 800 etiquetas de párrafo (cubren preliminares, resumen y objetivos)
+                $maxParagraphs = 800;
+                $count = 0;
                 foreach ($nodes as $node) {
+                    $count++;
+                    if ($count > $maxParagraphs) {
+                        break;
+                    }
                     // Capturar tanto texto <w:t> como saltos de línea suaves <w:br>
                     $childElements = $xpath->query('.//w:t | .//w:br', $node);
                     $pText = '';
@@ -77,6 +136,12 @@ class ExtractorPST {
                         }
                     }
                 }
+
+                unset($data, $dom, $xpath, $nodes);
+                if (function_exists('gc_collect_cycles')) {
+                    gc_collect_cycles();
+                }
+
                 return implode("\n", $lines);
             }
             $zip->close();

@@ -620,6 +620,27 @@ class DetallePSTController {
                     throw new Exception("Seleccione un archivo válido para simular la extracción.");
                 }
 
+                $parseIniToMb = function(?string $str): float {
+                    if (empty($str)) return 2.0;
+                    $str = trim($str);
+                    $unit = strtolower($str[strlen($str) - 1] ?? '');
+                    $num = (float)$str;
+                    switch ($unit) {
+                        case 'g': return $num * 1024;
+                        case 'm': return $num;
+                        case 'k': return $num / 1024;
+                        default: return $num / (1024 * 1024);
+                    }
+                };
+                $configMaxMb = (float)ConfigService::get('archivos.max_size_mb', 20);
+                $phpUploadMaxMb = $parseIniToMb(ini_get('upload_max_filesize'));
+                $phpPostMaxMb = $parseIniToMb(ini_get('post_max_size'));
+                $maxMb = round(min($configMaxMb, $phpUploadMaxMb, $phpPostMaxMb), 2);
+                $maxBytes = $maxMb * 1024 * 1024;
+                if ($_FILES['archivo_pst']['size'] > $maxBytes) {
+                    throw new Exception("El archivo excede el tamaño máximo permitido ({$maxMb} MB).");
+                }
+
                 $fileTmpPath = $_FILES['archivo_pst']['tmp_name'];
                 $fileName = $_FILES['archivo_pst']['name'];
                 $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));

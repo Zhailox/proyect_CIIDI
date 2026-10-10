@@ -380,15 +380,29 @@
                 <div class="config-card">
                     <div class="config-card-header">
                         <h3 class="config-card-title">
-                            <i class="ph ph-hard-drives"></i> Restricciones de Carga de Archivos
+                            <i class="ph ph-hard-drives"></i> Restricciones de Carga y Procesamiento de Documentos
                         </h3>
                     </div>
 
                     <div class="config-grid-2">
                         <div class="config-field">
-                            <label>Tamaño Máximo Permitido en MB:</label>
+                            <label>Tamaño Máximo Permitido por Archivo (MB):</label>
                             <input type="number" name="max_size_mb" value="<?= (int)($config['archivos']['max_size_mb'] ?? 20) ?>" min="1" max="500" class="config-input">
-                            <p class="field-hint">Límite máximo por archivo PDF/DOCX al registrar un nuevo PST.</p>
+                            <p class="field-hint">Límite máximo por archivo individual PDF/DOCX al registrar un PST.</p>
+                        </div>
+
+                        <div class="config-field">
+                            <label>Máximo de Documentos por Lote:</label>
+                            <input type="number" name="max_archivos_lote" value="<?= (int)($config['archivos']['max_archivos_lote'] ?? 5) ?>" min="1" max="50" class="config-input">
+                            <p class="field-hint">Cantidad máxima de proyectos que pueden cargarse simultáneamente en cola.</p>
+                        </div>
+                    </div>
+
+                    <div class="config-grid-2" style="margin-top: 1rem;">
+                        <div class="config-field">
+                            <label>Límite de Páginas para Análisis de Metadatos:</label>
+                            <input type="number" name="max_paginas_analisis" value="<?= (int)($config['archivos']['max_paginas_analisis'] ?? 15) ?>" min="1" max="100" class="config-input">
+                            <p class="field-hint">Páginas iniciales a procesar (título, autores, tutores, resumen y objetivos). Reduce drásticamente el consumo de memoria RAM.</p>
                         </div>
                     </div>
                 </div>
@@ -405,6 +419,12 @@
                             <label>Máximo de Estudiantes Autores:</label>
                             <input type="number" name="max_autores" value="<?= (int)($config['limites_equipo']['max_autores'] ?? 4) ?>" min="1" max="10" class="config-input">
                             <p class="field-hint">Límite máximo de integrantes por PST.</p>
+                        </div>
+
+                        <div class="config-field">
+                            <label>Máximo de Tutores:</label>
+                            <input type="number" name="max_tutores" value="<?= (int)($config['limites_equipo']['max_tutores'] ?? 3) ?>" min="1" max="5" class="config-input">
+                            <p class="field-hint">Límite máximo de tutores (académico, institucional, comunitario).</p>
                         </div>
                     </div>
                 </div>

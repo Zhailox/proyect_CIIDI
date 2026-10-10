@@ -50,6 +50,9 @@
     },
     "archivos": {
         "max_size_mb": 20,
+        "max_archivos_lote": 5,
+        "max_paginas_analisis": 30,
+        "max_xml_descomprimido_mb": 15,
         "extensiones_permitidas": [
             ".pdf",
             ".docx"

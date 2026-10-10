@@ -146,6 +146,8 @@ class ConfiguracionController {
 
                 // 6. Archivos y Carga Documental
                 if (isset($_POST['max_size_mb'])) $actual['archivos']['max_size_mb'] = max(1, (int)$_POST['max_size_mb']);
+                if (isset($_POST['max_archivos_lote'])) $actual['archivos']['max_archivos_lote'] = max(1, min(50, (int)$_POST['max_archivos_lote']));
+                if (isset($_POST['max_paginas_analisis'])) $actual['archivos']['max_paginas_analisis'] = max(1, min(100, (int)$_POST['max_paginas_analisis']));
                 if (isset($_POST['max_autores'])) $actual['limites_equipo']['max_autores'] = max(1, (int)$_POST['max_autores']);
                 if (isset($_POST['max_tutores'])) $actual['limites_equipo']['max_tutores'] = max(1, (int)$_POST['max_tutores']);
 
