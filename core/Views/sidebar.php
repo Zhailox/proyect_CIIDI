@@ -34,6 +34,12 @@ $ruta          = $ruta ?? '';
         $moduloOrigen = $item['modulo_origen'] ?? '';
         $moduloEstado = $item['modulo_estado'] ?? 'online';
 
+        // ====== NUEVO: Ocultar el SuperAdmin del Sidebar ======
+        if ($moduloOrigen === 'SuperAdmin') {
+            continue;
+        }
+        // ======================================================
+
         // Si el usuario no es SuperAdmin/Admin y el módulo está offline, omitirlo por completo
         if (!$esAdminTotal && $moduloEstado === 'offline') {
             continue;

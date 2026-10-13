@@ -104,7 +104,7 @@ class ArticulosController {
         
         // Obtenemos los catálogos para llenar los <select> del formulario
         $editoriales = $qb->tabla('editoriales')->orderBy('nombre', 'ASC')->get();
-        $autores = $qb->tabla('autores')->orderBy('nombre_completo', 'ASC')->get();
+        $autores = $qb->tabla('investigadores')->orderBy('nombre_completo', 'ASC')->get();
 
         return [
             'editoriales' => $editoriales,
@@ -337,7 +337,7 @@ class ArticulosController {
 
         $qb = new QueryBuilder();
         $editoriales = $qb->tabla('editoriales')->orderBy('nombre', 'ASC')->get();
-        $autores = $qb->tabla('autores')->orderBy('nombre_completo', 'ASC')->get();
+        $autores = $qb->tabla('investigadores')->orderBy('nombre_completo', 'ASC')->get();
 
         return [
             'articulo' => $articulo,

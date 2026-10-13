@@ -46,17 +46,17 @@ class ArticuloModel {
                 LOWER(r.titulo) LIKE LOWER(:q) OR
                 LOWER(d.resumen) LIKE LOWER(:q) OR
                 EXISTS (
-                    SELECT 1 FROM recurso_categorias rc 
-                    JOIN categorias c ON rc.id_categoria = c.id 
-                    WHERE rc.id_recurso = r.id AND LOWER(c.nombre) LIKE LOWER(:q)
+                    SELECT 1 FROM recurso_investigadores ri 
+                    JOIN investigadores i ON ri.id_investigador = i.id 
+                    WHERE ri.id_recurso = r.id AND LOWER(i.nombre_completo) LIKE LOWER(:q)
                 )
             )";
             $parametros[':q'] = '%' . $texto . '%';
         }
         if (!empty($filtros['id_autor'])) {
             $condiciones[] = "EXISTS (
-                SELECT 1 FROM recurso_autores ra 
-                WHERE ra.id_recurso = r.id AND ra.id_autor = :id_autor
+                SELECT 1 FROM recurso_investigadores ri 
+                WHERE ri.id_recurso = r.id AND ri.id_investigador = :id_autor
             )";
             $parametros[':id_autor'] = (int) $filtros['id_autor'];
         }
@@ -64,9 +64,9 @@ class ArticuloModel {
         if (!empty($filtros['q_autor'])) {
             $textoAutor = trim($filtros['q_autor']);
             $condiciones[] = "EXISTS (
-                SELECT 1 FROM recurso_autores ra 
-                JOIN autores a ON ra.id_autor = a.id 
-                WHERE ra.id_recurso = r.id AND (LOWER(a.nombre_completo) LIKE LOWER(:q_autor) OR LOWER(COALESCE(a.orcid, '')) LIKE LOWER(:q_autor))
+                SELECT 1 FROM recurso_investigadores ri 
+                JOIN investigadores a ON ri.id_investigador = a.id 
+                WHERE ri.id_recurso = r.id AND (LOWER(a.nombre_completo) LIKE LOWER(:q_autor) OR LOWER(COALESCE(a.orcid, '')) LIKE LOWER(:q_autor))
             )";
             $parametros[':q_autor'] = '%' . $textoAutor . '%';
         }
@@ -135,10 +135,10 @@ class ArticuloModel {
                     WHERE rc2.id_recurso = r.id
                 ), 'Sin categoría') AS categoria,
                COALESCE((
-                    SELECT STRING_AGG(a2.id || '|||' || a2.nombre_completo || '|||' || COALESCE(a2.orcid, ''), ';;;' ORDER BY a2.nombre_completo ASC)
-                    FROM recurso_autores ra2
-                    JOIN autores a2 ON a2.id = ra2.id_autor
-                    WHERE ra2.id_recurso = r.id
+                    SELECT STRING_AGG(i2.id || '|||' || i2.nombre_completo || '|||' || COALESCE(i2.orcid, ''), ';;;' ORDER BY i2.nombre_completo ASC)
+                    FROM recurso_investigadores ri2
+                    JOIN investigadores i2 ON i2.id = ri2.id_investigador
+                    WHERE ri2.id_recurso = r.id
                 ), 'Autor no registrado') AS autores_text
             FROM recursos r
             INNER JOIN detalles_articulos d ON d.id_recurso = r.id
@@ -203,18 +203,17 @@ public function contarArticulos(array $filtros = []) {
         }
         if (!empty($filtros['id_autor'])) {
             $condiciones[] = "EXISTS (
-                SELECT 1 FROM recurso_autores ra 
-                WHERE ra.id_recurso = r.id AND ra.id_autor = :id_autor
+                SELECT 1 FROM recurso_investigadores ri 
+                WHERE ri.id_recurso = r.id AND ri.id_investigador = :id_autor
             )";
             $parametros[':id_autor'] = (int) $filtros['id_autor'];
         }
-
         if (!empty($filtros['q_autor'])) {
             $textoAutor = trim($filtros['q_autor']);
             $condiciones[] = "EXISTS (
-                SELECT 1 FROM recurso_autores ra 
-                JOIN autores a ON ra.id_autor = a.id 
-                WHERE ra.id_recurso = r.id AND (LOWER(a.nombre_completo) LIKE LOWER(:q_autor) OR LOWER(COALESCE(a.orcid, '')) LIKE LOWER(:q_autor))
+                SELECT 1 FROM recurso_investigadores ri 
+                JOIN investigadores a ON ri.id_investigador = a.id 
+                WHERE ri.id_recurso = r.id AND (LOWER(a.nombre_completo) LIKE LOWER(:q_autor) OR LOWER(COALESCE(a.orcid, '')) LIKE LOWER(:q_autor))
             )";
             $parametros[':q_autor'] = '%' . $textoAutor . '%';
         }
@@ -266,8 +265,8 @@ public function contarArticulos(array $filtros = []) {
             SELECT DISTINCT r.id
             FROM recursos r
             INNER JOIN detalles_articulos d ON d.id_recurso = r.id
-            LEFT JOIN recurso_autores ra ON ra.id_recurso = r.id
-            LEFT JOIN autores a ON a.id = ra.id_autor
+            LEFT JOIN recurso_investigadores ri ON ri.id_recurso = r.id
+            LEFT JOIN investigadores a ON a.id = ri.id_investigador
             WHERE " . implode(' AND ', $condiciones) . "
         ) AS sub
     ";
@@ -389,8 +388,8 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
             
             // Creamos los autores nuevos ingresados al vuelo (Corrección PostgreSQL)
             if (!empty($autores_nuevos)) {
-            $stmtNewAutor = $db->prepare("INSERT INTO autores (nombre_completo, orcid, biografia, pagina_web) VALUES (?, ?, ?, ?) RETURNING id");
-            $stmtSimilares = $db->prepare("SELECT id, nombre_completo FROM autores WHERE LOWER(nombre_completo) LIKE LOWER(?) LIMIT 50");
+            $stmtNewAutor = $db->prepare("INSERT INTO investigadores (nombre_completo, orcid, biografia, pagina_web) VALUES (?, ?, ?, ?) RETURNING id");
+            $stmtSimilares = $db->prepare("SELECT id, nombre_completo FROM investigadores WHERE LOWER(nombre_completo) LIKE LOWER(?) LIMIT 50");
 
             foreach ($autores_nuevos as $json_autor) {
                 $datos = json_decode($json_autor, true);
@@ -410,7 +409,7 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
                     $autorId = null;
 
                     // A. Búsqueda estricta por ORCID primero
-                    $stmt = $db->prepare("SELECT id, nombre_completo FROM autores WHERE orcid = ?");
+                    $stmt = $db->prepare("SELECT id, nombre_completo FROM investigadores WHERE orcid = ?");
                     $stmt->execute([$orcid]);
                     $autorExistente = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -432,7 +431,7 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
 
             // 4. Insertar Relación Recurso-Autores (Tabla Pivote)
             if (!empty($autores_finales)) {
-                $stmtAutor = $db->prepare("INSERT INTO recurso_autores (id_recurso, id_autor) VALUES (?, ?)");
+                $stmtAutor = $db->prepare("INSERT INTO recurso_investigadores (id_recurso, id_investigador) VALUES (?, ?)");
                 foreach (array_unique($autores_finales) as $id_a) {
                     $stmtAutor->execute([$id_recurso, $id_a]);
                 }
@@ -524,9 +523,9 @@ public function obtenerArticuloPorId($id) {
 
         $stmtAutores = $db->prepare("
             SELECT a.id, a.nombre_completo, a.orcid
-            FROM recurso_autores ra
-            JOIN autores a ON a.id = ra.id_autor
-            WHERE ra.id_recurso = ?
+            FROM recurso_investigadores ri
+            JOIN investigadores a ON a.id = ri.id_investigador
+            WHERE ri.id_recurso = ?
             ORDER BY a.nombre_completo ASC
         ");
         $stmtAutores->execute([(int) $id]);
@@ -570,8 +569,8 @@ public function obtenerArticuloPorId($id) {
                        COALESCE((SELECT c2.nombre FROM recurso_categorias rc2 JOIN categorias c2 ON c2.id = rc2.id_categoria WHERE rc2.id_recurso = r.id LIMIT 1), 'Artículo') AS categoria,
                        COALESCE((
                     SELECT STRING_AGG(a2.id || '|||' || a2.nombre_completo || '|||' || COALESCE(a2.orcid, ''), ';;;' ORDER BY a2.nombre_completo ASC)
-                    FROM recurso_autores ra2
-                    JOIN autores a2 ON a2.id = ra2.id_autor
+                    FROM recurso_investigadores ra2
+                    JOIN investigadores a2 ON a2.id = ra2.id_investigador
                     WHERE ra2.id_recurso = r.id
                 ), 'Autor no registrado') AS autores_text
                 FROM recursos r
@@ -607,10 +606,10 @@ public function obtenerArticuloPorId($id) {
 public function obtenerAutoresDelArticulo($id_recurso) {
     $db = Connection::getInstance();
     $stmt = $db->prepare("
-        SELECT ra.id_autor
-        FROM recurso_autores ra
-        WHERE ra.id_recurso = ?
-        ORDER BY ra.id_autor ASC
+        SELECT ri.id_investigador
+        FROM recurso_investigadores ri
+        WHERE ri.id_recurso = ?
+        ORDER BY ri.id_investigador ASC
     ");
     $stmt->execute([(int)$id_recurso]);
     return $stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -687,7 +686,7 @@ public function actualizarArticulo(
         ]);
 
         // Limpiar relaciones viejas antes de volver a insertar
-        $db->prepare("DELETE FROM recurso_autores WHERE id_recurso = ?")->execute([$id]);
+        $db->prepare("DELETE FROM recurso_investigadores WHERE id_recurso = ?")->execute([$id]);
         $db->prepare("DELETE FROM recurso_etiquetas WHERE id_recurso = ?")->execute([$id]);
         $db->prepare("DELETE FROM recurso_categorias WHERE id_recurso = ?")->execute([$id]);
 
@@ -712,37 +711,35 @@ public function actualizarArticulo(
         }
 
         if (!empty($autores_nuevos)) {
-            $stmtNewAutor = $db->prepare("INSERT INTO autores (nombre_completo, orcid, biografia, pagina_web) VALUES (?, ?, ?, ?) RETURNING id");
-            $stmtSimilares = $db->prepare("SELECT id, nombre_completo FROM autores WHERE LOWER(nombre_completo) LIKE LOWER(?) LIMIT 50");
+            $stmtNewAutor = $db->prepare("INSERT INTO investigadores (nombre_completo, orcid, biografia, pagina_web) VALUES (?, ?, ?, ?) RETURNING id");
 
             foreach ($autores_nuevos as $json_autor) {
                 $datos = json_decode($json_autor, true);
 
                 if ($datos && !empty($datos['nombre']) && !empty($datos['orcid'])) {
                     $nom = trim($datos['nombre']);
-                    // Extracción inteligente del ORCID (ignora URLs o texto basura alrededor)
+                    // Extracción inteligente del ORCID
                     $orcidBruto = trim($datos['orcid']);
                     $orcid = '';
                     if (preg_match('/(\d{4}-\d{4}-\d{4}-\d{3}[0-9X])/i', $orcidBruto, $coincidencias)) {
-                        $orcid = strtoupper($coincidencias[1]); // Extrae solo el formato XXXX-XXXX-XXXX-XXXX
+                        $orcid = strtoupper($coincidencias[1]);
                     } else {
-                        $orcid = $orcidBruto; // Fallback por si acaso
+                        $orcid = $orcidBruto;
                     }
                     $biografia = !empty($datos['biografia']) ? trim($datos['biografia']) : null;
                     $pagina_web = !empty($datos['pagina_web']) ? trim($datos['pagina_web']) : null;
                     $autorId = null;
 
-                    // A. Búsqueda estricta por ORCID primero
-                    $stmt = $db->prepare("SELECT id, nombre_completo FROM autores WHERE orcid = ?");
+                    // A. Búsqueda estricta por ORCID en INVESTIGADORES
+                    $stmt = $db->prepare("SELECT id, nombre_completo FROM investigadores WHERE orcid = ?");
                     $stmt->execute([$orcid]);
                     $autorExistente = $stmt->fetch(PDO::FETCH_ASSOC);
 
                     if ($autorExistente) {
-                        // Si ya existe, tomamos su ID real e informamos
                         $autorId = $autorExistente['id'];
                         $autores_vinculados[] = $autorExistente['nombre_completo'];
                     } else {
-                        // B. Si no existe en absoluto, lo insertamos
+                        // B. Insertar en INVESTIGADORES
                         $stmtNewAutor->execute([$nom, $orcid, $biografia, $pagina_web]);
                         $autorId = $stmtNewAutor->fetchColumn();
                     }
@@ -755,12 +752,11 @@ public function actualizarArticulo(
         }
 
         if (!empty($autores_finales)) {
-            $stmtAutor = $db->prepare("INSERT INTO recurso_autores (id_recurso, id_autor) VALUES (?, ?)");
+            $stmtAutor = $db->prepare("INSERT INTO recurso_investigadores (id_recurso, id_investigador) VALUES (?, ?)");
             foreach (array_unique($autores_finales) as $id_a) {
                 $stmtAutor->execute([$id, $id_a]);
             }
         }
-
         // Insertar etiquetas nuevas
         if (!empty($etiquetas)) {
             $stmtTag = $db->prepare("INSERT INTO recurso_etiquetas (id_recurso, id_etiqueta) VALUES (?, ?)");
@@ -818,19 +814,17 @@ public function obtenerCatalogoPaginado($tabla, $buscar = '', $pagina = 1, $porP
         $offset = ($pagina - 1) * $porPagina;
         $where = "";
 
-        // Quitamos cédula, buscamos por nombre u ORCID
         if (trim($buscar) !== '') {
             $where = "WHERE LOWER(nombre_completo) LIKE LOWER(:b) OR LOWER(orcid) LIKE LOWER(:b)";
         }
-        $stmtTotal = $db->prepare("SELECT COUNT(*) FROM autores $where");
+        $stmtTotal = $db->prepare("SELECT COUNT(*) FROM investigadores $where");
         if (trim($buscar) !== '') {
             $stmtTotal->bindValue(':b', "%" . trim($buscar) . "%", PDO::PARAM_STR);
         }
         $stmtTotal->execute();
         $total = (int)$stmtTotal->fetchColumn();
 
-        // Traemos pagina_web y orcid
-        $sql = "SELECT id, nombre_completo, orcid, biografia, pagina_web FROM autores $where ORDER BY nombre_completo ASC LIMIT :limit OFFSET :offset";
+        $sql = "SELECT id, nombre_completo, orcid, biografia, pagina_web FROM investigadores $where ORDER BY nombre_completo ASC LIMIT :limit OFFSET :offset";
         $stmt = $db->prepare($sql);
         if (trim($buscar) !== '') {
             $stmt->bindValue(':b', "%" . trim($buscar) . "%", PDO::PARAM_STR);
@@ -929,7 +923,6 @@ public function obtenerCategoriasDelArticulo($id_recurso) {
     public function actualizarAutor($id, $nombre, $orcid, $biografia = null, $pagina_web = null) {
         $db = Connection::getInstance();
         
-        // Limpieza y extracción del ORCID puro
         $orcidBruto = trim($orcid);
         $orcidLimpio = '';
         if (preg_match('/(\d{4}-\d{4}-\d{4}-\d{3}[0-9X])/i', $orcidBruto, $coincidencias)) {
@@ -938,15 +931,15 @@ public function obtenerCategoriasDelArticulo($id_recurso) {
             $orcidLimpio = $orcidBruto;
         }
 
-        $db->prepare("UPDATE autores SET nombre_completo = ?, orcid = ?, biografia = ?, pagina_web = ? WHERE id = ?")
+        $db->prepare("UPDATE investigadores SET nombre_completo = ?, orcid = ?, biografia = ?, pagina_web = ? WHERE id = ?")
            ->execute([trim($nombre), $orcidLimpio, trim($biografia) ?: null, trim($pagina_web) ?: null, $id]);
         return true;
     }
 
     public function eliminarAutor($id) {
         $db = Connection::getInstance();
-        $db->prepare("DELETE FROM recurso_autores WHERE id_autor = ?")->execute([$id]);
-        $db->prepare("DELETE FROM autores WHERE id = ?")->execute([$id]);
+        $db->prepare("DELETE FROM recurso_investigadores WHERE id_investigador = ?")->execute([$id]);
+        $db->prepare("DELETE FROM investigadores WHERE id = ?")->execute([$id]);
         return true;
     }
 
@@ -967,15 +960,15 @@ public function obtenerCategoriasDelArticulo($id_recurso) {
     }
     public function obtenerAutorPorNombreExacto($nombre) {
         $db = Connection::getInstance();
-        $stmt = $db->prepare("SELECT * FROM autores WHERE LOWER(TRIM(nombre_completo)) = LOWER(TRIM(?)) LIMIT 1");
+        $stmt = $db->prepare("SELECT * FROM investigadores WHERE LOWER(TRIM(nombre_completo)) = LOWER(TRIM(?)) LIMIT 1");
         $stmt->execute([$nombre]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
     public function obtenerAutorPorId($id) {
         $db = Connection::getInstance();
-        $stmt = $db->prepare("SELECT * FROM autores WHERE id = ? LIMIT 1");
+        $stmt = $db->prepare("SELECT * FROM investigadores WHERE id = ? LIMIT 1");
         $stmt->execute([(int)$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
-
 }
