@@ -104,9 +104,19 @@ class ModulosController {
         Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $carpeta = $_POST['modulo_id'] ?? '';
+            $carpeta = basename(trim($_POST['modulo_id'] ?? ''));
             $nuevoEstado = $_POST['nuevo_estado'] ?? 'online';
             $esAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+
+            if (empty($carpeta) || !preg_match('/^[a-zA-Z0-9_-]+$/', $carpeta)) {
+                if ($esAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['status' => 'error', 'message' => 'Identificador de módulo inválido.']);
+                    exit;
+                }
+                header("Location: gestor-modulos");
+                exit;
+            }
 
             if (in_array($carpeta, ['Autenticacion', 'SuperAdmin'])) {
                 if ($esAjax) {
@@ -205,8 +215,8 @@ class ModulosController {
     public function detalleModulo() {
         Auth::requierePrivilegioMinimo(0);
 
-        $idModulo = $_GET['id'] ?? $_GET['modulo'] ?? '';
-        if (empty($idModulo)) {
+        $idModulo = basename(trim($_GET['id'] ?? $_GET['modulo'] ?? ''));
+        if (empty($idModulo) || !preg_match('/^[a-zA-Z0-9_-]+$/', $idModulo)) {
             header("Location: gestor-modulos");
             exit;
         }
@@ -372,10 +382,28 @@ class ModulosController {
         Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $idModulo = $_POST['modulo_id'] ?? '';
-            $configFilePath = $_POST['config_file_path'] ?? '';
+            $idModulo = basename(trim($_POST['modulo_id'] ?? ''));
             $rawJson = $_POST['raw_config_json'] ?? '';
             $esAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+
+            if (empty($idModulo) || !preg_match('/^[a-zA-Z0-9_-]+$/', $idModulo)) {
+                if ($esAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['status' => 'error', 'message' => 'Identificador de módulo inválido.']);
+                    exit;
+                }
+                header("Location: gestor-modulos");
+                exit;
+            }
+
+            // Resolver ruta segura de configuración JSON en servidor (prevención de Arbitrary File Write)
+            $foundJsons = glob(MODULES_PATH . $idModulo . '/*.json');
+            if (!empty($foundJsons)) {
+                $configFilePath = $foundJsons[0];
+            } else {
+                $storageDir = defined('STORAGE_PATH') ? STORAGE_PATH : (defined('BASE_PATH') ? BASE_PATH . '/storage/' : __DIR__ . '/../../../storage/');
+                $configFilePath = $storageDir . strtolower($idModulo) . '_meta.json';
+            }
 
             if (!empty($configFilePath) && !empty($rawJson)) {
                 $decoded = json_decode($rawJson, true);
@@ -412,11 +440,11 @@ class ModulosController {
         Auth::requierePrivilegioMinimo(0);
         header('Content-Type: application/json');
 
-        $moduloId  = $_POST['modulo_id'] ?? '';
+        $moduloId  = basename(trim($_POST['modulo_id'] ?? ''));
         $claveRuta = $_POST['clave_ruta'] ?? '';
 
-        if (empty($moduloId) || empty($claveRuta)) {
-            echo json_encode(['status' => 'error', 'message' => 'Faltan parámetros requeridos']);
+        if (empty($moduloId) || !preg_match('/^[a-zA-Z0-9_-]+$/', $moduloId) || empty($claveRuta)) {
+            echo json_encode(['status' => 'error', 'message' => 'Parámetros requeridos faltantes o inválidos']);
             exit;
         }
 
@@ -507,9 +535,9 @@ class ModulosController {
         Auth::requierePrivilegioMinimo(0);
         header('Content-Type: application/json');
 
-        $moduloId = $_POST['modulo_id'] ?? '';
-        if (empty($moduloId)) {
-            echo json_encode(['status' => 'error', 'message' => 'ID de módulo no proporcionado.']);
+        $moduloId = basename(trim($_POST['modulo_id'] ?? ''));
+        if (empty($moduloId) || !preg_match('/^[a-zA-Z0-9_-]+$/', $moduloId)) {
+            echo json_encode(['status' => 'error', 'message' => 'ID de módulo no proporcionado o inválido.']);
             exit;
         }
 

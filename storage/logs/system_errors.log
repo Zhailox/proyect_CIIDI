@@ -1741,3 +1741,75 @@ Trace:
 #5 [internal function]: MailService::{closure:MailService::enviarAsincrono():146}()
 #6 {main}
 --------------------------------------------------------------------------------
+[2026-10-13 22:12:34] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  no existe la relación «recurso_investigadores»
+LINE 22:                     FROM recurso_investigadores ri2
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php:152
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(152): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(283): ArticuloModel->obtenerUltimosArticulos(Array, 1, 50)
+#2 C:\wamp64\www\proyect_CIIDI\modules\Articulos\controllers\ArticulosController.php(34): ArticuloModel->obtenerArticulosPaginados(Array, 1, 50)
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ArticulosController->index()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('articulos', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-13 22:13:00] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  no existe la relación «recurso_investigadores»
+LINE 22:                     FROM recurso_investigadores ri2
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php:152
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(152): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(283): ArticuloModel->obtenerUltimosArticulos(Array, 1, 50)
+#2 C:\wamp64\www\proyect_CIIDI\modules\Articulos\controllers\ArticulosController.php(34): ArticuloModel->obtenerArticulosPaginados(Array, 1, 50)
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ArticulosController->index()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('articulos', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-13 22:13:10] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  no existe la relación «recurso_investigadores»
+LINE 22:                     FROM recurso_investigadores ri2
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php:152
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(152): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(283): ArticuloModel->obtenerUltimosArticulos(Array, 1, 50)
+#2 C:\wamp64\www\proyect_CIIDI\modules\Articulos\controllers\ArticulosController.php(34): ArticuloModel->obtenerArticulosPaginados(Array, 1, 50)
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ArticulosController->index()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('articulos', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-13 22:13:17] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  no existe la relación «recurso_investigadores»
+LINE 22:                     FROM recurso_investigadores ri2
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php:152
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(152): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(283): ArticuloModel->obtenerUltimosArticulos(Array, 1, 50)
+#2 C:\wamp64\www\proyect_CIIDI\modules\Articulos\controllers\ArticulosController.php(34): ArticuloModel->obtenerArticulosPaginados(Array, 1, 50)
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ArticulosController->index()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('articulos', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-13 22:13:21] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  no existe la relación «recurso_investigadores»
+LINE 22:                     FROM recurso_investigadores ri2
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php:152
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(152): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(283): ArticuloModel->obtenerUltimosArticulos(Array, 1, 50)
+#2 C:\wamp64\www\proyect_CIIDI\modules\Articulos\controllers\ArticulosController.php(34): ArticuloModel->obtenerArticulosPaginados(Array, 1, 50)
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ArticulosController->index()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('articulos', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-13 22:13:22] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  no existe la relación «recurso_investigadores»
+LINE 22:                     FROM recurso_investigadores ri2
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php:152
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(152): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(283): ArticuloModel->obtenerUltimosArticulos(Array, 1, 50)
+#2 C:\wamp64\www\proyect_CIIDI\modules\Articulos\controllers\ArticulosController.php(34): ArticuloModel->obtenerArticulosPaginados(Array, 1, 50)
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ArticulosController->index()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('articulos', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------

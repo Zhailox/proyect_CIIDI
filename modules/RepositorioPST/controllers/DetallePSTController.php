@@ -134,6 +134,10 @@ class DetallePSTController {
                 }
             }
         }
+
+        if (!$documento && !headers_sent()) {
+            http_response_code(404);
+        }
         
         return [
             'documento'          => $documento,
@@ -649,6 +653,21 @@ class DetallePSTController {
                     throw new Exception("Formato no soportado. Debe ser PDF o Word (.docx).");
                 }
 
+                $finfoSim = finfo_open(FILEINFO_MIME_TYPE);
+                $mimeSim = finfo_file($finfoSim, $fileTmpPath);
+                if (PHP_VERSION_ID < 80500 && is_resource($finfoSim)) {
+                    finfo_close($finfoSim);
+                }
+                $allowedMimeSim = [
+                    'application/pdf',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/zip',
+                    'application/x-zip-compressed'
+                ];
+                if (!in_array($mimeSim, $allowedMimeSim, true)) {
+                    throw new Exception("El contenido binario del archivo no corresponde a un documento PDF o Word válido.");
+                }
+
                 require_once __DIR__ . '/../services/ExtractorPST.php';
                 $text = ($fileExtension === 'pdf') ? ExtractorPST::extraerTextoPDF($fileTmpPath) : ExtractorPST::extraerTextoDOCX($fileTmpPath);
 
@@ -848,7 +867,12 @@ class DetallePSTController {
                     throw new Exception("El archivo digital del documento (PDF/DOCX) es obligatorio.");
                 }
 
-                $realFilePath = BASE_PATH . '/' . ltrim($datos['archivo_pdf'], '/');
+                $relPdfCheck = ltrim(str_replace(['\\', '/'], '/', $datos['archivo_pdf']), '/');
+                if (strpos($relPdfCheck, '..') !== false || (strpos($relPdfCheck, 'storage/documentos/tmp/') !== 0 && strpos($relPdfCheck, 'storage/documentos/pst/') !== 0)) {
+                    throw new Exception("Ruta de archivo temporal no autorizada.");
+                }
+
+                $realFilePath = BASE_PATH . '/' . $relPdfCheck;
                 if (!file_exists($realFilePath)) {
                     throw new Exception("El archivo digital asociado no se encuentra en el almacenamiento temporal del servidor. Extraiga el documento nuevamente.");
                 }
@@ -859,9 +883,9 @@ class DetallePSTController {
 
                 // Promover archivo desde storage/documentos/tmp/ a storage/documentos/pst/
                 $destPath = null;
-                if (strpos($archivoPdf, 'storage/documentos/tmp/') !== false) {
+                if (strpos($relPdfCheck, 'storage/documentos/tmp/') === 0) {
                     $slug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($datos['titulo'], 0, 30)));
-                    $ext = strtolower(pathinfo($archivoPdf, PATHINFO_EXTENSION));
+                    $ext = strtolower(pathinfo($relPdfCheck, PATHINFO_EXTENSION));
                     $destName = 'pst_' . $slug . '_' . time() . '_' . mt_rand(100, 999) . '.' . $ext;
                     $destPath = $storageDir . $destName;
                     if (!copy($realFilePath, $destPath)) {
@@ -870,7 +894,7 @@ class DetallePSTController {
                     $finalPdfPath = 'storage/documentos/pst/' . $destName;
                     $datos['archivo_pdf'] = $finalPdfPath;
                 } else {
-                    $finalPdfPath = $archivoPdf;
+                    $finalPdfPath = $relPdfCheck;
                 }
 
                 $nuevoId = $model->crearPST($datos);
@@ -977,7 +1001,14 @@ class DetallePSTController {
             $promotedTmpPath = null;
             if (isset($_FILES['archivo_pst']) && $_FILES['archivo_pst']['error'] === UPLOAD_ERR_OK) {
                 $ext = strtolower(pathinfo($_FILES['archivo_pst']['name'], PATHINFO_EXTENSION));
-                if (in_array($ext, ['pdf', 'docx'])) {
+                $finfoTrad = finfo_open(FILEINFO_MIME_TYPE);
+                $mimeTrad = finfo_file($finfoTrad, $_FILES['archivo_pst']['tmp_name']);
+                if (PHP_VERSION_ID < 80500 && is_resource($finfoTrad)) {
+                    finfo_close($finfoTrad);
+                }
+                $allowedMimeTrad = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip', 'application/x-zip-compressed'];
+
+                if (in_array($ext, ['pdf', 'docx'], true) && in_array($mimeTrad, $allowedMimeTrad, true)) {
                     $slug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($_POST['titulo'] ?? 'pst', 0, 30)));
                     $destName = 'pst_' . $slug . '_' . time() . '_' . mt_rand(100, 999) . '.' . $ext;
                     if (move_uploaded_file($_FILES['archivo_pst']['tmp_name'], $storageDir . $destName)) {
@@ -986,24 +1017,26 @@ class DetallePSTController {
                         AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo de Escritura', "El archivo para el proyecto se recibió pero el servidor no pudo guardarlo en el disco.");
                     }
                 } else {
-                    AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo de Formato', "Intento de subir un archivo con extensión no permitida (.{$ext}). Archivo ignorado.");
+                    AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo de Formato/MIME', "Intento de subir un archivo con extensión o firma binaria no permitida (.{$ext}, MIME: {$mimeTrad}). Archivo ignorado.");
                 }
             } elseif (!empty($_POST['archivo_pdf'])) {
-                $rawPdf = trim($_POST['archivo_pdf']);
-                $sourceFilePath = BASE_PATH . '/' . ltrim($rawPdf, '/');
-                if (file_exists($sourceFilePath)) {
-                    if (strpos($rawPdf, 'storage/documentos/tmp/') !== false) {
-                        $slug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($_POST['titulo'] ?? 'pst', 0, 30)));
-                        $ext = strtolower(pathinfo($rawPdf, PATHINFO_EXTENSION));
-                        $destName = 'pst_' . $slug . '_' . time() . '_' . mt_rand(100, 999) . '.' . $ext;
-                        $destPath = $storageDir . $destName;
-                        if (rename($sourceFilePath, $destPath) || copy($sourceFilePath, $destPath)) {
-                            @unlink($sourceFilePath);
-                            $archivoPath = 'storage/documentos/pst/' . $destName;
-                            $promotedTmpPath = $destPath;
+                $rawPdf = ltrim(str_replace(['\\', '/'], '/', trim($_POST['archivo_pdf'])), '/');
+                if (strpos($rawPdf, '..') === false && (strpos($rawPdf, 'storage/documentos/tmp/') === 0 || strpos($rawPdf, 'storage/documentos/pst/') === 0)) {
+                    $sourceFilePath = BASE_PATH . '/' . $rawPdf;
+                    if (file_exists($sourceFilePath)) {
+                        if (strpos($rawPdf, 'storage/documentos/tmp/') === 0) {
+                            $slug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($_POST['titulo'] ?? 'pst', 0, 30)));
+                            $ext = strtolower(pathinfo($rawPdf, PATHINFO_EXTENSION));
+                            $destName = 'pst_' . $slug . '_' . time() . '_' . mt_rand(100, 999) . '.' . $ext;
+                            $destPath = $storageDir . $destName;
+                            if (rename($sourceFilePath, $destPath) || copy($sourceFilePath, $destPath)) {
+                                @unlink($sourceFilePath);
+                                $archivoPath = 'storage/documentos/pst/' . $destName;
+                                $promotedTmpPath = $destPath;
+                            }
+                        } else {
+                            $archivoPath = $rawPdf;
                         }
-                    } else {
-                        $archivoPath = $rawPdf;
                     }
                 }
             }
@@ -1032,6 +1065,15 @@ class DetallePSTController {
             }
             $carrerasVinculadas = array_values(array_unique(array_filter($carrerasVinculadas, fn($cId) => $cId > 0 && $cId !== $idCarrera)));
 
+            $rawUrlGitTrad = !empty($_POST['url_repositorio']) ? trim($_POST['url_repositorio']) : null;
+            $urlGitTradSanitizada = null;
+            if (!empty($rawUrlGitTrad) && filter_var($rawUrlGitTrad, FILTER_VALIDATE_URL)) {
+                $schemeTrad = strtolower(parse_url($rawUrlGitTrad, PHP_URL_SCHEME) ?? '');
+                if (in_array($schemeTrad, ['http', 'https'], true)) {
+                    $urlGitTradSanitizada = $rawUrlGitTrad;
+                }
+            }
+
             $datos = [
                 'titulo'                     => !empty($_POST['titulo']) ? trim($_POST['titulo']) : '',
                 'anio_publicacion'           => !empty($_POST['anio_publicacion']) ? (int)$_POST['anio_publicacion'] : (int)date('Y'),
@@ -1046,7 +1088,7 @@ class DetallePSTController {
                 'nivel_academico'            => $nivelPost,
                 'trayecto'                   => $trayectoPost,
                 'id_trayecto'                => $idTrayectoPost,
-                'url_repositorio'            => !empty($_POST['url_repositorio']) ? trim($_POST['url_repositorio']) : null,
+                'url_repositorio'            => $urlGitTradSanitizada,
                 'archivo_pdf'                => $archivoPath,
                 'resumen'                    => !empty($_POST['resumen']) ? trim($_POST['resumen']) : '',
                 'obj_general'                => !empty($_POST['obj_general']) ? trim($_POST['obj_general']) : null,

@@ -147,6 +147,12 @@ class LoginController {
         $password = trim($_POST['password'] ?? '');
         $passwordConfirm = trim($_POST['password_confirm'] ?? '');
 
+        if (class_exists('CSRF') && !CSRF::validarToken($_POST['csrf_token'] ?? null)) {
+            $_SESSION['error_restablecer'] = "El token de seguridad CSRF ha caducado. Por favor, intente nuevamente.";
+            header("Location: restablecer-clave?token=" . urlencode($rawToken));
+            exit;
+        }
+
         if (empty($rawToken) || empty($password)) {
             $_SESSION['error_restablecer'] = "Todos los campos son obligatorios.";
             header("Location: restablecer-clave?token=" . urlencode($rawToken));

@@ -165,16 +165,32 @@ class Connection {
         }
     }
 
+    private static ?int $lastSyncedUserId = null;
+
     public static function getInstance(bool $silencioso = false): ?PDO {
         if (self::$instance === null) {
             $conexionObjeto = new self($silencioso);
             self::$instance = $conexionObjeto->pdo;
+            self::$lastSyncedUserId = null;
+        }
+        if (self::$instance !== null && isset($_SESSION['usuario_id']) && is_numeric($_SESSION['usuario_id'])) {
+            $uid = (int)$_SESSION['usuario_id'];
+            if ($uid > 0 && self::$lastSyncedUserId !== $uid) {
+                try {
+                    $stmt = self::$instance->prepare("SELECT set_config('app.usuario_actual', ?, false)");
+                    $stmt->execute([(string)$uid]);
+                    self::$lastSyncedUserId = $uid;
+                } catch (Throwable) {
+                    // Ignorar si la sesión de BD está en transacción abortada
+                }
+            }
         }
         return self::$instance;
     }
 
     public static function resetConnection(): void {
         self::$instance = null;
+        self::$lastSyncedUserId = null;
     }
 
     public static function logSystemError(Throwable $e): void {

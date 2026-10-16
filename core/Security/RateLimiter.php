@@ -362,7 +362,7 @@ class RateLimiter {
         try {
             $db = Connection::getInstance();
             if ($db) {
-                $stmt = $db->prepare("SELECT ip, intentos, EXTRACT(EPOCH FROM primer_intento)::int AS primer_intento, EXTRACT(EPOCH FROM ultimo_intento)::int AS ultimo_intento, EXTRACT(EPOCH FROM bloqueado_hasta)::int AS bloqueado_hasta, datos_adicionales FROM waf_rate_limiter WHERE tipo = 'attempt'");
+                $stmt = $db->prepare("SELECT ip, intentos, EXTRACT(EPOCH FROM primer_intento)::bigint AS primer_intento, EXTRACT(EPOCH FROM ultimo_intento)::bigint AS ultimo_intento, EXTRACT(EPOCH FROM bloqueado_hasta)::bigint AS bloqueado_hasta, datos_adicionales FROM waf_rate_limiter WHERE tipo = 'attempt'");
                 $stmt->execute();
                 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 $res = [];
@@ -371,9 +371,9 @@ class RateLimiter {
                     $res[$r['ip']] = [
                         'ip' => $r['ip'],
                         'intentos' => (int)$r['intentos'],
-                        'primer_intento' => (int)($r['primer_intento'] ?? 0),
-                        'ultimo_intento' => (int)($r['ultimo_intento'] ?? 0),
-                        'bloqueado_hasta' => (int)($r['bloqueado_hasta'] ?? 0),
+                        'primer_intento' => (int)($extra['primer_intento_ts'] ?? $r['primer_intento'] ?? 0),
+                        'ultimo_intento' => (int)($extra['ultimo_intento_ts'] ?? $r['ultimo_intento'] ?? 0),
+                        'bloqueado_hasta' => (int)($extra['bloqueado_hasta_ts'] ?? $r['bloqueado_hasta'] ?? 0),
                         'historial_cedulas' => $extra['historial_cedulas'] ?? []
                     ];
                 }
@@ -391,15 +391,23 @@ class RateLimiter {
             $db = Connection::getInstance();
             if ($db) {
                 $db->exec("DELETE FROM waf_rate_limiter WHERE tipo = 'attempt'");
-                $stmt = $db->prepare("INSERT INTO waf_rate_limiter (ip, tipo, intentos, primer_intento, ultimo_intento, bloqueado_hasta, datos_adicionales) VALUES (?, 'attempt', ?, to_timestamp(?), to_timestamp(?), to_timestamp(?), ?)");
+                $stmt = $db->prepare("INSERT INTO waf_rate_limiter (ip, tipo, intentos, primer_intento, ultimo_intento, bloqueado_hasta, datos_adicionales) VALUES (?, 'attempt', ?, (to_timestamp(?) AT TIME ZONE 'UTC'), (to_timestamp(?) AT TIME ZONE 'UTC'), (to_timestamp(?) AT TIME ZONE 'UTC'), ?)");
                 foreach ($attempts as $ip => $data) {
-                    $extra = json_encode(['historial_cedulas' => $data['historial_cedulas'] ?? []]);
+                    $primerTs = (int)($data['primer_intento'] ?? time());
+                    $ultimoTs = (int)($data['ultimo_intento'] ?? time());
+                    $bloqTs   = (int)($data['bloqueado_hasta'] ?? 0);
+                    $extra = json_encode([
+                        'historial_cedulas' => $data['historial_cedulas'] ?? [],
+                        'primer_intento_ts' => $primerTs,
+                        'ultimo_intento_ts' => $ultimoTs,
+                        'bloqueado_hasta_ts' => $bloqTs
+                    ]);
                     $stmt->execute([
                         $ip,
                         (int)($data['intentos'] ?? 1),
-                        (int)($data['primer_intento'] ?? time()),
-                        (int)($data['ultimo_intento'] ?? time()),
-                        (int)($data['bloqueado_hasta'] ?? 0),
+                        $primerTs,
+                        $ultimoTs,
+                        $bloqTs,
                         $extra
                     ]);
                 }

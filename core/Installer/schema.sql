@@ -2851,6 +2851,25 @@ SELECT pg_catalog.setval('public.trayectos_id_seq', 20, true);
 
 
 --
--- PostgreSQL database dump complete
+-- Tablas exclusivas para investigadores de Artículos Científicos (Migración 006)
 --
 
+CREATE TABLE IF NOT EXISTS public.investigadores (
+    id SERIAL PRIMARY KEY,
+    nombre_completo VARCHAR(150) NOT NULL,
+    orcid VARCHAR(50) UNIQUE NOT NULL,
+    biografia TEXT NULL,
+    pagina_web VARCHAR(255) NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.recurso_investigadores (
+    id_recurso INTEGER NOT NULL,
+    id_investigador INTEGER NOT NULL,
+    PRIMARY KEY (id_recurso, id_investigador),
+    CONSTRAINT fk_recurso_inv FOREIGN KEY (id_recurso) REFERENCES public.recursos(id) ON DELETE CASCADE,
+    CONSTRAINT fk_investigador FOREIGN KEY (id_investigador) REFERENCES public.investigadores(id) ON DELETE CASCADE
+);
+
+--
+-- PostgreSQL database dump complete
+--
