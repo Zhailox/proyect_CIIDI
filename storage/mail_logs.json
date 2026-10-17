@@ -1,5 +1,15 @@
 [
     {
+        "id": "mail_6ad2bdaae95ba",
+        "fecha": "2026-10-16 20:13:30",
+        "destino_email": "andrusramirez2020@gmail.com",
+        "destino_nombre": "adrusss",
+        "asunto": "Actualización de Permisos y Rol Institucional - CIIDI",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server Additional SMTP info: php_network_getaddresses: getaddrinfo for smtp.test.com failed: Host desconocido"
+    },
+    {
         "id": "mail_6ac53b472d1e4",
         "fecha": "2026-10-06 14:17:43",
         "destino_email": "juanxzall0701@gmail.com",

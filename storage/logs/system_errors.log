@@ -1813,3 +1813,34 @@ Trace:
 #5 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
 #6 {main}
 --------------------------------------------------------------------------------
+[2026-10-16 20:13:30] ERROR: SMTP Error: Could not connect to SMTP host. Failed to connect to server en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Fri, 16 O...', '--b1=_i1yReKAMP...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(199): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(151): MailService::enviar('andrusramirez20...', 'adrusss', 'Actualizaci\xC3\xB3n ...', '<h2 style="colo...', '', false)
+#5 [internal function]: MailService::{closure:MailService::enviarAsincrono():146}()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-16 21:00:04] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  no existe la base de datos «ciidii» en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-16 21:00:04] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  no existe la base de datos «ciidii» en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(256): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\InicioRepositorioController.php(12): DocumentoModel->getPSTDocumentosCount()
+#4 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): InicioRepositorioController->index()
+#5 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('repositorio', Array, Array, Array, Object(AssetResolver))
+#6 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#7 {main}
+--------------------------------------------------------------------------------

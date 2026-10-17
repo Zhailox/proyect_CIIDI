@@ -1,12 +1,1 @@
-{
-    "198.51.100.99": {
-        "ip": "198.51.100.99",
-        "intentos": 6,
-        "primer_intento": 1791946000,
-        "ultimo_intento": 1791946000,
-        "bloqueado_hasta": 1791946900,
-        "historial_cedulas": [
-            "99999999"
-        ]
-    }
-}
+[]
