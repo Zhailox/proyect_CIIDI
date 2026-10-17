@@ -1,5 +1,15 @@
 [
     {
+        "id": "mail_6ad1855ab20ae",
+        "fecha": "2026-10-15 22:00:58",
+        "destino_email": "cepillinin@gmail.com",
+        "destino_nombre": "Felipe",
+        "asunto": "Bienvenido al Sistema CIIDI - Credenciales de Acceso",
+        "exito": false,
+        "tipo": "Directo",
+        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server Additional SMTP info: php_network_getaddresses: getaddrinfo for smtp.test.com failed: Host desconocido"
+    },
+    {
         "id": "mail_6ac53b472d1e4",
         "fecha": "2026-10-06 14:17:43",
         "destino_email": "juanxzall0701@gmail.com",
