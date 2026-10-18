@@ -384,6 +384,43 @@ class DetallePSTController {
                   </script>
                   </body></html>";
             exit;
+        } elseif ($ext === 'doc') {
+            require_once __DIR__ . '/../services/ExtractorPST.php';
+            $docText = '';
+            try {
+                $docText = ExtractorPST::extraerTextoDOC($fullPath);
+            } catch (\Throwable $e) {
+                $docText = '';
+            }
+            $paragraphsHtml = '';
+            foreach (explode("\n", $docText) as $pLine) {
+                $pLine = trim($pLine);
+                if ($pLine !== '' && stripos($pLine, 'PAGEREF _Toc') === false) {
+                    $paragraphsHtml .= '<p>' . htmlspecialchars($pLine, ENT_QUOTES, 'UTF-8') . '</p>';
+                }
+            }
+            if ($paragraphsHtml === '') {
+                $paragraphsHtml = '<p><em>No se pudo generar la vista previa textual para este documento Word (.doc) antiguo.</em></p>';
+            }
+            header('Content-Type: text/html; charset=utf-8');
+            echo "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'>
+                  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                  <title>" . htmlspecialchars($safeFilename) . "</title>
+                  <style>
+                    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 0; line-height: 1.65; }
+                    .doc-toolbar { position: sticky; top: 0; z-index: 100; background: #ffffff; border-bottom: 1px solid #cbd5e1; padding: 0.5rem 1rem; display: flex; justify-content: space-between; align-items: center; }
+                    .paper-container { max-width: 860px; margin: 1.5rem auto 3rem auto; background: #ffffff; padding: 2.5rem 3rem; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
+                    .paper-container p { margin-bottom: 0.9rem; text-align: justify; font-size: 0.95rem; }
+                  </style></head><body>
+                  <div class='doc-toolbar'>
+                    <div style='display:flex; align-items:center; gap:0.5rem;'>
+                        <span style='background:rgba(112, 144, 203, 0.15); color:#505984; padding:0.25rem 0.55rem; border-radius:4px; font-size:0.75rem; font-weight:700;'>Word Legacy (.doc)</span>
+                        <span style='font-size:0.8rem; color:#64748b; font-weight:600;'>" . htmlspecialchars($safeFilename) . "</span>
+                    </div>
+                  </div>
+                  <div class='paper-container'>{$paragraphsHtml}</div>
+                  </body></html>";
+            exit;
         } else {
             header('Content-Type: application/octet-stream');
             readfile($fullPath);
@@ -507,7 +544,7 @@ class DetallePSTController {
                         default: return $num / (1024 * 1024);
                     }
                 };
-                $configMaxMb = (float)ConfigService::get('archivos.max_size_mb', 20);
+                $configMaxMb = (float)ConfigService::get('archivos.max_size_mb', 100);
                 $phpUploadMaxMb = $parseIniToMb(ini_get('upload_max_filesize'));
                 $phpPostMaxMb = $parseIniToMb(ini_get('post_max_size'));
                 $maxMb = round(min($configMaxMb, $phpUploadMaxMb, $phpPostMaxMb), 2);
@@ -520,8 +557,8 @@ class DetallePSTController {
                 $fileName = $_FILES['archivo_pst']['name'];
                 $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
-                if (!in_array($fileExtension, ['pdf', 'docx'])) {
-                    throw new Exception("Formato de archivo no soportado. Debe ser un archivo PDF o Word (.docx).");
+                if (!in_array($fileExtension, ['pdf', 'docx', 'doc'], true)) {
+                    throw new Exception("Formato de archivo no soportado. Debe ser un archivo PDF o Word (.docx / .doc).");
                 }
 
                 // 1. Validar MIME-Type binario / Magic Bytes para prevenir archivos falsos o maliciosos
@@ -534,22 +571,22 @@ class DetallePSTController {
                 $allowedMimeTypes = [
                     'application/pdf',
                     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/msword',
+                    'application/CDFV2',
+                    'application/vnd.ms-office',
+                    'application/x-ole-storage',
                     'application/zip', // Algunos sistemas detectan docx como zip
-                    'application/x-zip-compressed'
+                    'application/x-zip-compressed',
+                    'application/octet-stream'
                 ];
 
-                if (!in_array($mimeType, $allowedMimeTypes)) {
+                if (!in_array($mimeType, $allowedMimeTypes, true)) {
                     throw new Exception("El contenido binario del archivo no corresponde a un documento PDF o Word válido.");
                 }
 
                 require_once __DIR__ . '/../services/ExtractorPST.php';
 
-                $text = '';
-                if ($fileExtension === 'pdf') {
-                    $text = ExtractorPST::extraerTextoPDF($fileTmpPath);
-                } else {
-                    $text = ExtractorPST::extraerTextoDOCX($fileTmpPath);
-                }
+                $text = ExtractorPST::extraerTextoArchivo($fileTmpPath, $fileExtension);
 
                 if (empty(trim($text))) {
                     throw new Exception("No se pudo extraer texto del documento. Asegúrese de que el archivo no esté protegido o escaneado como imagen pura sin OCR.");
@@ -591,6 +628,10 @@ class DetallePSTController {
                 $targetFile = $tmpDir . $savedFileName;
                 
                 if (move_uploaded_file($fileTmpPath, $targetFile) || copy($fileTmpPath, $targetFile)) {
+                    // Si es un archivo Word (.docx) pesado, optimizar sus imágenes internas para ahorrar espacio en el servidor
+                    if ($fileExtension === 'docx') {
+                        $datosExtraidos['optimizacion_archivo'] = ExtractorPST::optimizarArchivoDOCX($targetFile);
+                    }
                     $datosExtraidos['archivo_pdf'] = 'storage/documentos/tmp/' . $savedFileName;
                 } else {
                     throw new Exception("No se pudo guardar el archivo temporal en el almacenamiento del servidor.");
@@ -636,7 +677,7 @@ class DetallePSTController {
                         default: return $num / (1024 * 1024);
                     }
                 };
-                $configMaxMb = (float)ConfigService::get('archivos.max_size_mb', 20);
+                $configMaxMb = (float)ConfigService::get('archivos.max_size_mb', 100);
                 $phpUploadMaxMb = $parseIniToMb(ini_get('upload_max_filesize'));
                 $phpPostMaxMb = $parseIniToMb(ini_get('post_max_size'));
                 $maxMb = round(min($configMaxMb, $phpUploadMaxMb, $phpPostMaxMb), 2);
@@ -649,8 +690,8 @@ class DetallePSTController {
                 $fileName = $_FILES['archivo_pst']['name'];
                 $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
-                if (!in_array($fileExtension, ['pdf', 'docx'])) {
-                    throw new Exception("Formato no soportado. Debe ser PDF o Word (.docx).");
+                if (!in_array($fileExtension, ['pdf', 'docx', 'doc'], true)) {
+                    throw new Exception("Formato no soportado. Debe ser PDF o Word (.docx / .doc).");
                 }
 
                 $finfoSim = finfo_open(FILEINFO_MIME_TYPE);
@@ -661,15 +702,20 @@ class DetallePSTController {
                 $allowedMimeSim = [
                     'application/pdf',
                     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/msword',
+                    'application/CDFV2',
+                    'application/vnd.ms-office',
+                    'application/x-ole-storage',
                     'application/zip',
-                    'application/x-zip-compressed'
+                    'application/x-zip-compressed',
+                    'application/octet-stream'
                 ];
                 if (!in_array($mimeSim, $allowedMimeSim, true)) {
                     throw new Exception("El contenido binario del archivo no corresponde a un documento PDF o Word válido.");
                 }
 
                 require_once __DIR__ . '/../services/ExtractorPST.php';
-                $text = ($fileExtension === 'pdf') ? ExtractorPST::extraerTextoPDF($fileTmpPath) : ExtractorPST::extraerTextoDOCX($fileTmpPath);
+                $text = ExtractorPST::extraerTextoArchivo($fileTmpPath, $fileExtension);
 
                 if (empty(trim($text))) {
                     throw new Exception("No se pudo extraer texto del archivo.");
@@ -1006,12 +1052,26 @@ class DetallePSTController {
                 if (PHP_VERSION_ID < 80500 && is_resource($finfoTrad)) {
                     finfo_close($finfoTrad);
                 }
-                $allowedMimeTrad = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip', 'application/x-zip-compressed'];
+                $allowedMimeTrad = [
+                    'application/pdf',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/msword',
+                    'application/CDFV2',
+                    'application/vnd.ms-office',
+                    'application/x-ole-storage',
+                    'application/zip',
+                    'application/x-zip-compressed',
+                    'application/octet-stream'
+                ];
 
-                if (in_array($ext, ['pdf', 'docx'], true) && in_array($mimeTrad, $allowedMimeTrad, true)) {
+                if (in_array($ext, ['pdf', 'docx', 'doc'], true) && in_array($mimeTrad, $allowedMimeTrad, true)) {
                     $slug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($_POST['titulo'] ?? 'pst', 0, 30)));
                     $destName = 'pst_' . $slug . '_' . time() . '_' . mt_rand(100, 999) . '.' . $ext;
                     if (move_uploaded_file($_FILES['archivo_pst']['tmp_name'], $storageDir . $destName)) {
+                        if ($ext === 'docx') {
+                            require_once __DIR__ . '/../services/ExtractorPST.php';
+                            ExtractorPST::optimizarArchivoDOCX($storageDir . $destName);
+                        }
                         $archivoPath = 'storage/documentos/pst/' . $destName;
                     } else {
                         AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo de Escritura', "El archivo para el proyecto se recibió pero el servidor no pudo guardarlo en el disco.");
@@ -1166,19 +1226,33 @@ class DetallePSTController {
                     $nuevoArchivoPath = null;
                     if (isset($_FILES['archivo_pst']) && $_FILES['archivo_pst']['error'] === UPLOAD_ERR_OK) {
                         $ext = strtolower(pathinfo($_FILES['archivo_pst']['name'], PATHINFO_EXTENSION));
-                        if (in_array($ext, ['pdf', 'docx'])) {
+                        if (in_array($ext, ['pdf', 'docx', 'doc'], true)) {
                             $finfo = finfo_open(FILEINFO_MIME_TYPE);
                             $mimeType = finfo_file($finfo, $_FILES['archivo_pst']['tmp_name']);
                             if (PHP_VERSION_ID < 80500 && is_resource($finfo)) {
                                 finfo_close($finfo);
                             }
 
-                            $allowedMimeTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip', 'application/x-zip-compressed'];
+                            $allowedMimeTypes = [
+                                'application/pdf',
+                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                'application/msword',
+                                'application/CDFV2',
+                                'application/vnd.ms-office',
+                                'application/x-ole-storage',
+                                'application/zip',
+                                'application/x-zip-compressed',
+                                'application/octet-stream'
+                            ];
 
-                            if (in_array($mimeType, $allowedMimeTypes)) {
+                            if (in_array($mimeType, $allowedMimeTypes, true)) {
                                 $slug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($_POST['titulo'] ?? 'pst', 0, 30)));
                                 $destName = 'pst_' . $slug . '_' . time() . '_' . mt_rand(100, 999) . '.' . $ext;
                                 if (move_uploaded_file($_FILES['archivo_pst']['tmp_name'], $storageDir . $destName)) {
+                                    if ($ext === 'docx') {
+                                        require_once __DIR__ . '/../services/ExtractorPST.php';
+                                        ExtractorPST::optimizarArchivoDOCX($storageDir . $destName);
+                                    }
                                     $nuevoArchivoPath = 'storage/documentos/pst/' . $destName;
                                 } else {
                                     AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo de Escritura (Edición)', "El nuevo adjunto para el proyecto ID #{$id} no pudo guardarse en el disco.");
@@ -1308,11 +1382,12 @@ class DetallePSTController {
                     }
 
                     // Preservar los datos enviados en el formulario para que el usuario no los pierda
+                    $maxAutoresCfg = max(1, (int)ConfigService::get('limites_equipo.max_autores', 4));
                     $autores = [];
                     foreach ($autoresPost as $ap) {
                         $autores[] = ['nombre_completo' => $ap['nombre'], 'cedula' => $ap['cedula'] ?? ''];
                     }
-                    while (count($autores) < 4) {
+                    while (count($autores) < $maxAutoresCfg) {
                         $autores[] = ['nombre_completo' => '', 'cedula' => ''];
                     }
 
@@ -1324,8 +1399,9 @@ class DetallePSTController {
 
                     $documento = array_merge($documento, $datos);
                 } else {
+                    $maxAutoresCfg = max(1, (int)ConfigService::get('limites_equipo.max_autores', 4));
                     $autores = $model->getAutoresByRecurso($id);
-                    while (count($autores) < 4) {
+                    while (count($autores) < $maxAutoresCfg) {
                         $autores[] = ['nombre_completo' => '', 'cedula' => ''];
                     }
                     

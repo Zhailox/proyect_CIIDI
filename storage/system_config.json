@@ -9,12 +9,12 @@
         "intentos_login": 5
     },
     "smtp": {
-        "host": "smtp.test.com",
+        "host": "",
         "port": 587,
-        "user": "notificaciones@test.com",
-        "pass": "ENC:tY+rj\/DlCKk5eKtYunJbBTqMHQzf3k\/Y\/UXmVKUnW+f6NzU7RieX1MjPah9UNHapBDmMaA9w6Z6SfQtquY\/eNg==",
-        "from_email": "notificaciones@test.com",
-        "from_name": "Sistema CIIDI - Test"
+        "user": "",
+        "pass": "",
+        "from_email": "",
+        "from_name": "Sistema CIIDI - UPTTMBI"
     },
     "accesos_modulos": {
         "articulos": {

@@ -4,13 +4,13 @@
             "estado": "online"
         },
         "Investigaciones": {
-            "estado": "online"
+            "estado": "offline"
         },
         "ForoChatbot": {
             "estado": "online"
         },
         "Cursos": {
-            "estado": "online"
+            "estado": "offline"
         },
         "VinculacionEmpresarial": {
             "estado": "offline"
@@ -19,7 +19,7 @@
             "estado": "online"
         },
         "LineasInvestigacion": {
-            "estado": "online"
+            "estado": "offline"
         }
     },
     "rutas": {

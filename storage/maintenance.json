@@ -1,7 +1,7 @@
 {
-    "activo": true,
+    "activo": false,
     "mensaje": "",
-    "fecha_inicio": "2026-10-16 21:05:06",
+    "fecha_inicio": null,
     "fecha_fin": null,
     "minutos": 0,
     "programado": false

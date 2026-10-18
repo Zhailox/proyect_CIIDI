@@ -81,12 +81,13 @@ if (typeof window.mammoth === 'undefined') {
 
                             <div class="grid-2-cols">
                                 <div class="upload-input-group">
-                                    <label for="anio_publicacion">Año de Publicación *</label>
-                                    <input type="number" id="anio_publicacion" name="anio_publicacion" class="upload-input" min="2018" max="2026" value="<?= htmlspecialchars($_POST['anio_publicacion'] ?? $documento['anio_publicacion'] ?? date('Y')) ?>" required>
+                                    <label for="anio_publicacion">Año de Creación / Publicación *</label>
+                                    <input type="number" id="anio_publicacion" name="anio_publicacion" class="upload-input" min="2018" max="2027" value="<?= htmlspecialchars($_POST['anio_publicacion'] ?? $documento['anio_publicacion'] ?? date('Y')) ?>" required>
                                 </div>
                                 <div class="upload-input-group">
                                     <label for="fecha_defensa">Fecha de Defensa *</label>
                                     <input type="date" id="fecha_defensa" name="fecha_defensa" class="upload-input" value="<?= htmlspecialchars($_POST['fecha_defensa'] ?? $documento['fecha_defensa'] ?? date('Y-m-d')) ?>" required>
+                                    <span id="hint_fecha_defensa" style="display: none; font-size: 0.72rem; margin-top: 0.25rem; line-height: 1.3;"></span>
                                 </div>
                             </div>
 
@@ -415,7 +416,7 @@ if (typeof window.mammoth === 'undefined') {
 
                             <!-- Zona Interactiva de Extracción / Sustitución de Archivo -->
                             <div class="drag-drop-zone" id="dropzone">
-                                <input type="file" id="input_archivo_extractor" name="archivo_pst" accept=".pdf,.docx" <?= $accion === 'crear' ? 'multiple' : '' ?> style="display:none;">
+                                <input type="file" id="input_archivo_extractor" name="archivo_pst" accept=".pdf,.docx,.doc" <?= $accion === 'crear' ? 'multiple' : '' ?> style="display:none;">
                                 <div class="drag-icon-wrapper">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -963,19 +964,19 @@ function procesarArchivosSeleccionados(fileList) {
     // 1. Filtrar extensiones no admitidas
     const invalidFormatFiles = files.filter(f => {
         const ext = f.name.split('.').pop().toLowerCase();
-        return ext !== 'pdf' && ext !== 'docx';
+        return ext !== 'pdf' && ext !== 'docx' && ext !== 'doc';
     });
 
     // 2. Filtrar archivos que exceden el tamaño máximo por archivo
     const oversizedFiles = files.filter(f => {
         const ext = f.name.split('.').pop().toLowerCase();
-        return (ext === 'pdf' || ext === 'docx') && f.size > MAX_FILE_SIZE_BYTES;
+        return (ext === 'pdf' || ext === 'docx' || ext === 'doc') && f.size > MAX_FILE_SIZE_BYTES;
     });
 
     // 3. Archivos válidos que cumplen formato y tamaño
     let validFiles = files.filter(f => {
         const ext = f.name.split('.').pop().toLowerCase();
-        return (ext === 'pdf' || ext === 'docx') && f.size <= MAX_FILE_SIZE_BYTES;
+        return (ext === 'pdf' || ext === 'docx' || ext === 'doc') && f.size <= MAX_FILE_SIZE_BYTES;
     });
 
     // 4. Validar límite de archivos por lote (MAX_ARCHIVOS_LOTE)
@@ -1001,7 +1002,7 @@ function procesarArchivosSeleccionados(fileList) {
     const avisosRechazo = [];
     if (invalidFormatFiles.length > 0) {
         const nombresInv = invalidFormatFiles.map(f => f.name).join(', ');
-        avisosRechazo.push(`Formato no admitido (solo .pdf y .docx):\n• ${nombresInv}`);
+        avisosRechazo.push(`Formato no admitido (solo .pdf, .docx y .doc):\n• ${nombresInv}`);
     }
     if (oversizedFiles.length > 0) {
         const detallesOversized = oversizedFiles.map(f => `• ${f.name} (${(f.size / (1024 * 1024)).toFixed(2)} MB)`).join('\n');
@@ -1082,9 +1083,12 @@ function iniciarProcesamientoListaArchivos(validFiles, carreraId) {
                 titulo: '',
                 id_carrera: carreraId,
                 anio_publicacion: new Date().getFullYear(),
-                fecha_defensa: new Date().toISOString().split('T')[0],
+                fecha_defensa: '',
+                fecha_precision: '',
+                fecha_texto_detectado: '',
                 nivel_academico: 'Pregrado',
                 trayecto: 'Trayecto I',
+                id_trayecto: '',
                 url_repositorio: '',
                 resumen: '',
                 obj_general: '',
@@ -1492,8 +1496,12 @@ function obtenerDatosFormularioActual() {
         titulo: document.getElementById('titulo') ? document.getElementById('titulo').value.trim() : '',
         id_carrera: document.getElementById('id_carrera') && document.getElementById('id_carrera').value ? document.getElementById('id_carrera').value : (document.getElementById('carrera_lote_master') ? document.getElementById('carrera_lote_master').value : 1),
         anio_publicacion: document.getElementById('anio_publicacion') ? document.getElementById('anio_publicacion').value : new Date().getFullYear(),
+        fecha_defensa: document.getElementById('fecha_defensa') ? document.getElementById('fecha_defensa').value : '',
+        fecha_precision: (documentoSeleccionadoIndex >= 0 && documentosEnCola[documentoSeleccionadoIndex] && documentosEnCola[documentoSeleccionadoIndex].data) ? (documentosEnCola[documentoSeleccionadoIndex].data.fecha_precision || '') : '',
+        fecha_texto_detectado: (documentoSeleccionadoIndex >= 0 && documentosEnCola[documentoSeleccionadoIndex] && documentosEnCola[documentoSeleccionadoIndex].data) ? (documentosEnCola[documentoSeleccionadoIndex].data.fecha_texto_detectado || '') : '',
         nivel_academico: document.getElementById('nivel_academico') ? document.getElementById('nivel_academico').value : 'Pregrado',
         trayecto: document.getElementById('trayecto') ? document.getElementById('trayecto').value : 'Trayecto I',
+        id_trayecto: document.getElementById('id_trayecto') ? document.getElementById('id_trayecto').value : '',
         url_repositorio: document.getElementById('url_repositorio') ? document.getElementById('url_repositorio').value.trim() : '',
         resumen: document.getElementById('resumen') ? document.getElementById('resumen').value.trim() : '',
         obj_general: document.getElementById('obj_general') ? document.getElementById('obj_general').value.trim() : '',
@@ -1573,6 +1581,11 @@ function limpiarCamposFormularioSilencioso() {
     if (!form) return;
     const inputs = form.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], textarea');
     inputs.forEach(input => { input.value = ''; });
+    const hintFecha = document.getElementById('hint_fecha_defensa');
+    if (hintFecha) {
+        hintFecha.style.display = 'none';
+        hintFecha.textContent = '';
+    }
     const hiddenInputs = form.querySelectorAll('input[name="tutor_academico_cedula"], input[name="tutor_institucional_cedula"], input[name="tutor_comunitario_cedula"], .autor-cedula-hidden');
     hiddenInputs.forEach(h => { h.value = ''; });
     const selects = form.querySelectorAll('.autor-cedula-tipo, #tutor_academico_tipo, #tutor_institucional_tipo, #tutor_comunitario_tipo');
@@ -1715,11 +1728,37 @@ function rellenarFormulario(data) {
         }
     }
     if (data.anio_publicacion !== undefined) document.getElementById('anio_publicacion').value = data.anio_publicacion || new Date().getFullYear();
+    const fechaInput = document.getElementById('fecha_defensa');
+    const hintFecha = document.getElementById('hint_fecha_defensa');
+    if (fechaInput && data.fecha_defensa !== undefined) {
+        fechaInput.value = data.fecha_defensa || '';
+    }
+    if (hintFecha) {
+        const prec = data.fecha_precision || '';
+        const txtDet = data.fecha_texto_detectado || '';
+        if (prec === 'completa') {
+            hintFecha.style.display = 'block';
+            hintFecha.style.color = '#166534';
+            hintFecha.innerHTML = `<i class="ph ph-check-circle"></i> Fecha exacta detectada${txtDet ? ' (' + txtDet + ')' : ''}.`;
+        } else if (prec === 'mes_anio') {
+            hintFecha.style.display = 'block';
+            hintFecha.style.color = '#b45309';
+            hintFecha.innerHTML = `<i class="ph ph-info"></i> Se detectó mes y año${txtDet ? ' (' + txtDet + ')' : ''}; se fijó el día 01 (ajústelo si conoce el día exacto).`;
+        } else if (prec === 'solo_anio') {
+            hintFecha.style.display = 'block';
+            hintFecha.style.color = '#9a3412';
+            hintFecha.innerHTML = `<i class="ph ph-warning-circle"></i> El documento solo declara el año (${data.anio_publicacion || ''}); complete el día y mes de defensa.`;
+        } else {
+            hintFecha.style.display = 'none';
+            hintFecha.textContent = '';
+        }
+    }
     if (data.nivel_academico !== undefined && document.getElementById('nivel_academico')) {
         document.getElementById('nivel_academico').value = data.nivel_academico || 'Pregrado';
         toggleTrayectoByNivel();
     }
     if (data.trayecto !== undefined && document.getElementById('trayecto')) document.getElementById('trayecto').value = data.trayecto || 'Trayecto I';
+    if (data.id_trayecto !== undefined && document.getElementById('id_trayecto')) document.getElementById('id_trayecto').value = data.id_trayecto || '';
     if (data.url_repositorio !== undefined && document.getElementById('url_repositorio')) document.getElementById('url_repositorio').value = data.url_repositorio || '';
     if (data.resumen !== undefined) document.getElementById('resumen').value = data.resumen || '';
     if (data.obj_general !== undefined && document.getElementById('obj_general')) document.getElementById('obj_general').value = data.obj_general || '';
@@ -2424,7 +2463,7 @@ function inicializarAutocompletadoCedulas() {
 function simularExtraccionModal() {
     const fileInput = document.getElementById('input_archivo_extractor');
     if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-        mostrarModalAlerta('warning', 'Archivo Requerido', 'Seleccione o arrastre un documento PDF o Word (.docx) en la casilla de la derecha para simular su extracción.');
+        mostrarModalAlerta('warning', 'Archivo Requerido', 'Seleccione o arrastre un documento PDF o Word (.docx / .doc) en la casilla de la derecha para simular su extracción.');
         return;
     }
 
@@ -2449,8 +2488,10 @@ function simularExtraccionModal() {
             
             const resMsj = `METADATOS DETECTADOS POR EL EXTRACTOR:\n\n` +
                 `• Título: ${d.titulo || 'No detectado'}\n` +
-                `• Año: ${d.anio_publicacion || 's.f.'}\n` +
-                `• Nivel Académico: ${d.nivel_academico || 'Pregrado'}\n` +
+                `• Año: ${d.anio_publicacion || 's.f.'} | Fecha Defensa: ${d.fecha_defensa || 'Pendiente (' + (d.fecha_precision || 's.f.') + ')'}\n` +
+                `• Nivel Académico: ${d.nivel_academico || 'Pregrado'} | Trayecto: ${d.trayecto || 'No detectado'}\n` +
+                `• Línea ID / Dimensión ID: ${d.linea_id || 'N/A'} / ${d.dimension_id || 'N/A'}\n` +
+                `• URL Repositorio: ${d.url_repositorio || 'No detectado'}\n` +
                 `• Autores Extraídos: ${d.autores ? d.autores.map(a => (a.nombre || a.nombre_completo) + (a.cedula ? ' (' + a.cedula + ')' : '')).filter(Boolean).join(', ') : 'Ninguno'}\n` +
                 `• Tutores:\n${tutoresStr.length > 0 ? tutoresStr.join('\n') : '  No detectados'}\n` +
                 `• Comunidad Beneficiada: ${d.comunidad_beneficiada || 'No detectada'}\n\n` +
