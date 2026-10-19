@@ -19,7 +19,7 @@ $parseIniToMb = function(?string $str): float {
 $configMaxMb = (float)ConfigService::get('archivos.max_size_mb', 20);
 $phpUploadMaxMb = $parseIniToMb(ini_get('upload_max_filesize'));
 $phpPostMaxMb = $parseIniToMb(ini_get('post_max_size'));
-$maxMbEfectivo = round(min($configMaxMb, $phpUploadMaxMb, $phpPostMaxMb), 2);
+$maxMbEfectivo = round($configMaxMb, 2);
 $maxArchivosLote = (int)ConfigService::get('archivos.max_archivos_lote', 5);
 $carrerasList = $carreras ?? [];
 $currCarrera = $_POST['id_carrera'] ?? $documento['id_carrera'] ?? $documento['carrera_id'] ?? 1;
@@ -1137,8 +1137,137 @@ function subirYExtraerDatos(docItem, index) {
     docItem.faseMsg = 'Subiendo al servidor...';
     renderizarColaUI();
 
+    const CHUNK_SIZE = 8 * 1024 * 1024; // 8 MB por fragmento (evita límites post_max_size/upload_max_filesize de 64M en PHP)
+    const file = docItem.file;
+    const totalSize = file.size;
+
+    const finalizarConRespuesta = function(response) {
+        if (response.status === 'success') {
+            docItem.estado = 'listo';
+            docItem.errorMsg = '';
+            docItem.progresoPct = 100;
+            docItem.faseMsg = 'Listo';
+            if (response.data) {
+                Object.assign(docItem.data, response.data);
+                if (response.data.ya_existe_en_bd) {
+                    docItem.advertencia = 'Ya existe un proyecto registrado con este título en el repositorio. Modifique el título antes de registrarlo.';
+                } else {
+                    docItem.advertencia = '';
+                }
+            }
+            try {
+                if (documentoSeleccionadoIndex === -1) {
+                    seleccionarDocumentoDeCola(index);
+                } else if (documentoSeleccionadoIndex === index) {
+                    rellenarFormulario(docItem.data);
+                }
+            } catch (renderErr) {
+                console.error("Error al rellenar formulario:", renderErr);
+            }
+        } else {
+            docItem.estado = 'error';
+            docItem.errorMsg = response.message || 'Error en la extracción de metadatos.';
+            docItem.data.titulo = '';
+            docItem.data.archivo_pdf = '';
+            if (documentoSeleccionadoIndex === index) {
+                limpiarCamposFormularioSilencioso();
+            }
+        }
+        renderizarColaUI();
+        extraccionEnCurso = false;
+        procesarSiguienteEnCola();
+    };
+
+    const fallarSubida = function(msg) {
+        docItem.xhr = null;
+        docItem.estado = 'error';
+        docItem.errorMsg = msg;
+        docItem.data.titulo = '';
+        docItem.data.archivo_pdf = '';
+        if (documentoSeleccionadoIndex === index) {
+            limpiarCamposFormularioSilencioso();
+        }
+        renderizarColaUI();
+        extraccionEnCurso = false;
+        procesarSiguienteEnCola();
+    };
+
+    if (totalSize > CHUNK_SIZE) {
+        const totalChunks = Math.ceil(totalSize / CHUNK_SIZE);
+        const uploadId = docItem.id + '_' + Date.now();
+        let currentChunk = 0;
+
+        const enviarSiguienteChunk = function() {
+            const start = currentChunk * CHUNK_SIZE;
+            const end = Math.min(totalSize, start + CHUNK_SIZE);
+            const blobChunk = file.slice(start, end);
+
+            const formData = new FormData();
+            formData.append('archivo_pst', blobChunk, file.name);
+            formData.append('chunk_index', currentChunk);
+            formData.append('total_chunks', totalChunks);
+            formData.append('upload_id', uploadId);
+            formData.append('original_name', file.name);
+            formData.append('total_size', totalSize);
+            formData.append('csrf_token', window.CSRF_TOKEN || '');
+
+            const xhr = new XMLHttpRequest();
+            docItem.xhr = xhr;
+            xhr.open('POST', '?ruta=agregar-documento&accion=extraer', true);
+            xhr.setRequestHeader('X-CSRF-Token', window.CSRF_TOKEN || '');
+
+            xhr.upload.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    const bytesSubidos = start + e.loaded;
+                    const pct = Math.min(99, Math.round((bytesSubidos / totalSize) * 100));
+                    docItem.progresoPct = pct;
+                    if (currentChunk + 1 === totalChunks && e.loaded >= e.total) {
+                        docItem.faseMsg = 'Analizando texto...';
+                    } else {
+                        docItem.faseMsg = `Subiendo (${pct}%)...`;
+                    }
+                    renderizarColaUI();
+                }
+            };
+
+            xhr.onload = function() {
+                docItem.xhr = null;
+                if (xhr.status !== 200) {
+                    fallarSubida('Error en el servidor (' + xhr.status + ').');
+                    return;
+                }
+                let response;
+                try {
+                    response = JSON.parse(xhr.responseText);
+                } catch (jsonErr) {
+                    console.error("Error parseando respuesta JSON del servidor:", jsonErr, xhr.responseText);
+                    fallarSubida('Respuesta inválida del servidor.');
+                    return;
+                }
+
+                if (response.status === 'chunk_ok') {
+                    currentChunk++;
+                    if (currentChunk < totalChunks) {
+                        enviarSiguienteChunk();
+                    }
+                } else {
+                    finalizarConRespuesta(response);
+                }
+            };
+
+            xhr.onerror = function() {
+                fallarSubida('Error de conexión de red durante la subida por fragmentos.');
+            };
+
+            xhr.send(formData);
+        };
+
+        enviarSiguienteChunk();
+        return;
+    }
+
     const formData = new FormData();
-    formData.append('archivo_pst', docItem.file);
+    formData.append('archivo_pst', file);
     formData.append('csrf_token', window.CSRF_TOKEN || '');
 
     const xhr = new XMLHttpRequest();
@@ -1167,77 +1296,17 @@ function subirYExtraerDatos(docItem, index) {
                 response = JSON.parse(xhr.responseText);
             } catch (jsonErr) {
                 console.error("Error parseando respuesta JSON del servidor:", jsonErr, xhr.responseText);
-                docItem.estado = 'error';
-                docItem.errorMsg = 'Respuesta inválida del servidor.';
-                docItem.data.titulo = '';
-                docItem.data.archivo_pdf = '';
-                if (documentoSeleccionadoIndex === index) {
-                    limpiarCamposFormularioSilencioso();
-                }
-                renderizarColaUI();
-                extraccionEnCurso = false;
-                procesarSiguienteEnCola();
+                fallarSubida('Respuesta inválida del servidor.');
                 return;
             }
-
-            if (response.status === 'success') {
-                docItem.estado = 'listo';
-                docItem.errorMsg = '';
-                docItem.progresoPct = 100;
-                docItem.faseMsg = 'Listo';
-                if (response.data) {
-                    Object.assign(docItem.data, response.data);
-                    if (response.data.ya_existe_en_bd) {
-                        docItem.advertencia = 'Ya existe un proyecto registrado con este título en el repositorio. Modifique el título antes de registrarlo.';
-                    } else {
-                        docItem.advertencia = '';
-                    }
-                }
-                try {
-                    // Si no había ningún documento seleccionado en el formulario, seleccionar este
-                    if (documentoSeleccionadoIndex === -1) {
-                        seleccionarDocumentoDeCola(index);
-                    } else if (documentoSeleccionadoIndex === index) {
-                        rellenarFormulario(docItem.data);
-                    }
-                } catch (renderErr) {
-                    console.error("Error al rellenar formulario:", renderErr);
-                }
-            } else {
-                docItem.estado = 'error';
-                docItem.errorMsg = response.message || 'Error en la extracción de metadatos.';
-                docItem.data.titulo = '';
-                docItem.data.archivo_pdf = '';
-                if (documentoSeleccionadoIndex === index) {
-                    limpiarCamposFormularioSilencioso();
-                }
-            }
+            finalizarConRespuesta(response);
         } else {
-            docItem.estado = 'error';
-            docItem.errorMsg = 'Error en el servidor (' + xhr.status + ').';
-            docItem.data.titulo = '';
-            docItem.data.archivo_pdf = '';
-            if (documentoSeleccionadoIndex === index) {
-                limpiarCamposFormularioSilencioso();
-            }
+            fallarSubida('Error en el servidor (' + xhr.status + ').');
         }
-        renderizarColaUI();
-        extraccionEnCurso = false;
-        procesarSiguienteEnCola();
     };
 
     xhr.onerror = function() {
-        docItem.xhr = null;
-        docItem.estado = 'error';
-        docItem.errorMsg = 'Error de conexión de red.';
-        docItem.data.titulo = '';
-        docItem.data.archivo_pdf = '';
-        if (documentoSeleccionadoIndex === index) {
-            limpiarCamposFormularioSilencioso();
-        }
-        renderizarColaUI();
-        extraccionEnCurso = false;
-        procesarSiguienteEnCola();
+        fallarSubida('Error de conexión de red.');
     };
 
     xhr.send(formData);
@@ -2099,7 +2168,11 @@ function abrirModalPrevisualizacionDocumento() {
     // Caso 1: Documento activo en la cola de procesamiento por lote
     if (documentoSeleccionadoIndex >= 0 && documentosEnCola[documentoSeleccionadoIndex]) {
         const item = documentosEnCola[documentoSeleccionadoIndex];
-        if (item.file) {
+        const isLegacyDoc = item.nombreArchivo && item.nombreArchivo.toLowerCase().endsWith('.doc');
+        if (isLegacyDoc && item.data && item.data.archivo_pdf) {
+            fileUrl = `?ruta=ver-pdf-pst&file=${encodeURIComponent(item.data.archivo_pdf)}`;
+            fileName = item.nombreArchivo;
+        } else if (item.file && !isLegacyDoc) {
             fileUrl = URL.createObjectURL(item.file);
             fileName = item.nombreArchivo;
             if (item.nombreArchivo.toLowerCase().endsWith('.docx')) isDocx = true;
@@ -2113,9 +2186,15 @@ function abrirModalPrevisualizacionDocumento() {
     // Caso 2: Archivo recién seleccionado localmente por el usuario
     else if (fileInput && fileInput.files && fileInput.files.length > 0) {
         const file = fileInput.files[0];
-        fileUrl = URL.createObjectURL(file);
-        fileName = file.name;
-        if (file.name.toLowerCase().endsWith('.docx')) isDocx = true;
+        const isLegacyDoc = file.name.toLowerCase().endsWith('.doc');
+        if (isLegacyDoc && pdfHidden && pdfHidden.value) {
+            fileUrl = `?ruta=ver-pdf-pst&file=${encodeURIComponent(pdfHidden.value)}`;
+            fileName = file.name;
+        } else {
+            fileUrl = URL.createObjectURL(file);
+            fileName = file.name;
+            if (file.name.toLowerCase().endsWith('.docx')) isDocx = true;
+        }
     } 
     // Caso 3: Documento en edición o registrado en la base de datos
     else if (pdfHidden && pdfHidden.value) {

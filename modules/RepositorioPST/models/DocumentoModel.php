@@ -2,6 +2,7 @@
 // modules/RepositorioPST/models/DocumentoModel.php
 require_once CORE_PATH . 'Database/Connection.php';
 require_once CORE_PATH . 'Database/QueryBuilder.php';
+require_once __DIR__ . '/../services/ConfigService.php';
 
 class DocumentoModel {
 
@@ -148,8 +149,11 @@ class DocumentoModel {
             $execParams[] = (int)$filtros['anio'];
         }
         
-        if (!empty($filtros['orden']) && $filtros['orden'] === 'asc') {
+        $orden = !empty($filtros['orden']) ? strtolower(trim($filtros['orden'])) : strtolower(trim((string)ConfigService::get('buscador.orden_predeterminado', 'anio_desc')));
+        if ($orden === 'asc' || $orden === 'anio_asc') {
             $sql .= " ORDER BY r.anio_publicacion ASC, r.id ASC LIMIT ? OFFSET ?";
+        } elseif ($orden === 'titulo_asc') {
+            $sql .= " ORDER BY r.titulo ASC, r.id DESC LIMIT ? OFFSET ?";
         } else {
             $sql .= " ORDER BY r.anio_publicacion DESC, r.id DESC LIMIT ? OFFSET ?";
         }
@@ -193,7 +197,7 @@ class DocumentoModel {
                 LEFT JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
                 LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
                 LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
-                WHERE r.id_tipo_recurso = 1 AND r.id != ?";
+                WHERE r.id_tipo_recurso = 1 AND COALESCE(dp.activo, true) = true AND r.id != ?";
         $params = [$idRecursoActual];
         if ($lineaId) {
             $sql .= " AND rc.id_linea_investigacion = ?";
@@ -216,6 +220,7 @@ class DocumentoModel {
                 FROM public.recursos r
                 JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
                 WHERE r.id_tipo_recurso = 1 
+                  AND COALESCE(dp.activo, true) = true
                   AND dp.comunidad_beneficiada IS NOT NULL 
                   AND TRIM(LOWER(dp.comunidad_beneficiada)) = TRIM(LOWER(?))";
         $params = [$comunidad];
@@ -240,6 +245,7 @@ class DocumentoModel {
                 LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
                 LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
                 WHERE r.id_tipo_recurso = 1 
+                  AND COALESCE(dp.activo, true) = true
                   AND r.id != ? 
                   AND dp.comunidad_beneficiada IS NOT NULL 
                   AND TRIM(LOWER(dp.comunidad_beneficiada)) = TRIM(LOWER(?))
@@ -771,7 +777,7 @@ class DocumentoModel {
 
     public function getPSTCountByLinea(?int $carreraId = null): array {
         $db = Connection::getInstance();
-        $sql = "SELECT li.id, li.nombre, li.descripcion, COUNT(DISTINCT r.id) AS total
+        $sql = "SELECT li.id, li.nombre, li.descripcion, COUNT(DISTINCT CASE WHEN COALESCE(dp.activo, true) = true THEN r.id ELSE NULL END) AS total
                 FROM public.lineas_investigacion li
                 LEFT JOIN public.recurso_clasificaciones rc ON li.id = rc.id_linea_investigacion
                 LEFT JOIN public.recursos r ON rc.id_recurso = r.id AND r.id_tipo_recurso = 1
@@ -808,7 +814,7 @@ class DocumentoModel {
                 LEFT JOIN public.trayectos t ON dp.id_trayecto = t.id
                 LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
                 LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
-                WHERE r.id_tipo_recurso = 1";
+                WHERE r.id_tipo_recurso = 1 AND COALESCE(dp.activo, true) = true";
         $params = [];
         if ($carreraId !== null && $carreraId > 0) {
             $sql .= " AND COALESCE(dp.id_carrera, li.id_carrera) = ?";
@@ -1012,8 +1018,13 @@ class DocumentoModel {
                             }
                         }
                         if (!$autorId) {
-                            $stmt = $db->prepare("INSERT INTO public.autores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
-                            $stmt->execute([$nom, $ced]);
+                            if (!empty($ced)) {
+                                $stmt = $db->prepare("INSERT INTO public.autores (nombre_completo, cedula) VALUES (?, ?) ON CONFLICT (cedula) DO UPDATE SET nombre_completo = EXCLUDED.nombre_completo RETURNING id");
+                                $stmt->execute([$nom, $ced]);
+                            } else {
+                                $stmt = $db->prepare("INSERT INTO public.autores (nombre_completo, cedula) VALUES (?, NULL) RETURNING id");
+                                $stmt->execute([$nom]);
+                            }
                             $autorId = $stmt->fetchColumn();
                         }
                         if ($autorId) {
@@ -1191,8 +1202,10 @@ class DocumentoModel {
                     if ($nom !== '') {
                         $autorId = null;
                         if ($ced) {
-                            $stmt = $db->prepare("SELECT id FROM public.autores WHERE cedula = ?");
-                            $stmt->execute([$ced]);
+                            $cleanCed = trim($ced);
+                            $soloDigitos = preg_replace('/\D/', '', $cleanCed);
+                            $stmt = $db->prepare("SELECT id FROM public.autores WHERE LOWER(TRIM(cedula)) IN (LOWER(?), LOWER(?), LOWER(?), LOWER(?)) LIMIT 1");
+                            $stmt->execute([$cleanCed, $soloDigitos, 'V-' . $soloDigitos, 'E-' . $soloDigitos]);
                             $autorId = $stmt->fetchColumn();
                         }
                         if (!$autorId) {
@@ -1201,8 +1214,13 @@ class DocumentoModel {
                             $autorId = $stmt->fetchColumn();
                         }
                         if (!$autorId) {
-                            $stmt = $db->prepare("INSERT INTO public.autores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
-                            $stmt->execute([$nom, $ced]);
+                            if (!empty($ced)) {
+                                $stmt = $db->prepare("INSERT INTO public.autores (nombre_completo, cedula) VALUES (?, ?) ON CONFLICT (cedula) DO UPDATE SET nombre_completo = EXCLUDED.nombre_completo RETURNING id");
+                                $stmt->execute([$nom, $ced]);
+                            } else {
+                                $stmt = $db->prepare("INSERT INTO public.autores (nombre_completo, cedula) VALUES (?, NULL) RETURNING id");
+                                $stmt->execute([$nom]);
+                            }
                             $autorId = $stmt->fetchColumn();
                         }
                         if ($autorId) {
@@ -1233,8 +1251,10 @@ class DocumentoModel {
                     $tutorId = null;
                     
                     if ($cedula) {
-                        $stmt = $db->prepare("SELECT id FROM public.tutores WHERE cedula = ?");
-                        $stmt->execute([$cedula]);
+                        $cleanCed = trim($cedula);
+                        $soloDigitos = preg_replace('/\D/', '', $cleanCed);
+                        $stmt = $db->prepare("SELECT id FROM public.tutores WHERE LOWER(TRIM(cedula)) IN (LOWER(?), LOWER(?), LOWER(?), LOWER(?)) LIMIT 1");
+                        $stmt->execute([$cleanCed, $soloDigitos, 'V-' . $soloDigitos, 'E-' . $soloDigitos]);
                         $tutorId = $stmt->fetchColumn();
                     }
                     if (!$tutorId) {
@@ -1243,8 +1263,13 @@ class DocumentoModel {
                         $tutorId = $stmt->fetchColumn();
                     }
                     if (!$tutorId) {
-                        $stmt = $db->prepare("INSERT INTO public.tutores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
-                        $stmt->execute([$nombre, $cedula]);
+                        if (!empty($cedula)) {
+                            $stmt = $db->prepare("INSERT INTO public.tutores (nombre_completo, cedula) VALUES (?, ?) ON CONFLICT (cedula) DO UPDATE SET nombre_completo = EXCLUDED.nombre_completo RETURNING id");
+                            $stmt->execute([$nombre, $cedula]);
+                        } else {
+                            $stmt = $db->prepare("INSERT INTO public.tutores (nombre_completo, cedula) VALUES (?, NULL) RETURNING id");
+                            $stmt->execute([$nombre]);
+                        }
                         $tutorId = $stmt->fetchColumn();
                     }
                     if ($tutorId) {
@@ -1305,6 +1330,9 @@ class DocumentoModel {
 
             $db->beginTransaction();
             
+            $stmt = $db->prepare("DELETE FROM public.proyecto_carreras_vinculadas WHERE id_recurso = ?");
+            $stmt->execute([$id]);
+
             $stmt = $db->prepare("DELETE FROM public.proyecto_tutores WHERE id_recurso = ?");
             $stmt->execute([$id]);
             
@@ -1400,7 +1428,7 @@ class DocumentoModel {
                 LEFT JOIN public.trayectos t ON dp.id_trayecto = t.id
                 LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
                 LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
-                WHERE r.id_tipo_recurso = 1";
+                WHERE r.id_tipo_recurso = 1 AND COALESCE(dp.activo, true) = true";
         
         $params = [];
         if (is_numeric($filtros)) {
@@ -1453,13 +1481,18 @@ class DocumentoModel {
         $stmt->execute($params);
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
                        
+        $minYear = (int)ConfigService::get('buscador.anio_minimo_histograma', 2018);
+        if ($minYear < 2000 || $minYear > (int)date('Y')) {
+            $minYear = 2018;
+        }
+        $maxYear = max((int)date('Y'), 2026);
         $counts = [];
-        for ($y = 2018; $y <= 2026; $y++) {
+        for ($y = $minYear; $y <= $maxYear; $y++) {
             $counts[$y] = 0;
         }
         foreach ($results as $row) {
             $year = (int)$row['anio_publicacion'];
-            if ($year >= 2018 && $year <= 2026) {
+            if ($year >= $minYear && $year <= $maxYear) {
                 $counts[$year] = (int)$row['total'];
             }
         }
@@ -1486,7 +1519,8 @@ class DocumentoModel {
            ->join('public.recurso_clasificaciones rc', 'r.id = rc.id_recurso', 'LEFT')
            ->join('public.lineas_investigacion li', 'rc.id_linea_investigacion = li.id', 'LEFT')
            ->join('public.dimensiones_operativas dims', 'rc.id_dimension_operativa = dims.id', 'LEFT')
-           ->where('r.id_tipo_recurso', '=', 1);
+           ->where('r.id_tipo_recurso', '=', 1)
+           ->whereRaw('COALESCE(dp.activo, true) = true');
            
         if (!empty($query)) {
             $keywords = self::extraerPalabrasClave($query);
@@ -1523,8 +1557,16 @@ class DocumentoModel {
             $qb->where('rc.id_dimension_operativa', '=', (int)$filtros['dimension_id']);
         }
         
-        $results = $qb->orderBy('r.id', 'DESC')
-                      ->limit($limit)
+        $orden = !empty($filtros['orden']) ? strtolower(trim($filtros['orden'])) : strtolower(trim((string)ConfigService::get('buscador.orden_predeterminado', 'anio_desc')));
+        if ($orden === 'asc' || $orden === 'anio_asc') {
+            $qb->orderBy('r.anio_publicacion', 'ASC');
+        } elseif ($orden === 'titulo_asc') {
+            $qb->orderBy('r.titulo', 'ASC');
+        } else {
+            $qb->orderBy('r.anio_publicacion', 'DESC');
+        }
+        
+        $results = $qb->limit($limit)
                       ->offset($offset)
                       ->get();
                       
@@ -1537,7 +1579,8 @@ class DocumentoModel {
            ->join('public.detalles_proyectos dp', 'r.id = dp.id_recurso', 'LEFT')
            ->join('public.recurso_clasificaciones rc', 'r.id = rc.id_recurso', 'LEFT')
            ->join('public.lineas_investigacion li', 'rc.id_linea_investigacion = li.id', 'LEFT')
-           ->where('r.id_tipo_recurso', '=', 1);
+           ->where('r.id_tipo_recurso', '=', 1)
+           ->whereRaw('COALESCE(dp.activo, true) = true');
            
         if (!empty($query)) {
             $keywords = self::extraerPalabrasClave($query);
@@ -1633,6 +1676,7 @@ class DocumentoModel {
 
             $whereClauses = [
                 'r.id_tipo_recurso = 1',
+                'COALESCE(dp.activo, true) = true',
                 'dp.vector_semantico IS NOT NULL',
                 '(dp.vector_semantico <=> ?) < 0.85'
             ];

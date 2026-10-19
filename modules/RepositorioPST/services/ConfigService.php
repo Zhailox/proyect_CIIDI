@@ -49,7 +49,7 @@ class ConfigService {
     }
 
     /**
-     * Guarda la configuración completa en el archivo JSON.
+     * Guarda la configuración completa en el archivo JSON y sincroniza los límites de PHP/Apache (.htaccess y .user.ini).
      */
     public static function save(array $data): bool {
         $path = self::getPath();
@@ -57,8 +57,77 @@ class ConfigService {
         $success = file_put_contents($path, $jsonContent, LOCK_EX) !== false;
         if ($success) {
             self::$cachedData = $data;
+            self::sincronizarEntornoServidor($data);
         }
         return $success;
+    }
+
+    /**
+     * Aplica directivas PHP modificables en tiempo de ejecución (PHP_INI_ALL) en cualquier servidor.
+     */
+    public static function aplicarDirectivasRuntime(): void {
+        $maxMb = max(20, (int)self::get('archivos.max_size_mb', 200));
+        $memMb = max(512, (int)ceil($maxMb * 2.5));
+        @ini_set('memory_limit', $memMb . 'M');
+        @ini_set('max_execution_time', '300');
+        @ini_set('max_input_time', '300');
+    }
+
+    /**
+     * Sincroniza de forma portable los archivos .user.ini (FastCGI/FPM/IIS/Nginx) y .htaccess (Apache mod_php)
+     * dentro del proyecto para que el servidor respete el tamaño máximo configurado sin editar php.ini global.
+     */
+    public static function sincronizarEntornoServidor(?array $data = null): void {
+        $cfg = $data ?? (self::get() ?: []);
+        $maxMb = max(20, (int)($cfg['archivos']['max_size_mb'] ?? 200));
+        $postMaxMb = $maxMb + 16;
+        $memMb = max(512, (int)ceil($maxMb * 2.5));
+
+        $base = defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 3);
+
+        // 1. Generar .user.ini en raíz y en public/ (para PHP-FPM, FastCGI, CGI, WAMP FastCGI, Cloud)
+        $userIniContent = "; Autogenerado por ConfigService (CIIDI - RepositorioPST)\n"
+            . "upload_max_filesize = {$maxMb}M\n"
+            . "post_max_size = {$postMaxMb}M\n"
+            . "memory_limit = {$memMb}M\n"
+            . "max_execution_time = 300\n"
+            . "max_input_time = 300\n";
+
+        @file_put_contents($base . '/.user.ini', $userIniContent, LOCK_EX);
+        if (is_dir($base . '/public')) {
+            @file_put_contents($base . '/public/.user.ini', $userIniContent, LOCK_EX);
+        }
+
+        // 2. Actualizar bloque seguro en .htaccess y public/.htaccess (para Apache mod_php)
+        $htaccessBlock = "# BEGIN CIIDI_PHP_LIMITS\n"
+            . "<IfModule php_module>\n"
+            . "    php_value upload_max_filesize {$maxMb}M\n"
+            . "    php_value post_max_size {$postMaxMb}M\n"
+            . "    php_value memory_limit {$memMb}M\n"
+            . "    php_value max_execution_time 300\n"
+            . "    php_value max_input_time 300\n"
+            . "</IfModule>\n"
+            . "<IfModule mod_php.c>\n"
+            . "    php_value upload_max_filesize {$maxMb}M\n"
+            . "    php_value post_max_size {$postMaxMb}M\n"
+            . "    php_value memory_limit {$memMb}M\n"
+            . "    php_value max_execution_time 300\n"
+            . "    php_value max_input_time 300\n"
+            . "</IfModule>\n"
+            . "# END CIIDI_PHP_LIMITS";
+
+        foreach ([$base . '/.htaccess', $base . '/public/.htaccess'] as $htFile) {
+            if (is_file($htFile) && is_writable($htFile)) {
+                $curr = file_get_contents($htFile);
+                if ($curr === false) continue;
+                if (preg_match('/# BEGIN CIIDI_PHP_LIMITS.*?# END CIIDI_PHP_LIMITS/s', $curr)) {
+                    $newHt = preg_replace('/# BEGIN CIIDI_PHP_LIMITS.*?# END CIIDI_PHP_LIMITS/s', $htaccessBlock, $curr);
+                } else {
+                    $newHt = rtrim($curr) . "\n\n" . $htaccessBlock . "\n";
+                }
+                @file_put_contents($htFile, $newHt, LOCK_EX);
+            }
+        }
     }
 
     /**

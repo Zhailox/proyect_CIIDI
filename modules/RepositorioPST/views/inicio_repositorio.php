@@ -744,7 +744,7 @@ mark, .highlight-match {
                                             <?php if (ConfigService::puedeDescargarDocumento($doc['archivo_pdf'] ?? null)): ?>
                                                 <a href="?ruta=ver-pdf-pst&id=<?= $doc['id'] ?>&download=1" class="ag-page-link" style="padding: 4px 8px; color: #166534;" title="Descargar Documento" target="_blank" download><i class="ph-bold ph-download-simple"></i></a>
                                             <?php endif; ?>
-                                            <button type="button" class="ag-page-link" style="padding: 4px 8px; cursor: pointer;" title="Citar" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($doc['titulo'])) ?>, <?= htmlspecialchars(json_encode($doc['autores_nombres'] ?? 'Autores Varios')) ?>, <?= $doc['anio_publicacion'] ?>)"><i class="ph-bold ph-quotes"></i></button>
+                                            <button type="button" class="ag-page-link" style="padding: 4px 8px; cursor: pointer;" title="Citar" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($doc['titulo'])) ?>, <?= htmlspecialchars(json_encode($doc['autores_nombres'] ?? 'Autores Varios')) ?>, <?= (int)$doc['anio_publicacion'] ?>, <?= htmlspecialchars(json_encode($doc['carrera_nombre'] ?? 'PNF en Informática')) ?>)"><i class="ph-bold ph-quotes"></i></button>
                                         </div>
                                     </td>
                                 </tr>
@@ -1103,7 +1103,7 @@ function cargarMasProyectosLazy() {
 
 // Modal Citas
 const configuracionesCitas = <?= json_encode(ConfigService::get('citas.estilos', [])) ?>;
-function abrirModalCita(titulo, autores, anio) {
+function abrirModalCita(titulo, autores, anio, carrera) {
     const listEl = document.getElementById('listaCitasDinamicas');
     if (!listEl) return;
     listEl.innerHTML = '';
@@ -1112,7 +1112,7 @@ function abrirModalCita(titulo, autores, anio) {
         '{autores}': autores || 'Autores Varios',
         '{anio}': anio || 's.f.',
         '{titulo}': titulo || 'Proyecto Socio-Tecnológico',
-        '{carrera}': 'PNF en Informática'
+        '{carrera}': carrera || 'PNF en Informática'
     };
     
     let count = 0;

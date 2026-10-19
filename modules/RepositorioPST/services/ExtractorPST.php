@@ -1280,6 +1280,14 @@ class ExtractorPST {
             $autores[] = ['nombre' => '', 'cedula' => ''];
         }
 
+        $maxTutores = max(1, (int)ConfigService::get('limites_equipo.max_tutores', 3));
+        if ($maxTutores < 2) {
+            $tutores['institucional'] = ['nombre' => '', 'cedula' => ''];
+        }
+        if ($maxTutores < 3) {
+            $tutores['comunitario'] = ['nombre' => '', 'cedula' => ''];
+        }
+
         return ['autores' => $autores, 'tutores' => $tutores];
     }
 

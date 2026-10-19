@@ -49,7 +49,7 @@
         "nivel_minimo_descarga": 998
     },
     "archivos": {
-        "max_size_mb": 60,
+        "max_size_mb": 200,
         "max_archivos_lote": 5,
         "max_paginas_analisis": 35,
         "max_xml_descomprimido_mb": 25,

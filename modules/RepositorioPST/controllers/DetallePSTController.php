@@ -41,6 +41,7 @@ class DetallePSTController {
             'trayecto'        => !empty($_GET['trayecto']) ? trim($_GET['trayecto']) : null,
             'comunidad'       => !empty($_GET['comunidad']) ? trim($_GET['comunidad']) : null,
             'anio'            => !empty($_GET['anio']) ? (int)$_GET['anio'] : null,
+            'orden'           => !empty($_GET['orden']) ? trim($_GET['orden']) : ConfigService::get('buscador.orden_predeterminado', 'anio_desc'),
         ];
         
         // Cargar los documentos filtrados y paginados
@@ -385,6 +386,7 @@ class DetallePSTController {
                   </body></html>";
             exit;
         } elseif ($ext === 'doc') {
+            $mostrarToolbar = (bool)ConfigService::get('visor_pdf.mostrar_toolbar', true);
             require_once __DIR__ . '/../services/ExtractorPST.php';
             $docText = '';
             try {
@@ -408,17 +410,38 @@ class DetallePSTController {
                   <title>" . htmlspecialchars($safeFilename) . "</title>
                   <style>
                     body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 0; line-height: 1.65; }
-                    .doc-toolbar { position: sticky; top: 0; z-index: 100; background: #ffffff; border-bottom: 1px solid #cbd5e1; padding: 0.5rem 1rem; display: flex; justify-content: space-between; align-items: center; }
-                    .paper-container { max-width: 860px; margin: 1.5rem auto 3rem auto; background: #ffffff; padding: 2.5rem 3rem; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
+                    .doc-toolbar { position: sticky; top: 0; z-index: 100; background: #ffffff; border-bottom: 1px solid #cbd5e1; padding: 0.5rem 1rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+                    .doc-toolbar-btn { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 0.35rem 0.65rem; font-size: 0.8rem; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; }
+                    .doc-toolbar-btn:hover { background: #e2e8f0; color: #002244; }
+                    .paper-container { max-width: 860px; margin: " . ($mostrarToolbar ? "1rem auto 3rem auto" : "1.5rem auto") . "; background: #ffffff; padding: 2.5rem 3rem; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; transition: transform 0.2s ease; transform-origin: top center; word-break: break-word; }
                     .paper-container p { margin-bottom: 0.9rem; text-align: justify; font-size: 0.95rem; }
-                  </style></head><body>
-                  <div class='doc-toolbar'>
-                    <div style='display:flex; align-items:center; gap:0.5rem;'>
-                        <span style='background:rgba(112, 144, 203, 0.15); color:#505984; padding:0.25rem 0.55rem; border-radius:4px; font-size:0.75rem; font-weight:700;'>Word Legacy (.doc)</span>
-                        <span style='font-size:0.8rem; color:#64748b; font-weight:600;'>" . htmlspecialchars($safeFilename) . "</span>
-                    </div>
-                  </div>
-                  <div class='paper-container'>{$paragraphsHtml}</div>
+                    @media print { .doc-toolbar { display: none !important; } body { padding: 0; background: #fff; } .paper-container { box-shadow: none; border: none; padding: 0; max-width: 100%; } }
+                  </style></head><body>";
+            if ($mostrarToolbar) {
+                echo "<div class='doc-toolbar'>
+                        <div style='display:flex; align-items:center; gap:0.5rem;'>
+                            <span style='background:rgba(112, 144, 203, 0.15); color:#505984; padding:0.25rem 0.55rem; border-radius:4px; font-size:0.75rem; font-weight:700;'>Word Legacy (.doc)</span>
+                            <span style='font-size:0.8rem; color:#64748b; font-weight:600;'>" . htmlspecialchars($safeFilename) . "</span>
+                        </div>
+                        <div style='display:flex; gap:0.4rem; align-items:center;'>
+                            <button type='button' class='doc-toolbar-btn' onclick='ajustarZoom(-0.1)' title='Reducir zoom'>−</button>
+                            <span id='zoomIndicator' style='font-size:0.78rem; font-weight:700; color:#475569; min-width:40px; text-align:center;'>100%</span>
+                            <button type='button' class='doc-toolbar-btn' onclick='ajustarZoom(0.1)' title='Aumentar zoom'>+</button>
+                            <button type='button' class='doc-toolbar-btn' onclick='window.print()' title='Imprimir documento'>Imprimir</button>
+                        </div>
+                      </div>";
+            }
+            echo "<div class='paper-container' id='paperContent'>{$paragraphsHtml}</div>
+                  <script>
+                    let nivelZoom = 1.0;
+                    function ajustarZoom(delta) {
+                        nivelZoom = Math.min(1.8, Math.max(0.6, Math.round((nivelZoom + delta) * 10) / 10));
+                        const p = document.getElementById('paperContent');
+                        if (p) p.style.transform = 'scale(' + nivelZoom + ')';
+                        const zInd = document.getElementById('zoomIndicator');
+                        if (zInd) zInd.innerText = Math.round(nivelZoom * 100) + '%';
+                    }
+                  </script>
                   </body></html>";
             exit;
         } else {
@@ -512,7 +535,7 @@ class DetallePSTController {
             }
         }
         
-        // 0. Procesar Acción: EXTRAER METADATOS DE ARCHIVOS Y GUARDAR ARCHIVO (AJAX)
+        // 0. Procesar Acción: EXTRAER METADATOS DE ARCHIVOS Y GUARDAR ARCHIVO (AJAX, soporta subida directa o por fragmentos / chunks)
         if ($accion === 'extraer' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Content-Type: application/json; charset=utf-8');
             try {
@@ -531,33 +554,76 @@ class DetallePSTController {
                     throw new Exception($msgError);
                 }
 
-                // Validar tamaño máximo configurado y permitido por el servidor
-                $parseIniToMb = function(?string $str): float {
-                    if (empty($str)) return 2.0;
-                    $str = trim($str);
-                    $unit = strtolower($str[strlen($str) - 1] ?? '');
-                    $num = (float)$str;
-                    switch ($unit) {
-                        case 'g': return $num * 1024;
-                        case 'm': return $num;
-                        case 'k': return $num / 1024;
-                        default: return $num / (1024 * 1024);
-                    }
-                };
                 $configMaxMb = (float)ConfigService::get('archivos.max_size_mb', 100);
-                $phpUploadMaxMb = $parseIniToMb(ini_get('upload_max_filesize'));
-                $phpPostMaxMb = $parseIniToMb(ini_get('post_max_size'));
-                $maxMb = round(min($configMaxMb, $phpUploadMaxMb, $phpPostMaxMb), 2);
+                $maxMb = round($configMaxMb, 2);
                 $maxBytes = $maxMb * 1024 * 1024;
-                if ($_FILES['archivo_pst']['size'] > $maxBytes) {
-                    throw new Exception("El archivo excede el tamaño máximo permitido ({$maxMb} MB).");
+
+                $isChunked = isset($_POST['chunk_index'], $_POST['total_chunks'], $_POST['upload_id']);
+                $isAssembledFile = false;
+
+                if ($isChunked) {
+                    $chunkIndex = (int)$_POST['chunk_index'];
+                    $totalChunks = max(1, (int)$_POST['total_chunks']);
+                    $uploadId = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)$_POST['upload_id']);
+                    $originalName = !empty($_POST['original_name']) ? trim((string)$_POST['original_name']) : $_FILES['archivo_pst']['name'];
+                    $totalSize = isset($_POST['total_size']) ? (float)$_POST['total_size'] : 0;
+
+                    if ($totalSize > $maxBytes) {
+                        throw new Exception("El archivo excede el tamaño máximo permitido ({$maxMb} MB).");
+                    }
+
+                    $extCheck = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+                    if (!in_array($extCheck, ['pdf', 'docx', 'doc'], true)) {
+                        throw new Exception("Formato de archivo no soportado. Debe ser un archivo PDF o Word (.docx / .doc).");
+                    }
+
+                    $partFile = $tmpDir . 'part_' . $uploadId . '.' . $extCheck;
+                    if ($chunkIndex === 0 && file_exists($partFile)) {
+                        @unlink($partFile);
+                    }
+
+                    $inStream = @fopen($_FILES['archivo_pst']['tmp_name'], 'rb');
+                    $outStream = @fopen($partFile, $chunkIndex === 0 ? 'wb' : 'ab');
+                    if (!$inStream || !$outStream) {
+                        if ($inStream) @fclose($inStream);
+                        if ($outStream) @fclose($outStream);
+                        throw new Exception("No se pudo ensamblar el fragmento temporal en el servidor.");
+                    }
+                    stream_copy_to_stream($inStream, $outStream);
+                    fclose($inStream);
+                    fclose($outStream);
+
+                    if ((float)@filesize($partFile) > $maxBytes) {
+                        @unlink($partFile);
+                        throw new Exception("El archivo ensamblado excede el tamaño máximo permitido ({$maxMb} MB).");
+                    }
+
+                    // Si aún faltan fragmentos por subir, confirmar recepción del fragmento actual
+                    if ($chunkIndex + 1 < $totalChunks) {
+                        while (ob_get_level()) ob_end_clean();
+                        echo json_encode([
+                            'status'      => 'chunk_ok',
+                            'chunk_index' => $chunkIndex
+                        ], JSON_UNESCAPED_UNICODE);
+                        exit;
+                    }
+
+                    // Último fragmento recibido: archivo completo listo para procesar
+                    $fileTmpPath = $partFile;
+                    $fileName = $originalName;
+                    $isAssembledFile = true;
+                } else {
+                    if ($_FILES['archivo_pst']['size'] > $maxBytes) {
+                        throw new Exception("El archivo excede el tamaño máximo permitido ({$maxMb} MB).");
+                    }
+                    $fileTmpPath = $_FILES['archivo_pst']['tmp_name'];
+                    $fileName = $_FILES['archivo_pst']['name'];
                 }
 
-                $fileTmpPath = $_FILES['archivo_pst']['tmp_name'];
-                $fileName = $_FILES['archivo_pst']['name'];
                 $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
                 if (!in_array($fileExtension, ['pdf', 'docx', 'doc'], true)) {
+                    if ($isAssembledFile && file_exists($fileTmpPath)) @unlink($fileTmpPath);
                     throw new Exception("Formato de archivo no soportado. Debe ser un archivo PDF o Word (.docx / .doc).");
                 }
 
@@ -581,6 +647,7 @@ class DetallePSTController {
                 ];
 
                 if (!in_array($mimeType, $allowedMimeTypes, true)) {
+                    if ($isAssembledFile && file_exists($fileTmpPath)) @unlink($fileTmpPath);
                     throw new Exception("El contenido binario del archivo no corresponde a un documento PDF o Word válido.");
                 }
 
@@ -589,6 +656,7 @@ class DetallePSTController {
                 $text = ExtractorPST::extraerTextoArchivo($fileTmpPath, $fileExtension);
 
                 if (empty(trim($text))) {
+                    if ($isAssembledFile && file_exists($fileTmpPath)) @unlink($fileTmpPath);
                     throw new Exception("No se pudo extraer texto del documento. Asegúrese de que el archivo no esté protegido o escaneado como imagen pura sin OCR.");
                 }
 
@@ -627,7 +695,11 @@ class DetallePSTController {
                 $savedFileName = 'tmp_pst_' . $slugTitle . '_' . time() . '_' . mt_rand(100, 999) . '.' . $fileExtension;
                 $targetFile = $tmpDir . $savedFileName;
                 
-                if (move_uploaded_file($fileTmpPath, $targetFile) || copy($fileTmpPath, $targetFile)) {
+                $movedOk = $isAssembledFile
+                    ? (@rename($fileTmpPath, $targetFile) || (@copy($fileTmpPath, $targetFile) && @unlink($fileTmpPath)))
+                    : (move_uploaded_file($fileTmpPath, $targetFile) || copy($fileTmpPath, $targetFile));
+
+                if ($movedOk) {
                     // Si es un archivo Word (.docx) pesado, optimizar sus imágenes internas para ahorrar espacio en el servidor
                     if ($fileExtension === 'docx') {
                         $datosExtraidos['optimizacion_archivo'] = ExtractorPST::optimizarArchivoDOCX($targetFile);
@@ -665,22 +737,8 @@ class DetallePSTController {
                     throw new Exception("Seleccione un archivo válido para simular la extracción.");
                 }
 
-                $parseIniToMb = function(?string $str): float {
-                    if (empty($str)) return 2.0;
-                    $str = trim($str);
-                    $unit = strtolower($str[strlen($str) - 1] ?? '');
-                    $num = (float)$str;
-                    switch ($unit) {
-                        case 'g': return $num * 1024;
-                        case 'm': return $num;
-                        case 'k': return $num / 1024;
-                        default: return $num / (1024 * 1024);
-                    }
-                };
                 $configMaxMb = (float)ConfigService::get('archivos.max_size_mb', 100);
-                $phpUploadMaxMb = $parseIniToMb(ini_get('upload_max_filesize'));
-                $phpPostMaxMb = $parseIniToMb(ini_get('post_max_size'));
-                $maxMb = round(min($configMaxMb, $phpUploadMaxMb, $phpPostMaxMb), 2);
+                $maxMb = round($configMaxMb, 2);
                 $maxBytes = $maxMb * 1024 * 1024;
                 if ($_FILES['archivo_pst']['size'] > $maxBytes) {
                     throw new Exception("El archivo excede el tamaño máximo permitido ({$maxMb} MB).");
