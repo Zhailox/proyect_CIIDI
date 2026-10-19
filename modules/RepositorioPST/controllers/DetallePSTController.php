@@ -481,12 +481,18 @@ class DetallePSTController {
         }
 
         // Si es petición AJAX, responder con JSON si no se tienen permisos en lugar de 302 redirect
-        if (in_array($accion, ['extraer', 'crear_ajax', 'simular_extraccion'])) {
-            if (!Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'RepositorioPST')) {
+        if (in_array($accion, ['extraer', 'crear_ajax', 'simular_extraccion', 'bulk_action', 'quick_edit', 'purgar_todo_pst', 'limpiar_temporales'], true)) {
+            $permisoRequerido = 'crear';
+            if ($accion === 'quick_edit') {
+                $permisoRequerido = 'editar';
+            } elseif (in_array($accion, ['purgar_todo_pst', 'limpiar_temporales'], true)) {
+                $permisoRequerido = 'eliminar';
+            }
+            if (!Auth::requierePrivilegioMinimo($this->nivelAdmin, $permisoRequerido, 'RepositorioPST', false)) {
                 header('Content-Type: application/json; charset=utf-8');
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'Sesión expirada o permisos insuficientes para realizar esta acción.'
+                    'message' => 'Tu sesión ha expirado o no cuentas con permisos para realizar esta acción.'
                 ], JSON_UNESCAPED_UNICODE);
                 exit;
             }
@@ -503,7 +509,7 @@ class DetallePSTController {
                     header('Content-Type: application/json; charset=utf-8');
                     echo json_encode([
                         'status' => 'error',
-                        'message' => 'Petición rechazada por seguridad: Token CSRF no válido o expirado.'
+                        'message' => 'La petición fue rechazada por seguridad. Recarga la página e intenta de nuevo.'
                     ], JSON_UNESCAPED_UNICODE);
                     exit;
                 }
@@ -1033,6 +1039,241 @@ class DetallePSTController {
             }
             exit;
         }
+
+        // 0.1b Procesar Acción: ACCIONES EN LOTE DESDE LA TABLA
+        if ($accion === 'bulk_action' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json; charset=utf-8');
+            try {
+                $rawBody = file_get_contents('php://input');
+                $payload = json_decode($rawBody, true);
+                if (!is_array($payload)) {
+                    $payload = $_POST;
+                }
+
+                $operacion = strtolower(trim((string)($payload['operacion'] ?? '')));
+                $ids = $payload['ids'] ?? [];
+                if (!is_array($ids)) {
+                    $ids = explode(',', (string)$ids);
+                }
+
+                if ($operacion === 'eliminar') {
+                    if (!Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'RepositorioPST', false)) {
+                        throw new Exception("No cuentas con permisos para eliminar proyectos.");
+                    }
+                } else {
+                    if (!Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'RepositorioPST', false)) {
+                        throw new Exception("No cuentas con permisos para modificar estos proyectos.");
+                    }
+                }
+
+                $res = $model->ejecutarAccionMasivaPST($ids, $operacion);
+                $cant = $res['procesados'] ?? 0;
+
+                $labelOp = 'actualizados';
+                if ($operacion === 'activar') $labelOp = 'visibles en el catálogo';
+                elseif ($operacion === 'ocultar') $labelOp = 'ocultados del público';
+                elseif ($operacion === 'eliminar') $labelOp = 'eliminados definitivamente';
+
+                AuditLogger::registrar('INFO', 'RepositorioPST', 'Acción por Lote', "Se procesaron {$cant} proyectos con la operación: {$operacion}.");
+
+                while (ob_get_level()) ob_end_clean();
+                echo json_encode([
+                    'status'  => 'success',
+                    'message' => "Listo. {$cant} proyectos quedaron {$labelOp}."
+                ], JSON_UNESCAPED_UNICODE);
+            } catch (\Throwable $e) {
+                while (ob_get_level()) ob_end_clean();
+                echo json_encode([
+                    'status'  => 'error',
+                    'message' => $e->getMessage()
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            exit;
+        }
+
+        // 0.1c Procesar Acción: EDICIÓN RÁPIDA DESDE LA TABLA
+        if ($accion === 'quick_edit' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json; charset=utf-8');
+            try {
+                $rawBody = file_get_contents('php://input');
+                $payload = json_decode($rawBody, true);
+                if (!is_array($payload)) {
+                    $payload = $_POST;
+                }
+
+                $idEdit = (int)($payload['id'] ?? 0);
+                if ($idEdit <= 0) {
+                    throw new Exception("No se indicó qué proyecto deseas actualizar.");
+                }
+
+                $model->actualizarRapidoPST($idEdit, $payload);
+                AuditLogger::registrar('INFO', 'RepositorioPST', 'Edición Rápida PST', "Proyecto #{$idEdit} actualizado desde la tabla rápida.");
+
+                while (ob_get_level()) ob_end_clean();
+                echo json_encode([
+                    'status'  => 'success',
+                    'message' => 'Los cambios del proyecto se guardaron correctamente.'
+                ], JSON_UNESCAPED_UNICODE);
+            } catch (\Throwable $e) {
+                while (ob_get_level()) ob_end_clean();
+                echo json_encode([
+                    'status'  => 'error',
+                    'message' => $e->getMessage()
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            exit;
+        }
+
+        // 0.1d Procesar Acción: LIMPIAR ARCHIVOS TEMPORALES HUÉRFANOS
+        if ($accion === 'limpiar_temporales' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json; charset=utf-8');
+            try {
+                $borrados = 0;
+                $bytesLiberados = 0;
+                if (is_dir($tmpDir)) {
+                    foreach (glob($tmpDir . '*') ?: [] as $archTmp) {
+                        if (is_file($archTmp) && basename($archTmp)[0] !== '.') {
+                            $bytesLiberados += (int)@filesize($archTmp);
+                            if (@unlink($archTmp)) {
+                                $borrados++;
+                            }
+                        }
+                    }
+                }
+                $mbLib = round($bytesLiberados / (1024 * 1024), 2);
+                AuditLogger::registrar('INFO', 'RepositorioPST', 'Limpieza de Temporales', "Se eliminaron {$borrados} archivos temporales liberando {$mbLib} MB.");
+
+                while (ob_get_level()) ob_end_clean();
+                echo json_encode([
+                    'status'  => 'success',
+                    'message' => $borrados > 0
+                        ? "Se limpiaron {$borrados} archivos temporales y se liberaron {$mbLib} MB en el servidor."
+                        : "La carpeta temporal ya estaba limpia."
+                ], JSON_UNESCAPED_UNICODE);
+            } catch (\Throwable $e) {
+                while (ob_get_level()) ob_end_clean();
+                echo json_encode([
+                    'status'  => 'error',
+                    'message' => $e->getMessage()
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            exit;
+        }
+
+        // 0.1e Procesar Acción: PURGAR TODOS LOS PST CON AUTENTICACIÓN SUPERADMIN
+        if ($accion === 'purgar_todo_pst' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json; charset=utf-8');
+            try {
+                $rawBody = file_get_contents('php://input');
+                $payload = json_decode($rawBody, true);
+                if (!is_array($payload)) {
+                    $payload = $_POST;
+                }
+
+                $cedulaSudo = trim((string)($payload['cedula_superadmin'] ?? ''));
+                $passwordSudo = (string)($payload['password_superadmin'] ?? '');
+                $frase = strtoupper(trim((string)($payload['frase_confirmacion'] ?? '')));
+                $conservarPersonas = isset($payload['conservar_personas']) ? (bool)$payload['conservar_personas'] : true;
+
+                if ($frase !== 'ELIMINAR TODO') {
+                    throw new Exception('Debes escribir exactamente la frase ELIMINAR TODO para confirmar.');
+                }
+
+                $sudoUser = $model->verificarCredencialesSuperAdmin($cedulaSudo, $passwordSudo);
+                if (!$sudoUser) {
+                    AuditLogger::registrar('WARNING', 'RepositorioPST', 'Intento Fallido de Purga Total', "Credenciales de SuperAdmin inválidas al intentar vaciar el catálogo de proyectos.");
+                    throw new Exception('Las credenciales ingresadas no son válidas o no pertenecen a una cuenta de SuperAdmin.');
+                }
+
+                $resultado = $model->purgarTodosLosPST($conservarPersonas);
+                $elim = $resultado['proyectos_eliminados'] ?? 0;
+                $mb = $resultado['mb_liberados'] ?? 0;
+
+                AuditLogger::registrar(
+                    'CRITICAL',
+                    'RepositorioPST',
+                    'Purga Total del Catálogo PST',
+                    "Catálogo vaciado con autorización de SuperAdmin {$sudoUser['nombre_completo']} con cédula {$sudoUser['cedula']}. Se eliminaron {$elim} proyectos y se liberaron {$mb} MB."
+                );
+
+                while (ob_get_level()) ob_end_clean();
+                echo json_encode([
+                    'status'  => 'success',
+                    'message' => "El catálogo fue vaciado por completo. Se eliminaron {$elim} proyectos y se liberaron {$mb} MB de espacio."
+                ], JSON_UNESCAPED_UNICODE);
+            } catch (\Throwable $e) {
+                while (ob_get_level()) ob_end_clean();
+                echo json_encode([
+                    'status'  => 'error',
+                    'message' => $e->getMessage()
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            exit;
+        }
+
+        // 0.1f Procesar Acción: EXPORTAR LISTADO ACTUAL A CSV
+        if ($accion === 'exportar_csv') {
+            $filtrosExp = [
+                'activo'        => 'todos',
+                'q'             => !empty($_GET['q']) ? trim($_GET['q']) : null,
+                'carrera_id'    => !empty($_GET['carrera_id']) ? (int)$_GET['carrera_id'] : null,
+                'trayecto'      => !empty($_GET['trayecto']) ? trim($_GET['trayecto']) : null,
+                'anio'          => !empty($_GET['anio']) ? (int)$_GET['anio'] : null,
+                'linea_id'      => !empty($_GET['linea_id']) ? (int)$_GET['linea_id'] : null,
+                'estado_filtro' => !empty($_GET['estado_filtro']) ? trim($_GET['estado_filtro']) : null,
+                'orden'         => !empty($_GET['orden']) ? trim($_GET['orden']) : 'recientes'
+            ];
+            $listaExp = $model->getPSTDocumentos($filtrosExp, 5000, 0);
+
+            while (ob_get_level()) ob_end_clean();
+            $filename = 'catalogo_pst_' . date('Ymd_His') . '.csv';
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            $out = fopen('php://output', 'w');
+            // BOM UTF-8 para lectura directa en Excel
+            fwrite($out, "\xEF\xBB\xBF");
+            fputcsv($out, [
+                'ID',
+                'Título del Proyecto',
+                'Año',
+                'Fecha de Defensa',
+                'Carrera',
+                'Nivel Académico',
+                'Trayecto',
+                'Línea de Investigación',
+                'Dimensión Operativa',
+                'Autores',
+                'Tutores',
+                'Comunidad Beneficiada',
+                'Palabras Clave',
+                'Repositorio Git',
+                'Estado',
+                'Vistas'
+            ], ';');
+
+            foreach ($listaExp as $item) {
+                fputcsv($out, [
+                    $item['id'] ?? '',
+                    $item['titulo'] ?? '',
+                    $item['anio_publicacion'] ?? '',
+                    $item['fecha_defensa'] ?? '',
+                    $item['carrera_nombre'] ?? '',
+                    $item['nivel_academico'] ?? 'Pregrado',
+                    $item['trayecto'] ?? '',
+                    $item['linea_nombre'] ?? '',
+                    $item['dimension_nombre'] ?? '',
+                    $item['autores_nombres'] ?? '',
+                    $item['tutores_nombres'] ?? '',
+                    $item['comunidad_beneficiada'] ?? '',
+                    $item['palabras_clave'] ?? '',
+                    $item['url_repositorio'] ?? '',
+                    !empty($item['activo']) ? 'Visible' : 'Oculto',
+                    $item['vistas'] ?? 0
+                ], ';');
+            }
+            fclose($out);
+            exit;
+        }
         
         $error = null;
         $success = null;
@@ -1040,13 +1281,13 @@ class DetallePSTController {
         // Cargar mensajes de éxito desde la redirección anterior
         if (isset($_GET['msg'])) {
             if ($_GET['msg'] === 'deleted') {
-                $success = "El recurso indexado ha sido eliminado exitosamente del catálogo.";
+                $success = "El proyecto fue eliminado del catálogo.";
             } elseif ($_GET['msg'] === 'created') {
-                $success = "El Proyecto Socio-Tecnológico ha sido registrado con éxito en el catálogo.";
+                $success = "El proyecto fue registrado con éxito en el catálogo.";
             } elseif ($_GET['msg'] === 'updated') {
-                $success = "El recurso ha sido modificado y actualizado exitosamente.";
+                $success = "Los cambios del proyecto se guardaron correctamente.";
             } elseif ($_GET['msg'] === 'status_changed') {
-                $success = "El estado de visibilidad del recurso se ha actualizado correctamente.";
+                $success = "La visibilidad del proyecto fue actualizada.";
             }
         }
 
@@ -1481,30 +1722,31 @@ class DetallePSTController {
         $documentos = [];
         $pagination = [];
         $q = !empty($_GET['q']) ? trim($_GET['q']) : '';
+        $filtrosAdmin = [
+            'activo'        => 'todos',
+            'q'             => $q !== '' ? $q : null,
+            'carrera_id'    => !empty($_GET['carrera_id']) ? (int)$_GET['carrera_id'] : null,
+            'trayecto'      => !empty($_GET['trayecto']) ? trim($_GET['trayecto']) : null,
+            'anio'          => !empty($_GET['anio']) ? (int)$_GET['anio'] : null,
+            'linea_id'      => !empty($_GET['linea_id']) ? (int)$_GET['linea_id'] : null,
+            'estado_filtro' => !empty($_GET['estado_filtro']) ? trim($_GET['estado_filtro']) : null,
+            'orden'         => !empty($_GET['orden']) ? trim($_GET['orden']) : 'recientes'
+        ];
         
         if ($accion === 'listar') {
-            $limit = (int)ConfigService::get('paginacion.limite_catalogo', 10);
-            if ($limit < 1) $limit = 10;
+            $limitDefault = max(1, (int)ConfigService::get('paginacion.limite_catalogo', 10));
+            $limit = !empty($_GET['limit']) ? max(5, min(100, (int)$_GET['limit'])) : $limitDefault;
             $page = !empty($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
             $offset = ($page - 1) * $limit;
             
-            if (!empty($q)) {
-                $documentos = $model->buscarStandard($q, ['activo' => 'todos'], $limit, $offset);
-                $totalDocs = $model->buscarStandardCount($q, ['activo' => 'todos']);
-            } else {
-                $documentos = $model->getPSTDocumentos(['activo' => 'todos', 'orden' => 'recientes'], $limit, $offset);
-                $totalDocs = $model->getPSTDocumentosCount(['activo' => 'todos']);
-            }
+            $documentos = $model->getPSTDocumentos($filtrosAdmin, $limit, $offset);
+            $totalDocs = $model->getPSTDocumentosCount($filtrosAdmin);
             
             $totalPages = max(1, (int)ceil($totalDocs / $limit));
             if ($page > $totalPages) {
                 $page = $totalPages;
                 $offset = ($page - 1) * $limit;
-                if (!empty($q)) {
-                    $documentos = $model->buscarStandard($q, ['activo' => 'todos'], $limit, $offset);
-                } else {
-                    $documentos = $model->getPSTDocumentos(['activo' => 'todos', 'orden' => 'recientes'], $limit, $offset);
-                }
+                $documentos = $model->getPSTDocumentos($filtrosAdmin, $limit, $offset);
             }
 
             $pagination = [
@@ -1516,7 +1758,7 @@ class DetallePSTController {
         }
 
         $carreras = $model->getCarreras();
-        $lineas = $model->getLineasInvestigacion();
+        $lineas = $model->getLineasInvestigacion(!empty($filtrosAdmin['carrera_id']) ? (int)$filtrosAdmin['carrera_id'] : null);
         $dimensiones = $model->getDimensionesOperativas();
         $nivelesAcademicos = $model->getNivelesAcademicos();
         $carreraFormId = !empty($documento['carrera_id']) ? (int)$documento['carrera_id'] : (!empty($documento['id_carrera']) ? (int)$documento['id_carrera'] : (!empty($_GET['carrera_id']) ? (int)$_GET['carrera_id'] : 1));
@@ -1539,6 +1781,7 @@ class DetallePSTController {
             'trayectosList'      => $trayectosList,
             'pagination'        => $pagination,
             'statsResumen'      => $statsResumen,
+            'filtrosAdmin'      => $filtrosAdmin,
             'q'                 => $q,
             'error'             => $error,
             'success'           => $success

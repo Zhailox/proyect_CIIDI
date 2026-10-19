@@ -96,7 +96,40 @@ class DocumentoModel {
             $execParams[] = (int)$filtros['carrera_id'];
         }
 
-        if (isset($filtros['activo'])) {
+        if (!empty($filtros['q'])) {
+            $qTerm = '%' . trim((string)$filtros['q']) . '%';
+            $sql .= " AND (
+                r.titulo ILIKE ? 
+                OR dp.resumen ILIKE ? 
+                OR dp.palabras_clave ILIKE ? 
+                OR dp.comunidad_beneficiada ILIKE ? 
+                OR dp.obj_general ILIKE ?
+                OR EXISTS (
+                    SELECT 1 FROM public.recurso_autores ra_q 
+                    JOIN public.autores a_q ON ra_q.id_autor = a_q.id 
+                    WHERE ra_q.id_recurso = r.id AND (a_q.nombre_completo ILIKE ? OR a_q.cedula ILIKE ?)
+                )
+                OR EXISTS (
+                    SELECT 1 FROM public.proyecto_tutores pt_q 
+                    JOIN public.tutores t_q ON pt_q.id_tutor = t_q.id 
+                    WHERE pt_q.id_recurso = r.id AND (t_q.nombre_completo ILIKE ? OR t_q.cedula ILIKE ?)
+                )
+            )";
+            array_push($execParams, $qTerm, $qTerm, $qTerm, $qTerm, $qTerm, $qTerm, $qTerm, $qTerm, $qTerm);
+        }
+
+        $estadoFiltro = !empty($filtros['estado_filtro']) ? strtolower(trim((string)$filtros['estado_filtro'])) : '';
+        if ($estadoFiltro === 'activos') {
+            $sql .= " AND COALESCE(dp.activo, true) = true";
+        } elseif ($estadoFiltro === 'ocultos') {
+            $sql .= " AND COALESCE(dp.activo, true) = false";
+        } elseif ($estadoFiltro === 'sin_archivo') {
+            $sql .= " AND (r.archivo_pdf IS NULL OR TRIM(r.archivo_pdf) = '')";
+        } elseif ($estadoFiltro === 'incompletos') {
+            $sql .= " AND (dp.palabras_clave IS NULL OR TRIM(dp.palabras_clave) = '' OR dp.comunidad_beneficiada IS NULL OR TRIM(dp.comunidad_beneficiada) = '' OR dp.resumen IS NULL OR TRIM(dp.resumen) = '')";
+        } elseif ($estadoFiltro === 'con_git') {
+            $sql .= " AND (dp.url_repositorio IS NOT NULL AND TRIM(dp.url_repositorio) != '')";
+        } elseif (isset($filtros['activo'])) {
             if ($filtros['activo'] !== 'todos') {
                 $sql .= " AND COALESCE(dp.activo, true) = ?";
                 $execParams[] = ($filtros['activo'] === true || $filtros['activo'] === '1' || $filtros['activo'] === 1) ? true : false;
@@ -150,7 +183,11 @@ class DocumentoModel {
         }
         
         $orden = !empty($filtros['orden']) ? strtolower(trim($filtros['orden'])) : strtolower(trim((string)ConfigService::get('buscador.orden_predeterminado', 'anio_desc')));
-        if ($orden === 'asc' || $orden === 'anio_asc') {
+        if ($orden === 'recientes') {
+            $sql .= " ORDER BY r.id DESC LIMIT ? OFFSET ?";
+        } elseif ($orden === 'vistas_desc') {
+            $sql .= " ORDER BY COALESCE(dp.vistas, 0) DESC, r.id DESC LIMIT ? OFFSET ?";
+        } elseif ($orden === 'asc' || $orden === 'anio_asc') {
             $sql .= " ORDER BY r.anio_publicacion ASC, r.id ASC LIMIT ? OFFSET ?";
         } elseif ($orden === 'titulo_asc') {
             $sql .= " ORDER BY r.titulo ASC, r.id DESC LIMIT ? OFFSET ?";
@@ -269,7 +306,40 @@ class DocumentoModel {
                 WHERE r.id_tipo_recurso = 1";
         
         $params = [];
-        if (isset($filtros['activo']) && $filtros['activo'] !== 'todos') {
+        if (!empty($filtros['q'])) {
+            $qTerm = '%' . trim((string)$filtros['q']) . '%';
+            $sql .= " AND (
+                r.titulo ILIKE ? 
+                OR dp.resumen ILIKE ? 
+                OR dp.palabras_clave ILIKE ? 
+                OR dp.comunidad_beneficiada ILIKE ? 
+                OR dp.obj_general ILIKE ?
+                OR EXISTS (
+                    SELECT 1 FROM public.recurso_autores ra_q 
+                    JOIN public.autores a_q ON ra_q.id_autor = a_q.id 
+                    WHERE ra_q.id_recurso = r.id AND (a_q.nombre_completo ILIKE ? OR a_q.cedula ILIKE ?)
+                )
+                OR EXISTS (
+                    SELECT 1 FROM public.proyecto_tutores pt_q 
+                    JOIN public.tutores t_q ON pt_q.id_tutor = t_q.id 
+                    WHERE pt_q.id_recurso = r.id AND (t_q.nombre_completo ILIKE ? OR t_q.cedula ILIKE ?)
+                )
+            )";
+            array_push($params, $qTerm, $qTerm, $qTerm, $qTerm, $qTerm, $qTerm, $qTerm, $qTerm, $qTerm);
+        }
+
+        $estadoFiltro = !empty($filtros['estado_filtro']) ? strtolower(trim((string)$filtros['estado_filtro'])) : '';
+        if ($estadoFiltro === 'activos') {
+            $sql .= " AND COALESCE(dp.activo, true) = true";
+        } elseif ($estadoFiltro === 'ocultos') {
+            $sql .= " AND COALESCE(dp.activo, true) = false";
+        } elseif ($estadoFiltro === 'sin_archivo') {
+            $sql .= " AND (r.archivo_pdf IS NULL OR TRIM(r.archivo_pdf) = '')";
+        } elseif ($estadoFiltro === 'incompletos') {
+            $sql .= " AND (dp.palabras_clave IS NULL OR TRIM(dp.palabras_clave) = '' OR dp.comunidad_beneficiada IS NULL OR TRIM(dp.comunidad_beneficiada) = '' OR dp.resumen IS NULL OR TRIM(dp.resumen) = '')";
+        } elseif ($estadoFiltro === 'con_git') {
+            $sql .= " AND (dp.url_repositorio IS NOT NULL AND TRIM(dp.url_repositorio) != '')";
+        } elseif (isset($filtros['activo']) && $filtros['activo'] !== 'todos') {
             $sql .= " AND COALESCE(dp.activo, true) = ?";
             $params[] = ($filtros['activo'] === true || $filtros['activo'] === '1' || $filtros['activo'] === 1) ? true : false;
         }
@@ -323,23 +393,65 @@ class DocumentoModel {
     }
 
     /**
-     * Obtiene el resumen de métricas globales (Total catálogo, Activos visibles, Con adjunto PDF) en una sola consulta.
+     * Obtiene el resumen de métricas operativas y salud documental en una sola consulta junto con uso de disco.
      */
     public function getPSTStatsResumen(): array {
         $db = Connection::getInstance();
         $sql = "SELECT 
                     COUNT(DISTINCT r.id) AS total_catalog,
                     COUNT(DISTINCT CASE WHEN COALESCE(dp.activo, true) = true THEN r.id END) AS total_activos,
-                    COUNT(DISTINCT CASE WHEN r.archivo_pdf IS NOT NULL AND TRIM(r.archivo_pdf) != '' THEN r.id END) AS total_con_pdf
+                    COUNT(DISTINCT CASE WHEN COALESCE(dp.activo, true) = false THEN r.id END) AS total_ocultos,
+                    COUNT(DISTINCT CASE WHEN r.archivo_pdf IS NOT NULL AND TRIM(r.archivo_pdf) != '' THEN r.id END) AS total_con_pdf,
+                    COUNT(DISTINCT CASE WHEN dp.url_repositorio IS NOT NULL AND TRIM(dp.url_repositorio) != '' THEN r.id END) AS total_con_git,
+                    COUNT(DISTINCT CASE WHEN dp.palabras_clave IS NULL OR TRIM(dp.palabras_clave) = '' OR dp.comunidad_beneficiada IS NULL OR TRIM(dp.comunidad_beneficiada) = '' OR dp.resumen IS NULL OR TRIM(dp.resumen) = '' THEN r.id END) AS total_incompletos,
+                    COALESCE(SUM(COALESCE(dp.vistas, 0)), 0) AS total_vistas
                 FROM public.recursos r
                 LEFT JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
                 WHERE r.id_tipo_recurso = 1";
         $stmt = $db->query($sql);
         $res = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $basePath = defined('BASE_PATH') ? BASE_PATH : (defined('ROOT_PATH') ? ROOT_PATH : dirname(__DIR__, 3));
+        $pstDir = $basePath . '/storage/documentos/pst/';
+        $tmpDir = $basePath . '/storage/documentos/tmp/';
+
+        $pstBytes = 0;
+        $formatos = ['pdf' => 0, 'docx' => 0, 'doc' => 0];
+        if (is_dir($pstDir)) {
+            foreach (glob($pstDir . '*') ?: [] as $f) {
+                if (is_file($f) && basename($f)[0] !== '.') {
+                    $pstBytes += (int)@filesize($f);
+                    $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
+                    if (isset($formatos[$ext])) {
+                        $formatos[$ext]++;
+                    }
+                }
+            }
+        }
+
+        $tmpBytes = 0;
+        $tmpCount = 0;
+        if (is_dir($tmpDir)) {
+            foreach (glob($tmpDir . '*') ?: [] as $tf) {
+                if (is_file($tf) && basename($tf)[0] !== '.') {
+                    $tmpCount++;
+                    $tmpBytes += (int)@filesize($tf);
+                }
+            }
+        }
+
         return [
-            'total_catalog' => $res ? (int)$res['total_catalog'] : 0,
-            'total_activos' => $res ? (int)$res['total_activos'] : 0,
-            'total_con_pdf' => $res ? (int)$res['total_con_pdf'] : 0,
+            'total_catalog'     => $res ? (int)$res['total_catalog'] : 0,
+            'total_activos'     => $res ? (int)$res['total_activos'] : 0,
+            'total_ocultos'     => $res ? (int)$res['total_ocultos'] : 0,
+            'total_con_pdf'     => $res ? (int)$res['total_con_pdf'] : 0,
+            'total_con_git'     => $res ? (int)$res['total_con_git'] : 0,
+            'total_incompletos' => $res ? (int)$res['total_incompletos'] : 0,
+            'total_vistas'      => $res ? (int)$res['total_vistas'] : 0,
+            'storage_pst_mb'    => round($pstBytes / (1024 * 1024), 2),
+            'storage_tmp_mb'    => round($tmpBytes / (1024 * 1024), 2),
+            'storage_tmp_count' => $tmpCount,
+            'formatos'          => $formatos
         ];
     }
 
@@ -1785,4 +1897,229 @@ LIMIT 20";
 
         return $cedula ? $this->cleanCP850(trim($cedula)) : null;
     }
+
+    /**
+     * Ejecuta acciones en lote sobre múltiples proyectos seleccionados.
+     */
+    public function ejecutarAccionMasivaPST(array $ids, string $operacion): array {
+        $cleanIds = array_values(array_unique(array_filter(array_map('intval', $ids), fn($v) => $v > 0)));
+        if (empty($cleanIds)) {
+            throw new Exception("No se seleccionaron proyectos válidos.");
+        }
+
+        $db = Connection::getInstance();
+        $placeholders = implode(',', array_fill(0, count($cleanIds), '?'));
+
+        if ($operacion === 'activar' || $operacion === 'ocultar') {
+            $nuevoEstado = ($operacion === 'activar') ? 'true' : 'false';
+            $stmt = $db->prepare("UPDATE public.detalles_proyectos SET activo = {$nuevoEstado} WHERE id_recurso IN ({$placeholders})");
+            $stmt->execute($cleanIds);
+            return [
+                'procesados' => count($cleanIds),
+                'operacion'  => $operacion
+            ];
+        }
+
+        if ($operacion === 'eliminar') {
+            $eliminados = 0;
+            foreach ($cleanIds as $idRecurso) {
+                if ($this->eliminarPST($idRecurso)) {
+                    $eliminados++;
+                }
+            }
+            return [
+                'procesados' => $eliminados,
+                'operacion'  => 'eliminar'
+            ];
+        }
+
+        throw new Exception("La acción solicitada no es válida.");
+    }
+
+    /**
+     * Actualiza de forma rápida la clasificación y datos clave de un proyecto desde la tabla.
+     */
+    public function actualizarRapidoPST(int $id, array $datos): bool {
+        $titulo = trim((string)($datos['titulo'] ?? ''));
+        if ($titulo === '') {
+            throw new Exception("El título del proyecto no puede quedar vacío.");
+        }
+        if ($this->existePSTPorTitulo($titulo, $id)) {
+            throw new Exception("Ya existe otro proyecto registrado con ese mismo título.");
+        }
+
+        $db = Connection::getInstance();
+        try {
+            $db->beginTransaction();
+
+            $anio = !empty($datos['anio_publicacion']) ? (int)$datos['anio_publicacion'] : (int)date('Y');
+            $stmtRec = $db->prepare("UPDATE public.recursos SET titulo = ?, anio_publicacion = ? WHERE id = ? AND id_tipo_recurso = 1");
+            $stmtRec->execute([$titulo, $anio, $id]);
+
+            $idCarrera = !empty($datos['id_carrera']) ? (int)$datos['id_carrera'] : 1;
+            $nivelRaw = !empty($datos['nivel_academico']) ? trim((string)$datos['nivel_academico']) : 'Pregrado';
+            $nivelMap = [
+                'Especialización' => 'Especializacion',
+                'Maestría'        => 'Maestria'
+            ];
+            $nivelAcademico = $nivelMap[$nivelRaw] ?? $nivelRaw;
+
+            $idTrayecto = !empty($datos['id_trayecto']) ? (int)$datos['id_trayecto'] : null;
+            $nivelesConTrayecto = $this->getNivelesConTrayecto();
+            if (!$idTrayecto && !empty($datos['trayecto']) && in_array($nivelRaw, $nivelesConTrayecto, true)) {
+                $idTrayecto = $this->resolverIdTrayecto($idCarrera, $datos['trayecto']);
+            }
+
+            $comunidad = isset($datos['comunidad_beneficiada']) ? trim((string)$datos['comunidad_beneficiada']) : null;
+            $palabras = isset($datos['palabras_clave']) ? trim((string)$datos['palabras_clave']) : null;
+            $urlGit = !empty($datos['url_repositorio']) ? trim((string)$datos['url_repositorio']) : null;
+            if ($urlGit && !filter_var($urlGit, FILTER_VALIDATE_URL)) {
+                $urlGit = null;
+            }
+            $activo = isset($datos['activo']) ? ((string)$datos['activo'] === '1' || $datos['activo'] === true || $datos['activo'] === 1) : true;
+
+            $stmtDet = $db->prepare("UPDATE public.detalles_proyectos 
+                                     SET id_carrera = ?, nivel_academico = ?, id_trayecto = ?, comunidad_beneficiada = ?, palabras_clave = ?, url_repositorio = ?, activo = ?, vector_semantico = NULL
+                                     WHERE id_recurso = ?");
+            $stmtDet->execute([
+                $idCarrera,
+                $nivelAcademico,
+                $idTrayecto,
+                $comunidad,
+                $palabras,
+                $urlGit,
+                $activo ? 'true' : 'false',
+                $id
+            ]);
+
+            if (!empty($datos['linea_id'])) {
+                $stmtDelClas = $db->prepare("DELETE FROM public.recurso_clasificaciones WHERE id_recurso = ?");
+                $stmtDelClas->execute([$id]);
+
+                $stmtInsClas = $db->prepare("INSERT INTO public.recurso_clasificaciones (id_recurso, id_linea_investigacion, id_dimension_operativa) VALUES (?, ?, ?)");
+                $stmtInsClas->execute([
+                    $id,
+                    (int)$datos['linea_id'],
+                    !empty($datos['dimension_id']) ? (int)$datos['dimension_id'] : null
+                ]);
+            }
+
+            $db->commit();
+            return true;
+        } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Verifica credenciales pertenecientes a una cuenta activa con rango de SuperAdmin.
+     */
+    public function verificarCredencialesSuperAdmin(?string $cedulaInput, string $password): ?array {
+        if (trim($password) === '') {
+            return null;
+        }
+        $db = Connection::getInstance();
+        $usuario = null;
+
+        $cedulaTrim = trim((string)$cedulaInput);
+        if ($cedulaTrim !== '') {
+            $soloDigitos = preg_replace('/\D/', '', $cedulaTrim);
+            $conV = 'V-' . $soloDigitos;
+            $conE = 'E-' . $soloDigitos;
+            $stmt = $db->prepare("SELECT u.id, u.cedula, u.nombre_completo, u.contrasena, u.activo, p.nivel_privilegio
+                                  FROM public.usuarios u
+                                  JOIN public.roles r ON u.id_rol = r.id
+                                  JOIN public.privilegios p ON r.privilegio_id = p.privilegio_id
+                                  WHERE (LOWER(TRIM(u.cedula)) IN (LOWER(?), LOWER(?), LOWER(?), LOWER(?)))
+                                    AND p.nivel_privilegio = 0
+                                    AND u.activo = true
+                                  LIMIT 1");
+            $stmt->execute([$cedulaTrim, $soloDigitos, $conV, $conE]);
+            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+        } elseif (!empty($_SESSION['usuario_id']) && isset($_SESSION['nivel_privilegio']) && (int)$_SESSION['nivel_privilegio'] === 0) {
+            $stmt = $db->prepare("SELECT u.id, u.cedula, u.nombre_completo, u.contrasena, u.activo, p.nivel_privilegio
+                                  FROM public.usuarios u
+                                  JOIN public.roles r ON u.id_rol = r.id
+                                  JOIN public.privilegios p ON r.privilegio_id = p.privilegio_id
+                                  WHERE u.id = ? AND p.nivel_privilegio = 0 AND u.activo = true
+                                  LIMIT 1");
+            $stmt->execute([(int)$_SESSION['usuario_id']]);
+            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+
+        if (!$usuario || empty($usuario['contrasena'])) {
+            return null;
+        }
+
+        if (!password_verify($password, $usuario['contrasena'])) {
+            return null;
+        }
+
+        return [
+            'id'              => (int)$usuario['id'],
+            'cedula'          => $usuario['cedula'],
+            'nombre_completo' => $this->cleanCP850($usuario['nombre_completo'])
+        ];
+    }
+
+    /**
+     * Elimina de forma transaccional todos los proyectos del catálogo y limpia sus archivos físicos.
+     */
+    public function purgarTodosLosPST(bool $conservarDirectorioPersonas = true): array {
+        $db = Connection::getInstance();
+        try {
+            $stmtIds = $db->query("SELECT id, archivo_pdf FROM public.recursos WHERE id_tipo_recurso = 1");
+            $rows = $stmtIds->fetchAll(PDO::FETCH_ASSOC);
+            $totalPst = count($rows);
+
+            $db->beginTransaction();
+
+            $db->exec("DELETE FROM public.proyecto_carreras_vinculadas WHERE id_recurso IN (SELECT id FROM public.recursos WHERE id_tipo_recurso = 1)");
+            $db->exec("DELETE FROM public.proyecto_tutores WHERE id_recurso IN (SELECT id FROM public.recursos WHERE id_tipo_recurso = 1)");
+            $db->exec("DELETE FROM public.recurso_autores WHERE id_recurso IN (SELECT id FROM public.recursos WHERE id_tipo_recurso = 1)");
+            $db->exec("DELETE FROM public.recurso_clasificaciones WHERE id_recurso IN (SELECT id FROM public.recursos WHERE id_tipo_recurso = 1)");
+            $db->exec("DELETE FROM public.detalles_proyectos WHERE id_recurso IN (SELECT id FROM public.recursos WHERE id_tipo_recurso = 1)");
+            $db->exec("DELETE FROM public.recursos WHERE id_tipo_recurso = 1");
+
+            if (!$conservarDirectorioPersonas) {
+                $db->exec("DELETE FROM public.autores WHERE id NOT IN (SELECT DISTINCT id_autor FROM public.recurso_autores)");
+                $db->exec("DELETE FROM public.tutores WHERE id NOT IN (SELECT DISTINCT id_tutor FROM public.proyecto_tutores)");
+            }
+
+            $db->commit();
+
+            $basePath = defined('BASE_PATH') ? BASE_PATH : (defined('ROOT_PATH') ? ROOT_PATH : dirname(__DIR__, 3));
+            $bytesLiberados = 0;
+            $archivosBorrados = 0;
+
+            foreach (['/storage/documentos/pst/', '/storage/documentos/tmp/'] as $relDir) {
+                $fullDir = $basePath . $relDir;
+                if (is_dir($fullDir)) {
+                    foreach (glob($fullDir . '*') ?: [] as $f) {
+                        if (is_file($f) && basename($f)[0] !== '.') {
+                            $bytesLiberados += (int)@filesize($f);
+                            if (@unlink($f)) {
+                                $archivosBorrados++;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return [
+                'proyectos_eliminados' => $totalPst,
+                'archivos_eliminados'  => $archivosBorrados,
+                'mb_liberados'         => round($bytesLiberados / (1024 * 1024), 2)
+            ];
+        } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw $e;
+        }
+    }
 }
+

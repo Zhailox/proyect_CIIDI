@@ -46,18 +46,45 @@ if (typeof window.mammoth === 'undefined') {
             <div class="pst-header-left">
                 <?php if ($accion === 'crear'): ?>
                     <h1>Registrar Nuevo Proyecto</h1>
+                    <p>Extrae los datos automáticamente desde el documento o completa la ficha manualmente.</p>
                 <?php elseif ($accion === 'editar'): ?>
                     <h1>Modificar Proyecto Socio-Tecnológico</h1>
+                    <p>Actualiza la información académica, el equipo o el documento digital del proyecto.</p>
                 <?php else: ?>
                     <h1>Gestión Documental PST</h1>
+                    <p>Administra el catálogo de investigaciones, revisa su estado y organiza los archivos del repositorio.</p>
                 <?php endif; ?>
             </div>
+            <?php if ($accion === 'crear' || $accion === 'editar'): ?>
+                <div>
+                    <a href="?ruta=agregar-documento" class="btn-cancel" style="padding: 0.5rem 1rem; font-size: 0.82rem;">
+                        <i class="ph ph-arrow-left"></i> Volver al listado
+                    </a>
+                </div>
+            <?php endif; ?>
         </header>
 
-        <!-- VISTA 1: FORMULARIO (CREAR O EDITAR) -->
+        <!-- VISTA 1: FORMULARIO DE REGISTRO Y EDICIÓN -->
         <?php if ($accion === 'crear' || $accion === 'editar'): ?>
             
             <article class="upload-card">
+                <!-- Barra de progreso de llenado de la ficha -->
+                <div style="background: #fafbfe; border: 1px solid rgba(112, 144, 203, 0.2); border-radius: 6px; padding: 0.65rem 1rem; margin-bottom: 1.1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 0.6rem; flex: 1; min-width: 240px;">
+                        <i class="ph ph-check-square-offset" style="color: var(--color-secundario); font-size: 1.25rem;"></i>
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700; color: var(--texto-titulos); margin-bottom: 0.25rem;">
+                                <span id="labelCompletitudFicha">Datos completados en la ficha</span>
+                                <span id="porcentajeCompletitudFicha" style="color: var(--color-secundario);">0%</span>
+                            </div>
+                            <div style="width: 100%; height: 6px; background: rgba(80, 89, 132, 0.12); border-radius: 4px; overflow: hidden;">
+                                <div id="barraCompletitudFicha" style="width: 0%; height: 100%; background: var(--color-terciario); transition: width 0.25s ease;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <span id="estadoCompletitudTexto" style="font-size: 0.75rem; font-weight: 600; color: var(--texto-silenciado);">Completa los campos principales para publicar el proyecto</span>
+                </div>
+
                 <form id="formSubidaPst" action="?ruta=agregar-documento&accion=<?= $accion ?><?= $accion === 'editar' ? '&id='.$documento['id'] : '' ?>" method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                     <input type="hidden" id="archivo_pdf_hidden" name="archivo_pdf" value="<?= htmlspecialchars($documento['archivo_pdf'] ?? '') ?>">
@@ -498,175 +525,399 @@ if (typeof window.mammoth === 'undefined') {
                 </form>
             </article>
 
-        <!-- VISTA 2: TABLA DE GESTIÓN (LISTADO CRUD) -->
+        <!-- VISTA 2: TABLA DE GESTIÓN -->
         <?php else: ?>
             
             <?php 
-            $totalCatalogReal = $statsResumen['total_catalog'] ?? ($pagination['total_records'] ?? count($documentos ?? []));
-            $totalActivosReal = $statsResumen['total_activos'] ?? 0;
-            $totalConPdfReal  = $statsResumen['total_con_pdf'] ?? 0;
+            $totalCatalogReal    = $statsResumen['total_catalog'] ?? ($pagination['total_items'] ?? count($documentos ?? []));
+            $totalActivosReal    = $statsResumen['total_activos'] ?? 0;
+            $totalOcultosReal    = $statsResumen['total_ocultos'] ?? 0;
+            $totalConPdfReal     = $statsResumen['total_con_pdf'] ?? 0;
+            $totalConGitReal     = $statsResumen['total_con_git'] ?? 0;
+            $totalIncompletos    = $statsResumen['total_incompletos'] ?? 0;
+            $totalVistasGlobal   = $statsResumen['total_vistas'] ?? 0;
+            $storagePstMb        = $statsResumen['storage_pst_mb'] ?? 0;
+            $storageTmpMb        = $statsResumen['storage_tmp_mb'] ?? 0;
+            $storageTmpCount     = $statsResumen['storage_tmp_count'] ?? 0;
+            $formatosConteo      = $statsResumen['formatos'] ?? ['pdf' => 0, 'docx' => 0, 'doc' => 0];
+
+            $fCarrera = $filtrosAdmin['carrera_id'] ?? '';
+            $fTrayecto = $filtrosAdmin['trayecto'] ?? '';
+            $fLinea = $filtrosAdmin['linea_id'] ?? '';
+            $fAnio = $filtrosAdmin['anio'] ?? '';
+            $fEstado = $filtrosAdmin['estado_filtro'] ?? '';
+            $fOrden = $filtrosAdmin['orden'] ?? 'recientes';
+            $fLimit = $pagination['limit'] ?? 10;
+            $hayFiltrosActivos = !empty($q) || !empty($fCarrera) || !empty($fTrayecto) || !empty($fLinea) || !empty($fAnio) || !empty($fEstado) || ($fOrden !== 'recientes');
+
+            $exportParams = $_GET;
+            $exportParams['ruta'] = 'agregar-documento';
+            $exportParams['accion'] = 'exportar_csv';
+            $urlExportarCsv = '?' . http_build_query($exportParams);
             ?>
 
-            <!-- TARJETAS DE MÉTRICAS KPI (GLASSMORPHISM & SISTEMA PALETA) -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
-                <div style="background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(80, 89, 132, 0.18); border-radius: 12px; padding: 1rem 1.2rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03);">
+            <!-- TARJETAS DE MÉTRICAS E INDICADORES DEL CATÁLOGO -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.9rem; margin-bottom: 1.15rem;">
+                
+                <!-- Tarjeta 1: Total en Catálogo -->
+                <a href="?ruta=agregar-documento" style="text-decoration: none; background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid <?= empty($fEstado) ? 'var(--color-secundario)' : 'rgba(80, 89, 132, 0.18)' ?>; border-radius: 12px; padding: 0.95rem 1.1rem; display: flex; align-items: center; gap: 0.9rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03); transition: transform 0.15s ease;">
                     <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(80, 89, 132, 0.12); color: var(--color-secundario); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
                         <i class="ph ph-folder-open"></i>
                     </div>
-                    <div>
-                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= number_format($totalCatalogReal) ?></div>
-                        <div style="font-size: 0.75rem; font-weight: 600; color: var(--texto-silenciado); text-transform: uppercase; letter-spacing: 0.5px;">Proyectos En Catálogo</div>
+                    <div style="min-width: 0;">
+                        <div style="font-size: 1.45rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= number_format($totalCatalogReal) ?></div>
+                        <div style="font-size: 0.72rem; font-weight: 700; color: var(--texto-silenciado); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 0.15rem;">Proyectos en Catálogo</div>
+                        <div style="font-size: 0.72rem; color: var(--color-secundario); font-weight: 600; margin-top: 0.15rem;">
+                            <?= number_format($totalVistasGlobal) ?> lecturas acumuladas
+                        </div>
                     </div>
-                </div>
+                </a>
 
-                <div style="background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(80, 89, 132, 0.18); border-radius: 12px; padding: 1rem 1.2rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03);">
+                <!-- Tarjeta 2: Visibles y Ocultos -->
+                <a href="?ruta=agregar-documento&estado_filtro=<?= $fEstado === 'ocultos' ? 'activos' : 'ocultos' ?>" style="text-decoration: none; background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid <?= in_array($fEstado, ['activos', 'ocultos'], true) ? 'var(--color-secundario)' : 'rgba(80, 89, 132, 0.18)' ?>; border-radius: 12px; padding: 0.95rem 1.1rem; display: flex; align-items: center; gap: 0.9rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03); transition: transform 0.15s ease;" title="Haz clic para filtrar visibles u ocultos">
                     <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(80, 89, 132, 0.12); color: var(--color-secundario); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
                         <i class="ph ph-eye"></i>
                     </div>
-                    <div>
-                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= number_format($totalActivosReal) ?></div>
-                        <div style="font-size: 0.75rem; font-weight: 600; color: var(--texto-silenciado); text-transform: uppercase; letter-spacing: 0.5px;">Visibles al Público</div>
+                    <div style="min-width: 0;">
+                        <div style="font-size: 1.45rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= number_format($totalActivosReal) ?></div>
+                        <div style="font-size: 0.72rem; font-weight: 700; color: var(--texto-silenciado); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 0.15rem;">Visibles al Público</div>
+                        <div style="font-size: 0.72rem; color: var(--texto-silenciado); font-weight: 600; margin-top: 0.15rem;">
+                            <?= number_format($totalOcultosReal) ?> ocultos actualmente
+                        </div>
                     </div>
-                </div>
+                </a>
 
-                <div style="background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(80, 89, 132, 0.18); border-radius: 12px; padding: 1rem 1.2rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03);">
+                <!-- Tarjeta 3: Archivos Digitales y Formatos -->
+                <a href="?ruta=agregar-documento&estado_filtro=con_git" style="text-decoration: none; background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid <?= $fEstado === 'con_git' ? 'var(--color-terciario)' : 'rgba(80, 89, 132, 0.18)' ?>; border-radius: 12px; padding: 0.95rem 1.1rem; display: flex; align-items: center; gap: 0.9rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03); transition: transform 0.15s ease;" title="Haz clic para ver los proyectos con enlace de código">
                     <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(112, 144, 203, 0.15); color: var(--color-terciario); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
-                        <i class="ph ph-file-pdf"></i>
+                        <i class="ph ph-file-text"></i>
                     </div>
-                    <div>
-                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= number_format($totalConPdfReal) ?></div>
-                        <div style="font-size: 0.75rem; font-weight: 600; color: var(--texto-silenciado); text-transform: uppercase; letter-spacing: 0.5px;">Documentos Adjuntos</div>
+                    <div style="min-width: 0;">
+                        <div style="font-size: 1.45rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= number_format($totalConPdfReal) ?></div>
+                        <div style="font-size: 0.72rem; font-weight: 700; color: var(--texto-silenciado); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 0.15rem;">Documentos Adjuntos</div>
+                        <div style="font-size: 0.71rem; color: var(--color-terciario); font-weight: 600; margin-top: 0.15rem;">
+                            <?= (int)$formatosConteo['pdf'] ?> PDF • <?= (int)$formatosConteo['docx'] + (int)$formatosConteo['doc'] ?> Word • <?= number_format($totalConGitReal) ?> con Git
+                        </div>
                     </div>
+                </a>
+
+                <!-- Tarjeta 4: Calidad de las Fichas -->
+                <a href="?ruta=agregar-documento&estado_filtro=incompletos" style="text-decoration: none; background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid <?= $fEstado === 'incompletos' ? 'var(--color-secundario)' : 'rgba(80, 89, 132, 0.18)' ?>; border-radius: 12px; padding: 0.95rem 1.1rem; display: flex; align-items: center; gap: 0.9rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03); transition: transform 0.15s ease;" title="Ver proyectos a los que les falta comunidad o palabras clave">
+                    <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(80, 89, 132, 0.12); color: var(--color-secundario); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+                        <i class="ph ph-clipboard-text"></i>
+                    </div>
+                    <div style="min-width: 0;">
+                        <div style="font-size: 1.45rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= number_format($totalIncompletos) ?></div>
+                        <div style="font-size: 0.72rem; font-weight: 700; color: var(--texto-silenciado); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 0.15rem;">Fichas por Completar</div>
+                        <div style="font-size: 0.72rem; color: var(--texto-silenciado); font-weight: 600; margin-top: 0.15rem;">
+                            <?= $totalIncompletos > 0 ? 'Haz clic para revisarlas' : 'Todas las fichas completas' ?>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Tarjeta 5: Uso de Espacio en Servidor -->
+                <div style="background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(80, 89, 132, 0.18); border-radius: 12px; padding: 0.95rem 1.1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03);">
+                    <div style="display: flex; align-items: center; gap: 0.85rem; min-width: 0;">
+                        <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(112, 144, 203, 0.15); color: var(--color-terciario); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+                            <i class="ph ph-hard-drives"></i>
+                        </div>
+                        <div style="min-width: 0;">
+                            <div style="font-size: 1.35rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= number_format($storagePstMb, 2) ?> MB</div>
+                            <div style="font-size: 0.72rem; font-weight: 700; color: var(--texto-silenciado); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 0.15rem;">Espacio en Servidor</div>
+                            <div style="font-size: 0.71rem; color: var(--texto-silenciado); font-weight: 600; margin-top: 0.15rem;">
+                                <?= $storageTmpCount > 0 ? "{$storageTmpCount} temporales ocupando {$storageTmpMb} MB" : "Sin archivos temporales" ?>
+                            </div>
+                        </div>
+                    </div>
+                    <?php if ($storageTmpCount > 0): ?>
+                        <button type="button" onclick="limpiarTemporalesServidor()" class="btn-cancel" style="padding: 0.35rem 0.55rem; font-size: 0.72rem; flex-shrink: 0;" title="Borrar archivos temporales en desuso">
+                            <i class="ph ph-broom"></i> Limpiar
+                        </button>
+                    <?php endif; ?>
+                </div>
+
+            </div>
+
+            <!-- CONSOLA DE BÚSQUEDA, FILTROS Y ACCIONES OPERATIVAS -->
+            <div style="background: rgba(255, 255, 255, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(112, 144, 203, 0.25); border-radius: 12px; padding: 1rem 1.15rem; margin-bottom: 1.25rem; box-shadow: 0 8px 25px rgba(0,0,0,0.03); display: flex; flex-direction: column; gap: 0.85rem;">
+                
+                <!-- Fila Superior: Buscador y Botones Principales -->
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.85rem; flex-wrap: wrap;">
+                    <form id="formFiltrosAdminPst" method="GET" action="" style="display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">
+                        <input type="hidden" name="ruta" value="agregar-documento">
+
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 280px;">
+                                <div style="position: relative; flex: 1; max-width: 460px;">
+                                    <i class="ph ph-magnifying-glass" style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: var(--color-secundario); font-size: 1.05rem;"></i>
+                                    <input type="text" name="q" value="<?= htmlspecialchars($q ?? '') ?>" class="upload-input" style="padding-left: 2.4rem !important; border-radius: 6px !important; width: 100%;" placeholder="Buscar por título, autor, cédula, tutor o comunidad...">
+                                </div>
+                                <button type="submit" class="btn-save" style="padding: 0.5rem 1.1rem; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                    <i class="ph ph-magnifying-glass"></i> Filtrar
+                                </button>
+                                <?php if ($hayFiltrosActivos): ?>
+                                    <a href="?ruta=agregar-documento" class="btn-cancel" style="padding: 0.5rem 0.9rem; font-size: 0.8rem;">
+                                        <i class="ph ph-arrow-counter-clockwise"></i> Limpiar filtros
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+
+                            <!-- Acciones de Gestión Masiva y Catálogo -->
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                <a href="<?= htmlspecialchars($urlExportarCsv) ?>" class="btn-cancel" style="padding: 0.5rem 0.9rem; font-size: 0.8rem; background: rgba(80, 89, 132, 0.08); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.2);" title="Descargar listado en formato compatible con Excel">
+                                    <i class="ph ph-file-csv"></i> Exportar listado
+                                </a>
+
+                                <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'eliminar', 'RepositorioPST', false) && $totalCatalogReal > 0): ?>
+                                    <button type="button" onclick="abrirModalPurgarCatalogo()" class="btn-clear" style="padding: 0.5rem 0.95rem; font-size: 0.8rem;" title="Borrar todos los proyectos con clave de SuperAdmin">
+                                        <i class="ph ph-trash"></i> Vaciar catálogo
+                                    </button>
+                                <?php endif; ?>
+
+                                <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'crear', 'RepositorioPST', false)): ?>
+                                    <a href="?ruta=agregar-documento&accion=crear" class="btn-create-new" style="padding: 0.55rem 1.2rem; font-size: 0.85rem; box-shadow: 0 4px 14px rgba(80, 89, 132, 0.2);">
+                                        <i class="ph ph-plus-circle" style="font-size: 1.05rem;"></i> Agregar Nuevo Proyecto
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <!-- Fila Inferior: Selectores Multicriterio -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.6rem; padding-top: 0.65rem; border-top: 1px solid rgba(112, 144, 203, 0.18);">
+                            <div>
+                                <select name="carrera_id" class="upload-input" onchange="this.form.submit()" style="font-size: 0.8rem !important;">
+                                    <option value="">Todas las carreras</option>
+                                    <?php foreach ($carrerasList as $cItem): ?>
+                                        <option value="<?= $cItem['id'] ?>" <?= ((string)$fCarrera === (string)$cItem['id']) ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($cItem['nombre']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div>
+                                <select name="trayecto" class="upload-input" onchange="this.form.submit()" style="font-size: 0.8rem !important;">
+                                    <option value="">Todos los trayectos</option>
+                                    <?php foreach (['Trayecto I', 'Trayecto II', 'Trayecto III', 'Trayecto IV'] as $tOpt): ?>
+                                        <option value="<?= $tOpt ?>" <?= ($fTrayecto === $tOpt) ? 'selected' : '' ?>><?= $tOpt ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div>
+                                <select name="linea_id" class="upload-input" onchange="this.form.submit()" style="font-size: 0.8rem !important;">
+                                    <option value="">Todas las líneas</option>
+                                    <?php foreach (($lineas ?? []) as $lItem): ?>
+                                        <option value="<?= $lItem['id'] ?>" <?= ((string)$fLinea === (string)$lItem['id']) ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($lItem['nombre']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div>
+                                <select name="anio" class="upload-input" onchange="this.form.submit()" style="font-size: 0.8rem !important;">
+                                    <option value="">Todos los años</option>
+                                    <?php for ($y = (int)date('Y') + 1; $y >= 2018; $y--): ?>
+                                        <option value="<?= $y ?>" <?= ((string)$fAnio === (string)$y) ? 'selected' : '' ?>>Año <?= $y ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                            </div>
+
+                            <div>
+                                <select name="estado_filtro" class="upload-input" onchange="this.form.submit()" style="font-size: 0.8rem !important;">
+                                    <option value="">Todos los estados</option>
+                                    <option value="activos" <?= $fEstado === 'activos' ? 'selected' : '' ?>>Solo visibles</option>
+                                    <option value="ocultos" <?= $fEstado === 'ocultos' ? 'selected' : '' ?>>Solo ocultos</option>
+                                    <option value="incompletos" <?= $fEstado === 'incompletos' ? 'selected' : '' ?>>Fichas por completar</option>
+                                    <option value="con_git" <?= $fEstado === 'con_git' ? 'selected' : '' ?>>Con enlace Git</option>
+                                    <option value="sin_archivo" <?= $fEstado === 'sin_archivo' ? 'selected' : '' ?>>Sin documento adjunto</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <select name="orden" class="upload-input" onchange="this.form.submit()" style="font-size: 0.8rem !important;">
+                                    <option value="recientes" <?= $fOrden === 'recientes' ? 'selected' : '' ?>>Más recientes primero</option>
+                                    <option value="anio_desc" <?= $fOrden === 'anio_desc' ? 'selected' : '' ?>>Año más reciente</option>
+                                    <option value="anio_asc" <?= $fOrden === 'anio_asc' ? 'selected' : '' ?>>Año más antiguo</option>
+                                    <option value="titulo_asc" <?= $fOrden === 'titulo_asc' ? 'selected' : '' ?>>Título de la A a la Z</option>
+                                    <option value="vistas_desc" <?= $fOrden === 'vistas_desc' ? 'selected' : '' ?>>Más leídos</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <select name="limit" class="upload-input" onchange="this.form.submit()" style="font-size: 0.8rem !important;">
+                                    <?php foreach ([10, 25, 50, 100] as $limOpt): ?>
+                                        <option value="<?= $limOpt ?>" <?= ((int)$fLimit === $limOpt) ? 'selected' : '' ?>>Mostrar <?= $limOpt ?> filas</option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
 
-            <!-- TOOLBAR DE GESTIÓN Y BÚSQUEDA GLASSMORPHIC -->
-            <div style="background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(112, 144, 203, 0.25); border-radius: 12px; padding: 0.85rem 1.1rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; box-shadow: 0 8px 25px rgba(0,0,0,0.03);">
-                <form method="GET" action="" style="display: flex; align-items: center; gap: 0.6rem; flex: 1; min-width: 300px; flex-wrap: wrap;">
-                    <input type="hidden" name="ruta" value="agregar-documento">
-                    <div style="position: relative; flex: 1; min-width: 220px; max-width: 400px;">
-                        <i class="ph ph-magnifying-glass" style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: var(--color-secundario); font-size: 1.1rem;"></i>
-                        <input type="text" name="q" value="<?= htmlspecialchars($q ?? '') ?>" class="upload-input" style="padding-left: 2.5rem; padding-top: 0.55rem; padding-bottom: 0.55rem; font-size: 0.85rem; border-radius: 8px; width: 100%;" placeholder="Buscar por título, autores o palabras clave...">
-                    </div>
-                    <button type="submit" class="btn-save" style="padding: 0.55rem 1.2rem; font-size: 0.82rem;">
-                        <i class="ph ph-magnifying-glass"></i> Buscar
-                    </button>
-                    <?php if (!empty($q)): ?>
-                        <a href="?ruta=agregar-documento" class="btn-cancel" style="padding: 0.55rem 1rem; font-size: 0.82rem;">
-                            <i class="ph ph-arrow-counter-clockwise"></i> Restablecer
-                        </a>
-                    <?php endif; ?>
-                </form>
-
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <!-- Botón Agregar Nuevo Proyecto (Único en el toolbar) -->
-                    <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'crear', 'RepositorioPST', false)): ?>
-                        <a href="?ruta=agregar-documento&accion=crear" class="btn-create-new" style="padding: 0.6rem 1.4rem; font-size: 0.88rem; box-shadow: 0 4px 14px rgba(80, 89, 132, 0.25);">
-                            <i class="ph ph-plus-circle" style="font-size: 1.1rem;"></i> Agregar Nuevo Proyecto
-                        </a>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <!-- CONTENEDOR DE TABLA DE GESTIÓN GLASSMORPHIC -->
-            <section class="crud-table-wrapper" style="background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(112, 144, 203, 0.25); border-radius: 12px; padding: 1.2rem; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);">
+            <!-- CONTENEDOR DE TABLA DE GESTIÓN -->
+            <section class="crud-table-wrapper" style="background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(112, 144, 203, 0.25); border-radius: 12px; padding: 1.1rem; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);">
                 
                 <div class="table-responsive">
                     <table class="pst-table" style="width: 100%; border-collapse: separate; border-spacing: 0 0.4rem;">
                         <thead>
                             <tr style="border-bottom: 2px solid rgba(112, 144, 203, 0.2);">
-                                <th style="width: 48%; padding: 0.75rem 1rem; color: var(--texto-titulos); font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">TÍTULO DEL PROYECTO</th>
-                                <th style="width: 25%; padding: 0.75rem 1rem; color: var(--texto-titulos); font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">AUTORES DEL EQUIPO</th>
-                                <th style="width: 10%; padding: 0.75rem 1rem; color: var(--texto-titulos); font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; text-align: center;">AÑO</th>
-                                <th style="text-align: center; width: 17%; padding: 0.75rem 1rem; color: var(--texto-titulos); font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">ACCIONES</th>
+                                <th style="width: 36px; text-align: center; padding: 0.75rem 0.5rem;">
+                                    <input type="checkbox" id="checkAllPstRows" onchange="alternarSeleccionTodosPst(this)" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--color-secundario);" title="Seleccionar todos los de esta página">
+                                </th>
+                                <th style="width: 44%; padding: 0.75rem 0.8rem; color: var(--texto-titulos); font-size: 0.76rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">PROYECTO Y CLASIFICACIÓN</th>
+                                <th style="width: 24%; padding: 0.75rem 0.8rem; color: var(--texto-titulos); font-size: 0.76rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">EQUIPO</th>
+                                <th style="width: 10%; padding: 0.75rem 0.6rem; color: var(--texto-titulos); font-size: 0.76rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; text-align: center;">AÑO</th>
+                                <th style="text-align: center; width: 22%; padding: 0.75rem 0.8rem; color: var(--texto-titulos); font-size: 0.76rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">ACCIONES</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($documentos)): ?>
                                 <tr>
-                                    <td colspan="4" style="text-align: center; padding: 3rem 1.5rem; color: var(--texto-silenciado); background: rgba(255, 255, 255, 0.4); border-radius: 8px;">
+                                    <td colspan="5" style="text-align: center; padding: 3rem 1.5rem; color: var(--texto-silenciado); background: rgba(255, 255, 255, 0.4); border-radius: 8px;">
                                         <i class="ph ph-folder-open" style="font-size: 2.5rem; color: var(--color-terciario); opacity: 0.6; display: block; margin-bottom: 0.5rem;"></i>
-                                        No se encontraron registros de proyectos socio-tecnológicos.
+                                        No se encontraron proyectos con los filtros seleccionados.
                                     </td>
                                 </tr>
                             <?php else: ?>
-                                <?php foreach ($documentos as $doc): 
+                                <?php 
+                                $baseRoot = defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 3);
+                                foreach ($documentos as $doc): 
                                     $doc['archivo_existe'] = !empty($doc['archivo_pdf']) && ConfigService::existeArchivoFisico($doc['archivo_pdf']);
+                                    $extArchivo = !empty($doc['archivo_pdf']) ? strtoupper(pathinfo($doc['archivo_pdf'], PATHINFO_EXTENSION)) : '';
+                                    $pesoArchivoMb = 0;
+                                    if ($doc['archivo_existe']) {
+                                        $fullDocPath = $baseRoot . '/' . ltrim($doc['archivo_pdf'], '/\\');
+                                        $pesoArchivoMb = round(((int)@filesize($fullDocPath)) / (1024 * 1024), 2);
+                                    }
+                                    $fichaIncompleta = empty(trim($doc['palabras_clave'] ?? '')) || empty(trim($doc['comunidad_beneficiada'] ?? '')) || empty(trim($doc['resumen'] ?? ''));
                                 ?>
-                                    <tr style="background: rgba(255, 255, 255, 0.45); transition: all 0.2s ease; border-radius: 8px;">
-                                         <td class="pst-td-title" style="padding: 0.85rem 1rem; border-radius: 8px 0 0 8px;">
-                                                 <?php 
-                                                 $nivelDoc = $doc['nivel_academico'] ?? 'Pregrado';
-                                                 $nivelDocLabel = $labelsNiveles[$nivelDoc] ?? $nivelDoc;
-                                                 ?>
-                                                 <span class="pst-badge-soft" style="background-color: rgba(80, 89, 132, 0.12); color: var(--color-secundario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(80, 89, 132, 0.2);"><?= htmlspecialchars($nivelDocLabel) ?></span>
-                                                 <?php if (in_array($nivelDoc, $nivelesConTrayecto) && !empty($doc['trayecto'])): ?>
-                                                     <span class="pst-badge-soft" style="background-color: rgba(112, 144, 203, 0.12); color: var(--color-terciario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(112, 144, 203, 0.2);"><?= htmlspecialchars($doc['trayecto']) ?></span>
-                                                 <?php endif; ?>
-                                                 <?php if (!empty($doc['carreras_vinculadas_nombres'])): ?>
-                                                     <span class="pst-badge-soft" style="background-color: rgba(112, 144, 203, 0.15); color: var(--color-secundario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 700; border: 1px solid rgba(112, 144, 203, 0.3);" title="Carreras Vinculadas: <?= htmlspecialchars($doc['carreras_vinculadas_nombres']) ?>">
-                                                         <i class="ph ph-tag"></i> <?= htmlspecialchars($doc['carreras_vinculadas_nombres']) ?>
-                                                     </span>
-                                                 <?php endif; ?>
+                                    <tr style="background: rgba(255, 255, 255, 0.5); transition: all 0.2s ease; border-radius: 8px;">
+                                         <td style="text-align: center; vertical-align: middle; padding: 0.75rem 0.5rem; border-radius: 8px 0 0 8px;">
+                                             <input type="checkbox" class="check-pst-row" value="<?= (int)$doc['id'] ?>" onchange="actualizarBarraLotePst()" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--color-secundario);">
+                                         </td>
+                                         <td class="pst-td-title" style="padding: 0.85rem 0.8rem;">
+                                              <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.35rem;">
+                                                  <?php 
+                                                  $nivelDoc = $doc['nivel_academico'] ?? 'Pregrado';
+                                                  $nivelDocLabel = $labelsNiveles[$nivelDoc] ?? $nivelDoc;
+                                                  ?>
+                                                  <?php if (!empty($doc['carrera_nombre'])): ?>
+                                                      <span class="pst-badge-soft" style="background-color: rgba(80, 89, 132, 0.14); color: var(--color-secundario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 700; border: 1px solid rgba(80, 89, 132, 0.22);">
+                                                          <?= htmlspecialchars($doc['carrera_nombre']) ?>
+                                                      </span>
+                                                  <?php else: ?>
+                                                      <span class="pst-badge-soft" style="background-color: rgba(80, 89, 132, 0.12); color: var(--color-secundario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 700; border: 1px solid rgba(80, 89, 132, 0.2);">
+                                                          <?= htmlspecialchars($nivelDocLabel) ?>
+                                                      </span>
+                                                  <?php endif; ?>
+
+                                                  <?php if (in_array($nivelDoc, $nivelesConTrayecto) && !empty($doc['trayecto'])): ?>
+                                                      <span class="pst-badge-soft" style="background-color: rgba(112, 144, 203, 0.12); color: var(--color-terciario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 700; border: 1px solid rgba(112, 144, 203, 0.2);"><?= htmlspecialchars($doc['trayecto']) ?></span>
+                                                  <?php endif; ?>
+
+                                                  <?php if (!empty($doc['linea_nombre'])): ?>
+                                                      <span class="pst-badge-soft" style="background-color: rgba(112, 144, 203, 0.1); color: var(--texto-titulos); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 600; border: 1px solid rgba(112, 144, 203, 0.22);">
+                                                          <?= htmlspecialchars($doc['linea_nombre']) ?>
+                                                      </span>
+                                                  <?php endif; ?>
+
                                                   <?php if (($doc['activo'] ?? true)): ?>
                                                       <span style="background: rgba(80, 89, 132, 0.1); color: var(--color-secundario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 700; border: 1px solid rgba(80, 89, 132, 0.2); display: inline-flex; align-items: center; gap: 0.2rem;">
-                                                          <span style="width: 6px; height: 6px; border-radius: 50%; background-color: var(--color-secundario); display: inline-block;"></span> Activo
+                                                          <span style="width: 6px; height: 6px; border-radius: 50%; background-color: var(--color-secundario); display: inline-block;"></span> Visible
                                                       </span>
                                                   <?php else: ?>
                                                       <span style="background: rgba(100, 116, 139, 0.12); color: var(--texto-silenciado); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 700; border: 1px solid rgba(100, 116, 139, 0.25); display: inline-flex; align-items: center; gap: 0.2rem;">
                                                           <span style="width: 6px; height: 6px; border-radius: 50%; background-color: var(--texto-silenciado); display: inline-block;"></span> Oculto
                                                       </span>
                                                   <?php endif; ?>
+
+                                                  <?php if ($doc['archivo_existe']): ?>
+                                                      <span style="background: rgba(112, 144, 203, 0.1); color: var(--color-secundario); padding: 0.12rem 0.4rem; border-radius: 4px; font-size: 0.66rem; font-weight: 700;">
+                                                          <?= htmlspecialchars($extArchivo) ?> • <?= $pesoArchivoMb ?> MB
+                                                      </span>
+                                                  <?php else: ?>
+                                                      <span style="background: #fff1f2; color: #e11d48; padding: 0.12rem 0.4rem; border-radius: 4px; font-size: 0.66rem; font-weight: 700; border: 1px solid rgba(225, 29, 72, 0.2);">
+                                                          Sin archivo
+                                                      </span>
+                                                  <?php endif; ?>
+
+                                                  <?php if ($fichaIncompleta): ?>
+                                                      <span style="background: #fffbeb; color: #b45309; padding: 0.12rem 0.4rem; border-radius: 4px; font-size: 0.66rem; font-weight: 700; border: 1px solid #fde68a;" title="A esta ficha le falta comunidad o palabras clave">
+                                                          Por completar
+                                                      </span>
+                                                  <?php endif; ?>
+
                                                   <?php if (!empty($doc['url_repositorio'])): ?>
-                                                      <a href="<?= htmlspecialchars($doc['url_repositorio']) ?>" target="_blank" style="color: var(--color-secundario); font-size: 0.73rem; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem; background: rgba(80, 89, 132, 0.08); padding: 0.12rem 0.4rem; border-radius: 4px;" title="Ver código fuente">
+                                                      <a href="<?= htmlspecialchars($doc['url_repositorio']) ?>" target="_blank" style="color: var(--color-secundario); font-size: 0.68rem; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(80, 89, 132, 0.08); padding: 0.12rem 0.4rem; border-radius: 4px;" title="Abrir código fuente">
                                                           <i class="ph ph-git-branch"></i> Git
                                                       </a>
                                                   <?php endif; ?>
                                               </div>
-                                              <strong style="font-size: 0.92rem; color: var(--texto-titulos); line-height: 1.3; display: block;"><?= htmlspecialchars($doc['titulo'] ?? '') ?></strong>
-                                              <?php if (!empty($doc['obj_general'])): ?>
-                                                  <div style="font-size: 0.75rem; color: var(--texto-silenciado); margin-top: 0.25rem; font-style: italic; line-height: 1.35;">
-                                                      <strong>Objetivo:</strong> <?= htmlspecialchars(substr($doc['obj_general'], 0, 110)) ?>...
+
+                                              <strong style="font-size: 0.9rem; color: var(--texto-titulos); line-height: 1.35; display: block;"><?= htmlspecialchars($doc['titulo'] ?? '') ?></strong>
+
+                                              <?php if (!empty($doc['comunidad_beneficiada'])): ?>
+                                                  <div style="font-size: 0.74rem; color: var(--texto-silenciado); margin-top: 0.2rem; display: flex; align-items: center; gap: 0.3rem;">
+                                                      <i class="ph ph-buildings" style="color: var(--color-terciario);"></i>
+                                                      <span><?= htmlspecialchars($doc['comunidad_beneficiada']) ?></span>
                                                   </div>
                                               <?php endif; ?>
                                          </td>
-                                         <td style="padding: 0.85rem 1rem; color: var(--texto-comun); font-size: 0.85rem; vertical-align: middle;">
-                                             <div style="display: flex; align-items: center; gap: 0.4rem;">
-                                                 <i class="ph ph-users" style="color: var(--color-terciario); font-size: 1rem;"></i>
-                                                 <span><?= htmlspecialchars($doc['autores_nombres'] ?? 'No registrados') ?></span>
+                                         <td style="padding: 0.85rem 0.8rem; color: var(--texto-comun); font-size: 0.82rem; vertical-align: middle;">
+                                             <div style="display: flex; align-items: flex-start; gap: 0.4rem;">
+                                                 <i class="ph ph-users" style="color: var(--color-terciario); font-size: 1rem; margin-top: 2px; flex-shrink: 0;"></i>
+                                                 <div>
+                                                     <div style="font-weight: 600; color: var(--texto-titulos); line-height: 1.35;"><?= htmlspecialchars($doc['autores_nombres'] ?? 'No registrados') ?></div>
+                                                     <?php if (!empty($doc['tutores_nombres'])): ?>
+                                                         <div style="font-size: 0.72rem; color: var(--texto-silenciado); margin-top: 0.2rem;">
+                                                             <?= htmlspecialchars($doc['tutores_nombres']) ?>
+                                                         </div>
+                                                     <?php endif; ?>
+                                                 </div>
                                              </div>
                                          </td>
-                                         <td style="padding: 0.85rem 1rem; text-align: center; vertical-align: middle;">
-                                             <span style="background: rgba(255,255,255,0.7); padding: 0.25rem 0.55rem; border-radius: 6px; font-weight: 800; font-size: 0.85rem; color: var(--texto-titulos); border: 1px solid rgba(169, 168, 166, 0.2);"><?= $doc['anio_publicacion'] ?></span>
+                                         <td style="padding: 0.85rem 0.6rem; text-align: center; vertical-align: middle;">
+                                             <span style="background: rgba(255,255,255,0.75); padding: 0.25rem 0.55rem; border-radius: 6px; font-weight: 800; font-size: 0.84rem; color: var(--texto-titulos); border: 1px solid rgba(169, 168, 166, 0.2); display: inline-block;"><?= $doc['anio_publicacion'] ?></span>
+                                             <div style="font-size: 0.7rem; color: var(--texto-silenciado); margin-top: 0.25rem; font-weight: 600;">
+                                                 <i class="ph ph-eye"></i> <?= (int)($doc['vistas'] ?? 0) ?>
+                                             </div>
                                          </td>
-                                         <td style="text-align: center; padding: 0.85rem 1rem; border-radius: 0 8px 8px 0; vertical-align: middle;">
-                                             <div class="action-links" style="display: flex; gap: 0.35rem; justify-content: center; flex-wrap: wrap;">
-                                                 <!-- Opción 3: Previsualizar Ficha Completa -->
-                                                 <button type="button" class="btn-action-edit" style="background: rgba(112, 144, 203, 0.12); color: var(--color-terciario); border: 1px solid rgba(112, 144, 203, 0.25); border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700;" title="Previsualizar Ficha Técnica" onclick="abrirModalPrevisualizarFichaAdmin(<?= htmlspecialchars(json_encode($doc)) ?>)">
+                                         <td style="text-align: center; padding: 0.85rem 0.8rem; border-radius: 0 8px 8px 0; vertical-align: middle;">
+                                             <div class="action-links" style="display: flex; gap: 0.3rem; justify-content: center; flex-wrap: wrap;">
+                                                 <!-- Ver Ficha -->
+                                                 <button type="button" class="btn-action-edit" style="background: rgba(112, 144, 203, 0.12); color: var(--color-terciario); border: 1px solid rgba(112, 144, 203, 0.25); border-radius: 6px; padding: 0.32rem 0.55rem; font-size: 0.75rem; font-weight: 700; cursor: pointer;" title="Ver ficha completa" onclick="abrirModalPrevisualizarFichaAdmin(<?= htmlspecialchars(json_encode($doc)) ?>)">
                                                      <i class="ph ph-eye"></i> Ficha
                                                  </button>
 
-                                                 <!-- Opción 5: Descargar Documento Adjunto -->
+                                                 <!-- Abrir Documento Adjunto -->
                                                  <?php if (!empty($doc['archivo_pdf']) && !empty($doc['archivo_existe'])): ?>
-                                                     <a href="?ruta=ver-pdf-pst&id=<?= $doc['id'] ?>" target="_blank" class="btn-action-edit" style="background: rgba(80, 89, 132, 0.1); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25); border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700; text-decoration: none;" title="Descargar / Abrir Documento Digital">
-                                                         <i class="ph ph-download-simple"></i> Adjunto
+                                                     <a href="?ruta=ver-pdf-pst&id=<?= $doc['id'] ?>" target="_blank" class="btn-action-edit" style="background: rgba(80, 89, 132, 0.1); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25); border-radius: 6px; padding: 0.32rem 0.55rem; font-size: 0.75rem; font-weight: 700; text-decoration: none;" title="Abrir documento digital">
+                                                         <i class="ph ph-file-text"></i> Archivo
                                                      </a>
                                                  <?php endif; ?>
 
-                                                 <!-- Opción 1: Activar / Desactivar (Soft Delete) -->
                                                  <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'editar', 'RepositorioPST', false)): ?>
-                                                     <a href="?ruta=agregar-documento&accion=toggle_estado&id=<?= $doc['id'] ?>" class="btn-action-edit" style="background: rgba(80, 89, 132, 0.08); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.2); border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700; text-decoration: none;" title="<?= ($doc['activo'] ?? true) ? 'Ocultar del catálogo público' : 'Hacer visible en el catálogo público' ?>">
-                                                         <i class="ph ph-eye-slash"></i> <?= ($doc['activo'] ?? true) ? 'Ocultar' : 'Activar' ?>
+                                                     <!-- Edición Rápida -->
+                                                     <button type="button" class="btn-action-edit" style="background: rgba(80, 89, 132, 0.1); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.22); border-radius: 6px; padding: 0.32rem 0.55rem; font-size: 0.75rem; font-weight: 700; cursor: pointer;" title="Edición rápida sin salir de la tabla" onclick="abrirModalEdicionRapidaPst(<?= htmlspecialchars(json_encode($doc)) ?>)">
+                                                         <i class="ph ph-sliders-horizontal"></i> Rápido
+                                                     </button>
+
+                                                     <!-- Alternar Visibilidad -->
+                                                     <a href="?ruta=agregar-documento&accion=toggle_estado&id=<?= $doc['id'] ?>" class="btn-action-edit" style="background: rgba(80, 89, 132, 0.08); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.2); border-radius: 6px; padding: 0.32rem 0.55rem; font-size: 0.75rem; font-weight: 700; text-decoration: none;" title="<?= ($doc['activo'] ?? true) ? 'Ocultar del catálogo público' : 'Hacer visible en el catálogo público' ?>">
+                                                         <i class="ph <?= ($doc['activo'] ?? true) ? 'ph-eye-slash' : 'ph-eye' ?>"></i> <?= ($doc['activo'] ?? true) ? 'Ocultar' : 'Mostrar' ?>
                                                      </a>
 
-                                                     <!-- Opción Editar -->
-                                                     <a href="?ruta=agregar-documento&accion=editar&id=<?= $doc['id'] ?>" class="btn-action-edit" style="background: rgba(80, 89, 132, 0.12); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25); border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700; text-decoration: none;" title="Modificar Metadatos">
+                                                     <!-- Editar Completo -->
+                                                     <a href="?ruta=agregar-documento&accion=editar&id=<?= $doc['id'] ?>" class="btn-action-edit" style="background: rgba(80, 89, 132, 0.12); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25); border-radius: 6px; padding: 0.32rem 0.55rem; font-size: 0.75rem; font-weight: 700; text-decoration: none;" title="Abrir formulario completo">
                                                          <i class="ph ph-pencil-simple"></i> Editar
                                                      </a>
                                                  <?php endif; ?>
 
                                                  <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'eliminar', 'RepositorioPST', false)): ?>
-                                                     <a href="javascript:void(0)" class="btn-action-delete" style="background: rgba(30, 41, 59, 0.08); color: var(--texto-titulos); border: 1px solid rgba(30, 41, 59, 0.2); border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 700; text-decoration: none;" title="Eliminar Registro Definitivo" onclick="confirmarEliminacionModal('?ruta=agregar-documento&accion=eliminar&id=<?= $doc['id'] ?>')">
+                                                     <a href="javascript:void(0)" class="btn-action-delete" style="background: rgba(30, 41, 59, 0.08); color: var(--texto-titulos); border: 1px solid rgba(30, 41, 59, 0.2); border-radius: 6px; padding: 0.32rem 0.55rem; font-size: 0.75rem; font-weight: 700; text-decoration: none;" title="Eliminar este proyecto" onclick="confirmarEliminacionModal('?ruta=agregar-documento&accion=eliminar&id=<?= $doc['id'] ?>')">
                                                          <i class="ph ph-trash"></i> Eliminar
                                                      </a>
                                                  <?php endif; ?>
@@ -683,7 +934,7 @@ if (typeof window.mammoth === 'undefined') {
                 <?php if (!empty($pagination) && $pagination['total_pages'] > 1): ?>
                     <div class="pst-pagination" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; padding-top: 0.75rem;">
                         <span style="font-size: 0.82rem; font-weight: 700; color: var(--texto-silenciado, #64748B);">
-                            Página <?= $pagination['current_page'] ?> de <?= $pagination['total_pages'] ?> (Total: <?= $pagination['total_items'] ?> documentos)
+                            Página <?= $pagination['current_page'] ?> de <?= $pagination['total_pages'] ?> • <?= $pagination['total_items'] ?> proyectos encontrados
                         </span>
 
                         <div style="display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap;">
@@ -737,6 +988,30 @@ if (typeof window.mammoth === 'undefined') {
                 <?php endif; ?>
 
             </section>
+
+            <!-- BARRA FLOTANTE PARA ACCIONES EN LOTE -->
+            <div id="barraAccionesLotePst" style="display: none; position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: var(--bg-card, #ffffff); border: 1px solid rgba(80, 89, 132, 0.3); border-radius: 10px; padding: 0.75rem 1.25rem; box-shadow: 0 12px 35px rgba(18, 26, 62, 0.18); z-index: 9990; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                <span style="font-size: 0.85rem; font-weight: 800; color: var(--texto-titulos);">
+                    <i class="ph ph-check-square" style="color: var(--color-secundario);"></i>
+                    <span id="contadorSeleccionadosLote">0</span> seleccionados
+                </span>
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                    <button type="button" onclick="ejecutarAccionMasivaTabla('activar')" class="btn-save" style="padding: 0.4rem 0.85rem; font-size: 0.78rem;">
+                        <i class="ph ph-eye"></i> Mostrar
+                    </button>
+                    <button type="button" onclick="ejecutarAccionMasivaTabla('ocultar')" class="btn-cancel" style="padding: 0.4rem 0.85rem; font-size: 0.78rem;">
+                        <i class="ph ph-eye-slash"></i> Ocultar
+                    </button>
+                    <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'eliminar', 'RepositorioPST', false)): ?>
+                        <button type="button" onclick="confirmarEliminarLoteTabla()" class="btn-clear" style="padding: 0.4rem 0.85rem; font-size: 0.78rem;">
+                            <i class="ph ph-trash"></i> Eliminar
+                        </button>
+                    <?php endif; ?>
+                    <button type="button" onclick="limpiarSeleccionTablaPst()" class="btn-cancel" style="padding: 0.4rem 0.75rem; font-size: 0.78rem; background: transparent;">
+                        Desmarcar
+                    </button>
+                </div>
+            </div>
 
         <?php endif; ?>
 
@@ -1923,6 +2198,9 @@ function rellenarFormulario(data) {
 
     actualizarLineasPorCarrera(targetCarreraId, data.linea_id, data.dimension_id);
     actualizarTrayectosPorCarrera(targetCarreraId, data.trayecto, data.id_trayecto);
+    if (typeof calcularCompletitudFormularioPst === 'function') {
+        setTimeout(calcularCompletitudFormularioPst, 120);
+    }
 }
 
 function syncIdTrayecto(selectEl) {
@@ -2048,6 +2326,9 @@ async function actualizarLineasPorCarrera(carreraId, selectedLineaId = null, sel
                 const dimSelect = document.getElementById('dimension_id');
                 if (dimSelect) dimSelect.value = selectedDimId;
             }
+        }
+        if (typeof calcularCompletitudFormularioPst === 'function') {
+            calcularCompletitudFormularioPst();
         }
     } catch (e) {
         console.error('Error cargando líneas por carrera:', e);
@@ -2877,3 +3158,460 @@ function confirmarCarreraModalLote() {
     }
 }
 </script>
+
+<!-- MODAL DE EDICIÓN RÁPIDA DE PROYECTO DESDE LA TABLA -->
+<div id="modalEdicionRapidaPst" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 99998; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: var(--bg-card, #ffffff); border-radius: 16px; width: 100%; max-width: 620px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid rgba(80, 89, 132, 0.2); overflow: hidden;">
+        <div style="padding: 1.25rem 1.5rem; background: linear-gradient(135deg, var(--color-secundario) 0%, var(--color-terciario) 100%); color: #ffffff; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+                    <i class="ph ph-sliders-horizontal"></i> Ajuste Rápido de Proyecto
+                </h3>
+                <p style="margin: 3px 0 0 0; font-size: 0.8rem; color: rgba(255, 255, 255, 0.88);">Modifica los datos principales sin salir del listado</p>
+            </div>
+            <button type="button" onclick="cerrarModalEdicionRapidaPst()" style="background: rgba(255,255,255,0.18); border: none; color: #ffffff; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                <i class="ph ph-x"></i>
+            </button>
+        </div>
+
+        <div style="padding: 1.4rem 1.5rem; max-height: 78vh; overflow-y: auto;">
+            <input type="hidden" id="quick_edit_id" value="">
+
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-size: 0.76rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 5px;">Título del Proyecto</label>
+                <textarea id="quick_edit_titulo" class="upload-input" rows="2" style="width: 100%; padding: 9px 12px; font-size: 0.9rem; resize: vertical;"></textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 0.9rem; margin-bottom: 1rem;">
+                <div>
+                    <label style="display: block; font-size: 0.76rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 5px;">Carrera o PNF</label>
+                    <select id="quick_edit_carrera" class="upload-input" style="width: 100%; padding: 9px 12px; font-size: 0.88rem;">
+                        <?php foreach ($carrerasList as $cItem): ?>
+                            <option value="<?= $cItem['id'] ?>"><?= htmlspecialchars($cItem['nombre']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.76rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 5px;">Año de Creación</label>
+                    <input type="number" id="quick_edit_anio" class="upload-input" min="2000" max="2099" style="width: 100%; padding: 9px 12px; font-size: 0.88rem;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; margin-bottom: 1rem;">
+                <div>
+                    <label style="display: block; font-size: 0.76rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 5px;">Línea de Investigación</label>
+                    <select id="quick_edit_linea" class="upload-input" onchange="actualizarDimensionesEdicionRapida(this.value)" style="width: 100%; padding: 9px 12px; font-size: 0.88rem;">
+                        <option value="">Sin línea asignada</option>
+                        <?php foreach ($lineas as $lItem): ?>
+                            <option value="<?= $lItem['id'] ?>"><?= htmlspecialchars($lItem['nombre']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.76rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 5px;">Dimensión Operativa</label>
+                    <select id="quick_edit_dimension" class="upload-input" style="width: 100%; padding: 9px 12px; font-size: 0.88rem;">
+                        <option value="">Sin dimensión asignada</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 0.9rem; margin-bottom: 0.5rem;">
+                <div>
+                    <label style="display: block; font-size: 0.76rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 5px;">Enlace de Código</label>
+                    <input type="url" id="quick_edit_git" class="upload-input" placeholder="https://github.com/usuario/proyecto" style="width: 100%; padding: 9px 12px; font-size: 0.88rem;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.76rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 5px;">Visibilidad en el Catálogo</label>
+                    <select id="quick_edit_activo" class="upload-input" style="width: 100%; padding: 9px 12px; font-size: 0.88rem;">
+                        <option value="1">Visible al público</option>
+                        <option value="0">Oculto del catálogo</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding: 1rem 1.5rem; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 0.75rem;">
+            <button type="button" class="btn-cancel" onclick="cerrarModalEdicionRapidaPst()" style="padding: 8px 18px; font-size: 0.86rem;">Cancelar</button>
+            <button type="button" id="btnGuardarQuickEditPst" class="btn-save" onclick="guardarEdicionRapidaPst()" style="padding: 8px 20px; font-size: 0.86rem; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="ph ph-floppy-disk"></i> Guardar Cambios
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE VACIADO TOTAL DEL CATÁLOGO CON AUTORIZACIÓN DEL SUPER ADMINISTRADOR -->
+<div id="modalPurgarCatalogoPst" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: var(--bg-card, #ffffff); border-radius: 16px; width: 100%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3); border: 1px solid #fecdd3; overflow: hidden;">
+        <div style="padding: 1.3rem 1.5rem; background: #fff1f2; border-bottom: 1px solid #ffe4e6; display: flex; align-items: center; gap: 12px;">
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: #ffe4e6; color: #be123c; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;">
+                <i class="ph ph-shield-warning"></i>
+            </div>
+            <div style="flex: 1;">
+                <h3 style="margin: 0; font-size: 1.12rem; font-weight: 800; color: #881337;">Vaciar Catálogo de Proyectos</h3>
+                <p style="margin: 2px 0 0 0; font-size: 0.79rem; color: #9f1239;">Requiere autorización de un Super Administrador</p>
+            </div>
+            <button type="button" onclick="cerrarModalPurgarCatalogo()" style="background: transparent; border: none; color: #9f1239; width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 1.1rem;">
+                <i class="ph ph-x"></i>
+            </button>
+        </div>
+
+        <div style="padding: 1.35rem 1.5rem;">
+            <p style="margin: 0 0 1rem 0; font-size: 0.86rem; color: var(--texto-comun); line-height: 1.5;">
+                Esta operación eliminará todos los proyectos registrados en el repositorio junto con sus documentos guardados en el servidor.
+            </p>
+
+            <label style="display: flex; align-items: flex-start; gap: 9px; padding: 10px 12px; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0; margin-bottom: 1rem; cursor: pointer;">
+                <input type="checkbox" id="purgar_conservar_personas" checked style="margin-top: 3px; width: 16px; height: 16px; accent-color: var(--color-secundario);">
+                <span style="font-size: 0.82rem; color: var(--texto-titulos); font-weight: 600; line-height: 1.4;">
+                    Conservar el directorio de personas registradas, como autores y tutores, para agilizar próximas cargas
+                </span>
+            </label>
+
+            <div style="margin-bottom: 0.9rem;">
+                <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 4px;">Cédula del Super Administrador</label>
+                <input type="text" id="purgar_cedula_superadmin" class="upload-input" value="<?= htmlspecialchars($_SESSION['usuario_cedula'] ?? '') ?>" placeholder="Ej: V-12345678" style="width: 100%; padding: 9px 12px; font-size: 0.88rem;">
+            </div>
+
+            <div style="margin-bottom: 0.9rem;">
+                <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 4px;">Contraseña del Super Administrador</label>
+                <input type="password" id="purgar_password_superadmin" class="upload-input" placeholder="Ingresa la contraseña para autorizar" style="width: 100%; padding: 9px 12px; font-size: 0.88rem;">
+            </div>
+
+            <div style="margin-bottom: 0.4rem;">
+                <label style="display: block; font-size: 0.75rem; font-weight: 800; color: #be123c; text-transform: uppercase; margin-bottom: 4px;">Escribe VACIAR REPOSITORIO para confirmar</label>
+                <input type="text" id="purgar_frase_confirmacion" class="upload-input" placeholder="VACIAR REPOSITORIO" autocomplete="off" style="width: 100%; padding: 9px 12px; font-size: 0.88rem; border-color: #fda4af;">
+            </div>
+        </div>
+
+        <div style="padding: 1rem 1.5rem; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 0.75rem;">
+            <button type="button" class="btn-cancel" onclick="cerrarModalPurgarCatalogo()" style="padding: 8px 16px; font-size: 0.86rem;">Cancelar</button>
+            <button type="button" id="btnEjecutarPurgaCatalogo" onclick="ejecutarPurgaTotalCatalogo()" style="padding: 8px 18px; font-size: 0.86rem; font-weight: 700; border-radius: 8px; border: 1px solid #be123c; background: #be123c; color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="ph ph-trash"></i> Confirmar y Vaciar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// 1. INDICADOR EN TIEMPO REAL DE COMPLETITUD DEL FORMULARIO
+function calcularCompletitudFormularioPst() {
+    const barra = document.getElementById('barraCompletitudFicha');
+    const textoPct = document.getElementById('porcentajeCompletitudFicha');
+    const textoEstado = document.getElementById('estadoCompletitudTexto');
+    if (!barra || !textoPct || !textoEstado) return;
+
+    const camposEvaluados = [
+        { nombre: 'título', ok: Boolean((document.getElementById('titulo')?.value || '').trim()) },
+        { nombre: 'carrera', ok: Boolean((document.getElementById('id_carrera')?.value || '').trim()) },
+        { nombre: 'año', ok: Boolean((document.getElementById('anio_publicacion')?.value || '').trim()) },
+        { nombre: 'línea de investigación', ok: Boolean((document.getElementById('linea_id')?.value || '').trim()) },
+        { nombre: 'dimensión', ok: Boolean((document.getElementById('dimension_id')?.value || '').trim()) },
+        { nombre: 'comunidad beneficiada', ok: Boolean((document.getElementById('comunidad_beneficiada')?.value || '').trim()) },
+        { nombre: 'resumen', ok: (document.getElementById('resumen')?.value || '').trim().length > 25 },
+        { nombre: 'objetivo general', ok: (document.getElementById('obj_general')?.value || '').trim().length > 15 },
+        { nombre: 'palabras clave', ok: Boolean((document.getElementById('palabras_clave')?.value || '').trim()) }
+    ];
+
+    // Verificar al menos un autor con nombre
+    let tieneAutor = false;
+    document.getElementsByName('autor_nombre[]').forEach(inp => {
+        if ((inp.value || '').trim().length > 2) tieneAutor = true;
+    });
+    camposEvaluados.push({ nombre: 'autor principal', ok: tieneAutor });
+
+    // Verificar al menos un tutor con nombre
+    const tAcad = (document.getElementById('tutor_academico_nombre')?.value || '').trim();
+    const tInst = (document.getElementById('tutor_institucional_nombre')?.value || '').trim();
+    const tCom = (document.getElementById('tutor_comunitario_nombre')?.value || '').trim();
+    camposEvaluados.push({ nombre: 'tutor', ok: Boolean(tAcad || tInst || tCom) });
+
+    // Verificar archivo adjunto o cargado
+    const tieneArchivo = Boolean(
+        (document.getElementById('archivo_pdf_hidden')?.value || '').trim() ||
+        (document.getElementById('input_archivo_extractor')?.files?.length > 0)
+    );
+    camposEvaluados.push({ nombre: 'documento adjunto', ok: tieneArchivo });
+
+    const completados = camposEvaluados.filter(c => c.ok).length;
+    const faltantes = camposEvaluados.filter(c => !c.ok).map(c => c.nombre);
+    const pct = Math.round((completados / camposEvaluados.length) * 100);
+
+    barra.style.width = pct + '%';
+    textoPct.textContent = pct + '%';
+
+    if (pct === 100) {
+        textoEstado.textContent = 'Ficha completa y lista para guardar';
+    } else if (faltantes.length <= 3) {
+        textoEstado.textContent = 'Casi listo, falta completar: ' + faltantes.join(', ');
+    } else {
+        textoEstado.textContent = completados + ' de ' + camposEvaluados.length + ' datos clave completados';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const formPst = document.getElementById('formSubidaPst');
+    if (formPst) {
+        formPst.addEventListener('input', calcularCompletitudFormularioPst);
+        formPst.addEventListener('change', calcularCompletitudFormularioPst);
+        setTimeout(calcularCompletitudFormularioPst, 150);
+    }
+});
+
+// 2. SELECCIÓN POR LOTES Y BARRA FLOTANTE DE ACCIONES MASIVAS
+function obtenerIdsSeleccionadosTablaPst() {
+    const checks = document.querySelectorAll('.check-pst-row:checked');
+    return Array.from(checks).map(c => parseInt(c.value, 10)).filter(n => n > 0);
+}
+
+function alternarSeleccionTodosPst(masterCheckbox) {
+    const checks = document.querySelectorAll('.check-pst-row');
+    checks.forEach(c => {
+        c.checked = masterCheckbox.checked;
+    });
+    actualizarBarraLotePst();
+}
+
+function actualizarBarraLotePst() {
+    const seleccionados = obtenerIdsSeleccionadosTablaPst();
+    const barra = document.getElementById('barraAccionesLotePst');
+    const contador = document.getElementById('contadorSeleccionadosPst');
+    const master = document.getElementById('checkAllPstTable');
+    const totalChecks = document.querySelectorAll('.check-pst-row').length;
+
+    if (contador) contador.textContent = seleccionados.length;
+    if (barra) {
+        barra.style.display = seleccionados.length > 0 ? 'flex' : 'none';
+    }
+    if (master && totalChecks > 0) {
+        master.checked = seleccionados.length === totalChecks;
+    }
+}
+
+function limpiarSeleccionTablaPst() {
+    document.querySelectorAll('.check-pst-row').forEach(c => { c.checked = false; });
+    const master = document.getElementById('checkAllPstTable');
+    if (master) master.checked = false;
+    actualizarBarraLotePst();
+}
+
+async function ejecutarAccionMasivaTabla(operacion) {
+    const ids = obtenerIdsSeleccionadosTablaPst();
+    if (ids.length === 0) return;
+
+    try {
+        const res = await fetch('?ruta=agregar-documento&accion=bulk_action', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': window.CSRF_TOKEN || ''
+            },
+            body: JSON.stringify({
+                ids: ids,
+                operacion: operacion,
+                csrf_token: window.CSRF_TOKEN || ''
+            })
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+            mostrarModalAlerta('success', 'Operación Completada', json.message || 'Los proyectos seleccionados fueron actualizados.', () => {
+                window.location.reload();
+            });
+        } else {
+            mostrarModalAlerta('error', 'No se pudo completar', json.message || 'Ocurrió un inconveniente al procesar la selección.');
+        }
+    } catch (err) {
+        mostrarModalAlerta('error', 'Error de Conexión', 'No fue posible comunicarse con el servidor.');
+    }
+}
+
+function confirmarEliminarLoteTabla() {
+    const ids = obtenerIdsSeleccionadosTablaPst();
+    if (ids.length === 0) return;
+
+    confirmarAccionModal(
+        'error',
+        'Eliminar Selección',
+        '¿Estás seguro de eliminar permanentemente los ' + ids.length + ' proyectos seleccionados junto con sus archivos? Esta acción no se puede deshacer.',
+        'Sí, eliminar selección',
+        () => {
+            ejecutarAccionMasivaTabla('eliminar');
+        }
+    );
+}
+
+// 3. LIMPIEZA DE ARCHIVOS TEMPORALES DE EXTRACCIÓN
+async function limpiarTemporalesServidor() {
+    try {
+        const res = await fetch('?ruta=agregar-documento&accion=limpiar_temporales', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': window.CSRF_TOKEN || ''
+            },
+            body: JSON.stringify({ csrf_token: window.CSRF_TOKEN || '' })
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+            mostrarModalAlerta('success', 'Almacenamiento Optimizado', json.message || 'Se limpiaron los archivos temporales.', () => {
+                window.location.reload();
+            });
+        } else {
+            mostrarModalAlerta('error', 'Aviso', json.message || 'No se pudieron limpiar los archivos temporales.');
+        }
+    } catch (e) {
+        mostrarModalAlerta('error', 'Error de Conexión', 'No se pudo conectar con el servidor.');
+    }
+}
+
+// 4. EDICIÓN RÁPIDA DESDE LA TABLA
+function actualizarDimensionesEdicionRapida(lineaId, selectedDimId = '') {
+    const dimSelect = document.getElementById('quick_edit_dimension');
+    if (!dimSelect) return;
+
+    dimSelect.innerHTML = '<option value="">Sin dimensión asignada</option>';
+    const dims = (typeof dimensionesPorLinea !== 'undefined' && lineaId && dimensionesPorLinea[lineaId]) ? dimensionesPorLinea[lineaId] : [];
+    dims.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = d.nombre;
+        dimSelect.appendChild(opt);
+    });
+    if (selectedDimId) {
+        dimSelect.value = String(selectedDimId);
+    }
+}
+
+function abrirModalEdicionRapidaPst(doc) {
+    if (!doc || !doc.id) return;
+    document.getElementById('quick_edit_id').value = doc.id;
+    document.getElementById('quick_edit_titulo').value = doc.titulo || '';
+    document.getElementById('quick_edit_carrera').value = doc.id_carrera || 1;
+    document.getElementById('quick_edit_anio').value = doc.anio_publicacion || new Date().getFullYear();
+    document.getElementById('quick_edit_linea').value = doc.linea_id || '';
+    actualizarDimensionesEdicionRapida(doc.linea_id || '', doc.dimension_id || '');
+    document.getElementById('quick_edit_git').value = doc.url_repositorio || '';
+    document.getElementById('quick_edit_activo').value = (doc.activo === false || doc.activo === 0 || doc.activo === '0' || doc.activo === 'f') ? '0' : '1';
+
+    const modal = document.getElementById('modalEdicionRapidaPst');
+    if (modal) modal.style.display = 'flex';
+}
+
+function cerrarModalEdicionRapidaPst() {
+    const modal = document.getElementById('modalEdicionRapidaPst');
+    if (modal) modal.style.display = 'none';
+}
+
+async function guardarEdicionRapidaPst() {
+    const id = parseInt(document.getElementById('quick_edit_id').value, 10);
+    const titulo = (document.getElementById('quick_edit_titulo').value || '').trim();
+    if (!id || !titulo) {
+        mostrarModalAlerta('warning', 'Título Requerido', 'El proyecto debe tener un título válido.');
+        return;
+    }
+
+    const btn = document.getElementById('btnGuardarQuickEditPst');
+    if (btn) btn.disabled = true;
+
+    try {
+        const res = await fetch('?ruta=agregar-documento&accion=quick_edit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': window.CSRF_TOKEN || ''
+            },
+            body: JSON.stringify({
+                id: id,
+                titulo: titulo,
+                id_carrera: document.getElementById('quick_edit_carrera').value,
+                anio_publicacion: document.getElementById('quick_edit_anio').value,
+                linea_id: document.getElementById('quick_edit_linea').value,
+                dimension_id: document.getElementById('quick_edit_dimension').value,
+                url_repositorio: document.getElementById('quick_edit_git').value,
+                activo: document.getElementById('quick_edit_activo').value === '1',
+                csrf_token: window.CSRF_TOKEN || ''
+            })
+        });
+        const json = await res.json();
+        if (btn) btn.disabled = false;
+
+        if (json.status === 'success') {
+            cerrarModalEdicionRapidaPst();
+            mostrarModalAlerta('success', 'Cambios Guardados', json.message || 'El proyecto se actualizó correctamente.', () => {
+                window.location.reload();
+            });
+        } else {
+            mostrarModalAlerta('error', 'No se pudo actualizar', json.message || 'Verifica los datos ingresados.');
+        }
+    } catch (e) {
+        if (btn) btn.disabled = false;
+        mostrarModalAlerta('error', 'Error de Conexión', 'No fue posible guardar los cambios en el servidor.');
+    }
+}
+
+// 5. VACIADO TOTAL DEL CATÁLOGO CON AUTORIZACIÓN DEL SUPER ADMINISTRADOR
+function abrirModalPurgarCatalogo() {
+    const passInput = document.getElementById('purgar_password_superadmin');
+    const fraseInput = document.getElementById('purgar_frase_confirmacion');
+    if (passInput) passInput.value = '';
+    if (fraseInput) fraseInput.value = '';
+    const modal = document.getElementById('modalPurgarCatalogoPst');
+    if (modal) modal.style.display = 'flex';
+}
+
+function cerrarModalPurgarCatalogo() {
+    const modal = document.getElementById('modalPurgarCatalogoPst');
+    if (modal) modal.style.display = 'none';
+}
+
+async function ejecutarPurgaTotalCatalogo() {
+    const cedula = (document.getElementById('purgar_cedula_superadmin')?.value || '').trim();
+    const password = document.getElementById('purgar_password_superadmin')?.value || '';
+    const frase = (document.getElementById('purgar_frase_confirmacion')?.value || '').trim();
+    const conservarPersonas = Boolean(document.getElementById('purgar_conservar_personas')?.checked);
+
+    if (!password) {
+        mostrarModalAlerta('warning', 'Contraseña Requerida', 'Por favor ingresa la contraseña del Super Administrador para autorizar la operación.');
+        return;
+    }
+
+    if (frase.toUpperCase() !== 'VACIAR REPOSITORIO') {
+        mostrarModalAlerta('warning', 'Frase Incorrecta', 'Debes escribir exactamente VACIAR REPOSITORIO para confirmar.');
+        return;
+    }
+
+    const btn = document.getElementById('btnEjecutarPurgaCatalogo');
+    if (btn) btn.disabled = true;
+
+    try {
+        const res = await fetch('?ruta=agregar-documento&accion=purgar_todo_pst', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': window.CSRF_TOKEN || ''
+            },
+            body: JSON.stringify({
+                cedula_superadmin: cedula,
+                password_superadmin: password,
+                confirmacion_texto: frase,
+                conservar_personas: conservarPersonas,
+                csrf_token: window.CSRF_TOKEN || ''
+            })
+        });
+        const json = await res.json();
+        if (btn) btn.disabled = false;
+
+        if (json.status === 'success') {
+            cerrarModalPurgarCatalogo();
+            mostrarModalAlerta('success', 'Catálogo Vaciado', json.message || 'El repositorio fue vaciado por completo.', () => {
+                window.location.href = '?ruta=agregar-documento&accion=listar';
+            });
+        } else {
+            mostrarModalAlerta('error', 'Autorización Rechazada', json.message || 'No se pudo autorizar el vaciado del catálogo.');
+        }
+    } catch (e) {
+        if (btn) btn.disabled = false;
+        mostrarModalAlerta('error', 'Error de Conexión', 'No fue posible comunicarse con el servidor.');
+    }
+}
+</script>
+
