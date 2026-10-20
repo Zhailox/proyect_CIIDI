@@ -466,29 +466,29 @@ if (typeof window.mammoth === 'undefined') {
                                 <?php else: ?>
                                     <h3 class="drag-title">Carga Automática e Indexación por Lotes</h3>
                                     <p class="drag-desc">Arrastra tus archivos PDF o Word aquí. Máx. <?= $maxArchivosLote ?> archivos por lote y <?= $maxMb ?> MB por archivo.</p>
-                                    <button type="button" class="btn-browse" id="btnBrowseFile">Seleccionar Archivo(s)</button>
+                                    <button type="button" class="btn-browse" id="btnBrowseFile">Seleccionar Archivos</button>
                                 <?php endif; ?>
                             </div>
 
-                            <!-- COLA DE DOCUMENTOS POR LOTES UI (Exclusivo en modo Creación Masiva) -->
+                            <!-- COLA DE DOCUMENTOS POR LOTES UI -->
                             <?php if ($accion === 'crear'): ?>
-                            <div id="contenedorColaDocumentos" style="display: none; background: var(--bg-card, #ffffff); border: 1px solid rgba(169, 168, 166, 0.2); border-radius: 6px; padding: 0.75rem; margin-top: 0.5rem;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; border-bottom: 1px solid rgba(169, 168, 166, 0.15); padding-bottom: 0.4rem;">
+                            <div id="contenedorColaDocumentos" style="display: none; background: var(--bg-card, #ffffff); border: 1px solid rgba(80, 89, 132, 0.22); border-radius: 6px; padding: 0.75rem; margin-top: 0.5rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; border-bottom: 1px solid rgba(80, 89, 132, 0.15); padding-bottom: 0.4rem;">
                                     <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--texto-titulos); margin: 0; display: flex; align-items: center; gap: 0.35rem;">
-                                        <i class="ph ph-stack"></i> Documentos Cargados en Lote (<span id="countCola">0</span> / <?= $maxArchivosLote ?> máx.)
+                                        <i class="ph ph-stack" style="color: var(--color-secundario);"></i> Documentos en Cola: <span id="countCola">0</span> de <?= $maxArchivosLote ?>
                                     </h4>
-                                    <button type="button" class="btn-clear" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="limpiarColaDocumentos()">
+                                    <button type="button" class="btn-clear" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; background: #ffffff; color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25);" onclick="limpiarColaDocumentos()">
                                         <i class="ph ph-trash"></i> Vaciar Cola
                                     </button>
                                 </div>
 
-                                <div id="listaColaItems" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 280px; overflow-y: auto; padding-right: 0.2rem;">
+                                <div id="listaColaItems" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 300px; overflow-y: auto; padding-right: 0.2rem;">
                                     <!-- Ítems renderizados dinámicamente -->
                                 </div>
 
-                                <div style="margin-top: 0.75rem; padding-top: 0.5rem; border-top: 1px solid rgba(169, 168, 166, 0.15);">
+                                <div style="margin-top: 0.75rem; padding-top: 0.5rem; border-top: 1px solid rgba(80, 89, 132, 0.15);">
                                     <button type="button" class="btn-save" id="btnSubirLote" onclick="subirLoteABaseDeDatos()" style="width: 100%; display: inline-flex; justify-content: center; align-items: center; gap: 0.4rem; padding: 0.55rem 1rem;">
-                                        <i class="ph ph-cloud-arrow-up" style="font-size: 1.1rem;"></i> Subir Lote a Base de Datos
+                                        <i class="ph ph-cloud-arrow-up" style="font-size: 1.1rem;"></i> Subir Todos los Listos
                                     </button>
                                 </div>
                             </div>
@@ -517,7 +517,7 @@ if (typeof window.mammoth === 'undefined') {
                         <button type="button" class="btn-clear" id="btnGuardarBorrador" onclick="guardarBorradorEnCola()" style="display: none; background-color: rgba(112, 144, 203, 0.1); color: var(--color-secundario); border-color: rgba(80, 89, 132, 0.3);">
                             <i class="ph ph-floppy-disk"></i> Guardar en Borrador
                         </button>
-                        <button type="submit" class="btn-save">
+                        <button type="submit" class="btn-save" id="btnSubmitFormPst">
                             <?= $accion === 'editar' ? 'Guardar Cambios' : 'Registrar Recurso' ?>
                         </button>
                     </div>
@@ -1142,32 +1142,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
         dropzone.addEventListener('drop', (e) => {
             const dt = e.dataTransfer;
-            const files = dt.files;
-            if (files && files.length > 0) {
-                procesarArchivosSeleccionados(files);
+            if (dt && dt.files && dt.files.length > 0) {
+                const archivosArrastrados = Array.from(dt.files);
+                procesarArchivosSeleccionados(archivosArrastrados);
             }
         });
 
         fileInput.addEventListener('change', (e) => {
             if (e.target.files && e.target.files.length > 0) {
-                procesarArchivosSeleccionados(e.target.files);
+                const archivosElegidos = Array.from(e.target.files);
+                fileInput.value = '';
+                procesarArchivosSeleccionados(archivosElegidos);
             }
         });
     }
 
-    // Interceptar envío tradicional del formulario para garantizar que exista documento cargado y no sea duplicado
+    // Interceptar envío del formulario para subir el documento activo sin perder el resto de la cola
     const formSubidaPst = document.getElementById('formSubidaPst');
     if (formSubidaPst) {
         formSubidaPst.addEventListener('submit', (e) => {
             const esCrear = <?= json_encode($accion === 'crear') ?>;
             if (esCrear) {
+                if (documentosEnCola.length > 0) {
+                    e.preventDefault();
+                    let targetIdx = documentoSeleccionadoIndex;
+                    if (targetIdx < 0 || targetIdx >= documentosEnCola.length || documentosEnCola[targetIdx].estado === 'exito') {
+                        targetIdx = documentosEnCola.findIndex(d => d.estado === 'listo');
+                    }
+                    if (targetIdx >= 0) {
+                        subirDocumentoIndividualDeCola(targetIdx);
+                    } else {
+                        subirLoteABaseDeDatos();
+                    }
+                    return false;
+                }
+
                 const pdfHidden = document.getElementById('archivo_pdf_hidden') ? document.getElementById('archivo_pdf_hidden').value.trim() : '';
                 const fileInput = document.getElementById('input_archivo_extractor');
                 const tieneArchivoInput = (fileInput && fileInput.files && fileInput.files.length > 0);
 
                 if (!pdfHidden && !tieneArchivoInput) {
                     e.preventDefault();
-                    mostrarModalAlerta('warning', 'Documento Requerido', 'Debe cargar y extraer un documento digital (PDF o Word) válido antes de registrar el proyecto.');
+                    mostrarModalAlerta('warning', 'Documento Requerido', 'Debe cargar y extraer un documento digital PDF o Word válido antes de registrar el proyecto.');
                     return false;
                 }
 
@@ -1249,15 +1265,16 @@ function procesarArchivosSeleccionados(fileList) {
         return (ext === 'pdf' || ext === 'docx' || ext === 'doc') && f.size <= MAX_FILE_SIZE_BYTES;
     });
 
-    // 4. Validar límite de archivos por lote (MAX_ARCHIVOS_LOTE)
+    // 4. Validar límite de archivos activos por lote
     let batchLimitFiles = [];
     if (!esEditar && typeof MAX_ARCHIVOS_LOTE === 'number' && MAX_ARCHIVOS_LOTE > 0) {
-        const cuposDisponibles = Math.max(0, MAX_ARCHIVOS_LOTE - documentosEnCola.length);
+        const activosEnCola = documentosEnCola.filter(d => d.estado !== 'exito').length;
+        const cuposDisponibles = Math.max(0, MAX_ARCHIVOS_LOTE - activosEnCola);
         if (cuposDisponibles <= 0) {
             mostrarModalAlerta(
                 'warning',
                 'Límite de Lote Alcanzado',
-                `La cola ya contiene el límite máximo permitido de ${MAX_ARCHIVOS_LOTE} documentos.\n\nProcese o elimine documentos existentes en la cola antes de agregar nuevos archivos.`
+                `La cola ya contiene el límite máximo permitido de ${MAX_ARCHIVOS_LOTE} documentos pendientes.\n\nSuba o descarte documentos de la lista antes de agregar más archivos.`
             );
             return;
         }
@@ -1272,15 +1289,15 @@ function procesarArchivosSeleccionados(fileList) {
     const avisosRechazo = [];
     if (invalidFormatFiles.length > 0) {
         const nombresInv = invalidFormatFiles.map(f => f.name).join(', ');
-        avisosRechazo.push(`Formato no admitido (solo .pdf, .docx y .doc):\n• ${nombresInv}`);
+        avisosRechazo.push(`Formato no admitido, solo se aceptan PDF y Word:\n• ${nombresInv}`);
     }
     if (oversizedFiles.length > 0) {
-        const detallesOversized = oversizedFiles.map(f => `• ${f.name} (${(f.size / (1024 * 1024)).toFixed(2)} MB)`).join('\n');
-        avisosRechazo.push(`Excede(n) el tamaño máximo permitido (${MAX_FILE_SIZE_MB} MB):\n${detallesOversized}`);
+        const detallesOversized = oversizedFiles.map(f => `• ${f.name} con ${(f.size / (1024 * 1024)).toFixed(2)} MB`).join('\n');
+        avisosRechazo.push(`Superan el tamaño máximo permitido de ${MAX_FILE_SIZE_MB} MB:\n${detallesOversized}`);
     }
     if (batchLimitFiles.length > 0) {
         const nombresLimit = batchLimitFiles.map(f => f.name).join(', ');
-        avisosRechazo.push(`Excede(n) el cupo máximo por lote (${MAX_ARCHIVOS_LOTE} archivos máx. en cola):\n• ${nombresLimit}`);
+        avisosRechazo.push(`Superan el cupo máximo de ${MAX_ARCHIVOS_LOTE} archivos en cola:\n• ${nombresLimit}`);
     }
 
     if (avisosRechazo.length > 0) {
@@ -1288,7 +1305,7 @@ function procesarArchivosSeleccionados(fileList) {
             mostrarModalAlerta(
                 'warning',
                 'Aviso de Carga por Lotes',
-                `Se procesarán ${validFiles.length} archivo(s) válido(s).\n\nLos siguientes archivos fueron omitidos:\n\n${avisosRechazo.join('\n\n')}`
+                `Se procesarán ${validFiles.length} archivos válidos.\n\nLos siguientes archivos fueron omitidos:\n\n${avisosRechazo.join('\n\n')}`
             );
         } else {
             mostrarModalAlerta(
@@ -1325,6 +1342,11 @@ function procesarArchivosSeleccionados(fileList) {
         return;
     }
 
+    // Antes de agregar una nueva tanda desde otra carpeta, resguardar los cambios del documento que esté abierto en pantalla
+    if (documentoSeleccionadoIndex >= 0 && documentoSeleccionadoIndex < documentosEnCola.length) {
+        guardarDatosFormularioEnArray(documentoSeleccionadoIndex);
+    }
+
     const carreraSelectForm = document.getElementById('id_carrera');
     const carreraValActual = carreraSelectForm ? carreraSelectForm.value : '';
 
@@ -1338,54 +1360,77 @@ function procesarArchivosSeleccionados(fileList) {
     iniciarProcesamientoListaArchivos(validFiles, carreraValActual || 1);
 }
 
+function crearEstructuraDatosVaciaCola(carreraId) {
+    return {
+        titulo: '',
+        id_carrera: carreraId || 1,
+        anio_publicacion: new Date().getFullYear(),
+        fecha_defensa: '',
+        fecha_precision: '',
+        fecha_texto_detectado: '',
+        nivel_academico: 'Pregrado',
+        trayecto: 'Trayecto I',
+        id_trayecto: '',
+        url_repositorio: '',
+        resumen: '',
+        obj_general: '',
+        palabras_clave: '',
+        comunidad_beneficiada: '',
+        linea_id: '',
+        dimension_id: '',
+        archivo_pdf: '',
+        autores: [],
+        carreras_vinculadas: [],
+        tutor_academico_cedula: '',
+        tutor_academico_nombre: '',
+        tutor_institucional_cedula: '',
+        tutor_institucional_nombre: '',
+        tutor_comunitario_cedula: '',
+        tutor_comunitario_nombre: ''
+    };
+}
+
+function clonarDatosCola(dataObj, carreraFallback) {
+    const base = crearEstructuraDatosVaciaCola(carreraFallback);
+    if (!dataObj || typeof dataObj !== 'object') return base;
+    const copia = Object.assign({}, base, dataObj);
+    copia.autores = Array.isArray(dataObj.autores)
+        ? dataObj.autores.map(a => ({
+            cedula: a && a.cedula ? String(a.cedula).trim() : '',
+            nombre: a && (a.nombre || a.nombre_completo) ? String(a.nombre || a.nombre_completo).trim() : ''
+        }))
+        : [];
+    copia.carreras_vinculadas = Array.isArray(dataObj.carreras_vinculadas)
+        ? dataObj.carreras_vinculadas.map(v => parseInt(v, 10)).filter(v => !isNaN(v))
+        : [];
+    return copia;
+}
+
 function iniciarProcesamientoListaArchivos(validFiles, carreraId) {
+    if (documentoSeleccionadoIndex >= 0 && documentoSeleccionadoIndex < documentosEnCola.length) {
+        guardarDatosFormularioEnArray(documentoSeleccionadoIndex);
+    }
+
     validFiles.forEach(file => {
         const docObj = {
-            id: Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+            id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
             nombreArchivo: file.name,
             file: file,
             estado: 'pendiente',
             errorMsg: '',
+            advertencia: '',
             progresoPct: 0,
             faseMsg: 'En cola de espera...',
             xhr: null,
-            data: {
-                titulo: '',
-                id_carrera: carreraId,
-                anio_publicacion: new Date().getFullYear(),
-                fecha_defensa: '',
-                fecha_precision: '',
-                fecha_texto_detectado: '',
-                nivel_academico: 'Pregrado',
-                trayecto: 'Trayecto I',
-                id_trayecto: '',
-                url_repositorio: '',
-                resumen: '',
-                obj_general: '',
-                palabras_clave: '',
-                comunidad_beneficiada: '',
-                linea_id: '',
-                dimension_id: '',
-                archivo_pdf: '',
-                autores: [],
-                tutor_academico_cedula: '',
-                tutor_academico_nombre: '',
-                tutor_institucional_cedula: '',
-                tutor_institucional_nombre: '',
-                tutor_comunitario_cedula: '',
-                tutor_comunitario_nombre: ''
-            }
+            data: crearEstructuraDatosVaciaCola(carreraId)
         };
         documentosEnCola.push(docObj);
     });
 
-    // Resetear valor de input file para permitir re-seleccionar los mismos archivos si es necesario
     const fileInput = document.getElementById('input_archivo_extractor');
     if (fileInput) fileInput.value = '';
 
     renderizarColaUI();
-
-    // Iniciar procesamiento secuencial de la cola (concurrencia controlada = 1)
     procesarSiguienteEnCola();
 }
 
@@ -1398,27 +1443,38 @@ function procesarSiguienteEnCola() {
     }
 
     extraccionEnCurso = true;
-    subirYExtraerDatos(documentosEnCola[siguienteIdx], siguienteIdx);
+    subirYExtraerDatos(documentosEnCola[siguienteIdx]);
 }
 
-function subirYExtraerDatos(docItem, index) {
+function subirYExtraerDatos(docItem) {
     docItem.estado = 'extrayendo';
     docItem.progresoPct = 0;
     docItem.faseMsg = 'Subiendo al servidor...';
     renderizarColaUI();
 
-    const CHUNK_SIZE = 8 * 1024 * 1024; // 8 MB por fragmento (evita límites post_max_size/upload_max_filesize de 64M en PHP)
+    const CHUNK_SIZE = 8 * 1024 * 1024;
     const file = docItem.file;
     const totalSize = file.size;
 
     const finalizarConRespuesta = function(response) {
+        const realIndex = documentosEnCola.findIndex(d => d.id === docItem.id);
+        if (realIndex === -1) {
+            extraccionEnCurso = false;
+            procesarSiguienteEnCola();
+            return;
+        }
+
         if (response.status === 'success') {
             docItem.estado = 'listo';
             docItem.errorMsg = '';
             docItem.progresoPct = 100;
             docItem.faseMsg = 'Listo';
             if (response.data) {
-                Object.assign(docItem.data, response.data);
+                const carreraPrevia = docItem.data.id_carrera || 1;
+                docItem.data = clonarDatosCola(Object.assign({}, docItem.data, response.data), carreraPrevia);
+                if (!docItem.data.id_carrera) {
+                    docItem.data.id_carrera = carreraPrevia;
+                }
                 if (response.data.ya_existe_en_bd) {
                     docItem.advertencia = 'Ya existe un proyecto registrado con este título en el repositorio. Modifique el título antes de registrarlo.';
                 } else {
@@ -1427,8 +1483,8 @@ function subirYExtraerDatos(docItem, index) {
             }
             try {
                 if (documentoSeleccionadoIndex === -1) {
-                    seleccionarDocumentoDeCola(index);
-                } else if (documentoSeleccionadoIndex === index) {
+                    seleccionarDocumentoDeCola(realIndex, false);
+                } else if (documentoSeleccionadoIndex === realIndex) {
                     rellenarFormulario(docItem.data);
                 }
             } catch (renderErr) {
@@ -1439,7 +1495,7 @@ function subirYExtraerDatos(docItem, index) {
             docItem.errorMsg = response.message || 'Error en la extracción de metadatos.';
             docItem.data.titulo = '';
             docItem.data.archivo_pdf = '';
-            if (documentoSeleccionadoIndex === index) {
+            if (documentoSeleccionadoIndex === realIndex) {
                 limpiarCamposFormularioSilencioso();
             }
         }
@@ -1450,11 +1506,17 @@ function subirYExtraerDatos(docItem, index) {
 
     const fallarSubida = function(msg) {
         docItem.xhr = null;
+        const realIndex = documentosEnCola.findIndex(d => d.id === docItem.id);
+        if (realIndex === -1) {
+            extraccionEnCurso = false;
+            procesarSiguienteEnCola();
+            return;
+        }
         docItem.estado = 'error';
         docItem.errorMsg = msg;
         docItem.data.titulo = '';
         docItem.data.archivo_pdf = '';
-        if (documentoSeleccionadoIndex === index) {
+        if (documentoSeleccionadoIndex === realIndex) {
             limpiarCamposFormularioSilencioso();
         }
         renderizarColaUI();
@@ -1494,7 +1556,7 @@ function subirYExtraerDatos(docItem, index) {
                     if (currentChunk + 1 === totalChunks && e.loaded >= e.total) {
                         docItem.faseMsg = 'Analizando texto...';
                     } else {
-                        docItem.faseMsg = `Subiendo (${pct}%)...`;
+                        docItem.faseMsg = `Subiendo ${pct}%...`;
                     }
                     renderizarColaUI();
                 }
@@ -1503,7 +1565,7 @@ function subirYExtraerDatos(docItem, index) {
             xhr.onload = function() {
                 docItem.xhr = null;
                 if (xhr.status !== 200) {
-                    fallarSubida('Error en el servidor (' + xhr.status + ').');
+                    fallarSubida('Error en el servidor: código ' + xhr.status);
                     return;
                 }
                 let response;
@@ -1550,7 +1612,7 @@ function subirYExtraerDatos(docItem, index) {
             const pct = Math.round((e.loaded / e.total) * 100);
             docItem.progresoPct = pct;
             if (pct < 100) {
-                docItem.faseMsg = 'Subiendo (' + pct + '%)...';
+                docItem.faseMsg = 'Subiendo ' + pct + '%...';
             } else {
                 docItem.faseMsg = 'Analizando texto...';
             }
@@ -1571,7 +1633,7 @@ function subirYExtraerDatos(docItem, index) {
             }
             finalizarConRespuesta(response);
         } else {
-            fallarSubida('Error en el servidor (' + xhr.status + ').');
+            fallarSubida('Error en el servidor: código ' + xhr.status);
         }
     };
 
@@ -1587,6 +1649,8 @@ function renderizarColaUI() {
     const lista = document.getElementById('listaColaItems');
     const countSpan = document.getElementById('countCola');
     const btnGuardarBorrador = document.getElementById('btnGuardarBorrador');
+    const btnSubmitFormPst = document.getElementById('btnSubmitFormPst');
+    const esCrear = <?= json_encode($accion === 'crear') ?>;
 
     if (!contenedor || !lista) return;
 
@@ -1594,12 +1658,17 @@ function renderizarColaUI() {
         contenedor.style.display = 'none';
         documentoSeleccionadoIndex = -1;
         if (btnGuardarBorrador) btnGuardarBorrador.style.display = 'none';
+        if (btnSubmitFormPst && esCrear) btnSubmitFormPst.textContent = 'Registrar Recurso';
         return;
     }
 
     contenedor.style.display = 'block';
-    if (countSpan) countSpan.textContent = documentosEnCola.length;
+    const activosCount = documentosEnCola.filter(d => d.estado !== 'exito').length;
+    if (countSpan) countSpan.textContent = activosCount;
     if (btnGuardarBorrador) btnGuardarBorrador.style.display = 'inline-flex';
+    if (btnSubmitFormPst && esCrear) {
+        btnSubmitFormPst.textContent = documentosEnCola.length > 1 ? 'Subir Documento en Pantalla' : 'Registrar Recurso';
+    }
 
     lista.innerHTML = '';
 
@@ -1608,48 +1677,48 @@ function renderizarColaUI() {
         const isSelected = (idx === documentoSeleccionadoIndex);
         
         let borderStyle = isSelected 
-            ? 'border: 2px solid var(--color-terciario, #007bff); background-color: #f4f8ff;'
-            : 'border: 1px solid rgba(169, 168, 166, 0.25); background-color: var(--blanco, #ffffff);';
+            ? 'border: 2px solid var(--color-terciario); background-color: #f4f8ff;'
+            : 'border: 1px solid rgba(80, 89, 132, 0.22); background-color: #ffffff;';
 
-        itemCard.setAttribute('style', `${borderStyle} border-radius: 4px; padding: 0.5rem 0.6rem; cursor: pointer; transition: all 0.15s ease;`);
+        itemCard.setAttribute('style', `${borderStyle} border-radius: 6px; padding: 0.55rem 0.65rem; cursor: pointer; transition: all 0.15s ease;`);
 
         let statusBadge = '';
         if (item.estado === 'pendiente') {
-            statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: #f1f5f9; color: var(--texto-silenciado); font-weight: 700;"><i class="ph ph-clock"></i> Pendiente</span>`;
+            statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: 4px; background-color: #ffffff; border: 1px solid rgba(80, 89, 132, 0.25); color: var(--color-secundario); font-weight: 700;"><i class="ph ph-clock"></i> En espera</span>`;
         } else if (item.estado === 'extrayendo') {
             const faseText = item.faseMsg || 'Extrayendo...';
             const pct = item.progresoPct || 0;
             statusBadge = `
                 <div style="text-align: right;">
-                    <span style="font-size: 0.68rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: #eff6ff; color: var(--color-terciario); font-weight: 700; display: inline-block;"><i class="ph ph-arrows-clockwise spin"></i> ${escapeHtml(faseText)}</span>
-                    <div style="width: 100%; min-width: 90px; background-color: #e2e8f0; border-radius: 4px; height: 4px; margin-top: 3px; overflow: hidden;">
+                    <span style="font-size: 0.68rem; padding: 0.15rem 0.45rem; border-radius: 4px; background-color: #eff6ff; color: var(--color-terciario); font-weight: 700; display: inline-block;"><i class="ph ph-arrows-clockwise spin"></i> ${escapeHtml(faseText)}</span>
+                    <div style="width: 100%; min-width: 90px; background-color: rgba(80, 89, 132, 0.12); border-radius: 4px; height: 4px; margin-top: 3px; overflow: hidden;">
                         <div style="width: ${pct}%; background-color: var(--color-terciario); height: 100%; transition: width 0.2s ease;"></div>
                     </div>
                 </div>
             `;
         } else if (item.estado === 'listo') {
             if (item.advertencia) {
-                statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: rgba(245, 158, 11, 0.15); color: #b45309; font-weight: 700;"><i class="ph ph-warning"></i> Duplicado</span>`;
+                statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: 4px; background-color: rgba(112, 144, 203, 0.15); color: var(--color-secundario); font-weight: 700;"><i class="ph ph-warning"></i> Título existente</span>`;
             } else {
-                statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: rgba(80, 89, 132, 0.1); color: var(--color-secundario); font-weight: 700;"><i class="ph ph-check-circle"></i> Listo</span>`;
+                statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: 4px; background-color: rgba(80, 89, 132, 0.1); color: var(--color-secundario); font-weight: 700;"><i class="ph ph-check-circle"></i> Listo</span>`;
             }
         } else if (item.estado === 'subiendo') {
-            statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: rgba(112, 144, 203, 0.15); color: var(--color-terciario); font-weight: 700;"><i class="ph ph-cloud-arrow-up spin"></i> Subiendo...</span>`;
+            statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: 4px; background-color: rgba(112, 144, 203, 0.15); color: var(--color-terciario); font-weight: 700;"><i class="ph ph-cloud-arrow-up spin"></i> Subiendo...</span>`;
         } else if (item.estado === 'exito') {
-            statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: rgba(80, 89, 132, 0.1); color: var(--color-secundario); font-weight: 700;"><i class="ph ph-check-circle"></i> Subido</span>`;
+            statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: 4px; background-color: var(--color-secundario); color: #ffffff; font-weight: 700;"><i class="ph ph-check-circle"></i> Subido</span>`;
         } else if (item.estado === 'error') {
-            statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background-color: rgba(239, 68, 68, 0.12); color: #dc2626; font-weight: 700;"><i class="ph ph-warning-circle"></i> Error</span>`;
+            statusBadge = `<span style="font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: 4px; background-color: rgba(80, 89, 132, 0.12); color: var(--color-secundario); font-weight: 700;"><i class="ph ph-warning-circle"></i> Revisar</span>`;
         }
 
         const titleText = (item.estado === 'listo' || item.estado === 'exito' || (item.data && item.data.titulo)) 
             ? (item.data && item.data.titulo ? item.data.titulo : item.nombreArchivo) 
-            : (item.estado === 'error' ? 'Extracción fallida' : 'Analizando documento...');
+            : (item.estado === 'error' ? 'Requiere revisión' : 'Analizando documento...');
 
         let content = `
             <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.4rem;">
                 <div style="overflow: hidden; text-overflow: ellipsis; flex-grow: 1;">
                     <div style="font-size: 0.75rem; font-weight: 700; color: var(--texto-titulos); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                        <i class="ph ph-file-pdf" style="color: var(--color-terciario);"></i> ${escapeHtml(item.nombreArchivo)}
+                        <i class="ph ph-file-text" style="color: var(--color-terciario);"></i> ${ idx + 1 }. ${escapeHtml(item.nombreArchivo)}
                     </div>
                     <div style="font-size: 0.7rem; color: var(--texto-silenciado); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 0.1rem;">
                         ${escapeHtml(titleText)}
@@ -1661,38 +1730,51 @@ function renderizarColaUI() {
 
         if (item.estado === 'error' && item.errorMsg) {
             content += `
-                <div class="alert-message alert-error" style="margin-top: 0.4rem; margin-bottom: 0; padding: 0.35rem 0.5rem; font-size: 0.7rem; word-break: break-word;">
-                    <i class="ph ph-warning-circle"></i> ${escapeHtml(item.errorMsg)}
+                <div style="margin-top: 0.4rem; margin-bottom: 0; padding: 0.35rem 0.5rem; font-size: 0.7rem; word-break: break-word; border-radius: 4px; background-color: #f4f8ff; border: 1px solid rgba(112, 144, 203, 0.35); color: var(--color-secundario);">
+                    <i class="ph ph-info"></i> ${escapeHtml(item.errorMsg)}
                 </div>
             `;
         } else if (item.advertencia) {
             content += `
-                <div style="margin-top: 0.4rem; margin-bottom: 0; padding: 0.35rem 0.5rem; font-size: 0.7rem; word-break: break-word; border-radius: 3px; background-color: #fffbeb; border: 1px solid #fde68a; color: #92400e;">
+                <div style="margin-top: 0.4rem; margin-bottom: 0; padding: 0.35rem 0.5rem; font-size: 0.7rem; word-break: break-word; border-radius: 4px; background-color: #f4f8ff; border: 1px solid rgba(112, 144, 203, 0.35); color: var(--color-secundario);">
                     <i class="ph ph-warning"></i> ${escapeHtml(item.advertencia)}
                 </div>
             `;
         }
 
+        const puedeRevisarOSubir = (item.estado === 'listo' || (item.estado === 'error' && item.data && item.data.archivo_pdf));
+
         content += `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; padding-top: 0.3rem; border-top: 1px dashed rgba(169, 168, 166, 0.15);">
-                ${(item.estado === 'listo' || (item.estado === 'error' && item.data && item.data.archivo_pdf)) ? `
-                    <button type="button" class="btn-action-edit" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;" onclick="event.stopPropagation(); seleccionarDocumentoDeCola(${idx});">
-                        <i class="ph ph-pencil-simple"></i> Revisar / Editar
-                    </button>
-                ` : `
-                    <span style="font-size: 0.72rem; color: var(--texto-silenciado);">
-                        ${item.estado === 'error' ? '<i class=\"ph ph-x-circle\" style=\"color:#dc2626;\"></i> No procesable' : '<i class=\"ph ph-spinner spin\"></i> En proceso'}
-                    </span>
-                `}
-                <button type="button" class="btn-action-delete" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;" onclick="event.stopPropagation(); eliminarDocumentoDeCola(${idx});">
-                    <i class="ph ph-trash"></i> Descartar
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.45rem; padding-top: 0.35rem; border-top: 1px dashed rgba(80, 89, 132, 0.15);">
+                <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
+                    ${puedeRevisarOSubir ? `
+                        <button type="button" class="btn-action-edit" style="font-size: 0.7rem; padding: 0.18rem 0.5rem; background: #ffffff; color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.3); border-radius: 4px; font-weight: 700; cursor: pointer;" onclick="event.stopPropagation(); seleccionarDocumentoDeCola(${idx});">
+                            <i class="ph ph-pencil-simple"></i> Revisar / Editar
+                        </button>
+                        <button type="button" style="font-size: 0.7rem; padding: 0.18rem 0.55rem; background: var(--color-secundario); color: #ffffff; border: 1px solid var(--color-secundario); border-radius: 4px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;" onclick="event.stopPropagation(); subirDocumentoIndividualDeCola(${idx});">
+                            <i class="ph ph-cloud-arrow-up"></i> Subir este
+                        </button>
+                    ` : (item.estado === 'exito' ? `
+                        <span style="font-size: 0.72rem; color: var(--color-secundario); font-weight: 700;">
+                            <i class="ph ph-check-circle"></i> Guardado en el catálogo
+                        </span>
+                    ` : `
+                        <span style="font-size: 0.72rem; color: var(--texto-silenciado);">
+                            ${item.estado === 'error' ? '<i class="ph ph-warning-circle" style="color:var(--color-secundario);"></i> No procesable' : '<i class="ph ph-spinner spin"></i> En proceso'}
+                        </span>
+                    `)}
+                </div>
+                <button type="button" class="btn-action-delete" style="font-size: 0.7rem; padding: 0.18rem 0.5rem; background: #ffffff; color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25); border-radius: 4px; font-weight: 600; cursor: pointer;" onclick="event.stopPropagation(); eliminarDocumentoDeCola(${idx});">
+                    <i class="ph ph-trash"></i> ${item.estado === 'exito' ? 'Quitar' : 'Descartar'}
                 </button>
             </div>
         `;
 
         itemCard.innerHTML = content;
         itemCard.addEventListener('click', () => {
-            seleccionarDocumentoDeCola(idx);
+            if (item.estado !== 'exito') {
+                seleccionarDocumentoDeCola(idx);
+            }
         });
 
         lista.appendChild(itemCard);
@@ -1708,7 +1790,7 @@ function escapeHtml(str) {
         .replace(/"/g, '&quot;');
 }
 
-function seleccionarDocumentoDeCola(index) {
+function seleccionarDocumentoDeCola(index, guardarActual = true) {
     if (index < 0 || index >= documentosEnCola.length) return;
 
     const docItem = documentosEnCola[index];
@@ -1718,12 +1800,14 @@ function seleccionarDocumentoDeCola(index) {
     }
 
     if (docItem.estado === 'error' && (!docItem.data || !docItem.data.archivo_pdf)) {
-        mostrarModalAlerta('warning', 'Documento no Procesado', `El archivo "${docItem.nombreArchivo}" no pudo ser procesado:\n\n${docItem.errorMsg || 'Error desconocido'}.\n\nElimine este archivo de la cola o cargue una versión que cumpla con los requisitos.`);
+        mostrarModalAlerta('warning', 'Documento no Procesado', `El archivo "${docItem.nombreArchivo}" no pudo ser procesado:\n\n${docItem.errorMsg || 'Error desconocido'}.\n\nDescarte este archivo de la cola o cargue una versión válida.`);
         return;
     }
 
-    if (documentoSeleccionadoIndex >= 0 && documentoSeleccionadoIndex < documentosEnCola.length && documentoSeleccionadoIndex !== index) {
-        guardarDatosFormularioEnArray(documentoSeleccionadoIndex);
+    if (guardarActual && documentoSeleccionadoIndex >= 0 && documentoSeleccionadoIndex < documentosEnCola.length && documentoSeleccionadoIndex !== index) {
+        if (documentosEnCola[documentoSeleccionadoIndex] && documentosEnCola[documentoSeleccionadoIndex].estado !== 'exito') {
+            guardarDatosFormularioEnArray(documentoSeleccionadoIndex);
+        }
     }
 
     documentoSeleccionadoIndex = index;
@@ -1731,7 +1815,7 @@ function seleccionarDocumentoDeCola(index) {
     renderizarColaUI();
 
     if (docItem.estado === 'error' && docItem.errorMsg) {
-        mostrarModalAlerta('warning', 'Documento con Observación', `El documento "${docItem.nombreArchivo}" presentó la siguiente observación:\n\n${docItem.errorMsg}\n\nPuede modificar los datos en el formulario y pulsar "Guardar en Borrador" para prepararlo.`);
+        mostrarModalAlerta('warning', 'Documento con Observación', `El documento "${docItem.nombreArchivo}" presentó la siguiente observación:\n\n${docItem.errorMsg}\n\nPuede completar los datos en el formulario y pulsar Subir este o Guardar en Borrador.`);
     } else if (docItem.advertencia) {
         mostrarModalAlerta('warning', 'Título Duplicado', `Atención: ${docItem.advertencia}`);
     }
@@ -1739,8 +1823,10 @@ function seleccionarDocumentoDeCola(index) {
 
 function guardarDatosFormularioEnArray(index) {
     if (index < 0 || index >= documentosEnCola.length) return;
+    if (!documentosEnCola[index]) return;
     const currentData = obtenerDatosFormularioActual();
-    Object.assign(documentosEnCola[index].data, currentData);
+    const carreraFallback = currentData.id_carrera || documentosEnCola[index].data.id_carrera || 1;
+    documentosEnCola[index].data = clonarDatosCola(Object.assign({}, documentosEnCola[index].data, currentData), carreraFallback);
 }
 
 async function guardarBorradorEnCola() {
@@ -1861,10 +1947,37 @@ function obtenerDatosFormularioActual() {
     };
 }
 
+function buscarSiguienteIndiceSeleccionable(preferredIndex) {
+    if (documentosEnCola.length === 0) return -1;
+    const clamped = Math.min(Math.max(0, preferredIndex), documentosEnCola.length - 1);
+    const puedeAbrir = (d) => d && (d.estado === 'listo' || (d.estado === 'error' && d.data && d.data.archivo_pdf));
+
+    if (puedeAbrir(documentosEnCola[clamped])) {
+        return clamped;
+    }
+    for (let i = clamped; i < documentosEnCola.length; i++) {
+        if (puedeAbrir(documentosEnCola[i])) return i;
+    }
+    for (let i = clamped - 1; i >= 0; i--) {
+        if (puedeAbrir(documentosEnCola[i])) return i;
+    }
+    return -1;
+}
+
 function eliminarDocumentoDeCola(index) {
     if (index < 0 || index >= documentosEnCola.length) return;
-    
+
+    // Si el usuario tiene abierto en el formulario un documento distinto al que va a borrar,
+    // guardamos primero sus cambios en su posición original antes de alterar el arreglo.
+    if (documentoSeleccionadoIndex >= 0 && documentoSeleccionadoIndex < documentosEnCola.length && documentoSeleccionadoIndex !== index) {
+        if (documentosEnCola[documentoSeleccionadoIndex] && documentosEnCola[documentoSeleccionadoIndex].estado !== 'exito') {
+            guardarDatosFormularioEnArray(documentoSeleccionadoIndex);
+        }
+    }
+
+    const borrandoSeleccionado = (documentoSeleccionadoIndex === index);
     const eliminado = documentosEnCola[index];
+
     if (eliminado && eliminado.xhr && typeof eliminado.xhr.abort === 'function') {
         try {
             eliminado.xhr.abort();
@@ -1872,19 +1985,22 @@ function eliminarDocumentoDeCola(index) {
     }
     const eraExtrayendo = (eliminado && eliminado.estado === 'extrayendo');
 
+    // Eliminar de la lista
     documentosEnCola.splice(index, 1);
-    
-    if (documentoSeleccionadoIndex === index) {
-        if (documentosEnCola.length > 0) {
-            seleccionarDocumentoDeCola(Math.max(0, index - 1));
+
+    if (borrandoSeleccionado) {
+        // Anular primero el índice seleccionado para que NUNCA se guarden los datos del elemento borrado sobre el que ocupó su lugar
+        documentoSeleccionadoIndex = -1;
+        const nuevoIdx = buscarSiguienteIndiceSeleccionable(index);
+        if (nuevoIdx >= 0) {
+            seleccionarDocumentoDeCola(nuevoIdx, false);
         } else {
-            documentoSeleccionadoIndex = -1;
             limpiarCamposFormularioSilencioso();
         }
     } else if (documentoSeleccionadoIndex > index) {
         documentoSeleccionadoIndex--;
     }
-    
+
     if (eraExtrayendo) {
         extraccionEnCurso = false;
     }
@@ -1920,6 +2036,10 @@ function limpiarCamposFormularioSilencioso() {
     if (!form) return;
     const inputs = form.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], textarea');
     inputs.forEach(input => { input.value = ''; });
+    const pdfHidden = document.getElementById('archivo_pdf_hidden');
+    if (pdfHidden) pdfHidden.value = '';
+    const alertaDup = document.getElementById('alerta_duplicado_titulo');
+    if (alertaDup) alertaDup.style.display = 'none';
     const hintFecha = document.getElementById('hint_fecha_defensa');
     if (hintFecha) {
         hintFecha.style.display = 'none';
@@ -1936,6 +2056,121 @@ function limpiarCamposFormularioSilencioso() {
     }
 }
 
+async function subirDocumentoIndividualDeCola(index) {
+    if (index < 0 || index >= documentosEnCola.length) return;
+
+    const item = documentosEnCola[index];
+    if (!item) return;
+
+    if (item.estado === 'extrayendo' || item.estado === 'pendiente') {
+        mostrarModalAlerta('warning', 'Extracción en Proceso', `El archivo "${item.nombreArchivo}" todavía se está analizando. Espere unos segundos a que esté listo.`);
+        return;
+    }
+
+    if (item.estado === 'exito') {
+        mostrarModalAlerta('success', 'Documento ya Subido', `El archivo "${item.nombreArchivo}" ya fue registrado en el catálogo.`);
+        return;
+    }
+
+    // Si es el documento que está actualmente abierto en el formulario, guardar sus cambios primero
+    if (documentoSeleccionadoIndex === index) {
+        guardarDatosFormularioEnArray(index);
+    }
+
+    const datosEnvio = item.data || {};
+    const tituloLimpio = (datosEnvio.titulo || '').trim();
+    const archivoPdfLimpio = (datosEnvio.archivo_pdf || '').trim();
+    const autoresValidos = Array.isArray(datosEnvio.autores)
+        ? datosEnvio.autores.filter(a => a && ((a.nombre && a.nombre.trim() !== '') || (a.nombre_completo && a.nombre_completo.trim() !== '')))
+        : [];
+
+    if (!archivoPdfLimpio) {
+        mostrarModalAlerta('warning', 'Archivo no Disponible', `El documento "${item.nombreArchivo}" no cuenta con un archivo temporal válido. Vuelva a cargarlo.`);
+        return;
+    }
+
+    if (!tituloLimpio) {
+        seleccionarDocumentoDeCola(index);
+        mostrarModalAlerta('warning', 'Falta el Título', `Por favor escribe el título del proyecto para "${item.nombreArchivo}" antes de subirlo.`);
+        return;
+    }
+
+    if (item.advertencia) {
+        seleccionarDocumentoDeCola(index);
+        mostrarModalAlerta('warning', 'Título Duplicado', `El documento "${item.nombreArchivo}" tiene un título que ya existe en el catálogo. Ajusta el título en el formulario antes de subirlo.`);
+        return;
+    }
+
+    if (autoresValidos.length === 0) {
+        seleccionarDocumentoDeCola(index);
+        mostrarModalAlerta('warning', 'Falta al menos un Autor', `El documento "${item.nombreArchivo}" necesita al menos un autor registrado en el formulario antes de subirlo.`);
+        return;
+    }
+
+    item.estado = 'subiendo';
+    renderizarColaUI();
+
+    try {
+        const res = await fetch('?ruta=agregar-documento&accion=crear_ajax', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+                'X-CSRF-Token': window.CSRF_TOKEN || ''
+            },
+            body: JSON.stringify(Object.assign({}, item.data, { csrf_token: window.CSRF_TOKEN || '' }))
+        });
+
+        const json = await res.json();
+        if (json.status === 'success') {
+            item.estado = 'exito';
+            item.errorMsg = '';
+            item.advertencia = '';
+
+            // Buscar si queda otro documento listo para pasarlo al formulario automáticamente
+            if (documentoSeleccionadoIndex === index) {
+                documentoSeleccionadoIndex = -1;
+                const siguienteIdx = buscarSiguienteIndiceSeleccionable(index);
+                if (siguienteIdx >= 0) {
+                    seleccionarDocumentoDeCola(siguienteIdx, false);
+                } else {
+                    limpiarCamposFormularioSilencioso();
+                }
+            }
+
+            renderizarColaUI();
+
+            const restantesPorSubir = documentosEnCola.filter(d => d.estado !== 'exito').length;
+            if (restantesPorSubir === 0) {
+                mostrarModalAlerta(
+                    'success',
+                    'Todos los Documentos Subidos',
+                    `Se registró con éxito "${item.nombreArchivo}". Ya se subieron todos los archivos de tu cola.`,
+                    () => {
+                        window.location.href = '?ruta=agregar-documento&msg=created';
+                    }
+                );
+            } else {
+                mostrarModalAlerta(
+                    'success',
+                    'Documento Subido',
+                    `Se registró con éxito "${item.nombreArchivo}". Quedan ${restantesPorSubir} documentos en tu cola.`
+                );
+            }
+        } else {
+            item.estado = 'error';
+            item.errorMsg = json.message || 'No se pudo guardar el documento.';
+            renderizarColaUI();
+            seleccionarDocumentoDeCola(index, false);
+            mostrarModalAlerta('warning', 'No se pudo subir el documento', item.errorMsg);
+        }
+    } catch (err) {
+        item.estado = 'error';
+        item.errorMsg = 'Error de comunicación con el servidor.';
+        renderizarColaUI();
+        mostrarModalAlerta('error', 'Error de Conexión', 'Ocurrió un problema de red al intentar subir el documento.');
+    }
+}
+
 async function subirLoteABaseDeDatos() {
     if (documentosEnCola.length === 0) {
         mostrarModalAlerta('warning', 'Cola Vacía', 'La cola de documentos está vacía.');
@@ -1943,7 +2178,9 @@ async function subirLoteABaseDeDatos() {
     }
 
     if (documentoSeleccionadoIndex >= 0 && documentoSeleccionadoIndex < documentosEnCola.length) {
-        guardarDatosFormularioEnArray(documentoSeleccionadoIndex);
+        if (documentosEnCola[documentoSeleccionadoIndex] && documentosEnCola[documentoSeleccionadoIndex].estado !== 'exito') {
+            guardarDatosFormularioEnArray(documentoSeleccionadoIndex);
+        }
     }
 
     // Verificar si hay documentos aún en extracción
@@ -1959,7 +2196,7 @@ async function subirLoteABaseDeDatos() {
 
     if (listos.length === 0) {
         if (conError.length > 0) {
-            mostrarModalAlerta('warning', 'Sin Documentos Listos', 'No hay documentos válidos listos para registrar. Los archivos en cola presentan errores de validación o extracción.');
+            mostrarModalAlerta('warning', 'Sin Documentos Listos', 'No hay documentos válidos listos para registrar. Revisa los archivos marcados en la cola.');
         } else {
             mostrarModalAlerta('success', 'Cola Completada', 'Todos los documentos válidos de la cola ya se han subido con éxito a la base de datos.');
         }
@@ -1969,14 +2206,14 @@ async function subirLoteABaseDeDatos() {
     // Verificar si algún documento listo tiene advertencia de duplicado
     const conDuplicado = listos.filter(d => d.advertencia);
     if (conDuplicado.length > 0) {
-        mostrarModalAlerta('warning', 'Títulos Duplicados Detectados', 'Uno o más documentos en cola tienen títulos que ya existen en la base de datos. Por favor seleccione el documento, modifique su título y presione "Guardar en Borrador" antes de subir el lote.');
+        mostrarModalAlerta('warning', 'Títulos Duplicados Detectados', 'Uno o más documentos en cola tienen títulos que ya existen en la base de datos. Por favor selecciona el documento, modifica su título y presiona Guardar en Borrador antes de subir el lote.');
         return;
     }
 
     const btnSubir = document.getElementById('btnSubirLote');
     if (btnSubir) {
         btnSubir.disabled = true;
-        btnSubir.innerHTML = '<i class="ph ph-spinner spin"></i> Procesando Subida en Lote...';
+        btnSubir.innerHTML = '<i class="ph ph-spinner spin"></i> Subiendo Documentos...';
     }
 
     let exitosos = 0;
@@ -2021,7 +2258,7 @@ async function subirLoteABaseDeDatos() {
 
     if (btnSubir) {
         btnSubir.disabled = false;
-        btnSubir.innerHTML = '<i class="ph ph-cloud-arrow-up" style="font-size: 1.1rem;"></i> Subir Lote a Base de Datos';
+        btnSubir.innerHTML = '<i class="ph ph-cloud-arrow-up" style="font-size: 1.1rem;"></i> Subir Todos los Listos';
     }
 
     if (exitosos === 0 && fallidos === 0) {
@@ -2029,14 +2266,19 @@ async function subirLoteABaseDeDatos() {
         return;
     }
 
-    let msj = `Proceso de subida en lote finalizado.\n\n• Documentos registrados con éxito: ${exitosos}.`;
+    let msj = `Proceso de subida finalizado.\n\n• Documentos registrados con éxito: ${exitosos}.`;
     if (fallidos > 0) {
-        msj += `\n• Documentos con error: ${fallidos}.\nRevise los ítems marcados en la cola para corregirlos.`;
+        msj += `\n• Documentos por revisar: ${fallidos}.\nRevisa los elementos pendientes en la cola para completar los datos faltantes.`;
+        const primerConError = buscarSiguienteIndiceSeleccionable(0);
+        if (primerConError >= 0) {
+            documentoSeleccionadoIndex = -1;
+            seleccionarDocumentoDeCola(primerConError, false);
+        }
         if (exitosos > 0) {
             confirmarAccionModal(
                 'warning',
                 'Carga Parcial Finalizada',
-                msj + '\n\n¿Desea ir al catálogo para ver los proyectos registrados o permanecer aquí para revisar los que tuvieron error?',
+                msj + '\n\n¿Deseas ir al catálogo para ver los proyectos registrados o quedarte aquí para revisar los pendientes?',
                 'Ver Catálogo',
                 () => {
                     window.location.href = '?ruta=agregar-documento&msg=created';
@@ -2046,7 +2288,7 @@ async function subirLoteABaseDeDatos() {
             mostrarModalAlerta('warning', 'Resumen de Carga', msj);
         }
     } else {
-        mostrarModalAlerta('success', 'Carga Completada', msj + '\n\nPresione Aceptar para ver los proyectos registrados en el catálogo.', () => {
+        mostrarModalAlerta('success', 'Carga Completada', msj + '\n\nPresiona Aceptar para ver los proyectos registrados en el catálogo.', () => {
             window.location.href = '?ruta=agregar-documento&msg=created';
         });
     }
@@ -2055,8 +2297,12 @@ async function subirLoteABaseDeDatos() {
 function rellenarFormulario(data) {
     if (!data) return;
 
-    if (data.archivo_pdf !== undefined && document.getElementById('archivo_pdf_hidden')) document.getElementById('archivo_pdf_hidden').value = data.archivo_pdf || '';
-    if (data.titulo !== undefined) document.getElementById('titulo').value = data.titulo || '';
+    if (document.getElementById('archivo_pdf_hidden')) {
+        document.getElementById('archivo_pdf_hidden').value = data.archivo_pdf || '';
+    }
+    if (document.getElementById('titulo')) {
+        document.getElementById('titulo').value = data.titulo || '';
+    }
 
     const alertaEl = document.getElementById('alerta_duplicado_titulo');
     if (alertaEl) {
@@ -2066,10 +2312,12 @@ function rellenarFormulario(data) {
             alertaEl.style.display = 'none';
         }
     }
-    if (data.anio_publicacion !== undefined) document.getElementById('anio_publicacion').value = data.anio_publicacion || new Date().getFullYear();
+    if (document.getElementById('anio_publicacion')) {
+        document.getElementById('anio_publicacion').value = data.anio_publicacion || new Date().getFullYear();
+    }
     const fechaInput = document.getElementById('fecha_defensa');
     const hintFecha = document.getElementById('hint_fecha_defensa');
-    if (fechaInput && data.fecha_defensa !== undefined) {
+    if (fechaInput) {
         fechaInput.value = data.fecha_defensa || '';
     }
     if (hintFecha) {
@@ -2077,32 +2325,32 @@ function rellenarFormulario(data) {
         const txtDet = data.fecha_texto_detectado || '';
         if (prec === 'completa') {
             hintFecha.style.display = 'block';
-            hintFecha.style.color = '#166534';
-            hintFecha.innerHTML = `<i class="ph ph-check-circle"></i> Fecha exacta detectada${txtDet ? ' (' + txtDet + ')' : ''}.`;
+            hintFecha.style.color = 'var(--color-secundario)';
+            hintFecha.innerHTML = `<i class="ph ph-check-circle"></i> Fecha exacta detectada${txtDet ? ': ' + txtDet : ''}.`;
         } else if (prec === 'mes_anio') {
             hintFecha.style.display = 'block';
-            hintFecha.style.color = '#b45309';
-            hintFecha.innerHTML = `<i class="ph ph-info"></i> Se detectó mes y año${txtDet ? ' (' + txtDet + ')' : ''}; se fijó el día 01 (ajústelo si conoce el día exacto).`;
+            hintFecha.style.color = 'var(--color-secundario)';
+            hintFecha.innerHTML = `<i class="ph ph-info"></i> Se detectó mes y año${txtDet ? ': ' + txtDet : ''}; se fijó el día 01, ajústalo si conoces el día exacto.`;
         } else if (prec === 'solo_anio') {
             hintFecha.style.display = 'block';
-            hintFecha.style.color = '#9a3412';
-            hintFecha.innerHTML = `<i class="ph ph-warning-circle"></i> El documento solo declara el año (${data.anio_publicacion || ''}); complete el día y mes de defensa.`;
+            hintFecha.style.color = 'var(--color-secundario)';
+            hintFecha.innerHTML = `<i class="ph ph-warning-circle"></i> El documento solo declara el año ${data.anio_publicacion || ''}; completa el día y mes de defensa.`;
         } else {
             hintFecha.style.display = 'none';
             hintFecha.textContent = '';
         }
     }
-    if (data.nivel_academico !== undefined && document.getElementById('nivel_academico')) {
+    if (document.getElementById('nivel_academico')) {
         document.getElementById('nivel_academico').value = data.nivel_academico || 'Pregrado';
         toggleTrayectoByNivel();
     }
-    if (data.trayecto !== undefined && document.getElementById('trayecto')) document.getElementById('trayecto').value = data.trayecto || 'Trayecto I';
-    if (data.id_trayecto !== undefined && document.getElementById('id_trayecto')) document.getElementById('id_trayecto').value = data.id_trayecto || '';
-    if (data.url_repositorio !== undefined && document.getElementById('url_repositorio')) document.getElementById('url_repositorio').value = data.url_repositorio || '';
-    if (data.resumen !== undefined) document.getElementById('resumen').value = data.resumen || '';
-    if (data.obj_general !== undefined && document.getElementById('obj_general')) document.getElementById('obj_general').value = data.obj_general || '';
-    if (data.palabras_clave !== undefined) document.getElementById('palabras_clave').value = data.palabras_clave || '';
-    if (data.comunidad_beneficiada !== undefined) document.getElementById('comunidad_beneficiada').value = data.comunidad_beneficiada || '';
+    if (document.getElementById('trayecto')) document.getElementById('trayecto').value = data.trayecto || 'Trayecto I';
+    if (document.getElementById('id_trayecto')) document.getElementById('id_trayecto').value = data.id_trayecto || '';
+    if (document.getElementById('url_repositorio')) document.getElementById('url_repositorio').value = data.url_repositorio || '';
+    if (document.getElementById('resumen')) document.getElementById('resumen').value = data.resumen || '';
+    if (document.getElementById('obj_general')) document.getElementById('obj_general').value = data.obj_general || '';
+    if (document.getElementById('palabras_clave')) document.getElementById('palabras_clave').value = data.palabras_clave || '';
+    if (document.getElementById('comunidad_beneficiada')) document.getElementById('comunidad_beneficiada').value = data.comunidad_beneficiada || '';
 
     const autorRows = document.querySelectorAll('.authors-container .grid-2-cols');
     const nombreInputs = document.getElementsByName('autor_nombre[]');
