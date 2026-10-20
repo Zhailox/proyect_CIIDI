@@ -30,10 +30,15 @@ if ($appDebug) {
     error_reporting(0);
 }
 
-// 1.8. Aplicar directivas dinámicas de memoria y tiempo de ejecución según configuración del Repositorio
-if (file_exists(MODULES_PATH . 'RepositorioPST/services/ConfigService.php')) {
-    require_once MODULES_PATH . 'RepositorioPST/services/ConfigService.php';
-    ConfigService::aplicarDirectivasRuntime();
+// 1.8. Aplicar directivas dinámicas de memoria y tiempo de ejecución sin contaminar clases globales
+$cfgPstPath = MODULES_PATH . 'RepositorioPST/config_pst.json';
+if (file_exists($cfgPstPath)) {
+    $cfgPstData = @json_decode((string)@file_get_contents($cfgPstPath), true);
+    $maxMbRuntime = max(20, (int)($cfgPstData['archivos']['max_size_mb'] ?? 200));
+    $memMbRuntime = max(512, (int)ceil($maxMbRuntime * 2.5));
+    @ini_set('memory_limit', $memMbRuntime . 'M');
+    @ini_set('max_execution_time', '300');
+    @ini_set('max_input_time', '300');
 }
 
 // 2. Importar el motor del sistema (Microkernel)
@@ -42,4 +47,3 @@ require_once CORE_PATH . 'System/Kernel.php';
 // 3. Instanciar y ejecutar la aplicación
 $app = new Kernel();
 $app->run();
-
