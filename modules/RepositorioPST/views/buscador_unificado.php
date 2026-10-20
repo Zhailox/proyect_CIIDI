@@ -116,7 +116,7 @@ require_once __DIR__ . '/../services/ConfigService.php';
 
                     <div style="margin-top: 1rem;">
                         <button type="submit" class="btn-apply-filters"><i class="ph ph-funnel"></i> Aplicar Filtros</button>
-                        <?php if ($q !== '' || !empty($filtros['anio']) || !empty($filtros['linea_id']) || !empty($filtros['dimension_id']) || !empty($selectedCarrera) || !empty($_GET['usar_ia'])): ?>
+                        <?php if (!empty($busquedaActiva) || !empty($_GET['usar_ia'])): ?>
                             <a href="?ruta=buscador" class="btn-reset-all">Restablecer Todo</a>
                         <?php endif; ?>
                     </div>
@@ -164,7 +164,7 @@ require_once __DIR__ . '/../services/ConfigService.php';
 
                 <!-- Resultados de Búsqueda -->
                 <div class="search-results-section">
-                    <?php if ($q === '' && empty($filtros['anio']) && empty($filtros['linea_id']) && empty($filtros['dimension_id']) && empty($selectedCarrera)): ?>
+                    <?php if (empty($busquedaActiva)): ?>
                         <!-- Pantalla inicial / Estado Vacío inicial -->
                         <div class="search-welcome-state">
                             <i class="ph ph-books" style="font-size: 4rem; color: var(--color-terciario); opacity: 0.8;"></i>
@@ -180,7 +180,7 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                     Resultados Obtenidos
                                 <?php endif; ?>
                                 <span style="font-size: 0.85rem; font-weight: 500; color: var(--texto-silenciado);">
-                                    (Mostrando <?= count($resultados) ?> de <?= $pagination['total_items'] ?>)
+                                    · Mostrando <?= count($resultados) ?> de <?= $pagination['total_items'] ?>
                                 </span>
                             </h3>
                             <?php if (!empty($usar_ia)): ?>

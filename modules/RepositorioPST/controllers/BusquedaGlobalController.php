@@ -37,8 +37,21 @@ class BusquedaGlobalController {
             'orden'        => !empty($_GET['orden']) ? trim($_GET['orden']) : ConfigService::get('buscador.orden_predeterminado', 'anio_desc'),
         ];
         
-        // Búsqueda
-        if ($usar_ia && $q !== '') {
+        // Determinar si el usuario ya inició una búsqueda o aplicó algún filtro real
+        $filtroCarreraUsuario = $permitirFiltroCarrera && !empty($_GET['carrera_id']);
+        $busquedaActiva = (
+            $q !== '' ||
+            !empty($_GET['anio']) ||
+            !empty($_GET['linea_id']) ||
+            !empty($_GET['dimension_id']) ||
+            $filtroCarreraUsuario
+        );
+
+        // Solo consultar proyectos en la base de datos cuando exista una búsqueda o filtro activo
+        if (!$busquedaActiva) {
+            $resultados = [];
+            $totalResults = 0;
+        } elseif ($usar_ia && $q !== '') {
             // Modo IA: búsqueda semántica con soporte de filtros
             $resultados = $model->buscarSemantico($q, $filtrosExtra);
             $totalResults = count($resultados);
@@ -48,7 +61,7 @@ class BusquedaGlobalController {
             $totalResults = $model->buscarPSTCount($q, $filtrosExtra);
         }
         
-        $totalPages = $limit > 0 ? ceil($totalResults / $limit) : 1;
+        $totalPages = ($busquedaActiva && $limit > 0) ? (int)ceil($totalResults / $limit) : 1;
         
         // Cargar colecciones para poblar selectores
         $carreras     = $model->getCarreras();
@@ -62,6 +75,7 @@ class BusquedaGlobalController {
         
         return [
             'resultados'         => $resultados,
+            'busquedaActiva'     => $busquedaActiva,
             'q'                  => $q,
             'usar_ia'            => $usar_ia,
             'carreras'           => $carreras,

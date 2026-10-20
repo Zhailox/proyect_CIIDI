@@ -1,7 +1,7 @@
 {
-    "timestamp": 1792471322,
-    "fecha_hora": "2026-10-20 00:42:02",
-    "origen": "cron_cli",
-    "ejecutadas_ultimo_ciclo": 0,
-    "usuario_so": "Chailon"
+    "timestamp": 1792471788,
+    "fecha_hora": "2026-10-20 00:49:48",
+    "origen": "auto_scheduler",
+    "ejecutadas_ultimo_ciclo": 1,
+    "usuario_so": "SYSTEM"
 }
