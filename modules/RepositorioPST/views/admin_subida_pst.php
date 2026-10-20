@@ -664,6 +664,9 @@ if (typeof window.mammoth === 'undefined') {
 
                             <!-- Acciones de Gestión Masiva y Catálogo -->
                             <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                <a href="?ruta=gestion-red-onnx" class="btn-cancel" style="padding: 0.5rem 0.9rem; font-size: 0.8rem; background: #ffffff; color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.3);" title="Configurar parámetros y fidelidad del modelo ONNX de Redes Neuronales">
+                                    <i class="ph ph-cpu"></i> Modelo ONNX IA
+                                </a>
                                 <a href="<?= htmlspecialchars($urlExportarCsv) ?>" class="btn-cancel" style="padding: 0.5rem 0.9rem; font-size: 0.8rem; background: rgba(80, 89, 132, 0.08); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.2);" title="Descargar listado en formato compatible con Excel">
                                     <i class="ph ph-file-csv"></i> Exportar listado
                                 </a>

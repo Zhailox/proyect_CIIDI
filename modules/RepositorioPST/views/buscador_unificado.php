@@ -145,6 +145,7 @@ require_once __DIR__ . '/../services/ConfigService.php';
                         </div>
                         
                         <!-- Toggle de Búsqueda Semántica (IA) -->
+                        <?php if ((bool)ConfigService::get('red_onnx.habilitar_busqueda_semantica', true)): ?>
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             <div class="semantic-toggle-wrapper">
                                 <label class="semantic-switch" for="usarIaCheckbox">
@@ -159,6 +160,7 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                 <i class="ph-bold ph-info"></i> Encuentra proyectos por significado conceptual analizando resúmenes y títulos mediante embeddings vectoriales.
                             </div>
                         </div>
+                        <?php endif; ?>
                     </form>
                 </div>
 
@@ -315,13 +317,30 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                         <span class="page-link disabled">&laquo; Anterior</span>
                                     <?php endif; ?>
                                     
-                                    <?php for ($i = 1; $i <= $tot; $i++): ?>
+                                    <?php 
+                                    $rangoInicioBusc = max(1, $curr - 2);
+                                    $rangoFinBusc    = min($tot, $curr + 2);
+                                    if ($rangoInicioBusc > 1): ?>
+                                        <a href="<?= $build_url(1) ?>" class="page-link">1</a>
+                                        <?php if ($rangoInicioBusc > 2): ?>
+                                            <span class="page-link disabled">...</span>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+
+                                    <?php for ($i = $rangoInicioBusc; $i <= $rangoFinBusc; $i++): ?>
                                         <?php if ($i == $curr): ?>
                                             <span class="page-link active"><?= $i ?></span>
                                         <?php else: ?>
                                             <a href="<?= $build_url($i) ?>" class="page-link"><?= $i ?></a>
                                         <?php endif; ?>
                                     <?php endfor; ?>
+
+                                    <?php if ($rangoFinBusc < $tot): ?>
+                                        <?php if ($rangoFinBusc < $tot - 1): ?>
+                                            <span class="page-link disabled">...</span>
+                                        <?php endif; ?>
+                                        <a href="<?= $build_url($tot) ?>" class="page-link"><?= $tot ?></a>
+                                    <?php endif; ?>
                                     
                                     <?php if ($curr < $tot): ?>
                                         <a href="<?= $build_url($curr + 1) ?>" class="page-link">Siguiente &raquo;</a>

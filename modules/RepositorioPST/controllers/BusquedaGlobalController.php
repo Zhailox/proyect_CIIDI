@@ -26,7 +26,8 @@ class BusquedaGlobalController {
             $carreraId = 1; // PNF en Informática por defecto si el filtro está desactivado
         }
 
-        $usar_ia = !empty($_GET['usar_ia']) ? true : false;
+        $semanticaHabilitada = (bool)ConfigService::get('red_onnx.habilitar_busqueda_semantica', true);
+        $usar_ia = ($semanticaHabilitada && !empty($_GET['usar_ia'])) ? true : false;
         
         // Filtros avanzados dinámicos
         $filtrosExtra = [

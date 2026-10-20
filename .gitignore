@@ -1,3 +1,8 @@
 sync_*.log
 storage/documentos/tmp/*
 !storage/documentos/tmp/.gitkeep
+vendor/php-ai/rd-test/model.onnx
+vendor/php-ai/rd-test/model.onnx.data
+vendor/php-ai/rd-test/*.rar
+migrations/El_Monstruo_ONNX_1000PST_Quantized/
+vendor/ankane/onnxruntime/lib/**/*.pdb

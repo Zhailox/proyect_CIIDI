@@ -40,8 +40,8 @@
         "archivo_script": "script_tarea_1790301553_528.php",
         "timeout_segundos": 60,
         "estado": "activo",
-        "ultima_ejecucion": "2026-10-20 00:49:48",
-        "resultado_ultimo": "ERROR (0.15ms): El archivo de script 'script_tarea_1790301553_528.php' no existe en storage\/scheduler\/scripts\/."
+        "ultima_ejecucion": "2026-10-20 01:56:32",
+        "resultado_ultimo": "ERROR (0.19ms): El archivo de script 'script_tarea_1790301553_528.php' no existe en storage\/scheduler\/scripts\/."
     },
     "tarea_1790660917_352": {
         "id": "tarea_1790660917_352",
@@ -54,7 +54,7 @@
         "archivo_script": "script_tarea_1790660917_352.php",
         "timeout_segundos": 60,
         "estado": "activo",
-        "ultima_ejecucion": "2026-10-20 00:41:53",
-        "resultado_ultimo": "ERROR (0.13ms): El archivo de script 'script_tarea_1790660917_352.php' no existe en storage\/scheduler\/scripts\/."
+        "ultima_ejecucion": "2026-10-20 01:01:27",
+        "resultado_ultimo": "ERROR (0.23ms): El archivo de script 'script_tarea_1790660917_352.php' no existe en storage\/scheduler\/scripts\/."
     }
 }

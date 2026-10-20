@@ -7,9 +7,12 @@
         <div class="pst-config-header">
             <div>
                 <h1>Gestión de Parámetros del Repositorio</h1>
-                <p>Configura las reglas de citación, paginación, metadatos visibles y comportamiento general (Almacenado localmente en JSON).</p>
+                <p>Configura las reglas de citación, paginación, metadatos visibles y comportamiento general del módulo PST.</p>
             </div>
-            <div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <a href="?ruta=gestion-red-onnx" class="btn-cancel-sm" style="background: var(--color-secundario); color: #ffffff; border-color: var(--color-secundario);">
+                    <i class="ph ph-cpu"></i> Panel Modelo ONNX IA
+                </a>
                 <a href="?ruta=repositorio" class="btn-cancel-sm">
                     <i class="ph ph-arrow-left"></i> Volver al Catálogo
                 </a>

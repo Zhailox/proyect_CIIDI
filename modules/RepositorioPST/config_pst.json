@@ -38,7 +38,7 @@
         "mostrar_nivel_academico": true
     },
     "buscador": {
-        "anio_minimo_histograma": 2018,
+        "anio_minimo_histograma": 2021,
         "orden_predeterminado": "anio_desc",
         "resaltar_coincidencias": true,
         "permitir_filtro_carrera": false
@@ -62,5 +62,18 @@
     "limites_equipo": {
         "max_autores": 5,
         "max_tutores": 3
+    },
+    "red_onnx": {
+        "habilitar_busqueda_semantica": true,
+        "umbral_distancia_coseno": 0.65,
+        "max_resultados_semanticos": 20,
+        "max_tokens_secuencia": 256,
+        "lote_worker_embeddings": 5,
+        "fallback_busqueda_estandar": true,
+        "peso_titulo": 3,
+        "incluir_resumen": true,
+        "incluir_objetivo_general": true,
+        "incluir_palabras_clave": true,
+        "incluir_comunidad": true
     }
 }
