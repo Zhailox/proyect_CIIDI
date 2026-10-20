@@ -187,7 +187,7 @@ require_once __DIR__ . '/../services/ConfigService.php';
                             </h3>
                             <?php if (!empty($usar_ia)): ?>
                                 <span style="background: rgba(80, 89, 132, 0.12); color: var(--color-secundario); font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(80, 89, 132, 0.25);">
-                                    <i class="ph-bold ph-cpu"></i> Modelo MiniLM ONNX
+                                    <i class="ph-bold ph-cpu"></i> Modelo XLM-RoBERTa ONNX
                                 </span>
                             <?php endif; ?>
                         </div>

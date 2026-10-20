@@ -262,12 +262,12 @@ $similitudMinimaExigida = max(5, min(85, round((1.0 - $umbralCoseno) * 100)));
 
                             <!-- Longitud de secuencia de tokens -->
                             <div class="config-field">
-                                <label for="max_tokens_secuencia">Longitud Máxima de Secuencia WordPiece:</label>
+                                <label for="max_tokens_secuencia">Longitud Máxima de Secuencia SentencePiece:</label>
                                 <select id="max_tokens_secuencia" name="max_tokens_secuencia" class="config-input" style="font-weight: 700;">
                                     <option value="64" <?= $maxTokens === 64 ? 'selected' : '' ?>>64 tokens — Ultrarrápido para títulos cortos</option>
-                                    <option value="128" <?= $maxTokens === 128 ? 'selected' : '' ?>>128 tokens — Balance óptimo recomendado</option>
+                                    <option value="128" <?= $maxTokens === 128 ? 'selected' : '' ?>>128 tokens — Estándar nativo XLM-RoBERTa recomendado</option>
                                     <option value="192" <?= $maxTokens === 192 ? 'selected' : '' ?>>192 tokens — Cobertura amplia de resúmenes</option>
-                                    <option value="256" <?= $maxTokens === 256 ? 'selected' : '' ?>>256 tokens — Máxima capacidad del modelo MiniLM</option>
+                                    <option value="256" <?= $maxTokens === 256 ? 'selected' : '' ?>>256 tokens — Contexto extendido para resúmenes largos</option>
                                 </select>
                                 <p class="field-hint">Cantidad máxima de sub-palabras procesadas por cada inferencia del modelo ONNX.</p>
                             </div>
@@ -414,21 +414,21 @@ $similitudMinimaExigida = max(5, min(85, round((1.0 - $umbralCoseno) * 100)));
                     </div>
 
                     <div class="citation-style-box" style="margin-bottom: 0; padding: 0.65rem 0.85rem; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.78rem;">
-                        <div style="display: flex; justify-content: space-between; padding-bottom: 0.4rem; border-bottom: 1px dashed rgba(169, 168, 166, 0.25);">
+                        <div style="display: flex; justify-content: space-between; padding-bottom: 0.4rem; border-bottom: 1px dashed rgba(169, 168, 166, 0.25); gap: 0.5rem;">
                             <span style="color: var(--texto-silenciado); font-weight: 600;">Arquitectura Base:</span>
-                            <strong style="color: var(--texto-titulos);">Sentence-Transformer MiniLM-L6-v2</strong>
+                            <strong style="color: var(--texto-titulos); text-align: right;"><?= htmlspecialchars($diag['arquitectura'] ?? 'paraphrase-multilingual-MiniLM-L12-v2 · XLM-RoBERTa') ?></strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding-bottom: 0.4rem; border-bottom: 1px dashed rgba(169, 168, 166, 0.25);">
                             <span style="color: var(--texto-silenciado); font-weight: 600;">Motor Nativo C++:</span>
                             <strong style="color: var(--color-secundario);"><?= htmlspecialchars($diag['lib_nativa_nombre'] ?? 'ONNX Runtime') ?></strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding-bottom: 0.4rem; border-bottom: 1px dashed rgba(169, 168, 166, 0.25);">
-                            <span style="color: var(--texto-silenciado); font-weight: 600;">Peso del Grafo y Tensores:</span>
-                            <strong style="color: var(--texto-titulos);"><?= number_format((float)($diag['peso_total_mb'] ?? 91.0), 2) ?> MB</strong>
+                            <span style="color: var(--texto-silenciado); font-weight: 600;">Peso del Grafo Cuantizado:</span>
+                            <strong style="color: var(--texto-titulos);"><?= number_format((float)($diag['peso_total_mb'] ?? 113.43), 2) ?> MB</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding-bottom: 0.4rem; border-bottom: 1px dashed rgba(169, 168, 166, 0.25);">
-                            <span style="color: var(--texto-silenciado); font-weight: 600;">Vocabulario WordPiece:</span>
-                            <strong style="color: var(--texto-titulos);"><?= number_format((int)($diag['vocab_total_tokens'] ?? 30522)) ?> tokens</strong>
+                            <span style="color: var(--texto-silenciado); font-weight: 600;">Vocabulario SentencePiece:</span>
+                            <strong style="color: var(--texto-titulos);"><?= number_format((int)($diag['vocab_total_tokens'] ?? 250002), 0, ',', '.') ?> tokens</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding-bottom: 0.4rem; border-bottom: 1px dashed rgba(169, 168, 166, 0.25);">
                             <span style="color: var(--texto-silenciado); font-weight: 600;">Dimensión del Embedding:</span>
@@ -481,13 +481,13 @@ $similitudMinimaExigida = max(5, min(85, round((1.0 - $umbralCoseno) * 100)));
                     </div>
 
                     <div class="citation-preview-live" style="margin-top: 0; margin-bottom: 0.55rem; font-family: inherit; font-size: 0.76rem; line-height: 1.4;">
-                        <strong style="display: block; color: var(--texto-titulos); margin-bottom: 2px;">1. Tokenización WordPiece</strong>
-                        El texto del proyecto se segmenta en sub-palabras sobre un vocabulario de 30.522 tokens generando las matrices <code>input_ids</code> y <code>attention_mask</code>.
+                        <strong style="display: block; color: var(--texto-titulos); margin-bottom: 2px;">1. Tokenización SentencePiece Unigram XLM-RoBERTa</strong>
+                        El texto del proyecto se segmenta mediante prefijos metaspace <code>▁</code> sobre un vocabulario multilingüe de 250.002 tokens generando las matrices <code>input_ids</code> y <code>attention_mask</code>.
                     </div>
 
                     <div class="citation-preview-live" style="margin-top: 0; margin-bottom: 0.55rem; font-family: inherit; font-size: 0.76rem; line-height: 1.4;">
-                        <strong style="display: block; color: var(--texto-titulos); margin-bottom: 2px;">2. Grafo Transformer en ONNX Runtime</strong>
-                        El motor C++ proyecta cada token en un espacio contextual denso de 384 dimensiones y aplica <em>Mean Pooling</em> ponderado por la máscara de atención.
+                        <strong style="display: block; color: var(--texto-titulos); margin-bottom: 2px;">2. Grafo Transformer de 12 Capas en ONNX Runtime</strong>
+                        El motor C++ proyecta cada token en un espacio contextual denso de 384 dimensiones entrenado para español académico y aplica <em>Mean Pooling</em> ponderado por atención.
                     </div>
 
                     <div class="citation-preview-live" style="margin-top: 0; margin-bottom: 0; font-family: inherit; font-size: 0.76rem; line-height: 1.4;">
@@ -727,7 +727,7 @@ async function ejecutarPruebaInferenciaEnVivo() {
         meta.innerHTML = `
             <span><i class="ph ph-timer"></i> Latencia total: ${data.duracion_ms} ms</span>
             <span>·</span>
-            <span><i class="ph ph-text-aa"></i> Tokens WordPiece: ${data.tokens_activos}</span>
+            <span><i class="ph ph-text-aa"></i> Tokens SentencePiece: ${data.tokens_activos}</span>
             <span>·</span>
             <span><i class="ph ph-cube"></i> Vector: ${data.dimension} dims</span>
             <span>·</span>

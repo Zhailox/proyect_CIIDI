@@ -67,13 +67,13 @@
         "habilitar_busqueda_semantica": true,
         "umbral_distancia_coseno": 0.65,
         "max_resultados_semanticos": 20,
-        "max_tokens_secuencia": 256,
+        "max_tokens_secuencia": 192,
         "lote_worker_embeddings": 5,
         "fallback_busqueda_estandar": true,
-        "peso_titulo": 3,
+        "peso_titulo": 2,
         "incluir_resumen": true,
         "incluir_objetivo_general": true,
         "incluir_palabras_clave": true,
-        "incluir_comunidad": true
+        "incluir_comunidad": false
     }
 }

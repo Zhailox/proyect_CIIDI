@@ -3,13 +3,13 @@
  * Servicio de generación de embeddings semánticos usando ONNX Runtime.
  *
  * Encapsula toda la lógica de:
- *   1. Carga del modelo ONNX (Sentence-Transformer)
- *   2. Tokenización WordPiece vía TokenizerService
- *   3. Inferencia y mean pooling
- *   4. Normalización L2 del vector resultante
+ *   1. Auto-aprovisionamiento y carga del modelo ONNX paraphrase-multilingual-MiniLM-L12-v2 XLM-RoBERTa
+ *   2. Tokenización SentencePiece Unigram / WordPiece vía TokenizerService
+ *   3. Inferencia neuronal y Mean Pooling ponderado por máscara de atención
+ *   4. Normalización L2 del vector resultante de 384 dimensiones
  *
- * El vector normalizado es apto para almacenarse en pgvector y realizar
- * búsquedas por distancia coseno (operador <=>).
+ * El vector normalizado es apto para almacenarse en PostgreSQL pgvector y realizar
+ * búsquedas por distancia coseno mediante el operador <=>.
  *
  * Ubicación: modules/RepositorioPST/services/EmbeddingService.php
  */
@@ -22,7 +22,7 @@ class EmbeddingService {
     /** @var \OnnxRuntime\InferenceSession|\OnnxRuntime\Model Sesión ONNX activa */
     private $session;
 
-    /** @var TokenizerService Tokenizer WordPiece */
+    /** @var TokenizerService Tokenizer activo */
     private TokenizerService $tokenizer;
 
     /** @var int Dimensión del vector que produce el modelo */
@@ -40,10 +40,13 @@ class EmbeddingService {
     /** @var string Ruta del vocabulario cargado */
     private string $vocabPath;
 
+    /** @var array<string, mixed> Caché estático en memoria por proceso PHP para evitar recargas redundantes */
+    private static array $runtimeCache = [];
+
     /**
      * @param string|null $modelPath Ruta absoluta al archivo .onnx del modelo.
      * @param string|null $vocabPath Ruta absoluta al archivo vocab.txt del tokenizer.
-     * @param int|null    $maxTokens Longitud máxima de la secuencia tokenizada (si es null, se lee de ConfigService).
+     * @param int|null    $maxTokens Longitud máxima de la secuencia tokenizada.
      */
     public function __construct(
         ?string $modelPath = null,
@@ -66,50 +69,42 @@ class EmbeddingService {
         }
 
         // ──────────────────────────────────────────────────────────────
-        // 2. Resolver rutas por defecto
+        // 2. Resolver rutas por defecto y auto-extraer desde migrations si falta
         // ──────────────────────────────────────────────────────────────
         $basePath = defined('BASE_PATH') ? rtrim(BASE_PATH, '/\\') : dirname(__DIR__, 3);
 
+        self::asegurarModeloDisponible($basePath);
+
         $this->modelPath = $modelPath ?? $basePath . '/vendor/php-ai/rd-test/model.onnx';
         $this->vocabPath = $vocabPath ?? $basePath . '/vendor/php-ai/rd-test/vocab.txt';
-
-        if (!file_exists($this->modelPath) && class_exists('ZipArchive')) {
-            $zipRespaldo = $basePath . '/migrations/El_Monstruo_ONNX_1000PST_Quantized.zip';
-            if (file_exists($zipRespaldo)) {
-                $zip = new \ZipArchive();
-                if ($zip->open($zipRespaldo) === true) {
-                    $destinoDir = dirname($this->modelPath);
-                    for ($i = 0; $i < $zip->numFiles; $i++) {
-                        $entryName = $zip->getNameIndex($i);
-                        $baseEntry = basename((string)$entryName);
-                        if ($baseEntry !== '' && !str_ends_with((string)$entryName, '/')) {
-                            @copy("zip://{$zipRespaldo}#{$entryName}", $destinoDir . '/' . $baseEntry);
-                        }
-                    }
-                    $zip->close();
-                }
-            }
-        }
 
         if (!file_exists($this->modelPath)) {
             throw new RuntimeException("Modelo ONNX no encontrado en: {$this->modelPath}");
         }
         if (!file_exists($this->vocabPath)) {
-            throw new RuntimeException(
-                "Vocabulario del tokenizer no encontrado en: {$this->vocabPath}\n" .
-                "Descarga vocab.txt del mismo modelo Hugging Face que exportaste a ONNX."
-            );
+            throw new RuntimeException("Vocabulario del tokenizer no encontrado en: {$this->vocabPath}");
         }
 
         $this->maxTokens = $maxTokens;
 
+        $cacheKey = $this->modelPath . '|' . $this->vocabPath . '|' . $this->maxTokens;
+
+        if (isset(self::$runtimeCache[$cacheKey])) {
+            $cached                = self::$runtimeCache[$cacheKey];
+            $this->tokenizer       = $cached['tokenizer'];
+            $this->session         = $cached['session'];
+            $this->modelInputNames = $cached['inputs'];
+            $this->dimension       = $cached['dimension'];
+            return;
+        }
+
         // ──────────────────────────────────────────────────────────────
-        // 3. Cargar el tokenizer WordPiece
+        // 3. Cargar el tokenizer SentencePiece Unigram / WordPiece
         // ──────────────────────────────────────────────────────────────
         $this->tokenizer = new TokenizerService($this->vocabPath, $this->maxTokens);
 
         // ──────────────────────────────────────────────────────────────
-        // 4. Cargar el modelo ONNX (compatibilidad con ambas clases)
+        // 4. Cargar el modelo ONNX
         // ──────────────────────────────────────────────────────────────
         if (class_exists('\OnnxRuntime\InferenceSession')) {
             $this->session = new \OnnxRuntime\InferenceSession($this->modelPath);
@@ -117,20 +112,82 @@ class EmbeddingService {
             $this->session = new \OnnxRuntime\Model($this->modelPath);
         } else {
             throw new RuntimeException(
-                "No se encontró ninguna clase ONNX Runtime compatible.\n" .
-                "Verifica que 'ankane/onnxruntime' esté instalado vía Composer."
+                "No se encontró ninguna clase ONNX Runtime compatible. Verifica que ankane/onnxruntime esté instalado."
             );
         }
 
         // ──────────────────────────────────────────────────────────────
-        // 5. Detectar los nombres de inputs del modelo
+        // 5. Detectar los nombres de inputs y dimensión del modelo
         // ──────────────────────────────────────────────────────────────
         $this->modelInputNames = $this->detectarInputsModelo();
+        $this->dimension       = $this->detectarDimension();
 
-        // ──────────────────────────────────────────────────────────────
-        // 6. Detectar la dimensión del embedding con una inferencia de prueba
-        // ──────────────────────────────────────────────────────────────
-        $this->dimension = $this->detectarDimension();
+        self::$runtimeCache[$cacheKey] = [
+            'tokenizer' => $this->tokenizer,
+            'session'   => $this->session,
+            'inputs'    => $this->modelInputNames,
+            'dimension' => $this->dimension,
+        ];
+    }
+
+    /**
+     * Auto-descomprime el paquete cuantizado XLM-RoBERTa desde migrations si el binario
+     * no está presente en vendor/php-ai/rd-test y regenera vocab.txt si falta.
+     */
+    public static function asegurarModeloDisponible(string $basePath): void {
+        $dirModelo   = $basePath . '/vendor/php-ai/rd-test';
+        $modelFile   = $dirModelo . '/model.onnx';
+        $vocabFile   = $dirModelo . '/vocab.txt';
+        $tokJsonFile = $dirModelo . '/tokenizer.json';
+        $cfgFile     = $dirModelo . '/tokenizer_config.json';
+        $zipPaquete  = $basePath . '/migrations/El_Monstruo_ONNX_1000PST_Quantized.zip';
+
+        if (!is_dir($dirModelo)) {
+            @mkdir($dirModelo, 0777, true);
+        }
+
+        // Si no existe model.onnx y está el paquete ZIP en migrations, extraer automáticamente
+        if (!file_exists($modelFile) && file_exists($zipPaquete) && class_exists('ZipArchive')) {
+            $zip = new ZipArchive();
+            if ($zip->open($zipPaquete) === true) {
+                for ($i = 0; $i < $zip->numFiles; $i++) {
+                    $entryName = $zip->getNameIndex($i);
+                    $baseName  = basename($entryName);
+                    if ($baseName === '' || substr($entryName, -1) === '/') {
+                        continue;
+                    }
+                    $destName = ($baseName === 'model_quantized.onnx') ? 'model.onnx' : $baseName;
+                    $inStream = $zip->getStream($entryName);
+                    if ($inStream) {
+                        $outStream = @fopen($dirModelo . '/' . $destName, 'wb');
+                        if ($outStream) {
+                            stream_copy_to_stream($inStream, $outStream);
+                            fclose($outStream);
+                        }
+                        fclose($inStream);
+                    }
+                }
+                $zip->close();
+
+                if (file_exists($dirModelo . '/model.onnx.data')) {
+                    @unlink($dirModelo . '/model.onnx.data');
+                }
+            }
+        }
+
+        // Si existe tokenizer.json y falta vocab.txt o vocab.txt quedó desincronizado con XLM-RoBERTa
+        $necesitaRegenerarVocab = !file_exists($vocabFile);
+        if (!$necesitaRegenerarVocab && file_exists($cfgFile) && file_exists($tokJsonFile)) {
+            $meta = @json_decode((string)@file_get_contents($cfgFile), true) ?: [];
+            $esXlm = stripos((string)($meta['tokenizer_class'] ?? ''), 'XLMRoberta') !== false;
+            if ($esXlm && filesize($vocabFile) < 1000000) {
+                $necesitaRegenerarVocab = true;
+            }
+        }
+
+        if ($necesitaRegenerarVocab && file_exists($tokJsonFile)) {
+            TokenizerService::generarVocabDesdeTokenizerJson($tokJsonFile, $vocabFile);
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -140,8 +197,8 @@ class EmbeddingService {
     /**
      * Genera un vector embedding normalizado L2 a partir de un texto libre.
      *
-     * @param  string  $texto Texto de entrada (título + resumen + palabras clave + …).
-     * @return float[] Vector de dimensión fija (ej. 384 para MiniLM-L6-v2).
+     * @param  string  $texto Texto de entrada.
+     * @return float[] Vector de 384 dimensiones normalizado L2.
      */
     public function generarEmbedding(string $texto): array {
         $texto = $this->preprocesarTexto($texto);
@@ -150,8 +207,8 @@ class EmbeddingService {
             throw new InvalidArgumentException("El texto de entrada está vacío después del preprocesamiento.");
         }
 
-        $tokens = $this->tokenizer->encode($texto);
-        $feeds = $this->construirFeeds($tokens);
+        $tokens  = $this->tokenizer->encode($texto);
+        $feeds   = $this->construirFeeds($tokens);
         $outputs = $this->session->run(null, $feeds);
 
         $firstBatchOutput = $outputs[0][0];
@@ -166,7 +223,7 @@ class EmbeddingService {
     }
 
     /**
-     * Retorna la cantidad de tokens reales (sin padding) que produce un texto dado.
+     * Retorna la cantidad de tokens reales sin padding que produce un texto dado.
      */
     public function contarTokensActivos(string $texto): int {
         $texto = $this->preprocesarTexto($texto);
@@ -179,11 +236,11 @@ class EmbeddingService {
      * Construye el texto combinado de un proyecto PST respetando los pesos y campos configurados en red_onnx.
      */
     public static function construirTextoSemanticoProyecto(array $proyecto): string {
-        $pesoTitulo      = max(1, min(3, (int)ConfigService::get('red_onnx.peso_titulo', 2)));
-        $incResumen      = (bool)ConfigService::get('red_onnx.incluir_resumen', true);
-        $incObjetivo     = (bool)ConfigService::get('red_onnx.incluir_objetivo_general', true);
-        $incPalabras     = (bool)ConfigService::get('red_onnx.incluir_palabras_clave', true);
-        $incComunidad    = (bool)ConfigService::get('red_onnx.incluir_comunidad', false);
+        $pesoTitulo   = max(1, min(3, (int)ConfigService::get('red_onnx.peso_titulo', 2)));
+        $incResumen   = (bool)ConfigService::get('red_onnx.incluir_resumen', true);
+        $incObjetivo  = (bool)ConfigService::get('red_onnx.incluir_objetivo_general', true);
+        $incPalabras  = (bool)ConfigService::get('red_onnx.incluir_palabras_clave', true);
+        $incComunidad = (bool)ConfigService::get('red_onnx.incluir_comunidad', false);
 
         $segmentos = [];
         $titulo = trim((string)($proyecto['titulo'] ?? ''));
@@ -215,10 +272,12 @@ class EmbeddingService {
     }
 
     /**
-     * Retorna el diagnóstico completo de salud, archivos, vocabulario y latencia del motor ONNX.
+     * Retorna el diagnóstico completo de salud, archivos, vocabulario y latencia del motor ONNX XLM-RoBERTa.
      */
     public static function obtenerDiagnosticoModelo(): array {
         $basePath = defined('BASE_PATH') ? rtrim(BASE_PATH, '/\\') : dirname(__DIR__, 3);
+        self::asegurarModeloDisponible($basePath);
+
         $dirModelo = $basePath . '/vendor/php-ai/rd-test';
         $modelFile = $dirModelo . '/model.onnx';
         $dataFile  = $dirModelo . '/model.onnx.data';
@@ -232,57 +291,65 @@ class EmbeddingService {
         $pesoTotalBytes = ($modelExists ? filesize($modelFile) : 0) + ($dataExists ? filesize($dataFile) : 0);
         $pesoTotalMb    = round($pesoTotalBytes / (1024 * 1024), 2);
 
-        $vocabTokensCount = 0;
-        if ($vocabExists) {
-            $lines = @file($vocabFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            $vocabTokensCount = is_array($lines) ? count($lines) : 0;
-        }
-
         $tokenizerMeta = [];
         if (file_exists($cfgFile)) {
             $tokenizerMeta = @json_decode((string)@file_get_contents($cfgFile), true) ?: [];
         }
 
         $libNativaRuta = null;
-        $libNativaOk = false;
+        $libNativaOk   = false;
         if (class_exists('\OnnxRuntime\Vendor')) {
             try {
                 $libNativaRuta = \OnnxRuntime\Vendor::defaultLib();
-                $libNativaOk = $libNativaRuta && file_exists($libNativaRuta);
+                $libNativaOk   = $libNativaRuta && file_exists($libNativaRuta);
             } catch (\Throwable $e) {
                 $libNativaOk = false;
             }
         }
 
-        $operativo = false;
-        $dimension = 384;
-        $latenciaMs = 0.0;
-        $normaL2 = 0.0;
-        $inputsDetectados = ['input_ids', 'attention_mask', 'token_type_ids'];
-        $mensajeEstado = 'Motor ONNX listo y operativo';
+        $operativo        = false;
+        $dimension        = 384;
+        $latenciaMs       = 0.0;
+        $normaL2          = 0.0;
+        $vocabTokensCount = 250002;
+        $esSentencePiece  = true;
+        $inputsDetectados = ['input_ids', 'attention_mask'];
+        $mensajeEstado    = 'Motor ONNX XLM-RoBERTa listo y operativo';
 
         try {
-            $t0 = microtime(true);
-            $instancia = new self();
-            $vecPrueba = $instancia->generarEmbedding('Sistema web de gestión académica e inteligencia artificial');
-            $latenciaMs = round((microtime(true) - $t0) * 1000, 2);
-            $dimension = $instancia->getDimension();
+            $instancia        = new self();
+            $t0               = microtime(true);
+            $vecPrueba        = $instancia->generarEmbedding('Sistema web de gestión académica e inteligencia artificial');
+            $latenciaMs       = round((microtime(true) - $t0) * 1000, 2);
+            $dimension        = $instancia->getDimension();
             $inputsDetectados = $instancia->getInputsDetectados();
+            $vocabTokensCount = $instancia->getVocabSize();
+            $esSentencePiece  = $instancia->esSentencePiece();
 
             $sumaCuadrados = 0.0;
             foreach ($vecPrueba as $v) {
                 $sumaCuadrados += ($v * $v);
             }
-            $normaL2 = round(sqrt($sumaCuadrados), 4);
+            $normaL2   = round(sqrt($sumaCuadrados), 4);
             $operativo = true;
         } catch (\Throwable $e) {
-            $operativo = false;
+            $operativo     = false;
             $mensajeEstado = $e->getMessage();
         }
+
+        $arquitecturaNombre = $esSentencePiece
+            ? 'paraphrase-multilingual-MiniLM-L12-v2 · XLM-RoBERTa'
+            : 'Sentence-Transformer MiniLM-L6-v2 · BERT';
+
+        $tokenizerClase = $esSentencePiece
+            ? 'XLMRobertaTokenizer · SentencePiece Unigram'
+            : ($tokenizerMeta['tokenizer_class'] ?? 'BertTokenizer · WordPiece');
 
         return [
             'operativo'          => $operativo,
             'mensaje_estado'     => $mensajeEstado,
+            'arquitectura'       => $arquitecturaNombre,
+            'es_xlm_roberta'     => $esSentencePiece,
             'lib_nativa_ok'      => $libNativaOk,
             'lib_nativa_nombre'  => $libNativaRuta ? basename($libNativaRuta) : 'No detectada',
             'modelo_existe'      => $modelExists,
@@ -290,8 +357,8 @@ class EmbeddingService {
             'vocab_existe'       => $vocabExists,
             'peso_total_mb'      => $pesoTotalMb,
             'vocab_total_tokens' => $vocabTokensCount,
-            'tokenizer_clase'    => $tokenizerMeta['tokenizer_class'] ?? 'BertTokenizer',
-            'model_max_length'   => (int)($tokenizerMeta['model_max_length'] ?? 256),
+            'tokenizer_clase'    => $tokenizerClase,
+            'model_max_length'   => (int)($tokenizerMeta['model_max_length'] ?? 128),
             'dimension'          => $dimension,
             'latencia_ms'        => $latenciaMs,
             'norma_l2'           => $normaL2,
@@ -311,6 +378,20 @@ class EmbeddingService {
      */
     public function getInputsDetectados(): array {
         return $this->modelInputNames;
+    }
+
+    /**
+     * Retorna el tamaño total del vocabulario activo.
+     */
+    public function getVocabSize(): int {
+        return $this->tokenizer->getVocabSize();
+    }
+
+    /**
+     * Indica si el tokenizer activo es SentencePiece Unigram XLM-RoBERTa.
+     */
+    public function esSentencePiece(): bool {
+        return $this->tokenizer->esSentencePiece();
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -389,10 +470,10 @@ class EmbeddingService {
                 return array_map(fn($i) => $i['name'], $inputsMeta);
             }
         } catch (\Throwable $e) {
-            // Silenciar — se usan los defaults
+            // Usar entradas estándar de XLM-RoBERTa si no se pueden inspeccionar
         }
 
-        return ['input_ids', 'attention_mask', 'token_type_ids'];
+        return ['input_ids', 'attention_mask'];
     }
 
     private function detectarDimension(): int {
