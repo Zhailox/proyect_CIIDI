@@ -65,7 +65,7 @@
     },
     "red_onnx": {
         "habilitar_busqueda_semantica": true,
-        "umbral_distancia_coseno": 0.65,
+        "umbral_distancia_coseno": 0.82,
         "max_resultados_semanticos": 20,
         "max_tokens_secuencia": 192,
         "lote_worker_embeddings": 5,

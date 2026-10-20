@@ -304,7 +304,7 @@ class ConfiguracionController {
                     $actual['red_onnx'] = [];
                 }
 
-                $umbral = isset($_POST['umbral_distancia_coseno']) ? (float)$_POST['umbral_distancia_coseno'] : 0.85;
+                $umbral = isset($_POST['umbral_distancia_coseno']) ? (float)$_POST['umbral_distancia_coseno'] : 0.82;
                 $umbral = max(0.20, min(0.95, round($umbral, 2)));
 
                 $maxRes = isset($_POST['max_resultados_semanticos']) ? (int)$_POST['max_resultados_semanticos'] : 20;

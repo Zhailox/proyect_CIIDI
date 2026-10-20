@@ -1808,8 +1808,22 @@ class DocumentoModel {
         require_once __DIR__ . '/../services/ConfigService.php';
         require_once __DIR__ . '/../services/EmbeddingService.php';
 
-        $umbralDistancia = (float)ConfigService::get('red_onnx.umbral_distancia_coseno', 0.85);
+        $umbralDistancia = (float)ConfigService::get('red_onnx.umbral_distancia_coseno', 0.82);
         $umbralDistancia = max(0.15, min(0.95, $umbralDistancia));
+
+        // Calibración adaptativa para consultas cortas de 1 a 3 palabras en el espacio XLM-RoBERTa:
+        // Una consulta de pocas palabras frente a un resumen de 128 tokens presenta mayor distancia angular base.
+        $palabrasConsulta = preg_split('/\s+/u', trim($querytexto), -1, PREG_SPLIT_NO_EMPTY);
+        $numPalabras = is_array($palabrasConsulta) ? count($palabrasConsulta) : 1;
+        $margenConsultaCorta = 0.0;
+        if ($numPalabras === 1) {
+            $margenConsultaCorta = 0.075;
+        } elseif ($numPalabras === 2) {
+            $margenConsultaCorta = 0.04;
+        } elseif ($numPalabras === 3) {
+            $margenConsultaCorta = 0.02;
+        }
+        $umbralEfectivo = min(0.95, $umbralDistancia + $margenConsultaCorta);
 
         $maxResultados = (int)ConfigService::get('red_onnx.max_resultados_semanticos', 20);
         $maxResultados = max(1, min(100, $maxResultados));
@@ -1833,7 +1847,7 @@ class DocumentoModel {
                 'dp.vector_semantico IS NOT NULL',
                 '(dp.vector_semantico <=> ?) < ?'
             ];
-            $params = [$vectorPgFormat, $vectorPgFormat, $umbralDistancia];
+            $params = [$vectorPgFormat, $vectorPgFormat, $umbralEfectivo];
 
             if (!empty($filtros['anio'])) {
                 $whereClauses[] = 'r.anio_publicacion = ?';

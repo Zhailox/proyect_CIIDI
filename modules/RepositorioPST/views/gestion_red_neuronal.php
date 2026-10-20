@@ -4,7 +4,7 @@
 
 $cfgOnnx = $config['red_onnx'] ?? [];
 $habilitarSemantica = isset($cfgOnnx['habilitar_busqueda_semantica']) ? (bool)$cfgOnnx['habilitar_busqueda_semantica'] : true;
-$umbralCoseno       = isset($cfgOnnx['umbral_distancia_coseno']) ? (float)$cfgOnnx['umbral_distancia_coseno'] : 0.85;
+$umbralCoseno       = isset($cfgOnnx['umbral_distancia_coseno']) ? (float)$cfgOnnx['umbral_distancia_coseno'] : 0.82;
 $maxResultados      = isset($cfgOnnx['max_resultados_semanticos']) ? (int)$cfgOnnx['max_resultados_semanticos'] : 20;
 $maxTokens          = isset($cfgOnnx['max_tokens_secuencia']) ? (int)$cfgOnnx['max_tokens_secuencia'] : 128;
 $loteWorker         = isset($cfgOnnx['lote_worker_embeddings']) ? (int)$cfgOnnx['lote_worker_embeddings'] : 5;
@@ -249,14 +249,14 @@ $similitudMinimaExigida = max(5, min(85, round((1.0 - $umbralCoseno) * 100)));
                                         Umbral de Distancia Coseno Máxima: <span id="lblUmbralVal" style="color: var(--color-secundario);"><?= number_format($umbralCoseno, 2) ?></span>
                                     </label>
                                     <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
-                                        <button type="button" class="tag-pill-btn" id="btnPresetEstricto" onclick="seleccionarPresetExigencia(0.65)">Estricto</button>
-                                        <button type="button" class="tag-pill-btn" id="btnPresetEquilibrado" onclick="seleccionarPresetExigencia(0.85)">Recomendado</button>
-                                        <button type="button" class="tag-pill-btn" id="btnPresetFlexible" onclick="seleccionarPresetExigencia(0.90)">Flexible</button>
+                                        <button type="button" class="tag-pill-btn" id="btnPresetEstricto" onclick="seleccionarPresetExigencia(0.75)">Estricto</button>
+                                        <button type="button" class="tag-pill-btn" id="btnPresetEquilibrado" onclick="seleccionarPresetExigencia(0.82)">Recomendado</button>
+                                        <button type="button" class="tag-pill-btn" id="btnPresetFlexible" onclick="seleccionarPresetExigencia(0.88)">Flexible</button>
                                     </div>
                                 </div>
-                                <input type="range" id="umbral_distancia_coseno" name="umbral_distancia_coseno" min="0.25" max="0.95" step="0.01" value="<?= htmlspecialchars((string)$umbralCoseno) ?>" oninput="actualizarEtiquetaUmbral(this.value)" style="width: 100%; accent-color: var(--color-secundario); cursor: pointer; margin: 0.25rem 0;">
+                                <input type="range" id="umbral_distancia_coseno" name="umbral_distancia_coseno" min="0.45" max="0.95" step="0.01" value="<?= htmlspecialchars((string)$umbralCoseno) ?>" oninput="actualizarEtiquetaUmbral(this.value)" style="width: 100%; accent-color: var(--color-secundario); cursor: pointer; margin: 0.25rem 0;">
                                 <p class="field-hint">
-                                    Equivale a exigir una <strong>fidelidad mínima del <span id="lblSimilitudMinima"><?= $similitudMinimaExigida ?>%</span></strong>. Valores menores son más estrictos; 0.85 es el balance recomendado.
+                                    Equivale a exigir una <strong>fidelidad mínima base del <span id="lblSimilitudMinima"><?= $similitudMinimaExigida ?>%</span></strong> con compensación automática para búsquedas de 1 a 3 palabras.
                                 </p>
                             </div>
 
@@ -546,9 +546,9 @@ function actualizarEtiquetaUmbral(val) {
     if (btnEq) btnEq.classList.remove('active');
     if (btnEst) btnEst.classList.remove('active');
 
-    if (num >= 0.88) {
+    if (num >= 0.86) {
         if (btnFlex) btnFlex.classList.add('active');
-    } else if (num >= 0.75) {
+    } else if (num >= 0.79) {
         if (btnEq) btnEq.classList.add('active');
     } else {
         if (btnEst) btnEst.classList.add('active');
