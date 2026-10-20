@@ -1903,3 +1903,227 @@ Trace:
 #4 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
 #5 {main}
 --------------------------------------------------------------------------------
+[2026-10-19 23:18:26] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:18:26] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:18:26] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Database\QueryBuilder.php(19): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\models\UsuarioModel.php(11): QueryBuilder->__construct()
+#4 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(14): UsuarioModel->__construct()
+#5 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(60): LoginController->__construct()
+#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('login', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:19:00] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:19:00] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(299): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Views\home_bienvenida.php(13): DocumentoModel->getPSTDocumentosCount(Array)
+#4 C:\wamp64\www\proyect_CIIDI\core\Views\master.php(45): include('C:\\wamp64\\www\\p...')
+#5 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(79): include('C:\\wamp64\\www\\p...')
+#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('inicio', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:19:02] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:19:02] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(299): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\InicioRepositorioController.php(12): DocumentoModel->getPSTDocumentosCount()
+#4 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): InicioRepositorioController->index()
+#5 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('repositorio', Array, Array, Array, Object(AssetResolver))
+#6 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#7 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:19:04] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:19:07] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:19:07] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Database\QueryBuilder.php(19): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\models\UsuarioModel.php(11): QueryBuilder->__construct()
+#4 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(14): UsuarioModel->__construct()
+#5 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(60): LoginController->__construct()
+#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('login', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:19:13] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:19:13] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Database\QueryBuilder.php(19): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\models\UsuarioModel.php(11): QueryBuilder->__construct()
+#4 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(14): UsuarioModel->__construct()
+#5 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(60): LoginController->__construct()
+#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('login', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:20:23] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:20:24] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:20:24] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:21:07] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:21:07] ERROR: SQLSTATE[0A000]: Feature not supported: 7 ERROR:  extension "vector" is not available
+HINT:  The extension must first be installed on the system where PostgreSQL is running. en C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php:613
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php(613): PDO->exec('-- ============...')
+#1 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerController.php(230): InstallerService::runPendingMigrations('localhost', '5432', 'miki', '1234', 'ciidi')
+#2 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerHook.php(49): InstallerController->installSystemAjax()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(99): InstallerHook->intercept('installer-run')
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:21:07] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.detalles_proyectos" does not exist en C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php:613
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php(613): PDO->exec('-- ============...')
+#1 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerController.php(230): InstallerService::runPendingMigrations('localhost', '5432', 'miki', '1234', 'ciidi')
+#2 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerHook.php(49): InstallerController->installSystemAjax()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(99): InstallerHook->intercept('installer-run')
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:21:07] ERROR: SQLSTATE[25P02]: In failed sql transaction: 7 ERROR:  current transaction is aborted, commands ignored until end of transaction block en C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php:613
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php(613): PDO->exec('ALTER TABLE pub...')
+#1 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerController.php(230): InstallerService::runPendingMigrations('localhost', '5432', 'miki', '1234', 'ciidi')
+#2 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerHook.php(49): InstallerController->installSystemAjax()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(99): InstallerHook->intercept('installer-run')
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:21:07] ERROR: SQLSTATE[25P02]: In failed sql transaction: 7 ERROR:  current transaction is aborted, commands ignored until end of transaction block en C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php:613
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php(613): PDO->exec('ALTER TABLE aut...')
+#1 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerController.php(230): InstallerService::runPendingMigrations('localhost', '5432', 'miki', '1234', 'ciidi')
+#2 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerHook.php(49): InstallerController->installSystemAjax()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(99): InstallerHook->intercept('installer-run')
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:21:07] ERROR: SQLSTATE[25P02]: In failed sql transaction: 7 ERROR:  current transaction is aborted, commands ignored until end of transaction block en C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php:613
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php(613): PDO->exec('-- Migraci\xC3\xB3n 0...')
+#1 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerController.php(230): InstallerService::runPendingMigrations('localhost', '5432', 'miki', '1234', 'ciidi')
+#2 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerHook.php(49): InstallerController->installSystemAjax()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(99): InstallerHook->intercept('installer-run')
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:21:07] ERROR: SQLSTATE[25P02]: In failed sql transaction: 7 ERROR:  current transaction is aborted, commands ignored until end of transaction block en C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php:613
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php(613): PDO->exec('-- 1. Crear la ...')
+#1 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerController.php(230): InstallerService::runPendingMigrations('localhost', '5432', 'miki', '1234', 'ciidi')
+#2 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerHook.php(49): InstallerController->installSystemAjax()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(99): InstallerHook->intercept('installer-run')
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------

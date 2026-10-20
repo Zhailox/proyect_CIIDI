@@ -787,4 +787,3 @@ class ArticulosController {
         ];
     }
 }
-

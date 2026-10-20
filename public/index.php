@@ -30,6 +30,12 @@ if ($appDebug) {
     error_reporting(0);
 }
 
+// 1.8. Aplicar directivas dinámicas de memoria y tiempo de ejecución según configuración del Repositorio
+if (file_exists(MODULES_PATH . 'RepositorioPST/services/ConfigService.php')) {
+    require_once MODULES_PATH . 'RepositorioPST/services/ConfigService.php';
+    ConfigService::aplicarDirectivasRuntime();
+}
+
 // 2. Importar el motor del sistema (Microkernel)
 require_once CORE_PATH . 'System/Kernel.php';
 

@@ -1,1 +1,3 @@
 sync_*.log
+storage/documentos/tmp/*
+!storage/documentos/tmp/.gitkeep

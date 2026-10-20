@@ -49,17 +49,18 @@
         "nivel_minimo_descarga": 998
     },
     "archivos": {
-        "max_size_mb": 20,
+        "max_size_mb": 200,
         "max_archivos_lote": 5,
-        "max_paginas_analisis": 30,
-        "max_xml_descomprimido_mb": 15,
+        "max_paginas_analisis": 35,
+        "max_xml_descomprimido_mb": 25,
         "extensiones_permitidas": [
             ".pdf",
-            ".docx"
+            ".docx",
+            ".doc"
         ]
     },
     "limites_equipo": {
-        "max_autores": 4,
+        "max_autores": 5,
         "max_tutores": 3
     }
 }

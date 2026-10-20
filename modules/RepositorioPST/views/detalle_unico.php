@@ -147,6 +147,13 @@
                     <span style="font-weight: 700; color: var(--color-secundario);"><?= htmlspecialchars($documento['carrera_nombre'] ?? 'PNF en Informática') ?></span>
                 </div>
 
+                <?php if (!empty($documento['fecha_defensa'])): ?>
+                <div class="pst-meta-item">
+                    <strong>Fecha de Defensa / Creación</strong>
+                    <span><?= htmlspecialchars($documento['fecha_defensa']) ?></span>
+                </div>
+                <?php endif; ?>
+
                 <?php if (ConfigService::get('recursos.mostrar_url_git', true)): ?>
                 <div class="pst-meta-item">
                     <strong>Código Fuente</strong>
@@ -263,7 +270,7 @@
                             <i class="ph ph-download-simple"></i> Descargar Documento
                         </a>
                     <?php endif; ?>
-                    <button type="button" class="btn-back" style="background-color: #fff1f2; color: #be123c; border: 1px solid rgba(190, 18, 60, 0.2);" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($documento['titulo'])) ?>, <?= htmlspecialchars(json_encode($documento['autores_nombres'] ?? 'Autores Varios')) ?>, <?= $documento['anio_publicacion'] ?>)">
+                    <button type="button" class="btn-back" style="background-color: #fff1f2; color: #be123c; border: 1px solid rgba(190, 18, 60, 0.2);" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($documento['titulo'])) ?>, <?= htmlspecialchars(json_encode($documento['autores_nombres'] ?? 'Autores Varios')) ?>, <?= (int)$documento['anio_publicacion'] ?>, <?= htmlspecialchars(json_encode($documento['carrera_nombre'] ?? 'PNF en Informática')) ?>)">
                         <i class="ph ph-quotes"></i> Generar Cita Académica
                     </button>
                 </div>
@@ -341,7 +348,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // MODAL DE CITAS ACADÉMICAS DINÁMICAS (DESDE CONFIGURACIÓN JSON)
 const configuracionesCitas = <?= json_encode(ConfigService::get('citas.estilos', [])) ?>;
 
-function abrirModalCita(titulo, autores, anio) {
+function abrirModalCita(titulo, autores, anio, carrera) {
     const listEl = document.getElementById('listaCitasDinamicas');
     if (!listEl) return;
     
@@ -351,7 +358,7 @@ function abrirModalCita(titulo, autores, anio) {
         '{autores}': autores || 'Autores Varios',
         '{anio}': anio || 's.f.',
         '{titulo}': titulo || 'Proyecto Socio-Tecnológico',
-        '{carrera}': 'PNF en Informática'
+        '{carrera}': carrera || 'PNF en Informática'
     };
     
     let count = 0;

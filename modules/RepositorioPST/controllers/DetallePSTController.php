@@ -41,6 +41,7 @@ class DetallePSTController {
             'trayecto'        => !empty($_GET['trayecto']) ? trim($_GET['trayecto']) : null,
             'comunidad'       => !empty($_GET['comunidad']) ? trim($_GET['comunidad']) : null,
             'anio'            => !empty($_GET['anio']) ? (int)$_GET['anio'] : null,
+            'orden'           => !empty($_GET['orden']) ? trim($_GET['orden']) : ConfigService::get('buscador.orden_predeterminado', 'anio_desc'),
         ];
         
         // Cargar los documentos filtrados y paginados
@@ -384,6 +385,65 @@ class DetallePSTController {
                   </script>
                   </body></html>";
             exit;
+        } elseif ($ext === 'doc') {
+            $mostrarToolbar = (bool)ConfigService::get('visor_pdf.mostrar_toolbar', true);
+            require_once __DIR__ . '/../services/ExtractorPST.php';
+            $docText = '';
+            try {
+                $docText = ExtractorPST::extraerTextoDOC($fullPath);
+            } catch (\Throwable $e) {
+                $docText = '';
+            }
+            $paragraphsHtml = '';
+            foreach (explode("\n", $docText) as $pLine) {
+                $pLine = trim($pLine);
+                if ($pLine !== '' && stripos($pLine, 'PAGEREF _Toc') === false) {
+                    $paragraphsHtml .= '<p>' . htmlspecialchars($pLine, ENT_QUOTES, 'UTF-8') . '</p>';
+                }
+            }
+            if ($paragraphsHtml === '') {
+                $paragraphsHtml = '<p><em>No se pudo generar la vista previa textual para este documento Word (.doc) antiguo.</em></p>';
+            }
+            header('Content-Type: text/html; charset=utf-8');
+            echo "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'>
+                  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                  <title>" . htmlspecialchars($safeFilename) . "</title>
+                  <style>
+                    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 0; line-height: 1.65; }
+                    .doc-toolbar { position: sticky; top: 0; z-index: 100; background: #ffffff; border-bottom: 1px solid #cbd5e1; padding: 0.5rem 1rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+                    .doc-toolbar-btn { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 0.35rem 0.65rem; font-size: 0.8rem; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; }
+                    .doc-toolbar-btn:hover { background: #e2e8f0; color: #002244; }
+                    .paper-container { max-width: 860px; margin: " . ($mostrarToolbar ? "1rem auto 3rem auto" : "1.5rem auto") . "; background: #ffffff; padding: 2.5rem 3rem; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; transition: transform 0.2s ease; transform-origin: top center; word-break: break-word; }
+                    .paper-container p { margin-bottom: 0.9rem; text-align: justify; font-size: 0.95rem; }
+                    @media print { .doc-toolbar { display: none !important; } body { padding: 0; background: #fff; } .paper-container { box-shadow: none; border: none; padding: 0; max-width: 100%; } }
+                  </style></head><body>";
+            if ($mostrarToolbar) {
+                echo "<div class='doc-toolbar'>
+                        <div style='display:flex; align-items:center; gap:0.5rem;'>
+                            <span style='background:rgba(112, 144, 203, 0.15); color:#505984; padding:0.25rem 0.55rem; border-radius:4px; font-size:0.75rem; font-weight:700;'>Word Legacy (.doc)</span>
+                            <span style='font-size:0.8rem; color:#64748b; font-weight:600;'>" . htmlspecialchars($safeFilename) . "</span>
+                        </div>
+                        <div style='display:flex; gap:0.4rem; align-items:center;'>
+                            <button type='button' class='doc-toolbar-btn' onclick='ajustarZoom(-0.1)' title='Reducir zoom'>−</button>
+                            <span id='zoomIndicator' style='font-size:0.78rem; font-weight:700; color:#475569; min-width:40px; text-align:center;'>100%</span>
+                            <button type='button' class='doc-toolbar-btn' onclick='ajustarZoom(0.1)' title='Aumentar zoom'>+</button>
+                            <button type='button' class='doc-toolbar-btn' onclick='window.print()' title='Imprimir documento'>Imprimir</button>
+                        </div>
+                      </div>";
+            }
+            echo "<div class='paper-container' id='paperContent'>{$paragraphsHtml}</div>
+                  <script>
+                    let nivelZoom = 1.0;
+                    function ajustarZoom(delta) {
+                        nivelZoom = Math.min(1.8, Math.max(0.6, Math.round((nivelZoom + delta) * 10) / 10));
+                        const p = document.getElementById('paperContent');
+                        if (p) p.style.transform = 'scale(' + nivelZoom + ')';
+                        const zInd = document.getElementById('zoomIndicator');
+                        if (zInd) zInd.innerText = Math.round(nivelZoom * 100) + '%';
+                    }
+                  </script>
+                  </body></html>";
+            exit;
         } else {
             header('Content-Type: application/octet-stream');
             readfile($fullPath);
@@ -421,12 +481,18 @@ class DetallePSTController {
         }
 
         // Si es petición AJAX, responder con JSON si no se tienen permisos en lugar de 302 redirect
-        if (in_array($accion, ['extraer', 'crear_ajax', 'simular_extraccion'])) {
-            if (!Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'RepositorioPST')) {
+        if (in_array($accion, ['extraer', 'crear_ajax', 'simular_extraccion', 'bulk_action', 'quick_edit', 'purgar_todo_pst', 'contar_borrado_criterios', 'limpiar_temporales'], true)) {
+            $permisoRequerido = 'crear';
+            if ($accion === 'quick_edit') {
+                $permisoRequerido = 'editar';
+            } elseif (in_array($accion, ['purgar_todo_pst', 'contar_borrado_criterios', 'limpiar_temporales'], true)) {
+                $permisoRequerido = 'eliminar';
+            }
+            if (!Auth::requierePrivilegioMinimo($this->nivelAdmin, $permisoRequerido, 'RepositorioPST', false)) {
                 header('Content-Type: application/json; charset=utf-8');
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'Sesión expirada o permisos insuficientes para realizar esta acción.'
+                    'message' => 'Tu sesión ha expirado o no cuentas con permisos para realizar esta acción.'
                 ], JSON_UNESCAPED_UNICODE);
                 exit;
             }
@@ -443,7 +509,7 @@ class DetallePSTController {
                     header('Content-Type: application/json; charset=utf-8');
                     echo json_encode([
                         'status' => 'error',
-                        'message' => 'Petición rechazada por seguridad: Token CSRF no válido o expirado.'
+                        'message' => 'La petición fue rechazada por seguridad. Recarga la página e intenta de nuevo.'
                     ], JSON_UNESCAPED_UNICODE);
                     exit;
                 }
@@ -475,7 +541,7 @@ class DetallePSTController {
             }
         }
         
-        // 0. Procesar Acción: EXTRAER METADATOS DE ARCHIVOS Y GUARDAR ARCHIVO (AJAX)
+        // 0. Procesar Acción: EXTRAER METADATOS DE ARCHIVOS Y GUARDAR ARCHIVO (AJAX, soporta subida directa o por fragmentos / chunks)
         if ($accion === 'extraer' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Content-Type: application/json; charset=utf-8');
             try {
@@ -494,34 +560,77 @@ class DetallePSTController {
                     throw new Exception($msgError);
                 }
 
-                // Validar tamaño máximo configurado y permitido por el servidor
-                $parseIniToMb = function(?string $str): float {
-                    if (empty($str)) return 2.0;
-                    $str = trim($str);
-                    $unit = strtolower($str[strlen($str) - 1] ?? '');
-                    $num = (float)$str;
-                    switch ($unit) {
-                        case 'g': return $num * 1024;
-                        case 'm': return $num;
-                        case 'k': return $num / 1024;
-                        default: return $num / (1024 * 1024);
-                    }
-                };
-                $configMaxMb = (float)ConfigService::get('archivos.max_size_mb', 20);
-                $phpUploadMaxMb = $parseIniToMb(ini_get('upload_max_filesize'));
-                $phpPostMaxMb = $parseIniToMb(ini_get('post_max_size'));
-                $maxMb = round(min($configMaxMb, $phpUploadMaxMb, $phpPostMaxMb), 2);
+                $configMaxMb = (float)ConfigService::get('archivos.max_size_mb', 100);
+                $maxMb = round($configMaxMb, 2);
                 $maxBytes = $maxMb * 1024 * 1024;
-                if ($_FILES['archivo_pst']['size'] > $maxBytes) {
-                    throw new Exception("El archivo excede el tamaño máximo permitido ({$maxMb} MB).");
+
+                $isChunked = isset($_POST['chunk_index'], $_POST['total_chunks'], $_POST['upload_id']);
+                $isAssembledFile = false;
+
+                if ($isChunked) {
+                    $chunkIndex = (int)$_POST['chunk_index'];
+                    $totalChunks = max(1, (int)$_POST['total_chunks']);
+                    $uploadId = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)$_POST['upload_id']);
+                    $originalName = !empty($_POST['original_name']) ? trim((string)$_POST['original_name']) : $_FILES['archivo_pst']['name'];
+                    $totalSize = isset($_POST['total_size']) ? (float)$_POST['total_size'] : 0;
+
+                    if ($totalSize > $maxBytes) {
+                        throw new Exception("El archivo excede el tamaño máximo permitido ({$maxMb} MB).");
+                    }
+
+                    $extCheck = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+                    if (!in_array($extCheck, ['pdf', 'docx', 'doc'], true)) {
+                        throw new Exception("Formato de archivo no soportado. Debe ser un archivo PDF o Word (.docx / .doc).");
+                    }
+
+                    $partFile = $tmpDir . 'part_' . $uploadId . '.' . $extCheck;
+                    if ($chunkIndex === 0 && file_exists($partFile)) {
+                        @unlink($partFile);
+                    }
+
+                    $inStream = @fopen($_FILES['archivo_pst']['tmp_name'], 'rb');
+                    $outStream = @fopen($partFile, $chunkIndex === 0 ? 'wb' : 'ab');
+                    if (!$inStream || !$outStream) {
+                        if ($inStream) @fclose($inStream);
+                        if ($outStream) @fclose($outStream);
+                        throw new Exception("No se pudo ensamblar el fragmento temporal en el servidor.");
+                    }
+                    stream_copy_to_stream($inStream, $outStream);
+                    fclose($inStream);
+                    fclose($outStream);
+
+                    if ((float)@filesize($partFile) > $maxBytes) {
+                        @unlink($partFile);
+                        throw new Exception("El archivo ensamblado excede el tamaño máximo permitido ({$maxMb} MB).");
+                    }
+
+                    // Si aún faltan fragmentos por subir, confirmar recepción del fragmento actual
+                    if ($chunkIndex + 1 < $totalChunks) {
+                        while (ob_get_level()) ob_end_clean();
+                        echo json_encode([
+                            'status'      => 'chunk_ok',
+                            'chunk_index' => $chunkIndex
+                        ], JSON_UNESCAPED_UNICODE);
+                        exit;
+                    }
+
+                    // Último fragmento recibido: archivo completo listo para procesar
+                    $fileTmpPath = $partFile;
+                    $fileName = $originalName;
+                    $isAssembledFile = true;
+                } else {
+                    if ($_FILES['archivo_pst']['size'] > $maxBytes) {
+                        throw new Exception("El archivo excede el tamaño máximo permitido ({$maxMb} MB).");
+                    }
+                    $fileTmpPath = $_FILES['archivo_pst']['tmp_name'];
+                    $fileName = $_FILES['archivo_pst']['name'];
                 }
 
-                $fileTmpPath = $_FILES['archivo_pst']['tmp_name'];
-                $fileName = $_FILES['archivo_pst']['name'];
                 $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
-                if (!in_array($fileExtension, ['pdf', 'docx'])) {
-                    throw new Exception("Formato de archivo no soportado. Debe ser un archivo PDF o Word (.docx).");
+                if (!in_array($fileExtension, ['pdf', 'docx', 'doc'], true)) {
+                    if ($isAssembledFile && file_exists($fileTmpPath)) @unlink($fileTmpPath);
+                    throw new Exception("Formato de archivo no soportado. Debe ser un archivo PDF o Word (.docx / .doc).");
                 }
 
                 // 1. Validar MIME-Type binario / Magic Bytes para prevenir archivos falsos o maliciosos
@@ -534,24 +643,26 @@ class DetallePSTController {
                 $allowedMimeTypes = [
                     'application/pdf',
                     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/msword',
+                    'application/CDFV2',
+                    'application/vnd.ms-office',
+                    'application/x-ole-storage',
                     'application/zip', // Algunos sistemas detectan docx como zip
-                    'application/x-zip-compressed'
+                    'application/x-zip-compressed',
+                    'application/octet-stream'
                 ];
 
-                if (!in_array($mimeType, $allowedMimeTypes)) {
+                if (!in_array($mimeType, $allowedMimeTypes, true)) {
+                    if ($isAssembledFile && file_exists($fileTmpPath)) @unlink($fileTmpPath);
                     throw new Exception("El contenido binario del archivo no corresponde a un documento PDF o Word válido.");
                 }
 
                 require_once __DIR__ . '/../services/ExtractorPST.php';
 
-                $text = '';
-                if ($fileExtension === 'pdf') {
-                    $text = ExtractorPST::extraerTextoPDF($fileTmpPath);
-                } else {
-                    $text = ExtractorPST::extraerTextoDOCX($fileTmpPath);
-                }
+                $text = ExtractorPST::extraerTextoArchivo($fileTmpPath, $fileExtension);
 
                 if (empty(trim($text))) {
+                    if ($isAssembledFile && file_exists($fileTmpPath)) @unlink($fileTmpPath);
                     throw new Exception("No se pudo extraer texto del documento. Asegúrese de que el archivo no esté protegido o escaneado como imagen pura sin OCR.");
                 }
 
@@ -590,7 +701,15 @@ class DetallePSTController {
                 $savedFileName = 'tmp_pst_' . $slugTitle . '_' . time() . '_' . mt_rand(100, 999) . '.' . $fileExtension;
                 $targetFile = $tmpDir . $savedFileName;
                 
-                if (move_uploaded_file($fileTmpPath, $targetFile) || copy($fileTmpPath, $targetFile)) {
+                $movedOk = $isAssembledFile
+                    ? (@rename($fileTmpPath, $targetFile) || (@copy($fileTmpPath, $targetFile) && @unlink($fileTmpPath)))
+                    : (move_uploaded_file($fileTmpPath, $targetFile) || copy($fileTmpPath, $targetFile));
+
+                if ($movedOk) {
+                    // Si es un archivo Word (.docx) pesado, optimizar sus imágenes internas para ahorrar espacio en el servidor
+                    if ($fileExtension === 'docx') {
+                        $datosExtraidos['optimizacion_archivo'] = ExtractorPST::optimizarArchivoDOCX($targetFile);
+                    }
                     $datosExtraidos['archivo_pdf'] = 'storage/documentos/tmp/' . $savedFileName;
                 } else {
                     throw new Exception("No se pudo guardar el archivo temporal en el almacenamiento del servidor.");
@@ -624,22 +743,8 @@ class DetallePSTController {
                     throw new Exception("Seleccione un archivo válido para simular la extracción.");
                 }
 
-                $parseIniToMb = function(?string $str): float {
-                    if (empty($str)) return 2.0;
-                    $str = trim($str);
-                    $unit = strtolower($str[strlen($str) - 1] ?? '');
-                    $num = (float)$str;
-                    switch ($unit) {
-                        case 'g': return $num * 1024;
-                        case 'm': return $num;
-                        case 'k': return $num / 1024;
-                        default: return $num / (1024 * 1024);
-                    }
-                };
-                $configMaxMb = (float)ConfigService::get('archivos.max_size_mb', 20);
-                $phpUploadMaxMb = $parseIniToMb(ini_get('upload_max_filesize'));
-                $phpPostMaxMb = $parseIniToMb(ini_get('post_max_size'));
-                $maxMb = round(min($configMaxMb, $phpUploadMaxMb, $phpPostMaxMb), 2);
+                $configMaxMb = (float)ConfigService::get('archivos.max_size_mb', 100);
+                $maxMb = round($configMaxMb, 2);
                 $maxBytes = $maxMb * 1024 * 1024;
                 if ($_FILES['archivo_pst']['size'] > $maxBytes) {
                     throw new Exception("El archivo excede el tamaño máximo permitido ({$maxMb} MB).");
@@ -649,8 +754,8 @@ class DetallePSTController {
                 $fileName = $_FILES['archivo_pst']['name'];
                 $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
-                if (!in_array($fileExtension, ['pdf', 'docx'])) {
-                    throw new Exception("Formato no soportado. Debe ser PDF o Word (.docx).");
+                if (!in_array($fileExtension, ['pdf', 'docx', 'doc'], true)) {
+                    throw new Exception("Formato no soportado. Debe ser PDF o Word (.docx / .doc).");
                 }
 
                 $finfoSim = finfo_open(FILEINFO_MIME_TYPE);
@@ -661,15 +766,20 @@ class DetallePSTController {
                 $allowedMimeSim = [
                     'application/pdf',
                     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/msword',
+                    'application/CDFV2',
+                    'application/vnd.ms-office',
+                    'application/x-ole-storage',
                     'application/zip',
-                    'application/x-zip-compressed'
+                    'application/x-zip-compressed',
+                    'application/octet-stream'
                 ];
                 if (!in_array($mimeSim, $allowedMimeSim, true)) {
                     throw new Exception("El contenido binario del archivo no corresponde a un documento PDF o Word válido.");
                 }
 
                 require_once __DIR__ . '/../services/ExtractorPST.php';
-                $text = ($fileExtension === 'pdf') ? ExtractorPST::extraerTextoPDF($fileTmpPath) : ExtractorPST::extraerTextoDOCX($fileTmpPath);
+                $text = ExtractorPST::extraerTextoArchivo($fileTmpPath, $fileExtension);
 
                 if (empty(trim($text))) {
                     throw new Exception("No se pudo extraer texto del archivo.");
@@ -929,6 +1039,293 @@ class DetallePSTController {
             }
             exit;
         }
+
+        // 0.1b Procesar Acción: ACCIONES EN LOTE DESDE LA TABLA
+        if ($accion === 'bulk_action' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json; charset=utf-8');
+            try {
+                $rawBody = file_get_contents('php://input');
+                $payload = json_decode($rawBody, true);
+                if (!is_array($payload)) {
+                    $payload = $_POST;
+                }
+
+                $operacion = strtolower(trim((string)($payload['operacion'] ?? '')));
+                $ids = $payload['ids'] ?? [];
+                if (!is_array($ids)) {
+                    $ids = explode(',', (string)$ids);
+                }
+
+                if ($operacion === 'eliminar') {
+                    if (!Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'RepositorioPST', false)) {
+                        throw new Exception("No cuentas con permisos para eliminar proyectos.");
+                    }
+                } else {
+                    if (!Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'RepositorioPST', false)) {
+                        throw new Exception("No cuentas con permisos para modificar estos proyectos.");
+                    }
+                }
+
+                $res = $model->ejecutarAccionMasivaPST($ids, $operacion);
+                $cant = $res['procesados'] ?? 0;
+
+                $labelOp = 'actualizados';
+                if ($operacion === 'activar') $labelOp = 'visibles en el catálogo';
+                elseif ($operacion === 'ocultar') $labelOp = 'ocultados del público';
+                elseif ($operacion === 'eliminar') $labelOp = 'eliminados definitivamente';
+
+                AuditLogger::registrar('INFO', 'RepositorioPST', 'Acción por Lote', "Se procesaron {$cant} proyectos con la operación: {$operacion}.");
+
+                while (ob_get_level()) ob_end_clean();
+                echo json_encode([
+                    'status'  => 'success',
+                    'message' => "Listo. {$cant} proyectos quedaron {$labelOp}."
+                ], JSON_UNESCAPED_UNICODE);
+            } catch (\Throwable $e) {
+                while (ob_get_level()) ob_end_clean();
+                echo json_encode([
+                    'status'  => 'error',
+                    'message' => $e->getMessage()
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            exit;
+        }
+
+        // 0.1c Procesar Acción: EDICIÓN RÁPIDA DESDE LA TABLA
+        if ($accion === 'quick_edit' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json; charset=utf-8');
+            try {
+                $rawBody = file_get_contents('php://input');
+                $payload = json_decode($rawBody, true);
+                if (!is_array($payload)) {
+                    $payload = $_POST;
+                }
+
+                $idEdit = (int)($payload['id'] ?? 0);
+                if ($idEdit <= 0) {
+                    throw new Exception("No se indicó qué proyecto deseas actualizar.");
+                }
+
+                $model->actualizarRapidoPST($idEdit, $payload);
+                AuditLogger::registrar('INFO', 'RepositorioPST', 'Edición Rápida PST', "Proyecto #{$idEdit} actualizado desde la tabla rápida.");
+
+                while (ob_get_level()) ob_end_clean();
+                echo json_encode([
+                    'status'  => 'success',
+                    'message' => 'Los cambios del proyecto se guardaron correctamente.'
+                ], JSON_UNESCAPED_UNICODE);
+            } catch (\Throwable $e) {
+                while (ob_get_level()) ob_end_clean();
+                echo json_encode([
+                    'status'  => 'error',
+                    'message' => $e->getMessage()
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            exit;
+        }
+
+        // 0.1d Procesar Acción: LIMPIAR ARCHIVOS TEMPORALES HUÉRFANOS
+        if ($accion === 'limpiar_temporales' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json; charset=utf-8');
+            try {
+                $borrados = 0;
+                $bytesLiberados = 0;
+                if (is_dir($tmpDir)) {
+                    foreach (glob($tmpDir . '*') ?: [] as $archTmp) {
+                        if (is_file($archTmp) && basename($archTmp)[0] !== '.') {
+                            $bytesLiberados += (int)@filesize($archTmp);
+                            if (@unlink($archTmp)) {
+                                $borrados++;
+                            }
+                        }
+                    }
+                }
+                $mbLib = round($bytesLiberados / (1024 * 1024), 2);
+                AuditLogger::registrar('INFO', 'RepositorioPST', 'Limpieza de Temporales', "Se eliminaron {$borrados} archivos temporales liberando {$mbLib} MB.");
+
+                while (ob_get_level()) ob_end_clean();
+                echo json_encode([
+                    'status'  => 'success',
+                    'message' => $borrados > 0
+                        ? "Se limpiaron {$borrados} archivos temporales y se liberaron {$mbLib} MB en el servidor."
+                        : "La carpeta temporal ya estaba limpia."
+                ], JSON_UNESCAPED_UNICODE);
+            } catch (\Throwable $e) {
+                while (ob_get_level()) ob_end_clean();
+                echo json_encode([
+                    'status'  => 'error',
+                    'message' => $e->getMessage()
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            exit;
+        }
+
+        // 0.1e Procesar Acción: PURGAR TODOS LOS PST CON AUTENTICACIÓN SUPERADMIN
+        if ($accion === 'contar_borrado_criterios' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json; charset=utf-8');
+            try {
+                $rawBody = file_get_contents('php://input');
+                $payload = json_decode($rawBody, true);
+                if (!is_array($payload)) {
+                    $payload = $_POST;
+                }
+                $modo = strtolower(trim((string)($payload['modo'] ?? 'criterios')));
+                if ($modo === 'todo') {
+                    $resumen = $model->getPSTStatsResumen();
+                    $total = (int)($resumen['total_catalog'] ?? 0);
+                } else {
+                    $criterios = [
+                        'anio_desde'   => !empty($payload['anio_desde']) ? (int)$payload['anio_desde'] : null,
+                        'anio_hasta'   => !empty($payload['anio_hasta']) ? (int)$payload['anio_hasta'] : null,
+                        'carrera_id'   => !empty($payload['carrera_id']) ? (int)$payload['carrera_id'] : null,
+                        'linea_id'     => !empty($payload['linea_id']) ? (int)$payload['linea_id'] : null,
+                        'dimension_id' => !empty($payload['dimension_id']) ? (int)$payload['dimension_id'] : null
+                    ];
+                    $tieneAlguno = !empty($criterios['anio_desde']) || !empty($criterios['anio_hasta']) || !empty($criterios['carrera_id']) || !empty($criterios['linea_id']) || !empty($criterios['dimension_id']);
+                    $total = $tieneAlguno ? count($model->obtenerIdsPSTPorCriterios($criterios)) : 0;
+                }
+                while (ob_get_level()) ob_end_clean();
+                echo json_encode([
+                    'status' => 'success',
+                    'total'  => $total
+                ], JSON_UNESCAPED_UNICODE);
+            } catch (\Throwable $e) {
+                while (ob_get_level()) ob_end_clean();
+                echo json_encode([
+                    'status'  => 'error',
+                    'message' => $e->getMessage()
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            exit;
+        }
+
+        if ($accion === 'purgar_todo_pst' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json; charset=utf-8');
+            try {
+                $rawBody = file_get_contents('php://input');
+                $payload = json_decode($rawBody, true);
+                if (!is_array($payload)) {
+                    $payload = $_POST;
+                }
+
+                $cedulaSudo = trim((string)($payload['cedula_superadmin'] ?? ''));
+                $passwordSudo = (string)($payload['password_superadmin'] ?? '');
+                $modo = strtolower(trim((string)($payload['modo'] ?? 'todo')));
+                $frase = strtoupper(trim((string)($payload['frase_confirmacion'] ?? $payload['confirmacion_texto'] ?? '')));
+                $conservarPersonas = isset($payload['conservar_personas']) ? (bool)$payload['conservar_personas'] : true;
+
+                if ($modo === 'todo' && !in_array($frase, ['ELIMINAR TODO', 'VACIAR REPOSITORIO', 'CONFIRMAR'], true)) {
+                    throw new Exception('Debes escribir exactamente la frase ELIMINAR TODO para confirmar.');
+                }
+
+                $sudoUser = $model->verificarCredencialesSuperAdmin($cedulaSudo, $passwordSudo);
+                if (!$sudoUser) {
+                    AuditLogger::registrar('WARNING', 'RepositorioPST', 'Intento Fallido de Purga Total', "Credenciales de SuperAdmin inválidas al intentar vaciar el catálogo de proyectos.");
+                    throw new Exception('Las credenciales ingresadas no son válidas o no pertenecen a una cuenta de SuperAdmin.');
+                }
+
+                if ($modo === 'criterios') {
+                    $criterios = [
+                        'anio_desde'   => !empty($payload['anio_desde']) ? (int)$payload['anio_desde'] : null,
+                        'anio_hasta'   => !empty($payload['anio_hasta']) ? (int)$payload['anio_hasta'] : null,
+                        'carrera_id'   => !empty($payload['carrera_id']) ? (int)$payload['carrera_id'] : null,
+                        'linea_id'     => !empty($payload['linea_id']) ? (int)$payload['linea_id'] : null,
+                        'dimension_id' => !empty($payload['dimension_id']) ? (int)$payload['dimension_id'] : null
+                    ];
+                    $resultado = $model->eliminarPSTPorCriterios($criterios, $conservarPersonas);
+                } else {
+                    $resultado = $model->purgarTodosLosPST($conservarPersonas);
+                }
+                $elim = $resultado['proyectos_eliminados'] ?? 0;
+                $mb = $resultado['mb_liberados'] ?? 0;
+
+                AuditLogger::registrar(
+                    'CRITICAL',
+                    'RepositorioPST',
+                    'Purga Total del Catálogo PST',
+                    "Catálogo vaciado con autorización de SuperAdmin {$sudoUser['nombre_completo']} con cédula {$sudoUser['cedula']}. Se eliminaron {$elim} proyectos y se liberaron {$mb} MB."
+                );
+
+                while (ob_get_level()) ob_end_clean();
+                echo json_encode([
+                    'status'  => 'success',
+                    'message' => $modo === 'criterios'
+                        ? "Se eliminaron {$elim} proyectos que coincidían con los filtros seleccionados y se liberaron {$mb} MB de espacio."
+                        : "El catálogo fue vaciado por completo. Se eliminaron {$elim} proyectos y se liberaron {$mb} MB de espacio."
+                ], JSON_UNESCAPED_UNICODE);
+            } catch (\Throwable $e) {
+                while (ob_get_level()) ob_end_clean();
+                echo json_encode([
+                    'status'  => 'error',
+                    'message' => $e->getMessage()
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            exit;
+        }
+
+        // 0.1f Procesar Acción: EXPORTAR LISTADO ACTUAL A CSV
+        if ($accion === 'exportar_csv') {
+            $filtrosExp = [
+                'activo'        => 'todos',
+                'q'             => !empty($_GET['q']) ? trim($_GET['q']) : null,
+                'carrera_id'    => !empty($_GET['carrera_id']) ? (int)$_GET['carrera_id'] : null,
+                'trayecto'      => !empty($_GET['trayecto']) ? trim($_GET['trayecto']) : null,
+                'anio'          => !empty($_GET['anio']) ? (int)$_GET['anio'] : null,
+                'linea_id'      => !empty($_GET['linea_id']) ? (int)$_GET['linea_id'] : null,
+                'estado_filtro' => !empty($_GET['estado_filtro']) ? trim($_GET['estado_filtro']) : null,
+                'orden'         => !empty($_GET['orden']) ? trim($_GET['orden']) : 'recientes'
+            ];
+            $listaExp = $model->getPSTDocumentos($filtrosExp, 5000, 0);
+
+            while (ob_get_level()) ob_end_clean();
+            $filename = 'catalogo_pst_' . date('Ymd_His') . '.csv';
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            $out = fopen('php://output', 'w');
+            // BOM UTF-8 para lectura directa en Excel
+            fwrite($out, "\xEF\xBB\xBF");
+            fputcsv($out, [
+                'ID',
+                'Título del Proyecto',
+                'Año',
+                'Fecha de Defensa',
+                'Carrera',
+                'Nivel Académico',
+                'Trayecto',
+                'Línea de Investigación',
+                'Dimensión Operativa',
+                'Autores',
+                'Tutores',
+                'Comunidad Beneficiada',
+                'Palabras Clave',
+                'Repositorio Git',
+                'Estado',
+                'Vistas'
+            ], ';');
+
+            foreach ($listaExp as $item) {
+                fputcsv($out, [
+                    $item['id'] ?? '',
+                    $item['titulo'] ?? '',
+                    $item['anio_publicacion'] ?? '',
+                    $item['fecha_defensa'] ?? '',
+                    $item['carrera_nombre'] ?? '',
+                    $item['nivel_academico'] ?? 'Pregrado',
+                    $item['trayecto'] ?? '',
+                    $item['linea_nombre'] ?? '',
+                    $item['dimension_nombre'] ?? '',
+                    $item['autores_nombres'] ?? '',
+                    $item['tutores_nombres'] ?? '',
+                    $item['comunidad_beneficiada'] ?? '',
+                    $item['palabras_clave'] ?? '',
+                    $item['url_repositorio'] ?? '',
+                    !empty($item['activo']) ? 'Visible' : 'Oculto',
+                    $item['vistas'] ?? 0
+                ], ';');
+            }
+            fclose($out);
+            exit;
+        }
         
         $error = null;
         $success = null;
@@ -936,13 +1333,13 @@ class DetallePSTController {
         // Cargar mensajes de éxito desde la redirección anterior
         if (isset($_GET['msg'])) {
             if ($_GET['msg'] === 'deleted') {
-                $success = "El recurso indexado ha sido eliminado exitosamente del catálogo.";
+                $success = "El proyecto fue eliminado del catálogo.";
             } elseif ($_GET['msg'] === 'created') {
-                $success = "El Proyecto Socio-Tecnológico ha sido registrado con éxito en el catálogo.";
+                $success = "El proyecto fue registrado con éxito en el catálogo.";
             } elseif ($_GET['msg'] === 'updated') {
-                $success = "El recurso ha sido modificado y actualizado exitosamente.";
+                $success = "Los cambios del proyecto se guardaron correctamente.";
             } elseif ($_GET['msg'] === 'status_changed') {
-                $success = "El estado de visibilidad del recurso se ha actualizado correctamente.";
+                $success = "La visibilidad del proyecto fue actualizada.";
             }
         }
 
@@ -1006,12 +1403,26 @@ class DetallePSTController {
                 if (PHP_VERSION_ID < 80500 && is_resource($finfoTrad)) {
                     finfo_close($finfoTrad);
                 }
-                $allowedMimeTrad = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip', 'application/x-zip-compressed'];
+                $allowedMimeTrad = [
+                    'application/pdf',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/msword',
+                    'application/CDFV2',
+                    'application/vnd.ms-office',
+                    'application/x-ole-storage',
+                    'application/zip',
+                    'application/x-zip-compressed',
+                    'application/octet-stream'
+                ];
 
-                if (in_array($ext, ['pdf', 'docx'], true) && in_array($mimeTrad, $allowedMimeTrad, true)) {
+                if (in_array($ext, ['pdf', 'docx', 'doc'], true) && in_array($mimeTrad, $allowedMimeTrad, true)) {
                     $slug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($_POST['titulo'] ?? 'pst', 0, 30)));
                     $destName = 'pst_' . $slug . '_' . time() . '_' . mt_rand(100, 999) . '.' . $ext;
                     if (move_uploaded_file($_FILES['archivo_pst']['tmp_name'], $storageDir . $destName)) {
+                        if ($ext === 'docx') {
+                            require_once __DIR__ . '/../services/ExtractorPST.php';
+                            ExtractorPST::optimizarArchivoDOCX($storageDir . $destName);
+                        }
                         $archivoPath = 'storage/documentos/pst/' . $destName;
                     } else {
                         AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo de Escritura', "El archivo para el proyecto se recibió pero el servidor no pudo guardarlo en el disco.");
@@ -1166,19 +1577,33 @@ class DetallePSTController {
                     $nuevoArchivoPath = null;
                     if (isset($_FILES['archivo_pst']) && $_FILES['archivo_pst']['error'] === UPLOAD_ERR_OK) {
                         $ext = strtolower(pathinfo($_FILES['archivo_pst']['name'], PATHINFO_EXTENSION));
-                        if (in_array($ext, ['pdf', 'docx'])) {
+                        if (in_array($ext, ['pdf', 'docx', 'doc'], true)) {
                             $finfo = finfo_open(FILEINFO_MIME_TYPE);
                             $mimeType = finfo_file($finfo, $_FILES['archivo_pst']['tmp_name']);
                             if (PHP_VERSION_ID < 80500 && is_resource($finfo)) {
                                 finfo_close($finfo);
                             }
 
-                            $allowedMimeTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip', 'application/x-zip-compressed'];
+                            $allowedMimeTypes = [
+                                'application/pdf',
+                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                'application/msword',
+                                'application/CDFV2',
+                                'application/vnd.ms-office',
+                                'application/x-ole-storage',
+                                'application/zip',
+                                'application/x-zip-compressed',
+                                'application/octet-stream'
+                            ];
 
-                            if (in_array($mimeType, $allowedMimeTypes)) {
+                            if (in_array($mimeType, $allowedMimeTypes, true)) {
                                 $slug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', substr($_POST['titulo'] ?? 'pst', 0, 30)));
                                 $destName = 'pst_' . $slug . '_' . time() . '_' . mt_rand(100, 999) . '.' . $ext;
                                 if (move_uploaded_file($_FILES['archivo_pst']['tmp_name'], $storageDir . $destName)) {
+                                    if ($ext === 'docx') {
+                                        require_once __DIR__ . '/../services/ExtractorPST.php';
+                                        ExtractorPST::optimizarArchivoDOCX($storageDir . $destName);
+                                    }
                                     $nuevoArchivoPath = 'storage/documentos/pst/' . $destName;
                                 } else {
                                     AuditLogger::registrar('WARNING', 'RepositorioPST', 'Fallo de Escritura (Edición)', "El nuevo adjunto para el proyecto ID #{$id} no pudo guardarse en el disco.");
@@ -1308,11 +1733,12 @@ class DetallePSTController {
                     }
 
                     // Preservar los datos enviados en el formulario para que el usuario no los pierda
+                    $maxAutoresCfg = max(1, (int)ConfigService::get('limites_equipo.max_autores', 4));
                     $autores = [];
                     foreach ($autoresPost as $ap) {
                         $autores[] = ['nombre_completo' => $ap['nombre'], 'cedula' => $ap['cedula'] ?? ''];
                     }
-                    while (count($autores) < 4) {
+                    while (count($autores) < $maxAutoresCfg) {
                         $autores[] = ['nombre_completo' => '', 'cedula' => ''];
                     }
 
@@ -1324,8 +1750,9 @@ class DetallePSTController {
 
                     $documento = array_merge($documento, $datos);
                 } else {
+                    $maxAutoresCfg = max(1, (int)ConfigService::get('limites_equipo.max_autores', 4));
                     $autores = $model->getAutoresByRecurso($id);
-                    while (count($autores) < 4) {
+                    while (count($autores) < $maxAutoresCfg) {
                         $autores[] = ['nombre_completo' => '', 'cedula' => ''];
                     }
                     
@@ -1347,30 +1774,31 @@ class DetallePSTController {
         $documentos = [];
         $pagination = [];
         $q = !empty($_GET['q']) ? trim($_GET['q']) : '';
+        $filtrosAdmin = [
+            'activo'        => 'todos',
+            'q'             => $q !== '' ? $q : null,
+            'carrera_id'    => !empty($_GET['carrera_id']) ? (int)$_GET['carrera_id'] : null,
+            'trayecto'      => !empty($_GET['trayecto']) ? trim($_GET['trayecto']) : null,
+            'anio'          => !empty($_GET['anio']) ? (int)$_GET['anio'] : null,
+            'linea_id'      => !empty($_GET['linea_id']) ? (int)$_GET['linea_id'] : null,
+            'estado_filtro' => !empty($_GET['estado_filtro']) ? trim($_GET['estado_filtro']) : null,
+            'orden'         => !empty($_GET['orden']) ? trim($_GET['orden']) : 'recientes'
+        ];
         
         if ($accion === 'listar') {
-            $limit = (int)ConfigService::get('paginacion.limite_catalogo', 10);
-            if ($limit < 1) $limit = 10;
+            $limitDefault = max(1, (int)ConfigService::get('paginacion.limite_catalogo', 10));
+            $limit = !empty($_GET['limit']) ? max(5, min(100, (int)$_GET['limit'])) : $limitDefault;
             $page = !empty($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
             $offset = ($page - 1) * $limit;
             
-            if (!empty($q)) {
-                $documentos = $model->buscarStandard($q, ['activo' => 'todos'], $limit, $offset);
-                $totalDocs = $model->buscarStandardCount($q, ['activo' => 'todos']);
-            } else {
-                $documentos = $model->getPSTDocumentos(['activo' => 'todos', 'orden' => 'recientes'], $limit, $offset);
-                $totalDocs = $model->getPSTDocumentosCount(['activo' => 'todos']);
-            }
+            $documentos = $model->getPSTDocumentos($filtrosAdmin, $limit, $offset);
+            $totalDocs = $model->getPSTDocumentosCount($filtrosAdmin);
             
             $totalPages = max(1, (int)ceil($totalDocs / $limit));
             if ($page > $totalPages) {
                 $page = $totalPages;
                 $offset = ($page - 1) * $limit;
-                if (!empty($q)) {
-                    $documentos = $model->buscarStandard($q, ['activo' => 'todos'], $limit, $offset);
-                } else {
-                    $documentos = $model->getPSTDocumentos(['activo' => 'todos', 'orden' => 'recientes'], $limit, $offset);
-                }
+                $documentos = $model->getPSTDocumentos($filtrosAdmin, $limit, $offset);
             }
 
             $pagination = [
@@ -1382,7 +1810,7 @@ class DetallePSTController {
         }
 
         $carreras = $model->getCarreras();
-        $lineas = $model->getLineasInvestigacion();
+        $lineas = $model->getLineasInvestigacion(!empty($filtrosAdmin['carrera_id']) ? (int)$filtrosAdmin['carrera_id'] : null);
         $dimensiones = $model->getDimensionesOperativas();
         $nivelesAcademicos = $model->getNivelesAcademicos();
         $carreraFormId = !empty($documento['carrera_id']) ? (int)$documento['carrera_id'] : (!empty($documento['id_carrera']) ? (int)$documento['id_carrera'] : (!empty($_GET['carrera_id']) ? (int)$_GET['carrera_id'] : 1));
@@ -1398,6 +1826,7 @@ class DetallePSTController {
             'tutores'           => $tutores,
             'carreras'          => $carreras,
             'lineas'             => $lineas,
+            'todasLineas'        => $model->getLineasInvestigacion(null),
             'dimensiones'        => $dimensiones,
             'nivelesAcademicos'  => $nivelesAcademicos,
             'nivelesConTrayecto' => $model->getNivelesConTrayecto(),
@@ -1405,6 +1834,7 @@ class DetallePSTController {
             'trayectosList'      => $trayectosList,
             'pagination'        => $pagination,
             'statsResumen'      => $statsResumen,
+            'filtrosAdmin'      => $filtrosAdmin,
             'q'                 => $q,
             'error'             => $error,
             'success'           => $success
