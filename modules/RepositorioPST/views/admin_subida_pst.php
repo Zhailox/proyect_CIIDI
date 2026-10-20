@@ -180,9 +180,9 @@ if (typeof window.mammoth === 'undefined') {
                                 </div>
                             </div>
 
-                            <!-- Panel de Autores (Dinámico desde configuración) -->
+                            <!-- Panel de Autores -->
                             <h3 class="upload-section-title">
-                                <i class="ph ph-users"></i> Autores (Estudiantes del Equipo - Máx. <?= (int)ConfigService::get('limites_equipo.max_autores', 4) ?>)
+                                <i class="ph ph-users"></i> Autores — Estudiantes del Equipo · Máx. <?= (int)ConfigService::get('limites_equipo.max_autores', 4) ?>
                             </h3>
                             <div class="authors-container">
                                 <?php 
@@ -204,7 +204,7 @@ if (typeof window.mammoth === 'undefined') {
 
                                 for ($i = 0; $i < $maxAutores; $i++):
                                     $esObligatorio = ($i === 0);
-                                    $label = 'Estudiante ' . ($i + 1) . ($esObligatorio ? ' (Autor Principal) *' : ' (Opcional)');
+                                    $label = 'Estudiante ' . ($i + 1) . ($esObligatorio ? ' — Autor Principal *' : ' — Opcional');
                                     $cedRaw = $autoresList[$i]['cedula'] ?? '';
                                     $cedTipo = 'V-';
                                     $cedNum = $cedRaw;
@@ -220,12 +220,12 @@ if (typeof window.mammoth === 'undefined') {
                                     <div class="sub-label-header"><?= $label ?></div>
                                     <div class="grid-2-cols">
                                         <div class="upload-input-group">
-                                            <div style="display: flex; gap: 0.35rem; align-items: stretch;">
+                                            <div style="display: flex; gap: 0.35rem; align-items: stretch; min-width: 0; width: 100%;">
                                                 <select class="upload-input autor-cedula-tipo" style="width: 75px; flex-shrink: 0; cursor: pointer; font-weight: 700; padding: 0.5rem 0.4rem;" onchange="sincronizarCedulasPST()">
                                                     <option value="V-" <?= $cedTipo === 'V-' ? 'selected' : '' ?>>V-</option>
                                                     <option value="E-" <?= $cedTipo === 'E-' ? 'selected' : '' ?>>E-</option>
                                                 </select>
-                                                <input type="text" inputmode="numeric" class="upload-input autor-cedula-num" value="<?= htmlspecialchars($cedNum) ?>" placeholder="Cédula<?= $esObligatorio ? ' (30123456)' : '' ?>" maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); sincronizarCedulasPST();" style="flex: 1;">
+                                                <input type="text" inputmode="numeric" class="upload-input autor-cedula-num" value="<?= htmlspecialchars($cedNum) ?>" placeholder="Cédula<?= $esObligatorio ? ' Ej: 30123456' : '' ?>" maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); sincronizarCedulasPST();" style="flex: 1; min-width: 0; width: auto;">
                                                 <input type="hidden" name="autor_cedula[]" class="autor-cedula-hidden" value="<?= htmlspecialchars($cedRaw) ?>">
                                             </div>
                                         </div>
@@ -236,7 +236,7 @@ if (typeof window.mammoth === 'undefined') {
                                 <?php endfor; ?>
                             </div>
 
-                            <!-- Panel de Tutores del PST (respetando max_tutores) -->
+                            <!-- Panel de Tutores del PST -->
                             <?php 
                             $maxTutores = (int)ConfigService::get('limites_equipo.max_tutores', 3);
                             $tAcadCed = $_POST['tutor_academico_cedula'] ?? $tutores['academico']['cedula'] ?? '';
@@ -247,7 +247,7 @@ if (typeof window.mammoth === 'undefined') {
                             $tComNom = $_POST['tutor_comunitario_nombre'] ?? $tutores['comunitario']['nombre'] ?? '';
                             ?>
                             <h3 class="upload-section-title">
-                                <i class="ph ph-chalkboard-teacher"></i> Tutores del Proyecto (Máx. <?= $maxTutores ?>)
+                                <i class="ph ph-chalkboard-teacher"></i> Tutores del Proyecto · Máx. <?= $maxTutores ?>
                             </h3>
                             <div class="tutors-container">
                                 <?php if ($maxTutores >= 1): 
@@ -257,12 +257,12 @@ if (typeof window.mammoth === 'undefined') {
                                 <div class="sub-label-header">Tutor Académico</div>
                                 <div class="grid-2-cols">
                                     <div class="upload-input-group">
-                                        <div style="display: flex; gap: 0.35rem; align-items: stretch;">
+                                        <div style="display: flex; gap: 0.35rem; align-items: stretch; min-width: 0; width: 100%;">
                                             <select id="tutor_academico_tipo" class="upload-input" style="width: 75px; flex-shrink: 0; cursor: pointer; font-weight: 700; padding: 0.5rem 0.4rem;" onchange="sincronizarCedulasPST()">
                                                 <option value="V-" <?= $tAcadTipo === 'V-' ? 'selected' : '' ?>>V-</option>
                                                 <option value="E-" <?= $tAcadTipo === 'E-' ? 'selected' : '' ?>>E-</option>
                                             </select>
-                                            <input type="text" inputmode="numeric" id="tutor_academico_num" class="upload-input" value="<?= htmlspecialchars($tAcadNum) ?>" placeholder="Cédula Tutor" maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); sincronizarCedulasPST();" style="flex: 1;">
+                                            <input type="text" inputmode="numeric" id="tutor_academico_num" class="upload-input" value="<?= htmlspecialchars($tAcadNum) ?>" placeholder="Cédula Tutor" maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); sincronizarCedulasPST();" style="flex: 1; min-width: 0; width: auto;">
                                             <input type="hidden" name="tutor_academico_cedula" id="tutor_academico_cedula" value="<?= htmlspecialchars($tAcadCed) ?>">
                                         </div>
                                     </div>
@@ -279,12 +279,12 @@ if (typeof window.mammoth === 'undefined') {
                                 <div class="sub-label-header">Tutor Institucional</div>
                                 <div class="grid-2-cols">
                                     <div class="upload-input-group">
-                                        <div style="display: flex; gap: 0.35rem; align-items: stretch;">
+                                        <div style="display: flex; gap: 0.35rem; align-items: stretch; min-width: 0; width: 100%;">
                                             <select id="tutor_institucional_tipo" class="upload-input" style="width: 75px; flex-shrink: 0; cursor: pointer; font-weight: 700; padding: 0.5rem 0.4rem;" onchange="sincronizarCedulasPST()">
                                                 <option value="V-" <?= $tInstTipo === 'V-' ? 'selected' : '' ?>>V-</option>
                                                 <option value="E-" <?= $tInstTipo === 'E-' ? 'selected' : '' ?>>E-</option>
                                             </select>
-                                            <input type="text" inputmode="numeric" id="tutor_institucional_num" class="upload-input" value="<?= htmlspecialchars($tInstNum) ?>" placeholder="Cédula Tutor" maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); sincronizarCedulasPST();" style="flex: 1;">
+                                            <input type="text" inputmode="numeric" id="tutor_institucional_num" class="upload-input" value="<?= htmlspecialchars($tInstNum) ?>" placeholder="Cédula Tutor" maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); sincronizarCedulasPST();" style="flex: 1; min-width: 0; width: auto;">
                                             <input type="hidden" name="tutor_institucional_cedula" id="tutor_institucional_cedula" value="<?= htmlspecialchars($tInstCed) ?>">
                                         </div>
                                     </div>
@@ -301,12 +301,12 @@ if (typeof window.mammoth === 'undefined') {
                                 <div class="sub-label-header">Tutor Comunitario</div>
                                 <div class="grid-2-cols">
                                     <div class="upload-input-group">
-                                        <div style="display: flex; gap: 0.35rem; align-items: stretch;">
+                                        <div style="display: flex; gap: 0.35rem; align-items: stretch; min-width: 0; width: 100%;">
                                             <select id="tutor_comunitario_tipo" class="upload-input" style="width: 75px; flex-shrink: 0; cursor: pointer; font-weight: 700; padding: 0.5rem 0.4rem;" onchange="sincronizarCedulasPST()">
                                                 <option value="V-" <?= $tComTipo === 'V-' ? 'selected' : '' ?>>V-</option>
                                                 <option value="E-" <?= $tComTipo === 'E-' ? 'selected' : '' ?>>E-</option>
                                             </select>
-                                            <input type="text" inputmode="numeric" id="tutor_comunitario_num" class="upload-input" value="<?= htmlspecialchars($tComNum) ?>" placeholder="Cédula Tutor" maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); sincronizarCedulasPST();" style="flex: 1;">
+                                            <input type="text" inputmode="numeric" id="tutor_comunitario_num" class="upload-input" value="<?= htmlspecialchars($tComNum) ?>" placeholder="Cédula Tutor" maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); sincronizarCedulasPST();" style="flex: 1; min-width: 0; width: auto;">
                                             <input type="hidden" name="tutor_comunitario_cedula" id="tutor_comunitario_cedula" value="<?= htmlspecialchars($tComCed) ?>">
                                         </div>
                                     </div>
@@ -342,7 +342,7 @@ if (typeof window.mammoth === 'undefined') {
                                             <?php endforeach; ?>
                                         </select>
                                     <?php else: ?>
-                                        <input type="hidden" name="id_carrera" value="1">
+                                        <input type="hidden" id="id_carrera" name="id_carrera" value="1">
                                         <div style="background: rgba(80, 89, 132, 0.08); border: 1px dashed rgba(80, 89, 132, 0.3); padding: 9px 12px; border-radius: var(--radius-sm, 8px); display: flex; align-items: center; justify-content: space-between; font-size: 0.88rem; font-weight: 700; color: var(--texto-titulos, #1E293B);" title="El repositorio está configurado para PNF en Informática">
                                             <span>PNF en Informática</span>
                                             <span style="color: #64748B;"><i class="ph ph-lock-key"></i></span>
@@ -2054,6 +2054,9 @@ function limpiarCamposFormularioSilencioso() {
         lineaSelect.value = '';
         if (typeof updateDimensionOptions === 'function') updateDimensionOptions('');
     }
+    if (typeof calcularCompletitudFormularioPst === 'function') {
+        setTimeout(calcularCompletitudFormularioPst, 50);
+    }
 }
 
 async function subirDocumentoIndividualDeCola(index) {
@@ -2811,7 +2814,7 @@ function renderizarDocxConMammoth(arrayBuffer) {
     const mInstance = window.mammoth || (typeof mammoth !== 'undefined' ? mammoth : null);
 
     if (!mInstance) {
-        iframe.srcdoc = `<p style="padding:2rem; color:#be123c;">Error: No se pudo obtener la instancia de Mammoth.js en el entorno.</p>`;
+        iframe.srcdoc = `<p style="padding:2rem; color:#505984;">No se pudo obtener el lector de documentos Word en el navegador.</p>`;
         return;
     }
 
@@ -2823,6 +2826,9 @@ function renderizarDocxConMammoth(arrayBuffer) {
             "p[style-name='Heading 2'] => h3.doc-heading-2:fresh",
             "p[style-name='Heading 3'] => h4.doc-heading-3:fresh",
             "p[style-name='Heading 4'] => h5.doc-heading-4:fresh",
+            "p[style-name='Titulo 1'] => h2.doc-heading-1:fresh",
+            "p[style-name='Titulo 2'] => h3.doc-heading-2:fresh",
+            "p[style-name='Titulo 3'] => h4.doc-heading-3:fresh",
             "p[style-name='Quote'] => blockquote.doc-quote:fresh",
             "p[style-name='Intense Quote'] => blockquote.doc-quote-intense:fresh",
             "r[style-name='Strong'] => strong",
@@ -2841,172 +2847,528 @@ function renderizarDocxConMammoth(arrayBuffer) {
 
     mInstance.convertToHtml({ arrayBuffer: arrayBuffer }, options)
         .then(function(result) {
-            const messagesHtml = (result.messages && result.messages.length > 0) ? `
-                <div class="doc-warning-banner">
-                    <i class="ph ph-info"></i> <strong>Aviso de conversión:</strong> Se procesaron ${result.messages.length} notas de estilo/formato durante la renderización.
-                </div>
-            ` : '';
-
-            const htmlContent = `
-                <!DOCTYPE html>
-                <html lang="es">
-                <head>
-                    <meta charset="UTF-8">
-                    <style>
-                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-                        
-                        body {
-                            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-                            background-color: #f1f5f9;
-                            color: #1e293b;
-                            margin: 0;
-                            padding: 2rem 1.5rem;
-                            line-height: 1.7;
-                            -webkit-font-smoothing: antialiased;
-                        }
-                        .paper-wrapper {
-                            max-width: 860px;
-                            margin: 0 auto;
-                            background: #ffffff;
-                            padding: 3.5rem 4rem;
-                            border-radius: 8px;
-                            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
-                            border: 1px solid #cbd5e1;
-                            position: relative;
-                        }
-                        .paper-wrapper::before {
-                            content: "VISTA PREVIA INTEGRAL DE DOCUMENTO (DOCX)";
-                            display: block;
-                            font-size: 0.68rem;
-                            font-weight: 800;
-                            letter-spacing: 1px;
-                            color: #64748b;
-                            text-transform: uppercase;
-                            border-bottom: 2px solid var(--color-secundario, rgb(80, 89, 132));
-                            padding-bottom: 0.5rem;
-                            margin-bottom: 2rem;
-                        }
-                        h1, .doc-title {
-                            color: var(--texto-titulos, #1E293B);
-                            font-size: 1.8rem;
-                            font-weight: 800;
-                            line-height: 1.25;
-                            margin-top: 1.5rem;
-                            margin-bottom: 1rem;
-                        }
-                        h2, .doc-subtitle, .doc-heading-1 {
-                            color: var(--texto-titulos, #1E293B);
-                            font-size: 1.35rem;
-                            font-weight: 700;
-                            margin-top: 1.75rem;
-                            margin-bottom: 0.75rem;
-                            border-bottom: 1px solid #e2e8f0;
-                            padding-bottom: 0.35rem;
-                        }
-                        h3, .doc-heading-2 {
-                            color: var(--color-secundario, rgb(80, 89, 132));
-                            font-size: 1.15rem;
-                            font-weight: 700;
-                            margin-top: 1.4rem;
-                            margin-bottom: 0.5rem;
-                        }
-                        h4, .doc-heading-3 {
-                            color: #334155;
-                            font-size: 1rem;
-                            font-weight: 700;
-                            margin-top: 1.2rem;
-                            margin-bottom: 0.4rem;
-                        }
-                        p {
-                            margin-bottom: 1.1rem;
-                            text-align: justify;
-                            font-size: 0.94rem;
-                            color: #334155;
-                        }
-                        strong {
-                            color: #0f172a;
-                            font-weight: 700;
-                        }
-                        blockquote, .doc-quote, .doc-quote-intense {
-                            border-left: 4px solid var(--color-secundario, rgb(80, 89, 132));
-                            background-color: #f8fafc;
-                            padding: 0.85rem 1.25rem;
-                            margin: 1.25rem 0;
-                            border-radius: 0 6px 6px 0;
-                            font-style: italic;
-                            color: #475569;
-                        }
-                        table {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin: 1.5rem 0;
-                            font-size: 0.88rem;
-                            background: white;
-                        }
-                        th, td {
-                            border: 1px solid #cbd5e1;
-                            padding: 0.65rem 0.85rem;
-                            text-align: left;
-                        }
-                        th {
-                            background-color: #f1f5f9;
-                            color: #002244;
-                            font-weight: 700;
-                        }
-                        tr:nth-child(even) {
-                            background-color: #f8fafc;
-                        }
-                        ul, ol {
-                            padding-left: 1.5rem;
-                            margin-bottom: 1.25rem;
-                            font-size: 0.94rem;
-                            color: #334155;
-                        }
-                        li {
-                            margin-bottom: 0.4rem;
-                        }
-                        img {
-                            max-width: 100%;
-                            height: auto;
-                            display: block;
-                            margin: 1.5rem auto;
-                            border-radius: 6px;
-                            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                            border: 1px solid #cbd5e1;
-                        }
-                        code, pre {
-                            font-family: 'JetBrains Mono', monospace;
-                            background: #f1f5f9;
-                            padding: 0.2rem 0.4rem;
-                            border-radius: 4px;
-                            font-size: 0.85rem;
-                            color: #0f172a;
-                        }
-                        .doc-warning-banner {
-                            background: #eff6ff;
-                            border: 1px solid #bfdbfe;
-                            color: #1e40af;
-                            padding: 0.6rem 1rem;
-                            border-radius: 6px;
-                            font-size: 0.8rem;
-                            margin-bottom: 1.5rem;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="paper-wrapper">
-                        ${messagesHtml}
-                        ${result.value}
-                    </div>
-                </body>
-                </html>
-            `;
+            const htmlContent = construirHtmlVisorWordInteractivo(result.value || '');
             iframe.srcdoc = htmlContent;
         })
         .catch(function(err) {
             console.error('Error Mammoth.js:', err);
-            iframe.srcdoc = `<p style="padding:2rem; color:#be123c;">Error al renderizar la estructura visual del archivo Word. (${err.message})</p>`;
+            iframe.srcdoc = `<p style="padding:2rem; color:#505984;">No se pudo abrir la estructura visual del archivo Word: ${err.message}</p>`;
         });
+}
+
+function construirHtmlVisorWordInteractivo(cuerpoHtml) {
+    return `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        :root {
+            --azul-oscuro: #002244;
+            --azul-inst: #505984;
+            --azul-claro: #7090CB;
+            --borde-suave: rgba(80, 89, 132, 0.22);
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: #f4f7fb;
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+        .word-toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            background: #ffffff;
+            border-bottom: 1px solid var(--borde-suave);
+            padding: 0.55rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.65rem;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 14px rgba(0, 34, 68, 0.06);
+        }
+        .word-toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+        .word-btn {
+            background: #ffffff;
+            color: var(--azul-inst);
+            border: 1px solid var(--borde-suave);
+            border-radius: 6px;
+            padding: 0.35rem 0.65rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: all 0.15s ease;
+        }
+        .word-btn:hover, .word-btn.active {
+            background: var(--azul-inst);
+            color: #ffffff;
+            border-color: var(--azul-inst);
+        }
+        .word-search-box {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border: 1px solid var(--borde-suave);
+            border-radius: 6px;
+            padding: 0.15rem 0.45rem;
+            gap: 0.3rem;
+        }
+        .word-search-input {
+            border: none;
+            outline: none;
+            font-size: 0.78rem;
+            color: #1e293b;
+            width: 165px;
+            padding: 0.22rem 0.25rem;
+            background: transparent;
+        }
+        .word-search-count {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--azul-inst);
+            min-width: 38px;
+            text-align: center;
+        }
+        .word-mini-btn {
+            background: transparent;
+            border: none;
+            color: var(--azul-inst);
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 800;
+            padding: 0.15rem 0.3rem;
+            border-radius: 4px;
+        }
+        .word-mini-btn:hover {
+            background: rgba(112, 144, 203, 0.15);
+        }
+        .word-stats-pill {
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: var(--azul-inst);
+            background: #f4f8ff;
+            border: 1px solid rgba(112, 144, 203, 0.3);
+            padding: 0.28rem 0.6rem;
+            border-radius: 6px;
+        }
+        .word-workspace {
+            display: flex;
+            align-items: flex-start;
+            min-height: calc(100vh - 54px);
+        }
+        .word-outline-sidebar {
+            width: 270px;
+            flex-shrink: 0;
+            background: #ffffff;
+            border-right: 1px solid var(--borde-suave);
+            position: sticky;
+            top: 52px;
+            height: calc(100vh - 52px);
+            overflow-y: auto;
+            padding: 0.9rem 0.75rem;
+            display: none;
+        }
+        .word-outline-sidebar.open {
+            display: block;
+        }
+        .word-outline-title {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--azul-oscuro);
+            margin: 0 0 0.6rem 0;
+            padding-bottom: 0.4rem;
+            border-bottom: 2px solid var(--azul-inst);
+        }
+        .word-outline-item {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: transparent;
+            border: none;
+            padding: 0.38rem 0.5rem;
+            margin-bottom: 0.15rem;
+            border-radius: 5px;
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: #334155;
+            cursor: pointer;
+            line-height: 1.35;
+            transition: background 0.12s ease;
+        }
+        .word-outline-item:hover {
+            background: #f0f5ff;
+            color: var(--azul-oscuro);
+        }
+        .word-outline-item.level-2 { padding-left: 1rem; font-size: 0.73rem; }
+        .word-outline-item.level-3 { padding-left: 1.5rem; font-size: 0.71rem; color: #505984; }
+        .word-canvas {
+            flex: 1;
+            padding: 1.75rem 1.25rem 3rem 1.25rem;
+            overflow-x: auto;
+        }
+        .paper-wrapper {
+            max-width: 860px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 3rem 3.5rem;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 34, 68, 0.07);
+            border: 1px solid var(--borde-suave);
+            position: relative;
+            transition: max-width 0.2s ease, zoom 0.15s ease;
+            word-break: break-word;
+        }
+        .paper-wrapper.wide-mode {
+            max-width: 96%;
+        }
+        h1, .doc-title { color: #002244; font-size: 1.65rem; font-weight: 800; line-height: 1.3; margin: 1.4rem 0 0.9rem 0; }
+        h2, .doc-subtitle, .doc-heading-1 { color: #002244; font-size: 1.3rem; font-weight: 700; margin: 1.6rem 0 0.7rem 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.3rem; }
+        h3, .doc-heading-2 { color: #505984; font-size: 1.12rem; font-weight: 700; margin: 1.3rem 0 0.5rem 0; }
+        h4, .doc-heading-3 { color: #334155; font-size: 1rem; font-weight: 700; margin: 1.1rem 0 0.4rem 0; }
+        p { margin-bottom: 1rem; text-align: justify; font-size: 0.94rem; color: #334155; }
+        a { color: var(--azul-inst); text-decoration: none; border-bottom: 1px dashed var(--azul-claro); cursor: pointer; }
+        a:hover { color: var(--azul-oscuro); background-color: #f0f5ff; border-bottom-style: solid; }
+        table { width: 100%; border-collapse: collapse; margin: 1.4rem 0; font-size: 0.86rem; background: #ffffff; }
+        th, td { border: 1px solid rgba(80, 89, 132, 0.25); padding: 0.6rem 0.8rem; text-align: left; }
+        th { background-color: #f4f8ff; color: #002244; font-weight: 700; }
+        img { max-width: 100%; height: auto; display: block; margin: 1.4rem auto; border-radius: 6px; border: 1px solid var(--borde-suave); }
+        mark.word-search-hit { background: rgba(112, 144, 203, 0.35); color: #002244; padding: 0 2px; border-radius: 3px; font-weight: 700; }
+        mark.word-search-hit.current { background: #505984; color: #ffffff; outline: 2px solid #7090CB; }
+        .word-target-flash { animation: flashTarget 1.6s ease; }
+        @keyframes flashTarget {
+            0% { background-color: rgba(112, 144, 203, 0.35); }
+            100% { background-color: transparent; }
+        }
+        .btn-top-float {
+            position: fixed;
+            bottom: 1.2rem;
+            right: 1.2rem;
+            background: var(--azul-inst);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 0.45rem 0.8rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(0, 34, 68, 0.2);
+            z-index: 150;
+        }
+        @media print {
+            .word-toolbar, .word-outline-sidebar, .btn-top-float { display: none !important; }
+            body { background: #ffffff; }
+            .word-canvas { padding: 0; }
+            .paper-wrapper { box-shadow: none; border: none; padding: 0; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="word-toolbar">
+        <div class="word-toolbar-group">
+            <button type="button" class="word-btn" id="btnToggleOutline" onclick="alternarEsquemaWord()">
+                ☰ Capítulos e Índice
+            </button>
+            <div class="word-search-box">
+                <input type="text" id="wordSearchInput" class="word-search-input" placeholder="Buscar palabra en el texto..." oninput="ejecutarBusquedaWord()" onkeydown="if(event.key==='Enter'){event.preventDefault(); saltarCoincidenciaWord(1);}">
+                <span id="wordSearchCount" class="word-search-count">0 / 0</span>
+                <button type="button" class="word-mini-btn" onclick="saltarCoincidenciaWord(-1)" title="Anterior">▲</button>
+                <button type="button" class="word-mini-btn" onclick="saltarCoincidenciaWord(1)" title="Siguiente">▼</button>
+                <button type="button" class="word-mini-btn" onclick="limpiarBusquedaWord()" title="Limpiar">✕</button>
+            </div>
+        </div>
+        <div class="word-toolbar-group">
+            <span id="wordStatsBadge" class="word-stats-pill">Calculando...</span>
+            <button type="button" class="word-btn" onclick="cambiarZoomWord(-10)">−</button>
+            <span id="wordZoomLabel" style="font-size: 0.76rem; font-weight: 800; color: #002244; min-width: 42px; text-align: center;">100%</span>
+            <button type="button" class="word-btn" onclick="cambiarZoomWord(10)">+</button>
+            <button type="button" class="word-btn" id="btnWideMode" onclick="alternarAnchoWord()">Ancho completo</button>
+            <button type="button" class="word-btn" onclick="window.print()">Imprimir</button>
+        </div>
+    </div>
+
+    <div class="word-workspace">
+        <aside id="wordOutlineSidebar" class="word-outline-sidebar">
+            <div class="word-outline-title">Secciones del Documento</div>
+            <div id="wordOutlineList"></div>
+        </aside>
+        <main class="word-canvas">
+            <div class="paper-wrapper" id="paperContent">
+                ${cuerpoHtml}
+            </div>
+        </main>
+    </div>
+
+    <button type="button" class="btn-top-float" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">↑ Subir al inicio</button>
+
+    <script>
+        let zoomActualWord = 100;
+        let coincidenciasWord = [];
+        let indiceCoincidenciaActual = -1;
+
+        function resaltarElementoDestino(el) {
+            if (!el) return;
+            el.classList.remove('word-target-flash');
+            void el.offsetWidth;
+            el.classList.add('word-target-flash');
+        }
+
+        // Interceptar todos los enlaces e índices de Word para evitar que el iframe cargue el sistema adentro
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a');
+            if (!link) return;
+
+            const rawHref = (link.getAttribute('href') || '').trim();
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Si es un enlace web externo hacia otro dominio, abrir en pestaña nueva
+            if (/^https?:\\/\\//i.test(rawHref) && !rawHref.includes(window.location.host)) {
+                window.open(rawHref, '_blank', 'noopener,noreferrer');
+                return;
+            }
+
+            // Buscar marcador interno por ID o nombre (#_Toc...)
+            let anchorId = '';
+            if (rawHref.startsWith('#')) {
+                anchorId = decodeURIComponent(rawHref.substring(1));
+            } else if (rawHref.includes('#')) {
+                anchorId = decodeURIComponent(rawHref.split('#').pop());
+            }
+
+            if (anchorId) {
+                const porId = document.getElementById(anchorId) || document.querySelector('[name="' + anchorId.replace(/"/g, '') + '"]');
+                if (porId) {
+                    porId.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    resaltarElementoDestino(porId.closest('h1, h2, h3, h4, h5, p') || porId);
+                    return;
+                }
+            }
+
+            // Si Word no exportó el marcador o era un elemento del índice, buscar la sección por su título limpio
+            const textoIndice = (link.textContent || '')
+                .replace(/[\\.…\\s\\t]+\\d+\\s*$/, '')
+                .replace(/\\s+/g, ' ')
+                .trim();
+
+            if (textoIndice.length >= 2) {
+                const buscado = textoIndice.toLowerCase();
+                const bloques = document.querySelectorAll('#paperContent h1, #paperContent h2, #paperContent h3, #paperContent h4, #paperContent h5, #paperContent p, #paperContent strong');
+                for (let i = 0; i < bloques.length; i++) {
+                    const b = bloques[i];
+                    if (b.contains(link) || link.contains(b)) continue;
+                    const txt = (b.textContent || '').replace(/[\\.…\\s\\t]+\\d+\\s*$/, '').replace(/\\s+/g, ' ').trim().toLowerCase();
+                    if (txt === buscado || (buscado.length >= 5 && txt.startsWith(buscado))) {
+                        b.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        resaltarElementoDestino(b);
+                        return;
+                    }
+                }
+            }
+        }, true);
+
+        function cambiarZoomWord(delta) {
+            zoomActualWord = Math.min(170, Math.max(70, zoomActualWord + delta));
+            const paper = document.getElementById('paperContent');
+            if (paper) paper.style.zoom = zoomActualWord + '%';
+            const lbl = document.getElementById('wordZoomLabel');
+            if (lbl) lbl.textContent = zoomActualWord + '%';
+        }
+
+        function alternarAnchoWord() {
+            const paper = document.getElementById('paperContent');
+            const btn = document.getElementById('btnWideMode');
+            if (!paper) return;
+            paper.classList.toggle('wide-mode');
+            if (btn) btn.classList.toggle('active', paper.classList.contains('wide-mode'));
+        }
+
+        function alternarEsquemaWord() {
+            const sidebar = document.getElementById('wordOutlineSidebar');
+            const btn = document.getElementById('btnToggleOutline');
+            if (!sidebar) return;
+            sidebar.classList.toggle('open');
+            if (btn) btn.classList.toggle('active', sidebar.classList.contains('open'));
+        }
+
+        function inicializarEsquemaYEstadisticas() {
+            const paper = document.getElementById('paperContent');
+            if (!paper) return;
+
+            // Estadísticas de palabras e imágenes
+            const textoPlano = (paper.innerText || '').trim();
+            const totalPalabras = textoPlano ? textoPlano.split(/\\s+/).length : 0;
+            const totalImgs = paper.querySelectorAll('img').length;
+            const badge = document.getElementById('wordStatsBadge');
+            if (badge) {
+                badge.textContent = totalPalabras.toLocaleString('es-VE') + ' palabras • ' + totalImgs + ' imágenes';
+            }
+
+            // Construir esquema de capítulos y secciones
+            const outlineList = document.getElementById('wordOutlineList');
+            if (!outlineList) return;
+            outlineList.innerHTML = '';
+
+            const nodos = paper.querySelectorAll('h1, h2, h3, h4, p');
+            let contadorSecciones = 0;
+            const regexSeccion = /^(CAP[ÍI]TULO|PARTE|FASE|MOMENTO|RESUMEN|INTRODUCCI[ÓO]N|CONCLUSIONES|RECOMENDACIONES|REFERENCIAS|BIBLIOGRAF[ÍI]A|ANEXOS|OBJETIVO|\\d+\\.\\d*\\s+[A-ZÁÉÍÓÚÑ])/i;
+
+            nodos.forEach((nodo, idx) => {
+                const tag = nodo.tagName.toLowerCase();
+                const texto = (nodo.textContent || '').replace(/\\s+/g, ' ').trim();
+                if (!texto || texto.length < 3 || texto.length > 140) return;
+                // Ignorar líneas de índice llenas de puntos suspensivos
+                if (/\\.{4,}\\s*\\d+$/.test(texto)) return;
+
+                let esEncabezado = (tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'h4');
+                let nivel = tag === 'h1' ? 1 : (tag === 'h2' ? 2 : 3);
+
+                if (!esEncabezado && tag === 'p' && regexSeccion.test(texto) && texto.length <= 95) {
+                    esEncabezado = true;
+                    nivel = 2;
+                }
+
+                if (esEncabezado) {
+                    const secId = 'word_sec_' + idx;
+                    if (!nodo.id) nodo.id = secId;
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'word-outline-item level-' + nivel;
+                    btn.textContent = texto;
+                    btn.onclick = function() {
+                        nodo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        resaltarElementoDestino(nodo);
+                    };
+                    outlineList.appendChild(btn);
+                    contadorSecciones++;
+                }
+            });
+
+            if (contadorSecciones === 0) {
+                outlineList.innerHTML = '<p style="font-size: 0.75rem; color: #64748b; text-align: left;">No se detectaron subtítulos separados en este documento.</p>';
+            }
+        }
+
+        function limpiarMarcasBusqueda() {
+            const paper = document.getElementById('paperContent');
+            if (!paper) return;
+            const marcas = paper.querySelectorAll('mark.word-search-hit');
+            marcas.forEach(m => {
+                const parent = m.parentNode;
+                parent.replaceChild(document.createTextNode(m.textContent), m);
+                parent.normalize();
+            });
+            coincidenciasWord = [];
+            indiceCoincidenciaActual = -1;
+        }
+
+        function limpiarBusquedaWord() {
+            const input = document.getElementById('wordSearchInput');
+            if (input) input.value = '';
+            limpiarMarcasBusqueda();
+            const countEl = document.getElementById('wordSearchCount');
+            if (countEl) countEl.textContent = '0 / 0';
+        }
+
+        function ejecutarBusquedaWord() {
+            limpiarMarcasBusqueda();
+            const input = document.getElementById('wordSearchInput');
+            const countEl = document.getElementById('wordSearchCount');
+            const termino = input ? input.value.trim() : '';
+            if (termino.length < 2) {
+                if (countEl) countEl.textContent = '0 / 0';
+                return;
+            }
+
+            const paper = document.getElementById('paperContent');
+            const walker = document.createTreeWalker(paper, NodeFilter.SHOW_TEXT, null, false);
+            const nodosTexto = [];
+            let n;
+            while ((n = walker.nextNode())) {
+                if (n.parentNode && !['SCRIPT', 'STYLE', 'MARK'].includes(n.parentNode.tagName)) {
+                    nodosTexto.push(n);
+                }
+            }
+
+            const escaped = termino.replace(/[.*+?^\${}()|[\\]\\\\]/g, '\\\\$&');
+            const regex = new RegExp(escaped, 'gi');
+
+            nodosTexto.forEach(textNode => {
+                const val = textNode.nodeValue;
+                if (!regex.test(val)) return;
+                regex.lastIndex = 0;
+
+                const frag = document.createDocumentFragment();
+                let lastIdx = 0;
+                let match;
+                while ((match = regex.exec(val)) !== null) {
+                    if (match.index > lastIdx) {
+                        frag.appendChild(document.createTextNode(val.slice(lastIdx, match.index)));
+                    }
+                    const mark = document.createElement('mark');
+                    mark.className = 'word-search-hit';
+                    mark.textContent = match[0];
+                    frag.appendChild(mark);
+                    coincidenciasWord.push(mark);
+                    lastIdx = regex.lastIndex;
+                }
+                if (lastIdx < val.length) {
+                    frag.appendChild(document.createTextNode(val.slice(lastIdx)));
+                }
+                textNode.parentNode.replaceChild(frag, textNode);
+            });
+
+            if (coincidenciasWord.length > 0) {
+                indiceCoincidenciaActual = 0;
+                enfocarCoincidenciaActual();
+            } else if (countEl) {
+                countEl.textContent = '0 / 0';
+            }
+        }
+
+        function enfocarCoincidenciaActual() {
+            const countEl = document.getElementById('wordSearchCount');
+            if (coincidenciasWord.length === 0) {
+                if (countEl) countEl.textContent = '0 / 0';
+                return;
+            }
+            coincidenciasWord.forEach((m, idx) => {
+                m.classList.toggle('current', idx === indiceCoincidenciaActual);
+            });
+            const actual = coincidenciasWord[indiceCoincidenciaActual];
+            if (actual) {
+                actual.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            if (countEl) {
+                countEl.textContent = (indiceCoincidenciaActual + 1) + ' / ' + coincidenciasWord.length;
+            }
+        }
+
+        function saltarCoincidenciaWord( paso ) {
+            if (coincidenciasWord.length === 0) return;
+            indiceCoincidenciaActual = (indiceCoincidenciaActual + paso + coincidenciasWord.length) % coincidenciasWord.length;
+            enfocarCoincidenciaActual();
+        }
+
+        inicializarEsquemaYEstadisticas();
+    <\/script>
+</body>
+</html>`;
 }
 
 function cerrarModalPrevisualizacion() {
@@ -3618,9 +3980,12 @@ function calcularCompletitudFormularioPst() {
     const textoEstado = document.getElementById('estadoCompletitudTexto');
     if (!barra || !textoPct || !textoEstado) return;
 
+    const elCarrera = document.getElementById('id_carrera') || document.querySelector('[name="id_carrera"]');
+    const carreraAsignada = Boolean((elCarrera?.value || '').trim()) || !permitirFiltroCarrera;
+
     const camposEvaluados = [
         { nombre: 'título', ok: Boolean((document.getElementById('titulo')?.value || '').trim()) },
-        { nombre: 'carrera', ok: Boolean((document.getElementById('id_carrera')?.value || '').trim()) },
+        { nombre: 'carrera', ok: carreraAsignada },
         { nombre: 'año', ok: Boolean((document.getElementById('anio_publicacion')?.value || '').trim()) },
         { nombre: 'línea de investigación', ok: Boolean((document.getElementById('linea_id')?.value || '').trim()) },
         { nombre: 'dimensión', ok: Boolean((document.getElementById('dimension_id')?.value || '').trim()) },

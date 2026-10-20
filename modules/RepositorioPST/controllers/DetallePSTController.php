@@ -296,73 +296,362 @@ class DetallePSTController {
             }
             readfile($fullPath);
             exit;
-        } elseif ($ext === 'docx') {
+        } elseif ($ext === 'docx' || $ext === 'doc') {
             $mostrarToolbar = (bool)ConfigService::get('visor_pdf.mostrar_toolbar', true);
+            $esDocx = ($ext === 'docx');
             $rawUrlParams = $_GET;
             $rawUrlParams['raw'] = '1';
             $rawUrl = '?' . http_build_query($rawUrlParams);
+
+            $paragraphsHtml = '';
+            if (!$esDocx) {
+                require_once __DIR__ . '/../services/ExtractorPST.php';
+                $docText = '';
+                try {
+                    $docText = ExtractorPST::extraerTextoDOC($fullPath);
+                } catch (\Throwable $e) {
+                    $docText = '';
+                }
+                foreach (explode("\n", $docText) as $pLine) {
+                    $pLine = trim($pLine);
+                    if ($pLine !== '' && stripos($pLine, 'PAGEREF _Toc') === false) {
+                        $paragraphsHtml .= '<p>' . htmlspecialchars($pLine, ENT_QUOTES, 'UTF-8') . '</p>';
+                    }
+                }
+                if ($paragraphsHtml === '') {
+                    $paragraphsHtml = '<p><em>No se pudo generar la vista previa textual para este documento Word antiguo.</em></p>';
+                }
+            }
 
             header('Content-Type: text/html; charset=utf-8');
             echo "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'>
                   <meta name='viewport' content='width=device-width, initial-scale=1.0'>
                   <title>" . htmlspecialchars($safeFilename) . "</title>
                   <style>
+                    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
                     :root {
-                        --color-primario: #002244;
-                        --color-secundario: #505984;
-                        --color-terciario: #7090CB;
-                        --texto-titulos: #1E293B;
-                        --texto-silenciado: #64748B;
+                        --azul-oscuro: #002244;
+                        --azul-inst: #505984;
+                        --azul-claro: #7090CB;
+                        --borde-suave: rgba(80, 89, 132, 0.22);
                     }
                     * { box-sizing: border-box; }
-                    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 0; line-height: 1.6; }
-                    .doc-toolbar { position: sticky; top: 0; z-index: 100; background: #ffffff; border-bottom: 1px solid #cbd5e1; padding: 0.5rem 1rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-                    .doc-toolbar-btn { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 0.35rem 0.65rem; font-size: 0.8rem; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; }
-                    .doc-toolbar-btn:hover { background: #e2e8f0; color: #002244; }
-                    .paper-container { max-width: 860px; margin: " . ($mostrarToolbar ? "1rem auto 3rem auto" : "1.5rem auto") . "; background: #ffffff; padding: 2.5rem 3rem; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; transition: transform 0.2s ease; transform-origin: top center; word-break: break-word; }
+                    body { font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: #f4f7fb; color: #1e293b; margin: 0; padding: 0; line-height: 1.7; }
+                    .word-toolbar { position: sticky; top: 0; z-index: 200; background: #ffffff; border-bottom: 1px solid var(--borde-suave); padding: 0.55rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.65rem; flex-wrap: wrap; box-shadow: 0 4px 14px rgba(0, 34, 68, 0.06); }
+                    .word-toolbar-group { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+                    .word-btn { background: #ffffff; color: var(--azul-inst); border: 1px solid var(--borde-suave); border-radius: 6px; padding: 0.35rem 0.65rem; font-size: 0.78rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.15s ease; }
+                    .word-btn:hover, .word-btn.active { background: var(--azul-inst); color: #ffffff; border-color: var(--azul-inst); }
+                    .word-search-box { display: flex; align-items: center; background: #ffffff; border: 1px solid var(--borde-suave); border-radius: 6px; padding: 0.15rem 0.45rem; gap: 0.3rem; }
+                    .word-search-input { border: none; outline: none; font-size: 0.78rem; color: #1e293b; width: 165px; padding: 0.22rem 0.25rem; background: transparent; }
+                    .word-search-count { font-size: 0.72rem; font-weight: 700; color: var(--azul-inst); min-width: 38px; text-align: center; }
+                    .word-mini-btn { background: transparent; border: none; color: var(--azul-inst); cursor: pointer; font-size: 0.78rem; font-weight: 800; padding: 0.15rem 0.3rem; border-radius: 4px; }
+                    .word-mini-btn:hover { background: rgba(112, 144, 203, 0.15); }
+                    .word-stats-pill { font-size: 0.74rem; font-weight: 700; color: var(--azul-inst); background: #f4f8ff; border: 1px solid rgba(112, 144, 203, 0.3); padding: 0.28rem 0.6rem; border-radius: 6px; }
+                    .word-workspace { display: flex; align-items: flex-start; min-height: calc(100vh - 54px); }
+                    .word-outline-sidebar { width: 270px; flex-shrink: 0; background: #ffffff; border-right: 1px solid var(--borde-suave); position: sticky; top: 52px; height: calc(100vh - 52px); overflow-y: auto; padding: 0.9rem 0.75rem; display: none; }
+                    .word-outline-sidebar.open { display: block; }
+                    .word-outline-title { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--azul-oscuro); margin: 0 0 0.6rem 0; padding-bottom: 0.4rem; border-bottom: 2px solid var(--azul-inst); }
+                    .word-outline-item { display: block; width: 100%; text-align: left; background: transparent; border: none; padding: 0.38rem 0.5rem; margin-bottom: 0.15rem; border-radius: 5px; font-size: 0.76rem; font-weight: 600; color: #334155; cursor: pointer; line-height: 1.35; }
+                    .word-outline-item:hover { background: #f0f5ff; color: var(--azul-oscuro); }
+                    .word-outline-item.level-2 { padding-left: 1rem; font-size: 0.73rem; }
+                    .word-outline-item.level-3 { padding-left: 1.5rem; font-size: 0.71rem; color: #505984; }
+                    .word-canvas { flex: 1; padding: 1.75rem 1.25rem 3rem 1.25rem; overflow-x: auto; }
+                    .paper-container { max-width: 860px; margin: 0 auto; background: #ffffff; padding: 3rem 3.5rem; border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 34, 68, 0.07); border: 1px solid var(--borde-suave); transition: max-width 0.2s ease, zoom 0.15s ease; word-break: break-word; }
+                    .paper-container.wide-mode { max-width: 96%; }
                     .paper-container h1, .paper-container h2, .paper-container h3, .paper-container h4 { color: #002244; font-weight: 800; line-height: 1.3; }
-                    .paper-container p { margin-bottom: 1rem; text-align: justify; font-size: 0.95rem; }
-                    .paper-container table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.9rem; }
-                    .paper-container td, .paper-container th { border: 1px solid #cbd5e1; padding: 0.6rem; }
-                    .paper-container th { background: #f1f5f9; }
-                    .paper-container img { max-width: 100%; height: auto; display: block; margin: 1rem auto; }
+                    .paper-container p { margin-bottom: 1rem; text-align: justify; font-size: 0.94rem; color: #334155; }
+                    .paper-container a { color: var(--azul-inst); text-decoration: none; border-bottom: 1px dashed var(--azul-claro); cursor: pointer; }
+                    .paper-container a:hover { color: var(--azul-oscuro); background-color: #f0f5ff; border-bottom-style: solid; }
+                    .paper-container table { width: 100%; border-collapse: collapse; margin: 1.4rem 0; font-size: 0.86rem; background: #ffffff; }
+                    .paper-container td, .paper-container th { border: 1px solid rgba(80, 89, 132, 0.25); padding: 0.6rem 0.8rem; }
+                    .paper-container th { background: #f4f8ff; color: #002244; font-weight: 700; }
+                    .paper-container img { max-width: 100%; height: auto; display: block; margin: 1.4rem auto; border-radius: 6px; border: 1px solid var(--borde-suave); }
                     .doc-loader { text-align: center; padding: 3rem; color: #505984; font-weight: 600; font-size: 0.95rem; }
-                    @media print { .doc-toolbar { display: none !important; } body { padding: 0; background: #fff; } .paper-container { box-shadow: none; border: none; padding: 0; max-width: 100%; } }
-                  </style>
-                  <script src='modules/RepositorioPST/assets/js/mammoth.browser.min.js'></script>
-                  <script>
-                    if (typeof window.mammoth === 'undefined') {
-                        document.write('<script src=\"https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js\"><\/script>');
-                    }
-                  </script>
-                  </head><body>";
+                    mark.word-search-hit { background: rgba(112, 144, 203, 0.35); color: #002244; padding: 0 2px; border-radius: 3px; font-weight: 700; }
+                    mark.word-search-hit.current { background: #505984; color: #ffffff; outline: 2px solid #7090CB; }
+                    .word-target-flash { animation: flashTarget 1.6s ease; }
+                    @keyframes flashTarget { 0% { background-color: rgba(112, 144, 203, 0.35); } 100% { background-color: transparent; } }
+                    .btn-top-float { position: fixed; bottom: 1.2rem; right: 1.2rem; background: var(--azul-inst); color: #ffffff; border: none; border-radius: 8px; padding: 0.45rem 0.8rem; font-size: 0.78rem; font-weight: 700; cursor: pointer; box-shadow: 0 6px 16px rgba(0, 34, 68, 0.2); z-index: 150; }
+                    @media print { .word-toolbar, .word-outline-sidebar, .btn-top-float { display: none !important; } body { padding: 0; background: #fff; } .word-canvas { padding: 0; } .paper-container { box-shadow: none; border: none; padding: 0; max-width: 100%; } }
+                  </style>";
+            if ($esDocx) {
+                echo "<script src='modules/RepositorioPST/assets/js/mammoth.browser.min.js'></script>
+                      <script>
+                        if (typeof window.mammoth === 'undefined') {
+                            document.write('<script src=\"https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js\"><\/script>');
+                        }
+                      </script>";
+            }
+            echo "</head><body>";
             if ($mostrarToolbar) {
-                echo "<div class='doc-toolbar'>
-                        <div style='display:flex; align-items:center; gap:0.5rem;'>
-                            <span style='background:rgba(112, 144, 203, 0.15); color:var(--color-secundario); padding:0.25rem 0.55rem; border-radius:4px; font-size:0.75rem; font-weight:700;'>Word (.docx)</span>
-                            <span style='font-size:0.8rem; color:#64748b; font-weight:600;'>" . htmlspecialchars($safeFilename) . "</span>
+                echo "<div class='word-toolbar'>
+                        <div class='word-toolbar-group'>
+                            <button type='button' class='word-btn' id='btnToggleOutline' onclick='alternarEsquemaWord()'>☰ Capítulos e Índice</button>
+                            <div class='word-search-box'>
+                                <input type='text' id='wordSearchInput' class='word-search-input' placeholder='Buscar palabra en el texto...' oninput='ejecutarBusquedaWord()' onkeydown=\"if(event.key==='Enter'){event.preventDefault(); saltarCoincidenciaWord(1);}\">
+                                <span id='wordSearchCount' class='word-search-count'>0 / 0</span>
+                                <button type='button' class='word-mini-btn' onclick='saltarCoincidenciaWord(-1)' title='Anterior'>▲</button>
+                                <button type='button' class='word-mini-btn' onclick='saltarCoincidenciaWord(1)' title='Siguiente'>▼</button>
+                                <button type='button' class='word-mini-btn' onclick='limpiarBusquedaWord()' title='Limpiar'>✕</button>
+                            </div>
                         </div>
-                        <div style='display:flex; gap:0.4rem; align-items:center;'>
-                            <button type='button' class='doc-toolbar-btn' onclick='ajustarZoom(-0.1)' title='Reducir zoom'>−</button>
-                            <span id='zoomIndicator' style='font-size:0.78rem; font-weight:700; color:#475569; min-width:40px; text-align:center;'>100%</span>
-                            <button type='button' class='doc-toolbar-btn' onclick='ajustarZoom(0.1)' title='Aumentar zoom'>+</button>
-                            <button type='button' class='doc-toolbar-btn' onclick='window.print()' title='Imprimir documento'>Imprimir</button>
+                        <div class='word-toolbar-group'>
+                            <span id='wordStatsBadge' class='word-stats-pill'>Cargando...</span>
+                            <button type='button' class='word-btn' onclick='cambiarZoomWord(-10)'>−</button>
+                            <span id='wordZoomLabel' style='font-size:0.76rem; font-weight:800; color:#002244; min-width:42px; text-align:center;'>100%</span>
+                            <button type='button' class='word-btn' onclick='cambiarZoomWord(10)'>+</button>
+                            <button type='button' class='word-btn' id='btnWideMode' onclick='alternarAnchoWord()'>Ancho completo</button>
+                            <button type='button' class='word-btn' onclick='window.print()'>Imprimir</button>
                         </div>
                       </div>";
             }
-            echo "<div class='paper-container' id='paperContent'>
-                    <div class='doc-loader' id='docLoader'>Cargando visualización del documento Word...</div>
+            echo "<div class='word-workspace'>
+                    <aside id='wordOutlineSidebar' class='word-outline-sidebar'>
+                        <div class='word-outline-title'>Secciones del Documento</div>
+                        <div id='wordOutlineList'></div>
+                    </aside>
+                    <main class='word-canvas'>
+                        <div class='paper-container' id='paperContent'>"
+                        . ($esDocx ? "<div class='doc-loader' id='docLoader'>Cargando visualización del documento Word...</div>" : $paragraphsHtml) .
+                        "</div>
+                    </main>
                   </div>
+                  <button type='button' class='btn-top-float' onclick=\"window.scrollTo({top: 0, behavior: 'smooth'})\">↑ Subir al inicio</button>
                   <script>
-                    let nivelZoom = 1.0;
-                    function ajustarZoom(delta) {
-                        nivelZoom = Math.min(1.8, Math.max(0.6, Math.round((nivelZoom + delta) * 10) / 10));
-                        const p = document.getElementById('paperContent');
-                        if (p) p.style.transform = 'scale(' + nivelZoom + ')';
-                        const zInd = document.getElementById('zoomIndicator');
-                        if (zInd) zInd.innerText = Math.round(nivelZoom * 100) + '%';
+                    let zoomActualWord = 100;
+                    let coincidenciasWord = [];
+                    let indiceCoincidenciaActual = -1;
+
+                    function resaltarElementoDestino(el) {
+                        if (!el) return;
+                        el.classList.remove('word-target-flash');
+                        void el.offsetWidth;
+                        el.classList.add('word-target-flash');
                     }
 
+                    document.addEventListener('click', function(e) {
+                        const link = e.target.closest('a');
+                        if (!link) return;
+                        const rawHref = (link.getAttribute('href') || '').trim();
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        if (/^https?:\\/\\//i.test(rawHref) && !rawHref.includes(window.location.host)) {
+                            window.open(rawHref, '_blank', 'noopener,noreferrer');
+                            return;
+                        }
+
+                        let anchorId = '';
+                        if (rawHref.startsWith('#')) {
+                            anchorId = decodeURIComponent(rawHref.substring(1));
+                        } else if (rawHref.includes('#')) {
+                            anchorId = decodeURIComponent(rawHref.split('#').pop());
+                        }
+
+                        if (anchorId) {
+                            const porId = document.getElementById(anchorId) || document.querySelector('[name=\"' + anchorId.replace(/\"/g, '') + '\"]');
+                            if (porId) {
+                                porId.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                resaltarElementoDestino(porId.closest('h1, h2, h3, h4, h5, p') || porId);
+                                return;
+                            }
+                        }
+
+                        const textoIndice = (link.textContent || '').replace(/[\\.…\\s\\t]+\\d+\\s*$/, '').replace(/\\s+/g, ' ').trim();
+                        if (textoIndice.length >= 2) {
+                            const buscado = textoIndice.toLowerCase();
+                            const bloques = document.querySelectorAll('#paperContent h1, #paperContent h2, #paperContent h3, #paperContent h4, #paperContent h5, #paperContent p, #paperContent strong');
+                            for (let i = 0; i < bloques.length; i++) {
+                                const b = bloques[i];
+                                if (b.contains(link) || link.contains(b)) continue;
+                                const txt = (b.textContent || '').replace(/[\\.…\\s\\t]+\\d+\\s*$/, '').replace(/\\s+/g, ' ').trim().toLowerCase();
+                                if (txt === buscado || (buscado.length >= 5 && txt.startsWith(buscado))) {
+                                    b.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    resaltarElementoDestino(b);
+                                    return;
+                                }
+                            }
+                        }
+                    }, true);
+
+                    function cambiarZoomWord(delta) {
+                        zoomActualWord = Math.min(170, Math.max(70, zoomActualWord + delta));
+                        const paper = document.getElementById('paperContent');
+                        if (paper) paper.style.zoom = zoomActualWord + '%';
+                        const lbl = document.getElementById('wordZoomLabel');
+                        if (lbl) lbl.textContent = zoomActualWord + '%';
+                    }
+
+                    function alternarAnchoWord() {
+                        const paper = document.getElementById('paperContent');
+                        const btn = document.getElementById('btnWideMode');
+                        if (!paper) return;
+                        paper.classList.toggle('wide-mode');
+                        if (btn) btn.classList.toggle('active', paper.classList.contains('wide-mode'));
+                    }
+
+                    function alternarEsquemaWord() {
+                        const sidebar = document.getElementById('wordOutlineSidebar');
+                        const btn = document.getElementById('btnToggleOutline');
+                        if (!sidebar) return;
+                        sidebar.classList.toggle('open');
+                        if (btn) btn.classList.toggle('active', sidebar.classList.contains('open'));
+                    }
+
+                    function inicializarEsquemaYEstadisticas() {
+                        const paper = document.getElementById('paperContent');
+                        if (!paper) return;
+                        const textoPlano = (paper.innerText || '').trim();
+                        const totalPalabras = textoPlano ? textoPlano.split(/\\s+/).length : 0;
+                        const totalImgs = paper.querySelectorAll('img').length;
+                        const badge = document.getElementById('wordStatsBadge');
+                        if (badge) {
+                            badge.textContent = totalPalabras.toLocaleString('es-VE') + ' palabras • ' + totalImgs + ' imágenes';
+                        }
+
+                        const outlineList = document.getElementById('wordOutlineList');
+                        if (!outlineList) return;
+                        outlineList.innerHTML = '';
+
+                        const nodos = paper.querySelectorAll('h1, h2, h3, h4, p');
+                        let contadorSecciones = 0;
+                        const regexSeccion = /^(CAP[ÍI]TULO|PARTE|FASE|MOMENTO|RESUMEN|INTRODUCCI[ÓO]N|CONCLUSIONES|RECOMENDACIONES|REFERENCIAS|BIBLIOGRAF[ÍI]A|ANEXOS|OBJETIVO|\\d+\\.\\d*\\s+[A-ZÁÉÍÓÚÑ])/i;
+
+                        nodos.forEach((nodo, idx) => {
+                            const tag = nodo.tagName.toLowerCase();
+                            const texto = (nodo.textContent || '').replace(/\\s+/g, ' ').trim();
+                            if (!texto || texto.length < 3 || texto.length > 140) return;
+                            if (/\\.{4,}\\s*\\d+$/.test(texto)) return;
+
+                            let esEncabezado = (tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'h4');
+                            let nivel = tag === 'h1' ? 1 : (tag === 'h2' ? 2 : 3);
+                            if (!esEncabezado && tag === 'p' && regexSeccion.test(texto) && texto.length <= 95) {
+                                esEncabezado = true;
+                                nivel = 2;
+                            }
+
+                            if (esEncabezado) {
+                                const secId = 'word_sec_' + idx;
+                                if (!nodo.id) nodo.id = secId;
+                                const btn = document.createElement('button');
+                                btn.type = 'button';
+                                btn.className = 'word-outline-item level-' + nivel;
+                                btn.textContent = texto;
+                                btn.onclick = function() {
+                                    nodo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    resaltarElementoDestino(nodo);
+                                };
+                                outlineList.appendChild(btn);
+                                contadorSecciones++;
+                            }
+                        });
+
+                        if (contadorSecciones === 0) {
+                            outlineList.innerHTML = '<p style=\"font-size: 0.75rem; color: #64748b; text-align: left;\">No se detectaron subtítulos separados en este documento.</p>';
+                        }
+                    }
+
+                    function limpiarMarcasBusqueda() {
+                        const paper = document.getElementById('paperContent');
+                        if (!paper) return;
+                        const marcas = paper.querySelectorAll('mark.word-search-hit');
+                        marcas.forEach(m => {
+                            const parent = m.parentNode;
+                            parent.replaceChild(document.createTextNode(m.textContent), m);
+                            parent.normalize();
+                        });
+                        coincidenciasWord = [];
+                        indiceCoincidenciaActual = -1;
+                    }
+
+                    function limpiarBusquedaWord() {
+                        const input = document.getElementById('wordSearchInput');
+                        if (input) input.value = '';
+                        limpiarMarcasBusqueda();
+                        const countEl = document.getElementById('wordSearchCount');
+                        if (countEl) countEl.textContent = '0 / 0';
+                    }
+
+                    function ejecutarBusquedaWord() {
+                        limpiarMarcasBusqueda();
+                        const input = document.getElementById('wordSearchInput');
+                        const countEl = document.getElementById('wordSearchCount');
+                        const termino = input ? input.value.trim() : '';
+                        if (termino.length < 2) {
+                            if (countEl) countEl.textContent = '0 / 0';
+                            return;
+                        }
+
+                        const paper = document.getElementById('paperContent');
+                        const walker = document.createTreeWalker(paper, NodeFilter.SHOW_TEXT, null, false);
+                        const nodosTexto = [];
+                        let n;
+                        while ((n = walker.nextNode())) {
+                            if (n.parentNode && !['SCRIPT', 'STYLE', 'MARK'].includes(n.parentNode.tagName)) {
+                                nodosTexto.push(n);
+                            }
+                        }
+
+                        const escaped = termino.replace(/[.*+?^\${}()|[\\]\\\\]/g, '\\\\$&');
+                        const regex = new RegExp(escaped, 'gi');
+
+                        nodosTexto.forEach(textNode => {
+                            const val = textNode.nodeValue;
+                            if (!regex.test(val)) return;
+                            regex.lastIndex = 0;
+
+                            const frag = document.createDocumentFragment();
+                            let lastIdx = 0;
+                            let match;
+                            while ((match = regex.exec(val)) !== null) {
+                                if (match.index > lastIdx) {
+                                    frag.appendChild(document.createTextNode(val.slice(lastIdx, match.index)));
+                                }
+                                const mark = document.createElement('mark');
+                                mark.className = 'word-search-hit';
+                                mark.textContent = match[0];
+                                frag.appendChild(mark);
+                                coincidenciasWord.push(mark);
+                                lastIdx = regex.lastIndex;
+                            }
+                            if (lastIdx < val.length) {
+                                frag.appendChild(document.createTextNode(val.slice(lastIdx)));
+                            }
+                            textNode.parentNode.replaceChild(frag, textNode);
+                        });
+
+                        if (coincidenciasWord.length > 0) {
+                            indiceCoincidenciaActual = 0;
+                            enfocarCoincidenciaActual();
+                        } else if (countEl) {
+                            countEl.textContent = '0 / 0';
+                        }
+                    }
+
+                    function enfocarCoincidenciaActual() {
+                        const countEl = document.getElementById('wordSearchCount');
+                        if (coincidenciasWord.length === 0) {
+                            if (countEl) countEl.textContent = '0 / 0';
+                            return;
+                        }
+                        coincidenciasWord.forEach((m, idx) => {
+                            m.classList.toggle('current', idx === indiceCoincidenciaActual);
+                        });
+                        const actual = coincidenciasWord[indiceCoincidenciaActual];
+                        if (actual) {
+                            actual.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        if (countEl) {
+                            countEl.textContent = (indiceCoincidenciaActual + 1) + ' / ' + coincidenciasWord.length;
+                        }
+                    }
+
+                    function saltarCoincidenciaWord(paso) {
+                        if (coincidenciasWord.length === 0) return;
+                        indiceCoincidenciaActual = (indiceCoincidenciaActual + paso + coincidenciasWord.length) % coincidenciasWord.length;
+                        enfocarCoincidenciaActual();
+                    }
+                  " . ($esDocx ? "
                     fetch('" . $rawUrl . "')
                         .then(res => {
                             if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -376,71 +665,16 @@ class DetallePSTController {
                         .then(result => {
                             const container = document.getElementById('paperContent');
                             container.innerHTML = result.value || '<p><em>El documento no contiene texto legible.</em></p>';
+                            inicializarEsquemaYEstadisticas();
                         })
                         .catch(err => {
                             console.warn('Fallo renderizado Mammoth:', err);
                             const container = document.getElementById('paperContent');
-                            container.innerHTML = '<div style=\"padding:1.5rem; color:#be123c;\"><p><strong>Vista previa no disponible mediante visor dinámico.</strong></p><p style=\"font-size:0.85rem; color:#64748b;\">' + (err.message || err) + '</p></div>';
+                            container.innerHTML = '<div style=\"padding:1.5rem; color:#505984;\"><p><strong>Vista previa no disponible mediante visor dinámico.</strong></p><p style=\"font-size:0.85rem; color:#64748b;\">' + (err.message || err) + '</p></div>';
                         });
-                  </script>
-                  </body></html>";
-            exit;
-        } elseif ($ext === 'doc') {
-            $mostrarToolbar = (bool)ConfigService::get('visor_pdf.mostrar_toolbar', true);
-            require_once __DIR__ . '/../services/ExtractorPST.php';
-            $docText = '';
-            try {
-                $docText = ExtractorPST::extraerTextoDOC($fullPath);
-            } catch (\Throwable $e) {
-                $docText = '';
-            }
-            $paragraphsHtml = '';
-            foreach (explode("\n", $docText) as $pLine) {
-                $pLine = trim($pLine);
-                if ($pLine !== '' && stripos($pLine, 'PAGEREF _Toc') === false) {
-                    $paragraphsHtml .= '<p>' . htmlspecialchars($pLine, ENT_QUOTES, 'UTF-8') . '</p>';
-                }
-            }
-            if ($paragraphsHtml === '') {
-                $paragraphsHtml = '<p><em>No se pudo generar la vista previa textual para este documento Word (.doc) antiguo.</em></p>';
-            }
-            header('Content-Type: text/html; charset=utf-8');
-            echo "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'>
-                  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-                  <title>" . htmlspecialchars($safeFilename) . "</title>
-                  <style>
-                    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 0; line-height: 1.65; }
-                    .doc-toolbar { position: sticky; top: 0; z-index: 100; background: #ffffff; border-bottom: 1px solid #cbd5e1; padding: 0.5rem 1rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-                    .doc-toolbar-btn { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 0.35rem 0.65rem; font-size: 0.8rem; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; }
-                    .doc-toolbar-btn:hover { background: #e2e8f0; color: #002244; }
-                    .paper-container { max-width: 860px; margin: " . ($mostrarToolbar ? "1rem auto 3rem auto" : "1.5rem auto") . "; background: #ffffff; padding: 2.5rem 3rem; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; transition: transform 0.2s ease; transform-origin: top center; word-break: break-word; }
-                    .paper-container p { margin-bottom: 0.9rem; text-align: justify; font-size: 0.95rem; }
-                    @media print { .doc-toolbar { display: none !important; } body { padding: 0; background: #fff; } .paper-container { box-shadow: none; border: none; padding: 0; max-width: 100%; } }
-                  </style></head><body>";
-            if ($mostrarToolbar) {
-                echo "<div class='doc-toolbar'>
-                        <div style='display:flex; align-items:center; gap:0.5rem;'>
-                            <span style='background:rgba(112, 144, 203, 0.15); color:#505984; padding:0.25rem 0.55rem; border-radius:4px; font-size:0.75rem; font-weight:700;'>Word Legacy (.doc)</span>
-                            <span style='font-size:0.8rem; color:#64748b; font-weight:600;'>" . htmlspecialchars($safeFilename) . "</span>
-                        </div>
-                        <div style='display:flex; gap:0.4rem; align-items:center;'>
-                            <button type='button' class='doc-toolbar-btn' onclick='ajustarZoom(-0.1)' title='Reducir zoom'>−</button>
-                            <span id='zoomIndicator' style='font-size:0.78rem; font-weight:700; color:#475569; min-width:40px; text-align:center;'>100%</span>
-                            <button type='button' class='doc-toolbar-btn' onclick='ajustarZoom(0.1)' title='Aumentar zoom'>+</button>
-                            <button type='button' class='doc-toolbar-btn' onclick='window.print()' title='Imprimir documento'>Imprimir</button>
-                        </div>
-                      </div>";
-            }
-            echo "<div class='paper-container' id='paperContent'>{$paragraphsHtml}</div>
-                  <script>
-                    let nivelZoom = 1.0;
-                    function ajustarZoom(delta) {
-                        nivelZoom = Math.min(1.8, Math.max(0.6, Math.round((nivelZoom + delta) * 10) / 10));
-                        const p = document.getElementById('paperContent');
-                        if (p) p.style.transform = 'scale(' + nivelZoom + ')';
-                        const zInd = document.getElementById('zoomIndicator');
-                        if (zInd) zInd.innerText = Math.round(nivelZoom * 100) + '%';
-                    }
+                  " : "
+                    inicializarEsquemaYEstadisticas();
+                  ") . "
                   </script>
                   </body></html>";
             exit;

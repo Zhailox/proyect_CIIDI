@@ -9,13 +9,42 @@ class SchedulerController {
     public function index() {
         Auth::requierePrivilegioMinimo(0);
 
-        $tareas = SchedulerService::obtenerTareas();
+        if (!empty($_GET['ajax_tick'])) {
+            header('Content-Type: application/json; charset=utf-8');
+            $resCiclo = SchedulerService::dispararCicloSiCorresponde(true);
+            $latido = SchedulerService::obtenerEstadoLatido();
+            echo json_encode([
+                'exito' => true,
+                'revisado' => $resCiclo['revisado'] ?? true,
+                'ejecutadas' => (int)($resCiclo['ejecutadas'] ?? 0),
+                'ultimo_latido' => $latido['datos']['fecha_hora'] ?? date('Y-m-d H:i:s')
+            ]);
+            exit;
+        }
+
         $diagnostico = SchedulerService::diagnosticarEntornoCron();
+        $tareas = SchedulerService::obtenerTareas();
 
         return [
             'tareas' => $tareas,
             'diagnostico' => $diagnostico
         ];
+    }
+
+    public function instalarCronLinux() {
+        Auth::requierePrivilegioMinimo(0);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $res = SchedulerService::instalarCrontabLinux();
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            if (!empty($res['exito'])) {
+                $_SESSION['mensaje_admin_exito'] = $res['mensaje'];
+            } else {
+                $_SESSION['mensaje_admin_error'] = $res['mensaje'];
+            }
+        }
+        header("Location: gestor-scheduler");
+        exit;
     }
 
     public function alternarEstado() {

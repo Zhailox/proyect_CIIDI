@@ -299,6 +299,11 @@ class SuperAdminModule implements ModuleContract {
                 'controlador'      => 'SchedulerController',
                 'metodo'           => 'verLog'
             ],
+            'instalar-cron-linux' => [
+                'controlador_path' => __DIR__ . '/controllers/SchedulerController.php',
+                'controlador'      => 'SchedulerController',
+                'metodo'           => 'instalarCronLinux'
+            ],
             // Rutas para WAF & Monitor de Seguridad
             'visor-seguridad' => [
                 'controlador_path' => __DIR__ . '/controllers/SecurityMonitorController.php',
