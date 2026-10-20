@@ -9,7 +9,7 @@ class InstallerService {
     }
 
     /**
-     * Diagnóstico profundo de hardware, servidor web, extensiones PHP y permisos.
+     * Diagnóstico de hardware, servidor web, extensiones PHP y permisos.
      */
     public static function checkSystemEnvironment(): array {
         $phpVersionOk = version_compare(PHP_VERSION, '8.1.0', '>=');
@@ -17,14 +17,14 @@ class InstallerService {
 
         // Extensiones PHP críticas requeridas por CIIDI
         $requiredExtensions = [
-            'pdo'        => 'Controlador de base de datos base (PDO)',
-            'pdo_pgsql'  => 'Conector nativo de PostgreSQL',
-            'openssl'    => 'Motor criptográfico institucional (AES-256-CBC, Hashes, Tokens)',
+            'pdo'        => 'Controlador de base de datos (PDO)',
+            'pdo_pgsql'  => 'Conector de PostgreSQL',
+            'openssl'    => 'Motor criptográfico (AES-256-CBC, Hashes, Tokens)',
             'mbstring'   => 'Manipulación segura de cadenas UTF-8',
-            'fileinfo'   => 'Detección real de tipos MIME de archivos subidos',
+            'fileinfo'   => 'Detección de tipos MIME de archivos subidos',
             'json'       => 'Serialización y transporte de payloads API',
-            'gd'         => 'Procesamiento y optimización de imágenes',
-            'curl'       => 'Peticiones HTTP externas y APIs institucionales',
+            'gd'         => 'Optimización de imágenes',
+            'curl'       => 'Peticiones HTTP externas y APIs',
             'zip'        => 'Compresión y descompresión de respaldos'
         ];
 

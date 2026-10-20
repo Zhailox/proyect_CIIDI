@@ -5,15 +5,15 @@
         "docentes": 15
     },
     "seguridad": {
-        "timeout_minutos": 120,
+        "timeout_minutos": 5,
         "intentos_login": 5
     },
     "smtp": {
-        "host": "smtp.test.com",
+        "host": "",
         "port": 587,
-        "user": "notificaciones@test.com",
+        "user": "",
         "pass": "ENC:tY+rj\/DlCKk5eKtYunJbBTqMHQzf3k\/Y\/UXmVKUnW+f6NzU7RieX1MjPah9UNHapBDmMaA9w6Z6SfQtquY\/eNg==",
-        "from_email": "notificaciones@test.com",
+        "from_email": "",
         "from_name": "Sistema CIIDI - Test"
     },
     "accesos_modulos": {

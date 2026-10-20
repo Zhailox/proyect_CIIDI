@@ -40,7 +40,7 @@ class QueryBuilder {
      */
     public function tabla(string $nombre_tabla): self {
         $this->reset();
-        $this->tabla = $nombre_tabla;
+        $this->tabla = preg_replace('/[^a-zA-Z0-9_\.\s]/', '', $nombre_tabla);
         return $this;
     }
     
@@ -178,7 +178,8 @@ class QueryBuilder {
     public function insert(array $datos) {
         if (!$this->db) return false;
 
-        $columnas = implode(", ", array_keys($datos));
+        $columnasLimpias = array_map(fn($col) => preg_replace('/[^a-zA-Z0-9_]/', '', (string)$col), array_keys($datos));
+        $columnas = implode(", ", $columnasLimpias);
         $placeholders = implode(", ", array_fill(0, count($datos), "?"));
         
         $sql = "INSERT INTO {$this->tabla} ($columnas) VALUES ($placeholders) RETURNING id";
@@ -202,7 +203,8 @@ class QueryBuilder {
         $valores_update = [];
 
         foreach ($datos as $columna => $valor) {
-            $set_clause[] = "$columna = ?";
+            $colSanitized = preg_replace('/[^a-zA-Z0-9_]/', '', (string)$columna);
+            $set_clause[] = "$colSanitized = ?";
             $valores_update[] = $valor;
         }
 

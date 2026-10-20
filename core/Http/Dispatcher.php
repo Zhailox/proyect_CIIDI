@@ -87,6 +87,8 @@ class Dispatcher {
             }
         } catch (DatabaseConnectionException $e) {
             $this->handleDatabaseException($e);
+        } catch (Throwable $e) {
+            $this->handleGeneralException($e);
         }
     }
 
@@ -121,6 +123,51 @@ class Dispatcher {
             include $vista_modulo_path;
         } else {
             echo "<div style='padding:40px;text-align:center;'><h2>Error 500: Servicio Temporalmente No Disponible</h2></div>";
+        }
+        exit;
+    }
+
+    /**
+     * Maneja de forma centralizada cualquier excepción de ejecución no controlada (HTTP 500).
+     */
+    private function handleGeneralException(Throwable $e): void {
+        if (class_exists('Connection')) {
+            Connection::logSystemError($e);
+        }
+        if (class_exists('AuditLogger')) {
+            AuditLogger::registrar('ERROR', 'Core_Dispatcher', 'Excepción Interna HTTP 500', $e->getMessage() . ' en ' . basename($e->getFile()) . ':' . $e->getLine());
+        }
+
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            || (!empty($_SERVER['HTTP_ACCEPT']) && str_contains(strtolower($_SERVER['HTTP_ACCEPT']), 'application/json'));
+        $appDebug = class_exists('Env') ? (bool)Env::get('APP_DEBUG', false) : false;
+        $detalleError = $appDebug ? ($e->getMessage() . " (" . basename($e->getFile()) . ":" . $e->getLine() . ")") : "Error interno del servidor al procesar la solicitud.";
+
+        if (!headers_sent()) {
+            http_response_code(500);
+        }
+
+        if ($isAjax) {
+            if (!headers_sent()) {
+                header('Content-Type: application/json');
+            }
+            echo json_encode([
+                'error' => true,
+                'mensaje' => 'Error interno del servidor (500).',
+                'debug' => $detalleError
+            ]);
+            exit;
+        }
+
+        $dbErrorMsg = $detalleError;
+        $isStandalone = true;
+        $standalone = true;
+        $vista_modulo_path = defined('CORE_VIEWS') ? CORE_VIEWS . '500.php' : __DIR__ . '/../Views/500.php';
+
+        if (file_exists($vista_modulo_path)) {
+            include $vista_modulo_path;
+        } else {
+            echo "<div style='padding:40px;text-align:center;'><h2>Error 500: Error Interno del Servidor</h2></div>";
         }
         exit;
     }

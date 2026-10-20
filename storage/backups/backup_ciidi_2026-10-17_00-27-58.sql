@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict gRGdIdtjfNNBhm5IzVtACYb7OCKXrQlC1JVxXAyUddBE9l0oKkTZnFp5UG0sK1M
+\restrict JPJAHTrhtIWhPwpYVdavQAIAfErQtqaCWIJzqd5NtnNHYuc76TcHULa88YzkspB
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -30,11 +30,11 @@ ALTER TABLE IF EXISTS ONLY public.recurso_autores DROP CONSTRAINT IF EXISTS recu
 ALTER TABLE IF EXISTS ONLY public.recurso_autores DROP CONSTRAINT IF EXISTS recurso_autores_id_autor_fkey;
 ALTER TABLE IF EXISTS ONLY public.proyecto_tutores DROP CONSTRAINT IF EXISTS proyecto_tutores_tipo_tutor_id_fkey;
 ALTER TABLE IF EXISTS ONLY public.proyecto_tutores DROP CONSTRAINT IF EXISTS proyecto_tutores_id_tutor_fkey;
-ALTER TABLE IF EXISTS ONLY public.proyecto_tutores DROP CONSTRAINT IF EXISTS proyecto_tutores_id_recurso_fkey;
 ALTER TABLE IF EXISTS ONLY public.preferencias_usuario DROP CONSTRAINT IF EXISTS preferencias_usuario_id_usuario_fkey;
 ALTER TABLE IF EXISTS ONLY public.notificaciones DROP CONSTRAINT IF EXISTS notificaciones_id_usuario_fkey;
 ALTER TABLE IF EXISTS ONLY public.lineas_investigacion DROP CONSTRAINT IF EXISTS lineas_investigacion_id_carrera_fkey;
 ALTER TABLE IF EXISTS ONLY public.historico_versiones_pst DROP CONSTRAINT IF EXISTS fk_version_recurso;
+ALTER TABLE IF EXISTS ONLY public.recurso_investigadores DROP CONSTRAINT IF EXISTS fk_recurso_inv;
 ALTER TABLE IF EXISTS ONLY public.recurso_etiquetas DROP CONSTRAINT IF EXISTS fk_recurso_etiqueta;
 ALTER TABLE IF EXISTS ONLY public.recurso_clasificaciones DROP CONSTRAINT IF EXISTS fk_recurso;
 ALTER TABLE IF EXISTS ONLY public.postulaciones_estudiantes DROP CONSTRAINT IF EXISTS fk_postulacion_inv;
@@ -42,6 +42,7 @@ ALTER TABLE IF EXISTS ONLY public.postulaciones_estudiantes DROP CONSTRAINT IF E
 ALTER TABLE IF EXISTS ONLY public.proyecto_carreras_vinculadas DROP CONSTRAINT IF EXISTS fk_pcv_recurso;
 ALTER TABLE IF EXISTS ONLY public.proyecto_carreras_vinculadas DROP CONSTRAINT IF EXISTS fk_pcv_carrera;
 ALTER TABLE IF EXISTS ONLY public.recurso_clasificaciones DROP CONSTRAINT IF EXISTS fk_linea_investigacion;
+ALTER TABLE IF EXISTS ONLY public.recurso_investigadores DROP CONSTRAINT IF EXISTS fk_investigador;
 ALTER TABLE IF EXISTS ONLY public.investigaciones_ofertadas DROP CONSTRAINT IF EXISTS fk_inv_profesor;
 ALTER TABLE IF EXISTS ONLY public.investigaciones_ofertadas DROP CONSTRAINT IF EXISTS fk_inv_linea;
 ALTER TABLE IF EXISTS ONLY public.investigaciones_ofertadas DROP CONSTRAINT IF EXISTS fk_inv_dimension;
@@ -52,10 +53,6 @@ ALTER TABLE IF EXISTS ONLY public.detalles_investigaciones DROP CONSTRAINT IF EX
 ALTER TABLE IF EXISTS ONLY public.detalles_investigaciones DROP CONSTRAINT IF EXISTS fk_detalles_investigaciones_ofertada;
 ALTER TABLE IF EXISTS ONLY public.detalles_articulos DROP CONSTRAINT IF EXISTS detalles_revistas_id_recurso_fkey;
 ALTER TABLE IF EXISTS ONLY public.detalles_articulos DROP CONSTRAINT IF EXISTS detalles_revistas_id_editorial_fkey;
-ALTER TABLE IF EXISTS ONLY public.detalles_proyectos DROP CONSTRAINT IF EXISTS detalles_proyectos_id_trayecto_fkey;
-ALTER TABLE IF EXISTS ONLY public.detalles_proyectos DROP CONSTRAINT IF EXISTS detalles_proyectos_id_recurso_fkey;
-ALTER TABLE IF EXISTS ONLY public.detalles_proyectos DROP CONSTRAINT IF EXISTS detalles_proyectos_id_investigacion_padre_fkey;
-ALTER TABLE IF EXISTS ONLY public.detalles_proyectos DROP CONSTRAINT IF EXISTS detalles_proyectos_id_carrera_fkey;
 ALTER TABLE IF EXISTS ONLY public.cursos DROP CONSTRAINT IF EXISTS cursos_id_docente_fkey;
 ALTER TABLE IF EXISTS ONLY public.auditoria DROP CONSTRAINT IF EXISTS auditoria_usuario_responsable_fkey;
 ALTER TABLE IF EXISTS ONLY public.accesos_recursos DROP CONSTRAINT IF EXISTS accesos_recursos_id_registro_actividad_fkey;
@@ -70,9 +67,6 @@ DROP INDEX IF EXISTS public.idx_recurso_clasif_linea;
 DROP INDEX IF EXISTS public.idx_recurso_clasif_dimension;
 DROP INDEX IF EXISTS public.idx_pcv_recurso;
 DROP INDEX IF EXISTS public.idx_pcv_carrera;
-DROP INDEX IF EXISTS public.idx_detalles_vector_null;
-DROP INDEX IF EXISTS public.idx_detalles_vector_hnsw;
-DROP INDEX IF EXISTS public.idx_detalles_proyectos_trayecto;
 DROP INDEX IF EXISTS public.idx_detalles_inv_ofertada;
 ALTER TABLE IF EXISTS ONLY public.waf_rate_limiter DROP CONSTRAINT IF EXISTS waf_rate_limiter_pkey;
 ALTER TABLE IF EXISTS ONLY public.visitantes DROP CONSTRAINT IF EXISTS visitantes_pkey;
@@ -95,6 +89,7 @@ ALTER TABLE IF EXISTS ONLY public.roles DROP CONSTRAINT IF EXISTS roles_pkey;
 ALTER TABLE IF EXISTS ONLY public.roles DROP CONSTRAINT IF EXISTS roles_nombre_key;
 ALTER TABLE IF EXISTS ONLY public.registro_actividad DROP CONSTRAINT IF EXISTS registro_actividad_pkey;
 ALTER TABLE IF EXISTS ONLY public.recursos DROP CONSTRAINT IF EXISTS recursos_pkey;
+ALTER TABLE IF EXISTS ONLY public.recurso_investigadores DROP CONSTRAINT IF EXISTS recurso_investigadores_pkey;
 ALTER TABLE IF EXISTS ONLY public.recurso_etiquetas DROP CONSTRAINT IF EXISTS recurso_etiquetas_pkey;
 ALTER TABLE IF EXISTS ONLY public.recurso_clasificaciones DROP CONSTRAINT IF EXISTS recurso_clasificaciones_pkey;
 ALTER TABLE IF EXISTS ONLY public.recurso_categorias DROP CONSTRAINT IF EXISTS recurso_categorias_pkey;
@@ -111,6 +106,8 @@ ALTER TABLE IF EXISTS ONLY public.niveles_academicos DROP CONSTRAINT IF EXISTS n
 ALTER TABLE IF EXISTS ONLY public.niveles_academicos DROP CONSTRAINT IF EXISTS niveles_academicos_codigo_key;
 ALTER TABLE IF EXISTS ONLY public.matriz_rbac DROP CONSTRAINT IF EXISTS matriz_rbac_pkey;
 ALTER TABLE IF EXISTS ONLY public.lineas_investigacion DROP CONSTRAINT IF EXISTS lineas_investigacion_pkey;
+ALTER TABLE IF EXISTS ONLY public.investigadores DROP CONSTRAINT IF EXISTS investigadores_pkey;
+ALTER TABLE IF EXISTS ONLY public.investigadores DROP CONSTRAINT IF EXISTS investigadores_orcid_key;
 ALTER TABLE IF EXISTS ONLY public.investigaciones_ofertadas DROP CONSTRAINT IF EXISTS investigaciones_ofertadas_pkey;
 ALTER TABLE IF EXISTS ONLY public.historico_versiones_pst DROP CONSTRAINT IF EXISTS historico_versiones_pst_pkey;
 ALTER TABLE IF EXISTS ONLY public.etiquetas DROP CONSTRAINT IF EXISTS etiquetas_pkey;
@@ -119,7 +116,6 @@ ALTER TABLE IF EXISTS ONLY public.editoriales DROP CONSTRAINT IF EXISTS editoria
 ALTER TABLE IF EXISTS ONLY public.editoriales DROP CONSTRAINT IF EXISTS editoriales_nombre_key;
 ALTER TABLE IF EXISTS ONLY public.dimensiones_operativas DROP CONSTRAINT IF EXISTS dimensiones_operativas_pkey;
 ALTER TABLE IF EXISTS ONLY public.detalles_articulos DROP CONSTRAINT IF EXISTS detalles_revistas_pkey;
-ALTER TABLE IF EXISTS ONLY public.detalles_proyectos DROP CONSTRAINT IF EXISTS detalles_proyectos_pkey;
 ALTER TABLE IF EXISTS ONLY public.detalles_investigaciones DROP CONSTRAINT IF EXISTS detalles_investigaciones_pkey;
 ALTER TABLE IF EXISTS ONLY public.cursos DROP CONSTRAINT IF EXISTS cursos_slug_key;
 ALTER TABLE IF EXISTS ONLY public.cursos DROP CONSTRAINT IF EXISTS cursos_pkey;
@@ -146,6 +142,7 @@ ALTER TABLE IF EXISTS public.password_resets ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.notificaciones ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.niveles_academicos ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.lineas_investigacion ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.investigadores ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.investigaciones_ofertadas ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.historico_versiones_pst ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.etiquetas ALTER COLUMN id DROP DEFAULT;
@@ -178,6 +175,7 @@ DROP SEQUENCE IF EXISTS public.registro_actividad_id_seq;
 DROP TABLE IF EXISTS public.registro_actividad;
 DROP SEQUENCE IF EXISTS public.recursos_id_seq;
 DROP TABLE IF EXISTS public.recursos;
+DROP TABLE IF EXISTS public.recurso_investigadores;
 DROP TABLE IF EXISTS public.recurso_etiquetas;
 DROP TABLE IF EXISTS public.recurso_clasificaciones;
 DROP TABLE IF EXISTS public.recurso_categorias;
@@ -200,6 +198,8 @@ DROP TABLE IF EXISTS public.niveles_academicos;
 DROP TABLE IF EXISTS public.matriz_rbac;
 DROP SEQUENCE IF EXISTS public.lineas_investigacion_id_seq;
 DROP TABLE IF EXISTS public.lineas_investigacion;
+DROP SEQUENCE IF EXISTS public.investigadores_id_seq;
+DROP TABLE IF EXISTS public.investigadores;
 DROP SEQUENCE IF EXISTS public.investigaciones_ofertadas_id_seq;
 DROP TABLE IF EXISTS public.investigaciones_ofertadas;
 DROP SEQUENCE IF EXISTS public.historico_versiones_pst_id_seq;
@@ -210,7 +210,6 @@ DROP SEQUENCE IF EXISTS public.editoriales_id_seq;
 DROP TABLE IF EXISTS public.editoriales;
 DROP SEQUENCE IF EXISTS public.dimensiones_operativas_id_seq;
 DROP TABLE IF EXISTS public.dimensiones_operativas;
-DROP TABLE IF EXISTS public.detalles_proyectos;
 DROP TABLE IF EXISTS public.detalles_investigaciones;
 DROP TABLE IF EXISTS public.detalles_articulos;
 DROP SEQUENCE IF EXISTS public.cursos_id_seq;
@@ -236,21 +235,6 @@ DROP TYPE IF EXISTS public.estado_propuesta_enum;
 DROP TYPE IF EXISTS public.estado_curso_enum;
 DROP TYPE IF EXISTS public.accion_auditoria_enum;
 DROP TYPE IF EXISTS public.accion_acceso_enum;
-DROP EXTENSION IF EXISTS vector;
---
--- Name: vector; Type: EXTENSION; Schema: -; Owner: -
---
-
-CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
-
-
---
--- Name: EXTENSION vector; Type: COMMENT; Schema: -; Owner: 
---
-
-COMMENT ON EXTENSION vector IS 'vector data type and ivfflat and hnsw access methods';
-
-
 --
 -- Name: accion_acceso_enum; Type: TYPE; Schema: public; Owner: postgres
 --
@@ -586,8 +570,7 @@ ALTER SEQUENCE public.auditoria_id_seq OWNED BY public.auditoria.id;
 CREATE TABLE public.autores (
     id integer NOT NULL,
     nombre_completo character varying(150) NOT NULL,
-    cedula character varying(20),
-    orcid character varying(50) DEFAULT NULL::character varying
+    cedula character varying(20) DEFAULT NULL::character varying
 );
 
 
@@ -769,38 +752,6 @@ CREATE TABLE public.detalles_investigaciones (
 
 
 ALTER TABLE public.detalles_investigaciones OWNER TO postgres;
-
---
--- Name: detalles_proyectos; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.detalles_proyectos (
-    id_recurso integer NOT NULL,
-    fecha_defensa date,
-    nivel_academico character varying(50) DEFAULT 'Pregrado'::character varying,
-    resumen text,
-    id_carrera integer,
-    comunidad_beneficiada text,
-    palabras_clave text,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    id_investigacion_padre integer,
-    url_repositorio text,
-    obj_general text,
-    activo boolean DEFAULT true,
-    vector_semantico public.vector(384),
-    id_trayecto integer,
-    vistas integer DEFAULT 0 NOT NULL
-);
-
-
-ALTER TABLE public.detalles_proyectos OWNER TO postgres;
-
---
--- Name: COLUMN detalles_proyectos.vistas; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON COLUMN public.detalles_proyectos.vistas IS 'Contador de visualizaciones de la ficha del proyecto';
-
 
 --
 -- Name: dimensiones_operativas; Type: TABLE; Schema: public; Owner: postgres
@@ -988,6 +939,43 @@ ALTER SEQUENCE public.investigaciones_ofertadas_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE public.investigaciones_ofertadas_id_seq OWNED BY public.investigaciones_ofertadas.id;
+
+
+--
+-- Name: investigadores; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.investigadores (
+    id integer NOT NULL,
+    nombre_completo character varying(150) NOT NULL,
+    orcid character varying(50) NOT NULL,
+    biografia text,
+    pagina_web character varying(255)
+);
+
+
+ALTER TABLE public.investigadores OWNER TO postgres;
+
+--
+-- Name: investigadores_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.investigadores_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.investigadores_id_seq OWNER TO postgres;
+
+--
+-- Name: investigadores_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.investigadores_id_seq OWNED BY public.investigadores.id;
 
 
 --
@@ -1372,6 +1360,18 @@ CREATE TABLE public.recurso_etiquetas (
 
 
 ALTER TABLE public.recurso_etiquetas OWNER TO postgres;
+
+--
+-- Name: recurso_investigadores; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.recurso_investigadores (
+    id_recurso integer NOT NULL,
+    id_investigador integer NOT NULL
+);
+
+
+ALTER TABLE public.recurso_investigadores OWNER TO postgres;
 
 --
 -- Name: recursos; Type: TABLE; Schema: public; Owner: postgres
@@ -1833,6 +1833,13 @@ ALTER TABLE ONLY public.historico_versiones_pst ALTER COLUMN id SET DEFAULT next
 --
 
 ALTER TABLE ONLY public.investigaciones_ofertadas ALTER COLUMN id SET DEFAULT nextval('public.investigaciones_ofertadas_id_seq'::regclass);
+
+
+--
+-- Name: investigadores id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.investigadores ALTER COLUMN id SET DEFAULT nextval('public.investigadores_id_seq'::regclass);
 
 
 --
@@ -2358,107 +2365,23 @@ INSERT INTO public.auditoria VALUES (441, 'recursos', 190, 'INSERT', NULL, NULL,
 INSERT INTO public.auditoria VALUES (442, 'recursos', 190, 'DELETE', NULL, NULL, '{"titulo": "Proyecto Interdisciplinario Test 1791138669", "id_tipo_recurso": 1}', NULL, '2026-10-04 14:31:09.821791');
 INSERT INTO public.auditoria VALUES (443, 'recursos', 191, 'INSERT', NULL, NULL, NULL, '{"titulo": "Sistema Integral de Gestión de Documentos Académicos para el Comité Cien2222tífico Investigador del PNF en Informática apoyado en Redes Neuronales", "id_tipo_recurso": 1}', '2026-10-04 16:43:25.694943');
 INSERT INTO public.auditoria VALUES (444, 'recursos', 192, 'INSERT', NULL, NULL, NULL, '{"titulo": "Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del P32323232NF en Informática apoyado en Redes Neuronales", "id_tipo_recurso": 1}', '2026-10-04 17:14:02.756345');
+INSERT INTO public.auditoria VALUES (452, 'recursos', 200, 'INSERT', NULL, NULL, NULL, '{"titulo": "Sistema Inteligente de Redes Neuronales para la Gestión Integral de la Coordinación PNF dasdasdase Contaduría Pública UPTT Mario Briceño Iragorry", "id_tipo_recurso": 1}', '2026-10-10 00:00:49.200289');
+INSERT INTO public.auditoria VALUES (453, 'recursos', 201, 'INSERT', NULL, NULL, NULL, '{"titulo": "Distribución de perfiles y macropartículas en recubrimientos obtenidos por arco catódico continúo utilizando un concentrador magnético recto", "id_tipo_recurso": 3}', '2026-10-12 14:48:05.546878');
+INSERT INTO public.auditoria VALUES (454, 'usuarios', 5, 'UPDATE', NULL, NULL, '{"activo": true, "id_rol": 3, "nombre": "bibi"}', '{"activo": false, "id_rol": 3, "nombre": "[Archivado] bibi"}', '2026-10-15 20:53:10.93682');
+INSERT INTO public.auditoria VALUES (455, 'usuarios', 22, 'INSERT', NULL, NULL, NULL, '{"email": "cepillinin@gmail.com", "id_rol": 3, "nombre": "Felipe"}', '2026-10-15 22:00:58.531497');
+INSERT INTO public.auditoria VALUES (456, 'recursos', 156, 'DELETE', 7, NULL, '{"titulo": "e", "id_tipo_recurso": 3}', NULL, '2026-10-17 00:10:53.864393');
+INSERT INTO public.auditoria VALUES (457, 'recursos', 151, 'DELETE', 7, NULL, '{"titulo": "e", "id_tipo_recurso": 3}', NULL, '2026-10-17 00:10:56.383811');
+INSERT INTO public.auditoria VALUES (458, 'recursos', 150, 'DELETE', 7, NULL, '{"titulo": "e", "id_tipo_recurso": 3}', NULL, '2026-10-17 00:21:36.486961');
 
 
 --
 -- Data for Name: autores; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.autores VALUES (1, 'Prof. Andrus', 'V-11223344', NULL);
-INSERT INTO public.autores VALUES (2, 'Estudiante Dev', 'V-27000111', NULL);
-INSERT INTO public.autores VALUES (3, 'Estudiante Electrónica', 'V-28000222', NULL);
-INSERT INTO public.autores VALUES (4, 'Juan Pérez', NULL, NULL);
-INSERT INTO public.autores VALUES (5, 'María García', NULL, NULL);
-INSERT INTO public.autores VALUES (6, 'Ing. Pedro Díaz', NULL, NULL);
-INSERT INTO public.autores VALUES (7, 'Carlos López', NULL, NULL);
-INSERT INTO public.autores VALUES (8, 'Ana Martínez', NULL, NULL);
-INSERT INTO public.autores VALUES (9, 'Dra. Sofía Rojas', NULL, NULL);
-INSERT INTO public.autores VALUES (14, 'Dr. Ramón Fuentes', 'V-10111213', NULL);
-INSERT INTO public.autores VALUES (15, 'Dra. Clara Vásquez', 'V-10222333', NULL);
-INSERT INTO public.autores VALUES (16, 'Ing. Luis Morelo', 'V-10333444', NULL);
-INSERT INTO public.autores VALUES (17, 'Prof. Yolanda Díaz', 'V-10444555', NULL);
-INSERT INTO public.autores VALUES (18, 'Ing. Pedro Ríos', 'V-10555666', NULL);
-INSERT INTO public.autores VALUES (19, 'Prof. Ana Suárez', 'V-10666777', NULL);
-INSERT INTO public.autores VALUES (21, 'Mariela Colón', 'V-27100002', NULL);
-INSERT INTO public.autores VALUES (22, 'Javier Navas', 'V-27100003', NULL);
-INSERT INTO public.autores VALUES (23, 'Luisa Paredes', 'V-27100004', NULL);
-INSERT INTO public.autores VALUES (24, 'Tomás Guerrero', 'V-27100005', NULL);
-INSERT INTO public.autores VALUES (25, 'Valentina Soto', 'V-27100006', NULL);
-INSERT INTO public.autores VALUES (26, 'Rodrigo Méndez', 'V-27100007', NULL);
-INSERT INTO public.autores VALUES (27, 'Gabriela López', 'V-27100008', NULL);
-INSERT INTO public.autores VALUES (28, 'Hernán Castro', 'V-27100009', NULL);
-INSERT INTO public.autores VALUES (29, 'Isabel Ramos', 'V-27100010', NULL);
-INSERT INTO public.autores VALUES (32, 'Fernando Carmino', 'V-12312313', NULL);
-INSERT INTO public.autores VALUES (30, 'Mariano Rajoy', 'V-9857492', NULL);
-INSERT INTO public.autores VALUES (31, 'Alejandro Alicante', 'V-12312391', NULL);
-INSERT INTO public.autores VALUES (33, 'Luis Enrique Morelos', 'E-5184865', NULL);
-INSERT INTO public.autores VALUES (34, 'Jesús Montilla', 'V-30866991', NULL);
-INSERT INTO public.autores VALUES (35, 'Luis Miguel', 'V-17855689', NULL);
-INSERT INTO public.autores VALUES (36, 'Fausto Hernandez', 'V-21314132', NULL);
-INSERT INTO public.autores VALUES (37, 'miki', 'V-1234', NULL);
-INSERT INTO public.autores VALUES (42, 'González González Miguel Alejandro', 'V-32621284', NULL);
-INSERT INTO public.autores VALUES (43, 'Rojo Ramírez José Alejandro', 'V-30536364', NULL);
-INSERT INTO public.autores VALUES (44, 'Ramírez Duarte Andrus Ruben', 'V-30469331', NULL);
-INSERT INTO public.autores VALUES (45, 'Pérez Marín José Gregorio', 'V-31177398', NULL);
-INSERT INTO public.autores VALUES (46, 'González Victoria', 'V-30931145', NULL);
-INSERT INTO public.autores VALUES (47, 'Estudiante Prueba Uno', 'V-30111222', NULL);
-INSERT INTO public.autores VALUES (48, 'Estudiante Prueba Dos', 'V-30333444', NULL);
-INSERT INTO public.autores VALUES (49, 'María Autor Prueba', 'V-31000111', NULL);
-INSERT INTO public.autores VALUES (50, 'Favian Herrera', 'V-30600230', NULL);
-INSERT INTO public.autores VALUES (51, 'Jesús Linares', 'V-30600950', NULL);
-INSERT INTO public.autores VALUES (52, 'Araujo Oliver', 'V-30866964', NULL);
-INSERT INTO public.autores VALUES (53, 'Nava Ailberth', 'V-30738034', NULL);
-INSERT INTO public.autores VALUES (54, 'David Lidmar', 'V-25111222', NULL);
-INSERT INTO public.autores VALUES (55, 'Estudiante Pruebas Uno', 'V-99887766', NULL);
-INSERT INTO public.autores VALUES (56, 'Estudiante Pruebas Dos', 'V-99887767', NULL);
-INSERT INTO public.autores VALUES (57, 'Daniel ángel', 'V-30379710', NULL);
-INSERT INTO public.autores VALUES (58, 'Araujo Rivas Isamar Andreina', 'V-31029609', NULL);
-INSERT INTO public.autores VALUES (59, 'Collantes Peña José Manuel', 'V-31602776', NULL);
-INSERT INTO public.autores VALUES (60, 'León Custode María Fernanda', 'V-31094982', NULL);
-INSERT INTO public.autores VALUES (61, 'Ocanto Morales ángel David', 'V-31239885', NULL);
-INSERT INTO public.autores VALUES (62, 'Briceño Brandon', 'V-29814531', NULL);
-INSERT INTO public.autores VALUES (63, 'Carrizo Franyeski', 'V-31602854', NULL);
-INSERT INTO public.autores VALUES (64, 'Ramírez Oriana', 'V-30671745', NULL);
-INSERT INTO public.autores VALUES (65, 'Valero Alejandro', 'V-29814164', NULL);
-INSERT INTO public.autores VALUES (66, 'Roberto Saavedra', 'V-30671594', NULL);
-INSERT INTO public.autores VALUES (67, 'Adrian Maldonado', 'V-30600276', NULL);
-INSERT INTO public.autores VALUES (68, 'Alberth Barreto', 'V-30438316', NULL);
-INSERT INTO public.autores VALUES (69, 'Escobar Morales Gelany Paola', 'V-33573889', NULL);
-INSERT INTO public.autores VALUES (70, 'Ruza Ferrebus Jhon David', 'V-32282366', NULL);
-INSERT INTO public.autores VALUES (71, 'Ortega Gonzalez Orlando Manuel', 'V-27889926', NULL);
-INSERT INTO public.autores VALUES (72, 'Piña Materan Juan Diego', 'V-31413623', NULL);
-INSERT INTO public.autores VALUES (73, 'Salcedo Angel Juan Diego', 'V-31008131', NULL);
-INSERT INTO public.autores VALUES (74, 'Andrés David Parra Cabrera', 'V-31029492', NULL);
-INSERT INTO public.autores VALUES (75, 'Jesús Alejandro Lobo Briceño', 'V-27677098', NULL);
-INSERT INTO public.autores VALUES (76, 'Orlando José González Moreno', 'V-31168262', NULL);
-INSERT INTO public.autores VALUES (77, 'Sebastián Jesús Blanco Rojas', 'V-30600412', NULL);
-INSERT INTO public.autores VALUES (78, 'Tsu David Galíndez', '1231323', NULL);
-INSERT INTO public.autores VALUES (79, 'Estudiante Pruebas', 'V-99999999', NULL);
-INSERT INTO public.autores VALUES (80, 'Test Author', 'V-88888888', NULL);
-INSERT INTO public.autores VALUES (82, 'Anyela Alejandra Briceño Guerra', 'V-31413272', NULL);
-INSERT INTO public.autores VALUES (83, 'Abraham David Graterol Villamizar', 'V-31167863', NULL);
-INSERT INTO public.autores VALUES (84, 'Isaac José Figuera García', 'V-31239364', NULL);
-INSERT INTO public.autores VALUES (88, 'Jesus Francisco Montilla Olmos', 'V-30886991', NULL);
-INSERT INTO public.autores VALUES (89, 'Miguel Alejandro Gonzalez Gonzalez', 'V-32621283', NULL);
-INSERT INTO public.autores VALUES (90, 'Juan Piña', 'V-8398', NULL);
-INSERT INTO public.autores VALUES (99, 'José José', NULL, NULL);
-INSERT INTO public.autores VALUES (100, 'JuanJo', NULL, NULL);
-INSERT INTO public.autores VALUES (101, 'Jaliscos', NULL, NULL);
-INSERT INTO public.autores VALUES (102, 'Jorge Lira-Camargo', NULL, NULL);
-INSERT INTO public.autores VALUES (92, 'José Antonio Ogosi-Auqui', NULL, NULL);
-INSERT INTO public.autores VALUES (96, 'Guillermo Pastor Morales-Romero', NULL, NULL);
-INSERT INTO public.autores VALUES (97, 'César Gerardo León-Velarde', NULL, NULL);
-INSERT INTO public.autores VALUES (103, 'Giovanni Andrés Cortés-Tovar', NULL, NULL);
-INSERT INTO public.autores VALUES (104, 'Robinson Osorio-Hernández', NULL, NULL);
-INSERT INTO public.autores VALUES (105, 'Jairo Alexander Osorio-Saráz', NULL, NULL);
-INSERT INTO public.autores VALUES (13, 'Alejandro', 'E-22231231', NULL);
-INSERT INTO public.autores VALUES (106, 'Analy De Los Angeles Hernández Cortéz', 'V-30601065', NULL);
-INSERT INTO public.autores VALUES (119, 'JULIE ANDREA SARMIENTO FORERO', 'V-30877998', NULL);
-INSERT INTO public.autores VALUES (120, 'MARIO ALEXANDER ROMERO RODRIGUEZ', 'V-30123654', NULL);
-INSERT INTO public.autores VALUES (121, 'Fabián Eduardo Alcoser Cantuña', 'V-20545874', NULL);
-INSERT INTO public.autores VALUES (122, 'Andrés Leal', 'V-12542222', NULL);
-INSERT INTO public.autores VALUES (125, 'Estudiante Informática 1', '9999901', NULL);
-INSERT INTO public.autores VALUES (126, 'Estudiante Electricidad 2', '9999902', NULL);
+INSERT INTO public.autores VALUES (2, 'Andrés David Parra Cabrera', 'V-31029492');
+INSERT INTO public.autores VALUES (3, 'Jesús Alejandro Lobo Briceño', 'V-27677098');
+INSERT INTO public.autores VALUES (4, 'Orlando José González Moreno', 'V-31168262');
+INSERT INTO public.autores VALUES (5, 'Sebastián Jesús Blanco Rojas', 'V-30600412');
 
 
 --
@@ -2489,7 +2412,6 @@ INSERT INTO public.categorias VALUES (15, 'Psicología');
 INSERT INTO public.categorias VALUES (16, 'Economía');
 INSERT INTO public.categorias VALUES (17, 'Contaduría');
 INSERT INTO public.categorias VALUES (18, 'Ingeniería Civil');
-INSERT INTO public.categorias VALUES (10, 'Admin');
 
 
 --
@@ -2509,40 +2431,20 @@ INSERT INTO public.cursos VALUES (7, 7, 'e', 'e', 'public/uploads/cursos/curso_1
 --
 
 INSERT INTO public.detalles_articulos VALUES (120, NULL, '93', '241', '0012-7353', '2026-07-09 20:16:51.643727', 'art_1783642611_6a5039f396bec.png', 'La industria de la construcción enfrenta un serio impacto ambiental por las altas emisiones del cemento, lo que impulsa la búsqueda de alternativas sostenibles como el concreto reforzado con fibras de polipropileno (FPP). Para ello se analizó su efecto en las propiedades del concreto a través de una revisión sistemática y filtrada de 66 artículos recientes entre los años 2021 y 2025 extraídos de Scopus, ScienceDirect y MDPI. Los estudios muestran que la FPP mejora la resistencia a compresión, flexión y tracción, especialmente en proporciones cercanas al 0.5%. También aumenta la durabilidad frente a agentes agresivos y mejora la microestructura al controlar grietas, aunque, puede reducir la trabajabilidad y aumentar la porosidad, efectos mitigables mediante el uso de fibras metálicas o adiciones puzolánicas. En conclusión, el uso de FPP es una opción viable para reducir el impacto ambiental del concreto y mejorar su desempeño cuando se aplica en proporciones adecuada', true, NULL);
-INSERT INTO public.detalles_articulos VALUES (118, 5, '87', '213', '0012-7353', '2026-07-09 15:19:57.897052', 'https://revistas.unal.edu.co/public/journals/21/cover_issue_5423_es_ES.png', 'Este artículo propone una ampliación de las capacidades del middleware MiSCi, al agregar una nueva capa denominada Datos Enlazados, para  identificar,  describir,  conectar,  relacionar  y  explotar  los  distintos  datos  generados  por  los  usuarios  y  las  aplicaciones  de  la  ciudad  inteligente usando el paradigma de datos enlazados. Esta nueva capa está compuestas por distintos agentes que permiten automatizar las etapas  de  especificación,  modelado,  generación,  vinculación,  publicación  y  explotación  de  los  datos  basados  en  MEDAWEDE.  Dichos  agentes  pueden  enriquecer  ontologías  existentes  en  MiSCi,  generar  modelos  de  conocimiento  requeridos  por  los  servicios  de  MiSCi, generar datos para construir modelos de conocimiento para MiSCi, y recomendar información en contextos de incertidumbre a través de una inferencia híbrida basada en lógica descriptiva/dialéctica. Además en este trabajo se especifica un caso de estudio, donde se muestran las capacidades del MiSCi para manejar distintas situaciones críticas, apoyado en la nueva capa de enlazado de dato', true, NULL);
 INSERT INTO public.detalles_articulos VALUES (121, 8, '93', '241', '0012-7353', '2026-07-09 20:19:28.855723', 'art_1783642768_6a503a90ca313.png', 'La discapacidad motora en Colombia afecta a un porcentaje significativo de la población, constituye una problemática relevante de salud pública,  asociada  con  diversos  factores  del  país.  Este  proyecto  desarrolla  un  sistema  de  control  de  robots  asistenciales  controlados  por  señales electrooculográficas (EOG), logrando que aquellas personas con movilidad reducida tengan acceso a este tipo de tecnologías. Para el desarrollo se adquirieron señales con el hardware Bitalino para generar y normalizar un conjunto de datos, que luego se procesa con Python y Open Signals para establecer comandos confiables. El entorno de simulación se realizó en CoppeliaSim. Durante el proceso de desarrollo, se encontraron obstáculos como el ruido y la exactitud de las señales. No obstante, se ha terminado la interfaz y la conexión entre CoppeliaSim, Python y las señales EOG, permitiendo que el robot se mueva en tiempo real. En la actualidad, se realizan pruebas de funcionamiento, exactitud y precisión de los movimientos.', true, NULL);
-INSERT INTO public.detalles_articulos VALUES (122, 8, '93', '241', '0012-7353', '2026-07-09 20:08:48.117741', 'art_1783642127_6a50380feed3b.png', 'La  banca  móvil  se  ha  consolidado  como  una  herramienta  clave  para  la  inclusión  financiera,  particularmente  en  zonas  rurales  donde  las  barreras geográficas y de infraestructura limitan el acceso a servicios bancarios tradicionales. Este estudio analiza los determinantes de la aceptación de la banca móvil en ganaderos del occidente de Antioquia, Colombia, utilizando el modelo UTAUT. Se aplicó una metodología cuantitativa  basada  en  encuestas  estructuradas  a  132  productores  rurales,  evaluando  variables  como  la  expectativa  de  rendimiento,  la  expectativa de esfuerzo, la influencia social, el riesgo y la confianza. Los resultados revelan que la expectativa de rendimiento y la facilidad de uso son los principales factores que influyen en la adopción de la banca móvil, mientras que la confianza, el riesgo y la influencia social no  mostraron  un  impacto  significativo.  Estos  hallazgos  destacan  la  necesidad  de  desarrollar  estrategias  que  promuevan  el  acceso  a  plataformas digitales intuitivas y capacitaciones enfocadas en el uso de estas herramientas.', true, NULL);
 INSERT INTO public.detalles_articulos VALUES (119, 8, '93', '241', '0012-7353', '2026-07-09 20:13:49.50881', 'art_1783642429_6a50393d74626.png', 'Los techos verdes representan una estrategia pasiva eficaz para reducir la transferencia de calor hacia el interior de los edificios, especialmente en climas  cálidos  y  húmedos.  En  este  trabajo  se  presenta  un  modelo  dinámico  unidimensional  de  balance  de  calor  y  masa  para  evaluar  el  comportamiento térmico de un techo verde extensivo en condiciones de trópico húmedo. El modelo considera procesos de conducción, convección, radiación y transferencia de humedad, incorporando la evapotranspiración y parámetros de la vegetación dependientes de la especie. La calibración y simulación se realizaron usando datos experimentales obtenidos de una base experimental de techos verde ubicada en Tabasco, México, con las especies Tradescantia  spathaceay Tradescantia  pallida.  El  desempeño  del  sistema  se  evaluó  bajo  tres  escenarios  climáticos  representativos:  temporada de estiaje, temporada de lluvia y de frente frío. Los resultados muestran que la capa vegetal reduce la transferencia de calor hacia el interior del edificio, además de contribuir a la estabilización térmica del microclima del techo. El análisis de sensibilidad indica que parámetros asociados a la vegetación, en particular el índice de área foliar y la resistencia interna de las hojas, ejercen una influencia dominante en la respuesta del sistema. Aunque el modelo se limita al caso unidimensional y a especies específicas, constituye una herramienta útil para la evaluación del desempeño térmico de techos verdes en climas tropicales húmedos', true, NULL);
 INSERT INTO public.detalles_articulos VALUES (143, 7, '93', '242', '0012-7353', '2026-09-07 15:40:32.098085', 'https://revistas.unal.edu.co/public/journals/21/submission_124890_112809_coverImage_es_ES.png', 'En una línea de transmisión de alta tensión de circuito único de 400 kV, la proximidad de los conductores de fase induce una corriente circulante en el conductor de tierra. Esta corriente forma un circuito cerrado a través del sistema de puesta a tierra de la base de la torre, que proporciona su ruta de retorno [1]. En este estudio, se modela y analiza la corriente circulante inducida. El modelado se realizó en el entorno MATLAB.Los resultados indican que la corriente circulante y la tensión inducida en el conductor de tierra presentan una relación aproximadamente lineal con las corrientes de los conductores de fase, y sus magnitudes se ven influenciadas por la resistencia de puesta a tierra de la torre R_g y la resistividad del suelo ρ. Además, las pérdidas de potencia en el conductor de tierra alcanzan niveles significativos en condiciones de alta corriente. Estos hallazgos resaltan la importancia de un diseño óptimo del sistema de puesta a tierra, una selección adecuada de las características del conductor de tierra y la implementación de métodos para reducir las corrientes circulantes con el fin de mejorar el rendimiento y reducir las pérdidas en las líneas de transmisión de alta tensión.', true, NULL);
+INSERT INTO public.detalles_articulos VALUES (122, 8, '93', '241', '0012-7353', '2026-07-09 20:08:48.117741', 'art_1783642127_6a50380feed3b.png', 'La  banca  móvil  se  ha  consolidado  como  una  herramienta  clave  para  la  inclusión  financiera,  particularmente  en  zonas  rurales  donde  las  barreras geográficas y de infraestructura limitan el acceso a servicios bancarios tradicionales. Este estudio analiza los determinantes de la aceptación de la banca móvil en ganaderos del occidente de Antioquia, Colombia, utilizando el modelo UTAUT. Se aplicó una metodología cuantitativa  basada  en  encuestas  estructuradas  a  132  productores  rurales,  evaluando  variables  como  la  expectativa  de  rendimiento,  la  expectativa de esfuerzo, la influencia social, el riesgo y la confianza. Los resultados revelan que la expectativa de rendimiento y la facilidad de uso son los principales factores que influyen en la adopción de la banca móvil, mientras que la confianza, el riesgo y la influencia social no  mostraron  un  impacto  significativo.  Estos  hallazgos  destacan  la  necesidad  de  desarrollar  estrategias  que  promuevan  el  acceso  a  plataformas digitales intuitivas y capacitaciones enfocadas en el uso de estas herramientas.', true, NULL);
+INSERT INTO public.detalles_articulos VALUES (118, 5, '87', '213', '0012-7353', '2026-07-09 15:19:57.897052', 'https://revistas.unal.edu.co/public/journals/21/cover_issue_5423_es_ES.png', 'Este artículo propone una ampliación de las capacidades del middleware MiSCi, al agregar una nueva capa denominada Datos Enlazados, para  identificar,  describir,  conectar,  relacionar  y  explotar  los  distintos  datos  generados  por  los  usuarios  y  las  aplicaciones  de  la  ciudad  inteligente usando el paradigma de datos enlazados. Esta nueva capa está compuestas por distintos agentes que permiten automatizar las etapas  de  especificación,  modelado,  generación,  vinculación,  publicación  y  explotación  de  los  datos  basados  en  MEDAWEDE.  Dichos  agentes  pueden  enriquecer  ontologías  existentes  en  MiSCi,  generar  modelos  de  conocimiento  requeridos  por  los  servicios  de  MiSCi, generar datos para construir modelos de conocimiento para MiSCi, y recomendar información en contextos de incertidumbre a través de una inferencia híbrida basada en lógica descriptiva/dialéctica. Además en este trabajo se especifica un caso de estudio, donde se muestran las capacidades del MiSCi para manejar distintas situaciones críticas, apoyado en la nueva capa de enlazado de dato', true, NULL);
+INSERT INTO public.detalles_articulos VALUES (201, 8, '87', '214', '0012-7353', '2026-10-12 14:48:05.546878', 'https://revistas.unal.edu.co/public/journals/21/cover_issue_5423_es_ES.png', 'Películas de titanio y cobre fueron depositadas sobre substratos de acero inoxidable 316 usando la técnica de arco catódico continuo y con un concentrador magnético recto. Las muestras obtenidas a diferentes distancias cátodo-substrato, para posiciones en el interior del concentrador magnético. La morfología superficial fue obtenida por microscopia electrónica de barrido (SEM). El espesor de las películas fue medido por la masa depositada; los perfiles de los recubrimientos fueron estudiados con las medidas con un calotest y con un perfilómetro; el coeficiente de fricción y desgaste fueron caracterizados con un tribómetro; la dureza con un nanoindentador. Los resultados muestran que el espesor medio se incrementa por la acción del concentrador magnético, con una región central de máximo espesor y disminuyen hasta en un 50%   con la posición radial hacia los bordes para distancias de 1 cm. Los recubrimientos muestran la presencia de macropartículas. El numero de macropartículas, la rugosidad del recubrimiento y la tasa de deposición, también fueron analizadas; la tasa de deposición depende de la posición axial en el interior del ducto. El número de macropartículas disminuye cuando aumenta la distancia cátodo-substrato. La fricción y la tasa de desgaste disminuyen cuando el substrato se coloca mas lejos del cátodo, en el interior del ducto. Los valores de la dureza medidos con el nanoindentador son del orden al reportado en la literatura; los bajos coeficientes de fricción, el menor desgaste y los altos valores de la dureza, fueron obtenidos en la región donde el campo magnético es alto.', true, NULL);
 INSERT INTO public.detalles_articulos VALUES (146, NULL, '91', '232', '0012-735', '2026-09-09 00:51:39.29162', 'https://revistas.unal.edu.co/public/journals/21/submission_112625_95079_coverImage_es_ES.png', 'La producción de azúcar de caña no centrifugada, en Colombia se realiza en instalaciones de poscosecha que generan alta cantidad de calor y vapor, producto de la evaporación de los jugos de caña del proceso. Este estudio tuvo como objetivo mejorar las condiciones de confort de una instalación de este tipo en el municipio de Pacho, Cundinamarca, Colombia, a través de simulación bioclimática, donde se modificó el cerramiento en las paredes y en la ventana cenital. Se evalúo el confort térmico adaptativo, donde el mejor comportamiento bioclimático se  presentó  en  las  configuraciones  con  perímetro  abierto  y  ventana  cenital,  esto  debido  a  que  una  mayor  área  de  ventilación  y  efecto chimenea optimizan  la  transferencia  de  calor  y  masa;  así  mismo,  se  observó  que  hay  un  comportamiento  generalizado  de  incomodidad  térmica para los trabajadores en la zona térmica hornilla, debido a las altas emisiones de calor y vapor en esta zona', true, NULL);
 INSERT INTO public.detalles_articulos VALUES (144, 8, '93', '242', '0012-7353', '2026-09-09 00:24:54.886595', 'https://revistas.unal.edu.co/public/journals/21/submission_124428_112347_coverImage_es_ES.png', 'Esta investigación desarrolló y evaluó un modelo de aprendizaje automático para optimizar la contratación de profesionales de ingeniería en  una universidad pública, reduciendo el tiempo de evaluación, los errores y la subjetividad en el análisis de currículums. Se empleó un enfoque cuantitativo, aplicado y cuasiexperimental, utilizando procesamiento de lenguaje natural (TF-IDF), clasificación KNN bajo el esquema One vs-Rest y tres conjuntos de datos de 10, 20 y 30 CV. La información fue procesada en Google Colab mediante etapas de limpieza, vectorización, entrenamiento y evaluación. El modelo alcanzó una precisión del 82 % en la clasificación de candidatos, priorizando de manera consistente a los postulantes según su grado académico y experiencia profesional. Además, redujo el tiempo promedio de evaluación de 15 a 2,5 minutos por CV y disminuyó la tasa de error a menos del 2 %, demostrando ser una herramienta eficiente, objetiva y escalable.', true, NULL);
-INSERT INTO public.detalles_articulos VALUES (150, 7, 'e', 'e', 'e', '2026-09-11 11:59:24.004409', 'https://i.pinimg.com/736x/34/63/e7/3463e729b17ec40b1c60c25e1d86af52.jpg', 'e', true, NULL);
-INSERT INTO public.detalles_articulos VALUES (151, 8, 'e', 'e', 'e', '2026-09-11 15:27:57.58139', 'default_article.jpg', 'e', true, NULL);
-INSERT INTO public.detalles_articulos VALUES (156, 8, 'e', 'e', 'e', '2026-09-23 12:09:57.549672', 'default_article.jpg', 'e', true, NULL);
 
 
 --
 -- Data for Name: detalles_investigaciones; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-
-
---
--- Data for Name: detalles_proyectos; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-INSERT INTO public.detalles_proyectos VALUES (186, '2026-09-30', 'Pregrado', 'Una descripción de proyectos es una visión general de alto nivel de por qué está haciendo el mismo. De igual manera el documento explica los objetivos y sus cualidades esenciales, donde la descripción es fundamental debido a que va ayudar en la realización del estudio ya que se requiere de la aplicación de varias metodologías que abordan aspectos desde la identificación del problema, hasta la selección de la alternativa más adecuada, haciendo uso de herramientas y técnicas que permiten la recolección y análisis de información de manera concreta y adecuada, aumentando así el nivel de objetividad del problema a resolver', 1, 'CAIPA Trujillo  ------------------------------------------------Naturaleza de la Comunidad: El CAIPA-Trujillo, Valera Estado Trujillo.   ------Misión', '', '2026-09-30 19:49:51.452795', NULL, NULL, 'Crear un módulo para expedir un PDF que contenga los datos del estudiante.', true, NULL, 1, 2);
-INSERT INTO public.detalles_proyectos VALUES (189, '2026-10-04', 'Pregrado', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry". Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr. Pablo Viloria”, coordinación de investigación del programa nacional', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP', '2026-10-04 14:23:02.803018', NULL, NULL, 'Desarrollar un Sistema Integral de Gestión Documentos Académicos, basado en una arquitectura modular, para la automatización de la búsqueda híbrida de información y la centralización de recursos académicos en beneficio de la comunidad del PNF en Informática.', true, NULL, 2, 1);
-INSERT INTO public.detalles_proyectos VALUES (173, '2026-09-29', 'Pregrado', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry”. Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio.', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr. Pablo Viloria”, coordinación de investigación del programa nacional', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP.', '2026-09-28 21:42:57.178804', NULL, 'https://github.com/Zhailox/proyect_CIIDI', 'Desarrollar un Sistema Integral de Gestión Documentos Académicos, basado en una arquitectura modular, para la automatización de la búsqueda híbrida de información y la centralización de recursos académicos en beneficio de la comunidad del PNF en Informática.', true, '[-0.05925069,-0.03747498,-0.06554397,-0.06347278,0.01856328,0.04152989,0.0537748,0.10685626,0.05460724,0.03196778,0.08279351,0.06442103,0.0142616,0.00074173,-0.1356299,-0.01493108,-0.05580725,0.00164277,-0.02545193,-0.01468711,0.0132404,0.01598015,0.07330319,-0.04391611,-0.01787273,0.02037034,0.03482321,-0.01704266,0.00341587,0.0130463,0.06558905,-0.06145759,0.0131649,0.08380697,-0.01494171,0.04393532,-0.08256437,-0.10029587,0.02182062,0.07503075,0.06523212,-0.00610734,0.03320325,0.08640354,0.08585677,0.06037056,-0.0227181,-0.0160492,-0.04371213,0.01633237,0.02850386,0.00413208,0.03778186,-0.01648951,-0.01617862,0.10706628,-0.07986463,-0.04913698,-0.07885513,0.02256624,0.03681551,0.04616364,-0.04254428,-0.05501775,0.01100807,0.11584439,-0.00816853,-0.05767767,-0.0091198,-0.05316711,0.02103463,0.05223362,-0.00291944,-0.12071767,-0.00130954,0.03160649,-0.02734312,0.04127143,0.01108991,-0.12584203,0.10424983,0.07652346,0.04712555,0.00176828,0.11890375,-0.02383991,-0.01895283,0.06245203,-0.00729361,0.00917774,0.04305562,-0.06614544,0.00908483,0.02611432,-0.04885595,-0.02181679,-0.00105993,-0.03111089,-0.05799797,0.01686539,-0.00727856,-0.00139628,0.03950931,-0.05493698,-0.06238848,-0.05383612,0.00963783,0.02148438,0.03785872,0.00315765,-0.08622456,0.004164,-0.03752858,-0.0768624,-0.00908454,0.06617588,-0.02461114,0.01082828,-0.0224869,-0.07010108,-0.05430985,-0.00608438,-0.13605556,0.01129745,-0.02149056,-0.08430939,-0.05646142,3.21e-06,-0.07987109,-0.01602009,-0.00933469,-0.00408662,-0.02661944,0.01917714,0.00905929,-0.12045219,0.05354386,-0.05263241,-0.04802469,0.08581738,-0.09023448,0.05450477,-0.06882538,-0.04295063,-0.0183707,-0.00357692,0.05667996,-0.0118025,0.0424695,-0.05078433,0.0540972,-0.00390886,0.07288367,0.00875139,-0.06223964,-0.00147281,-0.03561651,-0.00920601,-0.01965643,-0.01123198,-0.01697858,-0.0821374,-0.03854227,-0.04664788,-0.0027558,-0.00404482,-0.00727181,0.01521501,-0.01659469,0.04641366,0.02330182,-0.04872586,0.04125556,-0.00652021,-0.00590071,0.0688835,0.04427982,-0.02817639,0.00508187,0.0173254,-0.0125411,-0.00736206,0.07285192,-0.05632783,-0.06329135,0.07969405,-0.0012272,-0.08634257,0.10870047,0.01329678,-0.05255423,-0.00413915,-0.01895038,0.04435974,0.01566249,-0.01518437,0.09163383,-0.06740365,-0.00181401,0.00769065,-0.06145931,0.01257897,-0.05515214,1.691e-05,-0.02480186,-0.00196144,-0.00609902,-0.03468498,-0.082813,-0.03834114,0.00720314,0.01007346,0.04163549,0.01352953,0.07415434,0.04811692,-0.04825305,-0.13594282,0.05315195,0.02716414,0.02636825,-0.02861826,0.03203708,9.79e-06,-0.02460735,-0.06887244,-0.09604268,-0.02112674,-0.03868303,0.074514,0.05378978,0.01698826,-0.01614857,0.01324594,-0.00913139,0.03950855,-0.00121858,-0.11889488,0.07318352,-0.02479185,-0.08955578,0.14931802,0.0633479,0.0272713,-0.02892708,0.06855977,0.05213298,0.02930061,0.0362479,0.02327998,-0.00900855,0.08549445,-0.09212456,-0.0062773,-0.06393681,-0.02988164,-0.06656531,0.00189788,-0.06680977,-0.08173899,0.13036403,0.04231716,-0.09248655,-0.01629009,0.0962046,0.02152197,0.00771599,-0.02351502,-0.02283159,0.00957705,-0.11102535,-0.06420129,-0.0344277,-0.01683184,0.00518135,0.01580001,0.03648629,-0.06483451,-0.00697533,0.10704096,-0.01780988,-0.01667721,0.00116734,-0.02532095,-0.03949364,-0.01413431,-0.08801998,0.04969864,0.03610639,-0.02721713,-0.01111617,0.08395676,0.04666319,-0.0330354,0.06296749,0.10614739,0.03325656,0.00139509,0.00617149,0.00879517,0.0330602,0.06298579,0.00239869,-0.00572088,-0.01463202,-0.00524447,-0.02678896,0.01367217,0.02317831,0.04104974,0.073473,-0.05941937,-0.00329942,-0.08513019,0.01286764,0.04468957,0.01944439,0.00305925,-0.02291579,1.11e-06,-0.01570778,0.03718475,-0.05531326,-0.11503417,-0.00422938,-0.04732766,-0.02332506,0.00737748,-0.05463131,-0.01339876,0.01847539,-0.06700006,-0.01225672,-0.00934864,-0.0389382,0.00673474,0.01025173,0.08636673,-0.01835872,-0.07791513,0.04298014,0.01676848,-0.00817483,0.03374759,0.01188091,-0.00127944,-0.04114695,-0.04888705,-0.04104182,0.03008013,-0.00319994,-0.00567959,0.09543272,0.05643448,0.04699716,0.06550608,0.10699536,-0.02390888,-0.06485444,0.0025374,-0.0531951,-0.05711509,0.04206511,-0.00375201,0.03024956,-0.06744281,0.08687718,-0.04080023,0.09775816,0.03818337,0.06504229,0.0510898,-0.04361027,-0.02236276,-0.0624283,-0.00970752,0.01476809,0.02779145,-0.06446843,-0.01884619,0.02751795,-0.04763771,-0.0361749,0.04219323]', 4, 0);
-INSERT INTO public.detalles_proyectos VALUES (176, '2026-09-29', 'Pregrado', 'Proyecto sociotecnológico orientado al diseño y desarrollo de un sistema integral para Smartphone World C.A., compuesto por un módulo de gestión local —inventario, catálogo y reportes— y una tienda virtual de comercio electrónico, interconectados mediante una base de datos centralizada en la nube. La solución busca automatizar los procesos internos de inventario y ventas, reducir errores manuales, ampliar el alcance comercial de la empresa hacia el entorno digital y mejorar la experiencia de compra. Metodológicamente se enmarca en la Investigación-Acción Participativa (IAP) y la metodología ágil Kanban.', 1, 'Smarthphone World C.A. Valera, Trujillo', 'Sistemas de información; sistemas de información web; comercio electrónico; tienda virtual; gestión de inventario; desarrollo de aplicaciones web; base de datos centralizada; Smartphone World C.A.; Investigación-Acción Participativa; Kanban.', '2026-09-28 21:42:57.36464', NULL, NULL, 'Desarrollar un Sistema Integral de Gestión Comercial y Tienda Virtual para Smartphone World C.A., compuesto por un módulo de gestión local y una plataforma de comercio electrónico interconectados mediante una base de datos centralizada en la nube, con el fin de automatizar los procesos internos de inventario y ventas, y ampliar el alcance comercial de la empresa hacia el entorno digital.', true, '[0.01985952,0.07094203,-0.00238552,-0.13057585,0.02186875,-0.07937945,-0.05770198,0.04006172,-0.03605566,-0.02028793,0.15849763,-0.06105105,0.09173891,0.00743215,-0.00948643,-0.04883767,-0.02581971,-0.00500094,-0.00586483,0.09139819,0.01439474,0.02723359,0.03407835,0.0063564,0.03630525,-0.03930284,0.03303406,0.04511886,0.05106106,0.03126247,-0.00940637,0.0710755,-0.04375213,0.13838525,-0.03411234,-0.04955023,0.01102093,-0.05177833,-0.05231319,0.07070531,0.02875373,-0.02593235,0.03329957,0.00311921,-0.00206398,0.05054624,-0.0159033,-0.04053365,-0.08961645,-0.03454463,0.01988423,0.09558524,-0.00844969,0.01800124,-0.08293319,0.06372949,0.00744224,0.02505033,0.06279967,0.06931238,0.0844133,0.03886079,-0.03570087,-0.01423552,-0.0118013,0.01845861,-0.02132646,-0.00731776,0.04842911,-0.11408522,-0.00398291,-0.013698,0.03006148,-0.10031274,-0.04548948,0.03851598,-0.02080034,0.03517241,-0.01313011,-0.03700897,0.08063376,0.09052906,-0.00987269,0.06242925,0.06857232,-0.02178504,-0.07475212,0.07336083,0.00262275,-0.0374136,0.04157386,0.00810852,0.00160433,-0.01242881,0.01502916,0.03926325,0.00154229,-0.09771783,-0.05022117,0.02456313,0.01584313,-0.04959845,0.02961146,0.07457279,-0.01134913,0.00985592,-0.02798175,0.03459016,-0.00194146,0.00820839,-0.05081394,-0.02388711,0.01724218,-0.1335504,-0.08270342,0.06566998,0.07068728,0.07892974,0.0079365,-0.10344265,0.04471106,-0.05894118,-0.08229674,-0.06825164,0.03360102,-0.04787346,0.04312672,3.97e-06,-0.02247333,-0.02813695,0.00864426,0.0068661,0.0189039,0.00885051,-0.00865803,-0.00553141,0.00480288,-0.0743081,-0.00622663,0.02511503,-0.09736291,0.08719354,-0.00875973,-0.01233883,0.01533401,-0.08088913,0.02999764,0.03920232,-0.02767492,-0.06196172,0.08064747,-0.05068445,0.01949975,0.03085676,-0.00303399,-0.02810719,-0.00860167,0.02150979,0.05659482,-0.08795424,0.03024996,-0.01512152,-0.02450174,0.01478627,0.04887046,-0.01280913,-0.00316276,-0.00824196,-0.0139415,0.05304047,-0.05247531,0.00742833,0.04098904,-0.01990521,0.04692157,0.02572218,0.04677166,0.05021885,-0.01691481,-0.04510014,-0.13433573,-0.05561732,0.03649594,-0.01896187,0.02287414,0.06841137,-0.01527845,-0.01686777,-0.01277392,-0.0015382,-0.01980315,0.02649338,-0.00614031,-0.04189514,0.01753094,-0.07592851,0.0423334,0.03151833,-0.02348261,0.00764136,-0.02848372,0.06288379,-0.02466555,0.07324744,-0.07302298,0.03771569,-0.03008668,-0.01467534,-0.01442482,0.00462096,0.00765321,0.02284584,0.11377436,-0.04800183,-0.01886943,-0.07619259,-0.03692247,0.01136318,-0.05339911,0.02218387,0.03576334,0.04313724,-0.07829408,1.169e-05,-0.07187838,-0.03072275,-0.02833736,-0.028606,-0.02962481,-0.04862327,-0.05558837,-0.05456586,-0.07976109,0.07180777,0.0088289,0.03060526,0.08717507,-0.01491491,0.09332639,0.06145817,0.07501326,-0.00078807,-0.01726626,0.00441943,-0.02264565,0.04007063,0.05864647,-0.05647147,-0.00496021,-0.03296679,0.03521948,0.07275796,-0.03507761,0.02486666,-0.087371,-0.08936271,-0.05218089,0.0212646,0.04328981,-0.01704784,0.01342276,0.02677582,-0.01727928,-0.10895798,-0.00846797,-0.04610382,0.01755029,-0.06055957,-0.03124395,-0.01639051,-0.11341113,-0.03139392,-0.00395783,0.0590184,0.10302309,0.01243642,0.04897141,-0.02837964,-0.01788973,0.07562264,-0.02838806,-0.01372353,-0.04848669,-0.114097,0.11702261,-0.0269299,-0.07550073,-0.05475292,-0.03305218,0.03315384,0.00062401,0.04243458,-0.01308942,-0.01951094,0.01483972,0.05313,-0.03064657,-0.07927723,-0.03110083,0.03714048,-0.02170588,-0.00608075,0.03776922,-0.00978928,-0.03781902,0.05881948,0.0070434,-0.17028491,0.03742952,-0.00935042,0.0175951,0.06594529,-0.03059327,-0.00594868,-0.04997423,0.06097094,-0.1000648,0.00117198,-0.05116299,1.26e-06,-0.02660885,0.01080954,-0.06723181,-0.06845967,-0.02371018,-0.05115265,0.02566839,-0.04204132,0.08563372,0.07003161,0.05805737,-0.0701346,-0.03398318,0.06604284,-0.01638473,-0.02422986,0.01930934,0.06067912,-0.04543848,-0.015459,0.11434397,0.02815625,0.02165024,-0.02013673,0.03292522,-0.03155369,-0.04574576,-0.04187682,0.0081836,-0.00910023,0.01497305,-0.0438952,-0.02107744,-0.01111458,-0.0910754,0.06658481,-0.03032783,-0.03978919,0.06370669,-0.0372717,0.06718545,-0.09390166,0.03755091,0.04505807,-0.06746311,-0.10340935,0.09142085,-0.017073,0.06813696,0.11867006,0.02558627,-0.0422597,-0.02415622,-0.06736809,0.02007192,-0.0524175,0.09062227,-0.02153895,0.0092981,0.0275318,-0.05039734,-0.00524687,-0.0038743,0.06574797]', 1, 0);
-INSERT INTO public.detalles_proyectos VALUES (178, '2026-09-29', 'Pregrado', 'Las necesidades de los usuarios de telefonía móvil demandan cada vez más servicios, razón por la cual surge J2ME como tecnología para el desarrollo de software en dispositivos móviles. El asentamiento de tecnologías como GPRS ha permitido que aumente la gama de aplicaciones capaces de comunicarse con máquinas o dispositivos remotos e incluso manipularlos. Gracias a J2ME, es posible ejecutar comandos en un servidor conectado a Internet desde un dispositivo móvil, aprovechando todas las ventajas que esta tecnología ofrece para cubrir tareas específicas.', 1, 'Comunidad / Organización No Específicamente Nombrada', 'J2ME, Aplicación cliente-servidor, Dispositivo móvil, GPRS, UML, TCP/IP', '2026-09-28 22:19:25.188154', NULL, NULL, 'Diseñar y crear un prototipo de una aplicación cliente-servidor que permita ejecutar comandos básicos en un servidor remoto desde un dispositivo móvil.', true, '[-0.14411172,-0.07656197,0.0316156,-0.10254632,-0.05970205,-0.05200336,0.03811654,0.12786329,-0.00308773,0.05547953,0.09975484,0.06069791,0.02623486,0.01552907,0.0309525,0.07768106,0.04164487,0.02194112,0.05717304,0.08585897,0.0713499,-0.04777392,0.00487409,0.02635883,-0.05258956,-0.00397196,0.04165561,0.09434447,0.02400699,-0.03235112,0.03715437,0.0440168,-0.05928416,0.00296134,0.00407411,0.02924866,0.02860614,-0.10172377,-0.08165596,-0.08630587,-0.03060255,0.00398586,0.01621167,-0.0217723,0.03465194,-0.03043022,0.0179234,0.06670744,-0.03473819,0.05267858,0.00809241,0.00739181,0.01209925,0.03400459,-0.03103615,-0.01524468,-0.11625828,0.08944007,0.09804538,-0.02498407,-0.02348454,0.10563625,-0.00560327,0.04512785,-0.03934575,0.04081038,-0.04794649,-0.09585241,0.0657681,0.06562302,0.00851641,-0.07247273,-0.0530991,-0.06281449,-0.08221548,0.0575718,0.06366432,0.00200407,-0.03479077,-0.00025029,0.06733267,-0.00537186,0.03608818,-0.00237356,-0.00077461,0.06362069,-0.06436147,0.01342253,0.1137919,0.02681873,0.04363522,-0.04008166,0.00229088,0.02810902,-0.05462565,-0.02071294,0.00770666,-0.01292661,-0.09611588,0.04693617,-0.04375708,-0.01768261,-0.01695613,0.07583249,-0.03162886,-0.01764802,0.00535505,-0.01529406,0.05021386,-0.01786907,0.02810487,-0.03789011,-0.00351556,-0.05262277,-0.02438016,-0.00313385,-0.09253575,-0.10154362,0.03882094,-0.02556379,-0.03873922,-0.04442443,-0.03191473,-0.04019117,0.05759445,0.00731019,0.05842003,5.16e-06,0.01296363,0.00230128,0.00929914,0.00931864,0.0376617,0.04097037,0.09807329,0.03195464,-0.01522632,-0.09319799,-0.10142142,0.03161025,-0.01151042,0.04505561,0.03673584,-0.16802712,0.07793753,-0.03633951,0.047608,0.03633842,-0.03429339,-0.00819379,0.030906,0.00224507,-0.02134527,0.07582116,-0.05830027,0.04705614,0.11082814,0.08034465,-0.01164591,-0.01380819,-0.03877738,-0.00527778,-0.0388572,0.02758804,-0.10626822,-0.07637806,-0.01559404,-0.03310996,-0.02243502,-0.03378304,-0.12943386,-0.00108664,-0.03784155,-0.1252548,-0.04867774,-0.02084466,-0.08805314,-0.08101647,-0.02672616,0.09823977,0.00442962,-0.06585339,-0.00428855,-0.01951663,-0.00083471,0.0840191,0.01373653,-0.01585525,-0.04077482,0.01712322,0.04780078,0.03675315,0.00433869,-0.0564935,0.04543832,0.00915781,-0.00210797,0.02670949,-0.04720426,0.02765473,0.00212877,-0.02701443,0.0692837,-3.666e-05,0.01902044,0.0340581,-0.00224985,-0.01078356,0.00053185,-0.03214681,-0.03258416,-0.02189952,0.01545293,-0.05513379,0.0289738,-0.02949107,-0.00874822,0.01079392,0.01491124,0.03749896,-0.09723324,0.03790506,0.03804268,1.482e-05,-0.1069427,0.03012667,0.02641542,0.03703307,-0.15527269,-0.02829145,0.00459867,0.01138862,-0.08904773,0.04851188,-0.0358733,-0.04487365,0.00787664,-0.05372848,-0.02109903,0.03590378,-0.00997019,0.00582477,0.00339367,-0.04966499,-0.00368024,0.03791912,0.03865308,-0.0355734,-0.02059108,-0.03859969,-0.00619378,0.05078894,0.01049858,-0.04376861,0.02895131,0.03396125,-0.00391386,0.04208191,-0.03545884,0.04584656,-0.00801378,0.08165034,0.04791304,-0.07586809,0.1210115,-0.02911595,0.043675,0.01100862,0.01902193,-0.01287237,-0.05104797,-0.02813277,0.06093609,0.00095991,-0.03058875,-0.00206699,0.07449313,0.00180794,0.01888278,0.00252675,0.04019767,-0.09870644,0.00367956,-0.02891515,0.09569001,-0.05077512,-0.03816073,0.01083905,0.03422169,0.03121095,0.00594292,0.04243821,0.04105137,-0.05885001,0.05457956,0.02226271,0.00570706,-0.04620186,0.03327371,-0.01199383,-0.04418682,-0.09565905,-0.00222605,-0.07800362,-0.00154287,-0.00427066,0.03633285,-0.03801296,-0.01796061,-0.05583903,0.01574171,0.05072046,-0.03014486,-0.00665587,0.00830986,-0.01957086,0.00373547,0.0365425,0.04489513,1.48e-06,-0.03983065,-0.07765532,-0.01619183,-0.07422596,-0.01131874,0.01175053,-0.04365688,-0.01985931,0.01234694,-0.01554488,0.01533581,-0.11963625,-0.11745199,0.10408915,8.488e-05,0.09815756,0.01300107,-0.01021176,-0.03987638,-0.00730808,0.01650366,-0.06857794,0.11804671,0.06077459,-0.03324298,0.02433682,-0.04137399,-0.01250232,-0.0435237,-0.01022594,-0.09550486,0.00759037,0.00073605,-0.02681029,-0.09694905,0.01702258,-0.07868572,-0.00852924,0.00399294,0.03354774,0.05404755,-0.06461538,-9.611e-05,0.03064282,-0.04677418,0.00592527,-0.01113991,-0.02446944,-0.06621522,-0.0162646,-0.03420937,-0.04123229,0.03227136,-0.09721491,-0.07962228,-0.0178196,0.04096628,-0.02680835,0.01580892,-0.08702017,0.04155762,0.05948621,0.08412029,-0.06256799]', 3, 1);
-INSERT INTO public.detalles_proyectos VALUES (179, '2026-09-29', 'Pregrado', 'Este proyecto se basa en la instalación y configuración de Servidores Internet (Web, DNS, Correo Electrónico y FTP Anónimo) para la Empresa de Telecomunicaciones de Nariño TELENARIÑO, utilizando los sistemas operativos Digital Unix y Linux. Incluye el diseño de una página web y el desarrollo de un Sistema de Administración de Usuarios (SAINTEL) con acceso dinámico a bases de datos empleando PostgreSQL y la interfaz PHP.', 1, 'EMPRESA DE TELECOMUNICACIONES DE NARIÑO TELENARIÑO', 'Servidores Internet, Página Web, Base de Datos, Linux, Cliente-Servidor.', '2026-09-28 22:19:26.337196', NULL, NULL, 'Diseñar la Página Web para la empresa TELENARIÑO y configurar e implementar el servidor web HTTP, SERVIDOR DE NOMBRES DE DOMINIO DNS, CORREO ELECTRONICO, TRANSFERENCIA DE ARCHIVOS (FTP ANONIMO) y Listas de Correo Electrónico para el servicio de INTERNET TELENARIÑO utilizando Digital UNIX y Linux como sistemas operativos base.', true, '[-0.09203771,-0.04935906,0.0035797,-0.12417524,-0.07486805,-0.01758587,0.00169183,-0.01363514,-0.05722429,0.04323824,0.0298245,0.03856117,-0.00298095,-0.01558421,-0.04108659,-0.03699101,-0.06837983,-0.06748968,0.00713756,0.04903423,0.06647187,-0.03332555,-0.01965365,-0.04273701,-0.00253619,0.00233396,0.01184971,0.01851079,-0.02294335,0.01178862,0.04248783,0.02712162,0.02514481,0.02555915,-0.08987072,-0.04095366,0.01840709,-0.0260849,-0.06427911,-0.0026773,0.06279035,-0.05469756,-0.01192253,-0.01458376,0.05540394,-0.08015055,-0.0232726,0.05491513,-0.04552077,-0.07094121,-0.00777004,0.01990365,-0.00604409,0.00918066,-0.02373633,0.03019633,-0.11307805,-0.02907942,0.07577277,0.04303127,-0.01741545,0.05889915,0.08755114,-0.01493393,0.04731963,-0.00558064,0.06762194,0.01337729,0.02747086,0.00208819,-0.08359074,0.04756406,-0.00225292,0.01503452,-0.10100382,0.02405009,0.06555097,-0.01267061,-0.02292031,0.00945551,0.00471423,0.00397155,0.08168604,0.04352787,-0.00352504,-0.04905636,0.02173162,-0.04533914,-0.00442671,-0.00608516,-0.01382648,0.00717067,0.01327119,-0.03249365,-0.07635633,-0.0191486,-0.04995497,-0.05529353,-0.07805302,-0.0036287,-0.01071153,-0.03380282,0.07584166,-0.05175891,-0.1071903,-0.09781823,0.06448974,0.03166538,0.07441857,0.05121583,-0.06153802,-0.03462074,-0.05659573,-0.12717922,-0.13158536,0.031361,-0.08740171,-0.04696149,0.08058976,-0.03738944,-0.04946366,-0.04484335,-0.00999047,-0.00617394,0.06123118,0.02294724,0.10667582,3.62e-06,0.0189736,0.06619633,-0.00879442,-0.06162762,0.05770546,0.05262238,0.07318558,0.04833154,-0.07909339,-0.03267528,-0.10381703,0.05851141,-0.05948976,0.01497679,0.08481785,-0.03372995,-0.0398706,-0.03940414,0.06923363,-0.00979456,-0.00147816,0.07833464,0.07032387,0.04040794,0.07448897,0.0146892,-0.05914573,0.02911138,-0.01177742,0.01618825,0.10359948,-0.02608722,-0.00835189,0.05729843,0.09846074,-0.02013182,0.00309435,0.01228962,-0.00654781,0.00661002,-0.00426638,0.01773994,-0.03532397,0.03592682,-0.08542975,-0.04947244,-0.01907482,-0.10288486,0.01252378,0.01938246,-0.05996633,0.02548372,-0.0486367,0.05431288,0.1101666,-0.0264946,-0.05790978,0.01046391,0.0147935,-0.00491896,0.02031815,-0.11073762,0.010194,-0.04391983,0.01435984,-0.03912044,0.02702934,-0.00997966,0.05970621,-0.07261181,-0.04124497,0.04278942,0.09200536,0.08218414,-0.05261496,0.10441961,-0.09239176,0.00042233,-0.03961335,0.04832684,0.06032566,0.02604712,0.0371771,0.04083968,0.09652201,0.00606795,0.05592658,0.08154291,-0.01462527,0.00704173,-0.01411772,0.05487827,0.02655489,0.00735808,0.03063161,1.164e-05,-0.00653752,-0.01544763,-0.04216934,-0.02286453,-0.02060577,-0.01266372,0.05156666,-0.04358217,-0.01959907,-0.01077097,0.06693373,-0.0310205,0.07159777,-0.06824384,-0.05750894,0.02338098,0.04624728,-0.10535878,-0.04028122,-0.0960125,0.01367528,-0.01091251,-0.0041107,-0.03526305,0.04545685,-0.09682786,0.07183238,0.04834199,-0.03285601,-0.00396569,0.0013009,0.00332607,-0.03587178,0.07159564,-0.03195906,0.05464949,0.07337636,0.0784569,0.08203718,-0.00619486,0.05350644,-0.00220126,0.0198804,-0.03532276,-0.02249372,-0.01560993,-0.04192184,-0.0439078,-0.08858853,0.01022886,0.03586573,0.00462056,0.09121476,-0.03935163,0.03062108,0.05473379,0.01895092,-0.02656744,-0.05729284,0.04180244,0.04221907,-0.06470564,-0.02242581,0.02469386,0.00326803,0.05536197,-0.0578249,0.04303809,0.02735393,-0.04357682,-0.0707751,-0.05660586,-0.00327176,-0.01945781,-0.04346992,-0.04815305,-0.04445718,0.0957489,0.02832166,-0.01444057,0.01746923,0.01029396,0.01568412,-0.10659022,0.00212947,-0.01108814,0.11806897,-0.03047305,-0.00275268,-0.10651021,-0.0486698,-0.05781565,-0.08637701,0.01758054,-0.08930448,1.16e-06,-0.00340977,-0.0779095,-0.01811996,-0.02664065,0.0897786,0.0327118,0.02554721,-0.01344016,0.01491796,-0.03537947,0.1077441,0.03033541,-0.07310126,0.04561941,0.02435587,-0.04007779,0.03319964,0.07584578,0.00203603,-0.00134286,0.02563964,-0.03974592,-0.08580272,-0.00061307,0.04660436,0.02576626,-0.03275435,-0.03819849,-0.08054943,0.00381653,-0.02126698,-0.00526793,-0.0360248,-0.01427852,-0.07428661,0.00359677,-0.04087729,-0.06186523,-0.02875787,-0.09124503,0.10737597,0.02276169,-0.00915138,0.00325177,0.08029785,0.02734736,0.01638912,-0.02154568,0.03828502,-0.04431972,-0.00212045,0.05576089,0.07184378,-0.05759273,0.01510497,-0.06551862,0.11581776,0.00017091,-0.04675453,0.07210141,-0.05928099,0.00657723,0.02969677,0.01776673]', 2, 1);
-INSERT INTO public.detalles_proyectos VALUES (175, '2026-09-29', 'Pregrado', 'El presente proyecto sociotecnológico se centra en el desarrollo de un módulo avanzado para la administración y proyección de las líneas de investigación del PNFI, en el cual la innovación principal radica en la integración de modelos de Inteligencia Artificial (Machine Learning) orientados al análisis predictivo, esta herramienta procesa el volumen y la tipología de las investigaciones registradas para identificar tendencias emergentes, predecir el crecimiento de áreas temáticas y asistir al Comité Científico Investigador en la toma de decisiones estratégicas, todo ello operando sobre la arquitectura base del Sistema Integral de Gestión.', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr. Pablo Viloria”, coordinación de investigación del programa nacional', 'Líneas de investigación, PNFI, Machine Learning, Análisis predictivo, Toma de decisiones, Comité científico, Gestión del conocimiento, Sistema integral de gestión.', '2026-09-28 21:42:57.295976', NULL, NULL, 'Desarrollar un Sistema de Gestión de Eventos integrado con un módulo de Inteligencia Artificial (Machine Learning) para la administración, clasificación automática y análisis predictivo de las líneas de investigación de los proyectos académicos del PNFI, adscrito al Comité Científico de la UPTTMBI - Núcleo La Beatriz.', true, '[-0.10691101,-0.05934565,-0.01816613,-0.02918359,0.00401342,0.05353092,0.02148034,0.01029053,-0.12892279,0.03272152,0.03166542,0.03346941,0.06094049,-0.06925746,-0.05566427,-0.00232151,-0.0715307,-0.02508197,0.02504233,-0.0318286,-0.03946566,-0.05423755,0.08427692,-0.01183777,-0.05611667,0.01536735,0.04577246,0.00195516,0.04121561,0.07840494,0.03586992,-0.01177278,0.0608179,-0.01930206,0.04278956,0.05194455,-0.02232104,0.06094469,0.01097988,0.02190481,0.04986299,-0.05054829,-0.01519127,-0.06822739,0.02495528,-0.0420431,-0.00232999,-0.08040033,-0.07977065,-0.05216599,-0.06355304,-0.05344254,0.04483972,-0.00072563,-0.0508796,-0.07703695,-0.01242287,-0.03305169,-0.0191335,0.01057378,-0.01307547,-0.01360271,-0.02468993,0.04009112,0.13005123,0.04943472,-0.0409519,0.05502411,0.03245871,-0.01379436,0.04941405,-0.01530662,-0.0398075,0.04487692,0.00533738,0.01563456,0.01635406,-0.05772328,0.06512188,-0.08000862,0.03667854,-0.02564413,-0.03716166,-0.00123416,-0.0138882,-0.04181798,-0.07104185,-0.01714339,0.06597691,0.00069679,0.05170986,0.013662,0.05322829,-0.05140438,0.03730163,0.04494601,-0.05750694,-0.04445576,-0.07607714,0.06347766,-0.08135514,0.02874146,0.00246473,-0.03218228,0.00702817,0.02077131,0.00913249,-0.02145902,0.09065046,0.03006193,-0.05869355,0.02009534,-0.0140396,-0.01849112,0.03702654,0.0323948,-0.07359426,0.01923622,0.00443355,0.01874241,-0.05635449,-0.07186643,-0.06988829,-0.03661431,-0.00668964,-0.01809656,-0.09021372,3.59e-06,-0.01313119,-0.06141468,-0.02681581,-0.04673586,0.04170697,-0.03604468,-0.01508357,-0.07313532,0.07586415,-0.05173496,-0.03770082,-0.03365997,-0.01097066,0.10532051,-0.03390849,-0.05815334,-0.07040371,9.134e-05,-0.01279964,0.01744483,0.03626884,-0.09081505,0.0292194,-0.00178117,-0.06649663,0.01646813,0.02073399,0.09629155,-0.04059599,0.03552114,0.02666093,-0.04302624,-0.07194288,-0.00482538,-0.02392633,0.00620767,0.01223924,0.02071471,0.02668756,0.02029373,-0.02154868,-0.0280483,0.01469246,-0.02747267,-0.03430581,0.01601074,-0.03860669,-0.07649376,-0.0797019,-0.03181546,0.00858857,-0.00663453,-0.03297399,-0.06514493,0.03211981,0.0411167,0.05416586,0.02474821,0.04923617,-0.06902317,0.12397432,-0.01378794,0.06248938,0.01542784,-0.02687833,0.08051728,0.00973586,0.00118394,0.06719956,0.01237228,-0.01811113,0.02031502,-0.0184413,0.00683675,0.08084314,5.36e-05,-0.04602977,0.05902716,-0.04218503,0.01602012,-0.02641084,0.0333635,-0.06206931,0.00358204,0.05539051,-0.02250392,-0.00832444,0.01778713,-0.02745109,-0.01243164,-0.00447257,-0.02093601,0.00747335,0.06738105,-0.0637526,1.284e-05,-0.11241612,-0.00040135,-0.01312501,-0.05968213,-0.00337755,-0.01553092,-0.03123072,0.0098488,0.01433466,0.06169982,-0.01992697,-0.02329313,0.0504408,-0.09595956,0.06662289,0.03175093,0.00187822,0.08696009,-0.00303108,-0.03799642,0.01408894,0.02711364,-0.01229533,0.02512772,-0.01086463,-0.01521509,-0.01010758,0.12844397,0.02838753,0.03167254,-0.05208984,-0.02864406,-0.09393318,0.02677399,-0.04062098,0.01655869,0.06352014,-0.05289799,-0.01475044,-0.05894936,0.10994428,0.06449308,-0.1217307,0.020441,0.00310683,-0.0220238,-0.10712521,-0.14490625,0.03455459,-0.02595417,0.08707278,0.04089912,0.08775638,-0.09015322,-0.02984198,0.09268448,0.08240453,0.04499166,-0.02069507,0.0453141,-0.08604815,-0.02136984,-0.03740772,0.09909792,-0.03730319,0.09093473,-0.02895332,0.09724648,-0.03713877,-0.06439656,-0.00022025,0.07120758,-0.08611487,-0.02744274,-0.10471936,-0.00027148,-0.10180981,-0.00595749,-0.02483705,-0.01410815,-0.02950214,-0.10746602,-0.03414441,-0.00651263,-0.00850149,0.00834732,0.02379302,0.00401463,0.0298326,-0.03618317,0.05218413,-0.01660838,-0.09964748,-0.04460416,-0.042996,1.5e-06,-0.00785888,-0.02055499,0.09512505,-0.00440761,0.12766086,0.02176315,-0.09242076,-0.0441136,0.0572622,-0.02900737,0.06240599,-0.02377982,0.01921812,0.00775153,-0.04042818,-0.02372392,-0.0570731,0.0836352,-0.05964066,0.00499712,0.15984212,0.02120546,0.01815722,0.01574842,0.01259383,-0.04761832,-0.05362733,-0.03809543,-0.09393963,0.00095515,-0.07226653,0.02840768,-0.01813486,-0.03098103,0.00787146,0.08385681,0.11894244,-0.08773802,-0.06310001,0.07381704,-0.06070347,-0.07676332,0.00994569,0.01795867,0.00429539,-0.00283422,0.03168571,-0.0392185,0.00244572,0.02205604,0.05571314,0.03929997,0.0074625,-0.05259972,0.01321316,-0.04876329,-0.04487733,0.04228006,-0.06694911,0.05284138,0.06819382,-0.03558247,0.09597055,-0.02829743]', 4, 0);
-INSERT INTO public.detalles_proyectos VALUES (177, '2026-09-29', 'Pregrado', 'El presente proyecto de investigación, desarrollado bajo el enfoque de la Investigación Acción Participativa (IAP), tiene como propósito fundamental desarrollar un sistema inteligente basado en algoritmos genéticos para la optimización automática de horarios en la Coordinación del Programa Nacional de Formación en Informática (PNFI) de la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry" Núcleo La Beatriz. A través de un diagnóstico participativo que incluyó entrevistas, observación directa y la aplicación de matrices FODA y CAME, se identificó que el proceso actual de elaboración de horarios se realiza de manera completamente manual, consumiendo entre tres y cuatro semanas por trimestre y generando frecuentes conflictos de asignación. La solución propuesta, seleccionada mediante matriz de decisión multicriterio, consiste en el desarrollo de un sistema con arquitectura web que emplea algoritmos genéticos multiobjetivo para procesar restricciones complejas, minimizando errores en un 95% y reduciendo el tiempo de planificación en un 90%. El proyecto beneficiará directamente a coordinadores, docentes y estudiantes del PNFI, contribuyendo a una gestión académica más eficiente y tecnológicamente confiable.', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” NUES Dr. Pablo Viloria – La Beatriz, Coordinación del PNF en Informática.', 'Algoritmos genéticos, horarios universitarios, optimización, sistema inteligente, Investigación Acción Participativa.', '2026-09-28 21:42:57.445384', NULL, 'https://github.com/Zhailox/proyect_CIIDI', 'Desarrollar un sistema de optimización basado en algoritmos genéticos que mejore automáticamente la generación de horarios en la Coordinación del Programa Nacional de Formación en Informática, considerando múltiples restricciones y criterios de optimización para reducir significativamente el tiempo de planificación, minimizar los conflictos de horario y mejorar la satisfacción de la comunidad académica.', true, '[-0.08061925,0.02169833,-0.02530532,-0.06889659,-0.04207454,0.02184883,-0.00751991,0.05311541,-0.11603164,-0.00955703,0.04996218,0.06143741,0.06094424,-0.08960559,-0.03344202,-0.02806711,0.03495954,0.02117246,0.021226,0.00434396,-0.06445195,-0.07627258,0.05826151,-0.03167837,-0.03796604,-0.02809276,-0.00588366,0.08304577,0.03329217,-0.02192484,0.03053606,0.02878036,0.03809247,-0.01542312,-0.01146376,0.06423877,-0.01799236,0.01760301,0.01326499,0.00569564,0.05681516,-0.01267998,0.00344654,-0.0123726,0.07414893,-0.02448377,-0.10053693,-0.03596458,-0.03700538,-0.04276186,-0.07733416,-0.02590818,0.1363521,0.01948524,0.01375572,-0.0661201,-0.04785442,-0.04205839,0.04115662,-0.06406962,0.00887264,0.06631269,-0.01768079,-0.01795657,0.0696503,0.02084621,0.06897931,-0.09328443,0.04011939,0.04535985,0.03387897,0.02200332,-0.05690847,0.05049293,-0.03323226,0.0497962,0.06944754,0.02307007,0.02983317,-0.04492555,0.05756622,-0.01062246,-0.05539792,0.07334555,-0.01694335,-0.019216,-0.09342088,0.0291824,0.01427024,-0.00595245,0.0008604,0.00693333,0.10298504,-0.0397807,0.08534431,0.06902553,-0.05422496,0.02233263,-0.02114915,0.00891211,0.00198975,-0.03068023,0.02195456,0.01093123,-0.07540669,-0.04646764,0.04881689,0.02983729,0.09135802,-0.01618152,-0.05498018,-0.03159838,0.00028401,-0.03117629,-0.05720155,0.06971919,-0.00257084,0.02035614,0.01721217,-0.01702365,-0.07032179,-0.07383035,-0.06695915,-0.03592653,0.02878421,-0.05348524,-0.08271637,3.93e-06,-0.02533714,-0.08427905,0.01777137,-0.06775224,0.00369153,-0.07780096,0.04081408,-0.0761759,0.00468338,-0.0492664,-0.08314979,-0.05276526,-0.09663274,0.12050485,0.0200616,-0.1340883,-0.09616269,0.0454931,-0.00276488,0.0728509,-0.00099287,-0.12616514,-0.01593283,-0.01044658,0.03967457,0.02973675,0.02467248,0.02024777,-0.08681324,0.02108511,0.02696961,-0.07200929,-0.03562162,-0.00482157,-0.10055564,-0.05064826,-0.02141497,0.01045405,0.01853314,0.0249585,0.00370711,0.04693305,-0.00435469,-0.02648236,-0.02083208,0.05148834,-0.10041356,0.01856854,-0.03079083,0.05370743,0.03238774,0.02980333,-0.01270614,-0.01891467,0.04471086,0.00865099,0.01152548,0.08294054,0.00530583,-0.02788374,0.01490641,-0.08304154,0.03156805,0.04498549,-0.02662715,0.0682472,0.00077311,-0.08233788,0.07030042,0.01833233,-0.0561978,-0.10023482,-0.04746802,0.04968428,0.02557355,0.0287751,-0.05001203,0.06169407,-0.06660732,0.00732524,-0.04807844,0.07364885,-0.10086265,-0.02701705,0.12412482,-0.05482634,-0.01194657,-0.012025,-0.04555582,-0.07090425,0.01019201,-0.02648563,0.02041074,0.04571759,-0.02513622,1.279e-05,-0.02085972,-0.01914107,0.05176337,-0.0002451,-0.04397679,0.039294,0.02301453,-0.04516994,0.0248083,0.09043651,0.05561668,0.00606115,0.01160695,-0.09447076,0.02484759,0.04760743,-0.02300303,0.06242188,0.13297883,-0.00794453,-0.00546181,0.07244862,0.04296147,-0.02132732,0.03115277,0.0076492,-0.00827914,0.13147175,-0.02427397,0.00724055,-0.080492,-0.00403944,-0.07493703,0.07177699,-0.0081167,-0.01030331,0.01230606,0.04806585,0.00436773,-0.02999131,0.04979712,-0.01873043,0.00150313,0.05021555,-0.04269128,-0.03138009,-0.03766563,-0.12187715,-0.00807789,-0.00689329,0.06167652,0.0482745,0.12373179,0.0225606,0.01061518,0.07598653,0.02325876,0.04617615,0.03128352,-0.03933392,0.03289413,0.05493277,-0.03741197,0.05893309,-0.06092378,0.09026635,-0.03150479,-0.00307127,-0.05259495,-0.01436497,-0.07957516,0.00528513,0.07525855,0.0918241,-0.04865333,0.0660063,-0.07420029,0.05426456,0.01446061,-0.00492774,-0.06331617,-0.02599655,-0.0946916,-0.05097333,-0.03753334,-0.03868946,0.01360921,0.02304838,0.00485369,-0.02313916,0.0457037,0.00697355,-0.00616215,-0.05436906,-0.05249684,1.51e-06,0.03944925,-0.08053718,-0.05456593,-0.02625673,-0.01122764,-0.01836897,-0.05974932,-0.03570841,0.02957242,-0.00859484,0.07980656,-0.02509957,0.00235605,-0.00847601,0.01218896,-0.12523001,-0.0268507,0.07275889,-0.09372865,-0.05704234,0.06578907,0.02595644,0.03183014,0.0413341,0.04620037,-0.00329255,0.00727294,-0.0459928,-0.04987107,0.01413676,-0.03911143,0.03647073,-0.08343671,-0.00410058,-0.00442295,0.08691016,-0.02808818,-0.05130818,-0.00447341,0.03345399,-0.0043003,-0.08642427,-0.04765673,-0.04324001,-0.01719409,-0.05528444,-0.0317257,0.00820539,-0.04904306,0.01059823,0.00893269,-0.00886343,0.00227922,-0.11173847,-0.03357306,0.02458791,-0.0095698,0.02922594,-0.03517225,0.09610646,0.01151697,0.02094735,0.11841241,0.01190971]', 3, 1);
-INSERT INTO public.detalles_proyectos VALUES (180, '2026-09-29', 'Pregrado', 'El componente metodológico empleó la observación directa de los procesos internos de la tienda y la aplicación de entrevistas a los clientes, con un enfoque teórico-práctico para el diseño de la solución. Se aplicaron las etapas del desarrollo del software: especificación de requerimientos, diagramas UML, modelo entidad relación, diagrama relacional, pruebas de la caja negra. Los resultados mostraron que el sistema mejora significativamente el rendimiento de la tienda y aumenta su valor diferencial al proporcionar recomendaciones automáticas sobre el valor nutricional de los productos adquiridos.', 1, 'Tienda ''Tuti'' del Cantón Vinces', 'Aplicación Web, Consumo, Inventario, Semáforo, Cliente-Servidor', '2026-09-28 22:19:26.610302', NULL, NULL, 'Desarrollar una aplicación web cliente-servidor para el control de inventario, que muestre el porcentaje de consumo, acorde al semáforo nutricional en la tienda ''TUTI'' del cantón Vinces.', true, '[-0.09822307,-0.09192882,-0.07735155,-0.05146326,-0.03457792,0.033037,0.0669247,0.04759888,0.00750228,-0.01973644,0.15337119,0.02617699,0.02660482,-0.03904517,-0.00752803,0.05662277,0.06580162,0.00500952,-0.01674626,0.0192102,-0.04325675,-0.06976543,-0.01177764,0.02296027,-0.06926976,-0.05853769,0.00283562,0.03818609,0.00141473,-0.0361485,0.07968216,-0.02703603,0.01030735,0.01273934,0.00587365,0.0483531,-0.03312245,-0.10854405,-0.03714388,0.03980689,0.03305408,-0.0056358,-0.07490217,-0.04214194,-0.0036545,-0.13063377,0.00662792,0.00223572,-0.08566509,0.03993488,-0.06225728,0.00308673,-0.02878384,-0.09956642,0.01669587,-0.04653555,-0.08540189,-0.02395113,-0.01225972,0.0390549,0.05229504,0.04888159,-0.00906783,0.03312738,-0.01022156,0.03496342,0.0702491,0.00709155,-0.05759141,0.00511548,0.0300779,-0.10499816,-0.02130406,-0.04360644,-0.01125919,0.02202566,0.03780572,-0.03211833,-0.05509146,-0.0386366,0.02434851,0.02529636,-0.0373684,-0.01128719,-0.05748583,0.0158708,0.01647676,0.01238833,0.08035254,0.04206424,-0.03215814,-4.16e-06,0.07534224,-0.06513647,0.02799659,0.03431264,0.05784241,0.03382558,-0.04593113,0.02884573,-0.02132341,-0.03514081,0.02613174,-0.03498475,-0.03022427,-0.03613671,-0.05968354,0.07086342,0.10063778,0.04872123,-0.02417753,0.01691586,0.0404647,-0.11697696,-0.05742649,0.03764528,-0.03383224,-0.10420843,0.05418167,-0.01507362,-0.00175982,-0.0040843,-0.04577932,0.02149391,0.00033383,-0.07284531,0.05378699,5.12e-06,-0.00928967,-0.03477434,0.00644416,0.02272351,0.06940335,0.02022097,0.05843434,-0.03928555,-0.00368485,-0.0684357,0.00174911,0.05892399,-0.05771837,0.02118103,0.00319856,-0.11726794,-0.00188646,0.00383855,0.11591217,0.00241432,-0.11537328,-0.07427613,0.0058167,0.0654016,-0.04721004,0.01563894,0.01056125,0.09209604,-0.01399419,0.00856203,0.16008419,-0.00871262,-0.04006914,0.02173001,-0.04720356,-0.04562094,-0.03606809,-0.02193332,0.01142552,0.0217825,-0.02682671,0.02245488,-0.07884333,0.05601071,-0.11488404,-0.03761689,-0.06486976,0.03808604,-0.02748293,-0.03785056,-0.03141061,0.0748714,0.08586314,0.06097529,0.05018805,-0.01523165,-0.01873094,0.02673448,-0.05034008,0.00222569,0.01925827,-0.03522836,-0.00769648,-0.01064536,-0.05624041,0.04357175,0.00910134,-0.05582486,0.09422329,-0.04885064,-0.07712122,0.03685058,-0.04571743,0.02271814,0.05544749,-0.02406755,-0.05437331,0.07833015,-0.02002551,0.01768751,-0.0499464,0.03999531,0.06802518,0.09209368,-0.02399721,0.03387457,-0.03118184,0.11033714,-0.0071232,0.0247066,0.05579175,-0.01213913,0.01629858,0.02033769,0.07639816,1.479e-05,-0.08403679,-0.07708661,-0.02798273,0.0516161,0.00296907,-0.02270421,-0.07648506,-0.010586,-0.06143939,-0.0069288,0.10259248,0.00037936,-0.01369566,-0.070377,-0.01537497,0.06295109,-0.00112796,0.03707331,-0.00839932,-0.0967849,-0.01228304,-0.05843423,0.04094313,-0.04974301,-0.02925406,-8.767e-05,-0.01415337,-0.02599722,-0.01333235,-0.01082291,0.02682683,-0.00291212,-0.00260679,0.02790644,-0.08000444,0.0031539,0.02046096,0.01736283,-0.04863166,-0.01199514,0.03821531,-0.01524704,0.00218924,0.03591255,-0.07909229,0.02932314,-0.06235968,-0.09005536,0.0644564,0.0275412,0.0484769,0.02676601,0.05232109,-0.14266095,-0.03105432,0.14311355,0.11002378,-0.04076586,0.01779254,-0.05703148,0.04454628,-0.0030673,0.02718814,-0.01405081,0.04484745,0.10116617,-0.00402177,0.03391811,0.04160703,-0.10272555,0.03993793,0.06221976,-0.02384244,-0.02358864,0.05894148,-0.00474031,0.01236674,0.03361087,0.01579688,-0.00957997,-0.07008873,-0.01953126,0.01890335,-0.03348697,0.02258379,-0.03123484,0.0046795,-0.00213648,-0.01943675,0.01850492,-0.05775355,0.02749772,-0.02187607,0.04131094,0.06532372,1.62e-06,-0.04742031,-0.07931738,-0.11136408,-0.067009,0.00110748,0.09562043,-0.0101476,-0.02079741,0.06877154,0.02032099,0.03360707,0.01971118,-0.12696373,0.06973519,-0.05755852,-0.00674378,-0.0094072,0.08289793,-0.02488211,-0.06665211,0.01758113,0.03564626,0.0135718,0.01066943,0.02502933,-0.04173861,-0.0111534,0.07015381,-0.01028368,0.02115123,-0.05360326,-0.045118,-0.0728095,-0.03240774,-0.03041547,0.04407991,-0.08339348,-0.07245622,-0.06495788,0.08525187,0.00385077,-0.04612431,-0.03570939,0.04044387,0.0319451,0.0477932,-0.0487328,0.0465968,-0.01394424,0.03027847,-0.02624198,-0.02869969,0.02420132,-0.10126752,-0.05413417,-0.04858912,0.11383318,-0.02839237,0.04211164,0.01080393,-0.02155243,-0.00451452,0.09131661,-0.02188322]', 2, 0);
-INSERT INTO public.detalles_proyectos VALUES (192, '2026-10-04', 'Maestria', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry". Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr. Pablo Viloria”, coordinación de investigación del programa nacional', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP', '2026-10-04 17:14:02.756345', NULL, NULL, 'Desarrollar un Sistema Integral de Gestión Documentos Académicos, basado en una arquitectura modular, para la automatización de la búsqueda híbrida de información y la centralización de recursos académicos en beneficio de la comunidad del PNF en Informática.', true, NULL, 1, 3);
-INSERT INTO public.detalles_proyectos VALUES (191, '2026-10-04', 'Especializacion', 'El presente proyecto tiene como finalidad el desarrollo de un Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales en la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry". Esta iniciativa surge de un diagnóstico situacional bajo el enfoque de Investigación Acción Participativa (IAP), el cual identificó deficiencias críticas en la recuperación manual de información y riesgos en la preservación del material institucional. Para abordar estas necesidades, el equipo desarrollador propone una solución basada en una arquitectura modular e interoperable con tecnologías de código abierto, gestionada bajo los marcos ágiles de desarrollo, Scrum y XP. El sistema integra un motor de búsqueda híbrido asistido por redes neuronales, optimizando drásticamente los tiempos de localización de material investigativo y garantizando la integridad de los datos mediante un esquema de seguridad RBAC. El proyecto busca transformar los procesos operativos, democratizar el acceso al conocimiento científico y fortalecer la soberanía tecnológica de la institución, estableciendo un modelo de gestión documental escalable para el territorio', 1, 'Universidad Politécnica Territorial del Estado Trujillo “Mario Briceño Iragorry” Núcleo “Dr. Pablo Viloria”, coordinación de investigación del programa nacional', 'Gestión documental, Inteligencia científica, Repositorio digital, Redes neuronales, PNFI, Soberanía tecnológica, Metodologías Ágiles, IAP', '2026-10-04 16:43:25.694943', NULL, NULL, 'Desarrollar un Sistema Integral de Gestión Documentos Académicos, basado en una arquitectura modular, para la automatización de la búsqueda híbrida de información y la centralización de recursos académicos en beneficio de la comunidad del PNF en Informática.', true, NULL, 1, 1);
-INSERT INTO public.detalles_proyectos VALUES (174, '2026-09-29', 'Pregrado', 'El proyecto tiene como propósito optimizar el Sistema de Información para el Control de Matrícula del Centro de Atención Integral para Personas con Autismo “CAIPA Trujillo”, versión 2.0, ubicado en Valera, estado Trujillo. La investigación surge de la necesidad de mejorar la organización, búsqueda y gestión de los datos de los estudiantes, así como de corregir y ampliar las funcionalidades del sistema anterior, versión 1.0, que presentaba limitaciones en registro, consulta, reportes y control administrativo. Metodológicamente se enmarca en la Investigación-Acción Participativa, con enfoque sociotecnológico, mixto y aplicado, apoyado en la metodología ágil Extreme Programming (XP). El desarrollo se realizó con PHP, MySQL, HTML5, CSS3 y JavaScript bajo arquitectura MVC, incorporando módulos para estudiantes, representantes, personal docente, administrativo y obrero, Programa de Alimentación (PMA), medicamentos, reportes PDF y configuraciones. Como resultado, se obtuvo una plataforma web más moderna, segura y eficiente, con mejoras en usabilidad, validación de datos, paginación, búsqueda y generación de fichas técnicas. Las pruebas de calidad evidenciaron avances significativos y algunas correcciones pendientes en seguridad y reportes. Se concluye que la versión 2.0 optimiza el control de matrícula, reduce tiempos de gestión y fortalece la atención educativa e inclusiva de la institución.', 1, 'CAIPA Trujillo  ------------------------------------------------Naturaleza de la Comunidad: El CAIPA-Trujillo, Valera Estado Trujillo.   ------Misión', 'Sistema de información; control de matrícula; CAIPA Trujillo; autismo; aplicación web; optimización; metodología XP; PHP; MySQL; gestión educativa; inclusión; versión 2.0.', '2026-09-28 21:42:57.240697', NULL, NULL, 'Optimizar el sistema de información para el control de matrícula en el Centro de Atención Integral para Personas con Autismo “CAIPA TRUJILLO”. Versión 2.0.', true, '[-0.00571938,-0.04953498,-0.08629598,-0.03289757,-0.00857773,0.01331615,0.0340633,0.0673716,0.00466962,0.00622307,0.07896866,0.00184984,0.02425908,-0.01172042,-0.10141608,-0.00115401,-0.0049325,0.04657307,0.04746393,0.02212997,0.00704064,-0.01345895,0.05930132,-0.00785187,-0.08411591,0.00377013,-0.02679438,-0.01209026,0.04223953,-0.01513314,0.02804249,-0.07099612,0.11996243,-0.00899651,-0.09397516,0.0221704,-0.00066489,0.00887241,-0.05378565,-0.02100728,0.01937815,0.00831379,0.05940856,-0.05772688,0.03339604,0.01176001,0.03781492,-0.064724,-0.01994626,0.03689111,-0.08532099,-0.0255634,0.09385125,-0.03324623,-0.0222529,-0.04444352,9.333e-05,0.01022027,0.05644946,0.0314625,7.468e-05,0.00106255,0.08859298,-0.03433161,0.09047997,0.05337419,-0.02796561,-0.05238823,0.0056684,0.0215728,-0.00044551,0.04670694,0.0107275,0.05599345,-0.02100387,-0.04463188,-0.03381386,0.00588751,0.06558095,-0.04650596,0.04220439,0.04966015,-0.02274641,0.04255185,-0.00435739,0.0137031,-0.06145321,0.04722067,0.08281094,0.0342236,0.11065346,0.0740088,-0.01341383,-0.06181883,-0.01560853,-0.0578822,0.00060124,-0.02579393,-0.07767881,-0.00855687,-0.00898326,-0.04535138,0.00735668,0.03222778,-0.03357212,-0.08637534,0.05348231,0.00121735,-0.00717231,0.0314735,-0.02399469,0.01363574,-0.04991063,-0.02764525,0.00573506,0.02424147,-0.01288731,-0.01161377,0.05498582,0.03681189,-0.0138873,-0.06476001,-0.02950376,0.01789088,0.09377522,-0.04927289,-0.09194385,3.99e-06,-0.11736023,-0.01136356,0.0152148,0.0229757,0.00231399,-0.0105601,0.00394581,-0.06307554,0.05064955,-0.03997666,-0.03488859,0.00361811,-0.01433616,0.06537167,0.06188987,-0.0933183,0.01794364,0.02010839,0.02356089,-0.06430411,0.04822711,-0.03493352,0.00670492,0.01445281,0.04588763,0.01537796,-0.00664511,0.0551279,0.03909714,-0.0173378,0.02433442,-0.02862783,-0.06950868,-0.07946335,0.05193304,0.01079338,0.08873138,0.04271125,0.0329218,0.0649589,0.03170525,0.02281773,0.06608517,-0.03628481,-0.06681011,0.00346268,0.03550848,0.01619648,0.04754113,-0.10937289,0.02599898,-0.00410057,-0.08695522,-0.10956401,0.03879749,-0.09613352,-0.03328491,-0.06731256,-0.0592998,0.02833684,0.09025098,-0.13088676,0.03010702,-0.05371609,-0.01889052,-0.05040227,0.0856666,-0.05573363,0.15620387,-0.06605231,-0.07093699,0.01698302,0.0538259,-0.01301183,-0.00977093,-0.01556077,-0.11831327,0.03835668,-0.04864451,-0.04475818,-0.01153108,0.04164984,-0.04021977,0.00396321,0.06925572,-0.01055529,-0.01178205,0.11468049,-0.09394042,-0.01615525,0.05020351,-0.02536015,-0.03927977,0.0731451,-0.06975819,1.215e-05,-0.05465505,-0.05967352,0.00096445,-0.03406359,-0.0670287,0.009873,0.00958149,-0.02543025,0.03380241,-0.02329899,0.10534568,-0.086515,0.01929958,-0.07141153,0.04782291,0.0964474,-0.06398734,0.03385748,-0.03585588,-0.10822495,-0.06142102,-0.01254814,-0.00266526,-0.00066308,-0.01702423,0.00354437,-0.02928314,0.10717884,0.01720584,0.06523662,-0.15759249,-0.06922216,-0.0521619,0.1015155,0.03038084,-0.04361576,-0.03497508,-0.0509458,-0.06351568,0.0142692,0.08771912,0.04565064,-0.0750096,0.0013928,0.00759145,0.00461482,0.01616449,-0.02505468,-0.06725287,0.03481713,0.08919677,-0.02461283,0.02086076,-0.02096503,-0.00145545,0.12178374,-0.01330136,-0.024907,-0.02048674,-0.00976774,0.01823783,-0.03794979,-0.09246417,-0.01792341,0.0158406,0.06565722,-0.04130036,0.08402846,0.04870977,-0.02249243,0.04108274,-0.03370638,0.02607358,-0.02474131,-0.07468238,-0.01013681,0.0132718,0.05557633,-0.02900584,-0.00750556,-0.04420931,0.03864752,0.04630006,-0.00655822,-0.02862646,0.08763933,0.02443904,0.01644355,0.03115325,-0.01450574,-0.04158004,-0.00256847,0.05959474,-0.02155176,-0.09413143,1.36e-06,-0.09395938,-0.08263872,-0.06830602,-0.02143807,0.03336084,0.07283034,-0.04946786,0.01201681,-0.06043468,0.07155154,0.00669965,-0.01420139,-0.03733902,-0.05242552,0.00811942,-0.02119204,0.03293835,0.07984334,0.02796077,-0.10446852,0.05037287,-0.01573247,-0.08762269,-0.02640065,-0.01020894,-0.00602242,-0.101962,0.01585417,-0.02058463,0.03558667,0.01698938,-0.08007022,-0.00957641,0.02414479,0.05338432,0.00871717,-0.05452191,-0.03793967,0.0168057,0.0743237,0.1182828,-0.02095809,-0.01523965,-0.00041343,-0.00747605,0.02743655,-0.03264136,-0.05622501,0.04877659,-0.01409431,0.04214726,0.00202711,4.695e-05,0.04953497,0.00554586,-0.07487353,-0.01011193,0.01072712,-0.09809485,0.10192835,0.03435662,0.06720309,-0.02903569,-0.02252585]', 1, 1);
 
 
 --
@@ -2613,6 +2515,17 @@ INSERT INTO public.investigaciones_ofertadas VALUES (2, 7, 'Requerimiento: Siste
 
 (Nivel Requerido: Trayecto I)', 'Dar respuesta y solución tecnológica a los requerimientos de Megacell', 7, 9, 3, 'Abierta', '2026-09-17 00:01:42.595736', 16);
 INSERT INTO public.investigaciones_ofertadas VALUES (4, 7, 'asdasdasdasdsadadasdsa', 'asdasdasdasd', 'asdasdadasdas', 10, NULL, 3, 'En Desarrollo', '2026-09-29 00:05:26.495721', NULL);
+
+
+--
+-- Data for Name: investigadores; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO public.investigadores VALUES (1, 'Ricardo José Dos Santos Guillén', '0000-0001-8752-8550', 'Ricardo José Dos Santos Guillén obtuvo el título en Ing. de Sistemas en 2006 y en MSc. en Computación en 2016, ambos en la Universidad de Los Andes-Venezuela. Actualmente es candidato a Dr. en Ciencias Aplicadas en Universidad de los Andes-Venezuela y profesor en la Universidad Politécnica Territorial del Estado Trujillo "Mario Briceño Iragorry", Trujillo-Venezuela. Es investigador en el Centro Estudios en Microelectrónica y Sistemas Distribuidos (CEMISID); y en Tepuy R+D Group, Artificial Intelligence Software Development. Su interés en investigación incluye inteligencia artificial, datos enlazados, big data, minería semántica, lógica dialéctica, analítica social, y ambientes inteligentes', 'https://ricardojdsg.github.io/');
+INSERT INTO public.investigadores VALUES (2, 'Jose Aguilar Castro', '0000-0003-4194-6882', 'Jose Aguilar Castro obtuvo el título en Ing. de Sistemas en 1987 de la Universidad de Los Andes-Venezuela, MSc. en Ciencias de la Computación en 1991 en la Universidad Paul Sabatier-Francia, y Dr. en Ciencias de la Computación en 1995 de la Universidad René Descartes-Francia. Fue investigador postdoctoral en el Departamento de Ciencias de la Computación de la Universidad de Houston (1999-2000) y en el Laboratoire d''Analyse et d''Architecture des Systèmes, CNRS, Francia (2010-2011), e investigador prometeo en Ecuador (2014-2017). Actualmente es profesor titular del Departamento de Ciencias de la Computación de la Universidad de Los Andes, Mérida, Venezuela, e investigador invitado en la Universidad EAFIT, Medellín, Colombia. Es investigador en el CEMISID; y en Tepuy R+D Group. Además, es miembro de la Academia de Mérida y del Comité Técnico de Redes Neuronales del IEEE. Ha publicado más de 550 artículos y libros, en el campo de sistemas paralelos y distribuidos, inteligencia computacional, etc. Su interés en investigación incluye Inteligencia Artificial, Minería Semántica, Big Data, Sistema Emergente y Entornos Inteligentes.', NULL);
+INSERT INTO public.investigadores VALUES (3, 'Taniana Rodríguez de Paredes', '0000-0002-0429-3141', 'Taniana Rodríguez de Paredes obtuvo el título de Ing. de Sistemas en 1993, MSc. en Computación en 2000 y Dr. en Ciencias Aplicadas en 2016, todos en la Universidad de Los Andes-Venezuela. Actualmente es profesora en el postgrado en Computación, de la Universidad de los Andes, Mérida-Venezuela. Es Investigadora en el CEMISID; y en Tepuy R+D Group. Su interés en investigación incluye Datos Enlazados, Aprendizaje de Ontologías, Minería Semántica y Procesamiento de Lenguaje Natural', NULL);
+INSERT INTO public.investigadores VALUES (4, 'Armando Bermeo Acosta', '0000-0003-1610-4712', 'Armando Bermeo Acosta graduated as a physicist in 1980, Universidad del Valle; with master''s degrees in physical sciences, 1984, Universidad del Valle; Postgraduate degree in environment in 1999 from the Santiago de Cali University, Doctorate in Engineering 2014, Universidad del Valle. Professor at the Santiago de Cali University since 1980 and linked to the Faculty of Basic Sciences at the same University. research areas coatings, plasma physics and currently dedicated to technological appropriation for the design and construction of deposition equipment with cathode arc techniques', NULL);
+INSERT INTO public.investigadores VALUES (5, 'Sandra Patricia Castro Narvaez', '0000-0002-2023-8935', 'Chemistry and Master of Science-Chemistry- from Universidad del Valle, a research professor with a background in the areas of analytical and instrumental chemistry. She makes contributions to the Research Group in Electrochemistry and Environment (GIEMA) in the lines of solution to environmental problems and study of new materials. In her academic-administrative journey she has contributed to the construction of high-relevance academic programs for the south of the west. Colombian stories such as a Master''s Degree in Industrial Chemistry, Microbiology, Pharmaceutical Chemistry and Veterinary Medicine. She has held management positions in the Chemistry and Dean''s program of the Faculty of Basic Sciences of the Universidad Santiago de Cali.', NULL);
 
 
 --
@@ -2694,6 +2607,7 @@ INSERT INTO public.notificaciones VALUES (6, 5, 'Actualización Moderada de Cuen
 --
 
 INSERT INTO public.password_resets VALUES (1, 'orlando5711666@gmail.com', '98ae6a718e630e4dffb2c144bbb36b095f55358c7299904798709c244db29659', '2026-09-17 00:03:43.94943', false, '2026-09-16 23:48:43.94943');
+INSERT INTO public.password_resets VALUES (2, 'cepillinin@gmail.com', '7a210bb3f5bb6026643ef613f1ebe06da23ffdb0c803ef26172d2682c31ff520', '2026-10-17 00:09:23.260398', false, '2026-10-16 23:54:23.260398');
 
 
 --
@@ -2757,6 +2671,8 @@ INSERT INTO public.proyecto_carreras_vinculadas VALUES (189, 5, '2026-10-04 14:2
 INSERT INTO public.proyecto_carreras_vinculadas VALUES (189, 2, '2026-10-04 14:23:02.803018');
 INSERT INTO public.proyecto_carreras_vinculadas VALUES (192, 4, '2026-10-04 17:14:02.756345');
 INSERT INTO public.proyecto_carreras_vinculadas VALUES (192, 2, '2026-10-04 17:14:02.756345');
+INSERT INTO public.proyecto_carreras_vinculadas VALUES (200, 3, '2026-10-10 00:02:06.119834');
+INSERT INTO public.proyecto_carreras_vinculadas VALUES (200, 4, '2026-10-10 00:02:06.119834');
 
 
 --
@@ -2772,6 +2688,7 @@ INSERT INTO public.proyecto_tutores VALUES (191, 28, 2);
 INSERT INTO public.proyecto_tutores VALUES (191, 10, 4);
 INSERT INTO public.proyecto_tutores VALUES (192, 28, 2);
 INSERT INTO public.proyecto_tutores VALUES (192, 10, 4);
+INSERT INTO public.proyecto_tutores VALUES (200, 10, 3);
 INSERT INTO public.proyecto_tutores VALUES (173, 28, 2);
 INSERT INTO public.proyecto_tutores VALUES (173, 10, 4);
 INSERT INTO public.proyecto_tutores VALUES (174, 17, 3);
@@ -2788,77 +2705,16 @@ INSERT INTO public.proyecto_tutores VALUES (177, 39, 4);
 -- Data for Name: recurso_autores; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.recurso_autores VALUES (3, 1);
-INSERT INTO public.recurso_autores VALUES (179, 120);
-INSERT INTO public.recurso_autores VALUES (186, 58);
-INSERT INTO public.recurso_autores VALUES (186, 59);
-INSERT INTO public.recurso_autores VALUES (186, 60);
-INSERT INTO public.recurso_autores VALUES (186, 61);
-INSERT INTO public.recurso_autores VALUES (189, 42);
-INSERT INTO public.recurso_autores VALUES (189, 43);
-INSERT INTO public.recurso_autores VALUES (189, 44);
-INSERT INTO public.recurso_autores VALUES (189, 45);
-INSERT INTO public.recurso_autores VALUES (191, 42);
-INSERT INTO public.recurso_autores VALUES (191, 43);
-INSERT INTO public.recurso_autores VALUES (191, 44);
-INSERT INTO public.recurso_autores VALUES (191, 45);
-INSERT INTO public.recurso_autores VALUES (192, 42);
-INSERT INTO public.recurso_autores VALUES (192, 43);
-INSERT INTO public.recurso_autores VALUES (192, 44);
-INSERT INTO public.recurso_autores VALUES (192, 45);
-INSERT INTO public.recurso_autores VALUES (144, 92);
-INSERT INTO public.recurso_autores VALUES (144, 96);
-INSERT INTO public.recurso_autores VALUES (144, 97);
-INSERT INTO public.recurso_autores VALUES (144, 102);
-INSERT INTO public.recurso_autores VALUES (146, 103);
-INSERT INTO public.recurso_autores VALUES (146, 104);
-INSERT INTO public.recurso_autores VALUES (146, 105);
-INSERT INTO public.recurso_autores VALUES (122, 57);
-INSERT INTO public.recurso_autores VALUES (122, 58);
-INSERT INTO public.recurso_autores VALUES (122, 59);
-INSERT INTO public.recurso_autores VALUES (122, 60);
-INSERT INTO public.recurso_autores VALUES (121, 53);
-INSERT INTO public.recurso_autores VALUES (121, 54);
-INSERT INTO public.recurso_autores VALUES (121, 55);
-INSERT INTO public.recurso_autores VALUES (121, 56);
-INSERT INTO public.recurso_autores VALUES (120, 49);
-INSERT INTO public.recurso_autores VALUES (120, 50);
-INSERT INTO public.recurso_autores VALUES (120, 51);
-INSERT INTO public.recurso_autores VALUES (120, 52);
-INSERT INTO public.recurso_autores VALUES (119, 47);
-INSERT INTO public.recurso_autores VALUES (119, 48);
-INSERT INTO public.recurso_autores VALUES (118, 44);
-INSERT INTO public.recurso_autores VALUES (143, 13);
-INSERT INTO public.recurso_autores VALUES (150, 13);
-INSERT INTO public.recurso_autores VALUES (151, 31);
-INSERT INTO public.recurso_autores VALUES (156, 82);
-INSERT INTO public.recurso_autores VALUES (173, 42);
-INSERT INTO public.recurso_autores VALUES (173, 43);
-INSERT INTO public.recurso_autores VALUES (173, 44);
-INSERT INTO public.recurso_autores VALUES (173, 45);
-INSERT INTO public.recurso_autores VALUES (174, 58);
-INSERT INTO public.recurso_autores VALUES (174, 59);
-INSERT INTO public.recurso_autores VALUES (174, 60);
-INSERT INTO public.recurso_autores VALUES (174, 61);
-INSERT INTO public.recurso_autores VALUES (175, 34);
-INSERT INTO public.recurso_autores VALUES (175, 71);
-INSERT INTO public.recurso_autores VALUES (175, 72);
-INSERT INTO public.recurso_autores VALUES (175, 73);
-INSERT INTO public.recurso_autores VALUES (176, 52);
-INSERT INTO public.recurso_autores VALUES (176, 53);
-INSERT INTO public.recurso_autores VALUES (177, 46);
-INSERT INTO public.recurso_autores VALUES (178, 119);
-INSERT INTO public.recurso_autores VALUES (180, 121);
+INSERT INTO public.recurso_autores VALUES (200, 2);
+INSERT INTO public.recurso_autores VALUES (200, 3);
+INSERT INTO public.recurso_autores VALUES (200, 4);
+INSERT INTO public.recurso_autores VALUES (200, 5);
 
 
 --
 -- Data for Name: recurso_categorias; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.recurso_categorias VALUES (122, 6);
-INSERT INTO public.recurso_categorias VALUES (122, 5);
-INSERT INTO public.recurso_categorias VALUES (122, 7);
-INSERT INTO public.recurso_categorias VALUES (122, 1);
 INSERT INTO public.recurso_categorias VALUES (121, 18);
 INSERT INTO public.recurso_categorias VALUES (121, 5);
 INSERT INTO public.recurso_categorias VALUES (121, 7);
@@ -2869,15 +2725,18 @@ INSERT INTO public.recurso_categorias VALUES (119, 7);
 INSERT INTO public.recurso_categorias VALUES (119, 1);
 INSERT INTO public.recurso_categorias VALUES (118, 7);
 INSERT INTO public.recurso_categorias VALUES (118, 4);
-INSERT INTO public.recurso_categorias VALUES (143, 3);
-INSERT INTO public.recurso_categorias VALUES (143, 13);
+INSERT INTO public.recurso_categorias VALUES (201, 3);
+INSERT INTO public.recurso_categorias VALUES (201, 18);
+INSERT INTO public.recurso_categorias VALUES (146, 3);
 INSERT INTO public.recurso_categorias VALUES (144, 3);
 INSERT INTO public.recurso_categorias VALUES (144, 13);
 INSERT INTO public.recurso_categorias VALUES (144, 1);
-INSERT INTO public.recurso_categorias VALUES (146, 3);
-INSERT INTO public.recurso_categorias VALUES (150, 14);
-INSERT INTO public.recurso_categorias VALUES (151, 3);
-INSERT INTO public.recurso_categorias VALUES (156, 3);
+INSERT INTO public.recurso_categorias VALUES (143, 3);
+INSERT INTO public.recurso_categorias VALUES (143, 13);
+INSERT INTO public.recurso_categorias VALUES (122, 6);
+INSERT INTO public.recurso_categorias VALUES (122, 5);
+INSERT INTO public.recurso_categorias VALUES (122, 7);
+INSERT INTO public.recurso_categorias VALUES (122, 1);
 
 
 --
@@ -2889,6 +2748,7 @@ INSERT INTO public.recurso_clasificaciones VALUES (186, 7, 9);
 INSERT INTO public.recurso_clasificaciones VALUES (189, 9, 22);
 INSERT INTO public.recurso_clasificaciones VALUES (191, 10, 18);
 INSERT INTO public.recurso_clasificaciones VALUES (192, 10, 18);
+INSERT INTO public.recurso_clasificaciones VALUES (200, 7, 5);
 INSERT INTO public.recurso_clasificaciones VALUES (173, 7, 7);
 INSERT INTO public.recurso_clasificaciones VALUES (174, 7, 7);
 INSERT INTO public.recurso_clasificaciones VALUES (175, 7, 7);
@@ -2902,21 +2762,35 @@ INSERT INTO public.recurso_clasificaciones VALUES (180, 9, 16);
 -- Data for Name: recurso_etiquetas; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.recurso_etiquetas VALUES (143, 10);
-INSERT INTO public.recurso_etiquetas VALUES (143, 1);
-INSERT INTO public.recurso_etiquetas VALUES (122, 1);
-INSERT INTO public.recurso_etiquetas VALUES (122, 4);
 INSERT INTO public.recurso_etiquetas VALUES (121, 10);
 INSERT INTO public.recurso_etiquetas VALUES (120, 8);
 INSERT INTO public.recurso_etiquetas VALUES (119, 3);
 INSERT INTO public.recurso_etiquetas VALUES (119, 1);
 INSERT INTO public.recurso_etiquetas VALUES (118, 1);
+INSERT INTO public.recurso_etiquetas VALUES (201, 8);
+INSERT INTO public.recurso_etiquetas VALUES (146, 10);
 INSERT INTO public.recurso_etiquetas VALUES (144, 3);
 INSERT INTO public.recurso_etiquetas VALUES (144, 1);
-INSERT INTO public.recurso_etiquetas VALUES (146, 10);
-INSERT INTO public.recurso_etiquetas VALUES (150, 5);
-INSERT INTO public.recurso_etiquetas VALUES (151, 3);
-INSERT INTO public.recurso_etiquetas VALUES (156, 1);
+INSERT INTO public.recurso_etiquetas VALUES (143, 10);
+INSERT INTO public.recurso_etiquetas VALUES (143, 1);
+INSERT INTO public.recurso_etiquetas VALUES (122, 1);
+INSERT INTO public.recurso_etiquetas VALUES (122, 4);
+
+
+--
+-- Data for Name: recurso_investigadores; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO public.recurso_investigadores VALUES (118, 1);
+INSERT INTO public.recurso_investigadores VALUES (118, 2);
+INSERT INTO public.recurso_investigadores VALUES (118, 3);
+INSERT INTO public.recurso_investigadores VALUES (201, 4);
+INSERT INTO public.recurso_investigadores VALUES (201, 5);
+INSERT INTO public.recurso_investigadores VALUES (201, 1);
+INSERT INTO public.recurso_investigadores VALUES (146, 1);
+INSERT INTO public.recurso_investigadores VALUES (144, 1);
+INSERT INTO public.recurso_investigadores VALUES (143, 1);
+INSERT INTO public.recurso_investigadores VALUES (122, 1);
 
 
 --
@@ -2936,17 +2810,10 @@ INSERT INTO public.recursos VALUES (14, 'Telecomunicaciones de Fibra Óptica Rur
 INSERT INTO public.recursos VALUES (16, 'Criptografía Cuántica Post-RSA - Parte 7', 3, 2026, 'dummy.pdf');
 INSERT INTO public.recursos VALUES (20, 'Inteligencia Artificial en Diagnóstico Médico - Parte 1', 3, 2020, 'dummy.pdf');
 INSERT INTO public.recursos VALUES (191, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Cien2222tífico Investigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1791146605_845.docx');
-INSERT INTO public.recursos VALUES (122, 'Revisión sistemática del impacto de las fibras de polipropileno en las propiedades físico-mecánicas, microestructurales y de durabilidad del Concreto', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/121649/97474');
+INSERT INTO public.recursos VALUES (200, 'Sistema Inteligente de Redes Neuronales para la Gestión Integral de la Coordinación PNF dassadasdasdasdassadassadasasdasdasdase Contaduría Pública UPTT Mario Briceño Iragorry', 1, 2026, 'storage/documentos/pst/pst_sistema_inteligente_de_redes_n_1791604849_856.docx');
 INSERT INTO public.recursos VALUES (121, 'Modelo matemático para el balance de calor de un techo verde en condiciones de trópico húmedo', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/123977/97473');
 INSERT INTO public.recursos VALUES (120, 'Determinantes de la aceptación del uso de la banca móvil por parte de ganaderos', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/121522/97457');
 INSERT INTO public.recursos VALUES (119, 'Entorno virtual de capacitación con EOG para manipular robots asistenciales', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/124310/98135');
-INSERT INTO public.recursos VALUES (118, 'Middleware MiSCi para ciudades inteligentes extendido con datos enlazados', 3, 2020, 'https://revistas.unal.edu.co/index.php/dyna/article/view/83226');
-INSERT INTO public.recursos VALUES (143, 'Investigación y modelado de pérdidas por corriente circulante en sistemas de puesta a tierra de torres de alta tensión', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/124890/98825');
-INSERT INTO public.recursos VALUES (146, 'Modelamiento de confort adaptativo para un trapiche panelero', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/112625/91645');
-INSERT INTO public.recursos VALUES (144, 'Propuesta de un modelo de implementación basado en aprendizaje automático para el reclutamiento de profesionales de ingeniería en una universidad pública', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/124428/98826');
-INSERT INTO public.recursos VALUES (150, 'e', 3, 2026, 'https://www.youtube.com/');
-INSERT INTO public.recursos VALUES (151, 'e', 3, 2026, 'https://www.wikipedia.org/');
-INSERT INTO public.recursos VALUES (156, 'e', 3, 2026, 'https://www.wikipedia.org/');
 INSERT INTO public.recursos VALUES (179, 'CONFIGURACION E IMPLEMENTACION DE SERVIDORES INTERNET Y DISEÑO DE PAGINA WEB PARA LA EMPRESA DE TELECOMUNICACIONES DE NARIÑO TELENARIÑO', 1, 2026, 'storage/documentos/pst/pst_configuracion_e_implementacion_1790648366_353.pdf');
 INSERT INTO public.recursos VALUES (173, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1790646177_290.docx');
 INSERT INTO public.recursos VALUES (174, 'OPTIMIZACIÓN DEL SISTEMA DE INFORMACION PARA EL CONTROL DE MATRICULA EN EL CENTRO DE ATENCIÓN INTEGRAL PARA PERSONAS CON AUTISMO “CAIPA TRUJILLO” VERSIÓN 2.0', 1, 2026, 'storage/documentos/pst/pst_optimizaci__n_del_sistema_de_i_1790646177_402.docx');
@@ -2957,6 +2824,12 @@ INSERT INTO public.recursos VALUES (178, 'DISEÑO Y PROTOTIPO DE UNA APLICACIÓN
 INSERT INTO public.recursos VALUES (180, 'Aplicación web cliente-servidor para el control de inventario que indique el porcentaje de consumo de acuerdo al semáforo nutricional en la tienda ''Tuti'' del Cantón Vinces', 1, 2025, 'storage/documentos/pst/pst_aplicaci__n_web_cliente_servid_1790648366_463.pdf');
 INSERT INTO public.recursos VALUES (189, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Isadasdasdnvestigador del PNF en Informática apoyado en Redes Neuronales', 1, 2025, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1791138182_671.docx');
 INSERT INTO public.recursos VALUES (192, 'Sistema Integral de Gestión de Documentos Académicos para el Comité Científico Investigador del P32323232NF en Informática apoyado en Redes Neuronales', 1, 2026, 'storage/documentos/pst/pst_sistema_integral_de_gesti__n_d_1791148442_219.docx');
+INSERT INTO public.recursos VALUES (118, 'Middleware MiSCi para ciudades inteligentes extendido con datos enlazados', 3, 2020, 'https://revistas.unal.edu.co/index.php/dyna/article/view/83226');
+INSERT INTO public.recursos VALUES (201, 'Distribución de perfiles y macropartículas en recubrimientos obtenidos por arco catódico continúo utilizando un concentrador magnético recto', 3, 2026, 'https://doi.org/10.15446/dyna.v87n214.83929');
+INSERT INTO public.recursos VALUES (146, 'Modelamiento de confort adaptativo para un trapiche panelero', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/112625/91645');
+INSERT INTO public.recursos VALUES (144, 'Propuesta de un modelo de implementación basado en aprendizaje automático para el reclutamiento de profesionales de ingeniería en una universidad pública', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/124428/98826');
+INSERT INTO public.recursos VALUES (143, 'Investigación y modelado de pérdidas por corriente circulante en sistemas de puesta a tierra de torres de alta tensión', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/124890/98825');
+INSERT INTO public.recursos VALUES (122, 'Revisión sistemática del impacto de las fibras de polipropileno en las propiedades físico-mecánicas, microestructurales y de durabilidad del Concreto', 3, 2026, 'https://revistas.unal.edu.co/index.php/dyna/article/view/121649/97474');
 
 
 --
@@ -2966,7 +2839,9 @@ INSERT INTO public.recursos VALUES (192, 'Sistema Integral de Gestión de Docume
 INSERT INTO public.registro_actividad VALUES (1, 1, NULL, '2026-03-23 14:49:58', '2026-03-23 14:49:58', 1);
 INSERT INTO public.registro_actividad VALUES (3, 12, NULL, '2026-09-19 14:19:44.068925', '2026-09-19 14:20:25.834661', 2);
 INSERT INTO public.registro_actividad VALUES (4, 17, NULL, '2026-09-19 14:57:43.371674', '2026-09-19 14:58:00.847148', 2);
-INSERT INTO public.registro_actividad VALUES (2, 7, NULL, '2026-09-19 13:23:18.589777', '2026-10-05 14:27:50.185674', 52);
+INSERT INTO public.registro_actividad VALUES (5, 14, NULL, '2026-10-12 14:35:51.862914', '2026-10-15 22:49:13.185059', 3);
+INSERT INTO public.registro_actividad VALUES (6, 22, NULL, '2026-10-15 22:01:05.388022', '2026-10-15 22:52:12.025006', 2);
+INSERT INTO public.registro_actividad VALUES (2, 7, NULL, '2026-09-19 13:23:18.589777', '2026-10-16 23:58:18.16393', 64);
 
 
 --
@@ -3187,13 +3062,104 @@ INSERT INTO public.system_audit_log VALUES ('log_6ac2ec69a91fc5.76197883', '2026
 INSERT INTO public.system_audit_log VALUES ('log_6ac2ec6a953041.71829326', '2026-10-04 20:16:42', 'WARNING', 'SuperAdmin', 'Alternar Estado Módulo', 'Módulo LineasInvestigacion cambiado a estado: offline', 'Miguel González (ID: 7)', '::1', '371991b3f8bc2b0c3c2203924ae467d29338c4f934c30373591716552a4cdfb9', '916178f3021cd79d72b35126d7658a599465884928b856cf10697c6d7e62e768');
 INSERT INTO public.system_audit_log VALUES ('log_6ac2ec6d032786.51154961', '2026-10-04 20:16:45', 'WARNING', 'SuperAdmin', 'Alternar Estado Módulo', 'Módulo VinculacionEmpresarial cambiado a estado: offline', 'Miguel González (ID: 7)', '::1', '916178f3021cd79d72b35126d7658a599465884928b856cf10697c6d7e62e768', 'e2e5964dbd71bda9544c525c416f0bfd9d117fb372b5182418a6b241c5f2c4d1');
 INSERT INTO public.system_audit_log VALUES ('log_6ac3ec262fd721.24836059', '2026-10-05 14:27:50', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '::1', 'e2e5964dbd71bda9544c525c416f0bfd9d117fb372b5182418a6b241c5f2c4d1', '1981741c5823b2a930ff831d43ff72ee0dd802037b433b57e897a53fab67a665');
+INSERT INTO public.system_audit_log VALUES ('log_6ac3ec91266b08.85328438', '2026-10-05 14:29:37', 'INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo backup_ciidi_2026-10-05_14-29-36.sql generado exitosamente. Respaldos antiguos purgados: 0', 'Miguel González (ID: 7)', '::1', '1981741c5823b2a930ff831d43ff72ee0dd802037b433b57e897a53fab67a665', '3f952f8bc0c0055ff7f1b1a1f2b45d10dbd4163ab50f0897e4844c6190f8ed9d');
+INSERT INTO public.system_audit_log VALUES ('log_6ac3ec98497d76.34827531', '2026-10-05 14:29:44', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: backup_ciidi_2026-09-29_01-11-30.sql', 'Miguel González (ID: 7)', '::1', '3f952f8bc0c0055ff7f1b1a1f2b45d10dbd4163ab50f0897e4844c6190f8ed9d', 'f908ebf223ee2abcb7032793a1d55545ef46e0af6b8e811022828966edaff02e');
+INSERT INTO public.system_audit_log VALUES ('log_6ac3ec9b89cf17.09967153', '2026-10-05 14:29:47', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: backup_ciidi_2026-09-30_20-01-53.sql.gz', 'Miguel González (ID: 7)', '::1', 'f908ebf223ee2abcb7032793a1d55545ef46e0af6b8e811022828966edaff02e', 'e158d63bc615676ba7d3f81e618fb4fc76f38733455f23231616f794d178b070');
+INSERT INTO public.system_audit_log VALUES ('log_6ac3ec9e2cf8c9.43547874', '2026-10-05 14:29:50', 'WARNING', 'SuperAdmin', 'Eliminar Backup', 'Respaldo eliminado: pre_restore_checkpoint_2026-10-04_23-56-43.sql.gz', 'Miguel González (ID: 7)', '::1', 'e158d63bc615676ba7d3f81e618fb4fc76f38733455f23231616f794d178b070', '2f451489bf847d8ced60912f42a6072d58390d2affb03b022af3ab3c4effc8f9');
+INSERT INTO public.system_audit_log VALUES ('log_6ac504fd9fcd12.90258639', '2026-10-06 10:26:05', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '::1', '2f451489bf847d8ced60912f42a6072d58390d2affb03b022af3ab3c4effc8f9', '1f9dd73ecbb26cc6a6a47728aa1cb7bc924da7a2308951690ed04203db8ce514');
+INSERT INTO public.system_audit_log VALUES ('log_6ac50b5f9de507.56076043', '2026-10-06 10:53:19', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '::1', '1f9dd73ecbb26cc6a6a47728aa1cb7bc924da7a2308951690ed04203db8ce514', '720a88401ea0dbedcfd613e884e9d3a0ac0a1d19b66c5556e5aabf775f5511c8');
+INSERT INTO public.system_audit_log VALUES ('log_6ac50b75478373.62861792', '2026-10-06 10:53:41', 'INFO', 'Autenticacion', 'Cierre de Sesión', 'El usuario ''Miguel González'' (ID: 7) cerró su sesión voluntariamente.', 'Miguel González (ID: 7)', '::1', '720a88401ea0dbedcfd613e884e9d3a0ac0a1d19b66c5556e5aabf775f5511c8', '377a5e9353503df135791b1b62dfd2b0c113385c7d3889a8695ed99d0d31c1dd');
+INSERT INTO public.system_audit_log VALUES ('log_6ac979343affe0.38714832', '2026-10-09 19:31:00', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '::1', '377a5e9353503df135791b1b62dfd2b0c113385c7d3889a8695ed99d0d31c1dd', '92d48746a48ff531888a0e2d4d9f48fcb8ae034fae23a70eb765525670cc59d9');
+INSERT INTO public.system_audit_log VALUES ('log_6ac9798708df24.32604951', '2026-10-09 19:32:23', 'INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo pre_restore_checkpoint_2026-10-09_19-32-20.sql.gz generado exitosamente. Respaldos antiguos purgados: 0', 'Miguel González (ID: 7)', '::1', '92d48746a48ff531888a0e2d4d9f48fcb8ae034fae23a70eb765525670cc59d9', '8e95f5a92d4c11e96495d244d0fd338d8d9bd5228c1fff641a681cb23feb7bf0');
+INSERT INTO public.system_audit_log VALUES ('log_6ac97987a9aad7.31544594', '2026-10-09 19:32:23', 'WARNING', 'SuperAdmin', 'Restaurar BD', 'Base de datos restaurada exitosamente.', 'Miguel González (ID: 7)', '::1', '8e95f5a92d4c11e96495d244d0fd338d8d9bd5228c1fff641a681cb23feb7bf0', 'd9d80a66d4988e1bc0bd1a85b7ee5d60e564bd137d94e83fa7b8e28ab25f15a7');
+INSERT INTO public.system_audit_log VALUES ('log_6ac9ab70a28e01.20857263', '2026-10-09 23:05:20', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '::1', 'd9d80a66d4988e1bc0bd1a85b7ee5d60e564bd137d94e83fa7b8e28ab25f15a7', '9f9850a848e35e5e98d1671e0530cebf0d2bd66bd9fe6cf217d732f3c88c6a74');
+INSERT INTO public.system_audit_log VALUES ('log_6ac9b5f79df500.53282447', '2026-10-09 23:50:15', 'INFO', 'RepositorioPST', 'Actualizar Configuración', 'Se actualizaron los parámetros operativos del repositorio PST (límites de archivos, paginación, citas y filtros).', 'Miguel González (ID: 7)', '::1', '9f9850a848e35e5e98d1671e0530cebf0d2bd66bd9fe6cf217d732f3c88c6a74', 'c43a9049de3391783c54b1054d7df77d64d8a8dcd058af0c559ec47a294e862a');
+INSERT INTO public.system_audit_log VALUES ('log_6ac9b64962d632.68641383', '2026-10-09 23:51:37', 'WARNING', 'RepositorioPST', 'Fallo en Extracción Masiva', 'Error al intentar guardar el PST ''SISTEMA INTELIGENTE PARA LA GESTIÓN ACADÉMICA Y ADMINISTRATIVA EN LA ESCUELA NACIONAL “ANTONIO PÉREZ CARMONA”, ESCUQUE, ESTADO TRUJILLO'': SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «cedula»
+LINE 1: SELECT id FROM public.autores WHERE LOWER(TRIM(cedula)) IN (...
+                                                       ^', 'Miguel González (ID: 7)', '::1', 'c43a9049de3391783c54b1054d7df77d64d8a8dcd058af0c559ec47a294e862a', 'e67be910dcb20debf3341a48f440c928383d7fa260e31cc25a2d1646fe987814');
+INSERT INTO public.system_audit_log VALUES ('log_6ac9b64a16e1a9.75282571', '2026-10-09 23:51:38', 'WARNING', 'RepositorioPST', 'Fallo en Extracción Masiva', 'Error al intentar guardar el PST ''SOPORTE TÉCNICO A EQUIPOS DE COMPUTACIÓN Y USUARIOS EN LA ESCUELA TÉCNICA COMERCIAL “MADRE RAFOLS”'': SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «cedula»
+LINE 1: SELECT id FROM public.autores WHERE LOWER(TRIM(cedula)) IN (...
+                                                       ^', 'Miguel González (ID: 7)', '::1', 'e67be910dcb20debf3341a48f440c928383d7fa260e31cc25a2d1646fe987814', '1992d74b0025260870e358a8bd40477362a8bfd1d4376190dd0fa52311d973a2');
+INSERT INTO public.system_audit_log VALUES ('log_6ac9b64a320d37.17914146', '2026-10-09 23:51:38', 'WARNING', 'RepositorioPST', 'Fallo en Extracción Masiva', 'Error al intentar guardar el PST ''Sistema Inteligente de Redes Neuronales para la Gestión Integral de la Coordinación PNF de Contaduría Pública UPTT Mario Briceño Iragorry'': SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «cedula»
+LINE 1: SELECT id FROM public.autores WHERE LOWER(TRIM(cedula)) IN (...
+                                                       ^', 'Miguel González (ID: 7)', '::1', '1992d74b0025260870e358a8bd40477362a8bfd1d4376190dd0fa52311d973a2', '41bd184276a823a92447a856e59a19f9a9375363e923e1a067e3db2fcc25386f');
+INSERT INTO public.system_audit_log VALUES ('log_6ac9b660c4ce27.59338818', '2026-10-09 23:52:00', 'WARNING', 'SuperAdmin', 'Modificar Variables Globales', 'Se actualizaron las variables de entorno del sistema.', 'Miguel González (ID: 7)', '::1', '41bd184276a823a92447a856e59a19f9a9375363e923e1a067e3db2fcc25386f', '727ee25f9eb555cdd84ba8b5970462621de7bda3ca7847e91c0423dea1ff1f4f');
+INSERT INTO public.system_audit_log VALUES ('log_6ac9b67ccf2045.72642442', '2026-10-09 23:52:28', 'WARNING', 'RepositorioPST', 'Fallo en Extracción Masiva', 'Error al intentar guardar el PST ''SISTEMA INTELIGENTE PARA LA GESTIÓN ACADÉMICA Y ADMINISTRATIVA EN LA ESCUELA NACIONAL “ANTONIO PÉREZ CARMONA”, ESCUQUE, ESTADO TRUJILLO'': SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «cedula»
+LINE 1: SELECT id FROM public.autores WHERE LOWER(TRIM(cedula)) IN (...
+                                                       ^', 'Miguel González (ID: 7)', '::1', '727ee25f9eb555cdd84ba8b5970462621de7bda3ca7847e91c0423dea1ff1f4f', '35892454cad819007e3000b92d91c6a94ec1cc50c05946020d243e8e4276845a');
+INSERT INTO public.system_audit_log VALUES ('log_6ac9b67d6c94f2.58970066', '2026-10-09 23:52:29', 'WARNING', 'RepositorioPST', 'Fallo en Extracción Masiva', 'Error al intentar guardar el PST ''SOPORTE TÉCNICO A EQUIPOS DE COMPUTACIÓN Y USUARIOS EN LA ESCUELA TÉCNICA COMERCIAL “MADRE RAFOLS”'': SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «cedula»
+LINE 1: SELECT id FROM public.autores WHERE LOWER(TRIM(cedula)) IN (...
+                                                       ^', 'Miguel González (ID: 7)', '::1', '35892454cad819007e3000b92d91c6a94ec1cc50c05946020d243e8e4276845a', '2719ec60c88cad17696f5092e23cfc81fb7edf9bf9cd9b4d7d40dade86eec5db');
+INSERT INTO public.system_audit_log VALUES ('log_6ac9b67da24f28.27563813', '2026-10-09 23:52:29', 'WARNING', 'RepositorioPST', 'Fallo en Extracción Masiva', 'Error al intentar guardar el PST ''Sistema Inteligente de Redes Neuronales para la Gestión Integral de la Coordinación PNF de Contaduría Pública UPTT Mario Briceño Iragorry'': SQLSTATE[42703]: Undefined column: 7 ERROR:  no existe la columna «cedula»
+LINE 1: SELECT id FROM public.autores WHERE LOWER(TRIM(cedula)) IN (...
+                                                       ^', 'Miguel González (ID: 7)', '::1', '2719ec60c88cad17696f5092e23cfc81fb7edf9bf9cd9b4d7d40dade86eec5db', 'fa0644f33eb5d0a430dbb84fafbbae73cbcf48feebfa79650e1599eb97758ccf');
+INSERT INTO public.system_audit_log VALUES ('log_6ac9b8454b22d9.58265842', '2026-10-10 00:00:05', 'INFO', 'SuperAdmin', 'Crear Backup', 'Respaldo pre_restore_checkpoint_2026-10-10_00-00-04.sql.gz generado exitosamente. Respaldos antiguos purgados: 0', 'Miguel González (ID: 7)', '::1', 'fa0644f33eb5d0a430dbb84fafbbae73cbcf48feebfa79650e1599eb97758ccf', 'dcf6556150e89f8a03051a0af0c56a8eedb1652ae36b33b6fc30c6ae86ad3822');
+INSERT INTO public.system_audit_log VALUES ('log_6ac9b845994c68.35650090', '2026-10-10 00:00:05', 'WARNING', 'SuperAdmin', 'Restaurar BD', 'Base de datos restaurada exitosamente.', 'Miguel González (ID: 7)', '::1', 'dcf6556150e89f8a03051a0af0c56a8eedb1652ae36b33b6fc30c6ae86ad3822', '6c2e6bae64273d5396dde10b2595420312ee3df6a8a8f46b04c387a45102e3d1');
+INSERT INTO public.system_audit_log VALUES ('log_6ac9b8713fddd7.55190235', '2026-10-10 00:00:49', 'INFO', 'RepositorioPST', 'Registrar Proyecto', 'Proyecto PST registrado exitosamente: ''Sistema Inteligente de Redes Neuronales para la Gestión Integral de la Coordinación PNF dasdasdase Contaduría Pública UPTT Mario Briceño Iragorry'' (ID: #200).', 'Miguel González (ID: 7)', '::1', '6c2e6bae64273d5396dde10b2595420312ee3df6a8a8f46b04c387a45102e3d1', '899a8ae2aa89780a17aed2098c6e4e47c705322daddbe1e689f986161defa10f');
+INSERT INTO public.system_audit_log VALUES ('log_6ac9b8be20ffb7.45647653', '2026-10-10 00:02:06', 'INFO', 'RepositorioPST', 'Modificar Proyecto', 'Proyecto PST ID #200 modificado exitosamente: ''Sistema Inteligente de Redes Neuronales para la Gestión Integral de la Coordinación PNF dassadasdasdasdassadassadasasdasdasdase Contaduría Pública UPTT Mario Briceño Iragorry''.', 'Miguel González (ID: 7)', '::1', '899a8ae2aa89780a17aed2098c6e4e47c705322daddbe1e689f986161defa10f', 'e561144bccb40e329f768747d4e910f104f5a0ab6604bf432472da6fc9c15da9');
+INSERT INTO public.system_audit_log VALUES ('log_6acd0dab519cb8.24562207', '2026-10-12 12:41:15', 'WARNING', 'SuperAdmin', 'Restaurar BD', 'Base de datos restaurada exitosamente.', 'Miguel González (ID: 7)', '::1', 'e561144bccb40e329f768747d4e910f104f5a0ab6604bf432472da6fc9c15da9', '9b4f7e04b1a22e06d47b61a71459012a0366851cef1cfe0235d2ed026a40af0d');
+INSERT INTO public.system_audit_log VALUES ('log_6acd1e4fb298e6.80953179', '2026-10-12 13:52:15', 'INFO', 'Articulos', 'Actualizar Artículo', 'Artículo ID #118 actualizado: ''Middleware MiSCi para ciudades inteligentes extendido con datos enlazados''.', 'Miguel González (ID: 7)', '::1', '9b4f7e04b1a22e06d47b61a71459012a0366851cef1cfe0235d2ed026a40af0d', 'e32e69d35e38c697ea1ddb895fe238ce3c7f2b4e637412dca81064c245c9d861');
+INSERT INTO public.system_audit_log VALUES ('log_6acd288368cb90.30257089', '2026-10-12 14:35:47', 'INFO', 'Autenticacion', 'Cierre de Sesión', 'El usuario ''Miguel González'' (ID: 7) cerró su sesión voluntariamente.', 'Miguel González (ID: 7)', '::1', 'e32e69d35e38c697ea1ddb895fe238ce3c7f2b4e637412dca81064c245c9d861', 'c5a9085efd33c219de148a5848607df146f7d7ffd9c24a73f905b05631ed7198');
+INSERT INTO public.system_audit_log VALUES ('log_6acd2887d2fc81.78915986', '2026-10-12 14:35:51', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Sixsevenaldo González'' (C.I: V-67, Rol: Estudiantes).', 'Sixsevenaldo González (ID: 14)', '::1', 'c5a9085efd33c219de148a5848607df146f7d7ffd9c24a73f905b05631ed7198', 'b43187633c84f03ed1bbc3d2866ffcd6dd6055d89caaa7d6c3f631cb96604e2b');
+INSERT INTO public.system_audit_log VALUES ('log_6acd2892cd4be7.07104382', '2026-10-12 14:36:02', 'INFO', 'Autenticacion', 'Cierre de Sesión', 'El usuario ''Sixsevenaldo González'' (ID: 14) cerró su sesión voluntariamente.', 'Sixsevenaldo González (ID: 14)', '::1', 'b43187633c84f03ed1bbc3d2866ffcd6dd6055d89caaa7d6c3f631cb96604e2b', 'bb6b167c08af4f56220be880d76825616a924f7ec6de7ebcb495e0bfd3ad2b3d');
+INSERT INTO public.system_audit_log VALUES ('log_6acd2898043ea4.18790502', '2026-10-12 14:36:08', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '::1', 'bb6b167c08af4f56220be880d76825616a924f7ec6de7ebcb495e0bfd3ad2b3d', 'cfda77a8553effe8970ccdec8eeb3988eece94f7f9b8419fb02078523ab74fad');
+INSERT INTO public.system_audit_log VALUES ('log_6acd2a07945625.56814487', '2026-10-12 14:42:15', 'INFO', 'Autenticacion', 'Cierre de Sesión', 'El usuario ''Miguel González'' (ID: 7) cerró su sesión voluntariamente.', 'Miguel González (ID: 7)', '::1', 'cfda77a8553effe8970ccdec8eeb3988eece94f7f9b8419fb02078523ab74fad', 'b480df9dcac78726135c972d6d9c1281eb01e715d59569f31c30433614d5941f');
+INSERT INTO public.system_audit_log VALUES ('log_6acd2a19d044d7.63042038', '2026-10-12 14:42:33', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Sixsevenaldo González'' (C.I: V-67, Rol: Estudiantes).', 'Sixsevenaldo González (ID: 14)', '::1', 'b480df9dcac78726135c972d6d9c1281eb01e715d59569f31c30433614d5941f', 'a2b1385ba44721be7c45868cfcf3a3128ac2ec3d754b25fc1904708069b6a27b');
+INSERT INTO public.system_audit_log VALUES ('log_6acd2a27ee3728.67192848', '2026-10-12 14:42:47', 'INFO', 'Autenticacion', 'Cierre de Sesión', 'El usuario ''Sixsevenaldo González'' (ID: 14) cerró su sesión voluntariamente.', 'Sixsevenaldo González (ID: 14)', '::1', 'a2b1385ba44721be7c45868cfcf3a3128ac2ec3d754b25fc1904708069b6a27b', '8ce2ab6219d5392ca196d4e3e79d01e4b55d1f9fc012d8809dc7fb0cb6dfdb52');
+INSERT INTO public.system_audit_log VALUES ('log_6acd2a687693d5.16476178', '2026-10-12 14:43:52', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '::1', '8ce2ab6219d5392ca196d4e3e79d01e4b55d1f9fc012d8809dc7fb0cb6dfdb52', '38d6e0b6c199444f11322fad7947066427c64212350e2b42683e1f54944079ba');
+INSERT INTO public.system_audit_log VALUES ('log_6acd2b65893768.97153947', '2026-10-12 14:48:05', 'INFO', 'Articulos', 'Publicar Artículo', 'Nuevo artículo publicado: ''Distribución de perfiles y macropartículas en recubrimientos obtenidos por arco catódico continúo utilizando un concentrador magnético recto'' (2026).', 'Miguel González (ID: 7)', '::1', '38d6e0b6c199444f11322fad7947066427c64212350e2b42683e1f54944079ba', 'f723394d549c54eaea9a15d472db4e3e25396ce751e8d9205dd8982cce159e7e');
+INSERT INTO public.system_audit_log VALUES ('log_6ad1752f3a9241.94455873', '2026-10-15 20:51:59', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '::1', 'f723394d549c54eaea9a15d472db4e3e25396ce751e8d9205dd8982cce159e7e', '86c56df144b3d4e7153fc121a0b3a4085e7fbb96437b0fbbfbaa0afa939b5d6a');
+INSERT INTO public.system_audit_log VALUES ('log_6ad17576ed21f5.68877231', '2026-10-15 20:53:10', 'WARNING', 'SuperAdmin', 'Eliminar/Archivar Usuario', 'Usuario ID #5 archivado exitosamente. Credenciales liberadas.', 'Miguel González (ID: 7)', '::1', '86c56df144b3d4e7153fc121a0b3a4085e7fbb96437b0fbbfbaa0afa939b5d6a', '88252f1a4d5fcd2b6c70504560c3d8400cd60cb03b9f45fb79a70b961706e4ed');
+INSERT INTO public.system_audit_log VALUES ('log_6ad1855a82ede0.52563569', '2026-10-15 22:00:58', 'INFO', 'SuperAdmin', 'Crear Usuario', 'Nuevo usuario registrado: Felipe (C.I: V-6767)', 'Miguel González (ID: 7)', '::1', '88252f1a4d5fcd2b6c70504560c3d8400cd60cb03b9f45fb79a70b961706e4ed', 'b590a38c730d8a83395dcfb2ac5ba09e1500db765ff138d5936e2f0c7c39e38e');
+INSERT INTO public.system_audit_log VALUES ('log_6ad1855cea6610.55350711', '2026-10-15 22:01:00', 'INFO', 'Autenticacion', 'Cierre de Sesión', 'El usuario ''Miguel González'' (ID: 7) cerró su sesión voluntariamente.', 'Miguel González (ID: 7)', '::1', 'b590a38c730d8a83395dcfb2ac5ba09e1500db765ff138d5936e2f0c7c39e38e', '8037fde91a464c0ae2020ee78b967d4caae287503005482a2a3defce41601798');
+INSERT INTO public.system_audit_log VALUES ('log_6ad185615f3398.46491668', '2026-10-15 22:01:05', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Felipe'' (C.I: V-6767, Rol: Estudiantes).', 'Felipe (ID: 22)', '::1', '8037fde91a464c0ae2020ee78b967d4caae287503005482a2a3defce41601798', '2200452fba1d6cfef7d5c67ea1dafafeba89a78f790e93dcf1146a9be2bd4ca1');
+INSERT INTO public.system_audit_log VALUES ('log_6ad18625178222.78904664', '2026-10-15 22:04:21', 'INFO', 'Autenticacion', 'Cierre de Sesión', 'El usuario ''Felipe'' (ID: 22) cerró su sesión voluntariamente.', 'Felipe (ID: 22)', '::1', '2200452fba1d6cfef7d5c67ea1dafafeba89a78f790e93dcf1146a9be2bd4ca1', 'ab011da81223c730c3a1166b4685626637b4c49abed3cb10bfda82d3350080fd');
+INSERT INTO public.system_audit_log VALUES ('log_6ad1862a0b6fa7.47135216', '2026-10-15 22:04:26', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '::1', 'ab011da81223c730c3a1166b4685626637b4c49abed3cb10bfda82d3350080fd', '813eed349441985cec024f4b1e2841746f25f137269ba68d9f4d1cb0a8e4e8c1');
+INSERT INTO public.system_audit_log VALUES ('log_6ad186612ecbb9.39867261', '2026-10-15 22:05:21', 'WARNING', 'SuperAdmin', 'Alternar Mantenimiento', 'Modo Mantenimiento cambiado a: ACTIVADO', 'Miguel González (ID: 7)', '::1', '813eed349441985cec024f4b1e2841746f25f137269ba68d9f4d1cb0a8e4e8c1', '7e1248f26fb0a2b7e6edae1aa7ee01020161501444a7bdf2c7fe088449236343');
+INSERT INTO public.system_audit_log VALUES ('log_6ad18665733b73.03490080', '2026-10-15 22:05:25', 'INFO', 'Autenticacion', 'Cierre de Sesión', 'El usuario ''Miguel González'' (ID: 7) cerró su sesión voluntariamente.', 'Miguel González (ID: 7)', '::1', '7e1248f26fb0a2b7e6edae1aa7ee01020161501444a7bdf2c7fe088449236343', '532dd4bb426b9d3d445a34ef07ae606a53f24967647e63224dca90cbd9033e67');
+INSERT INTO public.system_audit_log VALUES ('log_6ad1866a483da0.68401817', '2026-10-15 22:05:30', 'WARNING', 'Autenticacion', 'Acceso Denegado Mantenimiento', 'Acceso denegado por mantenimiento para ''Felipe'' (C.I: V-6767).', 'Anónimo / Sistema', '::1', '532dd4bb426b9d3d445a34ef07ae606a53f24967647e63224dca90cbd9033e67', 'f34ad6b942516136d841d1c8bdeb5280cb8578ec83128a62ed9648677f5e5686');
+INSERT INTO public.system_audit_log VALUES ('log_6ad186f8584ce5.88174372', '2026-10-15 22:07:52', 'WARNING', 'Autenticacion', 'Acceso Denegado Mantenimiento', 'Acceso denegado por mantenimiento para ''Felipe'' (C.I: V-6767).', 'Anónimo / Sistema', '::1', 'f34ad6b942516136d841d1c8bdeb5280cb8578ec83128a62ed9648677f5e5686', '3028e92c206303e88e79c6661c8c93053e3d62ecca2aa1326fe36374928cc5a8');
+INSERT INTO public.system_audit_log VALUES ('log_6ad18dc9481086.63328390', '2026-10-15 22:36:57', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '::1', '3028e92c206303e88e79c6661c8c93053e3d62ecca2aa1326fe36374928cc5a8', '1bd6722f3cffa8500501f823348db939630bde3d7186f7ddfa8a41a9f1148672');
+INSERT INTO public.system_audit_log VALUES ('log_6ad18dcf08e789.87446451', '2026-10-15 22:37:03', 'INFO', 'SuperAdmin', 'Test Respuesta Core', 'Diagnóstico del Core ejecutado en 1.75ms. Memoria: 2 MB. Estado: SALUDABLE', 'Miguel González (ID: 7)', '::1', '1bd6722f3cffa8500501f823348db939630bde3d7186f7ddfa8a41a9f1148672', '7adfa2f752eb3b6a0cbc8016fce22558cfdbe81f28b77e3b2f273c256bc074db');
+INSERT INTO public.system_audit_log VALUES ('log_6ad18dd8977dd4.19471738', '2026-10-15 22:37:12', 'WARNING', 'SuperAdmin', 'Alternar Mantenimiento', 'Modo Mantenimiento cambiado a: DESACTIVADO', 'Miguel González (ID: 7)', '::1', '7adfa2f752eb3b6a0cbc8016fce22558cfdbe81f28b77e3b2f273c256bc074db', 'eb6a41566e093d010baf3600e545e8b8086f76afecd849b6200cc78fc5b70e9f');
+INSERT INTO public.system_audit_log VALUES ('log_6ad18dda35f167.66929848', '2026-10-15 22:37:14', 'INFO', 'Autenticacion', 'Cierre de Sesión', 'El usuario ''Miguel González'' (ID: 7) cerró su sesión voluntariamente.', 'Miguel González (ID: 7)', '::1', 'eb6a41566e093d010baf3600e545e8b8086f76afecd849b6200cc78fc5b70e9f', '137488ee2659c99c5e9ae400ce2574d253ba579987970067c0ed5a8aed869d07');
+INSERT INTO public.system_audit_log VALUES ('log_6ad19044b16f16.38184565', '2026-10-15 22:47:32', 'WARNING', 'Autenticacion', 'Login Fallido', 'Contraseña incorrecta para el usuario ''Sixsevenaldo González'' (C.I: V-67).', 'Anónimo / Sistema', '::1', '137488ee2659c99c5e9ae400ce2574d253ba579987970067c0ed5a8aed869d07', '4d886252766b42b587d86a2fb86ed96b821d3b37d3d5ed24de2495b92d24ce36');
+INSERT INTO public.system_audit_log VALUES ('log_6ad19051ea9f68.61643958', '2026-10-15 22:47:45', 'WARNING', 'Autenticacion', 'Login Fallido', 'Contraseña incorrecta para el usuario ''Sixsevenaldo González'' (C.I: V-67).', 'Anónimo / Sistema', '::1', '4d886252766b42b587d86a2fb86ed96b821d3b37d3d5ed24de2495b92d24ce36', '755773d6f46755e970546e2aec03546a2b01d5d9f21bafde73f7913f175f37fc');
+INSERT INTO public.system_audit_log VALUES ('log_6ad190621976f6.93443919', '2026-10-15 22:48:02', 'WARNING', 'Autenticacion', 'Login Fallido', 'Contraseña incorrecta para el usuario ''Sixsevenaldo González'' (C.I: V-67).', 'Anónimo / Sistema', '::1', '755773d6f46755e970546e2aec03546a2b01d5d9f21bafde73f7913f175f37fc', 'c175a3e7ca071b7661b7bd105e2782e69fd14cf98bccdba5261ed571c6349e53');
+INSERT INTO public.system_audit_log VALUES ('log_6ad19067023e03.71040820', '2026-10-15 22:48:07', 'WARNING', 'Autenticacion', 'Login Fallido', 'Contraseña incorrecta para el usuario ''Sixsevenaldo González'' (C.I: V-67).', 'Anónimo / Sistema', '::1', 'c175a3e7ca071b7661b7bd105e2782e69fd14cf98bccdba5261ed571c6349e53', 'b336326122aab1f5d63825211eeb27b9aace9112e27d49594bfd71b981141498');
+INSERT INTO public.system_audit_log VALUES ('log_6ad1906c517348.92693890', '2026-10-15 22:48:12', 'CRITICAL', 'WAF_Security', 'Bloqueo Automático IP por Fuerza Bruta', 'IP ::1 bloqueada por 15 min tras 5 intentos fallidos (Límite: 5).', 'Anónimo / Sistema', '::1', 'b336326122aab1f5d63825211eeb27b9aace9112e27d49594bfd71b981141498', '2e753034ebed02361c1379508b8cb0e5edf6157f4b59c79a75efdb1fdd9e13b9');
+INSERT INTO public.system_audit_log VALUES ('log_6ad1906c52ea94.71572519', '2026-10-15 22:48:12', 'WARNING', 'Autenticacion', 'Login Fallido', 'Contraseña incorrecta para el usuario ''Sixsevenaldo González'' (C.I: V-67).', 'Anónimo / Sistema', '::1', '2e753034ebed02361c1379508b8cb0e5edf6157f4b59c79a75efdb1fdd9e13b9', 'e4c832cab4664d66806915e0bb22325982c85b56c0e502f8a7ce2f9d98303f34');
+INSERT INTO public.system_audit_log VALUES ('log_6ad190850e65c1.88474596', '2026-10-15 22:48:37', 'WARNING', 'Autenticacion', 'Login Fallido', 'Contraseña incorrecta para el usuario ''Sixsevenaldo González'' (C.I: V-67).', 'Anónimo / Sistema', '::1', 'e4c832cab4664d66806915e0bb22325982c85b56c0e502f8a7ce2f9d98303f34', '20a9fbfbec5298a6b91109060ff9ca4dfead673eaf252857c47f132957d25753');
+INSERT INTO public.system_audit_log VALUES ('log_6ad190a92d4634.58641715', '2026-10-15 22:49:13', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Sixsevenaldo González'' (C.I: V-67, Rol: Estudiantes).', 'Sixsevenaldo González (ID: 14)', '::1', '20a9fbfbec5298a6b91109060ff9ca4dfead673eaf252857c47f132957d25753', '47ee89e5f0e01dc1b9fd2d39c35ec06e00c42dfe567bb11340ca7a6ec9d6c0ac');
+INSERT INTO public.system_audit_log VALUES ('log_6ad19157a5b288.42435915', '2026-10-15 22:52:07', 'INFO', 'Autenticacion', 'Cierre de Sesión', 'El usuario ''Sixsevenaldo González'' (ID: 14) cerró su sesión voluntariamente.', 'Sixsevenaldo González (ID: 14)', '::1', '47ee89e5f0e01dc1b9fd2d39c35ec06e00c42dfe567bb11340ca7a6ec9d6c0ac', '8fd4459034f94436a002823455750c5aae8f6c67f082b3c92b0c209edebc9477');
+INSERT INTO public.system_audit_log VALUES ('log_6ad1915c065984.28903954', '2026-10-15 22:52:12', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Felipe'' (C.I: V-6767, Rol: Estudiantes).', 'Felipe (ID: 22)', '::1', '8fd4459034f94436a002823455750c5aae8f6c67f082b3c92b0c209edebc9477', '15e19d130bb506d1c5c66c9fa9855ddcdbd49d163b32f633965b4fe1577f455c');
+INSERT INTO public.system_audit_log VALUES ('log_6ad1956a51e136.84094651', '2026-10-15 23:09:30', 'INFO', 'Autenticacion', 'Cierre de Sesión', 'El usuario ''Felipe'' (ID: 22) cerró su sesión voluntariamente.', 'Felipe (ID: 22)', '::1', '15e19d130bb506d1c5c66c9fa9855ddcdbd49d163b32f633965b4fe1577f455c', '170d289f48102cd03ad780626e29cb878a7ff4869806aa30e8a830b3e59045ae');
+INSERT INTO public.system_audit_log VALUES ('log_6ad1956f54bb02.31734538', '2026-10-15 23:09:35', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '::1', '170d289f48102cd03ad780626e29cb878a7ff4869806aa30e8a830b3e59045ae', '7ab5828a305aad771d3d9fc2fe3fa6cff052ae5f25c8e887b4d54dfb6925f793');
+INSERT INTO public.system_audit_log VALUES ('log_6ad2ee4814d4a4.10027715', '2026-10-16 23:40:56', 'WARNING', 'Autenticacion', 'Login Fallido', 'Contraseña incorrecta para el usuario ''Sixsevenaldo González'' (C.I: V-67).', 'Anónimo / Sistema', '::1', '7ab5828a305aad771d3d9fc2fe3fa6cff052ae5f25c8e887b4d54dfb6925f793', '18132a7758a365346bcc1e0bafe4cbfddef1c346fc14a6989ac4b28b1261f96d');
+INSERT INTO public.system_audit_log VALUES ('log_6ad2ee5bc1bf20.06953099', '2026-10-16 23:41:15', 'WARNING', 'Autenticacion', 'Login Fallido', 'Intento de inicio de sesión con cédula no registrada: ''V-66666666''.', 'Anónimo / Sistema', '::1', '18132a7758a365346bcc1e0bafe4cbfddef1c346fc14a6989ac4b28b1261f96d', '5491557743ce65ce6ba41cbdc8ce222b0bdc0f9267923d5fbea49dc45d5d301f');
+INSERT INTO public.system_audit_log VALUES ('log_6ad2f15cb15159.26129767', '2026-10-16 23:54:04', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '::1', '5491557743ce65ce6ba41cbdc8ce222b0bdc0f9267923d5fbea49dc45d5d301f', 'f352a83cfdeca77df9bc3f6393a173cec0f439abb14df7799bdf65398e215677');
+INSERT INTO public.system_audit_log VALUES ('log_6ad2f16528bdd9.94857352', '2026-10-16 23:54:13', 'WARNING', 'SuperAdmin', 'Alternar Mantenimiento', 'Modo Mantenimiento cambiado a: DESACTIVADO', 'Miguel González (ID: 7)', '::1', 'f352a83cfdeca77df9bc3f6393a173cec0f439abb14df7799bdf65398e215677', '32c1673d30e3d36032d0e7081a6a987ec94c0e0b2334145e8595323e9929d2d2');
+INSERT INTO public.system_audit_log VALUES ('log_6ad2f16659db90.03647515', '2026-10-16 23:54:14', 'INFO', 'Autenticacion', 'Cierre de Sesión', 'El usuario ''Miguel González'' (ID: 7) cerró su sesión voluntariamente.', 'Miguel González (ID: 7)', '::1', '32c1673d30e3d36032d0e7081a6a987ec94c0e0b2334145e8595323e9929d2d2', '8eab23aefeccb9f9098dd6a0aacc239be7d00844b140e56b9b915af82af49c5c');
+INSERT INTO public.system_audit_log VALUES ('log_6ad2f16f768300.74340923', '2026-10-16 23:54:23', 'INFO', 'Autenticacion', 'Recuperación Solicitada', 'Enlace directo de recuperación generado para ''Felipe'' (cepillinin@gmail.com).', 'Anónimo / Sistema', '::1', '8eab23aefeccb9f9098dd6a0aacc239be7d00844b140e56b9b915af82af49c5c', '6ed40c6b1ee115b7ae88e8dd3f18f7b0a8a681d3005f92d89a4f21b06604acb2');
+INSERT INTO public.system_audit_log VALUES ('log_6ad2f25a284447.67085333', '2026-10-16 23:58:18', 'INFO', 'Autenticacion', 'Inicio de Sesión', 'Acceso exitoso al sistema de ''Miguel González'' (C.I: V-32621284, Rol: Super Administrador).', 'Miguel González (ID: 7)', '::1', '6ed40c6b1ee115b7ae88e8dd3f18f7b0a8a681d3005f92d89a4f21b06604acb2', '3474ba8fdc2b39709bae71838935755ef3da4f9bb95139e39df26bc8ec41af66');
+INSERT INTO public.system_audit_log VALUES ('log_6ad2f3d530ec66.65732103', '2026-10-17 00:04:37', 'INFO', 'Articulos', 'Actualizar Artículo', 'Artículo ID #201 actualizado: ''Distribución de perfiles y macropartículas en recubrimientos obtenidos por arco catódico continúo utilizando un concentrador magnético recto''.', 'Miguel González (ID: 7)', '::1', '3474ba8fdc2b39709bae71838935755ef3da4f9bb95139e39df26bc8ec41af66', 'a519ac44e1a31f721c9c6ec8b6deb73da7aa5b13c253ed501fd10522a16be7ce');
+INSERT INTO public.system_audit_log VALUES ('log_6ad2f54de12001.11623918', '2026-10-17 00:10:53', 'WARNING', 'Articulos', 'Eliminar Artículo', 'Artículo ID #156 eliminado del catálogo.', 'Miguel González (ID: 7)', '::1', 'a519ac44e1a31f721c9c6ec8b6deb73da7aa5b13c253ed501fd10522a16be7ce', '8e1165459e2617f971026dc4b747963f73d52c87e38486793019dcf9ce6b6751');
+INSERT INTO public.system_audit_log VALUES ('log_6ad2f55060fc01.27801575', '2026-10-17 00:10:56', 'WARNING', 'Articulos', 'Eliminar Artículo', 'Artículo ID #151 eliminado del catálogo.', 'Miguel González (ID: 7)', '::1', '8e1165459e2617f971026dc4b747963f73d52c87e38486793019dcf9ce6b6751', '7ceac3354f08e49fc1a62414564aa14291fd66a662891883e20b95ab0b372ea7');
+INSERT INTO public.system_audit_log VALUES ('log_6ad2f5524c69e3.80352650', '2026-10-17 00:10:58', 'INFO', 'Articulos', 'Cambio Visibilidad', 'Se actualizó la visibilidad del artículo ID #150.', 'Miguel González (ID: 7)', '::1', '7ceac3354f08e49fc1a62414564aa14291fd66a662891883e20b95ab0b372ea7', '0d8bfcfdbbb5ad52f4bc468c38d540e53ffb79e1a0de7588084ffcd949a94ecd');
+INSERT INTO public.system_audit_log VALUES ('log_6ad2f588a8ddd6.77972470', '2026-10-17 00:11:52', 'WARNING', 'Articulos', 'Eliminar Categoría', 'Categoría ID #10 eliminada.', 'Miguel González (ID: 7)', '::1', '0d8bfcfdbbb5ad52f4bc468c38d540e53ffb79e1a0de7588084ffcd949a94ecd', '6f892d2e146652853e9be4e08c7215e9f5efe30746b91b1413e8b15e6bf06b5a');
+INSERT INTO public.system_audit_log VALUES ('log_6ad2f5a60d05c8.20207673', '2026-10-17 00:12:22', 'INFO', 'Articulos', 'Actualizar Artículo', 'Artículo ID #146 actualizado: ''Modelamiento de confort adaptativo para un trapiche panelero''.', 'Miguel González (ID: 7)', '::1', '6f892d2e146652853e9be4e08c7215e9f5efe30746b91b1413e8b15e6bf06b5a', '69bed43c3b24dc1de95563388be12f59b4f04ebb6fec8eb182108dcfa42e70db');
+INSERT INTO public.system_audit_log VALUES ('log_6ad2f5ac1fb158.92869985', '2026-10-17 00:12:28', 'INFO', 'Articulos', 'Actualizar Artículo', 'Artículo ID #144 actualizado: ''Propuesta de un modelo de implementación basado en aprendizaje automático para el reclutamiento de profesionales de ingeniería en una universidad pública''.', 'Miguel González (ID: 7)', '::1', '69bed43c3b24dc1de95563388be12f59b4f04ebb6fec8eb182108dcfa42e70db', '8a09f0c124bb9f476d15e8adc3cb5d345e8f7e7eaac1542b9539a19e366ef905');
+INSERT INTO public.system_audit_log VALUES ('log_6ad2f5b38d22a1.09033165', '2026-10-17 00:12:35', 'INFO', 'Articulos', 'Actualizar Artículo', 'Artículo ID #143 actualizado: ''Investigación y modelado de pérdidas por corriente circulante en sistemas de puesta a tierra de torres de alta tensión''.', 'Miguel González (ID: 7)', '::1', '8a09f0c124bb9f476d15e8adc3cb5d345e8f7e7eaac1542b9539a19e366ef905', '7238471014b89fcb3ddadf9d466496d62bbb1ddcc314b3d18779a4448495dbef');
+INSERT INTO public.system_audit_log VALUES ('log_6ad2f5ba367368.25058074', '2026-10-17 00:12:42', 'INFO', 'Articulos', 'Actualizar Artículo', 'Artículo ID #122 actualizado: ''Revisión sistemática del impacto de las fibras de polipropileno en las propiedades físico-mecánicas, microestructurales y de durabilidad del Concreto''.', 'Miguel González (ID: 7)', '::1', '7238471014b89fcb3ddadf9d466496d62bbb1ddcc314b3d18779a4448495dbef', '74130dbc5dae86e639bfe922c9866dcbcf4f3283ff22884be416dc948dee56b8');
+INSERT INTO public.system_audit_log VALUES ('log_6ad2f7d07a8287.24672958', '2026-10-17 00:21:36', 'WARNING', 'Articulos', 'Eliminar Artículo', 'Artículo ID #150 eliminado del catálogo.', 'Miguel González (ID: 7)', '::1', '74130dbc5dae86e639bfe922c9866dcbcf4f3283ff22884be416dc948dee56b8', 'c129bdbb921c17b9b5e76390b01438b2b96045de6298fb08fd9ec1627189f8c8');
+INSERT INTO public.system_audit_log VALUES ('log_6ad2f8d9769311.59576436', '2026-10-17 00:26:01', 'INFO', 'SuperAdmin', 'Test Respuesta Core', 'Diagnóstico del Core ejecutado en 1.15ms. Memoria: 2 MB. Estado: SALUDABLE', 'Miguel González (ID: 7)', '::1', 'c129bdbb921c17b9b5e76390b01438b2b96045de6298fb08fd9ec1627189f8c8', '945abb6bdf1eb0a5909012804affa23e24e89ac731c0c648b641ffa36dc09353');
 
 
 --
 -- Data for Name: telemetria_cache; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.telemetria_cache VALUES (1, '{"timestamp": 1791224873, "storage_mb": 49.71, "files_count": 78}');
+INSERT INTO public.telemetria_cache VALUES (1, '{"timestamp": 1792211157, "storage_mb": 5.29, "files_count": 53}');
 
 
 --
@@ -3287,7 +3253,6 @@ INSERT INTO public.tutores VALUES (40, 'KarinAI', 'Karina');
 --
 
 INSERT INTO public.usuarios VALUES (4, 'ale', 'ale@yaju.com', '44444444', '$2y$10$o0Uk8V6gzXNSW/EZBWvd1OoC7O6UzrU3LRbDMIqxYDou2KJGRXdUa', 3, true, NULL, NULL, NULL, false, NULL);
-INSERT INTO public.usuarios VALUES (5, 'bibi', 'bibi@gmail.com', '4444111', NULL, 3, true, NULL, NULL, NULL, false, NULL);
 INSERT INTO public.usuarios VALUES (8, 'Yisu Monte', 'yisu@gmail.com', '30866991', '$2y$10$jOukhIGIbdJCmpHdS.MqWusufmhQgHf.O9UByeqN.NFue38kT47xa', 3, true, NULL, NULL, NULL, false, NULL);
 INSERT INTO public.usuarios VALUES (9, 'Pedro Perez', 'iaiaia@gmail.com', '4123123', '$2y$10$xOgs5kJnv17wwzjNtnNUguWc7pxdYv.lMZGFejPOz7fIgLNEybLgC', 3, true, NULL, NULL, NULL, false, NULL);
 INSERT INTO public.usuarios VALUES (11, 'Juan', '123@gmail.com', '1234', '$2y$10$HBPGRak0eIYzElwfC.bGuOvgFOfK.GbG40ct2e7X9CS7OgMARJRcC', 3, true, NULL, NULL, NULL, false, NULL);
@@ -3304,6 +3269,8 @@ INSERT INTO public.usuarios VALUES (19, 'Juan Salcedo', 'juanxzall0701@gmail.com
 INSERT INTO public.usuarios VALUES (2, 'lando', 'lando@gmail.com', '22222222', '$2y$10$o0Uk8V6gzXNSW/EZBWvd1OoC7O6UzrU3LRbDMIqxYDou2KJGRXdUa', 2, true, NULL, NULL, NULL, true, NULL);
 INSERT INTO public.usuarios VALUES (3, 'miki', 'miki@gmail.com', '33333333', '$2y$10$o0Uk8V6gzXNSW/EZBWvd1OoC7O6UzrU3LRbDMIqxYDou2KJGRXdUa', 3, true, NULL, NULL, NULL, true, NULL);
 INSERT INTO public.usuarios VALUES (7, 'Miguel González', 'erwesitodepollo@gmail.com', '32621284', '$2y$10$tqm17pwan91BnMUfmCAB/O01faShLfeK3jo0jYVwpQcBpGr5iLiE.', 1, true, NULL, NULL, NULL, false, 'dc1c777c1cdc20c388ae51c653f684a4c5e4673e509adc494000642ed4e1cd0d');
+INSERT INTO public.usuarios VALUES (5, '[Archivado] bibi', 'bibi@gmail.com_deleted_1792111990', '4444111_x2111990', '$2y$12$KgG./enVG4wsHsojaIJxJOTDNy7nri.a6oj9veFmtMGE1B/dlvfje', 3, false, NULL, NULL, NULL, false, NULL);
+INSERT INTO public.usuarios VALUES (22, 'Felipe', 'cepillinin@gmail.com', 'V-6767', '$2y$12$0xdPaM20c2YpU3s6kg/XeujfdPq2QDTCNjul24vOXfbo8lfKLS0sW', 3, true, NULL, NULL, NULL, false, NULL);
 
 
 --
@@ -3331,14 +3298,14 @@ SELECT pg_catalog.setval('public.accesos_recursos_id_seq', 1, true);
 -- Name: auditoria_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.auditoria_id_seq', 444, true);
+SELECT pg_catalog.setval('public.auditoria_id_seq', 458, true);
 
 
 --
 -- Name: autores_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.autores_id_seq', 126, true);
+SELECT pg_catalog.setval('public.autores_id_seq', 5, true);
 
 
 --
@@ -3398,6 +3365,13 @@ SELECT pg_catalog.setval('public.investigaciones_ofertadas_id_seq', 4, true);
 
 
 --
+-- Name: investigadores_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.investigadores_id_seq', 5, true);
+
+
+--
 -- Name: lineas_investigacion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -3422,7 +3396,7 @@ SELECT pg_catalog.setval('public.notificaciones_id_seq', 6, true);
 -- Name: password_resets_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.password_resets_id_seq', 1, true);
+SELECT pg_catalog.setval('public.password_resets_id_seq', 2, true);
 
 
 --
@@ -3450,14 +3424,14 @@ SELECT pg_catalog.setval('public.propuestas_empresa_id_seq', 16, true);
 -- Name: recursos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.recursos_id_seq', 192, true);
+SELECT pg_catalog.setval('public.recursos_id_seq', 201, true);
 
 
 --
 -- Name: registro_actividad_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.registro_actividad_id_seq', 4, true);
+SELECT pg_catalog.setval('public.registro_actividad_id_seq', 6, true);
 
 
 --
@@ -3499,7 +3473,7 @@ SELECT pg_catalog.setval('public.tutores_id_seq', 40, true);
 -- Name: usuarios_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.usuarios_id_seq', 21, true);
+SELECT pg_catalog.setval('public.usuarios_id_seq', 22, true);
 
 
 --
@@ -3590,14 +3564,6 @@ ALTER TABLE ONLY public.detalles_investigaciones
 
 
 --
--- Name: detalles_proyectos detalles_proyectos_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.detalles_proyectos
-    ADD CONSTRAINT detalles_proyectos_pkey PRIMARY KEY (id_recurso);
-
-
---
 -- Name: detalles_articulos detalles_revistas_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -3659,6 +3625,22 @@ ALTER TABLE ONLY public.historico_versiones_pst
 
 ALTER TABLE ONLY public.investigaciones_ofertadas
     ADD CONSTRAINT investigaciones_ofertadas_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: investigadores investigadores_orcid_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.investigadores
+    ADD CONSTRAINT investigadores_orcid_key UNIQUE (orcid);
+
+
+--
+-- Name: investigadores investigadores_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.investigadores
+    ADD CONSTRAINT investigadores_pkey PRIMARY KEY (id);
 
 
 --
@@ -3787,6 +3769,14 @@ ALTER TABLE ONLY public.recurso_clasificaciones
 
 ALTER TABLE ONLY public.recurso_etiquetas
     ADD CONSTRAINT recurso_etiquetas_pkey PRIMARY KEY (id_recurso, id_etiqueta);
+
+
+--
+-- Name: recurso_investigadores recurso_investigadores_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.recurso_investigadores
+    ADD CONSTRAINT recurso_investigadores_pkey PRIMARY KEY (id_recurso, id_investigador);
 
 
 --
@@ -3965,27 +3955,6 @@ CREATE INDEX idx_detalles_inv_ofertada ON public.detalles_investigaciones USING 
 
 
 --
--- Name: idx_detalles_proyectos_trayecto; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX idx_detalles_proyectos_trayecto ON public.detalles_proyectos USING btree (id_trayecto);
-
-
---
--- Name: idx_detalles_vector_hnsw; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX idx_detalles_vector_hnsw ON public.detalles_proyectos USING hnsw (vector_semantico public.vector_cosine_ops) WITH (m='16', ef_construction='64');
-
-
---
--- Name: idx_detalles_vector_null; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX idx_detalles_vector_null ON public.detalles_proyectos USING btree (id_recurso) WHERE (vector_semantico IS NULL);
-
-
---
 -- Name: idx_pcv_carrera; Type: INDEX; Schema: public; Owner: miki
 --
 
@@ -4088,38 +4057,6 @@ ALTER TABLE ONLY public.cursos
 
 
 --
--- Name: detalles_proyectos detalles_proyectos_id_carrera_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.detalles_proyectos
-    ADD CONSTRAINT detalles_proyectos_id_carrera_fkey FOREIGN KEY (id_carrera) REFERENCES public.carreras(id) ON DELETE SET NULL;
-
-
---
--- Name: detalles_proyectos detalles_proyectos_id_investigacion_padre_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.detalles_proyectos
-    ADD CONSTRAINT detalles_proyectos_id_investigacion_padre_fkey FOREIGN KEY (id_investigacion_padre) REFERENCES public.recursos(id) ON DELETE SET NULL;
-
-
---
--- Name: detalles_proyectos detalles_proyectos_id_recurso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.detalles_proyectos
-    ADD CONSTRAINT detalles_proyectos_id_recurso_fkey FOREIGN KEY (id_recurso) REFERENCES public.recursos(id) ON DELETE CASCADE;
-
-
---
--- Name: detalles_proyectos detalles_proyectos_id_trayecto_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.detalles_proyectos
-    ADD CONSTRAINT detalles_proyectos_id_trayecto_fkey FOREIGN KEY (id_trayecto) REFERENCES public.trayectos(id) ON DELETE SET NULL;
-
-
---
 -- Name: detalles_articulos detalles_revistas_id_editorial_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -4200,6 +4137,14 @@ ALTER TABLE ONLY public.investigaciones_ofertadas
 
 
 --
+-- Name: recurso_investigadores fk_investigador; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.recurso_investigadores
+    ADD CONSTRAINT fk_investigador FOREIGN KEY (id_investigador) REFERENCES public.investigadores(id) ON DELETE CASCADE;
+
+
+--
 -- Name: recurso_clasificaciones fk_linea_investigacion; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -4256,6 +4201,14 @@ ALTER TABLE ONLY public.recurso_etiquetas
 
 
 --
+-- Name: recurso_investigadores fk_recurso_inv; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.recurso_investigadores
+    ADD CONSTRAINT fk_recurso_inv FOREIGN KEY (id_recurso) REFERENCES public.recursos(id) ON DELETE CASCADE;
+
+
+--
 -- Name: historico_versiones_pst fk_version_recurso; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -4285,14 +4238,6 @@ ALTER TABLE ONLY public.notificaciones
 
 ALTER TABLE ONLY public.preferencias_usuario
     ADD CONSTRAINT preferencias_usuario_id_usuario_fkey FOREIGN KEY (id_usuario) REFERENCES public.usuarios(id) ON DELETE CASCADE;
-
-
---
--- Name: proyecto_tutores proyecto_tutores_id_recurso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.proyecto_tutores
-    ADD CONSTRAINT proyecto_tutores_id_recurso_fkey FOREIGN KEY (id_recurso) REFERENCES public.detalles_proyectos(id_recurso) ON DELETE CASCADE;
 
 
 --
@@ -4387,5 +4332,5 @@ ALTER TABLE ONLY public.usuarios
 -- PostgreSQL database dump complete
 --
 
-\unrestrict gRGdIdtjfNNBhm5IzVtACYb7OCKXrQlC1JVxXAyUddBE9l0oKkTZnFp5UG0sK1M
+\unrestrict JPJAHTrhtIWhPwpYVdavQAIAfErQtqaCWIJzqd5NtnNHYuc76TcHULa88YzkspB
 

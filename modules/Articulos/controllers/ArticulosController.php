@@ -68,10 +68,14 @@ class ArticulosController {
     public function leer() {
         $id = (int)($_GET['id'] ?? 0);
         $maxRecomendados = ConfigService::get('paginacion.max_recomendados', 3);
+        $articulo = $this->articuloModel->obtenerArticuloPorId($id);
+        if (!$articulo && !headers_sent()) {
+            http_response_code(404);
+        }
 
         return [
-            'articulo' => $this->articuloModel->obtenerArticuloPorId($id),
-            'similares' => $this->articuloModel->getArticulosSimilares($id, $maxRecomendados)
+            'articulo' => $articulo,
+            'similares' => $articulo ? $this->articuloModel->getArticulosSimilares($id, $maxRecomendados) : []
         ];
     }
 
@@ -193,7 +197,9 @@ class ArticulosController {
             if ($_FILES['imagen_portada']['error'] === UPLOAD_ERR_OK) {
                 $finfo = finfo_open(FILEINFO_MIME_TYPE);
                 $mimeType = finfo_file($finfo, $_FILES['imagen_portada']['tmp_name']);
-                finfo_close($finfo);
+                if (PHP_VERSION_ID < 80500 && is_resource($finfo)) {
+                    finfo_close($finfo);
+                }
 
                 $mimePermitidos = ['image/jpeg', 'image/png', 'image/webp'];
                 if (!in_array($mimeType, $mimePermitidos)) {
@@ -386,11 +392,29 @@ class ArticulosController {
         $archivo_pdf = filter_var(trim($_POST['archivo_pdf'] ?? ''), FILTER_SANITIZE_URL);
         $url_imagen = filter_var(trim($_POST['url_imagen'] ?? ''), FILTER_SANITIZE_URL);
 
+        $esUrlSegura = function($url) {
+            if (empty($url)) return true;
+            $scheme = parse_url($url, PHP_URL_SCHEME);
+            $host = parse_url($url, PHP_URL_HOST);
+            if (!in_array(strtolower((string)$scheme), ['http', 'https'])) return false;
+            if (in_array(strtolower((string)$host), ['localhost', '127.0.0.1', '::1'])) return false;
+            return true;
+        };
+
+        if (!$esUrlSegura($archivo_pdf) || !$esUrlSegura($url_imagen)) {
+            $_SESSION['mensaje_error'] = "URL no válida o esquema no permitido. Asegúrese de usar enlaces web válidos (http:// o https://).";
+            header('Location: editar-articulo?id=' . $id);
+            exit;
+        }
+
         $autores = $_POST['autores'] ?? [];
         $autores_nuevos = $_POST['autores_nuevos'] ?? [];
         $etiquetas = $_POST['etiquetas'] ?? [];
 
-        $nombreImagen = trim($_POST['imagen_actual'] ?? 'default_article.jpg');
+        $imgActualInput = trim($_POST['imagen_actual'] ?? 'default_article.jpg');
+        $nombreImagen = (strpos($imgActualInput, 'http') === 0 && $esUrlSegura($imgActualInput))
+            ? $imgActualInput
+            : basename($imgActualInput);
         
 
         if (!empty($url_imagen)) {
@@ -412,7 +436,9 @@ class ArticulosController {
                 if ($_FILES['imagen_portada']['error'] === UPLOAD_ERR_OK) {
                     $finfo = finfo_open(FILEINFO_MIME_TYPE);
                     $mimeType = finfo_file($finfo, $_FILES['imagen_portada']['tmp_name']);
-                    finfo_close($finfo);
+                    if (PHP_VERSION_ID < 80500 && is_resource($finfo)) {
+                        finfo_close($finfo);
+                    }
 
                     $mimePermitidos = ['image/jpeg', 'image/png', 'image/webp'];
                     if (!in_array($mimeType, $mimePermitidos)) {

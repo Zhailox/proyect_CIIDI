@@ -12,6 +12,11 @@
                     <?= htmlspecialchars($error) ?>
                 </div>
             <?php endif; ?>
+            <?php if (isset($exito) && $exito): ?>
+                <div style="background: rgba(16, 185, 129, 0.12); color: #047857; border: 1px solid rgba(16, 185, 129, 0.3); padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 0.9rem; font-weight: 600; word-break: break-word;">
+                    <?= htmlspecialchars($exito) ?>
+                </div>
+            <?php endif; ?>
             <?php
             require_once CORE_PATH . 'Security/CaptchaService.php';
             $segDataRec = CaptchaService::generarCamposSeguridad();

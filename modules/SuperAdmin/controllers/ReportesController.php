@@ -8,10 +8,7 @@ class ReportesController {
     private ReportesModel $model;
 
     public function __construct() {
-        if (!Auth::check() || (int)Auth::usuario()['nivel'] !== 0) {
-            header('Location: ?ruta=inicio');
-            exit;
-        }
+        Auth::requierePrivilegioMinimo(0);
         $this->model = new ReportesModel();
     }
 
@@ -33,7 +30,7 @@ class ReportesController {
     }
 
     public function exportarCSV(): void {
-        $dominio = $_GET['dominio'] ?? 'pst';
+        $dominio = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['dominio'] ?? 'pst');
         $filtros = $_GET;
         $columnasSeleccionadas = $_GET['columnas'] ?? [];
 
@@ -45,13 +42,25 @@ class ReportesController {
         $output = fopen('php://output', 'w');
         fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
 
+        $sanitizeCsvRow = function(array $row): array {
+            return array_map(function($val) {
+                if (is_string($val) && strlen($val) > 0) {
+                    $primerChar = $val[0];
+                    if (in_array($primerChar, ['=', '+', '-', '@', "\t", "\r"], true)) {
+                        return "'" . $val;
+                    }
+                }
+                return $val;
+            }, $row);
+        };
+
         switch ($dominio) {
             case 'vinculacion':
                 $datos = $this->model->obtenerReporteVinculacion($filtros);
                 $headers = ['ID', 'Empresa', 'Contacto', 'Teléfono', 'Correo', 'Trayecto', 'Problema Planteado', 'Estado', 'Fecha'];
                 fputcsv($output, $headers);
                 foreach ($datos as $r) {
-                    fputcsv($output, [$r['id'], $r['nombre_empresa'], $r['contacto_persona'], $r['telefono'], $r['correo'], $r['nivel_trayecto'], $r['titulo_problematica'], $r['estado'], $r['fecha_creacion']]);
+                    fputcsv($output, $sanitizeCsvRow([$r['id'], $r['nombre_empresa'], $r['contacto_persona'], $r['telefono'], $r['correo'], $r['nivel_trayecto'], $r['titulo_problematica'], $r['estado'], $r['fecha_creacion']]));
                 }
                 break;
 
@@ -60,7 +69,7 @@ class ReportesController {
                 $headers = ['ID', 'Cédula', 'Nombre Completo', 'Correo', 'Rol', 'Estado'];
                 fputcsv($output, $headers);
                 foreach ($datos as $r) {
-                    fputcsv($output, [$r['id'], $r['cedula'], $r['nombre'], $r['correo'], $r['rol'], $r['activo'] ? 'Activo' : 'Suspendido']);
+                    fputcsv($output, $sanitizeCsvRow([$r['id'], $r['cedula'], $r['nombre'], $r['correo'], $r['rol'], $r['activo'] ? 'Activo' : 'Suspendido']));
                 }
                 break;
 
@@ -69,7 +78,7 @@ class ReportesController {
                 $headers = ['ID', 'Fecha', 'Nivel', 'Acción / Mensaje', 'IP', 'Responsable'];
                 fputcsv($output, $headers);
                 foreach ($datos as $r) {
-                    fputcsv($output, [$r['id'], $r['fecha'], $r['nivel'], $r['mensaje'], $r['ip'], $r['responsable']]);
+                    fputcsv($output, $sanitizeCsvRow([$r['id'], $r['fecha'], $r['nivel'], $r['mensaje'], $r['ip'], $r['responsable']]));
                 }
                 break;
 
@@ -117,7 +126,7 @@ class ReportesController {
                     foreach (array_keys($colsExportar) as $k) {
                         $rowCSV[] = $r[$k] ?? '';
                     }
-                    fputcsv($output, $rowCSV);
+                    fputcsv($output, $sanitizeCsvRow($rowCSV));
                 }
                 break;
         }

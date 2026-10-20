@@ -1,62 +1,12 @@
 [
     {
-        "id": "mail_6ad1855ab20ae",
-        "fecha": "2026-10-15 22:00:58",
+        "id": "mail_6ad2f16f76426",
+        "fecha": "2026-10-16 23:54:23",
         "destino_email": "cepillinin@gmail.com",
         "destino_nombre": "Felipe",
-        "asunto": "Bienvenido al Sistema CIIDI - Credenciales de Acceso",
+        "asunto": "Restablecer Contraseña - Sistema CIIDI UPTTMBI",
         "exito": false,
         "tipo": "Directo",
         "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server Additional SMTP info: php_network_getaddresses: getaddrinfo for smtp.test.com failed: Host desconocido"
-    },
-    {
-        "id": "mail_6ac53b472d1e4",
-        "fecha": "2026-10-06 14:17:43",
-        "destino_email": "juanxzall0701@gmail.com",
-        "destino_nombre": "Juan Salcedo",
-        "asunto": "Actualización de Permisos y Rol Institucional - CIIDI",
-        "exito": false,
-        "tipo": "Directo",
-        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10060 Additional SMTP info: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder"
-    },
-    {
-        "id": "mail_6abb00e3d58e0",
-        "fecha": "2026-09-28 20:05:55",
-        "destino_email": "juanxzall0701@gmail.com",
-        "destino_nombre": "Juan Salcedo",
-        "asunto": "Bienvenido al Sistema CIIDI - Credenciales de Acceso",
-        "exito": false,
-        "tipo": "Directo",
-        "detalle": "SMTP Error: Could not authenticate. SMTP server error: QUIT command failed"
-    },
-    {
-        "id": "mail_6abb009e0f5a2",
-        "fecha": "2026-09-28 20:04:46",
-        "destino_email": "andrusramirez2020@gmail.com",
-        "destino_nombre": "Administrador de Prueba",
-        "asunto": "Prueba de Conexión SMTP - CIIDI UPTTMBI",
-        "exito": false,
-        "tipo": "Directo",
-        "detalle": "SMTP Error: Could not authenticate. SMTP server error: QUIT command failed"
-    },
-    {
-        "id": "mail_6abb0086b9eb5",
-        "fecha": "2026-09-28 20:04:22",
-        "destino_email": "andrusramirez2020@gmail.com",
-        "destino_nombre": "Administrador de Prueba",
-        "asunto": "Prueba de Conexión SMTP - CIIDI UPTTMBI",
-        "exito": false,
-        "tipo": "Directo",
-        "detalle": "SMTP Error: Could not authenticate. SMTP server error: QUIT command failed"
-    },
-    {
-        "id": "mail_6ab605a223dd9",
-        "fecha": "2026-09-25 01:24:50",
-        "destino_email": "6767677@gmail.com",
-        "destino_nombre": "wen",
-        "asunto": "Bienvenido al Sistema CIIDI - Credenciales de Acceso",
-        "exito": false,
-        "tipo": "Directo",
-        "detalle": "SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server SMTP code: 10061 Additional SMTP info: No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión"
     }
 ]

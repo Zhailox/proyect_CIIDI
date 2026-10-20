@@ -1741,6 +1741,7 @@ Trace:
 #5 [internal function]: MailService::{closure:MailService::enviarAsincrono():146}()
 #6 {main}
 --------------------------------------------------------------------------------
+<<<<<<< HEAD
 [2026-10-15 22:00:58] ERROR: SMTP Error: Could not connect to SMTP host. Failed to connect to server en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
 Trace:
 #0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
@@ -1750,4 +1751,155 @@ Trace:
 #4 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(151): MailService::enviar('cepillinin@gmai...', 'Felipe', 'Bienvenido al S...', '<h2 style="colo...', '', false)
 #5 [internal function]: MailService::{closure:MailService::enviarAsincrono():146}()
 #6 {main}
+--------------------------------------------------------------------------------
+=======
+[2026-10-13 22:12:34] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  no existe la relación «recurso_investigadores»
+LINE 22:                     FROM recurso_investigadores ri2
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php:152
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(152): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(283): ArticuloModel->obtenerUltimosArticulos(Array, 1, 50)
+#2 C:\wamp64\www\proyect_CIIDI\modules\Articulos\controllers\ArticulosController.php(34): ArticuloModel->obtenerArticulosPaginados(Array, 1, 50)
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ArticulosController->index()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('articulos', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-13 22:13:00] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  no existe la relación «recurso_investigadores»
+LINE 22:                     FROM recurso_investigadores ri2
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php:152
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(152): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(283): ArticuloModel->obtenerUltimosArticulos(Array, 1, 50)
+#2 C:\wamp64\www\proyect_CIIDI\modules\Articulos\controllers\ArticulosController.php(34): ArticuloModel->obtenerArticulosPaginados(Array, 1, 50)
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ArticulosController->index()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('articulos', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-13 22:13:10] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  no existe la relación «recurso_investigadores»
+LINE 22:                     FROM recurso_investigadores ri2
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php:152
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(152): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(283): ArticuloModel->obtenerUltimosArticulos(Array, 1, 50)
+#2 C:\wamp64\www\proyect_CIIDI\modules\Articulos\controllers\ArticulosController.php(34): ArticuloModel->obtenerArticulosPaginados(Array, 1, 50)
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ArticulosController->index()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('articulos', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-13 22:13:17] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  no existe la relación «recurso_investigadores»
+LINE 22:                     FROM recurso_investigadores ri2
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php:152
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(152): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(283): ArticuloModel->obtenerUltimosArticulos(Array, 1, 50)
+#2 C:\wamp64\www\proyect_CIIDI\modules\Articulos\controllers\ArticulosController.php(34): ArticuloModel->obtenerArticulosPaginados(Array, 1, 50)
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ArticulosController->index()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('articulos', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-13 22:13:21] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  no existe la relación «recurso_investigadores»
+LINE 22:                     FROM recurso_investigadores ri2
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php:152
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(152): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(283): ArticuloModel->obtenerUltimosArticulos(Array, 1, 50)
+#2 C:\wamp64\www\proyect_CIIDI\modules\Articulos\controllers\ArticulosController.php(34): ArticuloModel->obtenerArticulosPaginados(Array, 1, 50)
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ArticulosController->index()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('articulos', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-13 22:13:22] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  no existe la relación «recurso_investigadores»
+LINE 22:                     FROM recurso_investigadores ri2
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php:152
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(152): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php(283): ArticuloModel->obtenerUltimosArticulos(Array, 1, 50)
+#2 C:\wamp64\www\proyect_CIIDI\modules\Articulos\controllers\ArticulosController.php(34): ArticuloModel->obtenerArticulosPaginados(Array, 1, 50)
+#3 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ArticulosController->index()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('articulos', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-16 20:13:30] ERROR: SMTP Error: Could not connect to SMTP host. Failed to connect to server en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Fri, 16 O...', '--b1=_i1yReKAMP...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(199): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(151): MailService::enviar('andrusramirez20...', 'adrusss', 'Actualizaci\xC3\xB3n ...', '<h2 style="colo...', '', false)
+#5 [internal function]: MailService::{closure:MailService::enviarAsincrono():146}()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-16 21:00:04] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  no existe la base de datos �ciidii� en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-16 21:00:04] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  no existe la base de datos �ciidii� en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(256): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\InicioRepositorioController.php(12): DocumentoModel->getPSTDocumentosCount()
+#4 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): InicioRepositorioController->index()
+#5 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('repositorio', Array, Array, Array, Object(AssetResolver))
+#6 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#7 {main}
+--------------------------------------------------------------------------------
+>>>>>>> 6c5eea6eeadaca1fb0a8c3c0baeea97784e3d0a2
+[2026-10-16 23:54:23] ERROR: SMTP Error: Could not connect to SMTP host. Failed to connect to server en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Fri, 16 O...', '--b1=_1zhRT0slb...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(199): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(138): MailService::enviar('cepillinin@gmai...', 'Felipe', 'Restablecer Con...', '<h2 style="colo...', '', false)
+#5 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(87): MailService::enviarEvento('autenticacion.r...', 'cepillinin@gmai...', Array, 'Felipe', false)
+#6 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): LoginController->procesarRecuperacion()
+#7 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('procesar-recupe...', Array, Array, Array, Object(AssetResolver))
+#8 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#9 {main}
+--------------------------------------------------------------------------------
+[2026-10-17 00:58:08] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.detalles_proyectos" does not exist
+LINE 3:                 LEFT JOIN public.detalles_proyectos dp ON r....
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php:314
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(314): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\InicioRepositorioController.php(12): DocumentoModel->getPSTDocumentosCount()
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): InicioRepositorioController->index()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('repositorio', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-17 00:58:21] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.detalles_proyectos" does not exist
+LINE 3:                 LEFT JOIN public.detalles_proyectos dp ON r....
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php:314
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(314): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\InicioRepositorioController.php(12): DocumentoModel->getPSTDocumentosCount()
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): InicioRepositorioController->index()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('repositorio', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-17 01:01:44] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "detalles_proyectos" does not exist
+LINE 15:             LEFT  JOIN detalles_proyectos dp ON dp.id_recurs...
+                                ^ en C:\wamp64\www\proyect_CIIDI\modules\LineasInvestigacion\models\LineasModel.php:93
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\LineasInvestigacion\models\LineasModel.php(93): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\LineasInvestigacion\controllers\DetalleController.php(43): LineasModel->getProyectosPorLinea(8, 10, 0)
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): DetalleLineaController->index()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('detalle-linea', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#5 {main}
 --------------------------------------------------------------------------------
