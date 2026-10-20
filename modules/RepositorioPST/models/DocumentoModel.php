@@ -1131,7 +1131,7 @@ class DocumentoModel {
                         }
                         if (!$autorId) {
                             if (!empty($ced)) {
-                                $stmt = $db->prepare("INSERT INTO public.autores (nombre_completo, cedula) VALUES (?, ?) ON CONFLICT (cedula) DO UPDATE SET nombre_completo = EXCLUDED.nombre_completo RETURNING id");
+                                $stmt = $db->prepare("INSERT INTO public.autores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
                                 $stmt->execute([$nom, $ced]);
                             } else {
                                 $stmt = $db->prepare("INSERT INTO public.autores (nombre_completo, cedula) VALUES (?, NULL) RETURNING id");
@@ -1189,7 +1189,7 @@ class DocumentoModel {
                     }
                     if (!$tutorId) {
                         if (!empty($cedula)) {
-                            $stmt = $db->prepare("INSERT INTO public.tutores (nombre_completo, cedula) VALUES (?, ?) ON CONFLICT (cedula) DO UPDATE SET nombre_completo = EXCLUDED.nombre_completo RETURNING id");
+                            $stmt = $db->prepare("INSERT INTO public.tutores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
                             $stmt->execute([$nombre, $cedula]);
                         } else {
                             $stmt = $db->prepare("INSERT INTO public.tutores (nombre_completo, cedula) VALUES (?, NULL) RETURNING id");
@@ -1327,7 +1327,7 @@ class DocumentoModel {
                         }
                         if (!$autorId) {
                             if (!empty($ced)) {
-                                $stmt = $db->prepare("INSERT INTO public.autores (nombre_completo, cedula) VALUES (?, ?) ON CONFLICT (cedula) DO UPDATE SET nombre_completo = EXCLUDED.nombre_completo RETURNING id");
+                                $stmt = $db->prepare("INSERT INTO public.autores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
                                 $stmt->execute([$nom, $ced]);
                             } else {
                                 $stmt = $db->prepare("INSERT INTO public.autores (nombre_completo, cedula) VALUES (?, NULL) RETURNING id");
@@ -1376,7 +1376,7 @@ class DocumentoModel {
                     }
                     if (!$tutorId) {
                         if (!empty($cedula)) {
-                            $stmt = $db->prepare("INSERT INTO public.tutores (nombre_completo, cedula) VALUES (?, ?) ON CONFLICT (cedula) DO UPDATE SET nombre_completo = EXCLUDED.nombre_completo RETURNING id");
+                            $stmt = $db->prepare("INSERT INTO public.tutores (nombre_completo, cedula) VALUES (?, ?) RETURNING id");
                             $stmt->execute([$nombre, $cedula]);
                         } else {
                             $stmt = $db->prepare("INSERT INTO public.tutores (nombre_completo, cedula) VALUES (?, NULL) RETURNING id");
@@ -2068,6 +2068,114 @@ LIMIT 20";
     /**
      * Elimina de forma transaccional todos los proyectos del catálogo y limpia sus archivos físicos.
      */
+    public function obtenerIdsPSTPorCriterios(array $criterios): array {
+        $db = Connection::getInstance();
+        $sql = "SELECT DISTINCT r.id
+                FROM public.recursos r
+                LEFT JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
+                LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
+                LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
+                WHERE r.id_tipo_recurso = 1";
+        $params = [];
+
+        if (!empty($criterios['anio_desde'])) {
+            $sql .= " AND r.anio_publicacion >= ?";
+            $params[] = (int)$criterios['anio_desde'];
+        }
+        if (!empty($criterios['anio_hasta'])) {
+            $sql .= " AND r.anio_publicacion <= ?";
+            $params[] = (int)$criterios['anio_hasta'];
+        }
+        if (!empty($criterios['carrera_id'])) {
+            $sql .= " AND COALESCE(dp.id_carrera, li.id_carrera) = ?";
+            $params[] = (int)$criterios['carrera_id'];
+        }
+        if (!empty($criterios['linea_id'])) {
+            $sql .= " AND rc.id_linea_investigacion = ?";
+            $params[] = (int)$criterios['linea_id'];
+        }
+        if (!empty($criterios['dimension_id'])) {
+            $sql .= " AND rc.id_dimension_operativa = ?";
+            $params[] = (int)$criterios['dimension_id'];
+        }
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+    }
+
+    public function eliminarPSTPorCriterios(array $criterios, bool $conservarDirectorioPersonas = true): array {
+        $tieneFiltro = !empty($criterios['anio_desde'])
+            || !empty($criterios['anio_hasta'])
+            || !empty($criterios['carrera_id'])
+            || !empty($criterios['linea_id'])
+            || !empty($criterios['dimension_id']);
+
+        if (!$tieneFiltro) {
+            throw new Exception("Selecciona al menos un criterio como rango de años, carrera, línea o dimensión para realizar el borrado selectivo.");
+        }
+
+        $ids = $this->obtenerIdsPSTPorCriterios($criterios);
+        if (empty($ids)) {
+            return [
+                'proyectos_eliminados' => 0,
+                'archivos_eliminados'  => 0,
+                'mb_liberados'         => 0
+            ];
+        }
+
+        $db = Connection::getInstance();
+        $basePath = defined('BASE_PATH') ? BASE_PATH : (defined('ROOT_PATH') ? ROOT_PATH : dirname(__DIR__, 3));
+        $bytesLiberados = 0;
+        $archivosBorrados = 0;
+
+        try {
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $stmtFiles = $db->prepare("SELECT archivo_pdf FROM public.recursos WHERE id IN ({$placeholders})");
+            $stmtFiles->execute($ids);
+            $archivosLista = $stmtFiles->fetchAll(PDO::FETCH_COLUMN);
+
+            $db->beginTransaction();
+
+            $db->prepare("DELETE FROM public.proyecto_carreras_vinculadas WHERE id_recurso IN ({$placeholders})")->execute($ids);
+            $db->prepare("DELETE FROM public.proyecto_tutores WHERE id_recurso IN ({$placeholders})")->execute($ids);
+            $db->prepare("DELETE FROM public.recurso_autores WHERE id_recurso IN ({$placeholders})")->execute($ids);
+            $db->prepare("DELETE FROM public.recurso_clasificaciones WHERE id_recurso IN ({$placeholders})")->execute($ids);
+            $db->prepare("DELETE FROM public.detalles_proyectos WHERE id_recurso IN ({$placeholders})")->execute($ids);
+            $db->prepare("DELETE FROM public.recursos WHERE id IN ({$placeholders})")->execute($ids);
+
+            if (!$conservarDirectorioPersonas) {
+                $db->exec("DELETE FROM public.autores WHERE id NOT IN (SELECT DISTINCT id_autor FROM public.recurso_autores)");
+                $db->exec("DELETE FROM public.tutores WHERE id NOT IN (SELECT DISTINCT id_tutor FROM public.proyecto_tutores)");
+            }
+
+            $db->commit();
+
+            foreach ($archivosLista as $relFile) {
+                if (!empty($relFile)) {
+                    $fullPath = $basePath . '/' . ltrim((string)$relFile, '/\\');
+                    if (file_exists($fullPath) && is_file($fullPath)) {
+                        $bytesLiberados += (int)@filesize($fullPath);
+                        if (@unlink($fullPath)) {
+                            $archivosBorrados++;
+                        }
+                    }
+                }
+            }
+
+            return [
+                'proyectos_eliminados' => count($ids),
+                'archivos_eliminados'  => $archivosBorrados,
+                'mb_liberados'         => round($bytesLiberados / (1024 * 1024), 2)
+            ];
+        } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw $e;
+        }
+    }
+
     public function purgarTodosLosPST(bool $conservarDirectorioPersonas = true): array {
         $db = Connection::getInstance();
         try {

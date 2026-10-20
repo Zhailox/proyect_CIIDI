@@ -481,11 +481,11 @@ class DetallePSTController {
         }
 
         // Si es petición AJAX, responder con JSON si no se tienen permisos en lugar de 302 redirect
-        if (in_array($accion, ['extraer', 'crear_ajax', 'simular_extraccion', 'bulk_action', 'quick_edit', 'purgar_todo_pst', 'limpiar_temporales'], true)) {
+        if (in_array($accion, ['extraer', 'crear_ajax', 'simular_extraccion', 'bulk_action', 'quick_edit', 'purgar_todo_pst', 'contar_borrado_criterios', 'limpiar_temporales'], true)) {
             $permisoRequerido = 'crear';
             if ($accion === 'quick_edit') {
                 $permisoRequerido = 'editar';
-            } elseif (in_array($accion, ['purgar_todo_pst', 'limpiar_temporales'], true)) {
+            } elseif (in_array($accion, ['purgar_todo_pst', 'contar_borrado_criterios', 'limpiar_temporales'], true)) {
                 $permisoRequerido = 'eliminar';
             }
             if (!Auth::requierePrivilegioMinimo($this->nivelAdmin, $permisoRequerido, 'RepositorioPST', false)) {
@@ -1161,6 +1161,44 @@ class DetallePSTController {
         }
 
         // 0.1e Procesar Acción: PURGAR TODOS LOS PST CON AUTENTICACIÓN SUPERADMIN
+        if ($accion === 'contar_borrado_criterios' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json; charset=utf-8');
+            try {
+                $rawBody = file_get_contents('php://input');
+                $payload = json_decode($rawBody, true);
+                if (!is_array($payload)) {
+                    $payload = $_POST;
+                }
+                $modo = strtolower(trim((string)($payload['modo'] ?? 'criterios')));
+                if ($modo === 'todo') {
+                    $resumen = $model->getPSTStatsResumen();
+                    $total = (int)($resumen['total_catalog'] ?? 0);
+                } else {
+                    $criterios = [
+                        'anio_desde'   => !empty($payload['anio_desde']) ? (int)$payload['anio_desde'] : null,
+                        'anio_hasta'   => !empty($payload['anio_hasta']) ? (int)$payload['anio_hasta'] : null,
+                        'carrera_id'   => !empty($payload['carrera_id']) ? (int)$payload['carrera_id'] : null,
+                        'linea_id'     => !empty($payload['linea_id']) ? (int)$payload['linea_id'] : null,
+                        'dimension_id' => !empty($payload['dimension_id']) ? (int)$payload['dimension_id'] : null
+                    ];
+                    $tieneAlguno = !empty($criterios['anio_desde']) || !empty($criterios['anio_hasta']) || !empty($criterios['carrera_id']) || !empty($criterios['linea_id']) || !empty($criterios['dimension_id']);
+                    $total = $tieneAlguno ? count($model->obtenerIdsPSTPorCriterios($criterios)) : 0;
+                }
+                while (ob_get_level()) ob_end_clean();
+                echo json_encode([
+                    'status' => 'success',
+                    'total'  => $total
+                ], JSON_UNESCAPED_UNICODE);
+            } catch (\Throwable $e) {
+                while (ob_get_level()) ob_end_clean();
+                echo json_encode([
+                    'status'  => 'error',
+                    'message' => $e->getMessage()
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            exit;
+        }
+
         if ($accion === 'purgar_todo_pst' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Content-Type: application/json; charset=utf-8');
             try {
@@ -1172,10 +1210,11 @@ class DetallePSTController {
 
                 $cedulaSudo = trim((string)($payload['cedula_superadmin'] ?? ''));
                 $passwordSudo = (string)($payload['password_superadmin'] ?? '');
-                $frase = strtoupper(trim((string)($payload['frase_confirmacion'] ?? '')));
+                $modo = strtolower(trim((string)($payload['modo'] ?? 'todo')));
+                $frase = strtoupper(trim((string)($payload['frase_confirmacion'] ?? $payload['confirmacion_texto'] ?? '')));
                 $conservarPersonas = isset($payload['conservar_personas']) ? (bool)$payload['conservar_personas'] : true;
 
-                if ($frase !== 'ELIMINAR TODO') {
+                if ($modo === 'todo' && !in_array($frase, ['ELIMINAR TODO', 'VACIAR REPOSITORIO', 'CONFIRMAR'], true)) {
                     throw new Exception('Debes escribir exactamente la frase ELIMINAR TODO para confirmar.');
                 }
 
@@ -1185,7 +1224,18 @@ class DetallePSTController {
                     throw new Exception('Las credenciales ingresadas no son válidas o no pertenecen a una cuenta de SuperAdmin.');
                 }
 
-                $resultado = $model->purgarTodosLosPST($conservarPersonas);
+                if ($modo === 'criterios') {
+                    $criterios = [
+                        'anio_desde'   => !empty($payload['anio_desde']) ? (int)$payload['anio_desde'] : null,
+                        'anio_hasta'   => !empty($payload['anio_hasta']) ? (int)$payload['anio_hasta'] : null,
+                        'carrera_id'   => !empty($payload['carrera_id']) ? (int)$payload['carrera_id'] : null,
+                        'linea_id'     => !empty($payload['linea_id']) ? (int)$payload['linea_id'] : null,
+                        'dimension_id' => !empty($payload['dimension_id']) ? (int)$payload['dimension_id'] : null
+                    ];
+                    $resultado = $model->eliminarPSTPorCriterios($criterios, $conservarPersonas);
+                } else {
+                    $resultado = $model->purgarTodosLosPST($conservarPersonas);
+                }
                 $elim = $resultado['proyectos_eliminados'] ?? 0;
                 $mb = $resultado['mb_liberados'] ?? 0;
 
@@ -1199,7 +1249,9 @@ class DetallePSTController {
                 while (ob_get_level()) ob_end_clean();
                 echo json_encode([
                     'status'  => 'success',
-                    'message' => "El catálogo fue vaciado por completo. Se eliminaron {$elim} proyectos y se liberaron {$mb} MB de espacio."
+                    'message' => $modo === 'criterios'
+                        ? "Se eliminaron {$elim} proyectos que coincidían con los filtros seleccionados y se liberaron {$mb} MB de espacio."
+                        : "El catálogo fue vaciado por completo. Se eliminaron {$elim} proyectos y se liberaron {$mb} MB de espacio."
                 ], JSON_UNESCAPED_UNICODE);
             } catch (\Throwable $e) {
                 while (ob_get_level()) ob_end_clean();
@@ -1774,6 +1826,7 @@ class DetallePSTController {
             'tutores'           => $tutores,
             'carreras'          => $carreras,
             'lineas'             => $lineas,
+            'todasLineas'        => $model->getLineasInvestigacion(null),
             'dimensiones'        => $dimensiones,
             'nivelesAcademicos'  => $nivelesAcademicos,
             'nivelesConTrayecto' => $model->getNivelesConTrayecto(),

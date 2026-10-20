@@ -669,7 +669,7 @@ if (typeof window.mammoth === 'undefined') {
                                 </a>
 
                                 <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'eliminar', 'RepositorioPST', false) && $totalCatalogReal > 0): ?>
-                                    <button type="button" onclick="abrirModalPurgarCatalogo()" class="btn-clear" style="padding: 0.5rem 0.95rem; font-size: 0.8rem;" title="Borrar todos los proyectos con clave de SuperAdmin">
+                                    <button type="button" onclick="abrirModalPurgarCatalogo()" class="btn-save" style="padding: 0.5rem 0.95rem; font-size: 0.8rem; background: var(--color-secundario); color: #ffffff; border: 1px solid var(--color-secundario); display: inline-flex; align-items: center; gap: 0.35rem;" title="Borrar proyectos por filtros o vaciar catálogo">
                                         <i class="ph ph-trash"></i> Vaciar catálogo
                                     </button>
                                 <?php endif; ?>
@@ -829,8 +829,8 @@ if (typeof window.mammoth === 'undefined') {
                                                           <span style="width: 6px; height: 6px; border-radius: 50%; background-color: var(--color-secundario); display: inline-block;"></span> Visible
                                                       </span>
                                                   <?php else: ?>
-                                                      <span style="background: rgba(100, 116, 139, 0.12); color: var(--texto-silenciado); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 700; border: 1px solid rgba(100, 116, 139, 0.25); display: inline-flex; align-items: center; gap: 0.2rem;">
-                                                          <span style="width: 6px; height: 6px; border-radius: 50%; background-color: var(--texto-silenciado); display: inline-block;"></span> Oculto
+                                                      <span style="background: #ffffff; color: var(--color-secundario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 700; border: 1px solid rgba(80, 89, 132, 0.25); display: inline-flex; align-items: center; gap: 0.2rem;">
+                                                          <span style="width: 6px; height: 6px; border-radius: 50%; background-color: var(--color-terciario); display: inline-block;"></span> Oculto
                                                       </span>
                                                   <?php endif; ?>
 
@@ -839,13 +839,13 @@ if (typeof window.mammoth === 'undefined') {
                                                           <?= htmlspecialchars($extArchivo) ?> • <?= $pesoArchivoMb ?> MB
                                                       </span>
                                                   <?php else: ?>
-                                                      <span style="background: #fff1f2; color: #e11d48; padding: 0.12rem 0.4rem; border-radius: 4px; font-size: 0.66rem; font-weight: 700; border: 1px solid rgba(225, 29, 72, 0.2);">
+                                                      <span style="background: #ffffff; color: var(--color-secundario); padding: 0.12rem 0.4rem; border-radius: 4px; font-size: 0.66rem; font-weight: 700; border: 1px solid rgba(80, 89, 132, 0.25);">
                                                           Sin archivo
                                                       </span>
                                                   <?php endif; ?>
 
                                                   <?php if ($fichaIncompleta): ?>
-                                                      <span style="background: #fffbeb; color: #b45309; padding: 0.12rem 0.4rem; border-radius: 4px; font-size: 0.66rem; font-weight: 700; border: 1px solid #fde68a;" title="A esta ficha le falta comunidad o palabras clave">
+                                                      <span style="background: #ffffff; color: var(--color-terciario); padding: 0.12rem 0.4rem; border-radius: 4px; font-size: 0.66rem; font-weight: 700; border: 1px solid rgba(112, 144, 203, 0.35);" title="A esta ficha le falta comunidad o palabras clave">
                                                           Por completar
                                                       </span>
                                                   <?php endif; ?>
@@ -917,7 +917,7 @@ if (typeof window.mammoth === 'undefined') {
                                                  <?php endif; ?>
 
                                                  <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'eliminar', 'RepositorioPST', false)): ?>
-                                                     <a href="javascript:void(0)" class="btn-action-delete" style="background: rgba(30, 41, 59, 0.08); color: var(--texto-titulos); border: 1px solid rgba(30, 41, 59, 0.2); border-radius: 6px; padding: 0.32rem 0.55rem; font-size: 0.75rem; font-weight: 700; text-decoration: none;" title="Eliminar este proyecto" onclick="confirmarEliminacionModal('?ruta=agregar-documento&accion=eliminar&id=<?= $doc['id'] ?>')">
+                                                     <a href="javascript:void(0)" class="btn-action-edit" style="background: #ffffff; color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.28); border-radius: 6px; padding: 0.32rem 0.55rem; font-size: 0.75rem; font-weight: 700; text-decoration: none;" title="Eliminar este proyecto" onclick="confirmarEliminacionModal('?ruta=agregar-documento&accion=eliminar&id=<?= $doc['id'] ?>')">
                                                          <i class="ph ph-trash"></i> Eliminar
                                                      </a>
                                                  <?php endif; ?>
@@ -990,24 +990,18 @@ if (typeof window.mammoth === 'undefined') {
             </section>
 
             <!-- BARRA FLOTANTE PARA ACCIONES EN LOTE -->
-            <div id="barraAccionesLotePst" style="display: none; position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: var(--bg-card, #ffffff); border: 1px solid rgba(80, 89, 132, 0.3); border-radius: 10px; padding: 0.75rem 1.25rem; box-shadow: 0 12px 35px rgba(18, 26, 62, 0.18); z-index: 9990; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <div id="barraAccionesLotePst" style="display: none; position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: #ffffff; border: 1px solid rgba(80, 89, 132, 0.3); border-radius: 10px; padding: 0.65rem 1.15rem; box-shadow: 0 12px 35px rgba(18, 26, 62, 0.18); z-index: 9990; align-items: center; gap: 1rem; flex-wrap: wrap;">
                 <span style="font-size: 0.85rem; font-weight: 800; color: var(--texto-titulos);">
                     <i class="ph ph-check-square" style="color: var(--color-secundario);"></i>
                     <span id="contadorSeleccionadosLote">0</span> seleccionados
                 </span>
                 <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                    <button type="button" onclick="ejecutarAccionMasivaTabla('activar')" class="btn-save" style="padding: 0.4rem 0.85rem; font-size: 0.78rem;">
-                        <i class="ph ph-eye"></i> Mostrar
-                    </button>
-                    <button type="button" onclick="ejecutarAccionMasivaTabla('ocultar')" class="btn-cancel" style="padding: 0.4rem 0.85rem; font-size: 0.78rem;">
-                        <i class="ph ph-eye-slash"></i> Ocultar
-                    </button>
                     <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'eliminar', 'RepositorioPST', false)): ?>
-                        <button type="button" onclick="confirmarEliminarLoteTabla()" class="btn-clear" style="padding: 0.4rem 0.85rem; font-size: 0.78rem;">
-                            <i class="ph ph-trash"></i> Eliminar
+                        <button type="button" onclick="confirmarEliminarLoteTabla()" class="btn-save" style="padding: 0.4rem 0.9rem; font-size: 0.78rem; background: var(--color-secundario); color: #ffffff; display: inline-flex; align-items: center; gap: 5px;">
+                            <i class="ph ph-trash"></i> Eliminar seleccionados
                         </button>
                     <?php endif; ?>
-                    <button type="button" onclick="limpiarSeleccionTablaPst()" class="btn-cancel" style="padding: 0.4rem 0.75rem; font-size: 0.78rem; background: transparent;">
+                    <button type="button" onclick="limpiarSeleccionTablaPst()" class="btn-cancel" style="padding: 0.4rem 0.75rem; font-size: 0.78rem; background: #ffffff; color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25);">
                         Desmarcar
                     </button>
                 </div>
@@ -1044,7 +1038,8 @@ const MAX_FILE_SIZE_BYTES = Math.floor(MAX_FILE_SIZE_MB * 1024 * 1024);
 const MAX_ARCHIVOS_LOTE = <?= json_encode($maxArchivosLote) ?>;
 
 // JSON con todas las dimensiones operativas del sistema para el filtrado dinámico
-const todasDimensiones = <?= json_encode($lineas && $dimensiones ? $dimensiones : []) ?>;
+const todasLineas = <?= json_encode($todasLineas ?? $lineas ?? []) ?>;
+const todasDimensiones = <?= json_encode($dimensiones ?? []) ?>;
 const activeDimensionId = <?= json_encode($_POST['dimension_id'] ?? $documento['dimension_id'] ?? '') ?>;
 
 // Estado global de la cola de documentos por lotes y despachador secuencial
@@ -2883,6 +2878,11 @@ document.addEventListener('DOMContentLoaded', () => {
     <?php if (!empty($success)): ?>
         mostrarModalAlerta('success', 'Operación Exitosa', <?= json_encode($success) ?>);
     <?php endif; ?>
+    if (window.location.search.includes('msg=')) {
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('msg');
+        window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search);
+    }
 });
 </script>
 
@@ -3185,7 +3185,7 @@ function confirmarCarreraModalLote() {
             <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 0.9rem; margin-bottom: 1rem;">
                 <div>
                     <label style="display: block; font-size: 0.76rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 5px;">Carrera o PNF</label>
-                    <select id="quick_edit_carrera" class="upload-input" style="width: 100%; padding: 9px 12px; font-size: 0.88rem;">
+                    <select id="quick_edit_carrera" class="upload-input" onchange="actualizarLineasEdicionRapida(this.value)" style="width: 100%; padding: 9px 12px; font-size: 0.88rem;">
                         <?php foreach ($carrerasList as $cItem): ?>
                             <option value="<?= $cItem['id'] ?>"><?= htmlspecialchars($cItem['nombre']) ?></option>
                         <?php endforeach; ?>
@@ -3202,9 +3202,6 @@ function confirmarCarreraModalLote() {
                     <label style="display: block; font-size: 0.76rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 5px;">Línea de Investigación</label>
                     <select id="quick_edit_linea" class="upload-input" onchange="actualizarDimensionesEdicionRapida(this.value)" style="width: 100%; padding: 9px 12px; font-size: 0.88rem;">
                         <option value="">Sin línea asignada</option>
-                        <?php foreach ($lineas as $lItem): ?>
-                            <option value="<?= $lItem['id'] ?>"><?= htmlspecialchars($lItem['nombre']) ?></option>
-                        <?php endforeach; ?>
                     </select>
                 </div>
                 <div>
@@ -3230,8 +3227,8 @@ function confirmarCarreraModalLote() {
             </div>
         </div>
 
-        <div style="padding: 1rem 1.5rem; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 0.75rem;">
-            <button type="button" class="btn-cancel" onclick="cerrarModalEdicionRapidaPst()" style="padding: 8px 18px; font-size: 0.86rem;">Cancelar</button>
+        <div style="padding: 1rem 1.5rem; background: #ffffff; border-top: 1px solid rgba(80, 89, 132, 0.15); display: flex; justify-content: flex-end; gap: 0.75rem;">
+            <button type="button" class="btn-cancel" onclick="cerrarModalEdicionRapidaPst()" style="padding: 8px 18px; font-size: 0.86rem; background: #ffffff; color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25);">Cancelar</button>
             <button type="button" id="btnGuardarQuickEditPst" class="btn-save" onclick="guardarEdicionRapidaPst()" style="padding: 8px 20px; font-size: 0.86rem; display: inline-flex; align-items: center; gap: 6px;">
                 <i class="ph ph-floppy-disk"></i> Guardar Cambios
             </button>
@@ -3239,60 +3236,133 @@ function confirmarCarreraModalLote() {
     </div>
 </div>
 
-<!-- MODAL DE VACIADO TOTAL DEL CATÁLOGO CON AUTORIZACIÓN DEL SUPER ADMINISTRADOR -->
-<div id="modalPurgarCatalogoPst" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; padding: 1rem;">
-    <div style="background: var(--bg-card, #ffffff); border-radius: 16px; width: 100%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3); border: 1px solid #fecdd3; overflow: hidden;">
-        <div style="padding: 1.3rem 1.5rem; background: #fff1f2; border-bottom: 1px solid #ffe4e6; display: flex; align-items: center; gap: 12px;">
-            <div style="width: 44px; height: 44px; border-radius: 12px; background: #ffe4e6; color: #be123c; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;">
-                <i class="ph ph-shield-warning"></i>
+<!-- MODAL DE BORRADO AVANZADO Y VACIADO DEL CATÁLOGO CON AUTORIZACIÓN DEL SUPER ADMINISTRADOR -->
+<div id="modalPurgarCatalogoPst" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 580px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid rgba(80, 89, 132, 0.25); overflow: hidden;">
+        <div style="padding: 1.2rem 1.5rem; background: linear-gradient(135deg, var(--color-secundario) 0%, var(--color-terciario) 100%); color: #ffffff; display: flex; align-items: center; gap: 12px;">
+            <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(255, 255, 255, 0.18); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.45rem; flex-shrink: 0;">
+                <i class="ph ph-shield-check"></i>
             </div>
             <div style="flex: 1;">
-                <h3 style="margin: 0; font-size: 1.12rem; font-weight: 800; color: #881337;">Vaciar Catálogo de Proyectos</h3>
-                <p style="margin: 2px 0 0 0; font-size: 0.79rem; color: #9f1239;">Requiere autorización de un Super Administrador</p>
+                <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #ffffff;">Borrado Masivo y Vaciado del Catálogo</h3>
+                <p style="margin: 2px 0 0 0; font-size: 0.78rem; color: rgba(255, 255, 255, 0.88);">Elimina proyectos por rango de años, línea o dimensión, o vacía todo el catálogo</p>
             </div>
-            <button type="button" onclick="cerrarModalPurgarCatalogo()" style="background: transparent; border: none; color: #9f1239; width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 1.1rem;">
+            <button type="button" onclick="cerrarModalPurgarCatalogo()" style="background: rgba(255, 255, 255, 0.18); border: none; color: #ffffff; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
                 <i class="ph ph-x"></i>
             </button>
         </div>
 
-        <div style="padding: 1.35rem 1.5rem;">
-            <p style="margin: 0 0 1rem 0; font-size: 0.86rem; color: var(--texto-comun); line-height: 1.5;">
-                Esta operación eliminará todos los proyectos registrados en el repositorio junto con sus documentos guardados en el servidor.
-            </p>
+        <div style="padding: 1.25rem 1.5rem; background: #ffffff; max-height: 78vh; overflow-y: auto;">
+            <!-- Selector de modo de borrado -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 1rem;">
+                <button type="button" id="btnModoBorradoCriterios" onclick="cambiarModoBorradoCatalogo('criterios')" style="padding: 0.6rem 0.8rem; border-radius: 10px; border: 2px solid var(--color-secundario); background: var(--color-secundario); color: #ffffff; font-weight: 800; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="ph ph-funnel"></i> Borrar por filtros
+                </button>
+                <button type="button" id="btnModoBorradoTodo" onclick="cambiarModoBorradoCatalogo('todo')" style="padding: 0.6rem 0.8rem; border-radius: 10px; border: 1px solid rgba(80, 89, 132, 0.3); background: #ffffff; color: var(--color-secundario); font-weight: 700; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="ph ph-trash"></i> Vaciar todo el catálogo
+                </button>
+            </div>
+            <input type="hidden" id="purgar_modo_actual" value="criterios">
 
-            <label style="display: flex; align-items: flex-start; gap: 9px; padding: 10px 12px; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0; margin-bottom: 1rem; cursor: pointer;">
+            <!-- Panel de filtros para borrado por criterios -->
+            <div id="panelBorradoPorCriterios" style="background: #ffffff; border: 1px solid rgba(80, 89, 132, 0.22); border-radius: 12px; padding: 0.95rem 1rem; margin-bottom: 1rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                    <div>
+                        <label style="display: block; font-size: 0.72rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 4px;">Desde el año</label>
+                        <select id="purgar_anio_desde" class="upload-input" onchange="actualizarConteoBorradoCriterios()" style="width: 100%; padding: 7px 10px; font-size: 0.84rem; background: #ffffff;">
+                            <option value="">Cualquier año inicial</option>
+                            <?php for ($y = 2018; $y <= (int)date('Y') + 1; $y++): ?>
+                                <option value="<?= $y ?>"><?= $y ?></option>
+                            <?php endfor; ?>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.72rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 4px;">Hasta el año</label>
+                        <select id="purgar_anio_hasta" class="upload-input" onchange="actualizarConteoBorradoCriterios()" style="width: 100%; padding: 7px 10px; font-size: 0.84rem; background: #ffffff;">
+                            <option value="">Cualquier año final</option>
+                            <?php for ($y = (int)date('Y') + 1; $y >= 2018; $y--): ?>
+                                <option value="<?= $y ?>"><?= $y ?></option>
+                            <?php endfor; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 0.75rem;">
+                    <label style="display: block; font-size: 0.72rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 4px;">Carrera o PNF</label>
+                    <select id="purgar_carrera_id" class="upload-input" onchange="actualizarLineasBorradoCriterios(this.value)" style="width: 100%; padding: 7px 10px; font-size: 0.84rem; background: #ffffff;">
+                        <option value="">Todas las carreras</option>
+                        <?php foreach ($carrerasList as $cItem): ?>
+                            <option value="<?= $cItem['id'] ?>"><?= htmlspecialchars($cItem['nombre']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.7rem;">
+                    <div>
+                        <label style="display: block; font-size: 0.72rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 4px;">Línea de Investigación</label>
+                        <select id="purgar_linea_id" class="upload-input" onchange="actualizarDimensionesBorradoCriterios(this.value)" style="width: 100%; padding: 7px 10px; font-size: 0.84rem; background: #ffffff;">
+                            <option value="">Todas las líneas</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.72rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 4px;">Dimensión Operativa</label>
+                        <select id="purgar_dimension_id" class="upload-input" onchange="actualizarConteoBorradoCriterios()" style="width: 100%; padding: 7px 10px; font-size: 0.84rem; background: #ffffff;">
+                            <option value="">Todas las dimensiones</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="resumenConteoBorradoBox" style="padding: 8px 12px; border-radius: 8px; background: #ffffff; border: 1px solid rgba(80, 89, 132, 0.25); font-size: 0.8rem; font-weight: 700; color: var(--color-secundario); display: flex; align-items: center; gap: 6px;">
+                    <i class="ph ph-info"></i>
+                    <span id="textoConteoBorradoCriterios">Selecciona al menos un filtro arriba para ver cuántos proyectos coinciden</span>
+                </div>
+            </div>
+
+            <div id="avisoBorradoTodoBox" style="display: none; padding: 10px 12px; border-radius: 10px; background: #ffffff; border: 1px solid rgba(80, 89, 132, 0.3); color: var(--color-secundario); font-size: 0.83rem; font-weight: 600; margin-bottom: 1rem; line-height: 1.45;">
+                Atención: Vas a eliminar todos los proyectos registrados en el catálogo junto con sus documentos almacenados en el servidor.
+            </div>
+
+            <label style="display: flex; align-items: flex-start; gap: 9px; padding: 9px 12px; border-radius: 10px; background: #ffffff; border: 1px solid rgba(80, 89, 132, 0.22); margin-bottom: 0.95rem; cursor: pointer;">
                 <input type="checkbox" id="purgar_conservar_personas" checked style="margin-top: 3px; width: 16px; height: 16px; accent-color: var(--color-secundario);">
-                <span style="font-size: 0.82rem; color: var(--texto-titulos); font-weight: 600; line-height: 1.4;">
+                <span style="font-size: 0.81rem; color: var(--texto-titulos); font-weight: 600; line-height: 1.4;">
                     Conservar el directorio de personas registradas, como autores y tutores, para agilizar próximas cargas
                 </span>
             </label>
 
-            <div style="margin-bottom: 0.9rem;">
-                <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 4px;">Cédula del Super Administrador</label>
-                <input type="text" id="purgar_cedula_superadmin" class="upload-input" value="<?= htmlspecialchars($_SESSION['usuario_cedula'] ?? '') ?>" placeholder="Ej: V-12345678" style="width: 100%; padding: 9px 12px; font-size: 0.88rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem;">
+                <div>
+                    <label style="display: block; font-size: 0.73rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 4px;">Cédula del Super Administrador</label>
+                    <input type="text" id="purgar_cedula_superadmin" class="upload-input" value="<?= htmlspecialchars($_SESSION['usuario_cedula'] ?? '') ?>" placeholder="Ej: V-12345678" style="width: 100%; padding: 8px 11px; font-size: 0.86rem; background: #ffffff;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.73rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 4px;">Contraseña del Super Administrador</label>
+                    <input type="password" id="purgar_password_superadmin" class="upload-input" placeholder="Ingresa la contraseña" style="width: 100%; padding: 8px 11px; font-size: 0.86rem; background: #ffffff;">
+                </div>
             </div>
 
-            <div style="margin-bottom: 0.9rem;">
-                <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 4px;">Contraseña del Super Administrador</label>
-                <input type="password" id="purgar_password_superadmin" class="upload-input" placeholder="Ingresa la contraseña para autorizar" style="width: 100%; padding: 9px 12px; font-size: 0.88rem;">
-            </div>
-
-            <div style="margin-bottom: 0.4rem;">
-                <label style="display: block; font-size: 0.75rem; font-weight: 800; color: #be123c; text-transform: uppercase; margin-bottom: 4px;">Escribe VACIAR REPOSITORIO para confirmar</label>
-                <input type="text" id="purgar_frase_confirmacion" class="upload-input" placeholder="VACIAR REPOSITORIO" autocomplete="off" style="width: 100%; padding: 9px 12px; font-size: 0.88rem; border-color: #fda4af;">
+            <div id="contenedorFrasePurgaTodo" style="display: none; margin-bottom: 0.3rem;">
+                <label style="display: block; font-size: 0.73rem; font-weight: 800; color: var(--color-secundario); text-transform: uppercase; margin-bottom: 4px;">Escribe VACIAR REPOSITORIO para confirmar el vaciado total</label>
+                <input type="text" id="purgar_frase_confirmacion" class="upload-input" placeholder="VACIAR REPOSITORIO" autocomplete="off" style="width: 100%; padding: 8px 11px; font-size: 0.86rem; background: #ffffff; border-color: rgba(80, 89, 132, 0.35);">
             </div>
         </div>
 
-        <div style="padding: 1rem 1.5rem; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 0.75rem;">
-            <button type="button" class="btn-cancel" onclick="cerrarModalPurgarCatalogo()" style="padding: 8px 16px; font-size: 0.86rem;">Cancelar</button>
-            <button type="button" id="btnEjecutarPurgaCatalogo" onclick="ejecutarPurgaTotalCatalogo()" style="padding: 8px 18px; font-size: 0.86rem; font-weight: 700; border-radius: 8px; border: 1px solid #be123c; background: #be123c; color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                <i class="ph ph-trash"></i> Confirmar y Vaciar
+        <div style="padding: 0.95rem 1.5rem; background: #ffffff; border-top: 1px solid rgba(80, 89, 132, 0.15); display: flex; justify-content: flex-end; gap: 0.75rem;">
+            <button type="button" class="btn-cancel" onclick="cerrarModalPurgarCatalogo()" style="padding: 8px 16px; font-size: 0.85rem; background: #ffffff; color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25);">Cancelar</button>
+            <button type="button" id="btnEjecutarPurgaCatalogo" class="btn-save" onclick="ejecutarPurgaTotalCatalogo()" style="padding: 8px 18px; font-size: 0.85rem; font-weight: 700; border-radius: 8px; border: 1px solid var(--color-secundario); background: var(--color-secundario); color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="ph ph-trash"></i> <span id="textoBotonEjecutarBorrado">Eliminar proyectos filtrados</span>
             </button>
         </div>
     </div>
 </div>
 
 <script>
+// Utilidad para recargar la página limpiando cualquier parámetro msg previo y evitando avisos repetidos
+function recargarListadoSinMensaje() {
+    const cleanUrl = new URL(window.location.href);
+    cleanUrl.searchParams.delete('msg');
+    window.location.href = cleanUrl.pathname + cleanUrl.search;
+}
+
 // 1. INDICADOR EN TIEMPO REAL DE COMPLETITUD DEL FORMULARIO
 function calcularCompletitudFormularioPst() {
     const barra = document.getElementById('barraCompletitudFicha');
@@ -3312,20 +3382,17 @@ function calcularCompletitudFormularioPst() {
         { nombre: 'palabras clave', ok: Boolean((document.getElementById('palabras_clave')?.value || '').trim()) }
     ];
 
-    // Verificar al menos un autor con nombre
     let tieneAutor = false;
     document.getElementsByName('autor_nombre[]').forEach(inp => {
         if ((inp.value || '').trim().length > 2) tieneAutor = true;
     });
     camposEvaluados.push({ nombre: 'autor principal', ok: tieneAutor });
 
-    // Verificar al menos un tutor con nombre
     const tAcad = (document.getElementById('tutor_academico_nombre')?.value || '').trim();
     const tInst = (document.getElementById('tutor_institucional_nombre')?.value || '').trim();
     const tCom = (document.getElementById('tutor_comunitario_nombre')?.value || '').trim();
     camposEvaluados.push({ nombre: 'tutor', ok: Boolean(tAcad || tInst || tCom) });
 
-    // Verificar archivo adjunto o cargado
     const tieneArchivo = Boolean(
         (document.getElementById('archivo_pdf_hidden')?.value || '').trim() ||
         (document.getElementById('input_archivo_extractor')?.files?.length > 0)
@@ -3357,7 +3424,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// 2. SELECCIÓN POR LOTES Y BARRA FLOTANTE DE ACCIONES MASIVAS
+// 2. SELECCIÓN POR LOTES Y BARRA FLOTANTE DE ELIMINACIÓN
 function obtenerIdsSeleccionadosTablaPst() {
     const checks = document.querySelectorAll('.check-pst-row:checked');
     return Array.from(checks).map(c => parseInt(c.value, 10)).filter(n => n > 0);
@@ -3374,11 +3441,11 @@ function alternarSeleccionTodosPst(masterCheckbox) {
 function actualizarBarraLotePst() {
     const seleccionados = obtenerIdsSeleccionadosTablaPst();
     const barra = document.getElementById('barraAccionesLotePst');
-    const contador = document.getElementById('contadorSeleccionadosPst');
-    const master = document.getElementById('checkAllPstTable');
+    const contador = document.getElementById('contadorSeleccionadosLote');
+    const master = document.getElementById('checkAllPstRows');
     const totalChecks = document.querySelectorAll('.check-pst-row').length;
 
-    if (contador) contador.textContent = seleccionados.length;
+    if (contador) contador.textContent = String(seleccionados.length);
     if (barra) {
         barra.style.display = seleccionados.length > 0 ? 'flex' : 'none';
     }
@@ -3389,7 +3456,7 @@ function actualizarBarraLotePst() {
 
 function limpiarSeleccionTablaPst() {
     document.querySelectorAll('.check-pst-row').forEach(c => { c.checked = false; });
-    const master = document.getElementById('checkAllPstTable');
+    const master = document.getElementById('checkAllPstRows');
     if (master) master.checked = false;
     actualizarBarraLotePst();
 }
@@ -3413,9 +3480,7 @@ async function ejecutarAccionMasivaTabla(operacion) {
         });
         const json = await res.json();
         if (json.status === 'success') {
-            mostrarModalAlerta('success', 'Operación Completada', json.message || 'Los proyectos seleccionados fueron actualizados.', () => {
-                window.location.reload();
-            });
+            recargarListadoSinMensaje();
         } else {
             mostrarModalAlerta('error', 'No se pudo completar', json.message || 'Ocurrió un inconveniente al procesar la selección.');
         }
@@ -3453,7 +3518,7 @@ async function limpiarTemporalesServidor() {
         const json = await res.json();
         if (json.status === 'success') {
             mostrarModalAlerta('success', 'Almacenamiento Optimizado', json.message || 'Se limpiaron los archivos temporales.', () => {
-                window.location.reload();
+                recargarListadoSinMensaje();
             });
         } else {
             mostrarModalAlerta('error', 'Aviso', json.message || 'No se pudieron limpiar los archivos temporales.');
@@ -3463,13 +3528,44 @@ async function limpiarTemporalesServidor() {
     }
 }
 
-// 4. EDICIÓN RÁPIDA DESDE LA TABLA
+// 4. EDICIÓN RÁPIDA DESDE LA TABLA CON LÍNEAS Y DIMENSIONES SINCRONIZADAS
+function actualizarLineasEdicionRapida(carreraId, selectedLineaId = '', selectedDimId = '') {
+    const lineaSelect = document.getElementById('quick_edit_linea');
+    if (!lineaSelect) return;
+
+    lineaSelect.innerHTML = '<option value="">Sin línea asignada</option>';
+    const listaLineas = Array.isArray(todasLineas) ? todasLineas : [];
+    const filtradas = carreraId
+        ? listaLineas.filter(l => !l.id_carrera || String(l.id_carrera) === String(carreraId))
+        : listaLineas;
+
+    filtradas.forEach(l => {
+        const opt = document.createElement('option');
+        opt.value = l.id;
+        opt.textContent = l.nombre;
+        lineaSelect.appendChild(opt);
+    });
+
+    if (selectedLineaId) {
+        lineaSelect.value = String(selectedLineaId);
+    }
+    actualizarDimensionesEdicionRapida(lineaSelect.value, selectedDimId);
+}
+
 function actualizarDimensionesEdicionRapida(lineaId, selectedDimId = '') {
     const dimSelect = document.getElementById('quick_edit_dimension');
     if (!dimSelect) return;
 
     dimSelect.innerHTML = '<option value="">Sin dimensión asignada</option>';
-    const dims = (typeof dimensionesPorLinea !== 'undefined' && lineaId && dimensionesPorLinea[lineaId]) ? dimensionesPorLinea[lineaId] : [];
+    if (!lineaId) {
+        dimSelect.disabled = true;
+        return;
+    }
+
+    dimSelect.disabled = false;
+    const listaDims = Array.isArray(todasDimensiones) ? todasDimensiones : [];
+    const dims = listaDims.filter(d => String(d.id_linea) === String(lineaId));
+
     dims.forEach(d => {
         const opt = document.createElement('option');
         opt.value = d.id;
@@ -3483,12 +3579,12 @@ function actualizarDimensionesEdicionRapida(lineaId, selectedDimId = '') {
 
 function abrirModalEdicionRapidaPst(doc) {
     if (!doc || !doc.id) return;
+    const carreraId = doc.carrera_id || doc.id_carrera || 1;
     document.getElementById('quick_edit_id').value = doc.id;
     document.getElementById('quick_edit_titulo').value = doc.titulo || '';
-    document.getElementById('quick_edit_carrera').value = doc.id_carrera || 1;
+    document.getElementById('quick_edit_carrera').value = carreraId;
     document.getElementById('quick_edit_anio').value = doc.anio_publicacion || new Date().getFullYear();
-    document.getElementById('quick_edit_linea').value = doc.linea_id || '';
-    actualizarDimensionesEdicionRapida(doc.linea_id || '', doc.dimension_id || '');
+    actualizarLineasEdicionRapida(carreraId, doc.linea_id || '', doc.dimension_id || '');
     document.getElementById('quick_edit_git').value = doc.url_repositorio || '';
     document.getElementById('quick_edit_activo').value = (doc.activo === false || doc.activo === 0 || doc.activo === '0' || doc.activo === 'f') ? '0' : '1';
 
@@ -3537,7 +3633,7 @@ async function guardarEdicionRapidaPst() {
         if (json.status === 'success') {
             cerrarModalEdicionRapidaPst();
             mostrarModalAlerta('success', 'Cambios Guardados', json.message || 'El proyecto se actualizó correctamente.', () => {
-                window.location.reload();
+                recargarListadoSinMensaje();
             });
         } else {
             mostrarModalAlerta('error', 'No se pudo actualizar', json.message || 'Verifica los datos ingresados.');
@@ -3548,12 +3644,148 @@ async function guardarEdicionRapidaPst() {
     }
 }
 
-// 5. VACIADO TOTAL DEL CATÁLOGO CON AUTORIZACIÓN DEL SUPER ADMINISTRADOR
+// 5. BORRADO AVANZADO POR CRITERIOS Y VACIADO TOTAL DEL CATÁLOGO
+function cambiarModoBorradoCatalogo(modo) {
+    const inputModo = document.getElementById('purgar_modo_actual');
+    const btnCriterios = document.getElementById('btnModoBorradoCriterios');
+    const btnTodo = document.getElementById('btnModoBorradoTodo');
+    const panelCriterios = document.getElementById('panelBorradoPorCriterios');
+    const avisoTodo = document.getElementById('avisoBorradoTodoBox');
+    const contenedorFrase = document.getElementById('contenedorFrasePurgaTodo');
+    const textoBoton = document.getElementById('textoBotonEjecutarBorrado');
+
+    if (inputModo) inputModo.value = modo;
+
+    if (modo === 'todo') {
+        if (btnTodo) {
+            btnTodo.style.border = '2px solid var(--color-secundario)';
+            btnTodo.style.background = 'var(--color-secundario)';
+            btnTodo.style.color = '#ffffff';
+        }
+        if (btnCriterios) {
+            btnCriterios.style.border = '1px solid rgba(80, 89, 132, 0.3)';
+            btnCriterios.style.background = '#ffffff';
+            btnCriterios.style.color = 'var(--color-secundario)';
+        }
+        if (panelCriterios) panelCriterios.style.display = 'none';
+        if (avisoTodo) avisoTodo.style.display = 'block';
+        if (contenedorFrase) contenedorFrase.style.display = 'block';
+        if (textoBoton) textoBoton.textContent = 'Confirmar y Vaciar Catálogo';
+    } else {
+        if (btnCriterios) {
+            btnCriterios.style.border = '2px solid var(--color-secundario)';
+            btnCriterios.style.background = 'var(--color-secundario)';
+            btnCriterios.style.color = '#ffffff';
+        }
+        if (btnTodo) {
+            btnTodo.style.border = '1px solid rgba(80, 89, 132, 0.3)';
+            btnTodo.style.background = '#ffffff';
+            btnTodo.style.color = 'var(--color-secundario)';
+        }
+        if (panelCriterios) panelCriterios.style.display = 'block';
+        if (avisoTodo) avisoTodo.style.display = 'none';
+        if (contenedorFrase) contenedorFrase.style.display = 'none';
+        if (textoBoton) textoBoton.textContent = 'Eliminar proyectos filtrados';
+        actualizarConteoBorradoCriterios();
+    }
+}
+
+function actualizarLineasBorradoCriterios(carreraId) {
+    const lineaSelect = document.getElementById('purgar_linea_id');
+    if (!lineaSelect) return;
+
+    lineaSelect.innerHTML = '<option value="">Todas las líneas</option>';
+    const listaLineas = Array.isArray(todasLineas) ? todasLineas : [];
+    const filtradas = carreraId
+        ? listaLineas.filter(l => !l.id_carrera || String(l.id_carrera) === String(carreraId))
+        : listaLineas;
+
+    filtradas.forEach(l => {
+        const opt = document.createElement('option');
+        opt.value = l.id;
+        opt.textContent = l.nombre;
+        lineaSelect.appendChild(opt);
+    });
+
+    actualizarDimensionesBorradoCriterios('');
+}
+
+function actualizarDimensionesBorradoCriterios(lineaId) {
+    const dimSelect = document.getElementById('purgar_dimension_id');
+    if (!dimSelect) return;
+
+    dimSelect.innerHTML = '<option value="">Todas las dimensiones</option>';
+    if (lineaId) {
+        const listaDims = Array.isArray(todasDimensiones) ? todasDimensiones : [];
+        const dims = listaDims.filter(d => String(d.id_linea) === String(lineaId));
+        dims.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.id;
+            opt.textContent = d.nombre;
+            dimSelect.appendChild(opt);
+        });
+    }
+    actualizarConteoBorradoCriterios();
+}
+
+async function actualizarConteoBorradoCriterios() {
+    const textoEl = document.getElementById('textoConteoBorradoCriterios');
+    if (!textoEl) return;
+
+    const anioDesde = document.getElementById('purgar_anio_desde')?.value || '';
+    const anioHasta = document.getElementById('purgar_anio_hasta')?.value || '';
+    const carreraId = document.getElementById('purgar_carrera_id')?.value || '';
+    const lineaId = document.getElementById('purgar_linea_id')?.value || '';
+    const dimensionId = document.getElementById('purgar_dimension_id')?.value || '';
+
+    if (!anioDesde && !anioHasta && !carreraId && !lineaId && !dimensionId) {
+        textoEl.textContent = 'Selecciona al menos un filtro arriba para ver cuántos proyectos coinciden';
+        return;
+    }
+
+    textoEl.textContent = 'Calculando proyectos que coinciden...';
+
+    try {
+        const res = await fetch('?ruta=agregar-documento&accion=contar_borrado_criterios', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': window.CSRF_TOKEN || ''
+            },
+            body: JSON.stringify({
+                modo: 'criterios',
+                anio_desde: anioDesde,
+                anio_hasta: anioHasta,
+                carrera_id: carreraId,
+                linea_id: lineaId,
+                dimension_id: dimensionId,
+                csrf_token: window.CSRF_TOKEN || ''
+            })
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+            if (json.total === 0) {
+                textoEl.textContent = 'Ningún proyecto coincide con los filtros elegidos';
+            } else if (json.total === 1) {
+                textoEl.textContent = '1 proyecto coincide y será eliminado al confirmar';
+            } else {
+                textoEl.textContent = json.total + ' proyectos coinciden y serán eliminados al confirmar';
+            }
+        }
+    } catch (e) {
+        textoEl.textContent = 'No se pudo consultar la cantidad de proyectos';
+    }
+}
+
 function abrirModalPurgarCatalogo() {
     const passInput = document.getElementById('purgar_password_superadmin');
     const fraseInput = document.getElementById('purgar_frase_confirmacion');
     if (passInput) passInput.value = '';
     if (fraseInput) fraseInput.value = '';
+
+    actualizarLineasBorradoCriterios(document.getElementById('purgar_carrera_id')?.value || '');
+    cambiarModoBorradoCatalogo('criterios');
+
     const modal = document.getElementById('modalPurgarCatalogoPst');
     if (modal) modal.style.display = 'flex';
 }
@@ -3564,18 +3796,35 @@ function cerrarModalPurgarCatalogo() {
 }
 
 async function ejecutarPurgaTotalCatalogo() {
+    const modo = document.getElementById('purgar_modo_actual')?.value || 'criterios';
     const cedula = (document.getElementById('purgar_cedula_superadmin')?.value || '').trim();
     const password = document.getElementById('purgar_password_superadmin')?.value || '';
     const frase = (document.getElementById('purgar_frase_confirmacion')?.value || '').trim();
     const conservarPersonas = Boolean(document.getElementById('purgar_conservar_personas')?.checked);
+
+    const anioDesde = document.getElementById('purgar_anio_desde')?.value || '';
+    const anioHasta = document.getElementById('purgar_anio_hasta')?.value || '';
+    const carreraId = document.getElementById('purgar_carrera_id')?.value || '';
+    const lineaId = document.getElementById('purgar_linea_id')?.value || '';
+    const dimensionId = document.getElementById('purgar_dimension_id')?.value || '';
+
+    if (modo === 'criterios' && !anioDesde && !anioHasta && !carreraId && !lineaId && !dimensionId) {
+        mostrarModalAlerta('warning', 'Filtro Requerido', 'Selecciona al menos un rango de años, una carrera, una línea o una dimensión para borrar por filtros.');
+        return;
+    }
+
+    if (modo === 'criterios' && anioDesde && anioHasta && parseInt(anioDesde, 10) > parseInt(anioHasta, 10)) {
+        mostrarModalAlerta('warning', 'Rango de Años Inválido', 'El año inicial no puede ser mayor que el año final.');
+        return;
+    }
 
     if (!password) {
         mostrarModalAlerta('warning', 'Contraseña Requerida', 'Por favor ingresa la contraseña del Super Administrador para autorizar la operación.');
         return;
     }
 
-    if (frase.toUpperCase() !== 'VACIAR REPOSITORIO') {
-        mostrarModalAlerta('warning', 'Frase Incorrecta', 'Debes escribir exactamente VACIAR REPOSITORIO para confirmar.');
+    if (modo === 'todo' && !['VACIAR REPOSITORIO', 'ELIMINAR TODO'].includes(frase.toUpperCase())) {
+        mostrarModalAlerta('warning', 'Frase Incorrecta', 'Debes escribir exactamente VACIAR REPOSITORIO para confirmar el vaciado total.');
         return;
     }
 
@@ -3590,9 +3839,15 @@ async function ejecutarPurgaTotalCatalogo() {
                 'X-CSRF-Token': window.CSRF_TOKEN || ''
             },
             body: JSON.stringify({
+                modo: modo,
+                anio_desde: anioDesde,
+                anio_hasta: anioHasta,
+                carrera_id: carreraId,
+                linea_id: lineaId,
+                dimension_id: dimensionId,
                 cedula_superadmin: cedula,
                 password_superadmin: password,
-                confirmacion_texto: frase,
+                frase_confirmacion: modo === 'todo' ? frase : 'CONFIRMAR',
                 conservar_personas: conservarPersonas,
                 csrf_token: window.CSRF_TOKEN || ''
             })
@@ -3602,11 +3857,11 @@ async function ejecutarPurgaTotalCatalogo() {
 
         if (json.status === 'success') {
             cerrarModalPurgarCatalogo();
-            mostrarModalAlerta('success', 'Catálogo Vaciado', json.message || 'El repositorio fue vaciado por completo.', () => {
-                window.location.href = '?ruta=agregar-documento&accion=listar';
+            mostrarModalAlerta('success', 'Borrado Completado', json.message || 'La operación se realizó con éxito.', () => {
+                recargarListadoSinMensaje();
             });
         } else {
-            mostrarModalAlerta('error', 'Autorización Rechazada', json.message || 'No se pudo autorizar el vaciado del catálogo.');
+            mostrarModalAlerta('error', 'No se pudo completar', json.message || 'No se pudo autorizar el borrado.');
         }
     } catch (e) {
         if (btn) btn.disabled = false;
