@@ -76,6 +76,14 @@
     <h2 class="gp-title"><i class="ph-bold ph-briefcase"></i> Gestión de Solicitudes</h2>
     <p class="gp-subtitle">Panel unificado para evaluar las propuestas de las empresas y asignar los equipos de estudiantes.</p>
     
+<?php
+$usuarioActual = Auth::usuario() ?? [];
+$rolActual = $usuarioActual['rol'] ?? '';
+$nivelActual = (int)($usuarioActual['nivel'] ?? 999);
+$esAdminActual = $nivelActual === 0 || str_contains(mb_strtolower($rolActual), 'super admin');
+$esComiteActual = str_contains(mb_strtolower($rolActual), 'comit');
+$puedeAcreditarPst = $esAdminActual || $esComiteActual;
+?>
     <div class="gp-main-tabs">
         <a href="?ruta=gestion-proyectos&tab=propuestas" class="gp-main-tab <?= $tab === 'propuestas' ? 'active' : '' ?>">
             <i class="ph-bold ph-folder-open"></i> Evaluación de Propuestas Empresariales
@@ -83,7 +91,11 @@
         <a href="?ruta=gestion-proyectos&tab=equipos" class="gp-main-tab <?= $tab === 'equipos' ? 'active' : '' ?>">
             <i class="ph-bold ph-users-three"></i> Asignación de Equipo Estudiantil
         </a>
-        
+        <?php if ($puedeAcreditarPst): ?>
+        <a href="?ruta=profesores-pst" class="gp-main-tab">
+            <i class="ph-bold ph-chalkboard-teacher"></i> Acreditación Docentes PST
+        </a>
+        <?php endif; ?>
     </div>
 </div>
 

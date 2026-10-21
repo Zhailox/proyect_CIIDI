@@ -1,9 +1,8 @@
 {
     "activo": false,
     "mensaje": "",
-    "fecha_inicio": "2026-09-12 06:28:32",
-    "fecha_fin": "2026-09-12 06:30:32",
-    "minutos": 2,
-    "programado": false,
-    "agenda": []
+    "fecha_inicio": null,
+    "fecha_fin": null,
+    "minutos": 0,
+    "programado": false
 }

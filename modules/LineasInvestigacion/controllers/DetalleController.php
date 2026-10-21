@@ -47,11 +47,15 @@ class DetalleLineaController {
         // Carga investigaciones ofertadas bajo esta línea
         $investigaciones = $lineasModel->getInvestigacionesPorLinea($id);
 
+        // Carga profesores afiliados
+        $profesores = $lineasModel->getProfesoresAfiliadosPorLinea($id);
+
         return [
             'linea'           => $linea,
             'dimensiones'     => $dimensiones,
             'proyectos'       => $proyectos,
             'investigaciones' => $investigaciones,
+            'profesores'      => $profesores,
             'pagination'      => [
                 'current_page' => $page,
                 'total_pages'  => $total_pages,

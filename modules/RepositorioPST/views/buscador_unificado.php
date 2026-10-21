@@ -2,38 +2,39 @@
 // modules/RepositorioPST/views/buscador_unificado.php
 require_once __DIR__ . '/../services/ConfigService.php';
 ?>
-<div class="main-content">
-    <!-- FONDO DE PÁGINA COMPLETA CON REDES AZULES Y FONDO BLANCO -->
-    <div class="search-page-canvas-bg" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: #ffffff;">
-        <canvas id="pstSearchPageCanvas" style="width: 100%; height: 100%; display: block;"></canvas>
+<!-- FONDO DE PÁGINA COMPLETA CON REDES AZULES Y FONDO BLANCO -->
+<div class="search-page-canvas-bg" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: #ffffff;">
+    <canvas id="pstSearchPageCanvas" style="width: 100%; height: 100%; display: block;"></canvas>
+</div>
+
+<div class="search-view-wrapper" style="position: relative; z-index: 1;">
+    
+    <div class="search-brand">
+        <h1>Búsqueda Inteligente</h1>
+        <div class="search-badge">
+            <i class="ph ph-sparkles"></i> Motor de búsqueda unificado
+        </div>
     </div>
 
-    <div class="search-view-wrapper" style="position: relative; z-index: 1;">
-        
-        <div class="search-brand">
-            <h1>Búsqueda Inteligente</h1>
-            <div class="search-badge">
-                <i class="ph ph-sparkles"></i> Motor de búsqueda unificado
-            </div>
-        </div>
+    <div class="search-layout-grid">
+        <!-- Columna Izquierda: Filtros Avanzados (OpenAlex Style) -->
+        <aside class="search-sidebar-column">
+            <form id="searchFilterForm" action="" method="GET">
+                <input type="hidden" name="ruta" value="buscador">
+                <input type="hidden" name="q" id="searchQueryHidden" value="<?= htmlspecialchars($q ?? '') ?>">
+                <input type="hidden" name="anio" id="searchYearInput" value="<?= htmlspecialchars($filtros['anio'] ?? '') ?>">
+                <input type="hidden" name="usar_ia" id="searchUsarIaHidden" value="<?= !empty($_GET['usar_ia']) ? '1' : '' ?>">
 
-        <div class="search-layout-grid">
-            <!-- Columna Izquierda: Filtros Avanzados (OpenAlex Style) -->
-            <aside class="search-sidebar-column">
-                <form id="searchFilterForm" action="" method="GET">
-                    <input type="hidden" name="ruta" value="buscador">
-                    <input type="hidden" name="q" id="searchQueryHidden" value="<?= htmlspecialchars($q ?? '') ?>">
-                    <input type="hidden" name="anio" id="searchYearInput" value="<?= htmlspecialchars($filtros['anio'] ?? '') ?>">
-
-                    <?php 
-                    $permitirFiltroCarrera = (bool)ConfigService::get('buscador.permitir_filtro_carrera', true);
-                    $selectedCarrera = $filtros['carrera_id'] ?? null;
-                    ?>
-                    <!-- Caja de Carrera (Dinámica / Bloqueada) -->
-                    <div class="filter-group-card">
-                        <h3><i class="ph ph-graduation-cap"></i> Programa Académico</h3>
-                        <?php if ($permitirFiltroCarrera): ?>
-                            <select name="carrera_id" id="carreraFilterSelect" class="filter-select-input" onchange="this.form.submit()" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--color-borde, #e2e8f0); background: #f8fafc; font-weight: 500; font-size: 0.9rem;">
+                <?php 
+                $permitirFiltroCarrera = (bool)ConfigService::get('buscador.permitir_filtro_carrera', true);
+                $selectedCarrera = $filtros['carrera_id'] ?? null;
+                ?>
+                <!-- Caja de Carrera (Dinámica / Bloqueada) -->
+                <div class="filter-group-card">
+                    <h3><i class="ph ph-graduation-cap"></i> Programa Académico</h3>
+                    <?php if ($permitirFiltroCarrera): ?>
+                        <div class="minimal-input-wrapper">
+                            <select name="carrera_id" id="carreraFilterSelect" onchange="submitFilterForm()">
                                 <option value="">Todas las carreras</option>
                                 <?php if (!empty($carreras)): ?>
                                     <?php foreach ($carreras as $carrera): ?>
@@ -43,13 +44,15 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </select>
-                        <?php else: ?>
-                            <div class="locked-value">
-                                <span>PNF en Informática</span>
-                                <span class="lock-badge"><i class="ph ph-lock-key"></i></span>
-                            </div>
-                        <?php endif; ?>
-                    </div>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                    <?php else: ?>
+                        <div class="locked-value">
+                            <span>PNF en Informática</span>
+                            <span class="lock-badge"><i class="ph ph-lock-key"></i></span>
+                        </div>
+                    <?php endif; ?>
+                </div>
 
                     <!-- Histograma Interactivo para el Año -->
                     <div class="filter-group-card">
@@ -79,7 +82,7 @@ require_once __DIR__ . '/../services/ConfigService.php';
                         </div>
                         <?php if (!empty($filtros['anio'])): ?>
                             <button type="button" class="btn-reset-year" onclick="selectYear('')">
-                                <i class="ph ph-x-circle"></i> Quitar filtro de año (<?= $filtros['anio'] ?>)
+                                <i class="ph ph-x-circle"></i> Quitar filtro de año: <?= $filtros['anio'] ?>
                             </button>
                         <?php endif; ?>
                     </div>
@@ -113,7 +116,7 @@ require_once __DIR__ . '/../services/ConfigService.php';
 
                     <div style="margin-top: 1rem;">
                         <button type="submit" class="btn-apply-filters"><i class="ph ph-funnel"></i> Aplicar Filtros</button>
-                        <?php if ($q !== '' || !empty($filtros['anio']) || !empty($filtros['linea_id']) || !empty($filtros['dimension_id'])): ?>
+                        <?php if (!empty($busquedaActiva) || !empty($_GET['usar_ia'])): ?>
                             <a href="?ruta=buscador" class="btn-reset-all">Restablecer Todo</a>
                         <?php endif; ?>
                     </div>
@@ -127,37 +130,78 @@ require_once __DIR__ . '/../services/ConfigService.php';
                 <div class="search-bar-panel">
                     <form id="searchBarForm" action="" method="GET">
                         <input type="hidden" name="ruta" value="buscador">
+                        <input type="hidden" name="carrera_id" value="<?= htmlspecialchars($selectedCarrera ?? '') ?>">
                         <input type="hidden" name="anio" value="<?= htmlspecialchars($filtros['anio'] ?? '') ?>">
                         <input type="hidden" name="linea_id" value="<?= htmlspecialchars($filtros['linea_id'] ?? '') ?>">
                         <input type="hidden" name="dimension_id" value="<?= htmlspecialchars($filtros['dimension_id'] ?? '') ?>">
 
-                        <div class="google-search-bar" id="searchBarContainer">
-                            <input type="text" name="q" id="searchQueryInput" value="<?= htmlspecialchars($q ?? '') ?>" placeholder="Buscar por títulos, palabras clave o resumen abstract..." autocomplete="off">
+                        <div class="google-search-bar <?= !empty($_GET['usar_ia']) ? 'ia-mode-container' : '' ?>" id="searchBarContainer">
+                            <input type="text" name="q" id="searchQueryInput" value="<?= htmlspecialchars($q ?? '') ?>" placeholder="<?= !empty($_GET['usar_ia']) ? 'Describe tu propuesta o temática de investigación: Búsqueda Semántica con Redes Neuronales...' : 'Buscar por títulos, palabras clave o resumen abstract...' ?>" autocomplete="off">
                             <svg class="google-search-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                             </svg>
-                            <button type="submit" class="btn-search-inner-submit"><i class="ph ph-magnifying-glass"></i></button>
+                            <button type="submit" class="btn-search-inner-submit" title="Buscar"><i class="ph ph-magnifying-glass"></i></button>
                         </div>
+                        
+                        <!-- Toggle de Búsqueda Semántica (IA) -->
+                        <?php if ((bool)ConfigService::get('red_onnx.habilitar_busqueda_semantica', true)): ?>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <div class="semantic-toggle-wrapper">
+                                <label class="semantic-switch" for="usarIaCheckbox">
+                                    <input type="checkbox" id="usarIaCheckbox" name="usar_ia" value="1" <?= !empty($_GET['usar_ia']) ? 'checked' : '' ?> onchange="handleSemanticToggle(this)">
+                                    <span class="semantic-slider"></span>
+                                </label>
+                                <label for="usarIaCheckbox" class="semantic-toggle-label <?= !empty($_GET['usar_ia']) ? 'active' : '' ?>">
+                                    <i class="ph-bold ph-sparkle"></i> Búsqueda Semántica con Redes Neuronales
+                                </label>
+                            </div>
+                            <div class="ia-hint <?= !empty($_GET['usar_ia']) ? 'visible' : '' ?>">
+                                <i class="ph-bold ph-info"></i> Encuentra proyectos por significado conceptual analizando resúmenes y títulos mediante embeddings vectoriales.
+                            </div>
+                        </div>
+                        <?php endif; ?>
                     </form>
                 </div>
 
                 <!-- Resultados de Búsqueda -->
                 <div class="search-results-section">
-                    <?php if ($q === '' && empty($filtros['anio']) && empty($filtros['linea_id']) && empty($filtros['dimension_id'])): ?>
+                    <?php if (empty($busquedaActiva)): ?>
                         <!-- Pantalla inicial / Estado Vacío inicial -->
                         <div class="search-welcome-state">
                             <i class="ph ph-books" style="font-size: 4rem; color: var(--color-terciario); opacity: 0.8;"></i>
                             <h2>Explora el repositorio PST</h2>
-                            <p>Escribe palabras clave o usa los filtros del panel izquierdo (como el histograma de publicaciones) para iniciar la búsqueda.</p>
+                            <p>Escribe palabras clave o usa los filtros del panel izquierdo para iniciar la búsqueda.</p>
                         </div>
                     <?php else: ?>
-                        <h3>Resultados Obtenidos (Mostrando <?= count($resultados) ?> de <?= $pagination['total_items'] ?>)</h3>
+                        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+                            <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--texto-titulos);">
+                                <?php if (!empty($usar_ia)): ?>
+                                    <i class="ph-bold ph-sparkle" style="color: var(--color-secundario);"></i> Resultados por Coincidencia Semántica IA
+                                <?php else: ?>
+                                    Resultados Obtenidos
+                                <?php endif; ?>
+                                <span style="font-size: 0.85rem; font-weight: 500; color: var(--texto-silenciado);">
+                                    · Mostrando <?= count($resultados) ?> de <?= $pagination['total_items'] ?>
+                                </span>
+                            </h3>
+                            <?php if (!empty($usar_ia)): ?>
+                                <span style="background: rgba(80, 89, 132, 0.12); color: var(--color-secundario); font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(80, 89, 132, 0.25);">
+                                    <i class="ph-bold ph-cpu"></i> Modelo XLM-RoBERTa ONNX
+                                </span>
+                            <?php endif; ?>
+                        </div>
                         
                         <?php if (empty($resultados)): ?>
                             <div class="no-results-card">
                                 <i class="ph ph-warning-circle"></i>
-                                <p>No se encontraron proyectos PST que coincidan con la búsqueda.</p>
+                                <p>
+                                    <?php if (!empty($usar_ia)): ?>
+                                        No se encontraron proyectos con similitud semántica suficiente para tu consulta. Prueba con términos más descriptivos o desactiva la Búsqueda Semántica.
+                                    <?php else: ?>
+                                        No se encontraron proyectos PST que coincidan con la búsqueda.
+                                    <?php endif; ?>
+                                </p>
                             </div>
                         <?php else: ?>
                             <div class="results-grid">
@@ -173,7 +217,16 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                 <?php foreach ($resultados as $res): ?>
                                     <div class="result-card">
                                         <div class="result-card-header">
-                                            <span class="badge-tipo"><i class="ph ph-file-text"></i> PST / Proyecto Socio-Tecnológico</span>
+                                            <span class="badge-tipo"><i class="ph ph-file-text"></i> <?= htmlspecialchars(ConfigService::get('recursos.sufijo_tipo_recurso', 'PST / Proyecto Socio-Tecnológico')) ?></span>
+                                            <?php if (isset($res['distancia'])): ?>
+                                                <?php 
+                                                    $dist = (float)$res['distancia'];
+                                                    $similitud = max(0, min(100, round((1 - $dist) * 100, 1)));
+                                                ?>
+                                                <span class="badge-similitud" title="Distancia Coseno: <?= number_format($dist, 4) ?>">
+                                                    <i class="ph-bold ph-sparkle"></i> <?= $similitud ?>% Similitud IA
+                                                </span>
+                                            <?php endif; ?>
                                             <span class="result-year"><?= $res['anio_publicacion'] ?></span>
                                         </div>
                                         <h4 class="result-title">
@@ -185,9 +238,13 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                         
                                         <!-- Línea, Trayecto y Dimensión en los resultados -->
                                         <div class="result-classification-tags">
-                                            <?php if (!empty($res['nivel_academico']) && $res['nivel_academico'] !== 'Pregrado'): ?>
+                                            <?php 
+                                            $nivBusc = $res['nivel_academico'] ?? '';
+                                            $labelsBusc = !empty($labelsNiveles) ? $labelsNiveles : ['Especializacion' => 'Especialización', 'Maestria' => 'Maestría'];
+                                            $nivBuscLabel = $labelsBusc[$nivBusc] ?? $nivBusc;
+                                            if (!empty($nivBusc) && ($nivBusc !== 'Pregrado')) : ?>
                                                 <span class="tag-linea" style="background-color: rgba(112, 144, 203, 0.15); color: var(--color-secundario); font-weight: 700;">
-                                                    <i class="ph ph-graduation-cap"></i> <?= htmlspecialchars($res['nivel_academico'] ?? '') ?>
+                                                    <i class="ph ph-graduation-cap"></i> <?= htmlspecialchars($nivBuscLabel) ?>
                                                 </span>
                                             <?php elseif (!empty($res['trayecto'])): ?>
                                                 <span class="tag-linea" style="background-color: rgba(0, 123, 255, 0.1); color: var(--color-terciario); font-weight: 700;">
@@ -200,11 +257,21 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                             <?php if (!empty($res['dimension_nombre'])): ?>
                                                 <span class="tag-dimension"><i class="ph ph-tree-structure"></i> <?= htmlspecialchars($res['dimension_nombre'] ?? '') ?></span>
                                             <?php endif; ?>
+                                            <?php if (!empty($res['carreras_vinculadas_nombres'])): ?>
+                                                <?php foreach (explode(', ', $res['carreras_vinculadas_nombres']) as $carrVincTag): ?>
+                                                    <span class="tag-linea" style="background-color: rgba(112, 144, 203, 0.15); color: var(--color-secundario); font-weight: 700; border: 1px solid rgba(112, 144, 203, 0.3);" title="Carrera Vinculada">
+                                                        <i class="ph ph-tag" style="color: var(--color-terciario);"></i> <?= htmlspecialchars(trim($carrVincTag)) ?>
+                                                    </span>
+                                                <?php endforeach; ?>
+                                            <?php endif; ?>
                                             <?php if (!empty($res['url_repositorio']) && ConfigService::get('recursos.mostrar_url_git', true)): ?>
                                                 <a href="<?= htmlspecialchars($res['url_repositorio'] ?? '') ?>" target="_blank" class="tag-linea" style="background-color: #002244; color: #fff; text-decoration: none;">
                                                     <i class="ph ph-git-branch"></i> Git
                                                 </a>
                                             <?php endif; ?>
+                                            <span class="tag-linea" style="background-color: #f1f5f9; color: var(--texto-silenciado);" title="Visualizaciones">
+                                                <i class="ph ph-eye" style="color: var(--color-secundario);"></i> <?= number_format((int)($res['vistas'] ?? 0)) ?> vistas
+                                            </span>
                                         </div>
 
                                         <div class="result-meta">
@@ -214,10 +281,15 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                             <?php endif; ?>
                                         </div>
                                         
-                                        <div class="result-actions">
+                                        <div class="result-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                             <a href="?ruta=detalles-pst&id=<?= $res['id'] ?>" class="btn-view-details">
-                                                <i class="ph ph-info"></i> Ver Ficha Técnia
+                                                <i class="ph ph-info"></i> Ver Ficha Técnica
                                             </a>
+                                            <?php if (ConfigService::puedeDescargarDocumento($res['archivo_pdf'] ?? null)): ?>
+                                                <a href="?ruta=ver-pdf-pst&id=<?= $res['id'] ?>&download=1" class="btn-view-details" style="background: rgba(16, 185, 129, 0.1); color: #059669; border-color: rgba(16, 185, 129, 0.3); text-decoration: none;" target="_blank" download>
+                                                    <i class="ph ph-download-simple"></i> Descargar Adjunto
+                                                </a>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 <?php endforeach; ?>
@@ -245,13 +317,30 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                         <span class="page-link disabled">&laquo; Anterior</span>
                                     <?php endif; ?>
                                     
-                                    <?php for ($i = 1; $i <= $tot; $i++): ?>
+                                    <?php 
+                                    $rangoInicioBusc = max(1, $curr - 2);
+                                    $rangoFinBusc    = min($tot, $curr + 2);
+                                    if ($rangoInicioBusc > 1): ?>
+                                        <a href="<?= $build_url(1) ?>" class="page-link">1</a>
+                                        <?php if ($rangoInicioBusc > 2): ?>
+                                            <span class="page-link disabled">...</span>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+
+                                    <?php for ($i = $rangoInicioBusc; $i <= $rangoFinBusc; $i++): ?>
                                         <?php if ($i == $curr): ?>
                                             <span class="page-link active"><?= $i ?></span>
                                         <?php else: ?>
                                             <a href="<?= $build_url($i) ?>" class="page-link"><?= $i ?></a>
                                         <?php endif; ?>
                                     <?php endfor; ?>
+
+                                    <?php if ($rangoFinBusc < $tot): ?>
+                                        <?php if ($rangoFinBusc < $tot - 1): ?>
+                                            <span class="page-link disabled">...</span>
+                                        <?php endif; ?>
+                                        <a href="<?= $build_url($tot) ?>" class="page-link"><?= $tot ?></a>
+                                    <?php endif; ?>
                                     
                                     <?php if ($curr < $tot): ?>
                                         <a href="<?= $build_url($curr + 1) ?>" class="page-link">Siguiente &raquo;</a>
@@ -268,7 +357,6 @@ require_once __DIR__ . '/../services/ConfigService.php';
         </div>
 
     </div>
-</div>
 
 <script>
 <?php include __DIR__ . '/../assets/js/search_engine.js'; ?>

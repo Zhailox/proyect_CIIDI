@@ -1,0 +1,10 @@
+========================================================
+REGISTRO DE EJECUCIÓN: hola [tarea_1790660917_352]
+FECHA/HORA: 2026-10-20 16:02:24
+DURACIÓN: 0.54 ms | ESTADO: FAIL
+========================================================
+
+MENSAJE: El archivo de script 'script_tarea_1790660917_352.php' no existe en storage/scheduler/scripts/.
+
+--- SALIDA ESTÁNDAR / CONSOLA (STDOUT/STDERR) ---
+

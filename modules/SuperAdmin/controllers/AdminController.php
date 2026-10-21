@@ -213,7 +213,7 @@ class AdminController {
     public function optimizarBaseDatos() {
         Auth::requierePrivilegioMinimo(0);
         try {
-            $res = $this->dashboardModel->optimizarBaseDatos();
+            $res = $this->getDashboardModel()->optimizarBaseDatos();
             if (session_status() === PHP_SESSION_NONE) session_start();
             if ($res['exito']) {
                 AuditLogger::registrar('INFO', 'SuperAdmin', 'Optimizar BD', 'VACUUM ANALYZE ejecutado exitosamente.');
@@ -474,7 +474,11 @@ class AdminController {
                 }
 
                 $ahora = time();
-                $esParaAhora = ($timestampInicio <= ($ahora + 10)); // tolerancia 10s
+                if ($timestampInicio < ($ahora - 60)) {
+                    throw new InvalidArgumentException("No se pueden agendar ventanas de mantenimiento en el pasado. Seleccione una fecha y hora futura.");
+                }
+
+                $esParaAhora = ($timestampInicio <= ($ahora + 30));
                 $fechaFin = date('Y-m-d H:i:s', $timestampInicio + ($duracionMinutos * 60));
 
                 $archivo = defined('STORAGE_PATH') ? STORAGE_PATH . 'maintenance.json' : __DIR__ . '/../../../storage/maintenance.json';
@@ -568,11 +572,19 @@ class AdminController {
 
     private function cerrarSesionesNoAdmin() {
         $savePath = session_save_path() ?: (ini_get('session.save_path') ?: sys_get_temp_dir());
+        $currentSessionId = session_id();
         $archivos = glob($savePath . '/sess_*');
         foreach ($archivos as $archivo) {
-            $contenido = file_get_contents($archivo);
+            // No cerrar la sesión actual desde la cual el Administrador activó el mantenimiento
+            if (!empty($currentSessionId) && str_contains($archivo, $currentSessionId)) {
+                continue;
+            }
+            $contenido = @file_get_contents($archivo);
+            if ($contenido === false) continue;
+            
             preg_match('/nivel_privilegio\|i:(\d+)/', $contenido, $matches);
-            if (isset($matches[1]) && (int)$matches[1] < 3) {
+            // Si el nivel de privilegio no está presente o es menor a 3, se destruye la sesión del usuario no admin
+            if (!isset($matches[1]) || (int)$matches[1] < 3) {
                 @unlink($archivo);
             }
         }

@@ -1,0 +1,103 @@
+.author-profile-wrapper {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.author-header-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: 0 10px 30px rgba(11, 26, 48, 0.04);
+    border: 1px solid rgba(112, 144, 203, 0.15);
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.author-header-bg {
+    position: absolute;
+    top: -100px;
+    right: -50px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(112, 144, 203, 0.08) 0%, rgba(255,255,255,0) 70%);
+    border-radius: 50%;
+    z-index: 0;
+}
+
+.author-avatar-large {
+    width: 120px;
+    height: 120px;
+    background: var(--color-secundario, #0b1a30);
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+    font-weight: 800;
+    box-shadow: 0 8px 20px rgba(11, 26, 48, 0.15);
+    z-index: 1;
+    flex-shrink: 0;
+}
+
+.author-info-content {
+    flex: 1;
+    z-index: 1;
+}
+
+.author-title {
+    margin: 0 0 0.5rem 0;
+    font-size: 2.2rem;
+    color: var(--texto-titulos, #0f172a);
+    font-weight: 800;
+}
+
+.author-badges {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.2rem;
+}
+
+.author-badge-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--texto-silenciado, #64748b);
+    background: rgba(112, 144, 203, 0.08);
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.author-badge-item.orcid {
+    color: var(--color-principal, #7090cb);
+    background: var(--color-secundario, rgba(112, 144, 203, 0.15));
+}
+
+.author-badge-item.orcid:hover {
+    background: var(--color-terciario, #7090cb);
+}
+
+.author-badge-item.web:hover {
+    color: var(--color-terciario, #7090cb);
+}
+
+.author-bio {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--texto-silenciado, #64748b);
+    margin: 0;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    padding-top: 1.2rem;
+}

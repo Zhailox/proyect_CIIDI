@@ -2,11 +2,13 @@
 // core/Security/RateLimiter.php
 
 class RateLimiter {
+    private static ?array $memoryWhitelist = null;
+    private static ?array $memoryBlacklist = null;
 
     private static function getStorageDir(): string {
         $dir = defined('STORAGE_PATH') ? STORAGE_PATH : __DIR__ . '/../../storage/';
         if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
+            @mkdir($dir, 0777, true);
         }
         return $dir;
     }
@@ -19,6 +21,40 @@ class RateLimiter {
         return self::getStorageDir() . 'security_blacklist.json';
     }
 
+    private static function getWhitelistFile(): string {
+        return self::getStorageDir() . 'security_whitelist.json';
+    }
+
+    public static function getMaxIntentos(): int {
+        $configFile = defined('STORAGE_PATH') ? STORAGE_PATH . 'system_config.json' : __DIR__ . '/../../storage/system_config.json';
+        if (file_exists($configFile)) {
+            $cfg = json_decode(file_get_contents($configFile), true) ?: [];
+            return max(1, (int)($cfg['seguridad']['intentos_login'] ?? 5));
+        }
+        return 5;
+    }
+
+    /**
+     * Escribe un archivo JSON en disco de forma atómica previniendo corrupción.
+     */
+    private static function writeJsonAtomic(string $filePath, array $data, int $options = JSON_PRETTY_PRINT): bool {
+        $dir = dirname($filePath);
+        $tempFile = tempnam($dir, 'tmp_json_');
+        if ($tempFile === false) {
+            return (bool) file_put_contents($filePath, json_encode($data, $options));
+        }
+
+        if (file_put_contents($tempFile, json_encode($data, $options)) !== false) {
+            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                @unlink($filePath);
+            }
+            return rename($tempFile, $filePath);
+        }
+
+        @unlink($tempFile);
+        return false;
+    }
+
     public static function obtenerIPCliente(): string {
         if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
             return $_SERVER['HTTP_CLIENT_IP'];
@@ -29,20 +65,16 @@ class RateLimiter {
         return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
     }
 
-    private static function getWhitelistFile(): string {
-        return self::getStorageDir() . 'security_whitelist.json';
-    }
-
-    public static function estaBloqueada(string $ip = null): array {
+    public static function estaBloqueada(?string $ip = null): array {
         if ($ip === null) $ip = self::obtenerIPCliente();
 
-        // 0. Revisar Lista Blanca (Whitelist) - Acceso prioritario garantizado
+        // 0. Revisar Lista Blanca (Whitelist) - Caché en memoria
         $whitelist = self::obtenerListaBlanca();
         if (isset($whitelist[$ip])) {
             return ['bloqueada' => false, 'es_whitelist' => true];
         }
 
-        // 1. Revisar Lista Negra Global (Bloqueo Permanente manual)
+        // 1. Revisar Lista Negra Global - Caché en memoria
         $blacklist = self::obtenerListaNegra();
         if (isset($blacklist[$ip])) {
             return [
@@ -52,19 +84,20 @@ class RateLimiter {
             ];
         }
 
-        // 2. Revisar Rate Limiting (Bloqueo temporal por intentos fallidos)
+        // 2. Revisar Rate Limiting (Bloqueo temporal)
         $attempts = self::obtenerIntentos();
         if (isset($attempts[$ip])) {
             $data = $attempts[$ip];
             $intentos = $data['intentos'] ?? 0;
             $bloqueadoHasta = $data['bloqueado_hasta'] ?? 0;
+            $maxIntentos = self::getMaxIntentos();
 
-            if ($intentos >= 5 && time() < $bloqueadoHasta) {
+            if ($intentos >= $maxIntentos && time() < $bloqueadoHasta) {
                 $segundosRestantes = $bloqueadoHasta - time();
                 $minutosRestantes = ceil($segundosRestantes / 60);
                 return [
                     'bloqueada' => true,
-                    'razon' => "IP bloqueada temporalmente por fuerza bruta. Reintente en {$minutosRestantes} minuto(s).",
+                    'razon' => "IP bloqueada temporalmente por exceso de intentos fallidos ({$intentos}/{$maxIntentos}). Reintente en {$minutosRestantes} minuto(s).",
                     'tipo' => 'rate_limit',
                     'segundos_restantes' => $segundosRestantes
                 ];
@@ -74,13 +107,9 @@ class RateLimiter {
         return ['bloqueada' => false];
     }
 
-    /**
-     * Inspecciona los datos de la petición (GET, POST, COOKIES) buscando patrones de SQL Injection o XSS.
-     */
     public static function inspeccionarPayloadsSeguridad(): array {
         $ip = self::obtenerIPCliente();
         
-        // Si está en Whitelist, no se bloquea
         $whitelist = self::obtenerListaBlanca();
         if (isset($whitelist[$ip])) {
             return ['amenaza_detectada' => false];
@@ -89,42 +118,66 @@ class RateLimiter {
         $patronesSQLi = [
             '/\b(union\s+all\s+select|union\s+select)\b/i',
             '/\b(select\s+.*\s+from|insert\s+into|delete\s+from|drop\s+table|drop\s+database|alter\s+table)\b/i',
-            '/(\'|\")\s*(or|and)\s*(\'|\")?\d+(\'|\")?\s*=\s*(\'|\")?\d+/i',
-            '/\b(exec\s*\(|execute\s*\(|pg_sleep\(|sleep\()\b/i'
+            '/(\'|\"|`|\b)\s*(or|and)\s*(\'|\"|`)?([a-zA-Z0-9_]+)(\'|\"|`)?\s*=\s*(\'|\"|`)?\4(\'|\"|`|\b)/i', // Detecta 0=0, 1=1, 'a'='a', etc.
+            '/(\'|\")\s*(or|and)\s+(\'|\")?(\d+|true)(\'|\")?\s*(--|#|\/\*)/i',
+            '/(\'|\")\s*(or|and)\s+(\'|\")?(\d+|true)/i',
+            '/\b(exec\s*\(|execute\s*\(|pg_sleep\(|sleep\(|benchmark\()\b/i',
+            '/(\'|\")\s*;\s*(--|\/\*)/i'
         ];
 
         $patronesXSS = [
-            '/<script\b[^>]*>(.*?)<\/script>/is',
+            '/<script\b[^>]*>/is',
             '/javascript\s*:/i',
-            '/onerror\s*=/i',
-            '/onload\s*=/i',
-            '/eval\s*\(/i'
+            '/\bon(error|load|click|mouseover|focus|blur|submit)\s*=/i',
+            '/\beval\s*\(/i',
+            '/<(iframe|embed|object|svg\s+onload)\b/i',
+            '/document\.(cookie|location)/i'
+        ];
+
+        $patronesLFI = [
+            '/\.\.[\/\\\\]/i',
+            '/\b(php|data|file|glob|phar):\/\//i'
         ];
 
         $datosRevisar = array_merge($_GET, $_POST);
         
         foreach ($datosRevisar as $clave => $valor) {
             if (is_array($valor)) continue;
+            $valorStr = (string)$valor;
 
-            // Check SQL Injection
             foreach ($patronesSQLi as $pattern) {
-                if (preg_match($pattern, (string)$valor)) {
-                    self::agregarListaNegra($ip, "WAF: Intento de Inyección SQL detectado en parámetro '{$clave}'");
-                    if (class_exists('AuditLogger')) {
-                        AuditLogger::registrar('CRITICAL', 'WAF_Security', 'Inyección SQL Interceptada', "IP {$ip} bloqueada por SQLi en parámetro '{$clave}': " . htmlspecialchars(substr($valor, 0, 100)));
+                if (preg_match($pattern, $valorStr)) {
+                    if (!in_array($ip, ['127.0.0.1', '::1', 'localhost'], true)) {
+                        self::agregarListaNegra($ip, "WAF: Intento de Inyección SQL detectado en parámetro '{$clave}'");
                     }
-                    return ['amenaza_detectada' => true, 'tipo' => 'SQLi', 'parametro' => $clave];
+                    if (class_exists('AuditLogger')) {
+                        AuditLogger::registrar('CRITICAL', 'WAF_Security', 'Inyección SQL Interceptada', "IP {$ip} detectada por SQLi en parámetro '{$clave}': " . htmlspecialchars(substr($valorStr, 0, 100)));
+                    }
+                    return ['amenaza_detectada' => true, 'tipo' => 'Inyección SQL (SQLi)', 'parametro' => $clave];
                 }
             }
 
-            // Check XSS Malicioso
             foreach ($patronesXSS as $pattern) {
-                if (preg_match($pattern, (string)$valor)) {
-                    self::agregarListaNegra($ip, "WAF: Ataque Cross-Site Scripting (XSS) detectado en '{$clave}'");
-                    if (class_exists('AuditLogger')) {
-                        AuditLogger::registrar('CRITICAL', 'WAF_Security', 'Ataque XSS Interceptado', "IP {$ip} bloqueada por XSS en parámetro '{$clave}'");
+                if (preg_match($pattern, $valorStr)) {
+                    if (!in_array($ip, ['127.0.0.1', '::1', 'localhost'], true)) {
+                        self::agregarListaNegra($ip, "WAF: Ataque Cross-Site Scripting (XSS) detectado en '{$clave}'");
                     }
-                    return ['amenaza_detectada' => true, 'tipo' => 'XSS', 'parametro' => $clave];
+                    if (class_exists('AuditLogger')) {
+                        AuditLogger::registrar('CRITICAL', 'WAF_Security', 'Ataque XSS Interceptado', "IP {$ip} detectada por XSS en parámetro '{$clave}'");
+                    }
+                    return ['amenaza_detectada' => true, 'tipo' => 'Cross-Site Scripting (XSS)', 'parametro' => $clave];
+                }
+            }
+
+            foreach ($patronesLFI as $pattern) {
+                if (preg_match($pattern, $valorStr)) {
+                    if (!in_array($ip, ['127.0.0.1', '::1', 'localhost'], true)) {
+                        self::agregarListaNegra($ip, "WAF: Intento de Path Traversal / LFI en '{$clave}'");
+                    }
+                    if (class_exists('AuditLogger')) {
+                        AuditLogger::registrar('CRITICAL', 'WAF_Security', 'Path Traversal Interceptado', "IP {$ip} detectada por Path Traversal en parámetro '{$clave}'");
+                    }
+                    return ['amenaza_detectada' => true, 'tipo' => 'Path Traversal / LFI', 'parametro' => $clave];
                 }
             }
         }
@@ -132,7 +185,7 @@ class RateLimiter {
         return ['amenaza_detectada' => false];
     }
 
-    public static function registrarIntentoFallido(string $ip = null, string $cedula = ''): void {
+    public static function registrarIntentoFallido(?string $ip = null, string $cedula = ''): void {
         if ($ip === null) $ip = self::obtenerIPCliente();
 
         $attempts = self::obtenerIntentos();
@@ -148,7 +201,6 @@ class RateLimiter {
                 'historial_cedulas' => [$cedula]
             ];
         } else {
-            // Si el bloqueo previo ya pasó de 15 min, reiniciar contador
             if ($attempts[$ip]['bloqueado_hasta'] > 0 && $ahora > $attempts[$ip]['bloqueado_hasta']) {
                 $attempts[$ip]['intentos'] = 1;
                 $attempts[$ip]['bloqueado_hasta'] = 0;
@@ -157,21 +209,20 @@ class RateLimiter {
             }
 
             $attempts[$ip]['ultimo_intento'] = $ahora;
-            if (!empty($cedula) && !in_array($cedula, $attempts[$ip]['historial_cedulas'])) {
+            if (!empty($cedula) && !in_array($cedula, $attempts[$ip]['historial_cedulas'], true)) {
                 $attempts[$ip]['historial_cedulas'][] = $cedula;
             }
 
-            // Si alcanza 5 intentos, bloquear por 15 minutos (900 segundos)
-            if ($attempts[$ip]['intentos'] >= 5) {
+            $maxIntentos = self::getMaxIntentos();
+            if ($attempts[$ip]['intentos'] >= $maxIntentos) {
                 $attempts[$ip]['bloqueado_hasta'] = $ahora + 900;
                 
-                // Registrar evento de seguridad en auditoría
                 if (class_exists('AuditLogger')) {
                     AuditLogger::registrar(
                         'CRITICAL',
                         'WAF_Security',
                         'Bloqueo Automático IP por Fuerza Bruta',
-                        "IP {$ip} bloqueada por 15 min tras {$attempts[$ip]['intentos']} intentos fallidos."
+                        "IP {$ip} bloqueada por 15 min tras {$attempts[$ip]['intentos']} intentos fallidos (Límite: {$maxIntentos})."
                     );
                 }
             }
@@ -180,7 +231,7 @@ class RateLimiter {
         self::guardarIntentos($attempts);
     }
 
-    public static function limpiarIntentosExitosa(string $ip = null): void {
+    public static function limpiarIntentosExitosa(?string $ip = null): void {
         if ($ip === null) $ip = self::obtenerIPCliente();
         $attempts = self::obtenerIntentos();
         if (isset($attempts[$ip])) {
@@ -190,6 +241,14 @@ class RateLimiter {
     }
 
     public static function desbloquearIP(string $ip): bool {
+        try {
+            $db = Connection::getInstance();
+            if ($db) {
+                $stmt = $db->prepare("DELETE FROM waf_rate_limiter WHERE ip = ?");
+                $stmt->execute([$ip]);
+            }
+        } catch (Throwable $e) {}
+
         $attempts = self::obtenerIntentos();
         $blacklist = self::obtenerListaNegra();
         $whitelist = self::obtenerListaBlanca();
@@ -222,10 +281,11 @@ class RateLimiter {
             'ip' => $ip,
             'nota' => $nota,
             'fecha_alta' => date('Y-m-d H:i:s'),
-            'responsable' => isset($_SESSION['nombre_usuario']) ? $_SESSION['nombre_usuario'] : 'SuperAdmin'
+            'responsable' => $_SESSION['nombre_usuario'] ?? 'SuperAdmin'
         ];
 
-        // Remover de la lista negra si existía
+        self::$memoryWhitelist = $whitelist;
+
         $blacklist = self::obtenerListaNegra();
         if (isset($blacklist[$ip])) {
             unset($blacklist[$ip]);
@@ -236,13 +296,54 @@ class RateLimiter {
     }
 
     public static function obtenerListaBlanca(): array {
+        if (self::$memoryWhitelist !== null) {
+            return self::$memoryWhitelist;
+        }
+
+        try {
+            $db = Connection::getInstance();
+            if ($db) {
+                $stmt = $db->prepare("SELECT ip, razon AS nota, creado_el AS fecha_alta, datos_adicionales FROM waf_rate_limiter WHERE tipo = 'whitelist'");
+                $stmt->execute();
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                $res = [];
+                foreach ($rows as $r) {
+                    $extra = !empty($r['datos_adicionales']) ? json_decode($r['datos_adicionales'], true) : [];
+                    $res[$r['ip']] = [
+                        'ip' => $r['ip'],
+                        'nota' => $r['nota'],
+                        'fecha_alta' => $r['fecha_alta'],
+                        'responsable' => $extra['responsable'] ?? 'SuperAdmin'
+                    ];
+                }
+                self::$memoryWhitelist = $res;
+                return self::$memoryWhitelist;
+            }
+        } catch (Throwable $e) {}
+
         $file = self::getWhitelistFile();
-        if (!file_exists($file)) return [];
-        return json_decode(file_get_contents($file), true) ?: [];
+        if (!file_exists($file)) {
+            self::$memoryWhitelist = [];
+            return [];
+        }
+        self::$memoryWhitelist = json_decode(file_get_contents($file), true) ?: [];
+        return self::$memoryWhitelist;
     }
 
     private static function guardarListaBlanca(array $whitelist): bool {
-        return (bool) file_put_contents(self::getWhitelistFile(), json_encode($whitelist, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        self::$memoryWhitelist = $whitelist;
+        try {
+            $db = Connection::getInstance();
+            if ($db) {
+                $db->exec("DELETE FROM waf_rate_limiter WHERE tipo = 'whitelist'");
+                $stmt = $db->prepare("INSERT INTO waf_rate_limiter (ip, tipo, razon, datos_adicionales) VALUES (?, 'whitelist', ?, ?)");
+                foreach ($whitelist as $ip => $data) {
+                    $extra = json_encode(['responsable' => $data['responsable'] ?? 'SuperAdmin']);
+                    $stmt->execute([$ip, $data['nota'] ?? '', $extra]);
+                }
+            }
+        } catch (Throwable $e) {}
+        return self::writeJsonAtomic(self::getWhitelistFile(), $whitelist, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     }
 
     public static function agregarListaNegra(string $ip, string $razon = 'Bloqueo manual por administración'): bool {
@@ -251,28 +352,118 @@ class RateLimiter {
             'ip' => $ip,
             'razon' => $razon,
             'fecha_bloqueo' => date('Y-m-d H:i:s'),
-            'responsable' => isset($_SESSION['nombre_usuario']) ? $_SESSION['nombre_usuario'] : 'SuperAdmin'
+            'responsable' => $_SESSION['nombre_usuario'] ?? 'SuperAdmin'
         ];
+        self::$memoryBlacklist = $blacklist;
         return self::guardarListaNegra($blacklist);
     }
 
     public static function obtenerIntentos(): array {
+        try {
+            $db = Connection::getInstance();
+            if ($db) {
+                $stmt = $db->prepare("SELECT ip, intentos, EXTRACT(EPOCH FROM primer_intento)::bigint AS primer_intento, EXTRACT(EPOCH FROM ultimo_intento)::bigint AS ultimo_intento, EXTRACT(EPOCH FROM bloqueado_hasta)::bigint AS bloqueado_hasta, datos_adicionales FROM waf_rate_limiter WHERE tipo = 'attempt'");
+                $stmt->execute();
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                $res = [];
+                foreach ($rows as $r) {
+                    $extra = !empty($r['datos_adicionales']) ? json_decode($r['datos_adicionales'], true) : [];
+                    $res[$r['ip']] = [
+                        'ip' => $r['ip'],
+                        'intentos' => (int)$r['intentos'],
+                        'primer_intento' => (int)($extra['primer_intento_ts'] ?? $r['primer_intento'] ?? 0),
+                        'ultimo_intento' => (int)($extra['ultimo_intento_ts'] ?? $r['ultimo_intento'] ?? 0),
+                        'bloqueado_hasta' => (int)($extra['bloqueado_hasta_ts'] ?? $r['bloqueado_hasta'] ?? 0),
+                        'historial_cedulas' => $extra['historial_cedulas'] ?? []
+                    ];
+                }
+                return $res;
+            }
+        } catch (Throwable $e) {}
+
         $file = self::getAttemptsFile();
         if (!file_exists($file)) return [];
         return json_decode(file_get_contents($file), true) ?: [];
     }
 
     private static function guardarIntentos(array $attempts): bool {
-        return (bool) file_put_contents(self::getAttemptsFile(), json_encode($attempts, JSON_PRETTY_PRINT));
+        try {
+            $db = Connection::getInstance();
+            if ($db) {
+                $db->exec("DELETE FROM waf_rate_limiter WHERE tipo = 'attempt'");
+                $stmt = $db->prepare("INSERT INTO waf_rate_limiter (ip, tipo, intentos, primer_intento, ultimo_intento, bloqueado_hasta, datos_adicionales) VALUES (?, 'attempt', ?, (to_timestamp(?) AT TIME ZONE 'UTC'), (to_timestamp(?) AT TIME ZONE 'UTC'), (to_timestamp(?) AT TIME ZONE 'UTC'), ?)");
+                foreach ($attempts as $ip => $data) {
+                    $primerTs = (int)($data['primer_intento'] ?? time());
+                    $ultimoTs = (int)($data['ultimo_intento'] ?? time());
+                    $bloqTs   = (int)($data['bloqueado_hasta'] ?? 0);
+                    $extra = json_encode([
+                        'historial_cedulas' => $data['historial_cedulas'] ?? [],
+                        'primer_intento_ts' => $primerTs,
+                        'ultimo_intento_ts' => $ultimoTs,
+                        'bloqueado_hasta_ts' => $bloqTs
+                    ]);
+                    $stmt->execute([
+                        $ip,
+                        (int)($data['intentos'] ?? 1),
+                        $primerTs,
+                        $ultimoTs,
+                        $bloqTs,
+                        $extra
+                    ]);
+                }
+            }
+        } catch (Throwable $e) {}
+        return self::writeJsonAtomic(self::getAttemptsFile(), $attempts, JSON_PRETTY_PRINT);
     }
 
     public static function obtenerListaNegra(): array {
+        if (self::$memoryBlacklist !== null) {
+            return self::$memoryBlacklist;
+        }
+
+        try {
+            $db = Connection::getInstance();
+            if ($db) {
+                $stmt = $db->prepare("SELECT ip, razon, creado_el AS fecha_bloqueo, datos_adicionales FROM waf_rate_limiter WHERE tipo = 'blacklist'");
+                $stmt->execute();
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                $res = [];
+                foreach ($rows as $r) {
+                    $extra = !empty($r['datos_adicionales']) ? json_decode($r['datos_adicionales'], true) : [];
+                    $res[$r['ip']] = [
+                        'ip' => $r['ip'],
+                        'razon' => $r['razon'],
+                        'fecha_bloqueo' => $r['fecha_bloqueo'],
+                        'responsable' => $extra['responsable'] ?? 'SuperAdmin'
+                    ];
+                }
+                self::$memoryBlacklist = $res;
+                return self::$memoryBlacklist;
+            }
+        } catch (Throwable $e) {}
+
         $file = self::getBlacklistFile();
-        if (!file_exists($file)) return [];
-        return json_decode(file_get_contents($file), true) ?: [];
+        if (!file_exists($file)) {
+            self::$memoryBlacklist = [];
+            return [];
+        }
+        self::$memoryBlacklist = json_decode(file_get_contents($file), true) ?: [];
+        return self::$memoryBlacklist;
     }
 
     private static function guardarListaNegra(array $blacklist): bool {
-        return (bool) file_put_contents(self::getBlacklistFile(), json_encode($blacklist, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        self::$memoryBlacklist = $blacklist;
+        try {
+            $db = Connection::getInstance();
+            if ($db) {
+                $db->exec("DELETE FROM waf_rate_limiter WHERE tipo = 'blacklist'");
+                $stmt = $db->prepare("INSERT INTO waf_rate_limiter (ip, tipo, razon, datos_adicionales) VALUES (?, 'blacklist', ?, ?)");
+                foreach ($blacklist as $ip => $data) {
+                    $extra = json_encode(['responsable' => $data['responsable'] ?? 'SuperAdmin']);
+                    $stmt->execute([$ip, $data['razon'] ?? '', $extra]);
+                }
+            }
+        } catch (Throwable $e) {}
+        return self::writeJsonAtomic(self::getBlacklistFile(), $blacklist, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     }
 }

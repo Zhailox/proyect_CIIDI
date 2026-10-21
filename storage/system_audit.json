@@ -1,5 +1,41 @@
 [
     {
+        "id": "log_6ab6bca0a5094",
+        "fecha_hora": "2026-09-25 18:25:36",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Test Respuesta Core",
+        "detalles": "Diagnóstico del Core ejecutado en 59.56ms. Memoria: 2 MB. Estado: SALUDABLE",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "b223bf39d6746fd6573f29495ff88727c3ecbb99cc991a6207dd9cffd7de4512",
+        "hash_integridad": "f942ada600ae987eec1cfa318c9fc6bd19121cda03e0230260f61e40a0d667f8"
+    },
+    {
+        "id": "log_6aae24aaea836",
+        "fecha_hora": "2026-09-19 05:59:06",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Crear Backup",
+        "detalles": "Respaldo backup_ciidi_2026-09-19_05-59-06.sql.gz generado exitosamente. Respaldos antiguos purgados: 0",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "2dfd60c361a160139dd869ac5d2538601a937d5c8ace48e6b2562578d858bed5",
+        "hash_integridad": "b223bf39d6746fd6573f29495ff88727c3ecbb99cc991a6207dd9cffd7de4512"
+    },
+    {
+        "id": "log_6aae24a27348f",
+        "fecha_hora": "2026-09-19 05:58:58",
+        "nivel": "INFO",
+        "modulo": "SuperAdmin",
+        "accion": "Crear Backup",
+        "detalles": "Respaldo backup_ciidi_2026-09-19_05-58-57.sql generado exitosamente. Respaldos antiguos purgados: 0",
+        "responsable": "Miguel González (ID: 7)",
+        "ip": "::1",
+        "hash_anterior": "c2447f66b277f8c58ec7df48ae945e30024d8ea4078c3036e6e5c4733dc9c29d",
+        "hash_integridad": "2dfd60c361a160139dd869ac5d2538601a937d5c8ace48e6b2562578d858bed5"
+    },
+    {
         "id": "log_6aadfc2e26aaf",
         "fecha_hora": "2026-09-19 03:06:22",
         "nivel": "INFO",

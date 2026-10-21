@@ -209,26 +209,28 @@ mark, .highlight-match {
     margin-top: 4px;
 }
 
-/* Grilla de Trayectos Académicos */
 .ag-pst-trayectos-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 1.2rem;
-    margin-bottom: 1.8rem;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .ag-pst-trayecto-card {
     background: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(80, 89, 132, 0.15);
-    border-radius: var(--radius-md, 16px);
-    padding: 1.25rem;
+    border-radius: var(--radius-md, 12px);
+    padding: 1rem 1.1rem;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     text-decoration: none;
     color: inherit;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    min-width: 0; /* Previene desbordamiento en CSS Grid */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .ag-pst-trayecto-card:hover {
@@ -251,17 +253,23 @@ mark, .highlight-match {
 }
 
 .ag-pst-trayecto-card h4 {
-    font-size: 0.98rem;
+    font-size: 0.92rem;
     font-weight: 800;
     color: var(--texto-titulos, #1E293B);
-    margin: 0 0 0.3rem 0;
+    margin: 0.2rem 0 0.4rem 0;
+    line-height: 1.35;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    hyphens: auto;
 }
 
 .ag-pst-trayecto-card p {
     font-size: 0.8rem;
     color: var(--texto-silenciado, #64748B);
-    line-height: 1.4;
+    line-height: 1.45;
     margin: 0 0 0.8rem 0;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .ag-pst-trayecto-card .t-count {
@@ -458,6 +466,7 @@ mark, .highlight-match {
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-wrap: wrap;
 }
 
 .ag-page-link {
@@ -478,8 +487,69 @@ mark, .highlight-match {
     border-color: var(--color-secundario, rgb(80, 89, 132));
 }
 
-.ag-page-link:hover:not(.active) {
+.ag-page-link:hover:not(.active):not(.disabled) {
     background: rgba(80, 89, 132, 0.08);
+}
+
+.ag-page-link.disabled {
+    opacity: 0.55;
+    cursor: default;
+    pointer-events: none;
+    background: #f8fafc;
+}
+
+/* AJUSTES RESPONSIVOS Y MOBILE FIRST */
+@media (max-width: 768px) {
+    .ag-pst-hero {
+        padding: 2rem 1.2rem;
+    }
+
+    .ag-pst-hero-title {
+        font-size: 1.6rem;
+    }
+
+    .ag-pst-search-box {
+        flex-direction: column;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.98);
+        padding: 10px;
+    }
+
+    .ag-pst-search-box input {
+        width: 100%;
+    }
+
+    .ag-pst-search-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .ag-pst-trayectos-grid {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+
+    .ag-pst-trayecto-card h4 {
+        font-size: 0.9rem;
+    }
+
+    .ag-pst-stats-row {
+        grid-template-columns: 1fr;
+    }
+
+    .ag-pst-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .ag-pst-table {
+        min-width: 600px;
+    }
+
+    .ag-pst-filter-sidebar {
+        position: static;
+        margin-top: 1rem;
+    }
 }
 </style>
 
@@ -495,21 +565,37 @@ mark, .highlight-match {
             </div>
             
             <h1 class="ag-pst-hero-title">
-                Proyectos Socio-Tecnológicos (PST)
+                Proyectos Socio-Tecnológicos
             </h1>
             
+            <?php
+            $selectedCarrera = $filtrosActivos['carrera_id'] ?? null;
+            $carrerasLista = $carreras ?? [];
+            $nombreCarreraHero = 'PNF en Informática';
+            if (!empty($selectedCarrera) && !empty($carrerasLista)) {
+                foreach ($carrerasLista as $c) {
+                    if ((string)$c['id'] === (string)$selectedCarrera) {
+                        $nombreCarreraHero = $c['nombre'];
+                        break;
+                    }
+                }
+            }
+            ?>
             <p class="ag-pst-hero-desc">
-                Plataforma de gestión, visibilidad e impacto de la producción científica desarrollada por la comunidad del PNF en Informática.
+                Plataforma de gestión, visibilidad e impacto de la producción científica desarrollada por la comunidad del <?= htmlspecialchars($nombreCarreraHero) ?>.
             </p>
             
             <form action="index.php" method="GET" class="ag-pst-search-box">
                 <input type="hidden" name="ruta" value="buscador">
                 <i class="ph-bold ph-magnifying-glass" style="font-size: 1.25rem; color: #64748b; margin-left: 12px;"></i>
                 <input type="text" name="q" placeholder="Buscar por título, autor, palabras clave o comunidad..." required>
-                <button type="submit" class="ag-pst-search-btn">
-                    Buscar PST <i class="ph-bold ph-arrow-right"></i>
+                <button type="submit" class="ag-pst-search-btn" title="Buscar usando el motor de búsqueda inteligente unificado">
+                    <i class="ph-bold ph-sparkles"></i> Buscar en Motor Inteligente
                 </button>
             </form>
+            <div style="font-size: 0.78rem; color: rgba(255,255,255,0.75); margin-top: 8px; text-align: center;">
+                <i class="ph-bold ph-info"></i> La búsqueda principal procesará su consulta en el <strong>Buscador Global Inteligente PST</strong>.
+            </div>
         </div>
     </div>
 
@@ -553,7 +639,7 @@ mark, .highlight-match {
             <div class="ag-pst-trayectos-grid">
                 <?php if (!empty($lineasConConteoLista)): ?>
                     <?php foreach ($lineasConConteoLista as $lineaCard): ?>
-                        <a href="?ruta=repositorio&linea_id=<?= $lineaCard['id'] ?>" class="ag-pst-trayecto-card">
+                        <a href="?ruta=repositorio&linea_id=<?= $lineaCard['id'] ?><?= !empty($selectedCarrera) ? '&carrera_id='.$selectedCarrera : '' ?>" class="ag-pst-trayecto-card">
                             <div>
                                 <h4 style="margin-top: 0.2rem;"><?= htmlspecialchars($lineaCard['nombre']) ?></h4>
                                 <p><?= htmlspecialchars($lineaCard['descripcion'] ?: 'Línea de investigación institucional del PNF.') ?></p>
@@ -566,21 +652,28 @@ mark, .highlight-match {
                     <?php endforeach; ?>
                 <?php else: ?>
                     <div style="grid-column: 1 / -1; color: var(--texto-silenciado); font-size: 0.88rem;">
-                        No hay líneas de investigación registradas en la base de datos.
+                        No hay líneas de investigación registradas para esta carrera.
                     </div>
                 <?php endif; ?>
             </div>
 
             <!-- TABLA PRINCIPAL DE BANCO DE PROYECTOS -->
+            <?php
+            $mostrarNivel = (bool)ConfigService::get('recursos.mostrar_nivel_academico', true);
+            $mostrarComunidad = (bool)ConfigService::get('recursos.mostrar_comunidad', true);
+            $totalColumnas = 3 + ($mostrarNivel ? 1 : 0) + ($mostrarComunidad ? 1 : 0);
+            $ordenActual = $filtrosActivos['orden'] ?? ConfigService::get('buscador.orden_predeterminado', 'anio_desc');
+            ?>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px;">
                 <span style="font-size: 1.1rem; font-weight: 800; color: var(--texto-titulos, #1E293B);">Banco General de Proyectos</span>
                 
-                <!-- ORDENAMIENTO DE PUBLICACIONES (RECIENTES VS ANTIGUOS) -->
+                <!-- ORDENAMIENTO DE PUBLICACIONES (CONFIGURABLE) -->
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 0.8rem; font-weight: 700; color: var(--texto-silenciado, #64748B);">Ordenar por:</span>
                     <select onchange="cambiarOrdenamiento(this.value)" style="font-size: 0.82rem; font-weight: 700; padding: 5px 10px; border-radius: var(--radius-sm, 6px); border: 1px solid rgba(80,89,132,0.2); background: #ffffff; cursor: pointer;">
-                        <option value="desc" <?= ($filtrosActivos['orden'] ?? 'desc') === 'desc' ? 'selected' : '' ?>>Más Recientes Primero</option>
-                        <option value="asc" <?= ($filtrosActivos['orden'] ?? 'desc') === 'asc' ? 'selected' : '' ?>>Más Antiguos Primero</option>
+                        <option value="anio_desc" <?= in_array($ordenActual, ['desc', 'anio_desc']) ? 'selected' : '' ?>>Año: Más reciente</option>
+                        <option value="anio_asc" <?= in_array($ordenActual, ['asc', 'anio_asc']) ? 'selected' : '' ?>>Año: Más antiguo</option>
+                        <option value="titulo_asc" <?= $ordenActual === 'titulo_asc' ? 'selected' : '' ?>>Título: A - Z</option>
                     </select>
                 </div>
             </div>
@@ -590,8 +683,12 @@ mark, .highlight-match {
                     <thead>
                         <tr>
                             <th style="width: 50%;">Proyecto / Título</th>
-                            <th>Nivel / Trayecto</th>
-                            <th>Comunidad</th>
+                            <?php if ($mostrarNivel): ?>
+                                <th>Nivel / Trayecto</th>
+                            <?php endif; ?>
+                            <?php if ($mostrarComunidad): ?>
+                                <th>Comunidad</th>
+                            <?php endif; ?>
                             <th>Año</th>
                             <th style="text-align: center;">Acciones</th>
                         </tr>
@@ -599,8 +696,9 @@ mark, .highlight-match {
                     <tbody id="agPstTableBody">
                         <?php if (empty($documentos)): ?>
                             <tr>
-                                <td colspan="5" style="text-align: center; padding: 2.5rem; color: var(--texto-silenciado, #64748B);">
-                                    No se encontraron publicaciones con los criterios seleccionados.
+                                <td colspan="<?= $totalColumnas ?>" style="text-align: center; padding: 2rem; color: var(--texto-silenciado);">
+                                    <i class="ph-bold ph-folder-open" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
+                                    No se encontraron proyectos Socio-Tecnológicos bajo los criterios seleccionados.
                                 </td>
                             </tr>
                         <?php else: ?>
@@ -608,30 +706,52 @@ mark, .highlight-match {
                                 <tr>
                                     <td>
                                         <a href="?ruta=detalles-pst&id=<?= $doc['id'] ?>" class="ag-doc-link">
-                                            <?= htmlspecialchars($doc['titulo']) ?>
+                                             <?= htmlspecialchars($doc['titulo']) ?>
                                         </a>
-                                        <div style="font-size: 0.78rem; color: var(--texto-silenciado, #64748B); margin-top: 4px;">
-                                            Autores: <?= htmlspecialchars($doc['autores_nombres'] ?? 'No especificados') ?>
+                                        <div style="font-size: 0.78rem; color: var(--texto-silenciado, #64748B); margin-top: 4px; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
+                                            <span>Autores: <?= htmlspecialchars($doc['autores_nombres'] ?? 'No especificados') ?></span>
+                                            <span style="display: inline-flex; align-items: center; gap: 0.25rem;" title="Visualizaciones">
+                                                <i class="ph ph-eye" style="color: var(--color-secundario);"></i> <?= number_format((int)($doc['vistas'] ?? 0)) ?> vistas
+                                            </span>
                                         </div>
+                                        <?php if (!empty($doc['carreras_vinculadas_nombres'])): ?>
+                                            <div style="display: flex; gap: 0.3rem; flex-wrap: wrap; margin-top: 5px;">
+                                                <?php foreach (explode(', ', $doc['carreras_vinculadas_nombres']) as $carrVincTag): ?>
+                                                    <span class="ag-badge-trayecto" style="font-size: 0.68rem; padding: 2px 6px; background: rgba(112, 144, 203, 0.15); color: var(--color-secundario); border: 1px solid rgba(112, 144, 203, 0.3);" title="Carrera Vinculada">
+                                                        <i class="ph ph-tag" style="color: var(--color-terciario);"></i> <?= htmlspecialchars(trim($carrVincTag)) ?>
+                                                    </span>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php endif; ?>
                                     </td>
+                                    <?php if ($mostrarNivel): 
+                                        $nivTabla = $doc['nivel_academico'] ?? 'Pregrado';
+                                        $nivTablaLabel = $labelsNivMap[$nivTabla] ?? $nivTabla;
+                                    ?>
                                     <td>
-                                        <span class="ag-badge-trayecto"><?= htmlspecialchars($doc['nivel_academico'] ?? 'Pregrado') ?></span>
-                                        <?php if (!empty($doc['trayecto'])): ?>
+                                        <span class="ag-badge-trayecto"><?= htmlspecialchars($nivTablaLabel) ?></span>
+                                        <?php if (($nivTabla === 'Pregrado') && !empty($doc['trayecto'])): ?>
                                             <span style="font-size: 0.76rem; font-weight: 700; color: var(--color-secundario); display: block; margin-top: 3px;">
-                                                Trayecto <?= htmlspecialchars($doc['trayecto']) ?>
+                                                <?= htmlspecialchars(str_starts_with($doc['trayecto'], 'Trayecto') ? $doc['trayecto'] : 'Trayecto ' . $doc['trayecto']) ?>
                                             </span>
                                         <?php endif; ?>
                                     </td>
+                                    <?php endif; ?>
+                                    <?php if ($mostrarComunidad): ?>
                                     <td style="color: var(--texto-titulos, #1E293B); font-weight: 600; font-size: 0.85rem;">
                                         <?= htmlspecialchars($doc['comunidad_beneficiada'] ?? 'Comunidad Unitaria') ?>
                                     </td>
+                                    <?php endif; ?>
                                     <td style="font-weight: 700; font-size: 0.88rem; color: var(--texto-titulos, #1E293B);">
                                         <?= htmlspecialchars($doc['anio_publicacion'] ?? '') ?>
                                     </td>
                                     <td style="text-align: center;">
-                                        <div style="display: flex; gap: 6px; justify-content: center;">
+                                        <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
                                             <a href="?ruta=detalles-pst&id=<?= $doc['id'] ?>" class="ag-page-link" style="padding: 4px 8px;" title="Ver Ficha">Ver</a>
-                                            <button type="button" class="ag-page-link" style="padding: 4px 8px; cursor: pointer;" title="Citar" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($doc['titulo'])) ?>, <?= htmlspecialchars(json_encode($doc['autores_nombres'] ?? 'Autores Varios')) ?>, <?= $doc['anio_publicacion'] ?>)"><i class="ph-bold ph-quotes"></i></button>
+                                            <?php if (ConfigService::puedeDescargarDocumento($doc['archivo_pdf'] ?? null)): ?>
+                                                <a href="?ruta=ver-pdf-pst&id=<?= $doc['id'] ?>&download=1" class="ag-page-link" style="padding: 4px 8px; color: #166534;" title="Descargar Documento" target="_blank" download><i class="ph-bold ph-download-simple"></i></a>
+                                            <?php endif; ?>
+                                            <button type="button" class="ag-page-link" style="padding: 4px 8px; cursor: pointer;" title="Citar" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($doc['titulo'])) ?>, <?= htmlspecialchars(json_encode($doc['autores_nombres'] ?? 'Autores Varios')) ?>, <?= (int)$doc['anio_publicacion'] ?>, <?= htmlspecialchars(json_encode($doc['carrera_nombre'] ?? 'PNF en Informática')) ?>)"><i class="ph-bold ph-quotes"></i></button>
                                         </div>
                                     </td>
                                 </tr>
@@ -642,22 +762,59 @@ mark, .highlight-match {
 
                 <!-- MODO DE NAVEGACIÓN DEDICADO: PAGINADOR VS LAZY LOADING -->
                 <?php if ($modoCargaActual === 'paginador' && $pag['total_pages'] > 1): ?>
-                    <div class="ag-pagination-bar">
+                    <div class="ag-pagination-bar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                         <span style="font-size: 0.82rem; font-weight: 700; color: var(--texto-silenciado, #64748B);">
-                            Página <?= $pag['current_page'] ?> de <?= $pag['total_pages'] ?> (Total: <?= $pag['total_items'] ?> proyectos)
+                            Página <?= $pag['current_page'] ?> de <?= $pag['total_pages'] ?> · Total: <?= $pag['total_items'] ?> proyectos
                         </span>
                         
                         <div class="ag-pagination-pages">
-                            <?php for ($i = 1; $i <= $pag['total_pages']; $i++): ?>
-                                <?php
-                                $query = $_GET;
-                                $query['page'] = $i;
-                                $linkUrl = '?' . http_build_query($query);
-                                ?>
-                                <a href="<?= $linkUrl ?>" class="ag-page-link <?= $i === $pag['current_page'] ? 'active' : '' ?>">
-                                    <?= $i ?>
-                                </a>
+                            <?php
+                            $currRepo = (int)$pag['current_page'];
+                            $totRepo  = (int)$pag['total_pages'];
+                            $queryRepo = $_GET;
+                            unset($queryRepo['page']);
+                            $buildRepoUrl = function($p) use ($queryRepo) {
+                                $queryRepo['page'] = $p;
+                                return '?' . http_build_query($queryRepo);
+                            };
+                            ?>
+
+                            <?php if ($currRepo > 1): ?>
+                                <a href="<?= $buildRepoUrl($currRepo - 1) ?>" class="ag-page-link">&laquo; Anterior</a>
+                            <?php else: ?>
+                                <span class="ag-page-link disabled">&laquo; Anterior</span>
+                            <?php endif; ?>
+
+                            <?php
+                            $rangoInicioRepo = max(1, $currRepo - 2);
+                            $rangoFinRepo    = min($totRepo, $currRepo + 2);
+                            if ($rangoInicioRepo > 1): ?>
+                                <a href="<?= $buildRepoUrl(1) ?>" class="ag-page-link">1</a>
+                                <?php if ($rangoInicioRepo > 2): ?>
+                                    <span class="ag-page-link disabled">...</span>
+                                <?php endif; ?>
+                            <?php endif; ?>
+
+                            <?php for ($i = $rangoInicioRepo; $i <= $rangoFinRepo; $i++): ?>
+                                <?php if ($i === $currRepo): ?>
+                                    <span class="ag-page-link active"><?= $i ?></span>
+                                <?php else: ?>
+                                    <a href="<?= $buildRepoUrl($i) ?>" class="ag-page-link"><?= $i ?></a>
+                                <?php endif; ?>
                             <?php endfor; ?>
+
+                            <?php if ($rangoFinRepo < $totRepo): ?>
+                                <?php if ($rangoFinRepo < $totRepo - 1): ?>
+                                    <span class="ag-page-link disabled">...</span>
+                                <?php endif; ?>
+                                <a href="<?= $buildRepoUrl($totRepo) ?>" class="ag-page-link"><?= $totRepo ?></a>
+                            <?php endif; ?>
+
+                            <?php if ($currRepo < $totRepo): ?>
+                                <a href="<?= $buildRepoUrl($currRepo + 1) ?>" class="ag-page-link">Siguiente &raquo;</a>
+                            <?php else: ?>
+                                <span class="ag-page-link disabled">Siguiente &raquo;</span>
+                            <?php endif; ?>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -675,14 +832,48 @@ mark, .highlight-match {
                 <input type="hidden" name="orden" value="<?= htmlspecialchars($filtrosActivos['orden'] ?? 'desc') ?>">
                 <input type="hidden" name="anio" id="agAnioInput" value="<?= htmlspecialchars($filtrosActivos['anio'] ?? '') ?>">
 
+                <?php 
+                $permitirFiltroCarrera = (bool)ConfigService::get('buscador.permitir_filtro_carrera', false);
+                $carrerasLista = $carreras ?? [];
+                $selectedCarrera = $filtrosActivos['carrera_id'] ?? null;
+                ?>
+                <!-- Programa Académico (Dinámica / Bloqueada) -->
+                <div class="ag-filter-group">
+                    <label><i class="ph-bold ph-graduation-cap"></i> Programa Académico</label>
+                    <?php if ($permitirFiltroCarrera): ?>
+                        <select name="carrera_id" id="agCarreraSelect" class="ag-filter-select" onchange="this.form.submit()">
+                            <option value="">Todas las carreras</option>
+                            <?php foreach ($carrerasLista as $cItem): ?>
+                                <option value="<?= $cItem['id'] ?>" <?= ((string)$selectedCarrera === (string)$cItem['id']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($cItem['nombre']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    <?php else: ?>
+                        <div style="background: rgba(80, 89, 132, 0.08); border: 1px dashed rgba(80, 89, 132, 0.3); padding: 8px 12px; border-radius: var(--radius-sm, 8px); display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: var(--texto-titulos, #1E293B);" title="El repositorio está configurado temporalmente para Informática">
+                            <span>PNF en Informática</span>
+                            <span style="color: #64748B;"><i class="ph-bold ph-lock-key"></i></span>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
                 <!-- Nivel Académico (Pregrado, Maestría, Doctorado, etc.) -->
                 <div class="ag-filter-group">
                     <label>Nivel Académico</label>
                     <select name="nivel_academico" id="agNivelAcademicoSelect" class="ag-filter-select" onchange="toggleTrayectoByNivel(this.value); this.form.submit();">
                         <option value="">Todos los Niveles</option>
-                        <?php foreach ($nivelesAcademicosLista as $nivelItem): ?>
+                        <?php 
+                        $labelsNivMap = !empty($labelsNiveles) ? $labelsNiveles : [
+                            'Pregrado' => 'Pregrado',
+                            'Especializacion' => 'Especialización',
+                            'Maestria' => 'Maestría',
+                            'Doctorado' => 'Doctorado'
+                        ];
+                        foreach ($nivelesAcademicosLista as $nivelItem): 
+                            $labelVis = $labelsNivMap[$nivelItem] ?? $nivelItem;
+                        ?>
                             <option value="<?= htmlspecialchars($nivelItem) ?>" <?= (($filtrosActivos['nivel_academico'] ?? '') === $nivelItem) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($nivelItem) ?>
+                                <?= htmlspecialchars($labelVis) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -690,12 +881,20 @@ mark, .highlight-match {
 
                 <!-- Trayecto del PNF (Solo activo si Nivel = Pregrado o no seleccionado) -->
                 <div class="ag-filter-group" id="agTrayectoGroup">
-                    <label>Trayecto (Solo Pregrado)</label>
+                    <label>Trayecto</label>
                     <select name="trayecto" id="agTrayectoSelect" class="ag-filter-select" onchange="this.form.submit()">
                         <option value="">Todos los Trayectos</option>
-                        <?php foreach ($trayectosLista as $tItem): ?>
-                            <option value="<?= htmlspecialchars($tItem) ?>" <?= (($filtrosActivos['trayecto'] ?? '') == $tItem) ? 'selected' : '' ?>>
-                                Trayecto <?= htmlspecialchars($tItem) ?>
+                        <?php 
+                        $vistosEnFiltro = [];
+                        foreach ($trayectosLista as $tItem): 
+                            $tNombre = is_array($tItem) ? $tItem['nombre'] : $tItem;
+                            if (in_array($tNombre, $vistosEnFiltro)) continue;
+                            $vistosEnFiltro[] = $tNombre;
+                            $tLabel = str_starts_with($tNombre, 'Trayecto') ? $tNombre : 'Trayecto ' . $tNombre;
+                            $tVal = is_array($tItem) ? $tItem['nombre'] : $tItem;
+                        ?>
+                            <option value="<?= htmlspecialchars($tVal) ?>" <?= (($filtrosActivos['trayecto'] ?? '') == $tVal) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($tLabel) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -770,33 +969,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const nivelEl = document.getElementById('agNivelAcademicoSelect');
     if (nivelEl) toggleTrayectoByNivel(nivelEl.value);
 
-    // Canvas animation
+    // Canvas animation optimizada con IntersectionObserver
     const canvas = document.getElementById('pst-nodes-canvas');
     if (canvas) {
         const ctx = canvas.getContext('2d');
         let width = canvas.width = canvas.offsetWidth;
         let height = canvas.height = canvas.offsetHeight;
+        let animId = null;
+        let isCanvasVisible = true;
         
+        let resizeTimeout;
         window.addEventListener('resize', () => {
-            if (!canvas) return;
-            width = canvas.width = canvas.offsetWidth;
-            height = canvas.height = canvas.offsetHeight;
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (!canvas) return;
+                width = canvas.width = canvas.offsetWidth;
+                height = canvas.height = canvas.offsetHeight;
+            }, 150);
         });
 
         const particles = [];
-        const numParticles = 40;
+        const numParticles = 30;
 
         for (let i = 0; i < numParticles; i++) {
             particles.push({
                 x: Math.random() * width,
                 y: Math.random() * height,
-                vx: (Math.random() - 0.5) * 0.5,
-                vy: (Math.random() - 0.5) * 0.5,
+                vx: (Math.random() - 0.5) * 0.4,
+                vy: (Math.random() - 0.5) * 0.4,
                 radius: Math.random() * 2 + 1.2
             });
         }
 
         function animate() {
+            if (!isCanvasVisible) return;
             ctx.clearRect(0, 0, width, height);
 
             for (let i = 0; i < numParticles; i++) {
@@ -828,9 +1034,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-            requestAnimationFrame(animate);
+            animId = requestAnimationFrame(animate);
         }
-        animate();
+
+        // Pausar renderizado cuando el canvas no está visible en pantalla (ahorro masivo de CPU/GPU)
+        if ('IntersectionObserver' in window) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    isCanvasVisible = entry.isIntersecting;
+                    if (isCanvasVisible) {
+                        if (!animId) animate();
+                    } else if (animId) {
+                        cancelAnimationFrame(animId);
+                        animId = null;
+                    }
+                });
+            }, { threshold: 0.05 });
+            observer.observe(canvas);
+        } else {
+            animate();
+        }
     }
 
     // Lazy Loading scroll listener si está activo en la configuración
@@ -843,12 +1066,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+const nivelesConTrayecto = <?= json_encode($nivelesConTrayecto ?? ['Pregrado']) ?>;
 function toggleTrayectoByNivel(nivelVal) {
     const group = document.getElementById('agTrayectoGroup');
     const select = document.getElementById('agTrayectoSelect');
     if (!group || !select) return;
 
-    if (nivelVal && nivelVal !== 'Pregrado') {
+    if (nivelVal && !nivelesConTrayecto.includes(nivelVal)) {
         select.value = '';
         select.disabled = true;
         group.style.opacity = '0.4';
@@ -893,6 +1117,7 @@ function seleccionarAnioHistograma(year) {
 function cambiarOrdenamiento(val) {
     const url = new URL(window.location.href);
     url.searchParams.set('orden', val);
+    url.searchParams.set('page', 1);
     window.location.href = url.toString();
 }
 
@@ -922,7 +1147,7 @@ function cargarMasProyectosLazy() {
 
 // Modal Citas
 const configuracionesCitas = <?= json_encode(ConfigService::get('citas.estilos', [])) ?>;
-function abrirModalCita(titulo, autores, anio) {
+function abrirModalCita(titulo, autores, anio, carrera) {
     const listEl = document.getElementById('listaCitasDinamicas');
     if (!listEl) return;
     listEl.innerHTML = '';
@@ -931,7 +1156,7 @@ function abrirModalCita(titulo, autores, anio) {
         '{autores}': autores || 'Autores Varios',
         '{anio}': anio || 's.f.',
         '{titulo}': titulo || 'Proyecto Socio-Tecnológico',
-        '{carrera}': 'PNF en Informática'
+        '{carrera}': carrera || 'PNF en Informática'
     };
     
     let count = 0;

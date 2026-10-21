@@ -78,7 +78,7 @@
                                     <h4 style="margin-top: 0.5rem; margin-bottom: 1rem; font-size: 0.9rem; line-height: 1.4; color: var(--texto-titulos); font-weight: 700;"><?= htmlspecialchars($docSlide['titulo'] ?? '') ?></h4>
                                     <div class="pst-slide-footer">
                                         <a href="?ruta=detalles-pst&id=<?= $docSlide['id'] ?>" class="btn-outline-repo" style="font-size: 0.75rem; text-decoration: none;">Ver Ficha</a>
-                                        <button type="button" class="btn-outline-repo" style="font-size: 0.75rem; cursor: pointer;" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($docSlide['titulo'])) ?>, <?= htmlspecialchars(json_encode($docSlide['autores_nombres'] ?? 'Autores Varios')) ?>, <?= $docSlide['anio_publicacion'] ?>)"><i class="ph ph-quotes"></i></button>
+                                        <button type="button" class="btn-outline-repo" style="font-size: 0.75rem; cursor: pointer;" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($docSlide['titulo'])) ?>, <?= htmlspecialchars(json_encode($docSlide['autores_nombres'] ?? 'Autores Varios')) ?>, <?= (int)$docSlide['anio_publicacion'] ?>, <?= htmlspecialchars(json_encode($docSlide['carrera_nombre'] ?? 'PNF en Informática')) ?>)"><i class="ph ph-quotes"></i></button>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -130,7 +130,8 @@
                                                     <?= htmlspecialchars($doc['linea_nombre'] ?? 'General') ?>
                                                 </span>
                                                 <small style="color: var(--color-secundario); font-weight: 700; display: block; font-size: 0.7rem; text-align: center;">
-                                                    <?= htmlspecialchars($doc['nivel_academico'] ?? 'Pregrado') ?><?= (($doc['nivel_academico'] ?? 'Pregrado') === 'Pregrado' && !empty($doc['trayecto'])) ? ' • ' . htmlspecialchars($doc['trayecto']) : '' ?>
+                                                    <?php $nivDetalle = $doc['nivel_academico'] ?? 'Pregrado'; $nivDetalleLabel = ($labelsNiveles[$nivDetalle] ?? ($labelsFiltro[$nivDetalle] ?? $nivDetalle)); ?>
+                                                    <?= htmlspecialchars($nivDetalleLabel) ?><?= (in_array($nivDetalle, $nivelesConTrayecto ?? ['Pregrado']) && !empty($doc['trayecto'])) ? ' • ' . htmlspecialchars($doc['trayecto']) : '' ?>
                                                 </small>
                                             </td>
                                             <td><strong><?= $doc['anio_publicacion'] ?></strong></td>
@@ -139,7 +140,7 @@
                                                     <a href="?ruta=detalles-pst&id=<?= $doc['id'] ?>" class="btn-outline-repo" style="text-decoration: none; padding: 0.35rem 0.6rem; font-size: 0.75rem;" title="Ver Ficha">
                                                         Ver
                                                     </a>
-                                                    <button type="button" class="btn-outline-repo" style="padding: 0.35rem 0.6rem; font-size: 0.75rem; cursor: pointer;" title="Generar Cita" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($doc['titulo'])) ?>, <?= htmlspecialchars(json_encode($doc['autores_nombres'] ?? 'Autores Varios')) ?>, <?= $doc['anio_publicacion'] ?>)">
+                                                    <button type="button" class="btn-outline-repo" style="padding: 0.35rem 0.6rem; font-size: 0.75rem; cursor: pointer;" title="Generar Cita" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($doc['titulo'])) ?>, <?= htmlspecialchars(json_encode($doc['autores_nombres'] ?? 'Autores Varios')) ?>, <?= (int)$doc['anio_publicacion'] ?>, <?= htmlspecialchars(json_encode($doc['carrera_nombre'] ?? 'PNF en Informática')) ?>)">
                                                         <i class="ph ph-quotes"></i>
                                                     </button>
                                                 </div>
@@ -228,10 +229,18 @@
                         <label for="nivel_academico">Nivel Académico</label>
                         <select name="nivel_academico" id="nivel_academico_filter" onchange="this.form.submit()">
                             <option value="">Todos los Niveles</option>
-                            <?php if (!empty($nivelesAcademicos)): ?>
-                                <?php foreach ($nivelesAcademicos as $nivel): ?>
+                            <?php if (!empty($nivelesAcademicos)): 
+                                $labelsFiltro = !empty($labelsNiveles) ? $labelsNiveles : [
+                                    'Pregrado' => 'Pregrado',
+                                    'Especializacion' => 'Especialización',
+                                    'Maestria' => 'Maestría',
+                                    'Doctorado' => 'Doctorado'
+                                ];
+                                foreach ($nivelesAcademicos as $nivel): 
+                                    $label = $labelsFiltro[$nivel] ?? $nivel;
+                                ?>
                                     <option value="<?= htmlspecialchars($nivel) ?>" <?= (($filtros['nivel_academico'] ?? '') === $nivel) ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($nivel) ?>
+                                        <?= htmlspecialchars($label) ?>
                                     </option>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -244,9 +253,12 @@
                         <select name="trayecto" id="trayecto_filter" onchange="this.form.submit()">
                             <option value="">Todos los Trayectos</option>
                             <?php if (!empty($trayectosList)): ?>
-                                <?php foreach ($trayectosList as $tItem): ?>
-                                    <option value="<?= htmlspecialchars($tItem) ?>" <?= (($filtros['trayecto'] ?? '') === $tItem) ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($tItem) ?>
+                                <?php foreach ($trayectosList as $tItem): 
+                                    $tNombre = is_array($tItem) ? $tItem['nombre'] : $tItem;
+                                    $tVal = is_array($tItem) ? $tItem['nombre'] : $tItem;
+                                ?>
+                                    <option value="<?= htmlspecialchars($tVal) ?>" <?= (($filtros['trayecto'] ?? '') === $tVal) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($tNombre) ?>
                                     </option>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -496,7 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // MODAL DE GENERACIÓN DE CITAS ACADÉMICAS DINÁMICAS
 const configuracionesCitas = <?= json_encode(ConfigService::get('citas.estilos', [])) ?>;
 
-function abrirModalCita(titulo, autores, anio) {
+function abrirModalCita(titulo, autores, anio, carrera) {
     const listEl = document.getElementById('listaCitasDinamicas');
     if (!listEl) return;
     
@@ -506,7 +518,7 @@ function abrirModalCita(titulo, autores, anio) {
         '{autores}': autores || 'Autores Varios',
         '{anio}': anio || 's.f.',
         '{titulo}': titulo || 'Proyecto Socio-Tecnológico',
-        '{carrera}': 'PNF en Informática'
+        '{carrera}': carrera || 'PNF en Informática'
     };
     
     let count = 0;

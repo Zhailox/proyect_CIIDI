@@ -6,185 +6,6 @@ if (empty($mod)) {
     return;
 }
 ?>
-<style>
-/* Antigravity Glassmorphism & Weightless UI (estilo.md) */
-.ag-glass-banner {
-    background: rgba(255, 255, 255, 0.94) !important;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(80, 89, 132, 0.16) !important;
-    border-radius: var(--radius-md, 14px);
-    padding: 1.6rem 2rem;
-    box-shadow: 0 16px 36px rgba(18, 26, 62, 0.05);
-}
-
-.ag-glass-card {
-    background: rgba(255, 255, 255, 0.95) !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(80, 89, 132, 0.15) !important;
-    border-radius: 14px;
-    padding: 1.5rem;
-    box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04);
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ag-metric-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    padding: 1.25rem;
-    border: 1px solid rgba(80, 89, 132, 0.14);
-    box-shadow: 0 8px 24px rgba(18, 26, 62, 0.03);
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ag-metric-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 16px 36px rgba(18, 26, 62, 0.07);
-}
-
-.ag-tab-btn {
-    padding: 10px 18px;
-    font-weight: 700;
-    font-size: 0.88rem;
-    border: none;
-    background: none;
-    color: var(--texto-silenciado, #64748b);
-    border-bottom: 3px solid transparent;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.ag-tab-btn.active {
-    color: var(--color-secundario) !important;
-    border-bottom-color: var(--color-secundario) !important;
-}
-
-.ag-tab-btn:hover:not(.active) {
-    color: var(--texto-titulos, #0f172a);
-}
-
-.ag-route-card {
-    background: rgba(248, 250, 252, 0.95);
-    border: 1px solid rgba(80, 89, 132, 0.14);
-    border-radius: 10px;
-    padding: 1.1rem;
-    transition: all 0.25s ease;
-}
-
-.ag-route-card:hover {
-    background: #ffffff;
-    border-color: rgba(80, 89, 132, 0.28);
-    box-shadow: 0 6px 20px rgba(18, 26, 62, 0.04);
-}
-
-.ag-btn-solid {
-    background: var(--color-secundario) !important;
-    color: #ffffff !important;
-    border: none !important;
-    padding: 9px 18px !important;
-    border-radius: 8px !important;
-    font-weight: 700 !important;
-    font-size: 0.85rem !important;
-    cursor: pointer !important;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none !important;
-    box-shadow: 0 4px 12px rgba(80, 89, 132, 0.2);
-    transition: all 0.25s ease !important;
-}
-
-.ag-btn-solid:hover {
-    background: var(--color-secundario-dark, rgb(60, 68, 105)) !important;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(80, 89, 132, 0.3);
-}
-
-.ag-btn-orange {
-    background: #d97706 !important;
-    color: #ffffff !important;
-    border: none !important;
-    padding: 8px 14px !important;
-    border-radius: 8px !important;
-    font-weight: 700 !important;
-    font-size: 0.83rem !important;
-    cursor: pointer !important;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s ease;
-}
-
-.ag-btn-orange:hover {
-    background: #b45309 !important;
-    transform: translateY(-1px);
-}
-
-.ag-btn-test {
-    background: #0284c7 !important;
-    color: #ffffff !important;
-    border: none !important;
-    padding: 7px 12px !important;
-    border-radius: 8px !important;
-    font-weight: 700 !important;
-    font-size: 0.82rem !important;
-    cursor: pointer !important;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s ease;
-}
-
-.ag-btn-test:hover {
-    background: #0369a1 !important;
-    transform: translateY(-1px);
-}
-
-.ag-badge-core {
-    background: rgba(99, 102, 241, 0.1);
-    color: #4f46e5;
-    border: 1px solid rgba(99, 102, 241, 0.25);
-    border-radius: 8px;
-    padding: 5px 12px;
-    font-weight: 800;
-    font-size: 0.78rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.ag-badge-online {
-    background: rgba(16, 185, 129, 0.1);
-    color: #059669;
-    border: 1px solid rgba(16, 185, 129, 0.25);
-    border-radius: 8px;
-    padding: 5px 12px;
-    font-weight: 800;
-    font-size: 0.78rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.ag-badge-offline {
-    background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
-    border: 1px solid rgba(239, 68, 68, 0.25);
-    border-radius: 8px;
-    padding: 5px 12px;
-    font-weight: 800;
-    font-size: 0.78rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-}
-</style>
-
 <div class="ag-glass-banner mb-2">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.2rem;">
         <div style="display: flex; align-items: center; gap: 1.2rem;">
@@ -243,14 +64,14 @@ if (empty($mod)) {
         <div style="font-size: 1.85rem; font-weight: 800; color: var(--texto-titulos, #0f172a); margin-top: 0.3rem;"><?= $mod['total_rutas'] ?></div>
     </div>
 
-    <div class="ag-metric-card" style="border-color: rgba(16,185,129,0.25);">
-        <div style="font-size: 0.75rem; font-weight: 800; color: #059669; text-transform: uppercase; letter-spacing: 0.5px;">Rutas Activas</div>
-        <div style="font-size: 1.85rem; font-weight: 800; color: #10b981; margin-top: 0.3rem;"><?= $mod['rutas_activas'] ?></div>
+    <div class="ag-metric-card" style="border-color: rgba(112, 144, 203, 0.3);">
+        <div style="font-size: 0.75rem; font-weight: 800; color: var(--color-terciario); text-transform: uppercase; letter-spacing: 0.5px;">Rutas Activas</div>
+        <div style="font-size: 1.85rem; font-weight: 800; color: var(--color-texto-comun); margin-top: 0.3rem;"><?= $mod['rutas_activas'] ?></div>
     </div>
 
-    <div class="ag-metric-card" style="border-color: rgba(239,68,68,0.25);">
-        <div style="font-size: 0.75rem; font-weight: 800; color: #dc2626; text-transform: uppercase; letter-spacing: 0.5px;">Restringidas</div>
-        <div style="font-size: 1.85rem; font-weight: 800; color: #ef4444; margin-top: 0.3rem;"><?= $mod['rutas_restringidas'] ?></div>
+    <div class="ag-metric-card" style="border-color: rgba(80, 89, 132, 0.25);">
+        <div style="font-size: 0.75rem; font-weight: 800; color: var(--color-secundario); text-transform: uppercase; letter-spacing: 0.5px;">Restringidas</div>
+        <div style="font-size: 1.85rem; font-weight: 800; color: var(--color-secundario); margin-top: 0.3rem;"><?= $mod['rutas_restringidas'] ?></div>
     </div>
 
     <div class="ag-metric-card">
@@ -299,7 +120,7 @@ if (empty($mod)) {
                     Matriz de Permisos por Ruta (RBAC & Feature Flags)
                 </h3>
                 <p style="margin: 0.2rem 0 0 0; color: var(--texto-silenciado, #64748b); font-size: 0.88rem;">
-                    Configure el rol mínimo necesario, modifique estados y ejecute pings sintéticos de salud por ruta.
+                    Configure estados y ejecute pings sintéticos de salud por ruta.
                 </p>
             </div>
         </div>
@@ -329,18 +150,7 @@ if (empty($mod)) {
                                     <i class="ph-bold ph-lightning"></i> Testear Ruta
                                 </button>
 
-                                <div style="display: flex; flex-direction: column; gap: 2px;">
-                                    <span style="font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase;">Rol Mínimo Exigido</span>
-                                    <select id="rol-ruta-<?= htmlspecialchars($r['clave']) ?>" onchange="toggleRutaAjaxDM('<?= htmlspecialchars($r['clave']) ?>')" style="font-size: 0.82rem; padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 700; background: #ffffff; cursor: pointer;">
-                                        <?php if (!empty($mod['rolesDinamicos'])): ?>
-                                            <?php foreach ($mod['rolesDinamicos'] as $rolDyn): ?>
-                                                <option value="<?= $rolDyn['nivel'] ?>" <?= $r['rol_minimo'] === $rolDyn['nivel'] ? 'selected' : '' ?>>
-                                                    <?= htmlspecialchars($rolDyn['nombre']) ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
-                                    </select>
-                                </div>
+                                
 
                                 <div style="display: flex; flex-direction: column; gap: 2px;">
                                     <span style="font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase;">Estado / Feature Flag</span>
@@ -447,9 +257,9 @@ if (empty($mod)) {
                                 <td style="padding: 10px;">
                                     <?php
                                     $n = strtoupper($log['nivel']);
-                                    $bg = $n === 'ERROR' || $n === 'CRITICAL' ? '#ef4444' : ($n === 'WARNING' ? '#d97706' : 'rgb(80, 89, 132)');
+                                    $bg = $n === 'ERROR' || $n === 'CRITICAL' ? 'var(--alert-active)' : ($n === 'WARNING' ? 'var(--warning-active)' : 'var(--color-terciario)');
                                     ?>
-                                    <span style="background: <?= $bg ?>; color: #ffffff; padding: 2px 7px; border-radius: 4px; font-weight: 800; font-size: 0.72rem;"><?= $n ?></span>
+                                    <span style="background: <?= $bg ?>; color: #ffffff; padding: 2px 7px; border-radius: var(--radius-sm); font-weight: 800; font-size: 0.72rem;"><?= $n ?></span>
                                 </td>
                                 <td style="padding: 10px; font-weight: 700; color: #0f172a;"><?= htmlspecialchars($log['accion']) ?></td>
                                 <td style="padding: 10px; color: #334155;"><?= htmlspecialchars($log['responsable']) ?></td>
@@ -559,17 +369,89 @@ function toggleModuloAjaxDM(moduloId, inputEl) {
                 badge.className = `badge-status-${moduloId} ${nuevoEstado === 'online' ? 'ag-badge-online' : 'ag-badge-offline'}`;
             }
 
-            // Actualización dinámica del menú lateral (Sidebar)
-            if (Array.isArray(data.rutas)) {
+            // Actualización dinámica del menú lateral (Sidebar) en tiempo real
+            const targetNavs = document.querySelectorAll(`.sidebar [data-modulo="${moduloId}"]`);
+
+            if (targetNavs.length > 0) {
+                targetNavs.forEach(navEl => {
+                    if (nuevoEstado === 'offline') {
+                        navEl.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                        navEl.style.opacity = '0';
+                        navEl.style.transform = 'translateX(-10px)';
+                        setTimeout(() => {
+                            navEl.style.display = 'none';
+                            navEl.style.transform = '';
+                        }, 250);
+                    } else {
+                        navEl.style.display = '';
+                        navEl.style.opacity = '0';
+                        navEl.style.transform = 'translateX(-10px)';
+                        void navEl.offsetWidth; // Forzar reflow para animación
+                        navEl.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                        navEl.style.opacity = '1';
+                        navEl.style.transform = '';
+                    }
+                });
+            } else if (nuevoEstado === 'online' && Array.isArray(data.menu) && data.menu.length > 0) {
+                // Si el elemento no existía en el DOM al cargar la página, se inyecta dinámicamente
+                const navContainer = document.querySelector('.sidebar .nav-menu');
+                if (navContainer) {
+                    data.menu.forEach(item => {
+                        const iconoHtml = (item.icono && item.icono.includes('<i')) ? item.icono : `<i class="${item.icono || 'ph ph-app-window'}"></i>`;
+                        if (item.tipo === 'link') {
+                            const a = document.createElement('a');
+                            a.href = item.enlace;
+                            a.className = 'nav-item';
+                            a.setAttribute('data-modulo', moduloId);
+                            a.innerHTML = `<span class="nav-icon">${iconoHtml}</span><span class="nav-text">${item.titulo}</span>`;
+                            a.style.opacity = '0';
+                            a.style.transform = 'translateX(-10px)';
+                            navContainer.appendChild(a);
+                            void a.offsetWidth;
+                            a.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                            a.style.opacity = '1';
+                            a.style.transform = '';
+                        } else if (item.tipo === 'parent') {
+                            const div = document.createElement('div');
+                            div.className = 'nav-parent';
+                            div.setAttribute('data-modulo', moduloId);
+                            let subitemsHtml = '';
+                            if (Array.isArray(item.subitems)) {
+                                item.subitems.forEach(sub => {
+                                    subitemsHtml += `<a href="${sub.ruta}" class="sub-nav-item"><span class="nav-text">${sub.titulo}</span></a>`;
+                                });
+                            }
+                            div.innerHTML = `
+                                <a href="${item.enlace}" class="nav-item nav-parent-link">
+                                    <span class="nav-icon">${iconoHtml}</span>
+                                    <span class="nav-text" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                        <span>${item.titulo}</span>
+                                        ${subitemsHtml ? '<i class="ph-bold ph-caret-down nav-caret" style="font-size: 0.8rem; transition: transform 0.25s ease; cursor: pointer; padding: 4px;" onclick="toggleSidebarParent(event)"></i>' : ''}
+                                    </span>
+                                </a>
+                                ${subitemsHtml ? `<div class="sub-menu">${subitemsHtml}</div>` : ''}
+                            `;
+                            div.style.opacity = '0';
+                            div.style.transform = 'translateX(-10px)';
+                            navContainer.appendChild(div);
+                            void div.offsetWidth;
+                            div.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                            div.style.opacity = '1';
+                            div.style.transform = '';
+                        }
+                    });
+                }
+            } else if (Array.isArray(data.rutas)) {
+                // Fallback por enlaces si no se localiza por data-modulo
                 data.rutas.forEach(ruta => {
-                    const navItems = document.querySelectorAll(`a[href="${ruta}"]`);
+                    const navItems = document.querySelectorAll(`.sidebar a[href="${ruta}"]`);
                     navItems.forEach(link => {
-                        const parentNav = link.closest('.nav-item, .sub-nav-item, .nav-parent');
+                        const parentNav = link.closest('.nav-parent') || link;
                         if (parentNav) {
                             if (nuevoEstado === 'offline') {
-                                parentNav.style.transition = 'all 0.3s ease';
+                                parentNav.style.transition = 'all 0.25s ease';
                                 parentNav.style.opacity = '0';
-                                setTimeout(() => { parentNav.style.display = 'none'; }, 300);
+                                setTimeout(() => { parentNav.style.display = 'none'; }, 250);
                             } else {
                                 parentNav.style.display = '';
                                 parentNav.style.opacity = '1';

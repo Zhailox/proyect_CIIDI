@@ -224,27 +224,23 @@ img.loaded {
 }
 
 .btn-edit {
-    background-color: rgba(245, 158, 11, 0.12);
-    color: #d97706;
+    background: var(--warning-inactive); 
+    color: var(--warning-active);
 }
 
 .btn-edit:hover {
-    background-color: #d97706;
-    color: white;
     transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(217, 119, 6, 0.25);
+    box-shadow: 0 4px 10px rgba(6, 140, 217, 0.25);
 }
 
 .btn-delete {
-    background-color: rgba(239, 68, 68, 0.12);
-    color: #dc2626;
+    background: var(--alert-inactive); 
+    color: var(--alert-active);
 }
 
 .btn-delete:hover {
-    background-color: #dc2626;
-    color: white;
     transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.25);
+    box-shadow: 0 4px 10px rgba(38, 81, 220, 0.25);
 }
 
 .gestor-art-empty {

@@ -21,18 +21,50 @@ class VinculacionController
         $this->nivelLogueado = SystemConfigService::get('accesos_modulos.autenticacion.publico', 999);
     }
 
+    /** Tiempo mínimo (segundos) que un humano tarda en llenar el formulario público de empresas */
+    private const PROPUESTA_MIN_SEGUNDOS = 3;
+
     public function guardarPropuesta(): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $datos = [
-                'nombre_empresa'       => trim($_POST['nombre_empresa'] ?? ''),
-                'rif_empresa'          => trim($_POST['rif_empresa'] ?? ''),
-                'persona_contacto'     => trim($_POST['persona_contacto'] ?? ''),
-                'telefono_contacto'    => trim($_POST['telefono_contacto'] ?? ''),
-                'correo_contacto'      => trim($_POST['correo_contacto'] ?? ''),
-                'area_afectada'        => 'Por evaluar (Se definirá al aprobar)',
-                'descripcion_problema' => trim($_POST['descripcion_problema'] ?? '')
-            ];
+            require_once __DIR__ . '/../services/FormularioPropuestaService.php';
+            require_once CORE_PATH . 'Security/CaptchaService.php';
+            require_once CORE_PATH . 'Security/CSRF.php';
+
+            $validacion = FormularioPropuestaService::validarEnvio($_POST);
+
+            // 0. Ciclo de recepción cerrado desde Configuración
+            if (!VinculacionConfigService::get('recepcion_activa', true)) {
+                $this->rechazarEnvioPropuesta("La recepción de propuestas se encuentra cerrada en este momento.", $validacion['valores']);
+            }
+
+            // 1. CSRF
+            if (!CSRF::validarToken($_POST['csrf_token'] ?? null)) {
+                $this->rechazarEnvioPropuesta("Su sesión expiró. Por favor, verifique los datos y envíe nuevamente.", $validacion['valores']);
+            }
+
+            // 2. Tiempo humano mínimo (mismo campo _form_ts que usa el login)
+            $ts = (int)($_POST['_form_ts'] ?? 0);
+            $transcurrido = time() - $ts;
+            if ($ts <= 0 || $transcurrido < self::PROPUESTA_MIN_SEGUNDOS) {
+                $this->rechazarEnvioPropuesta("El formulario se envió demasiado rápido. Por favor, revise los datos e intente de nuevo.", $validacion['valores']);
+            }
+
+            // 3. Honeypot (website_url_hp) + Captcha visual del login (captcha_num_ans en sesión)
+            $verifCaptcha = CaptchaService::validarPeticion($_POST);
+            if (!$verifCaptcha['valido']) {
+                $this->rechazarEnvioPropuesta($verifCaptcha['mensaje'], $validacion['valores']);
+            }
+
+            // 4. Validación por tipo de cada campo configurado
+            if (!empty($validacion['errores'])) {
+                $this->rechazarEnvioPropuesta(implode("\n", $validacion['errores']), $validacion['valores']);
+            }
+
+            $datos = $validacion['core'];
+            $datos['correo_contacto'] = strtolower($datos['correo_contacto']);
+            $datos['area_afectada'] = 'Por evaluar (Se definirá al aprobar)';
+            $datos['campos_extra'] = json_encode($validacion['extras'], JSON_UNESCAPED_UNICODE);
 
             // Generar código de seguimiento único
             $codigo_seguimiento = 'CIIDI-' . date('Y') . '-' . strtoupper(substr(md5(uniqid((string)rand(), true)), 0, 5));
@@ -40,14 +72,25 @@ class VinculacionController
 
             $id = $this->modelo->guardar($datos);
             if ($id) {
+                unset($_SESSION['propuesta_form_old']);
                 $_SESSION['mensaje_exito'] = "Su propuesta fue enviada correctamente.";
                 $_SESSION['codigo_seguimiento'] = $codigo_seguimiento;
             } else {
+                $_SESSION['propuesta_form_old'] = $validacion['valores'];
                 $_SESSION['mensaje_error'] = "Ocurrió un error al enviar su propuesta.";
             }
             echo "<script>window.location.href='?ruta=empresas-inicio';</script>";
             exit;
         }
+    }
+
+    /** Redirige al formulario público conservando lo que el usuario escribió. */
+    private function rechazarEnvioPropuesta(string $mensaje, array $valores): never
+    {
+        $_SESSION['propuesta_form_old'] = $valores;
+        $_SESSION['mensaje_error'] = $mensaje;
+        echo "<script>window.location.href='?ruta=empresas-inicio#registro-problematica';</script>";
+        exit;
     }
 
     public function procesarPropuesta(): void
@@ -81,11 +124,13 @@ class VinculacionController
                 $this->modelo->actualizarEstado($id, 'aceptada', $nivel);
 
                 if ($id_linea) {
-                    $stmt = $pdo->prepare("SELECT area_afectada, descripcion_problema, nombre_empresa, persona_contacto, correo_contacto, codigo_seguimiento FROM propuestas_empresa WHERE id = ?");
+                    $stmt = $pdo->prepare("SELECT area_afectada, descripcion_problema, nombre_empresa, persona_contacto, correo_contacto, codigo_seguimiento, campos_extra FROM propuestas_empresa WHERE id = ?");
                     $stmt->execute([$id]);
                     $prop = $stmt->fetch();
 
                     if ($prop) {
+                        require_once __DIR__ . '/../services/FormularioPropuestaService.php';
+                        $extrasCorreo = FormularioPropuestaService::extrasHtmlCorreo(FormularioPropuestaService::decodificarExtras($prop['campos_extra'] ?? null));
                         $titulo_oferta = "Requerimiento: " . $prop['area_afectada'];
                         $desc_oferta = $prop['descripcion_problema'] . "\n\n(Nivel Requerido: $nivel)";
 
@@ -119,6 +164,7 @@ class VinculacionController
                                         <p style='margin: 0 0 10px 0;'><b>Código de Seguimiento:</b> {$prop['codigo_seguimiento']}</p>
                                         <p style='margin: 0 0 10px 0;'><b>Área / Tema:</b> {$prop['area_afectada']}</p>
                                         <p style='margin: 0;'><b>Problemática:</b><br>" . nl2br($prop['descripcion_problema']) . "</p>
+                                        {$extrasCorreo}
                                     </div>
                                     <p>Te notificaremos nuevamente tan pronto como un equipo de desarrollo sea asignado a tu requerimiento.</p>
                                     <p>Saludos cordiales,<br><b>Equipo CIIDI</b></p>
@@ -167,11 +213,103 @@ class VinculacionController
                 }
 
                 $_SESSION['flash_success'] = "La propuesta ha sido rechazada y se notificó a la empresa.";
+            } elseif (in_array($accion, ['revertir', 'archivar', 'restaurar'], true)) {
+                $filtroDestino = $this->gestionarCicloPropuesta($id, $accion);
+                echo "<script>window.location.href='?ruta=gestion-proyectos&tab=propuestas&filtro=" . rawurlencode($filtroDestino) . "';</script>";
+                exit;
             }
 
             echo "<script>window.location.href='?ruta=gestion-proyectos&tab=propuestas';</script>";
             exit;
         }
+    }
+
+    /**
+     * Ciclo de vida de propuestas desde "Gestión de Solicitudes":
+     *  - revertir:  'aceptada' -> 'pendiente' (cierra la oferta vinculada y cancela postulaciones con motivo)
+     *  - archivar:  soft-delete con motivo (oculta de listados, cartelera y carrusel)
+     *  - restaurar: deshace el archivo
+     * Devuelve el filtro de estado a mostrar tras la redirección.
+     */
+    private function gestionarCicloPropuesta(int $id, string $accion): string
+    {
+        require_once CORE_PATH . 'Security/CSRF.php';
+        require_once CORE_PATH . 'Security/AuditLogger.php';
+
+        if (!CSRF::validarToken($_POST['csrf_token'] ?? null)) {
+            $_SESSION['flash_error'] = "Token de seguridad inválido o expirado. Recargue la página e intente de nuevo.";
+            return 'Todos';
+        }
+
+        $prop = $this->modelo->getPorId($id);
+        if (!$prop) {
+            $_SESSION['flash_error'] = "La propuesta indicada no existe.";
+            return 'Todos';
+        }
+        $ref = ($prop['codigo_seguimiento'] ?? 'S/C') . ' - ' . $prop['nombre_empresa'];
+        $motivo = mb_substr(trim((string)($_POST['motivo'] ?? '')), 0, 1000);
+
+        if ($accion === 'revertir') {
+            if ($motivo === '') {
+                $_SESSION['flash_error'] = "Debe indicar el motivo de la reversión.";
+                return 'aceptada';
+            }
+            $res = $this->modelo->revertirAceptada($id, $motivo);
+            if (!$res['ok']) {
+                $_SESSION['flash_error'] = $res['error'] ?? "No se pudo revertir la propuesta.";
+                return 'aceptada';
+            }
+            $afectados = $res['afectados'] ?? [];
+            foreach ($afectados as $est) {
+                if (empty($est['email'])) continue;
+                $nombreEst = htmlspecialchars((string)$est['nombre_completo']);
+                $cuerpo = "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;'>
+                    <div style='background-color: #505984; padding: 20px; text-align: center; color: white;'>
+                        <h2 style='margin: 0;'>Actualización de Postulación</h2>
+                    </div>
+                    <div style='padding: 20px; background-color: #ffffff; color: #333333;'>
+                        <p>Hola <b>{$nombreEst}</b>,</p>
+                        <p>Te informamos que el requerimiento tecnológico de la organización <b>" . htmlspecialchars((string)$prop['nombre_empresa']) . "</b> fue <b>retirado de la cartelera</b> por el Comité de Proyectos y vuelve a evaluación. Por este motivo tu postulación ha sido <b>cancelada</b>.</p>
+                        <div style='background: #fff1f2; padding: 15px; border-left: 4px solid #e11d48; margin: 20px 0; color: #9f1239;'>
+                            <p style='margin: 0 0 5px 0;'><b>Motivo:</b></p>
+                            <p style='margin: 0;'><i>" . nl2br(htmlspecialchars($motivo)) . "</i></p>
+                        </div>
+                        <p>Te invitamos a revisar la cartelera de oportunidades y postularte a otros proyectos.</p>
+                        <p>Saludos cordiales,<br><b>Equipo CIIDI</b></p>
+                    </div>
+                </div>";
+                $this->enviarCorreoNotificacion($est['email'], (string)$est['nombre_completo'], 'Postulación cancelada - CIIDI', $cuerpo);
+            }
+            AuditLogger::registrar('WARNING', 'VinculacionEmpresarial', 'Revertir Propuesta Aceptada',
+                "Propuesta #{$id} ({$ref}) revertida a pendiente. Ofertas cerradas: " . ($res['ofertas'] ?? 0) . ". Postulaciones canceladas: " . count($afectados) . ". Motivo: {$motivo}");
+            $_SESSION['flash_success'] = "La propuesta volvió a estado Pendiente. Se cerró su oferta en la cartelera"
+                . (count($afectados) ? " y se notificó a " . count($afectados) . " postulante(s)." : ".");
+            return 'pendiente';
+        }
+
+        if ($accion === 'archivar') {
+            if ($motivo === '') {
+                $_SESSION['flash_error'] = "Debe indicar el motivo del archivo.";
+                return 'Todos';
+            }
+            if ($this->modelo->archivar($id, $motivo, isset($_SESSION['usuario_id']) ? (int)$_SESSION['usuario_id'] : null)) {
+                AuditLogger::registrar('WARNING', 'VinculacionEmpresarial', 'Archivar Propuesta', "Propuesta #{$id} ({$ref}) archivada. Estado previo: {$prop['estado']}. Motivo: {$motivo}");
+                $_SESSION['flash_success'] = "La propuesta fue archivada. Puede restaurarla desde el filtro 'Archivadas'.";
+                return 'archivada';
+            }
+            $_SESSION['flash_error'] = "No se pudo archivar la propuesta (puede que ya esté archivada).";
+            return 'Todos';
+        }
+
+        // restaurar
+        if ($this->modelo->restaurar($id)) {
+            AuditLogger::registrar('INFO', 'VinculacionEmpresarial', 'Restaurar Propuesta', "Propuesta #{$id} ({$ref}) restaurada desde el archivo.");
+            $_SESSION['flash_success'] = "La propuesta fue restaurada.";
+            return (string)$prop['estado'];
+        }
+        $_SESSION['flash_error'] = "No se pudo restaurar la propuesta.";
+        return 'archivada';
     }
 
     public function postularOportunidad(): void
@@ -188,10 +326,19 @@ class VinculacionController
             $id_investigacion = (int) $_POST['id_investigacion'];
             $motivacion = trim($_POST['motivacion'] ?? '');
             $equipo_extra = $_POST['equipo_extra'] ?? null;
+            $trayecto = !empty($_POST['trayecto']) ? (int) $_POST['trayecto'] : null;
+            $trimestre = !empty($_POST['trimestre']) ? (int) $_POST['trimestre'] : 1;
+            $id_profesor_pst = !empty($_POST['id_profesor_pst']) ? (int) $_POST['id_profesor_pst'] : null;
+
+            if (!$trayecto || !$id_profesor_pst) {
+                $_SESSION['flash_error'] = "Debe indicar su trayecto y el profesor PST deseado.";
+                header("Location: ?ruta=cartelera-oportunidades");
+                exit;
+            }
 
             try {
-                if ($this->modelo->crearPostulacion($id_investigacion, $user['id'], $motivacion, $equipo_extra)) {
-                    $_SESSION['flash_success'] = "¡Tu solicitud ha sido enviada al Comité!";
+                if ($this->modelo->crearPostulacion($id_investigacion, $user['id'], $motivacion, $equipo_extra, $trayecto, $trimestre, $id_profesor_pst)) {
+                    $_SESSION['flash_success'] = "¡Tu solicitud ha sido enviada al Comité y a tu Profesor PST!";
                 } else {
                     $_SESSION['flash_error'] = "Ocurrió un error al enviar tu solicitud.";
                 }
@@ -407,18 +554,35 @@ class VinculacionController
             $estados_postulaciones = $this->modelo->getEstadosPostulacionesEstudiante($_SESSION['usuario_id']);
         }
         
+        require_once __DIR__ . '/../models/ProfesorPSTModel.php';
+        require_once __DIR__ . '/../../Autenticacion/services/PerfilPSTService.php';
+        $modeloPst = new ProfesorPSTModel();
+
         return [
             'oportunidades' => $oportunidades,
             'userData' => $userData,
             'lineasUnicas' => $lineasUnicas,
             'estados_postulaciones' => $estados_postulaciones,
             'oportunidadesPorTrayecto' => $oportunidadesPorTrayecto,
-            'cuposUnicos' => $cuposUnicos
+            'cuposUnicos' => $cuposUnicos,
+            'profesoresPST' => $modeloPst->getProfesoresPST(true),
+            'catTrayectos' => PerfilPSTService::catalogoTrayectos(),
+            'catTrimestres' => PerfilPSTService::catalogoTrimestres()
         ];
     }
 
     public function gestionProyectos(): array
     {
+        $rol = Auth::usuario()['rol'] ?? '';
+        $nivel = (int)(Auth::usuario()['nivel'] ?? 999);
+        $esSuperAdmin = $nivel === 0;
+        
+        // Si es profesor sin rol administrativo, redirigirlo a su panel oculto
+        if (!$esSuperAdmin && in_array($rol, ['Profesor', 'Docentes']) && $rol !== 'Comité') {
+            header("Location: ?ruta=postulaciones-pst");
+            exit;
+        }
+
         Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'VinculacionEmpresarial');
         
         $tab = $_GET['tab'] ?? 'propuestas';
@@ -455,7 +619,11 @@ class VinculacionController
             }
             ksort($trayectos);
             
+            $archivadas = $this->modelo->getArchivadas();
+            $estados['archivada'] = count($archivadas);
+            
             $datos['todas'] = $todas;
+            $datos['archivadas'] = $archivadas;
             $datos['lineas'] = $lineas;
             $datos['dimensiones'] = $dimensiones;
             $datos['kpiNuevas'] = $kpiNuevas;
@@ -467,7 +635,7 @@ class VinculacionController
             $estados = ['Pendiente' => 0, 'Aceptado' => 0, 'Rechazado' => 0];
             
             foreach ($postulaciones as $p) {
-                $nivel = !empty($p['nivel_trayecto']) ? $p['nivel_trayecto'] : 'Sin Asignar';
+                $nivel = !empty($p['pst_trayecto']) ? $p['pst_trayecto'] : 'Sin Asignar';
                 $trayectos[$nivel] = ($trayectos[$nivel] ?? 0) + 1;
                 
                 $est = $p['estado'] ?? '';
@@ -499,6 +667,25 @@ class VinculacionController
                 'recepcion_activa'     => isset($_POST['recepcion_activa']),
                 'mensaje_marquee'      => trim($_POST['mensaje_marquee'] ?? '')
             ];
+
+            // Campos del formulario público (JSON serializado por el editor de configuracion.php)
+            if (isset($_POST['campos_formulario_json'])) {
+                require_once __DIR__ . '/../services/FormularioPropuestaService.php';
+                $camposRecibidos = json_decode((string)$_POST['campos_formulario_json'], true);
+                if (is_array($camposRecibidos)) {
+                    $configs[FormularioPropuestaService::CLAVE_CONFIG] = FormularioPropuestaService::sanear($camposRecibidos);
+                }
+            }
+
+            // Catálogo dinámico de Trayectos y Niveles Académicos (Pregrado / Postgrado)
+            if (isset($_POST['catalogo_trayectos_json'])) {
+                require_once __DIR__ . '/../../Autenticacion/services/PerfilPSTService.php';
+                $trayectosRecibidos = json_decode((string)$_POST['catalogo_trayectos_json'], true);
+                if (is_array($trayectosRecibidos)) {
+                    $configs[PerfilPSTService::CLAVE_CONFIG_TRAYECTOS] = PerfilPSTService::sanearCatalogoTrayectos($trayectosRecibidos);
+                }
+            }
+
             if (VinculacionConfigService::setMultiple($configs)) {
                 $_SESSION['flash_success'] = "Configuraciones actualizadas exitosamente.";
             } else {

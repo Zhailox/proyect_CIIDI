@@ -21,6 +21,7 @@ class CursosModule implements ModuleContract {
                 'vista'            => __DIR__ . '/views/showcase_cursos.php',
                 'titulo'           => 'Catálogo de Cursos — Oferta Formativa',
                 'css'              => ['cursos.css'],
+                'seguridad_accion' => 'ver',
             ],
 
             // ── Crear curso ───────────────────────────────────────
@@ -31,11 +32,13 @@ class CursosModule implements ModuleContract {
                 'vista'            => __DIR__ . '/views/form_curso.php',
                 'titulo'           => 'Registrar Nuevo Curso',
                 'css'              => ['cursos.css'],
+                'seguridad_accion' => 'crear',
             ],
             'cursos-procesar-crear' => [
                 'controlador_path' => $ctrl,
                 'controlador'      => 'PromoController',
                 'metodo'           => 'procesarCrear',
+                'seguridad_accion' => 'crear',
             ],
 
             // ── Editar curso ──────────────────────────────────────
@@ -46,11 +49,13 @@ class CursosModule implements ModuleContract {
                 'vista'            => __DIR__ . '/views/form_curso.php',
                 'titulo'           => 'Editar Curso',
                 'css'              => ['cursos.css'],
+                'seguridad_accion' => 'editar',
             ],
             'cursos-procesar-editar' => [
                 'controlador_path' => $ctrl,
                 'controlador'      => 'PromoController',
                 'metodo'           => 'procesarEditar',
+                'seguridad_accion' => 'editar',
             ],
 
             // ── Eliminar curso ────────────────────────────────────
@@ -58,9 +63,10 @@ class CursosModule implements ModuleContract {
                 'controlador_path' => $ctrl,
                 'controlador'      => 'PromoController',
                 'metodo'           => 'procesarEliminar',
+                'seguridad_accion' => 'eliminar',
             ],
 
-            // ── Ver Detalle de Curso ──────────────────────────────
+            // ── Ver Detalle de Curso (Público) ─────────────────────
             'cursos-detalle' => [
                 'controlador_path' => $ctrl,
                 'controlador'      => 'PromoController',
@@ -68,6 +74,32 @@ class CursosModule implements ModuleContract {
                 'vista'            => __DIR__ . '/views/detalle_curso.php',
                 'titulo'           => 'Detalle del Curso',
                 'css'              => ['cursos.css'],
+                'seguridad_accion' => 'ver',
+            ],
+
+            // ── Formulario de Google (Inscripción pública oficial) ──
+            'cursos-formulario-google' => [
+                'controlador_path' => $ctrl,
+                'controlador'      => 'PromoController',
+                'metodo'           => 'mostrarFormularioGoogle',
+                'vista'            => __DIR__ . '/views/vista_formulario_google.php',
+                'titulo'           => 'Inscripción vía Formulario de Google',
+                'css'              => ['cursos.css'],
+                'seguridad_accion' => 'ver',
+            ],
+
+            // ── Redirección de preinscripción interna a Formulario Google ──
+            'cursos-preinscripcion' => [
+                'controlador_path' => $ctrl,
+                'controlador'      => 'PromoController',
+                'metodo'           => 'mostrarPreinscripcion',
+                'seguridad_accion' => 'ver',
+            ],
+            'cursos-procesar-preinscripcion' => [
+                'controlador_path' => $ctrl,
+                'controlador'      => 'PromoController',
+                'metodo'           => 'procesarPreinscripcion',
+                'seguridad_accion' => 'ver',
             ],
 
             // ── Gestión de Cursos (Profesores/Admin) ──────────────
@@ -78,6 +110,7 @@ class CursosModule implements ModuleContract {
                 'vista'            => __DIR__ . '/views/gestion_cursos.php',
                 'titulo'           => 'Gestión de Cursos',
                 'css'              => ['cursos.css'],
+                'seguridad_accion' => 'gestionar',
             ],
 
             // ── Configuración del módulo (SuperAdmin) ─────────────
@@ -88,29 +121,37 @@ class CursosModule implements ModuleContract {
                 'vista'            => __DIR__ . '/views/config_cursos.php',
                 'titulo'           => 'Configuración del Módulo de Cursos',
                 'css'              => ['cursos.css'],
+                'seguridad_accion' => 'configurar',
             ],
             'cursos-config-guardar' => [
                 'controlador_path' => $ctrl,
                 'controlador'      => 'PromoController',
                 'metodo'           => 'guardarConfig',
+                'seguridad_accion' => 'configurar',
             ],
         ];
     }
 
     public function getMenuConfig(): array {
-        $nivelAdmin = SystemConfigService::get('accesos_modulos.cursos.admin', 0);
-        $nivelPublico = SystemConfigService::get('accesos_modulos.cursos.publico', 10);
+        $nivelPublico = SystemConfigService::get('accesos_modulos.cursos.publico', 999);
+        $nivelAdmin   = SystemConfigService::get('accesos_modulos.cursos.admin', 1);
+
         return [
             [
                 'tipo'        => 'parent',
-                'titulo'      => 'Cursos',
+                'titulo'      => 'Formación',
                 'icono'       => 'ph-fill ph-graduation-cap',
+                'orden'       => 50,
+                'grupo'       => 'lineas-investigacion',
+                'orden_en_grupo' => 20,
                 'enlace'      => 'cursos',
-                'activadores' => ['cursos', 'cursos-gestion', 'cursos-crear', 'cursos-editar', 'cursos-config'],
+                'privilegio_minimo' => $nivelPublico,
+                'activadores' => ['cursos', 'cursos-detalle', 'cursos-formulario-google', 'cursos-gestion', 'cursos-crear', 'cursos-editar', 'cursos-config'],
                 'subitems'    => [
-                    ['ruta' => 'cursos',        'titulo' => 'Oferta Formativa', 'privilegio_minimo' => $nivelPublico],
-                    ['ruta' => 'cursos-gestion',  'titulo' => 'Registrar Curso', 'privilegio_minimo' => $nivelAdmin],
-                    ['ruta' => 'cursos-config', 'titulo' => 'Configuración', 'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'cursos',                   'titulo' => 'Oferta Formativa',       'privilegio_minimo' => $nivelPublico],
+                    ['ruta' => 'cursos-formulario-google', 'titulo' => 'Inscripción Google Form', 'privilegio_minimo' => $nivelPublico],
+                    ['ruta' => 'cursos-gestion',           'titulo' => 'Gestión de Cursos',      'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'cursos-config',            'titulo' => 'Configuración',          'privilegio_minimo' => $nivelAdmin],
                 ],
             ],
         ];

@@ -31,9 +31,9 @@ class CursosCsrfService {
         // hash_equals previene timing attacks
         $valido = !empty($tokenEsperado) && hash_equals($tokenEsperado, $tokenRecibido);
 
-        // Rotar siempre para uso único
-        unset($_SESSION[self::SESSION_KEY]);
-        self::generarToken(); // pre-genera el siguiente
+        // Ya NO rotamos el token inmediatamente para permitir múltiples pestañas
+        // unset($_SESSION[self::SESSION_KEY]);
+        // self::generarToken(); // pre-genera el siguiente
 
         return $valido;
     }
@@ -59,3 +59,4 @@ class CursosCsrfService {
         }
     }
 }
+

@@ -22,17 +22,16 @@ class CaptchaService {
         $ts = time();
         $_SESSION['captcha_ts'] = $ts;
 
-        // 2. Generar pregunta/reto dinámico para el Captcha
-        $n1 = rand(1, 9);
-        $n2 = rand(1, 9);
-        $operador = rand(0, 1) === 1 ? '+' : 'x';
-        $resultado = ($operador === '+') ? ($n1 + $n2) : ($n1 * $n2);
+        // 2. Generar pregunta/reto dinámico para el Captcha (Sumas sencillas entre 1 y 5)
+        $n1 = rand(1, 5);
+        $n2 = rand(1, 5);
+        $resultado = $n1 + $n2;
 
         $_SESSION['captcha_num_ans'] = (string)$resultado;
 
         return [
             'timestamp' => $ts,
-            'pregunta'  => "{$n1} {$operador} {$n2} = ?",
+            'pregunta'  => "{$n1} + {$n2} = ?",
             'honeypot_name' => 'website_url_hp'
         ];
     }
@@ -43,13 +42,12 @@ class CaptchaService {
     public static function renderImagenCaptcha(): void {
         self::initSession();
 
-        $n1 = rand(1, 9);
-        $n2 = rand(1, 9);
-        $operador = rand(0, 1) === 1 ? '+' : 'x';
-        $resultado = ($operador === '+') ? ($n1 + $n2) : ($n1 * $n2);
+        $n1 = rand(1, 5);
+        $n2 = rand(1, 5);
+        $resultado = $n1 + $n2;
         $_SESSION['captcha_num_ans'] = (string)$resultado;
 
-        $texto = "{$n1} {$operador} {$n2} = ?";
+        $texto = "{$n1} + {$n2} = ?";
 
         // Crear lienzo con PHP GD
         $width = 110;
@@ -84,7 +82,9 @@ class CaptchaService {
         header('Content-Type: image/png');
         header('Cache-Control: no-cache, no-store, must-revalidate');
         imagepng($image);
-        imagedestroy($image);
+        if (PHP_VERSION_ID < 80500 && is_resource($image)) {
+            imagedestroy($image);
+        }
         exit;
     }
 

@@ -1,44 +1,95 @@
 <?php
 // core/Security/Auth.php
+require_once CORE_PATH . 'Database/Connection.php';
+require_once CORE_PATH . 'Security/SessionManager.php';
 
 class Auth {
     
-    public static function check() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+    public static function check(): bool {
+        $sessionManager = new SessionManager();
+        $sessionManager->start();
         
         if (!isset($_SESSION['usuario_id'])) {
             return false;
         }
 
         // --- VERIFICACIÓN DE SESIÓN REVOCADA / KILL SESSION ---
-        $archivo_sesiones = CORE_PATH . '../storage/revoked_sessions.json';
+        $archivo_sesiones = defined('STORAGE_PATH') ? STORAGE_PATH . 'revoked_sessions.json' : CORE_PATH . '../storage/revoked_sessions.json';
         if (file_exists($archivo_sesiones)) {
             $revogadas = json_decode(file_get_contents($archivo_sesiones), true) ?: [];
             $usuarioIdStr = (string)$_SESSION['usuario_id'];
             
-            // Verificamos si la ID del usuario actual está marcada como revocada
-            if (isset($revogadas[$usuarioIdStr]) && $revogadas[$usuarioIdStr] === true) {
-                unset($revogadas[$usuarioIdStr]);
-                file_put_contents($archivo_sesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
-                
+            if (isset($revogadas[$usuarioIdStr])) {
+                $revocadoVal = $revogadas[$usuarioIdStr];
+                $loginTime = (int)($_SESSION['login_time'] ?? 0);
+
+                // Si hay un timestamp de revocación:
+                // Solo se revoca si esta sesión se inició ANTES o DURANTE el momento de revocación.
+                // Si la sesión se inició DESPUÉS de la revocación (nuevo inicio de sesión legítimo), no se expulsa.
+                $debeRevocar = false;
+                if (is_numeric($revocadoVal)) {
+                    $revocadoTime = (int)$revocadoVal;
+                    if ($loginTime <= $revocadoTime) {
+                        $debeRevocar = true;
+                    }
+                } else {
+                    // Valor booleano legado: solo revocar si no tiene login_time reciente
+                    if ($loginTime === 0) {
+                        $debeRevocar = true;
+                    }
+                }
+
+                if ($debeRevocar) {
+                    unset($revogadas[$usuarioIdStr]);
+                    file_put_contents($archivo_sesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
+                    
+                    session_unset();
+                    session_destroy();
+                    
+                    $sessionManager->start();
+                    session_regenerate_id(true);
+                    
+                    $_SESSION['error_login'] = "Tu sesión ha sido finalizada por el administrador por razones de seguridad.";
+                    header("Location: login");
+                    exit;
+                } else {
+                    // La sesión actual es posterior a la revocación (nuevo login exitoso posterior).
+                    // Limpiamos la entrada obsoleta del JSON para no dejar pendientes.
+                    unset($revogadas[$usuarioIdStr]);
+                    file_put_contents($archivo_sesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
+                }
+            }
+        }
+
+        // --- CONTROL DE TIEMPO DE INACTIVIDAD (SESSION TIMEOUT) ---
+        $archivo_config = defined('STORAGE_PATH') ? STORAGE_PATH . 'system_config.json' : CORE_PATH . '../storage/system_config.json';
+        $timeoutMinutos = 120;
+        if (file_exists($archivo_config)) {
+            $sysCfg = json_decode(file_get_contents($archivo_config), true) ?: [];
+            $timeoutMinutos = (int)($sysCfg['seguridad']['timeout_minutos'] ?? 120);
+        }
+        $timeoutSegundos = max(300, $timeoutMinutos * 60);
+
+        $ahora = time();
+        if (isset($_SESSION['ultimo_acceso'])) {
+            $inactividad = $ahora - (int)$_SESSION['ultimo_acceso'];
+            if ($inactividad > $timeoutSegundos) {
                 session_unset();
                 session_destroy();
-                session_start();
-                $_SESSION['error_login'] = "Tu sesión ha sido finalizada por el administrador por razones de seguridad.";
+                $sessionManager->start();
+                session_regenerate_id(true);
+                $_SESSION['error_login'] = "Tu sesión ha expirado por inactividad ({$timeoutMinutos} min). Por favor, inicia sesión nuevamente.";
                 header("Location: login");
                 exit;
             }
         }
+        $_SESSION['ultimo_acceso'] = $ahora;
 
         return true;
     }
 
     /**
      * Verifica si el usuario actual cumple con el nivel mínimo exigido o permiso dinámico RBAC.
-     * Nivel 0 = Administrador Supremo (nivelDios) | Nivel 1+ = Profesores, Bibliotecarios, Admins
-     * Si $redirect403 es true, redirige a 403 / login. Si es false, devuelve simplemente un booleano (true/false).
      */
     public static function requierePrivilegioMinimo(int $nivelExigido, ?string $permisoRuta = null, ?string $moduloRuta = null, bool $redirect403 = true): bool {
         if (!self::check()) {
@@ -49,21 +100,29 @@ class Auth {
         $nivelUsuario = (int)($_SESSION['nivel_privilegio'] ?? 999);
         $nivelDios = 0;
 
-        // El nivel 0 (Administrador Supremo / nivelDios) siempre tiene acceso total absoluto
         if ($nivelUsuario === $nivelDios) {
             return true;
         }
 
-        // 1. Si se especifican módulo y permiso, la matriz RBAC tiene prioridad absoluta
         if ($permisoRuta !== null && $moduloRuta !== null) {
-            $archivo_rbac = CORE_PATH . '../storage/rbac_matrix.json';
             $autorizado = false;
+            
+            try {
+                $db = Connection::getInstance();
+                if ($db) {
+                    $stmt = $db->prepare("SELECT permisos FROM matriz_rbac WHERE nivel_privilegio = ? AND modulo = ?");
+                    $stmt->execute([$nivelUsuario, $moduloRuta]);
+                    $fila = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if (file_exists($archivo_rbac)) {
-                $matrix = json_decode(file_get_contents($archivo_rbac), true) ?: [];
-                if (!empty($matrix[$nivelUsuario][$moduloRuta][$permisoRuta])) {
-                    $autorizado = true;
+                    if ($fila && !empty($fila['permisos'])) {
+                        $permisos = is_string($fila['permisos']) ? json_decode($fila['permisos'], true) : $fila['permisos'];
+                        if (!empty($permisos[$permisoRuta])) {
+                            $autorizado = true;
+                        }
+                    }
                 }
+            } catch (DatabaseConnectionException $e) {
+                $autorizado = false;
             }
 
             if (!$autorizado) {
@@ -76,7 +135,6 @@ class Auth {
             return true;
         }
 
-        // 2. Fallback: Verificación de nivel numérico cuando no se especifica módulo/permiso
         if ($nivelUsuario > $nivelExigido) {
             if ($redirect403) {
                 self::render403();
@@ -87,17 +145,13 @@ class Auth {
         return true;
     }
 
-
-
-    private static function render403() {
+    private static function render403(): void {
         if (!headers_sent()) {
             http_response_code(403);
         }
         $vista_modulo_path = CORE_VIEWS . '403.php';
         $titulo_pagina     = '403 - Acceso Denegado';
         
-        // Si las cabeceras ya se enviaron, significa que master.php ya está cargado y estamos en medio de la vista.
-        // Renderizamos solo el 403 para no duplicar el navbar y la barra lateral.
         if (headers_sent()) {
             if (file_exists($vista_modulo_path)) {
                 include $vista_modulo_path;
@@ -116,121 +170,28 @@ class Auth {
         exit;
     }
 
-    /**
-     * Devuelve los datos del usuario activo para usarlos en el Header o Sidebar
-     */
-    public static function usuario() {
+    public static function usuario(): ?array {
         if (!self::check()) return null;
 
-        return [
-            'id' => $_SESSION['usuario_id'],
-            'nombre' => $_SESSION['nombre_usuario'],
-            'rol' => $_SESSION['rol_nombre'],
-            'nivel' => $_SESSION['nivel_privilegio']
-        ];
-    }
-}
+        $nombre = $_SESSION['nombre'] 
+            ?? $_SESSION['usuario_nombre'] 
+            ?? $_SESSION['nombre_completo'] 
+            ?? $_SESSION['usuario'] 
+            ?? $_SESSION['emerg_user_nombre'] 
+            ?? 'Usuario';
 
-/**
- * Helper Global de Auditoría Activa (System Monitoring & Audit Trail)
- */
-class AuditLogger {
-    
-    public static function registrar(string $nivel, string $modulo, string $accion, string $detalles = '') {
-        $usuario = Auth::usuario();
-        $responsable = $usuario ? "{$usuario['nombre']} (ID: {$usuario['id']})" : "Sistema / Anónimo";
-        $ip = class_exists('RateLimiter') ? RateLimiter::obtenerIPCliente() : ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
-
-        $archivo = CORE_PATH . '../storage/system_audit.json';
-        $directorio = dirname($archivo);
-        if (!is_dir($directorio)) {
-            mkdir($directorio, 0777, true);
-        }
-
-        $logs = file_exists($archivo) ? (json_decode(file_get_contents($archivo), true) ?: []) : [];
-
-        // Obtener el Hash del registro inmediatamente anterior para el encadenamiento Tamper-Proof
-        $hashAnterior = !empty($logs) && isset($logs[0]['hash_integridad']) ? $logs[0]['hash_integridad'] : 'GENESIS_CIIDI_V1';
-        $idLog = uniqid('log_');
-        $fechaHora = date('Y-m-d H:i:s');
-
-        // Generar Hash SHA-256 de integridad (Cadena de Custodia Criptográfica)
-        $payloadIntegridad = "{$idLog}|{$fechaHora}|{$nivel}|{$modulo}|{$accion}|{$detalles}|{$responsable}|{$ip}|{$hashAnterior}";
-        $hashIntegridad = hash('sha256', $payloadIntegridad);
-
-        $registro = [
-            'id'              => $idLog,
-            'fecha_hora'      => $fechaHora,
-            'nivel'           => strtoupper($nivel), // INFO | WARNING | ERROR | CRITICAL
-            'modulo'          => $modulo,
-            'accion'          => $accion,
-            'detalles'        => $detalles,
-            'responsable'     => $responsable,
-            'ip'              => $ip,
-            'hash_anterior'   => $hashAnterior,
-            'hash_integridad' => $hashIntegridad
-        ];
-
-        array_unshift($logs, $registro); // Insertar al inicio para orden cronológico descendente
-        
-        // Conservar los últimos 1000 eventos en storage
-        if (count($logs) > 1000) {
-            $logs = array_slice($logs, 0, 1000);
-        }
-
-        file_put_contents($archivo, json_encode($logs, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-    }
-
-    /**
-     * Valida la integridad criptográfica SHA-256 de todos los registros de auditoría almacenados.
-     */
-    public static function verificarIntegridadCadena(): array {
-        $archivo = CORE_PATH . '../storage/system_audit.json';
-        if (!file_exists($archivo)) {
-            return ['integro' => true, 'mensaje' => 'El archivo de auditoría está vacío o no ha sido generado.', 'total' => 0, 'corruptos' => 0];
-        }
-
-        $logs = json_decode(file_get_contents($archivo), true) ?: [];
-        if (empty($logs)) {
-            return ['integro' => true, 'mensaje' => 'No existen eventos de auditoría registrados.', 'total' => 0, 'corruptos' => 0];
-        }
-
-        $corruptos = [];
-        $total = count($logs);
-
-        for ($i = 0; $i < $total; $i++) {
-            $current = $logs[$i];
-            
-            // Si el log viejo no tiene hash_integridad (legacy), lo omitimos de la falla estricta
-            if (!isset($current['hash_integridad'])) continue;
-
-            $hashGuardado = $current['hash_integridad'];
-            $hashAntGuardado = $current['hash_anterior'] ?? 'GENESIS_CIIDI_V1';
-
-            $payload = "{$current['id']}|{$current['fecha_hora']}|{$current['nivel']}|{$current['modulo']}|{$current['accion']}|{$current['detalles']}|{$current['responsable']}|{$current['ip']}|{$hashAntGuardado}";
-            $hashCalculado = hash('sha256', $payload);
-
-            if ($hashCalculado !== $hashGuardado) {
-                $corruptos[] = [
-                    'id' => $current['id'],
-                    'fecha_hora' => $current['fecha_hora'],
-                    'accion' => $current['accion'],
-                    'hash_esperado' => $hashCalculado,
-                    'hash_guardado' => $hashGuardado
-                ];
-            }
-        }
-
-        $integro = count($corruptos) === 0;
+        $rol = $_SESSION['rol'] 
+            ?? $_SESSION['rol_nombre'] 
+            ?? $_SESSION['usuario_rol'] 
+            ?? 'Usuario';
 
         return [
-            'integro'   => $integro,
-            'total'     => $total,
-            'corruptos' => count($corruptos),
-            'detalles'  => $corruptos,
-            'mensaje'   => $integro 
-                ? "La cadena criptográfica de auditoría es 100% íntegra ({$total} registros firmados digitalmente)."
-                : "¡ALERTA DE SEGURIDAD! Se detectaron " . count($corruptos) . " registros manipulados o con firmas alteradas."
+            'id' => $_SESSION['usuario_id'] ?? null,
+            'nombre' => $nombre,
+            'cedula' => $_SESSION['usuario_cedula'] ?? $_SESSION['cedula'] ?? '',
+            'email' => $_SESSION['usuario_email'] ?? $_SESSION['email'] ?? '',
+            'nivel' => $_SESSION['nivel_privilegio'] ?? 999,
+            'rol' => $rol
         ];
     }
 }

@@ -1,19 +1,46 @@
 // modules/LineasInvestigacion/assets/analitica_ui.js
 
+const pdfScript = document.createElement('script');
+pdfScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+document.head.appendChild(pdfScript);
+
 document.addEventListener('DOMContentLoaded', () => {
     
     // Variables globales para Chart.js
-    let chartInstance = null;
+    window.tendenciasChart = null;
 
     // --- PROYECCIÓN DE TENDENCIAS ---
     const btnProyectar = document.getElementById('btn-proyectar');
     const loadingTendencias = document.getElementById('loading-tendencias');
     const metricasTendencias = document.getElementById('metricas-tendencias-resultado');
 
+    // Lectura segura de un control numérico con valor por defecto y límites
+    function leerEntero(id, defecto, min, max) {
+        const el = document.getElementById(id);
+        const v = el ? parseInt(el.value, 10) : NaN;
+        if (isNaN(v)) return defecto;
+        return Math.min(max, Math.max(min, v));
+    }
+    function leerValor(id, defecto) {
+        const el = document.getElementById(id);
+        return el && el.value ? el.value : defecto;
+    }
+    function escaparHtml(txt) {
+        return String(txt ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
     btnProyectar.addEventListener('click', async () => {
         // Leer la cantidad de trimestres a proyectar
-        const selectTrimestres = document.getElementById('select-trimestres');
-        const predSteps = selectTrimestres ? parseInt(selectTrimestres.value) : 4;
+        const predSteps = leerEntero('select-trimestres', 4, 1, 12);
+
+        // Controles Avanzados ML (se envían todos al backend)
+        const params = {
+            pred_steps: predSteps,
+            historial_base: leerValor('select-historial', 'all'),
+            ml_model: leerValor('select-ml-model', 'linear'),
+            max_epochs: leerEntero('input-epochs', 500, 1, 5000),
+            timeout: leerEntero('input-timeout', 10, 1, 120)
+        };
 
         // Mostrar estado de carga
         btnProyectar.disabled = true;
@@ -25,25 +52,31 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('api-prediccion-tendencias', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pred_steps: predSteps })
+                body: JSON.stringify(params)
             });
 
             const data = await response.json();
 
             if(data.error) {
-                let errorHtml = `<p style="color:#ff4444">${data.error}</p>`;
-                if (data.raw_output) {
-                    errorHtml += `<pre style="color:#ffaa00; font-size:11px; background:#222; padding:5px;">${data.raw_output}</pre>`;
+                let errorHtml = `<p style="color:#ff4444">${escaparHtml(data.error)}</p>`;
+                if (data.raw_output || data.raw) {
+                    errorHtml += `<pre style="color:#ffaa00; font-size:11px; background:#222; padding:5px; white-space:pre-wrap;">${escaparHtml(data.raw_output || data.raw)}</pre>`;
                 }
                 metricasTendencias.innerHTML = errorHtml;
             } else {
-                renderizarGraficoTendencias(data, predSteps);
-                renderizarMetricasTendencias(data, predSteps);
-                renderizarInsights(data, predSteps);
+                // El backend puede limitar pred_steps: usamos el valor efectivo
+                const pasos = (data.future_labels && data.future_labels.length) ? data.future_labels.length : predSteps;
+                renderizarBadgeMotor(data, params);
+                renderizarGraficoTendencias(data, pasos);
+                renderizarMetricasTendencias(data, pasos);
+                renderizarInsights(data, pasos);
                 document.getElementById('btn-descargar-pdf').style.display = 'flex';
             }
         } catch (error) {
-            metricasTendencias.innerHTML = `<p style="color:#ff4444">Error de conexión con el motor de IA.</p>`;
+            metricasTendencias.innerHTML = `<div style="background:#fff1f2; border:1px solid #fda4af; padding:10px; border-radius:6px; color:#be123c;">
+                <strong>Aviso de Motor IA:</strong> Ocurrió un fallo en el cliente de gráficos.
+                <br><span style="font-size:0.75rem;">${error.message}</span>
+            </div>`;
             console.error(error);
         } finally {
             btnProyectar.disabled = false;
@@ -51,11 +84,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Insignia visible del motor que produjo el resultado (nunca silencioso)
+    function renderizarBadgeMotor(data, params) {
+        const cont = document.getElementById('engine-badge-tendencias');
+        if (!cont) return;
+        const esPython = data.engine === 'python';
+        const hist = data.history_labels || [];
+        const periodo = hist.length ? `${hist[0]} – ${hist[hist.length - 1]} (${hist.length} trimestres)` : 'sin datos';
+        const ventanas = { all: 'Todo el historial', '2y': 'Últimos 2 años', '1y': 'Último año' };
+        const extraRf = data.model_used === 'rf' && data.params && data.params.n_estimators ? ` · ${data.params.n_estimators} árboles` : '';
+
+        const chip = (icono, texto, bg, color, borde, titulo = '') =>
+            `<span title="${escaparHtml(titulo)}" style="display:inline-flex; align-items:center; gap:5px; font-size:0.75rem; font-weight:700; padding:4px 10px; border-radius:50px; background:${bg}; color:${color}; border:1px solid ${borde};"><i class="ph-bold ${icono}"></i>${texto}</span>`;
+
+        let html = esPython
+            ? chip('ph-cpu', 'Motor: Python · scikit-learn', '#dcfce7', '#166534', '#86efac', data.engine_detail || '')
+            : chip('ph-warning', 'Motor: PHP de respaldo', '#fef3c7', '#92400e', '#fcd34d', data.engine_detail || '');
+        html += chip('ph-function', escaparHtml((data.model_label || params.ml_model) + extraRf), '#eef0f7', '#505984', '#c7cbe0');
+        html += chip('ph-calendar', `${escaparHtml(ventanas[params.historial_base] || params.historial_base)}: ${escaparHtml(periodo)}`, '#f8fafc', '#475569', '#e2e8f0');
+
+        if (!esPython && data.fallback_reason) {
+            html += `<div style="flex-basis:100%; font-size:0.75rem; color:#92400e; margin-top:2px;"><i class="ph-bold ph-info"></i> Python no disponible: ${escaparHtml(data.fallback_reason)}</div>`;
+        }
+        cont.innerHTML = html;
+        cont.style.display = 'flex';
+    }
+
     function renderizarGraficoTendencias(data, predSteps) {
         const ctx = document.getElementById('tendenciasChart').getContext('2d');
         
-        if (chartInstance) {
-            chartInstance.destroy();
+        if (window.tendenciasChart) {
+            window.tendenciasChart.destroy();
         }
 
         // Paleta de colores Corporativa 100% exacta
@@ -70,6 +129,16 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Generar Fechas Reales (3 Trimestres por Año)
         let chartLabels = [];
+        const etiquetasBackend = Array.isArray(data.history_labels) && data.history_labels.length === maxHistory
+            && Array.isArray(data.future_labels) && data.future_labels.length >= predSteps;
+
+        if (etiquetasBackend) {
+            // El backend devuelve exactamente los trimestres analizados (ventana de historial aplicada)
+            chartLabels = [
+                ...data.history_labels,
+                ...data.future_labels.slice(0, predSteps).map(l => `${l} (Proy)`)
+            ];
+        } else {
         let date = new Date();
         // Un año de 3 trimestres equivale a cuatrimestres (cada 4 meses)
         let currentT = Math.floor(date.getMonth() / 4) + 1;
@@ -97,6 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
             chartLabels.push(`T${tempT} ${tempY} (Proy)`);
             tempT++;
             if(tempT > 3) { tempT = 1; tempY++; }
+        }
         }
 
         const lineData = data.areas.map((a, index) => {
@@ -127,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         });
 
-        chartInstance = new Chart(ctx, {
+        window.tendenciasChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: chartLabels,
@@ -181,6 +251,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderizarMetricasTendencias(data, predSteps) {
+        // Calcular etiquetas futuras para la línea de tiempo
+        let futureLabels = [];
+        if (Array.isArray(data.future_labels) && data.future_labels.length >= predSteps) {
+            // "T2 2026" -> "T2 '26"
+            futureLabels = data.future_labels.slice(0, predSteps).map(l => l.replace(/^(T\d) \d{2}(\d{2})$/, "$1 '$2"));
+        } else {
         let date = new Date();
         let currentMonth = date.getMonth() + 1;
         let currentT = 1;
@@ -190,8 +266,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let currentY = date.getFullYear();
         
-        // Calcular etiquetas futuras para la línea de tiempo
-        let futureLabels = [];
         let tempT = currentT;
         let tempY = currentY;
         for (let i = 0; i < predSteps; i++) {
@@ -199,17 +273,32 @@ document.addEventListener('DOMContentLoaded', () => {
             if (tempT > 3) { tempT = 1; tempY++; }
             futureLabels.push(`T${tempT} '${tempY.toString().slice(-2)}`);
         }
+        }
         let targetLabel = futureLabels[futureLabels.length - 1];
 
-        let errorMargen = Math.round(data.metrics.global_rmse);
-        let errorText = errorMargen === 0 ? "Precisión Alta" : `±${errorMargen} proy.`;
+        // RMSE con 2 decimales: redondear a entero ocultaba la diferencia entre modelos
+        const rmse = Number(data.metrics && data.metrics.global_rmse) || 0;
+        let errorText = rmse < 0.005 ? "Ajuste exacto" : `±${rmse.toFixed(2)} proy.`;
+
+        // Comparativa de RMSE de los 3 modelos sobre la misma ventana de datos
+        let comparativaHtml = '';
+        const porModelo = data.metrics && data.metrics.rmse_by_model;
+        if (porModelo) {
+            const nombres = { linear: 'Lineal', poly: 'Polinómica', rf: 'Random Forest' };
+            comparativaHtml = `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">` +
+                Object.keys(nombres).filter(k => porModelo[k] !== undefined).map(k => {
+                    const activo = k === data.model_used;
+                    return `<span title="RMSE de ajuste del modelo ${nombres[k]}" style="font-size:0.7rem; padding:2px 7px; border-radius:4px; border:1px solid ${activo ? '#505984' : '#e2e8f0'}; background:${activo ? '#505984' : '#ffffff'}; color:${activo ? '#ffffff' : '#475569'}; font-weight:${activo ? '700' : '600'};">${nombres[k]}: ${Number(porModelo[k]).toFixed(2)}</span>`;
+                }).join('') + `</div>`;
+        }
 
         let html = `<div style="margin-bottom: 15px; color: #1e293b; background: #f8fafc; padding: 10px; border-radius: 6px; border-left: 4px solid #7090cb;">
             <div style="display:flex; flex-wrap: wrap; justify-content:space-between; align-items:center; gap: 5px;">
                 <strong style="font-size: 0.95rem; flex: 1; min-width: 120px;">Margen (RMSE):</strong>
                 <span style="background: rgba(112, 144, 203, 0.15); color: #121a3e; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; flex-shrink: 0;">${errorText}</span>
             </div>
-            <div style="font-size: 0.8rem; color: #64748b; margin-top: 6px;">Margen estadístico de error en la IA.</div>
+            <div style="font-size: 0.8rem; color: #64748b; margin-top: 6px;">Margen estadístico de error en la IA (${escaparHtml(data.model_label || 'modelo')}).</div>
+            ${comparativaHtml}
         </div>
         
         <strong style="color: #121a3e; font-size: 1.05rem; display:block; margin-top: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
@@ -355,6 +444,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
+        let peakLabel = (Array.isArray(data.future_labels) && data.future_labels[peakIndex]) ? data.future_labels[peakIndex] : '';
+        if (!peakLabel) {
         let date = new Date();
         let currentMonth = date.getMonth() + 1;
         let startT = (currentMonth >= 1 && currentMonth <= 4) ? 1 : ((currentMonth >= 5 && currentMonth <= 8) ? 2 : 3);
@@ -366,7 +457,8 @@ document.addEventListener('DOMContentLoaded', () => {
             peakT++;
             if (peakT > 3) { peakT = 1; peakY++; }
         }
-        let peakLabel = `T${peakT} ${peakY}`;
+        peakLabel = `T${peakT} ${peakY}`;
+        }
 
         const cPrincipal = '#121a3e';
         const cSecundario = '#505984';

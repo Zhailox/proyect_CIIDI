@@ -43,7 +43,7 @@
                     <tr>
                         <td>
                             <strong style="color: var(--inv-dark); font-size: 1.05rem; display:block; margin-bottom: 0.3rem;">
-                                <?= htmlspecialchars($inv['titulo']) ?>
+                                <?= htmlspecialchars($inv['titulo'] ?? '') ?>
                             </strong>
                             <div style="font-size: 0.85rem; color: var(--inv-muted);">
                                 <i class="ph-fill ph-users-three"></i> Cupos Totales: <?= (int)$inv['cupos_disponibles'] ?>
@@ -51,7 +51,7 @@
                         </td>
                         <td>
                             <div style="font-weight:600; color:var(--inv-dark); font-size:0.9rem;">
-                                <?= htmlspecialchars($inv['linea_nombre']) ?>
+                                <?= htmlspecialchars($inv['linea_nombre'] ?? '') ?>
                             </div>
                             <span style="color: var(--inv-muted); text-transform: uppercase; font-size: 0.8rem; background:#F8FAFC; padding:0.1rem 0.4rem; border-radius:4px;">
                                 <?= htmlspecialchars($inv['trayecto']) ?>
@@ -97,6 +97,37 @@
             </tbody>
         </table>
     </div>
+
+    <!-- PAGINACIÓN -->
+    <?php if (isset($paginacion) && $paginacion['paginas'] > 1): ?>
+    <?php
+    $pagActual = $paginacion['pagina'];
+    $pagTotal  = $paginacion['paginas'];
+    $basePaginacion = "?ruta=mis-investigaciones&page=";
+    ?>
+    <div class="inv-pagination">
+        <div class="inv-pag-controls">
+            <?php if ($pagActual > 1): ?>
+            <a href="<?= $basePaginacion . ($pagActual - 1) ?>" class="inv-pag-btn">
+                <i class="ph-bold ph-caret-left"></i>
+            </a>
+            <?php endif; ?>
+
+            <?php for ($i = max(1, $pagActual - 2); $i <= min($pagTotal, $pagActual + 2); $i++): ?>
+            <a href="<?= $basePaginacion . $i ?>" class="inv-pag-btn <?= $i === $pagActual ? 'inv-pag-btn--active' : '' ?>">
+                <?= $i ?>
+            </a>
+            <?php endfor; ?>
+
+            <?php if ($pagActual < $pagTotal): ?>
+            <a href="<?= $basePaginacion . ($pagActual + 1) ?>" class="inv-pag-btn">
+                <i class="ph-bold ph-caret-right"></i>
+            </a>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
 </div>
 
 <script>
@@ -107,8 +138,8 @@ function mostrarModalSistema(tipo, titulo, mensaje, isConfirm = false, onConfirm
     let icon = tipo === 'success' ? '<i class="ph-bold ph-check-circle" style="color: #16a34a;"></i>' : '<i class="ph-bold ph-warning-circle" style="color: #dc2626;"></i>';
     let btnHtml = isConfirm 
         ? `<button type="button" class="btn btn-secondary" onclick="this.closest('div').parentElement.parentElement.remove()" style="margin-right:0.5rem; background:white; color:var(--inv-dark); border:1px solid var(--inv-border); padding:0.8rem 1.5rem; border-radius:50px; font-weight:600; cursor:pointer;">Cancelar</button>
-           <button type="button" class="btn btn-primary" id="btn-confirm-modal" style="background:var(--color-danger, #dc2626); color:white; border:none; padding:0.8rem 1.5rem; border-radius:50px; font-weight:600; cursor:pointer; box-shadow:0 4px 10px rgba(220, 38, 38, 0.3);">Sí, eliminar</button>`
-        : `<button type="button" class="btn btn-primary w-100 justify-center" onclick="this.closest('div').parentElement.parentElement.remove()" style="background:var(--color-secundario, #0b1a30); color:white; border:none; padding:0.8rem 1.5rem; border-radius:50px; font-weight:700; cursor:pointer; width:100%;">Entendido</button>`;
+           <button type="button" class="btn btn-primary" id="btn-confirm-modal" style="background:var(--inv-danger); color:white; border:none; padding:0.8rem 1.5rem; border-radius:50px; font-weight:600; cursor:pointer; box-shadow:0 4px 10px rgba(239, 68, 68, 0.3);">Sí, eliminar</button>`
+        : `<button type="button" class="btn btn-primary w-100 justify-center" onclick="this.closest('div').parentElement.parentElement.remove()" style="background:var(--inv-primary); color:white; border:none; padding:0.8rem 1.5rem; border-radius:50px; font-weight:700; cursor:pointer; width:100%;">Entendido</button>`;
 
     if (isConfirm) {
         icon = '<i class="ph-bold ph-trash" style="color: #dc2626;"></i>';

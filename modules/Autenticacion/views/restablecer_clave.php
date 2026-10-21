@@ -13,6 +13,7 @@
             <?php endif; ?>
 
             <form action="procesar-restablecer-clave" method="POST" class="recovery-flat-form">
+                <?= class_exists('CSRF') ? CSRF::campoOculto() : '' ?>
                 <input type="hidden" name="token" value="<?= htmlspecialchars($token ?? '') ?>">
                 
                 <div class="recovery-flat-group">

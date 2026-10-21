@@ -12,16 +12,42 @@ $lazy_load  = !empty($cfg['imagenes']['lazy_load']) ? 'lazy' : 'eager';
 $f_id      = $curso['id']       ?? '';
 $f_titulo  = htmlspecialchars($curso['titulo']          ?? '');
 $f_desc    = htmlspecialchars($curso['descripcion']     ?? '');
-$f_img     = htmlspecialchars($curso['imagen_portada']  ?? '');
+$f_img_raw = $curso['imagen_portada'] ?? '';
+// DB stores 'public/uploads/cursos/x.webp' but web root IS public/, so strip 'public/'
+if (!function_exists('curImgUrl')) {
+    function curImgUrl(string $raw): string {
+        if (empty($raw)) return '';
+        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) return $raw;
+        return ltrim(preg_replace('#^public/#', '', $raw), '/');
+    }
+}
+$f_img     = !empty($f_img_raw) ? htmlspecialchars(curImgUrl($f_img_raw)) : '';
 $f_estado  = $curso['estado']                           ?? 'borrador';
 $f_docente = $curso['id_docente']                       ?? '';
 
-// Metadatos JSON
-$m_moodle   = htmlspecialchars($meta['url_moodle']        ?? '');
-$m_modal    = $meta['modalidad']    ?? 'Virtual';
-$m_nivel    = $meta['nivel']        ?? 'Básico';
-$m_duracion = htmlspecialchars($meta['duracion'] ?? '');
-$m_cupo     = (int)($meta['cupo_maximo'] ?? 0);
+// Metadatos y adicionales DB
+$m_moodle   = htmlspecialchars($curso['url_moodle'] ?? '');
+$m_modal    = $curso['modalidad']    ?? 'Virtual';
+$m_nivel    = $curso['nivel']        ?? 'Básico';
+$m_duracion = htmlspecialchars($curso['duracion'] ?? '');
+$m_duracion_num = '';
+$m_duracion_tipo = 'horas';
+if (preg_match('/^(\d+)\s*(.*)$/', $curso['duracion'] ?? '', $matches)) {
+    $m_duracion_num = $matches[1];
+    $m_duracion_tipo = (stripos($matches[2], 'semana') !== false) ? 'semanas' : 'horas';
+}
+$m_cupo     = (int)($curso['cupo_maximo'] ?? 0);
+
+$f_f_inicio = $curso['fecha_inicio'] ?? '';
+$f_f_fin = $curso['fecha_fin'] ?? '';
+$f_vpreview = htmlspecialchars($curso['url_video_preview'] ?? '');
+$f_est_insc = $curso['estado_inscripcion'] ?? 'Abierta';
+$f_gform    = htmlspecialchars($curso['url_formulario_google'] ?? '');
+
+$lineas           = $lineas ?? [];
+$todasDimensiones = $todasDimensiones ?? [];
+$selectedLineas   = $curso['lineas_ids'] ?? [];
+$selectedDims     = $curso['dimensiones_ids'] ?? [];
 ?>
 
 <div class="cur-wrapper" style="max-width: 1200px;">
@@ -50,7 +76,7 @@ $m_cupo     = (int)($meta['cupo_maximo'] ?? 0);
             <input type="hidden" name="id" value="<?= (int)$f_id ?>">
         <?php endif; ?>
 
-        <!-- SECCIÓN 1: PRINCIPAL -->
+        <!-- SECCIÁN 1: PRINCIPAL -->
         <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04);">
             <h3 style="font-weight:800; color:var(--cur-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;"><i class="ph-fill ph-info" style="color:var(--cur-primary);"></i> 1. Información Principal</h3>
             
@@ -84,7 +110,7 @@ $m_cupo     = (int)($meta['cupo_maximo'] ?? 0);
                     <div style="position:relative;">
                         <i class="ph-bold ph-chalkboard-teacher" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
                         <?php
-                            $nombre_docente_actual = $usuario_actual['nombre'];
+                            $nombre_docente_actual = $usuario_actual['nombre_completo'] ?? trim(($usuario_actual['nombre'] ?? '') . ' ' . ($usuario_actual['apellido'] ?? ''));
                             if ($es_editar) {
                                 foreach ($docentes as $doc) {
                                     if ($doc['id'] == $f_docente) {
@@ -112,9 +138,67 @@ $m_cupo     = (int)($meta['cupo_maximo'] ?? 0);
                     </div>
                 </div>
             </div>
+
+            <!-- Líneas y Dimensiones (Pills interactivas) -->
+            <div style="margin-top:2rem; padding-top:1.5rem; border-top:1px solid #E2E8F0;">
+                <style>
+                .cb-pill input[type="checkbox"] { display: none; }
+                .cb-pill-text {
+                    display: inline-flex; align-items: center; gap: 0.4rem;
+                    padding: 0.6rem 1.2rem; background: #F1F5F9; color: #475569;
+                    border: 1px solid var(--cur-border); border-radius: 50px;
+                    font-size: 0.92rem; font-weight: 600; cursor: pointer;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); user-select: none;
+                }
+                .cb-pill input[type="checkbox"]:checked + .cb-pill-text {
+                    background: var(--cur-primary-light); color: var(--cur-primary);
+                    border-color: var(--cur-primary); box-shadow: 0 4px 12px rgba(80,89,132,0.15);
+                }
+                .cb-pill:hover .cb-pill-text { border-color: var(--cur-primary); transform: translateY(-1px); }
+                </style>
+
+                <!-- Líneas de Investigación -->
+                <div style="margin-bottom:1.5rem;">
+                    <label style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.8rem;">
+                        <i class="ph-bold ph-git-branch" style="color:var(--cur-primary);"></i> Líneas de Investigación a las que tributa el curso (Puede seleccionar varias)
+                    </label>
+                    <div style="display:flex; flex-wrap:wrap; gap:0.6rem;">
+                        <?php if (empty($lineas)): ?>
+                            <span style="color:var(--cur-muted); font-size:0.9rem;">No hay líneas de investigación registradas.</span>
+                        <?php else: ?>
+                            <?php foreach ($lineas as $l): ?>
+                                <label class="cb-pill">
+                                    <input type="checkbox" name="id_linea[]" value="<?= $l['id'] ?>" class="linea-cb" <?= in_array($l['id'], $selectedLineas) ? 'checked' : '' ?>>
+                                    <span class="cb-pill-text"><i class="ph-bold ph-git-branch"></i> <?= htmlspecialchars($l['nombre']) ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Dimensiones Operativas -->
+                <div>
+                    <label style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.8rem;">
+                        <i class="ph-bold ph-circles-three" style="color:var(--cur-primary);"></i> Dimensiones Operativas en las que opera (Puede seleccionar varias)
+                    </label>
+                    <div id="dimensiones-container" style="display:flex; flex-wrap:wrap; gap:0.6rem; min-height:45px; padding:1.2rem; border:1px dashed var(--cur-border); border-radius:12px; background:#F8FAFC;">
+                        <?php if (!empty($todasDimensiones)): ?>
+                            <?php foreach ($todasDimensiones as $d): ?>
+                                <label class="cb-pill dim-pill" data-linea="<?= $d['id_linea'] ?>" style="display:none;">
+                                    <input type="checkbox" name="id_dimension[]" value="<?= $d['id'] ?>" <?= in_array($d['id'], $selectedDims) ? 'checked' : '' ?>>
+                                    <span class="cb-pill-text"><i class="ph-bold ph-circles-three"></i> <?= htmlspecialchars($d['nombre']) ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                            <span id="no-dims-msg" style="color:var(--cur-muted); font-size:0.9rem;">Seleccione primero al menos una línea de investigación arriba.</span>
+                        <?php else: ?>
+                            <span style="color:var(--cur-muted); font-size:0.9rem;">No hay dimensiones operativas registradas.</span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- SECCIÓN 2: DESCRIPCIÓN Y PORTADA -->
+        <!-- SECCIÁN 2: DESCRIPCIÁN Y PORTADA -->
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap:2rem;">
             
             <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04); display:flex; flex-direction:column;">
@@ -125,29 +209,65 @@ $m_cupo     = (int)($meta['cupo_maximo'] ?? 0);
 
             <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04); display:flex; flex-direction:column;">
                 <h3 style="font-weight:800; color:var(--cur-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;"><i class="ph-fill ph-image" style="color:var(--cur-primary);"></i> 3. Imagen de Portada</h3>
-                
-                <div style="margin-bottom:1.5rem;">
-                    <label style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Imagen de Portada (Máx <?= $img_max_mb ?>MB · Solo PNG)</label>
+
+                <?php if ($f_img): ?>
+                <!-- Imagen actual (sólo en edición) -->
+                <div style="margin-bottom:1.5rem; padding:1.2rem; background:#EFF6FF; border-radius:12px; border:1px solid #BFDBFE; display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap;">
+                    <img src="<?= $f_img ?>" alt="Imagen actual" style="width:80px; height:80px; object-fit:cover; border-radius:10px; border:2px solid #BFDBFE; flex-shrink:0;" onerror="this.style.display='none'">
+                    <div>
+                        <div style="font-weight:700; color:#1D4ED8; font-size:0.9rem; margin-bottom:0.3rem;"><i class="ph-fill ph-check-circle"></i> Imagen actual guardada</div>
+                        <div style="font-size:0.82rem; color:#3B82F6;">Sube un nuevo archivo o pega una URL para reemplazarla. Si no cambias nada, se conserva la actual.</div>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <!-- Pestañas: Archivo vs URL -->
+                <div style="display:flex; gap:0.5rem; margin-bottom:1.2rem;">
+                    <button type="button" id="tab-archivo" onclick="cambiarTab('archivo')" style="padding:0.6rem 1.2rem; border-radius:50px; border:2px solid var(--cur-primary); background:var(--cur-primary); color:white; font-weight:600; cursor:pointer; font-size:0.9rem; transition:all 0.2s;">
+                        <i class="ph-bold ph-upload-simple"></i> Subir archivo
+                    </button>
+                    <button type="button" id="tab-url" onclick="cambiarTab('url')" style="padding:0.6rem 1.2rem; border-radius:50px; border:2px solid var(--cur-border); background:white; color:var(--cur-muted); font-weight:600; cursor:pointer; font-size:0.9rem; transition:all 0.2s;">
+                        <i class="ph-bold ph-link"></i> Pegar URL
+                    </button>
+                </div>
+
+                <!-- Panel: Subir archivo -->
+                <div id="panel-archivo" style="margin-bottom:1rem;">
                     <label id="label-portada" style="display:block; border:2px dashed var(--cur-border); border-radius:12px; padding:2rem; text-align:center; cursor:pointer; background:#F8FAFC; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--cur-primary)';" onmouseout="this.style.borderColor='var(--cur-border)';">
-                        <i class="ph-fill ph-upload-simple" style="font-size:2.5rem; color:var(--cur-muted); margin-bottom:1rem; display:block;"></i>
-                        <strong style="color:var(--cur-primary);">Seleccionar Imagen PNG</strong>
-                        <div style="font-size:0.85rem; color:var(--cur-muted); margin-top:0.5rem;">Solo se aceptan archivos <strong>.png</strong></div>
-                        <input type="file" name="imagen_portada_file" id="portada" accept=".png" style="display:none;" onchange="validarArchivoImagen(this)">
-                        <div id="file-name" style="margin-top:1rem; font-weight:600; color:var(--cur-dark);"></div>
+                        <?php if(!empty($f_img)): ?>
+                            <i class="ph-fill ph-upload-simple" style="font-size:2.5rem; color:var(--cur-muted); margin-bottom:0.8rem; display:none;" id="upload-icon"></i>
+                            <img id="img-preview" src="<?= $f_img ?>" style="display:block; max-width:100%; max-height:200px; border-radius:8px; margin:0 auto 1rem;" />
+                        <?php else: ?>
+                            <i class="ph-fill ph-upload-simple" style="font-size:2.5rem; color:var(--cur-muted); margin-bottom:0.8rem; display:block;" id="upload-icon"></i>
+                            <img id="img-preview" src="" style="display:none; max-width:100%; max-height:200px; border-radius:8px; margin:0 auto 1rem;" />
+                        <?php endif; ?>
+                        <strong style="color:var(--cur-primary);">Seleccionar Imagen</strong>
+                        <div style="font-size:0.85rem; color:var(--cur-muted); margin-top:0.4rem;">Formatos: <strong>.jpg, .png, .webp, .gif</strong> — Máx <?= $img_max_mb ?>MB</div>
+                        <input type="file" name="imagen_portada_file" id="portada" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;" onchange="validarArchivoImagen(this)">
+                        <div id="file-name" style="margin-top:0.8rem; font-weight:600; color:#166534;"></div>
                     </label>
                     <div id="file-error" style="display:none; margin-top:0.8rem; padding:0.8rem 1rem; background:#FEE2E2; border-radius:8px; color:#991B1B; font-size:0.9rem; font-weight:500;"></div>
-                    <?php if ($f_img): ?>
-                        <div style="margin-top:1rem; padding:1rem; background:rgba(80, 89, 132, 0.08); border-radius:8px; display:flex; align-items:center; gap:1rem;">
-                            <img src="<?= $f_img ?>" alt="Actual" style="width:50px; height:50px; object-fit:cover; border-radius:6px;">
-                            <span style="font-weight:600; color:#3d456a; font-size:0.9rem;">El curso ya cuenta con una imagen. Sube otra PNG si deseas reemplazarla.</span>
-                        </div>
-                    <?php endif; ?>
                 </div>
-            </div>
 
+                <!-- Panel: URL de imagen -->
+                <div id="panel-url" style="display:none; margin-bottom:1rem;">
+                    <label style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">URL de la imagen <span style="color:var(--cur-muted); font-weight:400; font-size:0.85rem;">(pega el enlace directo a la imagen)</span></label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-link" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <input type="url" name="imagen_portada_url" id="imagen_url" value="<?= htmlspecialchars($f_img_raw ?? '') ?>" placeholder="https://ejemplo.com/imagen.jpg"
+                            style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1rem; outline:none; box-sizing:border-box;"
+                            onfocus="this.style.borderColor='var(--cur-primary)';" onblur="this.style.borderColor='var(--cur-border)';"
+                            oninput="previsualizarUrl(this.value)">
+                    </div>
+                    <div id="url-preview-wrap" style="display:none; margin-top:1rem; text-align:center;">
+                        <img id="url-preview-img" src="" alt="Vista previa" style="max-width:100%; max-height:200px; border-radius:10px; border:2px solid #E5E7EB;">
+                    </div>
+                </div>
+
+            </div>
         </div>
 
-        <!-- SECCIÓN 3: METADATOS TÉCNICOS -->
+        <!-- SECCIÁN 3: METADATOS TÁCNICOS -->
         <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04);">
             <h3 style="font-weight:800; color:var(--cur-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;"><i class="ph-fill ph-sliders" style="color:var(--cur-primary);"></i> 4. Parámetros Académicos</h3>
             
@@ -188,10 +308,19 @@ $m_cupo     = (int)($meta['cupo_maximo'] ?? 0);
                 </div>
 
                 <div>
-                    <label for="duracion" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Duración (Horas/Semanas)</label>
-                    <div style="position:relative;">
-                        <i class="ph-bold ph-clock" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
-                        <input type="text" id="duracion" name="duracion" value="<?= $m_duracion ?>" placeholder="Ej: 40 horas académicas" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                    <label for="duracion_numero" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Duración</label>
+                    <div style="display:flex; gap:0.5rem;">
+                        <div style="position:relative; flex:1;">
+                            <i class="ph-bold ph-clock" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                            <input type="number" id="duracion_numero" name="duracion_numero" value="<?= $m_duracion_num ?>" placeholder="Ej: 40" min="1" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s; box-sizing:border-box;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                        </div>
+                        <div style="position:relative; flex:1;">
+                            <select id="duracion_tipo" name="duracion_tipo" style="width:100%; padding:1rem 2.5rem 1rem 1rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer; background:#fff; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                                <option value="horas" <?= $m_duracion_tipo === 'horas' ? 'selected' : '' ?>>Horas</option>
+                                <option value="semanas" <?= $m_duracion_tipo === 'semanas' ? 'selected' : '' ?>>Semanas</option>
+                            </select>
+                            <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted); pointer-events:none;"></i>
+                        </div>
                     </div>
                 </div>
 
@@ -201,6 +330,57 @@ $m_cupo     = (int)($meta['cupo_maximo'] ?? 0);
                         <i class="ph-bold ph-users-three" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
                         <input type="number" id="cupo_maximo" name="cupo_maximo" value="<?= $m_cupo ?>" min="0" placeholder="0 = Ilimitado" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
                     </div>
+                </div>
+
+                
+
+                <div>
+                    <label for="fecha_inicio" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Fecha de Inicio</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-calendar" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <input type="date" id="fecha_inicio" name="fecha_inicio" value="<?= $f_f_inicio ?>" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="fecha_fin" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Fecha de Fin</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-calendar-check" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <input type="date" id="fecha_fin" name="fecha_fin" value="<?= $f_f_fin ?>" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="estado_inscripcion" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Estado de Inscripción</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-door-open" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <select id="estado_inscripcion" name="estado_inscripcion" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                            <option value="Próximamente" <?= $f_est_insc === 'Próximamente' ? 'selected' : '' ?>>Próximamente</option>
+                            <option value="Abierta" <?= $f_est_insc === 'Abierta' ? 'selected' : '' ?>>Inscripción Abierta</option>
+                            <option value="Cerrada" <?= $f_est_insc === 'Cerrada' ? 'selected' : '' ?>>Inscripción Cerrada</option>
+                            <option value="En Curso" <?= $f_est_insc === 'En Curso' ? 'selected' : '' ?>>En Curso</option>
+                        </select>
+                        <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted); pointer-events:none;"></i>
+                    </div>
+                </div>
+
+                <div style="grid-column: 1 / -1;">
+                    <label for="url_video_preview" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Video Preview (OPCIONAL)</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-video" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <input type="url" id="url_video_preview" name="url_video_preview" value="<?= $f_vpreview ?>" placeholder="Ej: https://youtube.com/watch?v=..." style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                    </div>
+                </div>
+
+                <div style="grid-column: 1 / -1;">
+                    <label for="url_formulario_google" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">
+                        <i class="ph-bold ph-google-logo" style="color:#EA4335;"></i> Formulario de Google (Inscripción específica de este curso - Opcional)
+                    </label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-link" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <input type="url" id="url_formulario_google" name="url_formulario_google" value="<?= $f_gform ?>" placeholder="Ej: https://docs.google.com/forms/d/e/.../viewform (Dejar en blanco para usar el global del sistema)" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                    </div>
+                    <small style="color:var(--cur-muted); display:block; margin-top:0.4rem;">Si se define una URL de Google Form aquí, la vista de inscripción separada cargará este formulario para este curso en particular.</small>
                 </div>
 
             </div>
@@ -231,59 +411,159 @@ $m_cupo     = (int)($meta['cupo_maximo'] ?? 0);
 </div>
 
 <script>
-/**
- * Valida que el archivo seleccionado:
- * 1. Tenga extensión .png (case-insensitive)
- * 2. Sea realmente una imagen PNG verificando el magic byte (firma PNG: 89 50 4E 47)
- */
+const MAX_MB = <?= $img_max_mb ?>;
+
+// ── Tab switcher: Archivo / URL ──────────────────────────────────────────────
+function cambiarTab(tab) {
+    const panelArchivo = document.getElementById('panel-archivo');
+    const panelUrl     = document.getElementById('panel-url');
+    const tabArchivo   = document.getElementById('tab-archivo');
+    const tabUrl       = document.getElementById('tab-url');
+    const inputFile    = document.getElementById('portada');
+    const inputUrl     = document.getElementById('imagen_url');
+
+    if (tab === 'archivo') {
+        panelArchivo.style.display = 'block';
+        panelUrl.style.display     = 'none';
+        tabArchivo.style.background = 'var(--cur-primary)';
+        tabArchivo.style.color      = 'white';
+        tabArchivo.style.borderColor = 'var(--cur-primary)';
+        tabUrl.style.background = 'white';
+        tabUrl.style.color = 'var(--cur-muted)';
+        tabUrl.style.borderColor = 'var(--cur-border)';
+        // Disable URL input so file takes priority
+        if (inputUrl) inputUrl.disabled = true;
+        if (inputFile) inputFile.disabled = false;
+    } else {
+        panelArchivo.style.display = 'none';
+        panelUrl.style.display     = 'block';
+        tabUrl.style.background = 'var(--cur-primary)';
+        tabUrl.style.color      = 'white';
+        tabUrl.style.borderColor = 'var(--cur-primary)';
+        tabArchivo.style.background = 'white';
+        tabArchivo.style.color = 'var(--cur-muted)';
+        tabArchivo.style.borderColor = 'var(--cur-border)';
+        // Disable file input so URL takes priority
+        if (inputFile) { inputFile.value = ''; inputFile.disabled = true; }
+        if (inputUrl) inputUrl.disabled = false;
+        // Show preview if URL already has value
+        if (inputUrl && inputUrl.value) previsualizarUrl(inputUrl.value);
+    }
+}
+
+// ── URL image preview ─────────────────────────────────────────────────────────
+function previsualizarUrl(url) {
+    const wrap = document.getElementById('url-preview-wrap');
+    const img  = document.getElementById('url-preview-img');
+    if (!url || !url.startsWith('http')) {
+        wrap.style.display = 'none';
+        return;
+    }
+    img.src = url;
+    img.onerror = () => { wrap.style.display = 'none'; };
+    img.onload  = () => { wrap.style.display = 'block'; };
+}
+
+// ── File validation ───────────────────────────────────────────────────────────
 function validarArchivoImagen(input) {
     const file = input.files[0];
-    const errDiv = document.getElementById('file-error');
-    const nameDiv = document.getElementById('file-name');
-    const btnSubmit = document.getElementById('btn-submit');
+    const errDiv    = document.getElementById('file-error');
+    const nameDiv   = document.getElementById('file-name');
+    const previewImg = document.getElementById('img-preview');
+    const uploadIcon = document.getElementById('upload-icon');
 
     errDiv.style.display = 'none';
     errDiv.textContent = '';
     nameDiv.textContent = '';
 
-    if (!file) return;
-
-    // 1. Verificar extensión
-    if (!file.name.toLowerCase().endsWith('.png')) {
-        errDiv.textContent = '⚠ Solo se permiten archivos con extensión .png. El archivo seleccionado tiene una extensión diferente.';
-        errDiv.style.display = 'block';
-        input.value = '';
-        btnSubmit.disabled = false;
+    if (!file) {
+        previewImg.style.display = 'none';
+        uploadIcon.style.display = 'block';
         return;
     }
 
-    // 2. Verificar firma PNG real (magic bytes: 0x89 0x50 0x4E 0x47)
-    const reader = new FileReader();
-    reader.onloadend = function(e) {
-        const arr = new Uint8Array(e.target.result);
-        // PNG magic bytes: 137 80 78 71 (decimal)
-        const isPNG = arr[0] === 0x89 && arr[1] === 0x50 && arr[2] === 0x4E && arr[3] === 0x47;
-        if (!isPNG) {
-            errDiv.textContent = '⚠ El archivo no es una imagen PNG válida. Parece ser un archivo disfrazado con extensión .png.';
-            errDiv.style.display = 'block';
-            input.value = '';
-            nameDiv.textContent = '';
-        } else {
-            nameDiv.textContent = '✓ ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
-            nameDiv.style.color = '#166534';
-        }
-    };
-    reader.readAsArrayBuffer(file.slice(0, 4));
+    const allowed = ['image/jpeg','image/png','image/webp','image/gif'];
+    if (!allowed.includes(file.type.toLowerCase())) {
+        errDiv.textContent = '⚠ Solo se permiten archivos de imagen válidos (.jpg, .png, .webp, .gif).';
+        errDiv.style.display = 'block';
+        input.value = '';
+        previewImg.style.display = 'none';
+        uploadIcon.style.display = 'block';
+        return;
+    }
 
-    nameDiv.textContent = file.name;
+    const sizeMB = file.size / (1024 * 1024);
+    if (sizeMB > MAX_MB) {
+        errDiv.textContent = '⚠ El archivo excede el tamaño máximo permitido de ' + MAX_MB + 'MB (Tamaño actual: ' + sizeMB.toFixed(1) + 'MB).';
+        errDiv.style.display = 'block';
+        input.value = '';
+        previewImg.style.display = 'none';
+        uploadIcon.style.display = 'block';
+        return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    previewImg.src = objectUrl;
+    previewImg.style.display = 'block';
+    uploadIcon.style.display = 'none';
+    nameDiv.textContent = '✓ ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+    nameDiv.style.color = '#166534';
 }
 
-// Prevenir envío del formulario si hay error de archivo
+// ── Submit guard ──────────────────────────────────────────────────────────────
 document.getElementById('form-curso').addEventListener('submit', function(e) {
     const errDiv = document.getElementById('file-error');
-    if (errDiv.style.display === 'block' && errDiv.textContent.trim() !== '') {
+    if (errDiv && errDiv.style.display === 'block' && errDiv.textContent.trim() !== '') {
         e.preventDefault();
         errDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 });
+
+// Init: default tab = archivo
+cambiarTab('archivo');
+
+// ── Filtro dinámico de Dimensiones Operativas según Líneas seleccionadas ────
+function actualizarDimensiones() {
+    const lineasSeleccionadas = Array.from(document.querySelectorAll('.linea-cb:checked')).map(cb => cb.value);
+    const dimPills = document.querySelectorAll('.dim-pill');
+    const noDimsMsg = document.getElementById('no-dims-msg');
+    let visibles = 0;
+
+    dimPills.forEach(pill => {
+        const idLinea = pill.getAttribute('data-linea');
+        if (lineasSeleccionadas.includes(idLinea)) {
+            pill.style.display = 'inline-flex';
+            visibles++;
+        } else {
+            pill.style.display = 'none';
+            const cb = pill.querySelector('input[type="checkbox"]');
+            if (cb && !lineasSeleccionadas.includes(idLinea)) {
+                cb.checked = false;
+            }
+        }
+    });
+
+    if (noDimsMsg) {
+        if (lineasSeleccionadas.length === 0) {
+            noDimsMsg.style.display = 'block';
+            noDimsMsg.textContent = 'Seleccione al menos una línea de investigación para ver sus dimensiones.';
+        } else if (visibles === 0) {
+            noDimsMsg.style.display = 'block';
+            noDimsMsg.textContent = 'Las líneas seleccionadas no tienen dimensiones operativas asociadas.';
+        } else {
+            noDimsMsg.style.display = 'none';
+        }
+    }
+}
+
+document.querySelectorAll('.linea-cb').forEach(cb => {
+    cb.addEventListener('change', actualizarDimensiones);
+});
+actualizarDimensiones();
 </script>
+
+
+
+
+
+

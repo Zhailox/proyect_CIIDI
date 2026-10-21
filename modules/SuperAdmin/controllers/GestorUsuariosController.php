@@ -1,6 +1,7 @@
 <?php
 // modules/SuperAdmin/controllers/GestorUsuariosController.php
 require_once CORE_PATH . 'Security/Auth.php';
+require_once CORE_PATH . 'Services/MailService.php';
 require_once __DIR__ . '/../models/AdminUsuarioModel.php';
 
 class GestorUsuariosController {
@@ -36,6 +37,10 @@ class GestorUsuariosController {
 
         $accionesDisponibles = ['crear', 'editar', 'eliminar', 'auditar'];
 
+        require_once __DIR__ . '/../services/SystemConfigService.php';
+        $paginacionUsuarios = max(5, (int) SystemConfigService::get('paginacion.usuarios', 15));
+        $paginacionDocentes = max(5, (int) SystemConfigService::get('paginacion.docentes', 15));
+
         return [
             'modulosInstalados' => $modulosInstalados,
             'accionesDisponibles' => $accionesDisponibles,
@@ -46,57 +51,95 @@ class GestorUsuariosController {
             'todosLosUsuarios' => $this->adminModel->obtenerTodosLosUsuarios(),
             'matrizRBAC' => $this->obtenerMatrizRBAC(),
             'roles' => $this->adminModel->obtenerRoles(),
-            'privilegios' => $this->adminModel->obtenerPrivilegios()
+            'privilegios' => $this->adminModel->obtenerPrivilegios(),
+            'paginacionUsuarios' => $paginacionUsuarios,
+            'paginacionDocentes' => $paginacionDocentes
         ];
     }
 
     private function obtenerMatrizRBAC(): array {
-        $archivo = CORE_PATH . '../storage/rbac_matrix.json';
-        if (file_exists($archivo)) {
-            return json_decode(file_get_contents($archivo), true) ?: [];
+        $db = Connection::getInstance();
+        $stmt = $db->query("SELECT nivel_privilegio, modulo, permisos FROM matriz_rbac");
+        $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $matriz = [];
+        foreach ($resultados as $row) {
+            $nivel = $row['nivel_privilegio'];
+            $modulo = $row['modulo'];
+            $permisos = is_string($row['permisos']) ? json_decode($row['permisos'], true) : $row['permisos'];
+            $matriz[$nivel][$modulo] = $permisos;
         }
-        return [
-            'Estudiante' => ['crear' => true, 'editar' => false, 'eliminar' => false, 'auditar' => false],
-            'Profesor'   => ['crear' => true, 'editar' => true, 'eliminar' => false, 'auditar' => true],
-            'Bibliotecario' => ['crear' => true, 'editar' => true, 'eliminar' => true, 'auditar' => true]
-        ];
+        return $matriz;
     }
 
     public function guardarMatrizRBAC() {
         Auth::requierePrivilegioMinimo(0);
-
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $rawMatrix = $_POST['matrix'] ?? [];
-            $matrizProcesada = [];
-
-            // Matriz 3D: Nivel -> Modulo -> Accion
-            foreach ($rawMatrix as $nivel => $modulos) {
-                if (is_array($modulos)) {
-                    foreach ($modulos as $nombreModulo => $permisos) {
-                        foreach ($permisos as $accion => $val) {
-                            $matrizProcesada[$nivel][$nombreModulo][$accion] = ($val === '1' || $val === 1 || $val === true);
+            
+            $db = Connection::getInstance();
+            $db->beginTransaction();
+            try {
+                // Borrar configuración vieja e insertar la nueva de golpe
+                $db->exec("TRUNCATE matriz_rbac");
+                $stmt = $db->prepare("INSERT INTO matriz_rbac (nivel_privilegio, modulo, permisos) VALUES (?, ?, ?)");
+                
+                foreach ($rawMatrix as $nivel => $modulos) {
+                    if (is_array($modulos)) {
+                        foreach ($modulos as $nombreModulo => $permisos) {
+                            $permisosProcesados = [];
+                            foreach ($permisos as $accion => $val) {
+                                $permisosProcesados[$accion] = ($val === '1' || $val === 1 || $val === true);
+                            }
+                            $stmt->execute([$nivel, $nombreModulo, json_encode($permisosProcesados)]);
                         }
                     }
                 }
+                $db->commit();
+
+                // Revocación masiva por Nivel de Privilegio modificado en la Matriz RBAC
+                try {
+                    $nivelesModificados = array_keys($rawMatrix);
+                    if (!empty($nivelesModificados)) {
+                        $placeholders = implode(',', array_fill(0, count($nivelesModificados), '?'));
+                        $stmtUsers = $db->prepare("
+                            SELECT u.id 
+                            FROM usuarios u
+                            JOIN roles r ON u.id_rol = r.id
+                            JOIN privilegios p ON r.privilegio_id = p.privilegio_id
+                            WHERE p.nivel_privilegio IN ({$placeholders})
+                        ");
+                        $stmtUsers->execute($nivelesModificados);
+                        $afectados = $stmtUsers->fetchAll(PDO::FETCH_COLUMN);
+
+                        if (!empty($afectados)) {
+                            $archivoSesiones = CORE_PATH . '../storage/revoked_sessions.json';
+                            $revogadas = file_exists($archivoSesiones) ? (json_decode(file_get_contents($archivoSesiones), true) ?: []) : [];
+                            $miUsuarioId = (int)($_SESSION['usuario_id'] ?? 0);
+
+                            foreach ($afectados as $uId) {
+                                if ((int)$uId !== $miUsuarioId) {
+                                    $revogadas[(string)$uId] = time();
+                                }
+                            }
+                            file_put_contents($archivoSesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
+                        }
+                    }
+                } catch (Throwable $e) {}
+
+                AuditLogger::registrar('WARNING', 'SuperAdmin', 'Modificar Matriz RBAC', 'Se actualizaron los permisos granulares por Módulo y Nivel. Sesiones sincronizadas.');
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_exito'] = "Matriz de permisos segmentada actualizada en BD correctamente y sesiones sincronizadas.";
+            } catch (Exception $e) {
+                $db->rollBack();
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "Error al guardar la matriz en la base de datos.";
             }
-
-            $archivo = CORE_PATH . '../storage/rbac_matrix.json';
-            $directorio = dirname($archivo);
-            if (!is_dir($directorio)) {
-                mkdir($directorio, 0777, true);
-            }
-
-            file_put_contents($archivo, json_encode($matrizProcesada, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-            
-            AuditLogger::registrar('WARNING', 'SuperAdmin', 'Modificar Matriz RBAC', 'Se actualizaron los permisos granulares por Módulo y Nivel.');
-
-            if (session_status() === PHP_SESSION_NONE) session_start();
-            $_SESSION['mensaje_gestor_exito'] = "Matriz de permisos segmentada actualizada correctamente.";
             header("Location: gestor-usuarios");
             exit;
         }
     }
-
+    
     public function actualizarRol() {
         Auth::requierePrivilegioMinimo(0);
 
@@ -131,9 +174,30 @@ class GestorUsuariosController {
                     $_SESSION['rol_nombre'] = $nuevoNombre;
                 }
 
-                AuditLogger::registrar('INFO', 'SuperAdmin', 'Modificar Rol', "Rol ID #{$rolId} actualizado a '{$nuevoNombre}' (Nivel: {$nuevoPrivilegioId}).");
+                // Revocación masiva de sesión para todos los usuarios pertenecientes a este Rol
+                try {
+                    $db = Connection::getInstance();
+                    $stmtUsers = $db->prepare("SELECT id FROM usuarios WHERE id_rol = ?");
+                    $stmtUsers->execute([$rolId]);
+                    $usuariosAfectados = $stmtUsers->fetchAll(PDO::FETCH_COLUMN);
+
+                    if (!empty($usuariosAfectados)) {
+                        $archivoSesiones = CORE_PATH . '../storage/revoked_sessions.json';
+                        $revogadas = file_exists($archivoSesiones) ? (json_decode(file_get_contents($archivoSesiones), true) ?: []) : [];
+                        $miUsuarioId = (int)($_SESSION['usuario_id'] ?? 0);
+
+                        foreach ($usuariosAfectados as $uId) {
+                            if ((int)$uId !== $miUsuarioId) {
+                                $revogadas[(string)$uId] = time();
+                            }
+                        }
+                        file_put_contents($archivoSesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
+                    }
+                } catch (Throwable $e) {}
+
+                AuditLogger::registrar('INFO', 'SuperAdmin', 'Modificar Rol', "Rol ID #{$rolId} actualizado a '{$nuevoNombre}' (Nivel: {$nuevoPrivilegioId}). Sesiones remotas de usuarios revocadas.");
                 if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['mensaje_gestor_exito'] = "Rol actualizado exitosamente en la base de datos.";
+                $_SESSION['mensaje_gestor_exito'] = "Rol actualizado exitosamente en la base de datos y sesiones sincronizadas.";
             }
             header("Location: gestor-usuarios");
             exit;
@@ -164,13 +228,10 @@ class GestorUsuariosController {
             try {
                 $this->adminModel->crearRol($nombre, $privilegioId);
                 
-                // Inicializar en la matriz RBAC vacía
-                $archivo = CORE_PATH . '../storage/rbac_matrix.json';
-                $matriz = file_exists($archivo) ? (json_decode(file_get_contents($archivo), true) ?: []) : [];
-                if (!isset($matriz[$nombre])) {
-                    $matriz[$nombre] = ['crear' => false, 'editar' => false, 'eliminar' => false, 'auditar' => false];
-                    file_put_contents($archivo, json_encode($matriz, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-                }
+                // Inicializar en la matriz RBAC en BD
+                $db = Connection::getInstance();
+                $stmt = $db->prepare("INSERT INTO matriz_rbac (nivel_privilegio, modulo, permisos) VALUES (?, 'Sistema', ?) ON CONFLICT DO NOTHING");
+                $stmt->execute([$privilegioId, json_encode(['ver' => true, 'editar' => false, 'eliminar' => false])]);
 
                 AuditLogger::registrar('WARNING', 'SuperAdmin', 'Crear Rol', "Nuevo rol creado: {$nombre} (Privilegio ID: {$privilegioId})");
                 if (session_status() === PHP_SESSION_NONE) session_start();
@@ -196,7 +257,7 @@ class GestorUsuariosController {
                 $archivo = CORE_PATH . '../storage/revoked_sessions.json';
                 $revogadas = file_exists($archivo) ? (json_decode(file_get_contents($archivo), true) ?: []) : [];
                 
-                $revogadas[(string)$usuarioIdAExpulsar] = true;
+                $revogadas[(string)$usuarioIdAExpulsar] = time();
                 file_put_contents($archivo, json_encode($revogadas, JSON_PRETTY_PRINT));
 
                 AuditLogger::registrar('CRITICAL', 'SuperAdmin', 'Revocar Sesión Remota', "Sesión expulsada para el Usuario ID #{$usuarioIdAExpulsar}");
@@ -213,31 +274,51 @@ class GestorUsuariosController {
         }
     }
 
-    // Carga la vista de edición con los datos del usuario
-    public function mostrarEdicion() {
+    public function eliminarUsuarioAction() {
         Auth::requierePrivilegioMinimo(0);
-        
-        $cedula = $_GET['cedula'] ?? '';
-        $usuario = $this->adminModel->buscarPorCedula($cedula);
 
-        if (!$usuario) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $usuarioIdAEliminar = (int)($_POST['usuario_id'] ?? 0);
+            $usuarioIdActual = (int)($_SESSION['usuario_id'] ?? 0);
+
+            if ($usuarioIdAEliminar <= 0) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "ID de usuario no válido para eliminación.";
+                header("Location: gestor-usuarios");
+                exit;
+            }
+
+            if ($usuarioIdAEliminar === $usuarioIdActual) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "Operación denegada: No puedes eliminar tu propia cuenta en sesión activa.";
+                header("Location: gestor-usuarios");
+                exit;
+            }
+
+            $exito = $this->adminModel->archivarUsuario($usuarioIdAEliminar);
+
+            if (session_status() === PHP_SESSION_NONE) session_start();
+
+            if ($exito) {
+                // Expulsar cualquier sesión activa del usuario eliminado
+                $archivo = CORE_PATH . '../storage/revoked_sessions.json';
+                $revogadas = file_exists($archivo) ? (json_decode(file_get_contents($archivo), true) ?: []) : [];
+                $revogadas[(string)$usuarioIdAEliminar] = time();
+                file_put_contents($archivo, json_encode($revogadas, JSON_PRETTY_PRINT));
+
+                AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar/Archivar Usuario', "Usuario ID #{$usuarioIdAEliminar} archivado exitosamente. Credenciales liberadas.");
+                $_SESSION['mensaje_gestor_exito'] = "Usuario #{$usuarioIdAEliminar} eliminado exitosamente. Sus credenciales han sido liberadas para nuevos registros.";
+            } else {
+                $_SESSION['mensaje_gestor_error'] = "No se pudo eliminar el usuario especificado o no existe en la base de datos.";
+            }
+
             header("Location: gestor-usuarios");
             exit;
         }
-
-        // Bloqueo de seguridad: No puedes editarte a ti mismo desde aquí
-        if ($usuario['id'] === $_SESSION['usuario_id']) {
-            $_SESSION['error_gestor'] = "Para editar tus propios datos, utiliza la configuración de tu perfil personal.";
-            header("Location: gestor-usuarios?cedula=" . urlencode($cedula));
-            exit;
-        }
-
-        return [
-            'usuarioEditar' => $usuario,
-            'rolesDisponibles' => $this->adminModel->obtenerRoles(),
-            'error' => $_SESSION['error_edicion'] ?? null
-        ];
     }
+
+    // Carga la vista de edición con los datos del usuario
+
 
     // Recibe los datos del formulario de edición y los guarda
     public function procesarEdicion() {
@@ -261,6 +342,31 @@ class GestorUsuariosController {
             exit;
         }
 
+        // Validar formato y existencia de dominio de correo (PHPMailer / RFC / DNS MX)
+        $valEmail = MailService::validarEmail($email, true);
+        if (!$valEmail['valido']) {
+            $_SESSION['error_edicion'] = $valEmail['mensaje'];
+            header("Location: editar-usuario?cedula=" . urlencode($_POST['cedula_original']));
+            exit;
+        }
+        $email = $valEmail['email'];
+
+        // Verificar si el correo ya está en uso por otro usuario
+        $usuarioConEmail = $this->adminModel->buscarPorEmail($email);
+        if ($usuarioConEmail && (int)$usuarioConEmail['id'] !== (int)$id) {
+            $_SESSION['error_edicion'] = "El correo electrónico '{$email}' ya se encuentra asignado a otro usuario en el sistema.";
+            header("Location: editar-usuario?cedula=" . urlencode($_POST['cedula_original']));
+            exit;
+        }
+
+        // Verificar si la cédula ya está en uso por otro usuario
+        $usuarioConCedula = $this->adminModel->buscarPorCedula($cedula);
+        if ($usuarioConCedula && (int)$usuarioConCedula['id'] !== (int)$id) {
+            $_SESSION['error_edicion'] = "La cédula C.I. {$cedula} ya se encuentra asignada a otro usuario en el sistema.";
+            header("Location: editar-usuario?cedula=" . urlencode($_POST['cedula_original']));
+            exit;
+        }
+
         $hashSeguro = null;
         if (!empty($password)) {
             if ($password !== $password_confirm) {
@@ -271,15 +377,43 @@ class GestorUsuariosController {
             $hashSeguro = password_hash($password, PASSWORD_BCRYPT);
         }
 
-        // Pasamos el hashSeguro al modelo (será null si no se llenaron los campos)
-        $this->adminModel->actualizarUsuario($id, $cedula, $nombre, $email, $id_rol, $hashSeguro);
+        // Obtener datos exactos del usuario por ID antes de aplicar los cambios en la BD
+        $usuarioAnterior = $this->adminModel->buscarPorId($id);
+
+        // Pasamos el hashSeguro al modelo (será null si no se llenaron los campos de clave)
+        $resActualizar = $this->adminModel->actualizarUsuario($id, $cedula, $nombre, $email, $id_rol, $hashSeguro);
+        if (!$resActualizar) {
+            $_SESSION['error_edicion'] = "No se pudieron actualizar los datos del usuario. Verifique duplicados en la base de datos.";
+            header("Location: editar-usuario?cedula=" . urlencode($_POST['cedula_original']));
+            exit;
+        }
         
+        // Evaluar ESTRICTAMENTE si hubo una modificación real en el id_rol
+        if ($usuarioAnterior && isset($usuarioAnterior['id_rol']) && (int)$usuarioAnterior['id_rol'] !== (int)$id_rol) {
+            $roles = $this->adminModel->obtenerRoles();
+            $rolAnteriorNombre = $usuarioAnterior['rol_nombre'] ?? 'Desconocido';
+            $nuevoRolNombre = 'Usuario';
+            foreach ($roles as $r) {
+                if ((int)$r['id'] === (int)$id_rol) { 
+                    $nuevoRolNombre = $r['nombre']; 
+                    break; 
+                }
+            }
+
+            MailService::enviarEvento('superadmin.cambio_rol', $email, [
+                'NOMBRE_USUARIO' => $nombre,
+                'ROL_ANTERIOR'   => $rolAnteriorNombre,
+                'NUEVO_ROL'      => $nuevoRolNombre,
+                'FECHA_CAMBIO'   => date('d/m/Y H:i A')
+            ], $nombre);
+        }
+
         // Revocación remota de sesión automática para que los datos en caché y sesión del usuario se reseteen al instante
         $miUsuarioId = (int)($_SESSION['usuario_id'] ?? 0);
         if ($id > 0 && $id !== $miUsuarioId) {
             $archivoSesiones = CORE_PATH . '../storage/revoked_sessions.json';
             $revogadas = file_exists($archivoSesiones) ? (json_decode(file_get_contents($archivoSesiones), true) ?: []) : [];
-            $revogadas[(string)$id] = true;
+            $revogadas[(string)$id] = time();
             file_put_contents($archivoSesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
         }
 
@@ -308,6 +442,39 @@ class GestorUsuariosController {
             // Invertimos el estado
             $this->adminModel->cambiarEstadoActivo($id, !$estadoActual);
             
+            // Si el estado pasa de Activo a Suspendido, revocar inmediatamente su sesión
+            if ($estadoActual) {
+                $archivoSesiones = CORE_PATH . '../storage/revoked_sessions.json';
+                $revogadas = file_exists($archivoSesiones) ? (json_decode(file_get_contents($archivoSesiones), true) ?: []) : [];
+                $revogadas[(string)$id] = time();
+                file_put_contents($archivoSesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
+            }
+            
+            $usuarioObj = $this->adminModel->buscarPorCedula($cedula);
+            if ($usuarioObj && !empty($usuarioObj['email'])) {
+                $protocolo = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+                $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                $baseDir = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/\\');
+                $baseUrl = "{$protocolo}://{$host}" . ($baseDir && $baseDir !== '/' ? $baseDir : '');
+
+                if (!$estadoActual) {
+                    // Se acaba de restaurar/reactivar la cuenta
+                    MailService::enviarEvento('superadmin.cuenta_restaurada', $usuarioObj['email'], [
+                        'NOMBRE_USUARIO' => $usuarioObj['nombre_completo'],
+                        'ENLACE_ACCESO'   => "{$baseUrl}/login"
+                    ], $usuarioObj['nombre_completo']);
+                } else {
+                    // Se acaba de suspender/bloquear la cuenta
+                    MailService::enviarEvento('seguridad.cuenta_bloqueada', $usuarioObj['email'], [
+                        'NOMBRE_USUARIO' => $usuarioObj['nombre_completo'],
+                        'MOTIVO'         => 'Suspensión administrativa ejecutada desde el Panel de SuperAdmin',
+                        'IP_ORIGEN'      => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
+                        'FECHA_HORA'     => date('d/m/Y H:i A'),
+                        'ENLACE_SOPORTE' => "{$baseUrl}/recuperar-cuenta"
+                    ], $usuarioObj['nombre_completo']);
+                }
+            }
+
             $accionAudit = !$estadoActual ? 'Restaurar Cuenta Usuario' : 'Suspender Cuenta Usuario';
             $sevAudit = !$estadoActual ? 'INFO' : 'WARNING';
             AuditLogger::registrar($sevAudit, 'SuperAdmin', $accionAudit, "Estado de la cuenta del Usuario C.I. {$cedula} cambiado a: " . (!$estadoActual ? 'Activo' : 'Suspendido'));
@@ -335,6 +502,25 @@ class GestorUsuariosController {
                 exit;
             }
 
+            // Validar formato y existencia de dominio de correo (PHPMailer / RFC / DNS MX)
+            $valEmail = MailService::validarEmail($email, true);
+            if (!$valEmail['valido']) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = $valEmail['mensaje'];
+                header("Location: gestor-usuarios");
+                exit;
+            }
+            $email = $valEmail['email'];
+
+            // Verificar si el correo ya está registrado en la base de datos
+            $existeEmail = $this->adminModel->buscarPorEmail($email);
+            if ($existeEmail) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "Ya existe un usuario registrado con el correo electrónico '{$email}'.";
+                header("Location: gestor-usuarios");
+                exit;
+            }
+
             // Verificar duplicado de cédula
             $existe = $this->adminModel->buscarPorCedula($cedula);
             if ($existe) {
@@ -345,12 +531,53 @@ class GestorUsuariosController {
             }
 
             $hashClave = password_hash($clave, PASSWORD_BCRYPT);
-            $exito = $this->adminModel->crearUsuario($cedula, $nombre, $email, $id_rol, $hashClave);
+            try {
+                $exito = $this->adminModel->crearUsuario($cedula, $nombre, $email, $id_rol, $hashClave);
+            } catch (Throwable $e) {
+                AuditLogger::registrar('ERROR', 'SuperAdmin', 'Error Crear Usuario', "Excepción BD al registrar: " . $e->getMessage());
+                $exito = false;
+            }
 
             if (session_status() === PHP_SESSION_NONE) session_start();
             if ($exito) {
                 AuditLogger::registrar('INFO', 'SuperAdmin', 'Crear Usuario', "Nuevo usuario registrado: {$nombre} (C.I: {$cedula})");
-                $_SESSION['mensaje_gestor_exito'] = "Usuario '{$nombre}' creado exitosamente en el sistema.";
+                
+                // Asegurar que si el ID fue previamente marcado como revocado, sea limpiado
+                $usuarioNuevo = $this->adminModel->buscarPorCedula($cedula);
+                if ($usuarioNuevo && isset($usuarioNuevo['id'])) {
+                    $archivoSesiones = CORE_PATH . '../storage/revoked_sessions.json';
+                    if (file_exists($archivoSesiones)) {
+                        $revogadas = json_decode(file_get_contents($archivoSesiones), true) ?: [];
+                        $idStr = (string)$usuarioNuevo['id'];
+                        if (isset($revogadas[$idStr])) {
+                            unset($revogadas[$idStr]);
+                            file_put_contents($archivoSesiones, json_encode($revogadas, JSON_PRETTY_PRINT));
+                        }
+                    }
+                }
+
+                // Disparar correo situacional de invitación
+                $roles = $this->adminModel->obtenerRoles();
+                $nombreRol = 'Usuario';
+                foreach ($roles as $r) {
+                    if ((int)$r['id'] === $id_rol) { $nombreRol = $r['nombre']; break; }
+                }
+
+                $protocolo = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+                $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                $baseDir = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/\\');
+                $baseUrl = "{$protocolo}://{$host}" . ($baseDir && $baseDir !== '/' ? $baseDir : '');
+                $enlaceAcceso = "{$baseUrl}/login";
+
+                MailService::enviarEvento('superadmin.invitacion_usuario', $email, [
+                    'NOMBRE_USUARIO' => $nombre,
+                    'CEDULA'         => $cedula,
+                    'ROL_ASIGNADO'   => $nombreRol,
+                    'CLAVE_TEMPORAL' => $clave,
+                    'ENLACE_ACCESO'   => $enlaceAcceso
+                ], $nombre);
+
+                $_SESSION['mensaje_gestor_exito'] = "Usuario '{$nombre}' creado exitosamente en el sistema y notificación enviada a su correo.";
             } else {
                 $_SESSION['mensaje_gestor_error'] = "Error inesperado al crear el usuario.";
             }
@@ -422,38 +649,189 @@ class GestorUsuariosController {
     }
     public function eliminarNivelPrivilegioAction() {
         Auth::requierePrivilegioMinimo(0);
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $nivel = (int)($_POST['nivel'] ?? 0);
-            
-            // Protección de los niveles base
-            if ($nivel <= 3) {
-                if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['mensaje_gestor_error'] = "Seguridad: No se pueden eliminar los niveles base (0 al 3) del sistema.";
-            } else {
-                try {
-                    // 1. Eliminar de la Base de Datos
-                    $this->adminModel->eliminarPrivilegio($nivel);
-                    
-                    // 2. Purgar los datos fantasma del archivo JSON
-                    $archivo = CORE_PATH . '../storage/rbac_matrix.json';
-                    if (file_exists($archivo)) {
-                        $matriz = json_decode(file_get_contents($archivo), true) ?: [];
-                        if (isset($matriz[$nivel])) {
-                            unset($matriz[$nivel]); // Elimina la rama completa de ese nivel
-                            file_put_contents($archivo, json_encode($matriz, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-                        }
-                    }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
 
-                    AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Nivel', "Nivel de privilegio {$nivel} eliminado de la BD y purgado del RBAC.");
-                    if (session_status() === PHP_SESSION_NONE) session_start();
-                    $_SESSION['mensaje_gestor_exito'] = "Nivel {$nivel} eliminado y purgado de la matriz correctamente.";
-                } catch (Throwable $e) {
-                    if (session_status() === PHP_SESSION_NONE) session_start();
-                    $_SESSION['mensaje_gestor_error'] = "No se puede eliminar un nivel que tiene roles asignados.";
-                }
-            }
+        $nivel = (int)($_POST['nivel'] ?? 0);
+
+        if ($nivel <= 3) {
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            $_SESSION['mensaje_gestor_error'] = "Seguridad: No se pueden eliminar los niveles base (0 al 3).";
             header("Location: gestor-usuarios");
             exit;
         }
+
+        // Verificación + eliminación atómica
+        $resultado = $this->adminModel->eliminarPrivilegio($nivel);
+
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        if ($resultado['exito']) {
+            AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Nivel',
+                "Nivel de privilegio {$nivel} eliminado de la BD y purgado del RBAC.");
+            $_SESSION['mensaje_gestor_exito'] = $resultado['mensaje'];
+        } else {
+            $_SESSION['mensaje_gestor_error'] = $resultado['mensaje'];
+        }
+
+        header("Location: gestor-usuarios");
+        exit;
+    }
+
+    /**
+     * Emite una invitación oficial a un docente/profesor enviando un enlace firmado criptográficamente.
+     */
+    public function invitarProfesorAction() {
+        Auth::requierePrivilegioMinimo(0);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $cedula = trim($_POST['cedula'] ?? '');
+            $nombre = trim($_POST['nombre'] ?? '');
+            $email = trim($_POST['email'] ?? '');
+
+            if (empty($cedula) || empty($nombre) || empty($email)) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = "Cédula, Nombre Completo y Correo Institucional son obligatorios para invitar a un profesor.";
+                header("Location: gestor-usuarios");
+                exit;
+            }
+
+            // Validar formato y existencia de dominio de correo (PHPMailer / RFC / DNS MX)
+            $valEmail = MailService::validarEmail($email, true);
+            if (!$valEmail['valido']) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_error'] = $valEmail['mensaje'];
+                header("Location: gestor-usuarios");
+                exit;
+            }
+            $email = $valEmail['email'];
+
+            // Buscar el ID de Rol de Profesor / Docentes dinámicamente
+            $roles = $this->adminModel->obtenerRoles();
+            $idRolProfesor = 0;
+            foreach ($roles as $r) {
+                $nomRol = mb_strtolower($r['nombre']);
+                if (str_contains($nomRol, 'docente') || str_contains($nomRol, 'profesor')) {
+                    $idRolProfesor = (int)$r['id'];
+                    break;
+                }
+            }
+            // Si no se encuentra, usamos el ID 4 que corresponde al rol 'Docentes'
+            if ($idRolProfesor === 0) {
+                $idRolProfesor = 4;
+            }
+
+            $cedulaTrim = trim($cedula);
+            $soloDigitos = preg_replace('/[^0-9]/', '', $cedulaTrim);
+            $conPrefijo = 'V-' . $soloDigitos;
+
+            // Verificar si el usuario ya existe por cédula o correo en la base de datos
+            $db = Connection::getInstance();
+            $stmtCheck = $db->prepare("SELECT id, cedula, email, activo, activation_token FROM usuarios WHERE (cedula = ? OR cedula = ? OR cedula = ?) OR email = ?");
+            $stmtCheck->execute([$cedulaTrim, $soloDigitos, $conPrefijo, $email]);
+            $duplicado = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+            if (session_status() === PHP_SESSION_NONE) session_start();
+
+            // Generar Token Firmado SHA-256 (validez 48 horas)
+            $rawToken = bin2hex(random_bytes(32));
+            $tokenHash = hash('sha256', $rawToken);
+
+            if ($duplicado) {
+                // Si el usuario existe pero es una invitación pendiente (activo = false y con activation_token)
+                if ($duplicado['activo'] === false && !empty($duplicado['activation_token'])) {
+                    $stmtReinv = $db->prepare("UPDATE usuarios SET activation_token = ?, nombre_completo = ?, email = ?, id_rol = ? WHERE id = ?");
+                    $exito = $stmtReinv->execute([$tokenHash, $nombre, $email, $idRolProfesor, $duplicado['id']]);
+                } else {
+                    if ($duplicado['email'] === $email) {
+                        $_SESSION['mensaje_gestor_error'] = "El correo electrónico '{$email}' ya se encuentra registrado por un usuario activo.";
+                    } else {
+                        $_SESSION['mensaje_gestor_error'] = "Ya existe un usuario activo registrado con la cédula {$cedula}.";
+                    }
+                    header("Location: gestor-usuarios");
+                    exit;
+                }
+            } else {
+                // Crear usuario en estado inactivo (esperando que establezca clave por token)
+                $hashClaveDummy = password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT);
+                $sql = "INSERT INTO usuarios (cedula, nombre_completo, email, id_rol, contrasena, activo, email_verified, activation_token) VALUES (?, ?, ?, ?, ?, false, false, ?)";
+                
+                try {
+                    $stmt = $db->prepare($sql);
+                    $exito = $stmt->execute([$cedula, $nombre, $email, $idRolProfesor, $hashClaveDummy, $tokenHash]);
+                } catch (Throwable $e) {
+                    AuditLogger::registrar('ERROR', 'SuperAdmin', 'Error Invitar Profesor', "Excepción BD: " . $e->getMessage());
+                    $exito = false;
+                }
+            }
+
+            if ($exito) {
+                $protocolo = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+                $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                $scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/\\');
+                $baseUrl = "{$protocolo}://{$host}" . ($scriptDir && $scriptDir !== '/' ? $scriptDir : '');
+                
+                $enlaceActivacion = "{$baseUrl}/completar-registro?token={$rawToken}";
+
+                $resMail = MailService::enviarEvento('superadmin.invitacion_profesor', $email, [
+                    'NOMBRE_PROFESOR'   => $nombre,
+                    'CEDULA'            => $cedula,
+                    'ENLACE_ACTIVACION' => $enlaceActivacion,
+                    'TIEMPO_EXPIRACION' => '48 horas'
+                ], $nombre, false);
+
+                AuditLogger::registrar('INFO', 'SuperAdmin', 'Invitar Profesor', "Invitación emitida para el profesor {$nombre} (C.I: {$cedula}, Correo: {$email})");
+
+                if ($resMail['exito']) {
+                    $_SESSION['mensaje_gestor_exito'] = "Invitación emitida y correo de activación enviado exitosamente al profesor '{$nombre}'.";
+                } else {
+                    $detalleFalla = $resMail['error_detalle'] ?? $resMail['mensaje'] ?? 'Falla de entrega SMTP';
+                    $_SESSION['mensaje_gestor_error'] = "El registro del profesor fue preparado, pero falló el envío del correo ({$detalleFalla}). Enlace directo de activación: {$enlaceActivacion}";
+                }
+            } else {
+                $_SESSION['mensaje_gestor_error'] = "Error al intentar guardar el registro del profesor en la base de datos.";
+            }
+
+            header("Location: gestor-usuarios");
+            exit;
+        }
+    }
+
+    /**
+     * Endpoint AJAX para verificar la validez y disponibilidad de un correo electrónico en vivo.
+     */
+    public function verificarEmailAjax() {
+        header('Content-Type: application/json; charset=utf-8');
+        $email = trim($_GET['email'] ?? $_POST['email'] ?? '');
+        $excluirId = (int)($_GET['excluir_id'] ?? $_POST['excluir_id'] ?? 0);
+
+        if (empty($email)) {
+            echo json_encode(['valido' => false, 'disponible' => false, 'mensaje' => 'El correo es obligatorio.']);
+            exit;
+        }
+
+        // 1. Validar sintaxis y dominio con PHPMailer & DNS
+        $val = MailService::validarEmail($email, true);
+        if (!$val['valido']) {
+            echo json_encode(['valido' => false, 'disponible' => false, 'mensaje' => $val['mensaje']]);
+            exit;
+        }
+
+        // 2. Verificar existencia en la base de datos
+        $existente = $this->adminModel->buscarPorEmail($val['email']);
+        if ($existente && (int)$existente['id'] !== $excluirId) {
+            echo json_encode([
+                'valido' => true,
+                'disponible' => false,
+                'mensaje' => "El correo '{$val['email']}' ya está registrado por otro usuario ({$existente['nombre_completo']})."
+            ]);
+            exit;
+        }
+
+        echo json_encode([
+            'valido' => true,
+            'disponible' => true,
+            'mensaje' => 'Correo válido y disponible.'
+        ]);
+        exit;
     }
 }

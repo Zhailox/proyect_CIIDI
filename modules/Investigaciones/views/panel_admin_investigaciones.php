@@ -95,8 +95,8 @@
                 <tr>
                     <td>
                         <span style="color: var(--inv-muted); font-size: 0.75rem; font-family: monospace; background:#F1F5F9; padding:0.2rem 0.5rem; border-radius:4px;">#<?= $inv['id'] ?></span><br>
-                        <strong style="color: var(--inv-dark); font-size:1.05rem; display:block; margin-top:0.4rem;"><?= htmlspecialchars($inv['titulo']) ?></strong>
-                        <div style="font-size: 0.85rem; color: var(--inv-muted); margin-top: 0.2rem;"><i class="ph-fill ph-bookmark-simple"></i> <?= htmlspecialchars($inv['linea_nombre']) ?></div>
+                        <strong style="color: var(--inv-dark); font-size:1.05rem; display:block; margin-top:0.4rem;"><?= htmlspecialchars($inv['titulo'] ?? '') ?></strong>
+                        <div style="font-size: 0.85rem; color: var(--inv-muted); margin-top: 0.2rem;"><i class="ph-fill ph-bookmark-simple"></i> <?= htmlspecialchars($inv['linea_nombre'] ?? '') ?></div>
                     </td>
                     <td>
                         <div style="display:flex; align-items:center; gap:0.5rem; font-weight:600; color:var(--inv-dark);">

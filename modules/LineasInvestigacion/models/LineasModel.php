@@ -127,6 +127,39 @@ class LineasModel extends QueryBuilder {
     }
 
     /**
+     * Retorna los profesores afiliados a una línea y sus proyectos (investigaciones ofertadas).
+     */
+    public function getProfesoresAfiliadosPorLinea(int $id_linea): array {
+        $sql = "
+            SELECT 
+                u.id, 
+                u.nombre_completo AS nombre_profesor,
+                u.email
+            FROM profesor_linea pl
+            INNER JOIN usuarios u ON u.id = pl.id_usuario
+            WHERE pl.id_linea = ? AND u.activo = true
+            ORDER BY u.nombre_completo ASC
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id_linea]);
+        $profesores = $stmt->fetchAll();
+
+        // Para cada profesor, buscamos sus proyectos en esta línea
+        foreach ($profesores as &$prof) {
+            $sqlIo = "
+                SELECT id, titulo, estado, cupos_disponibles
+                FROM investigaciones_ofertadas
+                WHERE id_profesor = ? AND id_linea = ?
+                ORDER BY fecha_creacion DESC
+            ";
+            $stmtIo = $this->db->prepare($sqlIo);
+            $stmtIo->execute([$prof['id'], $id_linea]);
+            $prof['ofertas'] = $stmtIo->fetchAll();
+        }
+        return $profesores;
+    }
+
+    /**
      * Retorna todas las líneas en formato simple (para selectores de formulario).
      */
     public function getTodas(): array {

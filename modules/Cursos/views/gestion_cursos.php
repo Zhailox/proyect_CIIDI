@@ -8,6 +8,15 @@ $estado_f = $filtros['estado'] ?? '';
 
 $placeholder = htmlspecialchars($config_vista['imagenes']['placeholder_url'] ?? '', ENT_QUOTES, 'UTF-8');
 
+// DB stores 'public/uploads/cursos/x.webp' but web root IS public/, so strip 'public/'
+if (!function_exists('curImgUrl')) {
+    function curImgUrl(string $raw): string {
+        if (empty($raw)) return '';
+        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) return $raw;
+        return ltrim(preg_replace('#^public/#', '', $raw), '/');
+    }
+}
+
 $pag = $paginacion ?? ['pagina_actual' => 1, 'total_paginas' => 1, 'total' => 0, 'por_pagina' => 12];
 $pagina_actual = (int)$pag['pagina_actual'];
 $total_paginas = (int)$pag['total_paginas'];
@@ -91,10 +100,11 @@ $total_paginas = (int)$pag['total_paginas'];
                 </tr>
                 <?php else: ?>
                     <?php foreach($cursos as $c): 
-                        $img = !empty($c['imagen_portada']) ? $c['imagen_portada'] : $placeholder;
+                        $img_raw = $c['imagen_portada'] ?? '';
+                        $img = !empty($img_raw) ? htmlspecialchars(curImgUrl($img_raw)) : $placeholder;
                     ?>
                     <tr>
-                        <td><img src="<?= htmlspecialchars($img) ?>" class="cur-table-img" onerror="this.src='<?= $placeholder ?>'" style="box-shadow:0 4px 6px rgba(0,0,0,0.05);"></td>
+                        <td><img src="<?= $img ?>" class="cur-table-img" onerror="this.src='<?= $placeholder ?>'" style="box-shadow:0 4px 6px rgba(0,0,0,0.05);"></td>
                         <td>
                             <div class="cur-table-title" style="font-size:1.05rem;"><?= htmlspecialchars($c['titulo']) ?></div>
                             <small style="color:var(--cur-muted);"><i class="ph-fill ph-calendar-blank"></i> <?= date('d M, Y', strtotime($c['fecha_creacion'])) ?></small>

@@ -8,11 +8,14 @@ if ($nivelUsuario === 0) {
     $puedeEditar = true;
     $puedeEliminar = true;
 } else {
-    $archivo_rbac = CORE_PATH . '../storage/rbac_matrix.json';
-    if (file_exists($archivo_rbac)) {
-        $matrix = json_decode(file_get_contents($archivo_rbac), true) ?: [];
-        $puedeEditar = !empty($matrix[$nivelUsuario]['Articulos']['editar']);
-        $puedeEliminar = !empty($matrix[$nivelUsuario]['Articulos']['eliminar']);
+    $db = Connection::getInstance();
+    $stmt = $db->prepare("SELECT permisos FROM matriz_rbac WHERE nivel_privilegio = ? AND modulo = 'Articulos'");
+    $stmt->execute([$nivelUsuario]);
+    $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($fila && !empty($fila['permisos'])) {
+        $permisos = is_string($fila['permisos']) ? json_decode($fila['permisos'], true) : $fila['permisos'];
+        $puedeEditar = !empty($permisos['editar']);
+        $puedeEliminar = !empty($permisos['eliminar']);
     }
 }
 
@@ -358,10 +361,10 @@ function mostrarModalSistema(tipo, titulo, mensaje, isConfirm = false, onConfirm
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,34,68,0.8); z-index:99999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);';
     
-    let icon = tipo === 'success' ? '<i class="ph-bold ph-check-circle" style="color: #16a34a;"></i>' : '<i class="ph-bold ph-warning-circle" style="color: #dc2626;"></i>';
+    let icon = tipo === 'success' ? '<i class="ph-bold ph-check-circle" style="color: var(--success-active);"></i>' : '<i class="ph-bold ph-warning-circle" style="color: var(--alert-active);"></i>';
     let btnHtml = isConfirm 
         ? `<button type="button" class="btn btn-secondary" onclick="this.closest('div').parentElement.parentElement.remove()" style="margin-right:0.5rem; padding: 0.5rem 1rem; border-radius:6px; font-weight:600;">Cancelar</button>
-           <button type="button" class="btn btn-primary" id="btn-confirm-modal" style="background:#ef4444; color:white; border:none; padding: 0.5rem 1rem; border-radius:6px; font-weight:600;">Sí, proceder</button>`
+           <button type="button" class="btn btn-primary" id="btn-confirm-modal" style="background:var(--alert-active); color:white; border:none; padding: 0.5rem 1rem; border-radius:6px; font-weight:600;">Sí, proceder</button>`
         : `<button type="button" class="btn btn-primary w-100 justify-center" onclick="this.closest('div').parentElement.parentElement.remove()" style="padding: 0.5rem 1rem; border-radius:6px; font-weight:600;">Entendido</button>`;
 
     overlay.innerHTML = `
@@ -413,10 +416,10 @@ function renderizarGaleriaStorage(pagina) {
     let html = '';
     itemsPagina.forEach(img => {
         const badge = img.es_default 
-            ? '<span style="background: #3b82f6; color: white; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; box-shadow:0 2px 4px rgba(0,0,0,0.15);">Sistema</span>'
+            ? '<span style="background: var(--warning-inactive); color: var(--warning-active); font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; box-shadow:0 2px 4px rgba(0,0,0,0.15);">Sistema</span>'
             : (img.en_uso 
-                ? '<span style="background: #10b981; color: white; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; box-shadow:0 2px 4px rgba(0,0,0,0.15);">En uso</span>'
-                : '<span style="background: #f59e0b; color: white; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; box-shadow:0 2px 4px rgba(0,0,0,0.15);">Sin uso</span>');
+                ? '<span style="background: var(--success-inactive); color: var(--success-active); font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; box-shadow:0 2px 4px rgba(0,0,0,0.15);">En uso</span>'
+                : '<span style="background: var(--alert-inactive); color: var(--alert-active); font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; box-shadow:0 2px 4px rgba(0,0,0,0.15);">Sin uso</span>');
 
         const btnBorrar = (!img.en_uso && !img.es_default)
             ? ( puedeEliminarStorage 

@@ -1,0 +1,1 @@
+{"id":"log_6ac475abbaaf89.98499602","fecha_hora":"2026-10-06 00:14:35","nivel":"CRITICAL","modulo":"SuperAdmin","accion":"Error Panel Admin","detalles":"SQLSTATE[42P01]: Undefined table: 7 ERROR:  no existe la relación «telemetria_cache»\nLINE 1: SELECT datos FROM telemetria_cache WHERE id = 1\n                          ^","responsable":"Miguel González (ID: 7)","ip":"::1"}

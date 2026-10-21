@@ -7,9 +7,12 @@
         <div class="pst-config-header">
             <div>
                 <h1>Gestión de Parámetros del Repositorio</h1>
-                <p>Configura las reglas de citación, paginación, metadatos visibles y comportamiento general (Almacenado localmente en JSON).</p>
+                <p>Configura las reglas de citación, paginación, metadatos visibles y comportamiento general del módulo PST.</p>
             </div>
-            <div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <a href="?ruta=gestion-red-onnx" class="btn-cancel-sm" style="background: var(--color-secundario); color: #ffffff; border-color: var(--color-secundario);">
+                    <i class="ph ph-cpu"></i> Panel Modelo ONNX IA
+                </a>
                 <a href="?ruta=repositorio" class="btn-cancel-sm">
                     <i class="ph ph-arrow-left"></i> Volver al Catálogo
                 </a>
@@ -17,13 +20,13 @@
         </div>
 
         <?php if (!empty($mensaje)): ?>
-            <div style="background-color: #d1fae5; border: 1px solid #6ee7b7; color: #065f46; padding: 0.75rem 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; font-size: 0.88rem; display: flex; align-items: center; gap: 0.5rem;">
+            <div style="background-color: rgba(80, 89, 132, 0.08); border: 1px solid rgba(80, 89, 132, 0.25); color: var(--color-secundario); padding: 0.75rem 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; font-size: 0.88rem; display: flex; align-items: center; gap: 0.5rem;">
                 <i class="ph ph-check-circle" style="font-size: 1.2rem;"></i> <?= htmlspecialchars($mensaje) ?>
             </div>
         <?php endif; ?>
 
         <?php if (!empty($error)): ?>
-            <div style="background-color: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 0.75rem 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; font-size: 0.88rem; display: flex; align-items: center; gap: 0.5rem;">
+            <div style="background-color: rgba(100, 116, 139, 0.1); border: 1px solid rgba(100, 116, 139, 0.25); color: var(--texto-titulos); padding: 0.75rem 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; font-size: 0.88rem; display: flex; align-items: center; gap: 0.5rem;">
                 <i class="ph ph-warning-circle" style="font-size: 1.2rem;"></i> <?= htmlspecialchars($error) ?>
             </div>
         <?php endif; ?>
@@ -48,8 +51,8 @@
                 <button type="button" class="config-tab-btn" onclick="switchConfigTab('tabArchivos', this)">
                     <i class="ph ph-cloud-arrow-up"></i> Carga y Equipo PST
                 </button>
-                <button type="button" class="config-tab-btn" onclick="switchConfigTab('tabFidelidad', this)">
-                    <i class="ph ph-shield-check"></i> Verificador de Fidelidad
+                <button type="button" class="config-tab-btn" onclick="switchConfigTab('tabNiveles', this)">
+                    <i class="ph ph-graduation-cap"></i> Niveles Académicos
                 </button>
             </div>
 
@@ -77,7 +80,7 @@
                                                class="config-input" 
                                                style="font-weight: 700; width: 220px;" 
                                                required>
-                                        <span class="field-hint">(id: <?= htmlspecialchars($slug) ?>)</span>
+                                        <span class="field-hint">ID: <?= htmlspecialchars($slug) ?></span>
                                     </div>
                                     
                                     <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -181,7 +184,7 @@
                             <?php $modoCargaActualConfig = $config['paginacion']['modo_carga'] ?? 'paginador'; ?>
                             <select name="modo_carga" class="config-input" style="font-weight: 700;">
                                 <option value="paginador" <?= $modoCargaActualConfig === 'paginador' ? 'selected' : '' ?>>Paginación Numérica Tradicional</option>
-                                <option value="lazy_loading" <?= $modoCargaActualConfig === 'lazy_loading' ? 'selected' : '' ?>>Carga Progresiva Infinta (Lazy Loading)</option>
+                                <option value="lazy_loading" <?= $modoCargaActualConfig === 'lazy_loading' ? 'selected' : '' ?>>Carga Progresiva Infinita</option>
                             </select>
                             <p class="field-hint">Alterna el comportamiento de navegación en la vista general del repositorio.</p>
                         </div>
@@ -203,18 +206,9 @@
 
                     <div class="config-grid-2">
                         <div class="config-field">
-                            <label>Máximo de Investigaciones Afines (Recomendados):</label>
+                            <label>Máximo de Investigaciones Afines:</label>
                             <input type="number" name="max_proyectos_similares" value="<?= (int)($config['paginacion']['max_proyectos_similares'] ?? 3) ?>" min="1" max="10" class="config-input">
                             <p class="field-hint">Número de proyectos mostrados al pie de la Ficha Técnica.</p>
-                        </div>
-
-                        <div class="config-field">
-                            <label>Opciones del Selector de Paginación (separadas por coma):</label>
-                            <?php 
-                            $optsRaw = implode(', ', $config['paginacion']['opciones_selector'] ?? [5, 10, 15, 20, 50]);
-                            ?>
-                            <input type="text" name="opciones_selector_raw" value="<?= htmlspecialchars($optsRaw) ?>" class="config-input">
-                            <p class="field-hint">Valores seleccionables por el usuario (ej. 5, 10, 15, 20, 50).</p>
                         </div>
                     </div>
                 </div>
@@ -293,9 +287,9 @@
                         <div class="config-field">
                             <label>Ordenamiento Predeterminado de Resultados:</label>
                             <select name="orden_predeterminado" class="config-input">
-                                <option value="anio_desc" <?= ($config['buscador']['orden_predeterminado'] ?? '') === 'anio_desc' ? 'selected' : '' ?>>Año (Más reciente a más antiguo)</option>
-                                <option value="anio_asc" <?= ($config['buscador']['orden_predeterminado'] ?? '') === 'anio_asc' ? 'selected' : '' ?>>Año (Más antiguo a más reciente)</option>
-                                <option value="titulo_asc" <?= ($config['buscador']['orden_predeterminado'] ?? '') === 'titulo_asc' ? 'selected' : '' ?>>Título (A - Z)</option>
+                                <option value="anio_desc" <?= ($config['buscador']['orden_predeterminado'] ?? '') === 'anio_desc' ? 'selected' : '' ?>>Año: Más reciente</option>
+                                <option value="anio_asc" <?= ($config['buscador']['orden_predeterminado'] ?? '') === 'anio_asc' ? 'selected' : '' ?>>Año: Más antiguo</option>
+                                <option value="titulo_asc" <?= ($config['buscador']['orden_predeterminado'] ?? '') === 'titulo_asc' ? 'selected' : '' ?>>Título: A - Z</option>
                             </select>
                         </div>
                     </div>
@@ -326,30 +320,60 @@
                 <div class="config-card">
                     <div class="config-card-header">
                         <h3 class="config-card-title">
-                            <i class="ph ph-file-pdf"></i> Parámetros del Visor PDF
+                            <i class="ph ph-file-text"></i> Parámetros del Visor de Documentos
                         </h3>
                     </div>
 
                     <div class="config-switch-row">
-                        <div class="config-switch-label">
-                            <strong>Mostrar Barra de Herramientas del Visor PDF</strong>
-                            <span>Si se activa, el iframe mostrará botones de impresión y zoom nativos del navegador.</span>
-                        </div>
+                        <label for="switch_mostrar_toolbar" class="config-switch-label" style="cursor: pointer;">
+                            <strong>Mostrar Barra de Herramientas del Visor</strong>
+                            <span>Si se activa, el visor mostrará controles de navegación, zoom e impresión tanto en documentos PDF como en Word.</span>
+                        </label>
                         <label class="switch-toggle">
-                            <input type="checkbox" name="mostrar_toolbar" value="1" <?= !empty($config['visor_pdf']['mostrar_toolbar']) ? 'checked' : '' ?>>
+                            <input type="checkbox" id="switch_mostrar_toolbar" name="mostrar_toolbar" value="1" <?= !empty($config['visor_pdf']['mostrar_toolbar']) ? 'checked' : '' ?>>
                             <span class="switch-slider"></span>
                         </label>
                     </div>
 
                     <div class="config-switch-row">
-                        <div class="config-switch-label">
+                        <label for="switch_permitir_descarga" class="config-switch-label" style="cursor: pointer;">
                             <strong>Permitir Descarga Directa del Documento</strong>
-                            <span>Habilita los botones de descarga de archivos asociados.</span>
-                        </div>
+                            <span>Habilita los botones de descarga en fichas, buscador y catálogo cuando el archivo digital se encuentra en el servidor.</span>
+                        </label>
                         <label class="switch-toggle">
-                            <input type="checkbox" name="permitir_descarga" value="1" <?= !empty($config['visor_pdf']['permitir_descarga']) ? 'checked' : '' ?>>
+                            <input type="checkbox" id="switch_permitir_descarga" name="permitir_descarga" value="1" <?= !empty($config['visor_pdf']['permitir_descarga']) ? 'checked' : '' ?>>
                             <span class="switch-slider"></span>
                         </label>
+                    </div>
+
+                    <div class="config-field" style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(169, 168, 166, 0.2);">
+                        <label for="nivel_minimo_descarga">
+                            <i class="ph ph-shield-check"></i> Nivel Mínimo Requerido para Descarga:
+                        </label>
+                        <?php 
+                        $nivelActual = (int)($config['visor_pdf']['nivel_minimo_descarga'] ?? 999);
+                        ?>
+                        <select name="nivel_minimo_descarga" id="nivel_minimo_descarga" class="config-input">
+                            <option value="999" <?= $nivelActual === 999 ? 'selected' : '' ?>>
+                                Público General - Sin inicio de sesión
+                            </option>
+                            <option value="998" <?= $nivelActual === 998 ? 'selected' : '' ?>>
+                                Cualquier Usuario Autenticado - Cuentas registradas
+                            </option>
+                            <?php if (!empty($rolesDisponibles)): ?>
+                                <?php foreach ($rolesDisponibles as $rol): ?>
+                                    <option value="<?= (int)$rol['nivel_privilegio'] ?>" <?= $nivelActual === (int)$rol['nivel_privilegio'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($rol['nombre']) ?> o superior - Nivel <?= (int)$rol['nivel_privilegio'] ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <option value="5" <?= $nivelActual === 5 ? 'selected' : '' ?>>Estudiantes o superior - Nivel 5</option>
+                                <option value="2" <?= $nivelActual === 2 ? 'selected' : '' ?>>Docentes o superior - Nivel 2</option>
+                                <option value="1" <?= $nivelActual === 1 ? 'selected' : '' ?>>Comité o superior - Nivel 1</option>
+                                <option value="0" <?= $nivelActual === 0 ? 'selected' : '' ?>>Solo Super Administrador - Nivel 0</option>
+                            <?php endif; ?>
+                        </select>
+                        <p class="field-hint">Controla qué nivel de usuario podrá ver el botón de descarga y descargar directamente los archivos digitales del repositorio.</p>
                     </div>
                 </div>
             </div>
@@ -359,15 +383,29 @@
                 <div class="config-card">
                     <div class="config-card-header">
                         <h3 class="config-card-title">
-                            <i class="ph ph-hard-drives"></i> Restricciones de Carga de Archivos
+                            <i class="ph ph-hard-drives"></i> Restricciones de Carga y Procesamiento de Documentos
                         </h3>
                     </div>
 
                     <div class="config-grid-2">
                         <div class="config-field">
-                            <label>Tamaño Máximo Permitido (MB):</label>
+                            <label>Tamaño Máximo Permitido por Archivo (MB):</label>
                             <input type="number" name="max_size_mb" value="<?= (int)($config['archivos']['max_size_mb'] ?? 20) ?>" min="1" max="500" class="config-input">
-                            <p class="field-hint">Límite máximo por archivo PDF/DOCX al registrar un nuevo PST.</p>
+                            <p class="field-hint">Límite máximo por archivo individual PDF/DOCX al registrar un PST.</p>
+                        </div>
+
+                        <div class="config-field">
+                            <label>Máximo de Documentos por Lote:</label>
+                            <input type="number" name="max_archivos_lote" value="<?= (int)($config['archivos']['max_archivos_lote'] ?? 5) ?>" min="1" max="50" class="config-input">
+                            <p class="field-hint">Cantidad máxima de proyectos que pueden cargarse simultáneamente en cola.</p>
+                        </div>
+                    </div>
+
+                    <div class="config-grid-2" style="margin-top: 1rem;">
+                        <div class="config-field">
+                            <label>Límite de Páginas para Análisis de Metadatos:</label>
+                            <input type="number" name="max_paginas_analisis" value="<?= (int)($config['archivos']['max_paginas_analisis'] ?? 15) ?>" min="1" max="100" class="config-input">
+                            <p class="field-hint">Páginas iniciales a procesar (título, autores, tutores, resumen y objetivos). Reduce drásticamente el consumo de memoria RAM.</p>
                         </div>
                     </div>
                 </div>
@@ -381,82 +419,150 @@
 
                     <div class="config-grid-2">
                         <div class="config-field">
-                            <label>Máximo de Estudiantes (Autores):</label>
+                            <label>Máximo de Estudiantes Autores:</label>
                             <input type="number" name="max_autores" value="<?= (int)($config['limites_equipo']['max_autores'] ?? 4) ?>" min="1" max="10" class="config-input">
                             <p class="field-hint">Límite máximo de integrantes por PST.</p>
                         </div>
 
                         <div class="config-field">
-                            <label>Máximo de Tutores Asesores:</label>
-                            <input type="number" name="max_tutores" value="<?= (int)($config['limites_equipo']['max_tutores'] ?? 2) ?>" min="1" max="5" class="config-input">
-                            <p class="field-hint">Límite máximo de tutores por PST.</p>
+                            <label>Máximo de Tutores:</label>
+                            <input type="number" name="max_tutores" value="<?= (int)($config['limites_equipo']['max_tutores'] ?? 3) ?>" min="1" max="5" class="config-input">
+                            <p class="field-hint">Límite máximo de tutores (académico, institucional, comunitario).</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- TAB 6: VERIFICADOR DE FIDELIDAD DE EXTRACCIÓN -->
-            <div id="tabFidelidad" class="config-tab-pane">
-                <div class="config-card">
-                    <div class="config-card-header">
-                        <h3 class="config-card-title">
-                            Verificador de Fidelidad de Extracción de Metadatos
-                        </h3>
-                    </div>
-
-                    <div style="background-color: var(--bg-card, #ffffff); border: 2px dashed rgba(169, 168, 166, 0.4); border-radius: var(--radius-md, 6px); padding: 1.5rem; text-align: center; cursor: pointer; transition: border-color 0.2s;" id="dropzoneFidelidad">
-                        <h4 style="margin: 0 0 0.25rem 0; font-size: 0.95rem; font-weight: 700; color: var(--texto-titulos);">Prueba de Fidelidad de Documento</h4>
-                        <input type="file" id="fileFidelidadInput" accept=".pdf,.docx" style="display: none;">
-                        <button type="button" class="btn-save-sm" id="btnBrowseFidelidad" style="margin-top: 0.5rem;">
-                            Seleccionar Documento
-                        </button>
-                        <span id="selectedFileNameFidelidad" style="display: block; margin-top: 0.5rem; font-size: 0.8rem; font-weight: 700; color: var(--color-secundario);"></span>
-                    </div>
-
-                    <div style="margin-top: 1rem; text-align: center;">
-                        <button type="button" class="btn-save-sm" style="padding: 0.55rem 1.5rem;" onclick="ejecutarPruebaFidelidad()">
-                            Ejecutar Verificación
+            <!-- TAB 6: NIVELES ACADÉMICOS DINÁMICOS -->
+            <div id="tabNiveles" class="config-tab-pane">
+                <div class="config-card" style="padding: 1.5rem; background: #ffffff;">
+                    <div class="config-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+                        <div>
+                            <h3 class="config-card-title" style="font-size: 1rem;">
+                                <i class="ph ph-graduation-cap"></i> Gestión de Niveles Académicos
+                            </h3>
+                        </div>
+                        <button type="button" class="btn-save-sm" onclick="abrirModalCrearNivel()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1.1rem; font-size: 0.82rem; cursor: pointer;">
+                            <i class="ph ph-plus-circle" style="font-size: 1.1rem;"></i> Añadir Nivel Académico
                         </button>
                     </div>
 
-                    <!-- Panel de Resultados de la Prueba -->
-                    <div id="resultadoFidelidadBox" style="display: none; margin-top: 1.25rem; background-color: var(--bg-card, #ffffff); border: 1px solid rgba(169, 168, 166, 0.3); border-radius: var(--radius-md, 6px); padding: 1rem;">
-                        <h4 style="font-size: 0.88rem; font-weight: 800; color: var(--color-secundario); margin: 0 0 0.75rem 0; border-bottom: 1px solid rgba(169, 168, 166, 0.2); padding-bottom: 0.4rem;">
-                            Reporte de Diagnóstico de Fidelidad
-                        </h4>
-                        
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.75rem; margin-bottom: 1rem;">
-                            <div style="background: var(--bg-body, #f8fafc); padding: 0.6rem; border-radius: 4px; border: 1px solid rgba(169, 168, 166, 0.2);">
-                                <strong style="font-size: 0.7rem; color: var(--texto-silenciado); text-transform: uppercase; display: block;">Título Detectado:</strong>
-                                <span id="fidResTitulo" style="font-size: 0.82rem; font-weight: 700; color: var(--texto-titulos);"></span>
-                            </div>
-                            <div style="background: var(--bg-body, #f8fafc); padding: 0.6rem; border-radius: 4px; border: 1px solid rgba(169, 168, 166, 0.2);">
-                                <strong style="font-size: 0.7rem; color: var(--texto-silenciado); text-transform: uppercase; display: block;">Año / Nivel Académico:</strong>
-                                <span id="fidResMeta" style="font-size: 0.82rem; font-weight: 700; color: var(--texto-titulos);"></span>
-                            </div>
+                    <div style="background-color: #fafbfe; border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 6px; padding: 0.85rem 1rem; margin-bottom: 1.25rem; font-size: 0.82rem; color: var(--texto-silenciado); line-height: 1.45; display: flex; align-items: flex-start; gap: 0.6rem;">
+                        <i class="ph ph-info" style="font-size: 1.2rem; color: var(--color-secundario); flex-shrink: 0; margin-top: 1px;"></i>
+                        <div>
+                            Los niveles académicos aquí configurados se reflejan en los formularios de registro de PST, filtros de búsqueda, histogramas y fichas técnicas. Si un nivel requiere trayecto, el sistema habilitará automáticamente el selector de trayectos del PNF correspondiente.
                         </div>
+                    </div>
 
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.75rem; margin-bottom: 1rem;">
-                            <div style="background: var(--bg-body, #f8fafc); padding: 0.6rem; border-radius: 4px; border: 1px solid rgba(169, 168, 166, 0.2);">
-                                <strong style="font-size: 0.7rem; color: var(--texto-silenciado); text-transform: uppercase; display: block;">Autores / Integrantes:</strong>
-                                <span id="fidResAutores" style="font-size: 0.8rem; color: var(--texto-normal);"></span>
-                            </div>
-                            <div style="background: var(--bg-body, #f8fafc); padding: 0.6rem; border-radius: 4px; border: 1px solid rgba(169, 168, 166, 0.2);">
-                                <strong style="font-size: 0.7rem; color: var(--texto-silenciado); text-transform: uppercase; display: block;">Tutor / Comunidad:</strong>
-                                <span id="fidResTutorComunidad" style="font-size: 0.8rem; color: var(--texto-normal);"></span>
-                            </div>
-                        </div>
+                    <div class="table-responsive" style="overflow-x: auto;">
+                        <table class="pst-table" style="width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.85rem;">
+                            <thead>
+                                <tr style="background: rgba(80, 89, 132, 0.05); border-bottom: 2px solid rgba(80, 89, 132, 0.15);">
+                                    <th style="padding: 0.75rem 0.85rem; width: 70px; font-weight: 800; color: var(--color-secundario); text-align: center;">Orden</th>
+                                    <th style="padding: 0.75rem 0.85rem; font-weight: 800; color: var(--texto-titulos);">Nivel Académico</th>
+                                    <th style="padding: 0.75rem 0.85rem; font-weight: 800; color: var(--texto-titulos);">Código Identificador</th>
+                                    <th style="padding: 0.75rem 0.85rem; font-weight: 800; color: var(--texto-titulos); text-align: center;">Aplica Trayectos PNF</th>
+                                    <th style="padding: 0.75rem 0.85rem; font-weight: 800; color: var(--texto-titulos); text-align: center;">Proyectos Vinculados</th>
+                                    <th style="padding: 0.75rem 0.85rem; font-weight: 800; color: var(--texto-titulos); text-align: center;">Estado</th>
+                                    <th style="padding: 0.75rem 0.85rem; font-weight: 800; color: var(--texto-titulos); text-align: center;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($nivelesAcademicosDetallados)): ?>
+                                    <tr>
+                                        <td colspan="7" style="padding: 2.5rem 1rem; text-align: center; color: var(--texto-silenciado); background: #ffffff;">
+                                            No hay niveles académicos registrados en el sistema.
+                                        </td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach ($nivelesAcademicosDetallados as $nItem): 
+                                        $esActivo = !empty($nItem['activo']);
+                                        $totalProy = (int)($nItem['total_proyectos'] ?? 0);
+                                    ?>
+                                        <tr style="border-bottom: 1px solid rgba(169, 168, 166, 0.15); transition: background 0.15s; background: #ffffff;">
+                                            <td style="padding: 0.85rem 0.85rem; font-weight: 800; color: var(--color-secundario); text-align: center; vertical-align: middle;">
+                                                <span style="background: rgba(80, 89, 132, 0.08); padding: 0.2rem 0.55rem; border-radius: 4px; font-size: 0.8rem;">#<?= (int)$nItem['orden'] ?></span>
+                                            </td>
+                                            <td style="padding: 0.85rem 0.85rem; vertical-align: middle;">
+                                                <strong style="color: var(--texto-titulos); font-size: 0.92rem; display: block;"><?= htmlspecialchars($nItem['nombre']) ?></strong>
+                                                <?php if (!empty($nItem['descripcion'])): ?>
+                                                    <div style="font-size: 0.75rem; color: var(--texto-silenciado); margin-top: 2px;">
+                                                        <?= htmlspecialchars($nItem['descripcion']) ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td style="padding: 0.85rem 0.85rem; vertical-align: middle;">
+                                                <span class="pst-badge-soft" style="background: rgba(80, 89, 132, 0.08); color: var(--color-secundario); font-family: monospace; font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid rgba(80, 89, 132, 0.15);">
+                                                    <?= htmlspecialchars($nItem['codigo']) ?>
+                                                </span>
+                                            </td>
+                                            <td style="padding: 0.85rem 0.85rem; text-align: center; vertical-align: middle;">
+                                                <?php if (!empty($nItem['requiere_trayecto'])): ?>
+                                                    <span class="pst-badge-soft" style="background: rgba(0, 123, 255, 0.1); color: var(--color-terciario); padding: 0.25rem 0.55rem; border-radius: 12px; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                                        <i class="ph ph-check-circle"></i> Sí, Trayecto I - IV
+                                                    </span>
+                                                <?php else: ?>
+                                                    <span class="pst-badge-soft" style="background: rgba(100, 116, 139, 0.1); color: var(--texto-silenciado); padding: 0.25rem 0.55rem; border-radius: 12px; font-size: 0.72rem; font-weight: 700;">
+                                                        No aplica
+                                                    </span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td style="padding: 0.85rem 0.85rem; text-align: center; vertical-align: middle;">
+                                                <span class="pst-badge-soft" style="font-weight: 700; font-size: 0.78rem; color: <?= $totalProy > 0 ? 'var(--color-secundario)' : 'var(--texto-silenciado)' ?>; background: rgba(80, 89, 132, 0.08); padding: 0.25rem 0.6rem; border-radius: 10px;">
+                                                    <?= $totalProy ?> <?= $totalProy === 1 ? 'proyecto' : 'proyectos' ?>
+                                                </span>
+                                            </td>
+                                            <td style="padding: 0.85rem 0.85rem; text-align: center; vertical-align: middle;">
+                                                <?php if ($esActivo): ?>
+                                                    <span class="pst-badge-soft" style="background: rgba(80, 89, 132, 0.1); color: var(--color-secundario); padding: 0.25rem 0.55rem; border-radius: 12px; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem; border: 1px solid rgba(80, 89, 132, 0.2);">
+                                                        <span style="width: 6px; height: 6px; border-radius: 50%; background-color: var(--color-secundario); display: inline-block;"></span> Activo
+                                                    </span>
+                                                <?php else: ?>
+                                                    <span class="pst-badge-soft" style="background: rgba(169, 168, 166, 0.12); color: var(--texto-silenciado); padding: 0.25rem 0.55rem; border-radius: 12px; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem; border: 1px solid rgba(169, 168, 166, 0.25);">
+                                                        <span style="width: 6px; height: 6px; border-radius: 50%; background-color: var(--texto-silenciado); display: inline-block;"></span> Inactivo
+                                                    </span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td style="padding: 0.85rem 0.85rem; text-align: center; vertical-align: middle;">
+                                                <div class="action-links" style="display: flex; gap: 0.4rem; justify-content: center; align-items: center;">
+                                                    <!-- Editar -->
+                                                    <button type="button" 
+                                                            class="btn-action-edit" 
+                                                            onclick='abrirModalEditarNivel(<?= json_encode($nItem) ?>)'
+                                                            title="Modificar este nivel académico">
+                                                        <i class="ph ph-pencil-simple"></i> Editar
+                                                    </button>
+                                                    
+                                                    <!-- Toggle Estado -->
+                                                    <button type="button"
+                                                            class="btn-action-edit"
+                                                            onclick="ejecutarToggleNivel(<?= (int)$nItem['id'] ?>, '<?= htmlspecialchars(addslashes($nItem['nombre'])) ?>')"
+                                                            title="<?= $esActivo ? 'Desactivar nivel' : 'Activar nivel' ?>"
+                                                            style="color: var(--color-secundario); border-color: rgba(80, 89, 132, 0.2); background-color: rgba(80, 89, 132, 0.04);">
+                                                        <i class="ph ph-power"></i> <?= $esActivo ? 'Desactivar' : 'Activar' ?>
+                                                    </button>
 
-                        <div style="background: var(--bg-body, #fafbfe); padding: 0.75rem; border-radius: 4px; border: 1px solid rgba(169, 168, 166, 0.2);">
-                            <strong style="font-size: 0.7rem; color: var(--texto-silenciado); text-transform: uppercase; display: block; margin-bottom: 0.25rem;">Texto Extraído:</strong>
-                            <div id="fidResPreview" style="font-size: 0.78rem; font-family: monospace; color: var(--texto-normal); max-height: 140px; overflow-y: auto; white-space: pre-wrap; background: var(--bg-card, #ffffff); padding: 0.5rem; border-radius: 3px; border: 1px solid rgba(169, 168, 166, 0.2);"></div>
-                        </div>
+                                                    <!-- Eliminar -->
+                                                    <button type="button"
+                                                            class="btn-action-edit"
+                                                            onclick="abrirModalEliminarNivel(<?= (int)$nItem['id'] ?>, '<?= htmlspecialchars(addslashes($nItem['nombre'])) ?>', <?= $totalProy ?>)"
+                                                            title="<?= $totalProy > 0 ? 'No se puede eliminar: tiene proyectos vinculados' : 'Eliminar nivel académico' ?>"
+                                                            style="color: var(--texto-titulos); border-color: rgba(169, 168, 166, 0.35); background-color: rgba(169, 168, 166, 0.06); <?= $totalProy > 0 ? 'opacity: 0.45; cursor: not-allowed;' : '' ?>">
+                                                        <i class="ph ph-trash"></i> Eliminar
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
             <!-- BOTONES DE ACCIÓN PERMANENTES -->
-            <div class="pst-config-footer">
+            <div class="pst-config-footer" style="margin-top: 1.5rem; margin-bottom: 2rem;">
                 <a href="?ruta=repositorio" class="btn-cancel-sm">Cancelar</a>
                 <button type="submit" class="btn-save-sm">
                     <i class="ph ph-floppy-disk"></i> Guardar Cambios
@@ -467,13 +573,176 @@
     </div>
 </div>
 
+<!-- MODAL: CREAR NIVEL ACADÉMICO -->
+<div id="modalCrearNivel" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 34, 68, 0.7); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center;">
+    <div style="background: var(--bg-card, #ffffff); border: 1px solid rgba(169, 168, 166, 0.2); border-radius: 8px; width: 90%; max-width: 520px; padding: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
+        <form action="" method="POST">
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+            <input type="hidden" name="accion_nivel" value="crear">
+
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(169, 168, 166, 0.2); padding-bottom: 0.5rem; margin-bottom: 1.25rem;">
+                <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--texto-titulos); margin: 0; display: flex; align-items: center; gap: 0.4rem;">
+                    <i class="ph ph-graduation-cap" style="color: var(--color-secundario);"></i> Añadir Nivel Académico
+                </h3>
+                <button type="button" onclick="cerrarModalCrearNivel()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--texto-silenciado);">&times;</button>
+            </div>
+
+            <div class="config-grid-2">
+                <div class="config-field">
+                    <label>Nombre Visible *</label>
+                    <input type="text" name="nombre" id="crear_nivel_nombre" class="config-input" placeholder="Ej: Diplomado" required oninput="autogenerarCodigoCrear(this.value)">
+                </div>
+
+                <div class="config-field">
+                    <label>Código Identificador *</label>
+                    <input type="text" name="codigo" id="crear_nivel_codigo" class="config-input" placeholder="Ej: Diplomado" required>
+                    <p class="field-hint">Identificador interno único con letras, números y guión bajo.</p>
+                </div>
+            </div>
+
+            <div class="config-field" style="margin-top: 0.6rem;">
+                <label>Orden de Visualización</label>
+                <input type="number" name="orden" id="crear_nivel_orden" class="config-input" value="5" min="0" max="99" style="max-width: 140px;">
+                <p class="field-hint">Posición numérica para ordenar en selectores y listados.</p>
+            </div>
+
+            <div class="config-switch-row" style="margin-top: 0.75rem; padding: 0.6rem 0.75rem; background: rgba(80, 89, 132, 0.03); border: 1px solid rgba(169, 168, 166, 0.2); border-radius: 6px;">
+                <label for="crear_nivel_requiere_trayecto" class="config-switch-label" style="cursor: pointer; margin: 0;">
+                    <strong>¿Aplica Trayectos del PNF?</strong>
+                    <span>Habilita la selección de trayectos I al IV en proyectos con este nivel</span>
+                </label>
+                <label class="switch-toggle" style="margin: 0; flex-shrink: 0;">
+                    <input type="checkbox" name="requiere_trayecto" id="crear_nivel_requiere_trayecto" value="1">
+                    <span class="switch-slider"></span>
+                </label>
+            </div>
+
+            <div class="config-field" style="margin-top: 0.75rem;">
+                <label>Descripción Opcional</label>
+                <textarea name="descripcion" id="crear_nivel_descripcion" class="config-input" rows="2" style="resize: vertical; font-family: inherit;" placeholder="Breve descripción del alcance del nivel académico..."></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem; border-top: 1px solid rgba(169, 168, 166, 0.15); padding-top: 1rem; margin-top: 1.25rem;">
+                <button type="button" onclick="cerrarModalCrearNivel()" class="btn-cancel-sm">Cancelar</button>
+                <button type="submit" class="btn-save-sm">
+                    <i class="ph ph-check"></i> Guardar Nivel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: EDITAR NIVEL ACADÉMICO -->
+<div id="modalEditarNivel" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 34, 68, 0.7); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center;">
+    <div style="background: var(--bg-card, #ffffff); border: 1px solid rgba(169, 168, 166, 0.2); border-radius: 8px; width: 90%; max-width: 520px; padding: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
+        <form action="" method="POST">
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+            <input type="hidden" name="accion_nivel" value="editar">
+            <input type="hidden" name="id_nivel" id="edit_nivel_id" value="">
+
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(169, 168, 166, 0.2); padding-bottom: 0.5rem; margin-bottom: 1.25rem;">
+                <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--texto-titulos); margin: 0; display: flex; align-items: center; gap: 0.4rem;">
+                    <i class="ph ph-pencil-simple" style="color: var(--color-secundario);"></i> Modificar Nivel Académico
+                </h3>
+                <button type="button" onclick="cerrarModalEditarNivel()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--texto-silenciado);">&times;</button>
+            </div>
+
+            <div class="config-grid-2">
+                <div class="config-field">
+                    <label>Nombre Visible *</label>
+                    <input type="text" name="nombre" id="edit_nivel_nombre" class="config-input" required>
+                </div>
+
+                <div class="config-field">
+                    <label>Código Identificador *</label>
+                    <input type="text" name="codigo" id="edit_nivel_codigo" class="config-input" required>
+                    <p class="field-hint">Al cambiar el código, se actualizan los proyectos vinculados automáticamente.</p>
+                </div>
+            </div>
+
+            <div class="config-field" style="margin-top: 0.6rem;">
+                <label>Orden de Visualización</label>
+                <input type="number" name="orden" id="edit_nivel_orden" class="config-input" min="0" max="99" style="max-width: 140px;">
+                <p class="field-hint">Posición numérica para ordenar en selectores y listados.</p>
+            </div>
+
+            <div class="config-switch-row" style="margin-top: 0.75rem; padding: 0.6rem 0.75rem; background: rgba(80, 89, 132, 0.03); border: 1px solid rgba(169, 168, 166, 0.2); border-radius: 6px;">
+                <label for="edit_nivel_requiere_trayecto" class="config-switch-label" style="cursor: pointer; margin: 0;">
+                    <strong>¿Aplica Trayectos del PNF?</strong>
+                    <span>Habilita la selección de trayectos I al IV en proyectos con este nivel</span>
+                </label>
+                <label class="switch-toggle" style="margin: 0; flex-shrink: 0;">
+                    <input type="checkbox" name="requiere_trayecto" id="edit_nivel_requiere_trayecto" value="1">
+                    <span class="switch-slider"></span>
+                </label>
+            </div>
+
+            <div class="config-field" style="margin-top: 0.75rem;">
+                <label>Descripción</label>
+                <textarea name="descripcion" id="edit_nivel_descripcion" class="config-input" rows="2" style="resize: vertical; font-family: inherit;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem; border-top: 1px solid rgba(169, 168, 166, 0.15); padding-top: 1rem; margin-top: 1.25rem;">
+                <button type="button" onclick="cerrarModalEditarNivel()" class="btn-cancel-sm">Cancelar</button>
+                <button type="submit" class="btn-save-sm">
+                    <i class="ph ph-check"></i> Actualizar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: ELIMINAR NIVEL ACADÉMICO -->
+<div id="modalEliminarNivel" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 34, 68, 0.7); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center;">
+    <div style="background: var(--bg-card, #ffffff); border: 1px solid rgba(169, 168, 166, 0.2); border-radius: 8px; width: 90%; max-width: 480px; padding: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
+        <form action="" method="POST" id="formEliminarNivel">
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+            <input type="hidden" name="accion_nivel" value="eliminar">
+            <input type="hidden" name="id_nivel" id="del_nivel_id" value="">
+
+            <div style="text-align: center; margin-bottom: 1rem;">
+                <div style="width: 52px; height: 52px; margin: 0 auto 0.75rem auto; border-radius: 50%; background: rgba(80, 89, 132, 0.1); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: var(--color-secundario);">
+                    <i class="ph ph-trash"></i>
+                </div>
+                <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--texto-titulos); margin: 0 0 0.5rem 0;">¿Eliminar Nivel Académico?</h3>
+                <p id="del_nivel_mensaje" style="font-size: 0.85rem; color: var(--texto-silenciado); margin: 0; line-height: 1.45;"></p>
+            </div>
+
+            <div id="del_nivel_alerta_bloqueo" style="display: none; background: rgba(80, 89, 132, 0.08); border: 1px solid rgba(80, 89, 132, 0.25); color: var(--color-secundario); border-radius: 6px; padding: 0.75rem; font-size: 0.8rem; margin-bottom: 1rem; line-height: 1.4;">
+                <i class="ph ph-warning-circle" style="font-size: 1rem; vertical-align: middle;"></i> Este nivel tiene proyectos activos asignados. El sistema no permite su eliminación para preservar la integridad de los datos. Puede desactivarlo para que no aparezca en nuevas cargas.
+            </div>
+
+            <div style="display: flex; justify-content: center; gap: 0.6rem; border-top: 1px solid rgba(169, 168, 166, 0.15); padding-top: 1rem;">
+                <button type="button" onclick="cerrarModalEliminarNivel()" class="btn-cancel-sm">Cancelar</button>
+                <button type="submit" id="btnConfirmarEliminarNivel" class="btn-save-sm" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1.25rem;">
+                    <i class="ph ph-trash"></i> Confirmar Eliminación
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- FORMULARIO OCULTO PARA TOGGLE ESTADO -->
+<form id="formToggleNivel" action="" method="POST" style="display:none;">
+    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+    <input type="hidden" name="accion_nivel" value="toggle">
+    <input type="hidden" name="id_nivel" id="toggle_nivel_id" value="">
+</form>
+
 <script>
 function switchConfigTab(tabId, btn) {
     document.querySelectorAll('.config-tab-pane').forEach(tp => tp.classList.remove('active'));
     document.querySelectorAll('.config-tab-btn').forEach(tb => tb.classList.remove('active'));
     
-    document.getElementById(tabId).classList.add('active');
-    btn.classList.add('active');
+    const targetPane = document.getElementById(tabId);
+    if (targetPane) targetPane.classList.add('active');
+    if (btn) btn.classList.add('active');
+    
+    // Ocultar botón 'Guardar Cambios' de configuración general cuando se ve la pestaña de Niveles
+    const footer = document.querySelector('.pst-config-footer');
+    if (footer) {
+        footer.style.display = (tabId === 'tabNiveles') ? 'none' : 'flex';
+    }
     
     // Guardar la pestaña activa en la memoria del navegador
     sessionStorage.setItem('configPstTabActiva', tabId);
@@ -542,113 +811,122 @@ function actualizarPrevisualizacionCita(slug, plantilla) {
     previewEl.textContent = res;
 }
 
-// LÓGICA DEL VERIFICADOR DE FIDELIDAD DE EXTRACCIÓN CON DRAG & DROP NATIVO
-document.addEventListener('DOMContentLoaded', () => {
-    const fileInput = document.getElementById('fileFidelidadInput');
-    const labelFileName = document.getElementById('selectedFileNameFidelidad');
-    const dropzone = document.getElementById('dropzoneFidelidad');
-    const btnBrowse = document.getElementById('btnBrowseFidelidad');
-
-    if (dropzone && fileInput) {
-        dropzone.addEventListener('click', (e) => {
-            if (e.target !== fileInput) {
-                fileInput.click();
-            }
-        });
-
-        if (btnBrowse) {
-            btnBrowse.addEventListener('click', (e) => {
-                e.stopPropagation();
-                fileInput.click();
-            });
-        }
-
-        ['dragenter', 'dragover'].forEach(evt => {
-            dropzone.addEventListener(evt, (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                dropzone.style.borderColor = 'var(--color-terciario, #007bff)';
-                dropzone.style.backgroundColor = 'var(--bg-body, #f4f8ff)';
-            });
-        });
-
-        ['dragleave', 'drop'].forEach(evt => {
-            dropzone.addEventListener(evt, (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                dropzone.style.borderColor = 'rgba(169, 168, 166, 0.4)';
-                dropzone.style.backgroundColor = 'var(--bg-card, #ffffff)';
-            });
-        });
-
-        dropzone.addEventListener('drop', (e) => {
-            const dt = e.dataTransfer;
-            if (dt && dt.files && dt.files.length > 0) {
-                fileInput.files = dt.files;
-                if (labelFileName) {
-                    labelFileName.textContent = 'Archivo Seleccionado: ' + dt.files[0].name;
-                }
-            }
-        });
-
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files && e.target.files.length > 0) {
-                if (labelFileName) {
-                    labelFileName.textContent = 'Archivo Seleccionado: ' + e.target.files[0].name;
-                }
-            } else {
-                if (labelFileName) labelFileName.textContent = '';
-            }
-        });
+// --- FUNCIONES GESTIÓN DE NIVELES ACADÉMICOS ---
+function abrirModalCrearNivel() {
+    const modal = document.getElementById('modalCrearNivel');
+    if (modal) {
+        const nomInput = document.getElementById('crear_nivel_nombre');
+        const codInput = document.getElementById('crear_nivel_codigo');
+        const ordInput = document.getElementById('crear_nivel_orden');
+        const reqInput = document.getElementById('crear_nivel_requiere_trayecto');
+        const descInput = document.getElementById('crear_nivel_descripcion');
+        if (nomInput) nomInput.value = '';
+        if (codInput) codInput.value = '';
+        if (ordInput) ordInput.value = '5';
+        if (reqInput) reqInput.checked = false;
+        if (descInput) descInput.value = '';
+        modal.style.display = 'flex';
+        if (nomInput) nomInput.focus();
     }
-});
-
-function ejecutarPruebaFidelidad() {
-    const fileInput = document.getElementById('fileFidelidadInput');
-    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-        alert('Por favor seleccione un archivo PDF o Word (.docx) para ejecutar la prueba de fidelidad.');
-        return;
-    }
-
-    const file = fileInput.files[0];
-    const formData = new FormData();
-    formData.append('archivo_pst', file);
-
-    const resultBox = document.getElementById('resultadoFidelidadBox');
-    if (resultBox) resultBox.style.display = 'block';
-
-    document.getElementById('fidResTitulo').textContent = 'Procesando lectura de documento...';
-    document.getElementById('fidResMeta').textContent = 'Analizando estructura...';
-    document.getElementById('fidResAutores').textContent = 'Extrayendo...';
-    document.getElementById('fidResTutorComunidad').textContent = 'Extrayendo...';
-    document.getElementById('fidResPreview').textContent = 'Extrayendo binarios y texto...';
-
-    fetch('?ruta=agregar-documento&accion=simular_extraccion', {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === 'success') {
-            const d = data.data;
-            document.getElementById('fidResTitulo').textContent = d.titulo || 'No detectado';
-            document.getElementById('fidResMeta').textContent = (d.anio_publicacion || 's.f.') + ' | ' + (d.nivel_academico || 'Pregrado');
-            
-            const autoresList = d.autores ? d.autores.map(a => a.nombre || a.nombre_completo).filter(Boolean).join(', ') : 'Ninguno';
-            document.getElementById('fidResAutores').textContent = autoresList || 'No detectados';
-            
-            document.getElementById('fidResTutorComunidad').textContent = 'Tutor: ' + (d.tutor_academico_nombre || 'N/A') + ' | Comunidad: ' + (d.comunidad_beneficiada || 'N/A');
-            document.getElementById('fidResPreview').textContent = data.preview_texto || 'Sin vista previa';
-        } else {
-            alert('Error en la prueba de fidelidad: ' + (data.message || 'Error desconocido'));
-        }
-    })
-    .catch(err => {
-        alert('Ocurrió un error al comunicarse con el servidor para la simulación.');
-    });
 }
 
-// Inicializar previsualizaciones al cargar la página
+function cerrarModalCrearNivel() {
+    const modal = document.getElementById('modalCrearNivel');
+    if (modal) modal.style.display = 'none';
+}
+
+function autogenerarCodigoCrear(nombre) {
+    if (!nombre) return;
+    const codInput = document.getElementById('crear_nivel_codigo');
+    if (!codInput) return;
+    
+    // Normalizar a ASCII y remover espacios / caracteres especiales
+    const normalizado = nombre
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9]/g, '');
+    
+    codInput.value = normalizado;
+}
+
+function abrirModalEditarNivel(item) {
+    if (!item) return;
+    const idEl = document.getElementById('edit_nivel_id');
+    const nomEl = document.getElementById('edit_nivel_nombre');
+    const codEl = document.getElementById('edit_nivel_codigo');
+    const ordEl = document.getElementById('edit_nivel_orden');
+    const reqEl = document.getElementById('edit_nivel_requiere_trayecto');
+    const descEl = document.getElementById('edit_nivel_descripcion');
+
+    if (idEl) idEl.value = item.id || '';
+    if (nomEl) nomEl.value = item.nombre || '';
+    if (codEl) codEl.value = item.codigo || '';
+    if (ordEl) ordEl.value = item.orden !== undefined ? item.orden : 0;
+    if (reqEl) reqEl.checked = !!(item.requiere_trayecto && item.requiere_trayecto !== '0' && item.requiere_trayecto !== 0);
+    if (descEl) descEl.value = item.descripcion || '';
+
+    const modal = document.getElementById('modalEditarNivel');
+    if (modal) {
+        modal.style.display = 'flex';
+        if (nomEl) nomEl.focus();
+    }
+}
+
+function cerrarModalEditarNivel() {
+    const modal = document.getElementById('modalEditarNivel');
+    if (modal) modal.style.display = 'none';
+}
+
+function abrirModalEliminarNivel(id, nombre, totalProy) {
+    const idEl = document.getElementById('del_nivel_id');
+    const msgEl = document.getElementById('del_nivel_mensaje');
+    const alerta = document.getElementById('del_nivel_alerta_bloqueo');
+    const btnConfirm = document.getElementById('btnConfirmarEliminarNivel');
+
+    if (idEl) idEl.value = id;
+    if (msgEl) {
+        msgEl.innerHTML = `¿Está seguro de que desea eliminar el nivel académico <strong>"${nombre}"</strong>?`;
+    }
+
+    if (totalProy > 0) {
+        if (alerta) alerta.style.display = 'block';
+        if (btnConfirm) {
+            btnConfirm.disabled = true;
+            btnConfirm.style.opacity = '0.5';
+            btnConfirm.style.cursor = 'not-allowed';
+            btnConfirm.title = 'No se puede eliminar porque tiene proyectos vinculados';
+        }
+    } else {
+        if (alerta) alerta.style.display = 'none';
+        if (btnConfirm) {
+            btnConfirm.disabled = false;
+            btnConfirm.style.opacity = '1';
+            btnConfirm.style.cursor = 'pointer';
+            btnConfirm.title = '';
+        }
+    }
+
+    const modal = document.getElementById('modalEliminarNivel');
+    if (modal) modal.style.display = 'flex';
+}
+
+function cerrarModalEliminarNivel() {
+    const modal = document.getElementById('modalEliminarNivel');
+    if (modal) modal.style.display = 'none';
+}
+
+function ejecutarToggleNivel(id, nombre) {
+    if (confirm(`¿Desea cambiar el estado de visibilidad del nivel académico "${nombre}"?`)) {
+        const idInput = document.getElementById('toggle_nivel_id');
+        const form = document.getElementById('formToggleNivel');
+        if (idInput && form) {
+            idInput.value = id;
+            form.submit();
+        }
+    }
+}
+
+// Inicializar previsualizaciones y gestión de pestañas al cargar la página
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.citation-template-input').forEach(input => {
         const nameAttr = input.getAttribute('name');
@@ -659,13 +937,35 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
-});
-document.addEventListener('DOMContentLoaded', () => {
-    const tabGuardada = sessionStorage.getItem('configPstTabActiva') || 'tabCitas';
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabUrl = urlParams.get('tab');
+    const tabGuardada = tabUrl || sessionStorage.getItem('configPstTabActiva') || 'tabCitas';
     const boton = document.querySelector(`.pst-config-nav-tabs button[onclick*="'${tabGuardada}'"]`);
     if (boton) {
         switchConfigTab(tabGuardada, boton);
     }
+
+    // Cerrar modales con tecla Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            cerrarModalCrearNivel();
+            cerrarModalEditarNivel();
+            cerrarModalEliminarNivel();
+        }
+    });
+
+    // Cerrar modales al hacer clic en el backdrop
+    ['modalCrearNivel', 'modalEditarNivel', 'modalEliminarNivel'].forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+    });
 });
 if (window.history.replaceState) {
     window.history.replaceState(null, null, window.location.href);

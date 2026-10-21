@@ -109,12 +109,12 @@ async function buscarPropuesta(tipo) {
         contenedor.style.display = 'block';
         lista.innerHTML = '';
 
-        if (!data.success) {
-            lista.innerHTML = `<div style="padding: 1rem; background: #fee2e2; color: #991b1b; border-radius: 6px;"><i class="ph-bold ph-warning"></i> ${data.message}</div>`;
+        if (!data.exito) {
+            lista.innerHTML = `<div style="padding: 1rem; background: #fee2e2; color: #991b1b; border-radius: 6px;"><i class="ph-bold ph-warning"></i> ${data.error}</div>`;
             return;
         }
 
-        data.data.forEach(prop => {
+        data.datos.forEach(prop => {
             // Lógica del Stepper
             let s1 = 'active', s2 = '', s3 = '', s4 = '';
             let s2_text = 'Aprobación Comité', s2_icon = 'ph-users-three';
@@ -155,6 +155,25 @@ async function buscarPropuesta(tipo) {
                 `;
             }
 
+            let extrasHtml = '';
+            if (prop.campos_extra) {
+                try {
+                    let extras = typeof prop.campos_extra === 'string' ? JSON.parse(prop.campos_extra) : prop.campos_extra;
+                    if (Array.isArray(extras) && extras.length > 0) {
+                        extrasHtml = '<div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed #cbd5e1; font-size: 0.9rem;"><strong>Información Adicional:</strong><ul style="margin: 0; padding-left: 1.2rem; color: #475569;">';
+                        extras.forEach(e => {
+                            let valor = e.valor;
+                            if (e.tipo === 'fecha') {
+                                const [y, m, d] = valor.split('-');
+                                if (y && m && d) valor = `${d}/${m}/${y}`;
+                            }
+                            extrasHtml += `<li><b>${e.etiqueta}:</b> ${valor}</li>`;
+                        });
+                        extrasHtml += '</ul></div>';
+                    }
+                } catch (e) {}
+            }
+
             lista.innerHTML += `
                 <div style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; background: #fafafa;">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
@@ -170,6 +189,7 @@ async function buscarPropuesta(tipo) {
                         </div>
                     </div>
                     
+                    ${extrasHtml}
                     ${alertaRechazo}
 
                     <!-- STEPPER TIMELINE -->

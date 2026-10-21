@@ -1,4 +1,7 @@
 <?php
+require_once CORE_PATH . 'Security/Auth.php';
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
+$nivelAdminArt = SystemConfigService::get('accesos_modulos.articulos.admin', 1);
 $paginaActual = (int) ($paginacion['pagina'] ?? 1);
 $paginasTotales = (int) ($paginacion['paginas'] ?? 1);
 $busquedaActual = $_GET['q'] ?? '';
@@ -29,9 +32,11 @@ $buildUrl = function($page) use ($busquedaActual) {
             <a href="gestor-catalogos" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.85rem; border-radius: 6px;">
                 <i class="ph-bold ph-tags"></i> Catálogos
             </a>
-            <a href="nuevo-articulo" class="btn btn-primary gestor-art-btn-new" style="padding: 0.45rem 0.85rem; font-size: 0.85rem; border-radius: 6px;">
-                <i class="ph-bold ph-plus"></i> Registrar Artículo
-            </a>
+            <?php if (Auth::requierePrivilegioMinimo($nivelAdminArt, 'crear', 'Articulos', false)): ?>
+                <a href="nuevo-articulo" class="btn btn-primary gestor-art-btn-new" style="padding: 0.45rem 0.85rem; font-size: 0.85rem; border-radius: 6px;">
+                    <i class="ph-bold ph-plus"></i> Registrar Artículo
+                </a>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -73,12 +78,14 @@ $buildUrl = function($page) use ($busquedaActual) {
                                 <td class="art-title-col">
                                     <div style="margin-bottom: 0.3rem;">
                                         <?php if ($art['activo'] ?? true): ?>
-                                            <span style="background: #def7ec; color: #03543f; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.68rem; font-weight: 700;">Visible</span>
+                                            <span style="background: var(--success-inactive); color: var(--success-active); padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.68rem; font-weight: 700;">Visible</span>
                                         <?php else: ?>
-                                            <span style="background: #fde8e8; color: #9b1c1c; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.68rem; font-weight: 700;">Oculto</span>
+                                            <span style="background: var(--alert-inactive); color: var(--alert-active); padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.68rem; font-weight: 700;">Oculto</span>
                                         <?php endif; ?>
                                     </div>
-                                    <strong><?= htmlspecialchars($art['titulo']) ?></strong>
+                                    <a href="leer-articulo?id=<?= $art['id'] ?>" style="color: var(--titulos); text-decoration: none; font-weight: 700;" title="Leer Artículo">
+                                        <?= htmlspecialchars($art['titulo']) ?>
+                                    </a>
                                 </td>
                                 <td>
                                     Vol. <?= htmlspecialchars((string) ($art['volumen'] ?? '')) ?> <br>
@@ -88,21 +95,25 @@ $buildUrl = function($page) use ($busquedaActual) {
                                     <span class="art-category-badge"><?= htmlspecialchars($art['categoria'] ?? 'Sin categoría') ?></span>
                                 </td>
                                 <td class="art-actions-col">
-                                    <a href="toggle-estado-articulo?id=<?= $art['id'] ?>" class="btn-icon" style="background: <?= ($art['activo'] ?? true) ? '#fef3c7; color: #92400e;' : '#dcfce7; color: #15803d;' ?>" title="<?= ($art['activo'] ?? true) ? 'Ocultar' : 'Activar' ?>">
-                                        <i class="ph-bold <?= ($art['activo'] ?? true) ? 'ph-eye-slash' : 'ph-eye' ?>"></i>
-                                    </a>
+                                    <?php if (Auth::requierePrivilegioMinimo($nivelAdminArt, 'editar', 'Articulos', false)): ?>
+                                        <a href="toggle-estado-articulo?id=<?= $art['id'] ?>" class="btn-icon" style="background: <?= ($art['activo'] ?? true) ? 'var(--alert-inactive); color: var(--alert-active);' : 'var(--success-inactive); color: var(--success-active);' ?>" title="<?= ($art['activo'] ?? true) ? 'Ocultar' : 'Activar' ?>">
+                                            <i class="ph-bold <?= ($art['activo'] ?? true) ? 'ph-eye-slash' : 'ph-eye' ?>"></i>
+                                        </a>
 
-                                    <a href="editar-articulo?id=<?= $art['id'] ?>" class="btn-icon btn-edit" title="Editar">
-                                        <i class="ph-bold ph-pencil-simple"></i>
-                                    </a>
+                                        <a href="editar-articulo?id=<?= $art['id'] ?>" class="btn-icon btn-edit" title="Editar">
+                                            <i class="ph-bold ph-pencil-simple"></i>
+                                        </a>
+                                    <?php endif; ?>
                                     
-                                    <form action="eliminar-articulo" method="POST" class="form-inline-delete" id="form-delete-<?= $art['id'] ?>">
-                                        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-                                        <input type="hidden" name="id_articulo" value="<?= $art['id'] ?>">
-                                        <button type="button" class="btn-icon btn-delete" title="Eliminar" onclick="confirmarEliminacion(<?= $art['id'] ?>)">
-                                            <i class="ph-bold ph-trash"></i>
-                                        </button>
-                                    </form>
+                                    <?php if (Auth::requierePrivilegioMinimo($nivelAdminArt, 'eliminar', 'Articulos', false)): ?>
+                                        <form action="eliminar-articulo" method="POST" class="form-inline-delete" id="form-delete-<?= $art['id'] ?>">
+                                            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                                            <input type="hidden" name="id_articulo" value="<?= $art['id'] ?>">
+                                            <button type="button" class="btn-icon btn-delete" title="Eliminar" onclick="confirmarEliminacion(<?= $art['id'] ?>)">
+                                                <i class="ph-bold ph-trash"></i>
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -134,7 +145,7 @@ function mostrarModalSistema(tipo, titulo, mensaje, isConfirm = false, onConfirm
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,34,68,0.8); z-index:99999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);';
     
-    let icon = tipo === 'success' ? '<i class="ph-bold ph-check-circle" style="color: #16a34a;"></i>' : '<i class="ph-bold ph-warning-circle" style="color: #dc2626;"></i>';
+    let icon = tipo === 'success' ? '<i class="ph-bold ph-check-circle" style="color: var(--success-active);"></i>' : '<i class="ph-bold ph-warning-circle" style="color: var(--alert-active);"></i>';
     let btnHtml = isConfirm 
         ? `<button type="button" class="btn btn-secondary" onclick="this.closest('div').parentElement.parentElement.remove()" style="margin-right:0.5rem;">Cancelar</button>
            <button type="button" class="btn btn-primary" id="btn-confirm-modal">Sí, proceder</button>`

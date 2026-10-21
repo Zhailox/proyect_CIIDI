@@ -11,11 +11,14 @@
                 Control centralizado de usuarios, registro directo, matriz de privilegios y reseteo de claves.
             </p>
         </div>
-        <div style="display: flex; gap: 0.5rem;">
-            <button onclick="toggleModalCrearUsuario(true)" class="btn sa-btn-primary" style="background: var(--color-secundario) !important; color: #ffffff !important; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border: none;">
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button onclick="toggleModalInvitarProfesor(true)" class="sa-btn sa-btn-dark">
+                <i class="ph-bold ph-envelope-simple-open"></i> + Invitar Profesor
+            </button>
+            <button onclick="toggleModalCrearUsuario(true)" class="sa-btn sa-btn-primary">
                 <i class="ph-bold ph-user-plus"></i> + Crear Usuario
             </button>
-            <a href="sudoadmin" class="btn btn-outline" style="border-color: var(--color-secundario); color: var(--color-secundario) !important; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">
+            <a href="sudoadmin" class="sa-btn sa-btn-outline">
                 <i class="ph-bold ph-arrow-left"></i> Volver
             </a>
         </div>
@@ -24,16 +27,16 @@
 
 <!-- ALERTAS DE ÉXITO O ERROR DE SESIÓN -->
 <?php if (isset($_SESSION['mensaje_gestor_exito'])): ?>
-    <div style="background: rgba(16,185,129,0.12); color: #047857; border: 1px solid rgba(16,185,129,0.3); padding: 0.85rem 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-        <i class="ph-bold ph-check-circle" style="font-size: 1.2rem;"></i>
+    <div class="sa-alert sa-alert-success">
+        <i class="ph-bold ph-check-circle"></i>
         <?= htmlspecialchars($_SESSION['mensaje_gestor_exito']) ?>
         <?php unset($_SESSION['mensaje_gestor_exito']); ?>
     </div>
 <?php endif; ?>
 
 <?php if (isset($_SESSION['mensaje_gestor_error'])): ?>
-    <div style="background: rgba(239,68,68,0.12); color: #b91c1c; border: 1px solid rgba(239,68,68,0.3); padding: 0.85rem 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-        <i class="ph-bold ph-warning-circle" style="font-size: 1.2rem;"></i>
+    <div class="sa-alert sa-alert-error">
+        <i class="ph-bold ph-warning-circle"></i>
         <?= htmlspecialchars($_SESSION['mensaje_gestor_error']) ?>
         <?php unset($_SESSION['mensaje_gestor_error']); ?>
     </div>
@@ -52,8 +55,10 @@ if (isset($privilegios)) {
 ?>
 
 
+
+
 <!-- NAVEGACIÓN INTERNA EN PESTAÑAS (TABS) PARA SECCIONAR RESPONSABILIDADES -->
-<div class="sa-tabs-header glass-panel mb-2" style="background: #ffffff; padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(80,89,132,0.15);">
+<div class="sa-tabs-header glass-panel mb-2">
     <button class="sa-tab-btn tab-active" onclick="switchUserTab('tab-comunidad', this)">
         <i class="ph-bold ph-users"></i> Comunidad de Usuarios (<?= count($todosLosUsuarios) ?>)
     </button>
@@ -129,16 +134,15 @@ if (isset($privilegios)) {
                                     <?= !empty($usr['ultima_actividad']) ? date('d/m/Y H:i', strtotime($usr['ultima_actividad'])) : 'Sin registros' ?>
                                 </td>
                                 <td style="padding: 10px 12px;">
-                                    <span style="background: <?= $usr['activo'] ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)' ?>; color: <?= $usr['activo'] ? '#10b981' : '#ef4444' ?>; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 0.78rem;">
+                                    <span class="<?= $usr['activo'] ? 'sa-badge-active' : 'sa-badge-inactive' ?>">
                                         <?= $usr['activo'] ? 'Activo' : 'Suspendido' ?>
                                     </span>
                                 </td>
                                 <td style="padding: 10px 12px; text-align: center;">
                                     <div style="display: flex; gap: 0.4rem; justify-content: center; flex-wrap: wrap;">
                                         <button type="button"
-                                            class="btn btn-outline"
+                                            class="sa-btn-action"
                                             title="Editar Credenciales"
-                                            style="padding: 4px 8px; font-size: 0.78rem;"
                                             onclick="abrirModalEditarUsuario(<?= htmlspecialchars(json_encode([
                                                 'id' => $usr['id'],
                                                 'cedula' => $usr['cedula'],
@@ -149,24 +153,31 @@ if (isset($privilegios)) {
                                             <i class="ph-bold ph-pencil-simple"></i> Editar
                                         </button>
 
-
                                         <!-- REVOCAR -->
                                         <form action="revocar-sesion" method="POST" style="margin:0;">
-                                            <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
-                                            <button type="button" class="btn" title="Cerrar Sesión Remota" style="background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); padding: 4px 8px; font-size: 0.78rem; border-radius: 4px; cursor: pointer; font-weight: 600;" onclick="mostrarConfirmacionUsuarios(this.form, 'Revocar Sesión', '¿Expulsar a este usuario del sistema?', 'ph-power', '#ef4444')">
-                                                <i class="ph-bold ph-power"></i> Revocar
-                                            </button>
-                                        </form>
+                                             <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
+                                             <button type="button" class="sa-btn-action" title="Cerrar Sesión Remota" onclick="mostrarConfirmacionUsuarios(this.form, 'Revocar Sesión', '¿Expulsar a este usuario del sistema?', 'ph-power', 'var(--warning-active)')">
+                                                 <i class="ph-bold ph-power"></i> Revocar
+                                             </button>
+                                         </form>
 
                                         <!-- SUSPENDER / RESTAURAR -->
                                         <form action="alternar-estado-usuario" method="POST" style="margin:0;">
-                                            <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
-                                            <input type="hidden" name="cedula" value="<?= htmlspecialchars($usr['cedula']) ?>">
-                                            <input type="hidden" name="estado_actual" value="<?= $usr['activo'] ? '1' : '0' ?>">
-                                            <button type="button" class="btn" style="background: <?= $usr['activo'] ? 'rgba(239,68,68,0.12)' : 'rgba(16,185,129,0.12)' ?>; color: <?= $usr['activo'] ? '#ef4444' : '#10b981' ?>; border: 1px solid <?= $usr['activo'] ? 'rgba(239,68,68,0.25)' : 'rgba(16,185,129,0.25)' ?>; padding: 4px 8px; font-size: 0.78rem; border-radius: 4px; cursor: pointer; font-weight: 600;" onclick="mostrarConfirmacionUsuarios(this.form, '<?= $usr['activo'] ? 'Suspender' : 'Restaurar' ?> Cuenta', '¿Confirma que desea <?= $usr['activo'] ? 'SUSPENDER' : 'RESTAURAR' ?> al usuario <?= htmlspecialchars($usr['nombre_completo'], ENT_QUOTES) ?>?', '<?= $usr['activo'] ? 'ph-user-minus' : 'ph-user-check' ?>', '<?= $usr['activo'] ? '#ef4444' : '#10b981' ?>')">
-                                                <i class="ph-bold <?= $usr['activo'] ? 'ph-user-minus' : 'ph-user-check' ?>"></i> <?= $usr['activo'] ? 'Suspender' : 'Restaurar' ?>
-                                            </button>
-                                        </form>
+                                             <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
+                                             <input type="hidden" name="cedula" value="<?= htmlspecialchars($usr['cedula']) ?>">
+                                             <input type="hidden" name="estado_actual" value="<?= $usr['activo'] ? '1' : '0' ?>">
+                                             <button type="button" class="sa-btn-action" onclick="mostrarConfirmacionUsuarios(this.form, '<?= $usr['activo'] ? 'Suspender' : 'Restaurar' ?> Cuenta', '¿Confirma que desea <?= $usr['activo'] ? 'SUSPENDER' : 'RESTAURAR' ?> al usuario <?= htmlspecialchars($usr['nombre_completo'], ENT_QUOTES) ?>?', '<?= $usr['activo'] ? 'ph-user-minus' : 'ph-user-check' ?>', 'var(--warning-active)')">
+                                                 <i class="ph-bold <?= $usr['activo'] ? 'ph-user-minus' : 'ph-user-check' ?>"></i> <?= $usr['activo'] ? 'Suspender' : 'Restaurar' ?>
+                                             </button>
+                                         </form>
+
+                                        <!-- ELIMINAR Y LIBERAR CREDENCIALES -->
+                                        <form action="eliminar-usuario" method="POST" style="margin:0;">
+                                             <input type="hidden" name="usuario_id" value="<?= $usr['id'] ?>">
+                                             <button type="button" class="sa-btn-action sa-btn-action-dark" title="Eliminar Usuario y Liberar Credenciales" onclick="mostrarConfirmacionUsuarios(this.form, 'Eliminar y Archivar Usuario', '¿Está seguro de ELIMINAR permanentemente a <?= htmlspecialchars($usr['nombre_completo'], ENT_QUOTES) ?>? Sus credenciales (Cédula y Email) se liberarán de inmediato.', 'ph-trash', 'var(--alert-active)')">
+                                                 <i class="ph-bold ph-trash"></i> Eliminar
+                                             </button>
+                                         </form>
                                     </div>
                                 </td>
                             </tr>
@@ -181,7 +192,7 @@ if (isset($privilegios)) {
             <span id="userPaginationInfo" style="font-size: 0.82rem; color: #64748b; font-weight: 600;">Mostrando registros</span>
             <div style="display: flex; gap: 0.4rem; align-items: center;">
                 <button id="btnPrevUserPage" onclick="changeUserPage(-1)" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem; border-color: #cbd5e1; color: #334155;">‹ Anterior</button>
-                <span id="userPageNum" style="font-size: 0.85rem; font-weight: 700; color: var(--color-principal); padding: 0 6px;">1</span>
+                <span id="userPageNum" style="font-size: 0.85rem; font-weight: 700; padding: 0 6px;">1</span>
                 <button id="btnNextUserPage" onclick="changeUserPage(1)" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem; border-color: #cbd5e1; color: #334155;">Siguiente ›</button>
             </div>
         </div>
@@ -193,48 +204,54 @@ if (isset($privilegios)) {
      ========================================================================== -->
 <div id="tab-rbac" class="sa-tab-content" style="display: none;">
     <div class="glass-panel mb-2" style="padding: 1.5rem; border-radius: var(--radius-sm);">
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
-            <div>
-                <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem; font-weight: 700; color: var(--texto-titulos); display: flex; align-items: center; gap: 6px;">
-                    <i class="ph-bold ph-shield-check" style="color: var(--color-secundario);"></i> Matriz Granular de Permisos (RBAC)
-                </h4>
-                <p style="font-size: 0.85rem; color: var(--texto-silenciado); margin: 0;">
-                    Asigne permisos dinámicos por tipo de acción para controlar el comportamiento del sistema.
-                </p>
-            </div>
-            <form action="crear-nivel-privilegio" method="POST" style="margin: 0;">
-                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-                <button type="button" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem; border-color: var(--color-terciario); color: var(--color-terciario);" onclick="mostrarConfirmacionUsuarios(this.form, 'Extender Privilegios', '¿Crear un nuevo nivel jerárquico superior en la base de datos?', 'ph-sort-ascending', 'var(--color-terciario)')">
-                    <i class="ph-bold ph-plus"></i> Añadir Nivel
-                </button>
-            </form>
-        </div>
 
+        <!-- ===== TOOLBAR SUPERIOR ===== -->
+        <div class="rbac-toolbar">
+            <div class="rbac-toolbar-info">
+                <h4>
+                    <i class="ph-bold ph-shield-check"></i>
+                    Matriz Granular de Permisos (RBAC)
+                </h4>
+                <p>Asigne permisos dinámicos por tipo de acción para controlar el comportamiento del sistema.</p>
+            </div>
+
+            <div class="rbac-toolbar-actions">
+                <form action="crear-nivel-privilegio" method="POST" style="margin: 0;">
+                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                    <button type="button" class="rbac-btn rbac-btn-outline"
+                            onclick="mostrarConfirmacionUsuarios(this.form, 'Extender Privilegios', '¿Crear un nuevo nivel jerárquico superior en la base de datos?', 'ph-sort-ascending', 'var(--color-terciario)')">
+                        <i class="ph-bold ph-plus"></i> Añadir Nivel
+                    </button>
+                </form>
+            </div>
+        </div>
+        <!-- ===== LISTA DE NIVELES ===== -->
         <form action="guardar-matriz-rbac" method="POST">
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-            <div style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 600px; overflow-y: auto; padding-right: 5px;">
-                
-                <?php foreach ($privilegios as $priv): $nivel = $priv['nivel_privilegio']; if ($nivel === 0) continue;?>
 
-                    <details style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.02); flex-shrink: 0;">
-                        <summary style="padding: 12px 16px; font-weight: 800; color: var(--color-secundario); cursor: pointer; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; list-style: none;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <i class="ph-bold ph-shield-star" style="color: var(--color-terciario); font-size: 1.2rem;"></i>
+            <div style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 600px; overflow-y: auto; padding-right: 5px;">
+
+                <?php foreach ($privilegios as $priv): $nivel = $priv['nivel_privilegio']; if ($nivel === 0) continue; ?>
+
+                    <details class="rbac-level">
+                        <summary class="rbac-level-summary">
+                            <div class="rbac-level-title">
+                                <i class="ph-bold ph-shield-star"></i>
                                 Configurar Permisos del Nivel <?= htmlspecialchars($nivel) ?>
                             </div>
-                            
-                            <div style="display: flex; align-items: center; gap: 10px;">
+
+                            <div class="rbac-level-controls">
                                 <?php if ($nivel > 3): ?>
-                                    <!-- Botón limpio, sin form anidado -->
-                                    <button type="button" class="btn-icon btn-delete" title="Eliminar Nivel" style="padding: 2px 6px; height: auto;" onclick="event.stopPropagation(); confirmarEliminacionNivel(<?= $nivel ?>);">
+                                    <button type="button" class="rbac-level-delete"
+                                            title="Eliminar Nivel <?= $nivel ?>"
+                                            onclick="event.preventDefault(); event.stopPropagation(); confirmarEliminacionNivel(<?= $nivel ?>);">
                                         <i class="ph-bold ph-trash"></i>
                                     </button>
                                 <?php endif; ?>
-                                <i class="ph-bold ph-caret-down" style="color: #94a3b8;"></i>
+                                <i class="ph-bold ph-caret-down rbac-level-caret"></i>
                             </div>
                         </summary>
-                        
+
                         <div style="padding: 0; overflow-x: auto; border-top: 1px solid #e2e8f0;">
                             <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
                                 <thead style="background: rgba(244,247,251,0.5);">
@@ -248,12 +265,13 @@ if (isset($privilegios)) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($modulosInstalados as $indice => $moduloNombre): 
+                                    <?php foreach ($modulosInstalados as $indice => $moduloNombre):
                                         $permisosNivelModulo = $matrizRBAC[$nivel][$moduloNombre] ?? [];
                                     ?>
                                         <tr style="border-bottom: 1px solid #f1f5f9; background: <?= $indice % 2 === 0 ? '#ffffff' : '#f8fafc' ?>;">
                                             <td style="padding: 8px 16px; font-weight: 600; color: var(--texto-titulos);">
-                                                <i class="ph-bold ph-plugs-connected" style="color: #64748b; margin-right: 4px;"></i> <?= htmlspecialchars($moduloNombre) ?>
+                                                <i class="ph-bold ph-plugs-connected" style="color: #64748b; margin-right: 4px;"></i>
+                                                <?= htmlspecialchars($moduloNombre) ?>
                                             </td>
                                             <?php foreach ($accionesDisponibles as $accion): ?>
                                                 <td style="padding: 8px 12px; text-align: center;">
@@ -267,67 +285,75 @@ if (isset($privilegios)) {
                             </table>
                         </div>
                     </details>
-                <?php endforeach; ?>
 
+                <?php endforeach; ?>
             </div>
 
-            <div style="margin-top: 1.25rem; display: flex; justify-content: flex-end;">
-                <button type="submit" class="btn btn-solid" style="background: var(--color-secundario) !important; color: #ffffff !important; border-radius: 6px; padding: 8px 16px; font-weight: 700; border:none;">
-                    <i class="ph-bold ph-floppy-disk"></i> Guardar Matriz RBAC Segmentada
+            <div class="rbac-form-footer">
+                <button type="submit" class="rbac-btn rbac-btn-solid">
+                    <i class="ph-bold ph-floppy-disk"></i> Guardar Matriz RBAC
                 </button>
             </div>
         </form>
 
-        <!-- SECCIÓN EDICIÓN DE ROLES -->
-        <div style="margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 1.25rem;">
-            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--texto-titulos); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 6px;">
-                <i class="ph-bold ph-pencil-line" style="color: var(--color-terciario);"></i> Editar Denominación y Jerarquía de Roles
-            </h4>
-            <button type="button" onclick="toggleModalCrearRol(true)" class="btn btn-solid" style="padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                <i class="ph-bold ph-plus"></i> Crear Nuevo Rol
-            </button>
+        <!-- ===== SECCIÓN ROLES ===== -->
+        <div class="rbac-roles-section">
+            <div class="rbac-roles-header">
+                <h4>
+                    <i class="ph-bold ph-pencil-line"></i>
+                    Editar Denominación y Jerarquía de Roles
+                </h4>
+                <button type="button" class="rbac-btn rbac-btn-solid" onclick="toggleModalCrearRol(true)">
+                    <i class="ph-bold ph-shield-plus"></i> Crear Nuevo Rol
+                </button>
+            </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
-                <?php foreach ($roles as $rItem): 
+            <div class="rbac-roles-grid">
+                <?php foreach ($roles as $rItem):
                     $esRolSupremo = (isset($idPrivilegioCero) && $rItem['privilegio_id'] == $idPrivilegioCero);
-                    if ($esRolSupremo): 
+                    if ($esRolSupremo):
                 ?>
-                <!-- TARJETA INMUTABLE PARA EL ROL SUPREMO -->
-                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.85rem 1rem; border-radius: 8px; display: flex; flex-direction: column; gap: 0.6rem;">
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <input type="text" value="<?= htmlspecialchars($rItem['nombre']) ?>" class="sa-filter-input" style="flex: 1; min-width: 0; background: #e2e8f0; cursor: not-allowed; color: #64748b;" readonly title="El rol base no puede ser alterado">
-                            <span style="background: #1e293b; color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 700;">Nivel 0</span>
+                    <!-- TARJETA INMUTABLE PARA EL ROL SUPREMO -->
+                    <div class="rbac-role-card-locked">
+                        <div class="rbac-role-row" style="display: flex; gap: 0.5rem; align-items: center;">
+                            <input type="text" value="<?= htmlspecialchars($rItem['nombre']) ?>" class="sa-filter-input"
+                                   style="flex: 1; min-width: 0; background: #e2e8f0; cursor: not-allowed; color: #64748b;"
+                                   readonly title="El rol base no puede ser alterado">
+                            <span class="rbac-level-badge">Nivel 0</span>
                         </div>
                         <div style="display: flex; margin-top: 0.5rem;">
-                            <button type="button" class="btn" style="width: 100%; background: #cbd5e1; color: #64748b; padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; cursor: not-allowed;" disabled>
+                            <button type="button" class="rbac-btn"
+                                    style="width: 100%; justify-content: center; background: #cbd5e1; color: #64748b; cursor: not-allowed;"
+                                    disabled>
                                 <i class="ph-bold ph-lock-key"></i> Rol de Sistema (Inalterable)
                             </button>
                         </div>
                     </div>
                 <?php else: ?>
                     <!-- FORMULARIO NORMAL PARA LOS DEMÁS ROLES -->
-                    <form action="actualizar-rol" method="POST" style="background: #ffffff; border: 1px solid rgba(80, 89, 132, 0.2); padding: 0.85rem 1rem; border-radius: 8px; display: flex; flex-direction: column; gap: 0.6rem; box-shadow: 0 2px 8px rgba(18,26,62,0.02);">
+                    <form action="actualizar-rol" method="POST" class="rbac-role-card">
                         <input type="hidden" name="rol_id" value="<?= $rItem['id'] ?>">
                         <input type="hidden" name="nombre_anterior" value="<?= htmlspecialchars($rItem['nombre']) ?>">
-                        
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <input type="text" name="nuevo_nombre" value="<?= htmlspecialchars($rItem['nombre']) ?>" class="sa-filter-input" style="flex: 1; min-width: 0;" required>
-                            
+
+                        <div class="rbac-role-row">
+                            <input type="text" name="nuevo_nombre" value="<?= htmlspecialchars($rItem['nombre']) ?>" class="sa-filter-input" required>
+
                             <select name="privilegio_id" class="sa-filter-input" required title="Cambiar nivel jerárquico">
-                                <?php foreach ($privilegios as $priv): 
-                                    if ((int)$priv['nivel_privilegio'] === 0) continue; // <-- Oculta Nivel 0
+                                <?php foreach ($privilegios as $priv):
+                                    if ((int)$priv['nivel_privilegio'] === 0) continue;
                                     $isSelected = (isset($rItem['privilegio_id']) && $rItem['privilegio_id'] == $priv['privilegio_id']) ? 'selected' : '';
                                 ?>
                                     <option value="<?= $priv['privilegio_id'] ?>" <?= $isSelected ?>>Nivel <?= $priv['nivel_privilegio'] ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        
-                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                            <button type="submit" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem; border-color: var(--color-secundario); color: var(--color-secundario) !important; cursor: pointer; flex: 1;">
+
+                        <div class="rbac-role-actions">
+                            <button type="submit" class="rbac-btn rbac-btn-outline">
                                 <i class="ph-bold ph-check"></i> Actualizar
                             </button>
-                            <button type="button" class="btn btn-solid" style="background: rgba(239,68,68,0.1) !important; color: #ef4444 !important; border: 1px solid rgba(239,68,68,0.3); padding: 6px 12px; font-size: 0.8rem; cursor: pointer;" onclick="mostrarConfirmacionUsuarios(document.getElementById('form-del-rol-<?= $rItem['id'] ?>'), 'Eliminar Rol', '¿Seguro que desea eliminar el rol <?= htmlspecialchars($rItem['nombre'], ENT_QUOTES) ?>?', 'ph-trash', '#ef4444')">
+                            <button type="button" class="rbac-btn rbac-btn-danger-outline"
+                                    onclick="mostrarConfirmacionUsuarios(document.getElementById('form-del-rol-<?= $rItem['id'] ?>'), 'Eliminar Rol', '¿Seguro que desea eliminar el rol <?= htmlspecialchars($rItem['nombre'], ENT_QUOTES) ?>?', 'ph-trash', 'var(--color-principal)')">
                                 <i class="ph-bold ph-trash"></i> Eliminar
                             </button>
                         </div>
@@ -340,9 +366,9 @@ if (isset($privilegios)) {
                 <?php endforeach; ?>
             </div>
         </div>
+
     </div>
 </div>
-
 <!-- ==========================================================================
      BLOQUE 3: PLANTEL DOCENTE DEL SISTEMA
      ========================================================================== -->
@@ -357,7 +383,7 @@ if (isset($privilegios)) {
                 <p style="font-size: 0.85rem; color: #94a3b8; margin: 1rem 0;">No hay profesores o docentes registrados actualmente en la base de datos.</p>
             <?php else: ?>
                 <?php foreach ($profesores as $profe): ?>
-                    <div class="gestor-teacher-card">
+                    <div class="gestor-teacher-card teacher-card-item">
                         <div class="gestor-teacher-avatar">
                             <?= strtoupper(substr($profe['nombre_completo'], 0, 1)) ?>
                         </div>
@@ -375,6 +401,18 @@ if (isset($privilegios)) {
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
+
+        <!-- BARRAS Y CONTROLES DE PAGINACIÓN DOCENTES -->
+        <?php if (!empty($profesores)): ?>
+        <div id="teacherPaginationContainer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; flex-wrap: wrap; gap: 0.75rem; border-top: 1px solid #e2e8f0; padding-top: 0.75rem;">
+            <span id="teacherPaginationInfo" style="font-size: 0.82rem; color: #64748b; font-weight: 600;">Mostrando registros</span>
+            <div style="display: flex; gap: 0.4rem; align-items: center;">
+                <button id="btnPrevTeacherPage" onclick="changeTeacherPage(-1)" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem; border-color: #cbd5e1; color: #334155;">&lt; Anterior</button>
+                <span id="teacherPageNum" style="font-size: 0.85rem; font-weight: 700; color: var(--color-principal); padding: 0 6px;">1</span>
+                <button id="btnNextTeacherPage" onclick="changeTeacherPage(1)" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem; border-color: #cbd5e1; color: #334155;">Siguiente &gt;</button>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -388,10 +426,17 @@ if (isset($privilegios)) {
             <button type="button" onclick="toggleModalCrearUsuario(false)" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b;">✕</button>
         </div>
 
-        <form action="crear-usuario" method="POST" style="display: flex; flex-direction: column; gap: 0.85rem;">
+        <form action="crear-usuario" method="POST" style="display: flex; flex-direction: column; gap: 0.85rem;" onsubmit="actualizarCedulaCrearUsuario()">
             <div>
                 <label style="font-size: 0.78rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 4px;">Cédula de Identidad</label>
-                <input type="text" name="cedula" class="sa-filter-input" placeholder="Ej: V-12345678" required style="width: 100%; box-sizing: border-box;">
+                <div style="display: flex; gap: 0.5rem; align-items: stretch;">
+                    <select id="crear_usr_cedula_tipo" class="sa-filter-input" style="width: 80px; flex-shrink: 0; cursor: pointer; font-weight: 700;" onchange="actualizarCedulaCrearUsuario()">
+                        <option value="V-">V-</option>
+                        <option value="E-">E-</option>
+                    </select>
+                    <input type="text" inputmode="numeric" id="crear_usr_cedula_num" class="sa-filter-input" placeholder="Ej: 12345678" required maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); actualizarCedulaCrearUsuario();" style="flex: 1; box-sizing: border-box;">
+                    <input type="hidden" name="cedula" id="crear_usr_cedula_hidden">
+                </div>
             </div>
 
             <div>
@@ -401,7 +446,8 @@ if (isset($privilegios)) {
 
             <div>
                 <label style="font-size: 0.78rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 4px;">Correo Electrónico</label>
-                <input type="email" name="email" class="sa-filter-input" placeholder="ejemplo@upttmbi.edu.ve" required style="width: 100%; box-sizing: border-box;">
+                <input type="email" name="email" id="crear_usr_email" class="sa-filter-input" placeholder="ejemplo@upttmbi.edu.ve" required style="width: 100%; box-sizing: border-box;" onblur="validarEmailEnVivo(this, 'msg_email_crear')" oninput="limpiarMensajeEmail('msg_email_crear')">
+                <div id="msg_email_crear" style="font-size: 0.73rem; margin-top: 4px; display: none;"></div>
             </div>
 
             <div>
@@ -418,9 +464,9 @@ if (isset($privilegios)) {
                 <input type="password" name="password" class="sa-filter-input" placeholder="••••••••" required style="width: 100%; box-sizing: border-box;">
             </div>
 
-            <div style="display: flex; flex-direction: row; gap: 0.75rem; justify-content: flex-end; align-items: center; margin-top: 1.25rem;">
-                <button type="button" onclick="toggleModalCrearUsuario(false)" style="flex: 1; border: 1px solid #cbd5e1; background: #ffffff; color: #64748b; padding: 0 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700; height: 40px; line-height: 40px; text-align: center; cursor: pointer; box-sizing: border-box; margin: 0; outline: none; display: block;">Cancelar</button>
-                <button type="submit" style="flex: 1; background: var(--color-secundario, #2563eb) !important; color: #ffffff !important; border: none; padding: 0 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700; height: 40px; line-height: 40px; text-align: center; cursor: pointer; box-sizing: border-box; margin: 0; outline: none; display: block;">Guardar Usuario</button>
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end; align-items: center; margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+                <button type="button" onclick="toggleModalCrearUsuario(false)" class="sa-btn sa-btn-cancel" style="min-width: 110px;">Cancelar</button>
+                <button type="submit" class="sa-btn sa-btn-primary" style="min-width: 140px;">Guardar Usuario</button>
             </div>
         </form>
     </div>
@@ -430,7 +476,7 @@ if (isset($privilegios)) {
 
 <div id="modalEditarUsuario"
     style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center;">
-    <div style="background: #ffffff; width: 100%; max-width: 480px; border-radius: 12px; padding: 1.75rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(226, 232, 240, 0.8);">
+    <div style="background: #ffffff; width: 100%; max-width: 480px; border-radius: var(--radius-md); padding: 1.75rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(80, 89, 132, 0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
             <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--color-principal); display: flex; align-items: center; gap: 8px;">
                 <i class="ph-bold ph-user-plus" style="color: var(--color-secundario);"></i>  Editar Usuario
@@ -445,19 +491,22 @@ if (isset($privilegios)) {
 
         <form action="procesar-edicion-usuario"
               method="POST"
-              style="display: flex; flex-direction: column; gap: 0.85rem;">
+              style="display: flex; flex-direction: column; gap: 0.85rem;"
+              onsubmit="actualizarCedulaEditarUsuario()">
 
             <input type="hidden" name="usuario_id" id="editarUsuarioId">
             <input type="hidden" name="cedula_original" id="editarCedulaOriginal">
 
             <div>
-                <label>Cédula de Identidad</label>
-                <input type="text"
-                       name="cedula"
-                       id="editarCedula"
-                       class="sa-filter-input"
-                       required
-                       style="width: 100%; box-sizing: border-box;">
+                <label style="font-size: 0.78rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 4px;">Cédula de Identidad</label>
+                <div style="display: flex; gap: 0.5rem; align-items: stretch;">
+                    <select id="editarCedulaTipo" class="sa-filter-input" style="width: 80px; flex-shrink: 0; cursor: pointer; font-weight: 700;" onchange="actualizarCedulaEditarUsuario()">
+                        <option value="V-">V-</option>
+                        <option value="E-">E-</option>
+                    </select>
+                    <input type="text" inputmode="numeric" id="editarCedulaNum" class="sa-filter-input" placeholder="Ej: 12345678" required maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); actualizarCedulaEditarUsuario();" style="flex: 1; box-sizing: border-box;">
+                    <input type="hidden" name="cedula" id="editarCedula">
+                </div>
             </div>
 
             <div>
@@ -477,7 +526,10 @@ if (isset($privilegios)) {
                        id="editarEmail"
                        class="sa-filter-input"
                        required
-                       style="width: 100%; box-sizing: border-box;">
+                       style="width: 100%; box-sizing: border-box;"
+                       onblur="validarEmailEnVivo(this, 'msg_email_editar', document.getElementById('editarId').value)"
+                       oninput="limpiarMensajeEmail('msg_email_editar')">
+                <div id="msg_email_editar" style="font-size: 0.73rem; margin-top: 4px; display: none;"></div>
             </div>
 
             <div>
@@ -513,14 +565,14 @@ if (isset($privilegios)) {
                        style="width: 100%; box-sizing: border-box;">
             </div>
 
-            <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.75rem;">
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end; align-items: center; margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
                 <button type="button"
                         onclick="toggleModalEditarUsuario(false)"
-                        class="btn btn-outline" style="border-color: #cbd5e1; color: #64748b; padding: 0.65rem 1rem; border-radius: 6px; font-size: 0.85rem;">Cancelar</button>
+                        class="sa-btn sa-btn-cancel" style="min-width: 110px;">Cancelar</button>
 
                 <button type="submit"
-                        class="btn btn-solid"
-                        style="background: var(--color-secundario) !important; color: #ffffff !important; border: none;">
+                        class="sa-btn sa-btn-primary"
+                        style="min-width: 140px;">
                     Guardar Cambios
                 </button>
             </div>
@@ -530,7 +582,7 @@ if (isset($privilegios)) {
 
 <!-- MODAL PARA CREAR NUEVO ROL -->
 <div id="modalCrearRol" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center;">
-    <div style="background: #ffffff; width: 100%; max-width: 400px; border-radius: 12px; padding: 1.75rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(226, 232, 240, 0.8);">
+    <div style="background: #ffffff; width: 100%; max-width: 400px; border-radius: var(--radius-md); padding: 1.75rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(80, 89, 132, 0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
             <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--color-principal); display: flex; align-items: center; gap: 8px;">
                 <i class="ph-bold ph-shield-plus" style="color: var(--color-secundario);"></i> Crear Nuevo Rol
@@ -558,22 +610,22 @@ if (isset($privilegios)) {
                 </select>
             </div>
 
-            <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.75rem;">
-                <button type="button" onclick="toggleModalCrearRol(false)" class="btn btn-outline" style="border-color: #cbd5e1; color: #64748b; padding: 0.65rem 1rem; border-radius: 6px; font-size: 0.85rem;">Cancelar</button>
-                <button type="submit" class="btn btn-solid" style="background: var(--color-secundario) !important; color: #ffffff !important; border: none; padding: 0.65rem 1.25rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700;">Crear Rol</button>
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end; align-items: center; margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+                <button type="button" onclick="toggleModalCrearRol(false)" class="sa-btn sa-btn-cancel" style="min-width: 110px;">Cancelar</button>
+                <button type="submit" class="sa-btn sa-btn-primary" style="min-width: 120px;">Crear Rol</button>
             </div>
         </form>
     </div>
 </div>
 <!-- MODAL DE CONFIRMACIÓN UNIVERSAL -->
 <div id="modalConfirmacionUsuarios" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); z-index: 99999; align-items: center; justify-content: center;">
-    <div style="background: #ffffff; border-radius: 12px; width: 90%; max-width: 400px; padding: 2rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); text-align: center;">
+    <div style="background: #ffffff; border-radius: var(--radius-md); width: 90%; max-width: 400px; padding: 2rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); text-align: center; border: 1px solid rgba(80, 89, 132, 0.2);">
         <div id="modalConfirmIcon" style="font-size: 3.5rem; margin-bottom: 1rem;"></div>
         <h3 id="modalConfirmTitle" style="margin: 0 0 0.5rem 0; font-size: 1.2rem; color: var(--texto-titulos);"></h3>
         <p id="modalConfirmMessage" style="color: var(--texto-silenciado); font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5;"></p>
-        <div style="display: flex; justify-content: center; gap: 0.5rem;">
-            <button type="button" class="btn btn-outline" onclick="document.getElementById('modalConfirmacionUsuarios').style.display='none'" style="border-color: #cbd5e1; color: #64748b;">Cancelar</button>
-            <button type="button" id="modalConfirmBtn" class="btn btn-solid" style="color: #ffffff;">Confirmar</button>
+        <div style="display: flex; justify-content: center; gap: 0.75rem;">
+            <button type="button" class="sa-btn sa-btn-cancel" onclick="document.getElementById('modalConfirmacionUsuarios').style.display='none'" style="min-width: 110px;">Cancelar</button>
+            <button type="button" id="modalConfirmBtn" class="sa-btn sa-btn-dark" style="min-width: 110px;">Confirmar</button>
         </div>
     </div>
 </div>
@@ -583,6 +635,48 @@ if (isset($privilegios)) {
     <input type="hidden" name="nivel" id="inputEliminarNivel" value="">
 </form>
 <script>
+function validarEmailEnVivo(inputEl, msgBoxId, excluirId = 0) {
+    const val = inputEl.value.trim();
+    const msgBox = document.getElementById(msgBoxId);
+    if (!msgBox || !val) return;
+
+    if (!val.includes('@') || !val.includes('.')) {
+        msgBox.style.display = 'block';
+        msgBox.style.color = '#dc2626';
+        msgBox.innerHTML = '<i class="ph-bold ph-warning-circle"></i> Formato de correo no válido.';
+        return;
+    }
+
+    msgBox.style.display = 'block';
+    msgBox.style.color = '#0284c7';
+    msgBox.innerHTML = '<i class="ph-bold ph-spinner"></i> Comprobando disponibilidad del correo...';
+
+    const url = 'verificar-email-usuario?email=' + encodeURIComponent(val) + (excluirId ? '&excluir_id=' + encodeURIComponent(excluirId) : '');
+
+    fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            if (!data.valido || !data.disponible) {
+                msgBox.style.color = '#dc2626';
+                msgBox.innerHTML = '<i class="ph-bold ph-x-circle"></i> ' + data.mensaje;
+            } else {
+                msgBox.style.color = '#16a34a';
+                msgBox.innerHTML = '<i class="ph-bold ph-check-circle"></i> ' + data.mensaje;
+            }
+        })
+        .catch(() => {
+            msgBox.style.display = 'none';
+        });
+}
+
+function limpiarMensajeEmail(msgBoxId) {
+    const msgBox = document.getElementById(msgBoxId);
+    if (msgBox) {
+        msgBox.style.display = 'none';
+        msgBox.innerHTML = '';
+    }
+}
+
 function switchUserTab(tabId, btnElement) {
     const tabs = document.querySelectorAll('.sa-tab-content');
     tabs.forEach(tab => {
@@ -603,6 +697,10 @@ function switchUserTab(tabId, btnElement) {
         btnElement.classList.add('tab-active');
     }
 
+    if (tabId === 'tab-docentes') {
+        applyTeacherPagination();
+    }
+
     sessionStorage.setItem('gestorUsuariosTab', tabId);
 }
 
@@ -614,7 +712,7 @@ function toggleModalCrearUsuario(show) {
 }
 
 let currentUserPage = 1;
-const itemsPerPage = 10;
+const itemsPerPage = <?= (int)($paginacionUsuarios ?? 15) ?>;
 
 function filterUserTable() {
     currentUserPage = 1;
@@ -691,6 +789,60 @@ function changeUserPage(dir) {
     currentUserPage += dir;
     applyPaginationAndFilter();
 }
+
+let currentTeacherPage = 1;
+const teachersPerPage = <?= (int)($paginacionDocentes ?? 15) ?>;
+
+function applyTeacherPagination() {
+    const cards = Array.from(document.querySelectorAll('.teacher-card-item'));
+    if (!cards.length) return;
+
+    cards.forEach(c => c.style.display = 'none');
+
+    const totalMatches = cards.length;
+    const totalPages = Math.ceil(totalMatches / teachersPerPage) || 1;
+
+    if (currentTeacherPage > totalPages) currentTeacherPage = totalPages;
+    if (currentTeacherPage < 1) currentTeacherPage = 1;
+
+    const startIdx = (currentTeacherPage - 1) * teachersPerPage;
+    const endIdx = startIdx + teachersPerPage;
+
+    const visibleCards = cards.slice(startIdx, endIdx);
+    visibleCards.forEach(c => c.style.display = '');
+
+    const infoSpan = document.getElementById('teacherPaginationInfo');
+    const pageNumSpan = document.getElementById('teacherPageNum');
+    const btnPrev = document.getElementById('btnPrevTeacherPage');
+    const btnNext = document.getElementById('btnNextTeacherPage');
+
+    if (infoSpan) {
+        const displayStart = startIdx + 1;
+        const displayEnd = Math.min(endIdx, totalMatches);
+        infoSpan.textContent = `Mostrando ${displayStart}-${displayEnd} de ${totalMatches} docentes registrados`;
+    }
+
+    if (pageNumSpan) {
+        pageNumSpan.textContent = `Página ${currentTeacherPage} de ${totalPages}`;
+    }
+
+    if (btnPrev) {
+        btnPrev.disabled = (currentTeacherPage <= 1);
+        btnPrev.style.opacity = (currentTeacherPage <= 1) ? '0.5' : '1';
+        btnPrev.style.cursor = (currentTeacherPage <= 1) ? 'not-allowed' : 'pointer';
+    }
+
+    if (btnNext) {
+        btnNext.disabled = (currentTeacherPage >= totalPages);
+        btnNext.style.opacity = (currentTeacherPage >= totalPages) ? '0.5' : '1';
+        btnNext.style.cursor = (currentTeacherPage >= totalPages) ? 'not-allowed' : 'pointer';
+    }
+}
+
+function changeTeacherPage(dir) {
+    currentTeacherPage += dir;
+    applyTeacherPagination();
+}
 function toggleModalEditarUsuario(show) {
     const modal = document.getElementById('modalEditarUsuario');
 
@@ -705,10 +857,47 @@ function toggleModalCrearRol(show) {
     }
 }
 
+function actualizarCedulaCrearUsuario() {
+    const tipo = document.getElementById('crear_usr_cedula_tipo')?.value || 'V-';
+    const num = document.getElementById('crear_usr_cedula_num')?.value.trim().replace(/\D/g, '') || '';
+    const hidden = document.getElementById('crear_usr_cedula_hidden');
+    if (hidden) hidden.value = num ? (tipo + num) : '';
+}
+
+function actualizarCedulaEditarUsuario() {
+    const tipo = document.getElementById('editarCedulaTipo')?.value || 'V-';
+    const num = document.getElementById('editarCedulaNum')?.value.trim().replace(/\D/g, '') || '';
+    const hidden = document.getElementById('editarCedula');
+    if (hidden) hidden.value = num ? (tipo + num) : '';
+}
+
+function actualizarCedulaInvitarDocente() {
+    const tipo = document.getElementById('invitar_docente_tipo')?.value || 'V-';
+    const num = document.getElementById('invitar_docente_num')?.value.trim().replace(/\D/g, '') || '';
+    const hidden = document.getElementById('invitar_docente_hidden');
+    if (hidden) hidden.value = num ? (tipo + num) : '';
+}
+
 function abrirModalEditarUsuario(usuario) {
     document.getElementById('editarUsuarioId').value = usuario.id;
     document.getElementById('editarCedulaOriginal').value = usuario.cedula;
-    document.getElementById('editarCedula').value = usuario.cedula;
+
+    let rawCed = String(usuario.cedula || '').trim();
+    let tipo = 'V-';
+    if (rawCed.toUpperCase().startsWith('E-')) {
+        tipo = 'E-';
+        rawCed = rawCed.substring(2);
+    } else if (rawCed.toUpperCase().startsWith('V-')) {
+        tipo = 'V-';
+        rawCed = rawCed.substring(2);
+    }
+    const num = rawCed.replace(/\D/g, '');
+    const tipoSelect = document.getElementById('editarCedulaTipo');
+    const numInput = document.getElementById('editarCedulaNum');
+    if (tipoSelect) tipoSelect.value = tipo;
+    if (numInput) numInput.value = num;
+    document.getElementById('editarCedula').value = num ? (tipo + num) : '';
+
     document.getElementById('editarNombre').value = usuario.nombre;
     document.getElementById('editarEmail').value = usuario.email;
 
@@ -731,6 +920,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     switchUserTab(tabId, boton);
     applyPaginationAndFilter();
+    applyTeacherPagination();
 });
 function mostrarConfirmacionUsuarios(form, titulo, mensaje, icono, color) {
     document.getElementById('modalConfirmTitle').textContent = titulo;
@@ -746,6 +936,62 @@ function mostrarConfirmacionUsuarios(form, titulo, mensaje, icono, color) {
 function confirmarEliminacionNivel(nivel) {
     document.getElementById('inputEliminarNivel').value = nivel;
     const form = document.getElementById('formEliminarNivel');
-    mostrarConfirmacionUsuarios(form, 'Eliminar Nivel', `¿Seguro que deseas eliminar el nivel de privilegio ${nivel}? Esta acción fallará por seguridad si aún existen roles asignados a esta jerarquía.`, 'ph-trash', '#ef4444');
+    mostrarConfirmacionUsuarios(form, 'Eliminar Nivel', `¿Seguro que deseas eliminar el nivel de privilegio ${nivel}? Esta acción fallará por seguridad si aún existen roles asignados a esta jerarquía.`, 'ph-trash', 'var(--color-principal)');
+}
+function toggleModalInvitarProfesor(show) {
+    const modal = document.getElementById('modalInvitarProfesor');
+    if (modal) {
+        modal.style.display = show ? 'flex' : 'none';
+    }
 }
 </script>
+
+<!-- MODAL: INVITAR PROFESOR POR CORREO -->
+<div id="modalInvitarProfesor" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18, 26, 62, 0.6); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center; padding: 1rem;">
+    <div class="glass-panel" style="background: #ffffff; width: 100%; max-width: 500px; border-radius: var(--radius-md); padding: 1.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(80,89,132,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+            <h3 style="margin: 0; font-size: 1.1rem; color: #121a3e; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                <i class="ph-bold ph-envelope-simple-open" style="color: #7090cb;"></i> Invitar Nuevo Docente / Profesor
+            </h3>
+            <button type="button" onclick="toggleModalInvitarProfesor(false)" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer;">&times;</button>
+        </div>
+        <p style="font-size: 0.85rem; color: #64748b; margin-top: 0; margin-bottom: 1.25rem;">
+            Emita un token de invitación firmado enviado al correo institucional del docente para que defina su propia contraseña y active su cuenta.
+        </p>
+
+        <form action="invitar-profesor" method="POST" onsubmit="actualizarCedulaInvitarDocente()">
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+            <div style="margin-bottom: 1rem;">
+                <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 4px;">Cédula de Identidad (*):</label>
+                <div style="display: flex; gap: 0.5rem; align-items: stretch;">
+                    <select id="invitar_docente_tipo" class="sa-filter-input" style="width: 80px; flex-shrink: 0; cursor: pointer; font-weight: 700;" onchange="actualizarCedulaInvitarDocente()">
+                        <option value="V-">V-</option>
+                        <option value="E-">E-</option>
+                    </select>
+                    <input type="text" inputmode="numeric" id="invitar_docente_num" class="sa-filter-input" placeholder="Ej: 12345678" required maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); actualizarCedulaInvitarDocente();" style="flex: 1; box-sizing: border-box;">
+                    <input type="hidden" name="cedula" id="invitar_docente_hidden">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 4px;">Nombre Completo (*):</label>
+                <input type="text" name="nombre" required class="sa-filter-input" style="width: 100%;" placeholder="Ej: Prof. María Pérez">
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+                <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 4px;">Correo Institucional (*):</label>
+                <input type="email" name="email" id="invitar_email" required class="sa-filter-input" style="width: 100%; box-sizing: border-box;" placeholder="docente@upttmbi.edu.ve"
+                       onblur="validarEmailEnVivo(this, 'msg_email_invitar')"
+                       oninput="limpiarMensajeEmail('msg_email_invitar')">
+                <div id="msg_email_invitar" style="font-size: 0.73rem; margin-top: 4px; display: none;"></div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+                <button type="button" onclick="toggleModalInvitarProfesor(false)" class="sa-btn sa-btn-cancel" style="min-width: 110px;">Cancelar</button>
+                <button type="submit" class="sa-btn sa-btn-dark" style="min-width: 150px;">
+                    <i class="ph-bold ph-paper-plane-tilt"></i> Emitir Invitación
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

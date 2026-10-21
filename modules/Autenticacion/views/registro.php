@@ -15,7 +15,7 @@
             
             <h2 style="color: var(--color-principal); margin-bottom: 0.5rem; font-size: 1.8rem; font-weight: 800;">Crear Cuenta</h2>
             <p class="login-form-instruction" style="margin-bottom: 1.5rem;">
-                Complete sus datos para registrarse como estudiante del PNF en Informática.
+                Complete sus datos para registrarse como estudiante del PNF en Informática o solicitar su cuenta como docente.
             </p>
 
             <?php if (isset($error) && $error !== null): ?>
@@ -35,8 +35,15 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="login-flat-group">
-                        <label for="cedula">Cédula:</label>
-                        <input type="text" id="cedula" name="cedula" class="login-flat-input" placeholder="V-12345678" required autocomplete="off">
+                        <label for="cedula_num">Cédula:</label>
+                        <div style="display: flex; gap: 0.5rem; align-items: stretch;">
+                            <select id="cedula_tipo" name="cedula_tipo" class="login-flat-input" style="width: 80px; flex-shrink: 0; cursor: pointer; font-weight: 700;" onchange="actualizarCedulaRegistro()">
+                                <option value="V-">V-</option>
+                                <option value="E-">E-</option>
+                            </select>
+                            <input type="text" inputmode="numeric" id="cedula_num" name="cedula_num" class="login-flat-input" placeholder="Ej: 12345678" required autocomplete="off" maxlength="9" oninput="this.value = this.value.replace(/\D/g, ''); actualizarCedulaRegistro();" style="flex: 1;">
+                            <input type="hidden" id="cedula" name="cedula">
+                        </div>
                     </div>
 
                     <div class="login-flat-group">
@@ -48,6 +55,33 @@
                 <div class="login-flat-group">
                     <label for="email">Correo Electrónico:</label>
                     <input type="email" id="email" name="email" class="login-flat-input" required autocomplete="email">
+                </div>
+
+                <!-- TIPO DE CUENTA: ESTUDIANTE O DOCENTE (REGISTRO DE PROFESORES EN LÍNEA) -->
+                <div class="login-flat-group">
+                    <label>Tipo de Cuenta:</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 10px; font-weight: 600; color: #121a3e;">
+                            <input type="radio" name="tipo_cuenta" value="estudiante" checked onchange="toggleTipoCuentaRegistro()" style="accent-color: #505984;">
+                            <i class="ph-bold ph-student"></i> Estudiante
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 10px; font-weight: 600; color: #121a3e;">
+                            <input type="radio" name="tipo_cuenta" value="docente" onchange="toggleTipoCuentaRegistro()" style="accent-color: #505984;">
+                            <i class="ph-bold ph-chalkboard-teacher"></i> Docente / Profesor
+                        </label>
+                    </div>
+                </div>
+
+                <div id="bloqueRegistroDocente" style="display: none;">
+                    <div style="background: rgba(112, 144, 203, 0.12); border-left: 4px solid #7090cb; color: #121a3e; padding: 0.6rem 0.8rem; border-radius: 4px; font-size: 0.8rem; margin-bottom: 0.8rem;">
+                        <i class="ph-bold ph-info"></i> Las cuentas docentes quedan <strong>pendientes de aprobación</strong> por el Comité o la Administración antes de poder iniciar sesión.
+                    </div>
+                    <?php
+                    $pstIdPrefijo = 'regpst';
+                    $pstEsProfesor = false;
+                    $pstSeleccion = [];
+                    include __DIR__ . '/partials/selector_pst.php';
+                    ?>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -141,7 +175,7 @@ function evaluarFortalezaClave(val) {
     const hasLength = val.length >= 8;
     const hasUpper = /[A-Z]/.test(val);
     const hasNumber = /[0-9]/.test(val);
-    const hasSpecial = /[@$!%*?&._\-\#\^\(\)\{\}\[\]]/.test(val);
+    const hasSpecial = /[^a-zA-Z0-9\s]/.test(val);
 
     // Actualizar items de reglas
     actualizarReglaItem('ruleLength', hasLength);
@@ -217,4 +251,33 @@ function validarCoincidenciaClave() {
         matchLabel.style.color = '#ef4444';
     }
 }
+
+function actualizarCedulaRegistro() {
+    const tipoEl = document.getElementById('cedula_tipo');
+    const numEl = document.getElementById('cedula_num');
+    const hiddenEl = document.getElementById('cedula');
+    if (!tipoEl || !numEl || !hiddenEl) return;
+    const num = numEl.value.trim().replace(/\D/g, '');
+    hiddenEl.value = num ? (tipoEl.value + num) : '';
+}
+
+function toggleTipoCuentaRegistro() {
+    const sel = document.querySelector('input[name="tipo_cuenta"]:checked');
+    const bloque = document.getElementById('bloqueRegistroDocente');
+    const btn = document.getElementById('btnSubmitRegistro');
+    const esDocente = sel && sel.value === 'docente';
+    if (bloque) bloque.style.display = esDocente ? 'block' : 'none';
+    if (btn) btn.textContent = esDocente ? 'Solicitar Registro Docente' : 'Registrar Usuario';
+}
+
+document.querySelector('.login-flat-form')?.addEventListener('submit', function(e) {
+    actualizarCedulaRegistro();
+    const sel = document.querySelector('input[name="tipo_cuenta"]:checked');
+    const chkPst = document.getElementById('regpst-check');
+    if (sel && sel.value === 'docente' && chkPst && chkPst.checked
+        && document.querySelectorAll('#regpst-matriz input[name="pst_asignaciones[]"]:checked').length === 0) {
+        e.preventDefault();
+        alert('Indique al menos un trayecto y trimestre en el que dicta PST, o desmarque la opción de profesor PST.');
+    }
+});
 </script>

@@ -417,6 +417,45 @@ endforeach;
 <?php unset($_SESSION['flash_error']); endif; ?>
 
 <script>
+const profesoresPSTData = <?= json_encode($profesoresPST ?? []) ?>;
+
+function filtrarProfesores() {
+    const trSelect = document.getElementById('swal-trayecto');
+    const profSelect = document.getElementById('swal-profesor');
+    if (!trSelect || !profSelect) return;
+
+    const trayecto = parseInt(trSelect.value);
+    
+    profSelect.innerHTML = '<option value="">Seleccione...</option>';
+    
+    if (!trayecto) {
+        profSelect.innerHTML = '<option value="">Seleccione su Trayecto primero...</option>';
+        return;
+    }
+
+    const filtrados = profesoresPSTData.filter(p => {
+        if (Array.isArray(p.trayectos)) {
+            return p.trayectos.map(Number).includes(trayecto);
+        }
+        if (Array.isArray(p.asignaciones)) {
+            return p.asignaciones.some(a => Number(a.trayecto) === trayecto);
+        }
+        return Number(p.trayecto) === trayecto;
+    });
+    
+    if (filtrados.length === 0) {
+        profSelect.innerHTML = '<option value="">No hay docentes PST registrados para este trayecto</option>';
+        return;
+    }
+
+    filtrados.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.nombre_completo + (p.email ? ' (' + p.email + ')' : '');
+        profSelect.appendChild(opt);
+    });
+}
+
 function verDetalles(id, empresa, cupos, linea, area, problema, estadoPrevio = '', skipWarning = false) {
     if (!skipWarning) {
         if (estadoPrevio === 'Aceptado' || estadoPrevio === 'Pendiente') {
@@ -458,6 +497,25 @@ function verDetalles(id, empresa, cupos, linea, area, problema, estadoPrevio = '
                 <p style="background: #f8fafc; padding: 10px; border-radius: 5px; border-left: 4px solid #505984;">${problema}</p>
                 
                 <hr style="margin: 15px 0;">
+                <h4 style="margin-bottom: 10px; color:#2b3453; font-weight:bold;">Datos Académicos (PST)</h4>
+                <div style="margin-bottom: 15px;">
+                    <label for="swal-trayecto" style="display:block; font-size: 0.85rem; font-weight:bold; margin-bottom:4px;">Trayecto actual</label>
+                    <select id="swal-trayecto" class="swal2-select" style="width: 100%; margin: 0; padding: 6px; font-size: 0.85rem;" onchange="filtrarProfesores()">
+                        <option value="">Seleccione su Trayecto...</option>
+                        <?php foreach ($catTrayectos as $val => $nom): ?>
+                            <option value="<?= $val ?>"><?= htmlspecialchars($nom) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label for="swal-profesor" style="display:block; font-size: 0.85rem; font-weight:bold; margin-bottom:4px;">Profesor PST deseado</label>
+                    <select id="swal-profesor" class="swal2-select" style="width: 100%; margin: 0; padding: 6px; font-size: 0.85rem;">
+                        <option value="">Seleccione su Trayecto primero...</option>
+                    </select>
+                    <p style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">Seleccione su Trayecto para ver los profesores PST disponibles.</p>
+                </div>
+
                 <h4 style="margin-bottom: 5px; color:#2b3453; font-weight:bold;">Mensaje de Motivación</h4>
                 <textarea id="swal-motivacion" class="swal2-textarea" style="width: 100%; margin: 0; padding: 10px; font-size: 0.9rem;" placeholder="¿Por qué tu equipo es ideal para este proyecto? ¿Qué habilidades tienen?"></textarea>
                 
@@ -480,6 +538,9 @@ function verDetalles(id, empresa, cupos, linea, area, problema, estadoPrevio = '
             let count = 0;
             const container = document.getElementById('team-members-container');
             const btnAdd = document.getElementById('btn-add-member');
+            
+            // Render initial profesor list if values exist (unlikely on first open)
+            filtrarProfesores();
             
             btnAdd.addEventListener('click', () => {
                 let maxComps = Math.max(0, parseInt(cupos) - 1);
@@ -506,7 +567,15 @@ function verDetalles(id, empresa, cupos, linea, area, problema, estadoPrevio = '
             });
         },
         preConfirm: () => {
+            const trayecto = document.getElementById('swal-trayecto').value;
+            const profesorId = document.getElementById('swal-profesor').value;
             const motivacion = document.getElementById('swal-motivacion').value.trim();
+            
+            if (!trayecto || !profesorId) {
+                Swal.showValidationMessage('Debe seleccionar su Trayecto y el Profesor PST deseado.');
+                return false;
+            }
+
             if (!motivacion) {
                 Swal.showValidationMessage('El mensaje de motivación es obligatorio para que la empresa y el comité conozcan tu perfil.');
                 return false;
@@ -526,6 +595,8 @@ function verDetalles(id, empresa, cupos, linea, area, problema, estadoPrevio = '
             }
             
             return {
+                trayecto: trayecto,
+                id_profesor_pst: profesorId,
                 motivacion: motivacion,
                 equipo: members.length > 0 ? JSON.stringify(members) : ''
             };
@@ -536,24 +607,23 @@ function verDetalles(id, empresa, cupos, linea, area, problema, estadoPrevio = '
             form.method = 'POST';
             form.action = '?ruta=postular-oportunidad';
             
-            const inputId = document.createElement('input');
-            inputId.type = 'hidden';
-            inputId.name = 'id_investigacion';
-            inputId.value = id;
-            form.appendChild(inputId);
-            
-            const inputMot = document.createElement('input');
-            inputMot.type = 'hidden';
-            inputMot.name = 'motivacion';
-            inputMot.value = result.value.motivacion;
-            form.appendChild(inputMot);
+            const fields = {
+                'id_investigacion': id,
+                'trayecto': result.value.trayecto,
+                'id_profesor_pst': result.value.id_profesor_pst,
+                'motivacion': result.value.motivacion
+            };
             
             if (result.value.equipo) {
-                const inputEq = document.createElement('input');
-                inputEq.type = 'hidden';
-                inputEq.name = 'equipo_extra';
-                inputEq.value = result.value.equipo;
-                form.appendChild(inputEq);
+                fields['equipo_extra'] = result.value.equipo;
+            }
+
+            for (const key in fields) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = fields[key];
+                form.appendChild(input);
             }
             
             document.body.appendChild(form);

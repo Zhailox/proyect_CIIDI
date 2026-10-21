@@ -89,9 +89,9 @@ $is_logged = Auth::check();
             <?php foreach ($agrupadas[$key] as $inv): ?>
             <?php $yaPostulado = in_array($inv['id'], $postuladas_ids); ?>
             <div style="background: white; border: 1px solid rgba(80,89,132,0.15); border-radius: 12px; padding: 1.2rem; box-shadow: 0 4px 6px rgba(15,23,42,0.02); transition:transform 0.2s; cursor:pointer;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
-                <div style="font-size:0.75rem; font-weight:700; color:var(--inv-primary); margin-bottom:0.5rem; text-transform:uppercase; display:flex; align-items:center; gap:0.3rem;"><i class="ph-bold ph-bookmark-simple"></i> <?= htmlspecialchars($inv['linea_nombre']) ?></div>
-                <h4 style="font-size:1rem; font-weight:700; color:var(--inv-dark); margin-bottom:0.5rem; line-height:1.4;"><?= htmlspecialchars($inv['titulo']) ?></h4>
-                <p style="font-size:0.85rem; color:var(--inv-muted); line-height:1.5; margin-bottom:1.2rem; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;"><?= htmlspecialchars(mb_substr($inv['planteamiento_problema'], 0, 120)) ?>...</p>
+                <div style="font-size:0.75rem; font-weight:700; color:var(--inv-primary); margin-bottom:0.5rem; text-transform:uppercase; display:flex; align-items:center; gap:0.3rem;"><i class="ph-bold ph-bookmark-simple"></i> <?= htmlspecialchars($inv['linea_nombre'] ?? '') ?></div>
+                <h4 style="font-size:1rem; font-weight:700; color:var(--inv-dark); margin-bottom:0.5rem; line-height:1.4;"><?= htmlspecialchars($inv['titulo'] ?? '') ?></h4>
+                <p style="font-size:0.85rem; color:var(--inv-muted); line-height:1.5; margin-bottom:1.2rem; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;"><?= htmlspecialchars(mb_substr($inv['planteamiento_problema'] ?? '', 0, 120)) ?>...</p>
                 <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--inv-border); padding-top:1rem;">
                     <span style="font-size:0.8rem; font-weight:700; color:var(--inv-muted);"><i class="ph-fill ph-users-three"></i> <?= (int)$inv['cupos_disponibles'] ?> Vacantes</span>
                     <?php if ($yaPostulado): ?>

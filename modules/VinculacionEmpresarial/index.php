@@ -84,27 +84,71 @@ class VinculacionEmpresarialModule implements ModuleContract {
                 'controlador_path' => __DIR__ . '/controllers/TransparenciaController.php',
                 'metodo'           => 'rastrear',
                 'oculto'           => true
+            ],
+            'postulaciones-pst' => [
+                'vista'  => __DIR__ . '/views/postulaciones_pst.php',
+                'titulo' => 'Postulaciones PST',
+                'css'    => $css_modulo,
+                'controlador' => 'ProfesorPSTController',
+                'controlador_path' => __DIR__ . '/controllers/ProfesorPSTController.php',
+                'metodo' => 'panel'
+            ],
+            'revisar-postulacion-pst' => [
+                'vista' => __DIR__ . '/controllers/ProfesorPSTController.php',
+                'metodo' => 'revisarPostulacion',
+                'oculto' => true
+            ],
+            'guardar-mi-perfil-pst' => [
+                'vista' => __DIR__ . '/controllers/ProfesorPSTController.php',
+                'metodo' => 'guardarMiPerfil',
+                'oculto' => true
+            ],
+            'profesores-pst' => [
+                'vista'  => __DIR__ . '/views/profesores_pst.php',
+                'titulo' => 'Docentes PST',
+                'css'    => $css_modulo,
+                'controlador' => 'ProfesorPSTController',
+                'controlador_path' => __DIR__ . '/controllers/ProfesorPSTController.php',
+                'metodo' => 'gestionProfesores'
+            ],
+            'guardar-profesor-pst' => [
+                'vista' => __DIR__ . '/controllers/ProfesorPSTController.php',
+                'metodo' => 'guardarProfesor',
+                'oculto' => true
+            ],
+            'resolver-registro-docente' => [
+                'vista' => __DIR__ . '/controllers/ProfesorPSTController.php',
+                'metodo' => 'resolverRegistro',
+                'oculto' => true
+            ],
+            'resolver-solicitud-pst' => [
+                'vista' => __DIR__ . '/controllers/ProfesorPSTController.php',
+                'metodo' => 'resolverSolicitudAcreditacion',
+                'oculto' => true
             ]
         ];
     }
 
     public function getMenuConfig(): array {
-        $nivelAdmin = SystemConfigService::get('accesos_modulos.vinculacion_empresarial.admin', 0);
-        $nivelPublico = SystemConfigService::get('accesos_modulos.vinculacion_empresarial.publico', 999);
-        $nivelLogueado = SystemConfigService::get('accesos_modulos.autenticacion.publico', 999);
+        $nivelAdmin = 0;
+        $nivelPublico = 999;
+        $nivelLogueado = 999;
         return [
             [
                 'tipo'        => 'parent',
                 'titulo'      => 'Sector Productivo',
                 'icono'       => 'ph-fill ph-buildings',
+                'orden'       => 60,
+                'grupo'       => 'lineas-investigacion',
+                'orden_en_grupo' => 40,
                 'enlace'      => 'empresas-inicio',
                 'privilegio_minimo' =>  $nivelPublico,
-                'activadores' => ['empresas-inicio', 'seguimiento-empresa', 'cartelera-oportunidades', 'gestion-proyectos', 'banco-propuestas', 'gestion-equipos', 'vinculacion-config'], 
+                'activadores' => ['empresas-inicio', 'seguimiento-empresa', 'cartelera-oportunidades', 'gestion-proyectos', 'banco-propuestas', 'gestion-equipos', 'vinculacion-config', 'postulaciones-pst', 'profesores-pst'], 
                 'subitems'    => [
                     ['ruta' => 'empresas-inicio', 'titulo' => 'Conócenos', 'privilegio_minimo' => $nivelPublico,],
                     ['ruta' => 'cartelera-oportunidades', 'titulo' => 'Oportunidades PST', 'privilegio_minimo' => $nivelLogueado],
                     ['ruta' => 'seguimiento-empresa', 'titulo' => 'Seguimiento', 'privilegio_minimo' => $nivelPublico,],
-                    ['ruta' => 'gestion-proyectos', 'titulo' => 'Gestión de Solicitudes', 'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'gestion-proyectos', 'titulo' => 'Gestión de Solicitudes', 'privilegio_minimo' => $nivelLogueado, 'roles_permitidos' => ['Super Administrador', 'Comité', 'Profesor', 'Docentes']],
                     ['ruta' => 'vinculacion-config', 'titulo' => 'Configuración', 'privilegio_minimo' => $nivelAdmin]
                 ]
             ]
@@ -119,7 +163,7 @@ class VinculacionEmpresarialModule implements ModuleContract {
     public function getHomeConfig(): array {
         return [
             'icono'       => 'ph-fill ph-buildings',
-            'titulo'      => 'Vinculación Empresarial',
+            'titulo' => 'Sector Productivo',
             'descripcion' => 'Conexión directa entre las necesidades tecnológicas del sector productivo y las soluciones de nuestro talento académico.',
             'enlace'      => 'empresas-inicio', 
             'texto_boton' => 'SECTOR PRODUCTIVO',

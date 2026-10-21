@@ -2,6 +2,7 @@
 // core/Services/MailService.php
 
 require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../Security/Crypto.php';
 require_once __DIR__ . '/../../modules/SuperAdmin/services/SystemConfigService.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
@@ -102,8 +103,9 @@ class MailService {
 
     /**
      * Envía un correo electrónico desacoplado procesando una plantilla/evento del sistema.
+     * Permite dispatching síncrono o asíncrono en segundo plano (non-blocking).
      */
-    public static function enviarEvento(string $templateKey, string $destinoEmail, array $variables = [], string $destinoNombre = 'Usuario'): array {
+    public static function enviarEvento(string $templateKey, string $destinoEmail, array $variables = [], string $destinoNombre = 'Usuario', bool $async = true): array {
         $plantillas = self::obtenerPlantillas();
 
         if (!isset($plantillas[$templateKey])) {
@@ -123,12 +125,33 @@ class MailService {
         // Reemplazar variables dinámicas en el Asunto y Cuerpo
         foreach ($variables as $clave => $valor) {
             $placeholder = '{' . strtoupper($clave) . '}';
-            $asunto = str_replace($placeholder, $valor, $asunto);
-            $cuerpoHtml = str_replace($placeholder, $valor, $cuerpoHtml);
+            $asunto = str_replace($placeholder, (string)$valor, $asunto);
+            $cuerpoHtml = str_replace($placeholder, (string)$valor, $cuerpoHtml);
         }
 
         $esCompleta = !empty($tpl['plantilla_completa']);
+
+        if ($async) {
+            return self::enviarAsincrono($destinoEmail, $destinoNombre, $asunto, $cuerpoHtml, '', $esCompleta);
+        }
+
         return self::enviar($destinoEmail, $destinoNombre, $asunto, $cuerpoHtml, '', $esCompleta);
+    }
+
+    /**
+     * Encola el correo en un buffer y lo dispara en segundo plano liberando la petición HTTP inmediatamente (< 50ms).
+     */
+    public static function enviarAsincrono(string $destinoEmail, string $destinoNombre, string $asunto, string $contenidoHtml, string $textoPlano = '', bool $esCompleta = false): array {
+        // En Linux / Windows con fastcgi_finish_request o shutdown hook
+        register_shutdown_function(function() use ($destinoEmail, $destinoNombre, $asunto, $contenidoHtml, $textoPlano, $esCompleta) {
+            if (function_exists('fastcgi_finish_request')) {
+                fastcgi_finish_request();
+            }
+            // Ejecutar envío real en segundo plano sin congelar la pantalla del usuario
+            @self::enviar($destinoEmail, $destinoNombre, $asunto, $contenidoHtml, $textoPlano, $esCompleta);
+        });
+
+        return ['exito' => true, 'mensaje' => 'Correo programado en segundo plano para ' . htmlspecialchars($destinoEmail)];
     }
 
     /**
@@ -140,18 +163,18 @@ class MailService {
         $host     = trim($configSmtp['host'] ?? '');
         $port     = (int)($configSmtp['port'] ?? 587);
         $user     = trim($configSmtp['user'] ?? '');
-        $pass     = trim($configSmtp['pass'] ?? '');
+        $passRaw  = trim($configSmtp['pass'] ?? '');
+        $pass     = str_replace(' ', '', Crypto::decrypt($passRaw));
         $fromEmail= trim($configSmtp['from_email'] ?? $user);
 
         if (empty($fromEmail)) {
-            $fromEmail = 'no-reply@upttmbi.edu.ve';
+            $fromEmail = !empty($user) ? $user : 'no-reply@upttmbi.edu.ve';
         }
 
         $mail = new PHPMailer(true);
 
         try {
             $mail->CharSet = 'UTF-8';
-
             $mail->isSMTP();
 
             // Si hay un host configurado en el panel, lo usamos; de lo contrario fallback a localhost
@@ -161,7 +184,9 @@ class MailService {
             $mail->Password   = $pass;
             $mail->SMTPSecure = ($port === 465) ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = $port;
-            $mail->Timeout    = 10;
+            
+            // Timeout de conexión TCP adecuado para DNS y TLS (15 segundos)
+            $mail->Timeout    = 15;
 
             $mail->setFrom($fromEmail, 'Sistema CIIDI - UPTTMBI');
             $mail->addAddress($destinoEmail, $destinoNombre);
@@ -176,7 +201,15 @@ class MailService {
             return ['exito' => true, 'mensaje' => 'Correo enviado exitosamente a ' . htmlspecialchars($destinoEmail)];
         } catch (Exception $e) {
             self::registrarLog($destinoEmail, $destinoNombre, $asunto, false, $mail->ErrorInfo);
-            return ['exito' => false, 'mensaje' => 'Error al enviar correo vía SMTP: ' . $mail->ErrorInfo];
+            if (class_exists('Connection')) Connection::logSystemError($e);
+            
+            $appDebug = class_exists('Env') ? Env::get('APP_DEBUG', false) : false;
+            $msg = $appDebug ? 'Error al enviar correo vía SMTP: ' . $mail->ErrorInfo : 'No se pudo entregar el correo en este momento (' . $mail->ErrorInfo . ').';
+            return [
+                'exito' => false, 
+                'mensaje' => $msg,
+                'error_detalle' => $mail->ErrorInfo
+            ];
         }
     }
 
@@ -251,4 +284,59 @@ class MailService {
         </html>
         ";
     }
+
+    /**
+     * Valida la estructura sintáctica del correo con PHPMailer y verifica la existencia del dominio en DNS.
+     *
+     * @param string $email Correo a verificar
+     * @param bool $verificarDns Si se debe comprobar la existencia del dominio en servidores DNS
+     * @return array ['valido' => bool, 'mensaje' => string, 'email' => string]
+     */
+    public static function validarEmail(string $email, bool $verificarDns = true): array {
+        $email = strtolower(trim($email));
+
+        if (empty($email)) {
+            return ['valido' => false, 'mensaje' => 'El correo electrónico no puede estar vacío.', 'email' => ''];
+        }
+
+        // 1. Validación de sintaxis básica PHP
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['valido' => false, 'mensaje' => "El correo '{$email}' no posee un formato sintáctico válido.", 'email' => $email];
+        }
+
+        // 2. Validación estricta con PHPMailer (RFC 5322)
+        if (class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+            if (!PHPMailer::validateAddress($email, 'html5') && !PHPMailer::validateAddress($email, 'php')) {
+                return ['valido' => false, 'mensaje' => "El formato de correo no cumple con los estándares RFC.", 'email' => $email];
+            }
+        }
+
+        // 3. Comprobación del dominio y registros MX / A
+        if ($verificarDns) {
+            $partes = explode('@', $email);
+            $dominio = end($partes);
+
+            if (empty($dominio)) {
+                return ['valido' => false, 'mensaje' => 'El correo debe contener un dominio tras el símbolo @.', 'email' => $email];
+            }
+
+            // Excluir dominios locales de desarrollo
+            $dominiosLocales = ['localhost', 'local', 'test', 'example.com'];
+            if (!in_array($dominio, $dominiosLocales, true) && function_exists('checkdnsrr')) {
+                $tieneMx = @checkdnsrr($dominio, 'MX');
+                $tieneA  = @checkdnsrr($dominio, 'A');
+
+                if (!$tieneMx && !$tieneA) {
+                    return [
+                        'valido' => false,
+                        'mensaje' => "El dominio '@{$dominio}' no existe o no dispone de servidores de correo activos.",
+                        'email' => $email
+                    ];
+                }
+            }
+        }
+
+        return ['valido' => true, 'mensaje' => 'Correo válido y verificado.', 'email' => $email];
+    }
 }
+

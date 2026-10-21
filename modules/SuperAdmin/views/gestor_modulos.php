@@ -1,125 +1,3 @@
-<style>
-/* ==========================================================================
-   Antigravity UI & Motion Design Expert Style Guide (estilo.md)
-   ========================================================================== */
-.ag-header-banner {
-    background: rgba(255, 255, 255, 0.92) !important;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(80, 89, 132, 0.16) !important;
-    border-radius: var(--radius-md);
-    padding: 1.6rem 2rem;
-    box-shadow: 0 16px 36px rgba(18, 26, 62, 0.05);
-    margin-bottom: 2rem;
-}
-
-.ag-modules-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.ag-card {
-    background: rgba(255, 255, 255, 0.95) !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(80, 89, 132, 0.15) !important;
-    border-radius: 14px !important;
-    padding: 1.6rem !important;
-    box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04);
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 1.25rem;
-}
-
-.ag-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 42px rgba(18, 26, 62, 0.08);
-    border-color: rgba(80, 89, 132, 0.28) !important;
-}
-
-.ag-card-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 12px;
-    background: rgba(80, 89, 132, 0.08);
-    border: 1px solid rgba(80, 89, 132, 0.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.7rem;
-    color: var(--color-secundario);
-    flex-shrink: 0;
-}
-
-.ag-btn-manage {
-    background: var(--color-secundario) !important;
-    color: #ffffff !important;
-    border: none !important;
-    padding: 8px 16px !important;
-    border-radius: 8px !important;
-    font-weight: 700 !important;
-    font-size: 0.85rem !important;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-    transition: all 0.25s ease !important;
-    text-decoration: none !important;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-}
-
-.ag-btn-manage:hover {
-    background: var(--color-secundario-dark, rgb(60, 68, 105)) !important;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(80, 89, 132, 0.32);
-    color: #ffffff !important;
-}
-
-.ag-badge-core {
-    background: rgba(99, 102, 241, 0.1);
-    color: #4f46e5;
-    border: 1px solid rgba(99, 102, 241, 0.25);
-    border-radius: 8px;
-    padding: 4px 10px;
-    font-weight: 800;
-    font-size: 0.72rem;
-    letter-spacing: 0.5px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.ag-badge-online {
-    background: rgba(16, 185, 129, 0.1);
-    color: #059669;
-    border: 1px solid rgba(16, 185, 129, 0.25);
-    border-radius: 8px;
-    padding: 4px 10px;
-    font-weight: 800;
-    font-size: 0.72rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.ag-badge-offline {
-    background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
-    border: 1px solid rgba(239, 68, 68, 0.25);
-    border-radius: 8px;
-    padding: 4px 10px;
-    font-weight: 800;
-    font-size: 0.72rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-</style>
-
 <!-- ENCABEZADO PRINCIPAL GLASSMORPHIC -->
 <div class="ag-header-banner">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.2rem;">
@@ -135,18 +13,18 @@
             </p>
         </div>
         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <a href="exportar-config-sistema" class="btn btn-outline" style="border-color: #059669; color: #059669; background: #ffffff; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.83rem; display: inline-flex; align-items: center; gap: 6px;">
+            <a href="exportar-config-sistema" class="sa-btn sa-btn-outline">
                 <i class="ph-bold ph-download-simple"></i> Exportar Config System
             </a>
 
-            <button type="button" onclick="document.getElementById('file-import-config').click()" class="btn btn-outline" style="border-color: #7c3aed; color: #7c3aed; background: #ffffff; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.83rem; display: inline-flex; align-items: center; gap: 6px;">
+            <button type="button" onclick="document.getElementById('file-import-config').click()" class="sa-btn sa-btn-outline">
                 <i class="ph-bold ph-upload-simple"></i> Importar Config
             </button>
             <form id="form-import-config" action="importar-config-sistema" method="POST" enctype="multipart/form-data" style="display: none;">
                 <input type="file" id="file-import-config" name="config_file" accept=".json" onchange="document.getElementById('form-import-config').submit()">
             </form>
 
-            <a href="sudoadmin" class="btn btn-outline" style="border-color: var(--color-secundario); color: var(--color-secundario); background: #ffffff; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; transition: all 0.2s ease;">
+            <a href="sudoadmin" class="sa-btn sa-btn-outline">
                 <i class="ph-bold ph-arrow-left"></i> Volver al Centro de Mando
             </a>
         </div>
@@ -240,17 +118,89 @@ function toggleModuloAjaxGM(moduloId, inputEl) {
                 badge.className = `badge-status-${moduloId} ${nuevoEstado === 'online' ? 'ag-badge-online' : 'ag-badge-offline'}`;
             }
 
-            // Actualización dinámica del menú lateral (Sidebar)
-            if (Array.isArray(data.rutas)) {
+            // Actualización dinámica del menú lateral (Sidebar) en tiempo real
+            const targetNavs = document.querySelectorAll(`.sidebar [data-modulo="${moduloId}"]`);
+
+            if (targetNavs.length > 0) {
+                targetNavs.forEach(navEl => {
+                    if (nuevoEstado === 'offline') {
+                        navEl.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                        navEl.style.opacity = '0';
+                        navEl.style.transform = 'translateX(-10px)';
+                        setTimeout(() => {
+                            navEl.style.display = 'none';
+                            navEl.style.transform = '';
+                        }, 250);
+                    } else {
+                        navEl.style.display = '';
+                        navEl.style.opacity = '0';
+                        navEl.style.transform = 'translateX(-10px)';
+                        void navEl.offsetWidth; // Forzar reflow para animación
+                        navEl.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                        navEl.style.opacity = '1';
+                        navEl.style.transform = '';
+                    }
+                });
+            } else if (nuevoEstado === 'online' && Array.isArray(data.menu) && data.menu.length > 0) {
+                // Si el elemento no existía en el DOM al cargar la página, se inyecta dinámicamente
+                const navContainer = document.querySelector('.sidebar .nav-menu');
+                if (navContainer) {
+                    data.menu.forEach(item => {
+                        const iconoHtml = (item.icono && item.icono.includes('<i')) ? item.icono : `<i class="${item.icono || 'ph ph-app-window'}"></i>`;
+                        if (item.tipo === 'link') {
+                            const a = document.createElement('a');
+                            a.href = item.enlace;
+                            a.className = 'nav-item';
+                            a.setAttribute('data-modulo', moduloId);
+                            a.innerHTML = `<span class="nav-icon">${iconoHtml}</span><span class="nav-text">${item.titulo}</span>`;
+                            a.style.opacity = '0';
+                            a.style.transform = 'translateX(-10px)';
+                            navContainer.appendChild(a);
+                            void a.offsetWidth;
+                            a.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                            a.style.opacity = '1';
+                            a.style.transform = '';
+                        } else if (item.tipo === 'parent') {
+                            const div = document.createElement('div');
+                            div.className = 'nav-parent';
+                            div.setAttribute('data-modulo', moduloId);
+                            let subitemsHtml = '';
+                            if (Array.isArray(item.subitems)) {
+                                item.subitems.forEach(sub => {
+                                    subitemsHtml += `<a href="${sub.ruta}" class="sub-nav-item"><span class="nav-text">${sub.titulo}</span></a>`;
+                                });
+                            }
+                            div.innerHTML = `
+                                <a href="${item.enlace}" class="nav-item nav-parent-link">
+                                    <span class="nav-icon">${iconoHtml}</span>
+                                    <span class="nav-text" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                        <span>${item.titulo}</span>
+                                        ${subitemsHtml ? '<i class="ph-bold ph-caret-down nav-caret" style="font-size: 0.8rem; transition: transform 0.25s ease; cursor: pointer; padding: 4px;" onclick="toggleSidebarParent(event)"></i>' : ''}
+                                    </span>
+                                </a>
+                                ${subitemsHtml ? `<div class="sub-menu">${subitemsHtml}</div>` : ''}
+                            `;
+                            div.style.opacity = '0';
+                            div.style.transform = 'translateX(-10px)';
+                            navContainer.appendChild(div);
+                            void div.offsetWidth;
+                            div.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                            div.style.opacity = '1';
+                            div.style.transform = '';
+                        }
+                    });
+                }
+            } else if (Array.isArray(data.rutas)) {
+                // Fallback por enlaces si no se localiza por data-modulo
                 data.rutas.forEach(ruta => {
-                    const navItems = document.querySelectorAll(`a[href="${ruta}"]`);
+                    const navItems = document.querySelectorAll(`.sidebar a[href="${ruta}"]`);
                     navItems.forEach(link => {
-                        const parentNav = link.closest('.nav-item, .sub-nav-item, .nav-parent');
+                        const parentNav = link.closest('.nav-parent') || link;
                         if (parentNav) {
                             if (nuevoEstado === 'offline') {
-                                parentNav.style.transition = 'all 0.3s ease';
+                                parentNav.style.transition = 'all 0.25s ease';
                                 parentNav.style.opacity = '0';
-                                setTimeout(() => { parentNav.style.display = 'none'; }, 300);
+                                setTimeout(() => { parentNav.style.display = 'none'; }, 250);
                             } else {
                                 parentNav.style.display = '';
                                 parentNav.style.opacity = '1';

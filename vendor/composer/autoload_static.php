@@ -22,6 +22,10 @@ class ComposerStaticInit3ffbe28fb745b145fa2fcd19500ebf5e
             'PhpOffice\\Math\\' => 15,
             'PHPMailer\\PHPMailer\\' => 20,
         ),
+        'O' =>
+        array (
+            'OnnxRuntime\\' => 12,
+        ),
     );
 
     public static $prefixDirsPsr4 = array (
@@ -44,6 +48,10 @@ class ComposerStaticInit3ffbe28fb745b145fa2fcd19500ebf5e
         'PHPMailer\\PHPMailer\\' =>
         array (
             0 => __DIR__ . '/..' . '/phpmailer/phpmailer/src',
+        ),
+        'OnnxRuntime\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/ankane/onnxruntime/src',
         ),
     );
 

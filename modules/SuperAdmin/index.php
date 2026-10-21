@@ -15,13 +15,11 @@ class SuperAdminModule implements ModuleContract {
         return [
             // Ruta principal: El dashboard administrativo
             // Nueva ruta para Gestión de Usuarios
-            'gestor-usuarios' => [
+            
+            'invitar-profesor' => [
                 'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
                 'controlador'      => 'GestorUsuariosController',
-                'metodo'           => 'index',
-                'vista'            => __DIR__ . '/views/gestor_usuarios.php', 
-                'titulo'           => 'Gestión de Usuarios - UPTTMBI',
-                'css'              => ['SuperAdmin.css', 'gestor.css']
+                'metodo'           => 'invitarProfesorAction'
             ],
             'guardar-matriz-rbac' => [
                 'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
@@ -37,14 +35,6 @@ class SuperAdminModule implements ModuleContract {
                 'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
                 'controlador'      => 'GestorUsuariosController',
                 'metodo'           => 'revocarSesion'
-            ],
-            'editar-usuario' => [
-                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
-                'controlador'      => 'GestorUsuariosController',
-                'metodo'           => 'mostrarEdicion',
-                'vista'            => __DIR__ . '/views/editar_usuario.php', 
-                'titulo'           => 'Editar Usuario - Administración',
-                'css'              => ['SuperAdmin.css']
             ],
             // Endpoint para procesar los datos de edición
             'procesar-edicion-usuario' => [
@@ -68,6 +58,16 @@ class SuperAdminModule implements ModuleContract {
                 'controlador'      => 'GestorUsuariosController',
                 'metodo'           => 'crearUsuarioAction'
             ],
+            'verificar-email-usuario' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'verificarEmailAjax'
+            ],
+            'eliminar-usuario' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'eliminarUsuarioAction'
+            ],
             'sudoadmin' => [
                 'controlador_path' => __DIR__ . '/controllers/AdminController.php',
                 'controlador'      => 'AdminController',
@@ -89,7 +89,7 @@ class SuperAdminModule implements ModuleContract {
                 'metodo'           => 'index', // Este método lee el disco duro físico
                 'vista'            => __DIR__ . '/views/gestor_modulos.php', 
                 'titulo'           => 'Gestor de Módulos - Configuración',
-                'css'              => ['SuperAdmin.css']
+                'css'              => ['SuperAdmin.css', 'gestor_modulo.css']
             ],
             'alternar-modulo' => [
                 'controlador_path' => __DIR__ . '/controllers/ModulosController.php',
@@ -110,7 +110,7 @@ class SuperAdminModule implements ModuleContract {
                 'metodo'           => 'detalleModulo',
                 'vista'            => __DIR__ . '/views/detalle_modulo.php', 
                 'titulo'           => 'Gestión Individual de Módulo - SuperAdmin',
-                'css'              => ['SuperAdmin.css']
+                'css'              => ['SuperAdmin.css', 'detalle_modulo.css']
             ],
             'guardar-config-modulo' => [
                 'controlador_path' => __DIR__ . '/controllers/ModulosController.php',
@@ -164,6 +164,31 @@ class SuperAdminModule implements ModuleContract {
                 'controlador_path' => __DIR__ . '/controllers/LogsController.php',
                 'controlador'      => 'LogsController',
                 'metodo'           => 'limpiarLogs'
+            ],
+            // Ruta para el Centro de Reportes & Exportación
+            'gestor-reportes' => [
+                'controlador_path' => __DIR__ . '/controllers/ReportesController.php',
+                'controlador'      => 'ReportesController',
+                'metodo'           => 'index',
+                'vista'            => __DIR__ . '/views/gestor_reportes.php', 
+                'titulo'           => 'Centro de Reportes & Exportación - SuperAdmin',
+                'css'              => ['SuperAdmin.css', 'gestor.css'],
+                'js'               => ['chart.min.js']
+            ],
+            'exportar-reporte-csv' => [
+                'controlador_path' => __DIR__ . '/controllers/ReportesController.php',
+                'controlador'      => 'ReportesController',
+                'metodo'           => 'exportarCSV'
+            ],
+            'exportar-reporte-pdf' => [
+                'controlador_path' => __DIR__ . '/controllers/ReportesController.php',
+                'controlador'      => 'ReportesController',
+                'metodo'           => 'exportarPDF'
+            ],
+            'exportar-reporte-json' => [
+                'controlador_path' => __DIR__ . '/controllers/ReportesController.php',
+                'controlador'      => 'ReportesController',
+                'metodo'           => 'exportarJSON'
             ],
             'generar-backup' => [
                 'controlador_path' => __DIR__ . '/controllers/AdminController.php',
@@ -247,7 +272,7 @@ class SuperAdminModule implements ModuleContract {
                 'metodo'           => 'index',
                 'vista'            => __DIR__ . '/views/gestor_scheduler.php',
                 'titulo'           => 'Tareas Programadas & Cron - SuperAdmin',
-                'css'              => ['SuperAdmin.css']
+                'css'              => ['SuperAdmin.css', 'scheduler.css']
             ],
             'alternar-estado-tarea' => [
                 'controlador_path' => __DIR__ . '/controllers/SchedulerController.php',
@@ -274,6 +299,11 @@ class SuperAdminModule implements ModuleContract {
                 'controlador'      => 'SchedulerController',
                 'metodo'           => 'verLog'
             ],
+            'instalar-cron-linux' => [
+                'controlador_path' => __DIR__ . '/controllers/SchedulerController.php',
+                'controlador'      => 'SchedulerController',
+                'metodo'           => 'instalarCronLinux'
+            ],
             // Rutas para WAF & Monitor de Seguridad
             'visor-seguridad' => [
                 'controlador_path' => __DIR__ . '/controllers/SecurityMonitorController.php',
@@ -281,7 +311,7 @@ class SuperAdminModule implements ModuleContract {
                 'metodo'           => 'index',
                 'vista'            => __DIR__ . '/views/visor_seguridad.php',
                 'titulo'           => 'Monitor WAF & Seguridad - SuperAdmin',
-                'css'              => ['SuperAdmin.css']
+                'css'              => ['SuperAdmin.css', 'visor_seguridad.css']
             ],
             'desbloquear-ip' => [
                 'controlador_path' => __DIR__ . '/controllers/SecurityMonitorController.php',
@@ -353,6 +383,14 @@ class SuperAdminModule implements ModuleContract {
                 'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
                 'controlador'      => 'ConfiguracionController',
                 'metodo'           => 'guardarPlantillaPersonalizadaAction'
+            ],
+            'gestor-usuarios' => [
+                'controlador_path' => __DIR__ . '/controllers/GestorUsuariosController.php',
+                'controlador'      => 'GestorUsuariosController',
+                'metodo'           => 'index',
+                'vista'            => __DIR__ . '/views/gestor_usuarios.php', 
+                'titulo'           => 'Gestión de Usuarios - UPTTMBI',
+                'css'              => ['SuperAdmin.css', 'gestor.css']
             ]
         ];
     }
@@ -363,13 +401,15 @@ class SuperAdminModule implements ModuleContract {
                 'tipo'        => 'parent',
                 'titulo'      => 'SuperAdmin',
                 'icono'       => 'ph-fill ph-terminal-window',
+                'orden'       => 900,
                 'privilegio_minimo' => 0,
                 'enlace'      => 'sudoadmin',
                 // Rutas que mantienen iluminado y desplegado el panel administrativo en el Sidebar
-                'activadores' => ['sudoadmin', 'gestor-modulos', 'detalle-modulo', 'gestor-mantenimiento', 'visor-logs', 'gestor-usuarios', 'gestor-scheduler', 'visor-seguridad', 'configuracion-sistema', 'gestor-correos'], 
+                'activadores' => ['sudoadmin', 'gestor-usuarios', 'gestor-reportes', 'gestor-modulos', 'detalle-modulo', 'gestor-mantenimiento', 'visor-logs', 'gestor-scheduler', 'visor-seguridad', 'configuracion-sistema', 'gestor-correos'], 
                 'subitems'    => [
                     ['ruta' => 'sudoadmin', 'titulo' => 'Panel de Control', 'privilegio_minimo' => 0],
                     ['ruta' => 'gestor-usuarios', 'titulo' => 'Gestión de Usuarios', 'privilegio_minimo' => 0],
+                    ['ruta' => 'gestor-reportes', 'titulo' => 'Reportes y Exportación', 'privilegio_minimo' => 0],
                     ['ruta' => 'gestor-modulos', 'titulo' => 'Gestor de Módulos', 'privilegio_minimo' => 0],
                     ['ruta' => 'gestor-correos', 'titulo' => 'Gestión de Correos SMTP', 'privilegio_minimo' => 0],
                     ['ruta' => 'configuracion-sistema', 'titulo' => 'Variables de Entorno', 'privilegio_minimo' => 0],

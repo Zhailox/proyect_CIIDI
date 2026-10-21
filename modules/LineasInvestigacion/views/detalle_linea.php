@@ -208,7 +208,7 @@
     <!-- Columna derecha: Investigaciones -->
     <aside class="li-col-right">
         <div class="cosmos-sidebar-card">
-            <div class="cosmos-sidebar-header">
+            <div class="cosmos-sidebar-header" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(80, 89, 132, 0.95)); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
                 <i class="ph-bold ph-chalkboard-teacher"></i>
                 <h3>Investigaciones Ofertadas</h3>
                 <span style="margin-left:auto;background:rgba(255,255,255,0.18);border-radius:50px;padding:2px 8px;font-size:0.7rem;font-weight:700;"><?= count($investigaciones) ?> Activas</span>
@@ -225,7 +225,7 @@
                         <div class="cosmos-oferta-accent-bar" style="background:<?= $inv['estado'] === 'Abierta' ? 'linear-gradient(180deg,#059669,#34d399)' : 'linear-gradient(180deg,#94a3b8,#cbd5e1)' ?>;"></div>
                         <div class="cosmos-oferta-content">
                             <span class="cosmos-oferta-badge" style="<?= $inv['estado'] === 'Abierta' ? '' : 'background:#f1f5f9;color:#64748b;' ?>">
-                                <?= $inv['estado'] === 'Abierta' ? 'Abierta · '.(int)$inv['cupos_disponibles'].' cupos' : 'Cerrada' ?>
+                                <?= $inv['estado'] === 'Abierta' ? 'Abierta &bull; '.(int)$inv['cupos_disponibles'].' cupos' : 'Cerrada' ?>
                             </span>
                             <h4 class="cosmos-oferta-title"><?= htmlspecialchars($inv['titulo']) ?></h4>
                             <div class="cosmos-oferta-meta">
@@ -244,6 +244,56 @@
                         </div>
                     </div>
                     <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="cosmos-sidebar-card" style="margin-top: 1.5rem;">
+            <div class="cosmos-sidebar-header" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(45, 55, 72, 0.95)); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                <i class="ph-bold ph-users-three"></i>
+                <h3>Investigadores y Docentes</h3>
+                <span style="margin-left:auto;background:rgba(255,255,255,0.18);border-radius:50px;padding:2px 8px;font-size:0.7rem;font-weight:700;"><?= count($profesores ?? []) ?></span>
+            </div>
+            <div class="cosmos-sidebar-body" style="padding: 1rem;">
+                <?php if (empty($profesores)): ?>
+                <div class="cosmos-sidebar-empty">
+                    <i class="ph-bold ph-users-slash"></i>
+                    <p>No hay investigadores ni docentes afiliados a esta línea.</p>
+                </div>
+                <?php else: ?>
+                    <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                        <?php foreach ($profesores as $prof): ?>
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.8rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <i class="ph-fill ph-user-circle" style="font-size: 1.5rem; color: #505984;"></i>
+                                <div style="flex: 1; min-width: 0;">
+                                    <a href="?ruta=investigadores&q=<?= urlencode($prof['nombre_profesor']) ?>&ver_perfil=1<?= !empty($prof['id_profesor']) ? '&ver_id=' . (int)$prof['id_profesor'] : '' ?>"
+                                       style="color: #1e293b; font-size: 0.9rem; font-weight: 700; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none;"
+                                       onmouseover="this.style.color='#505984'; this.style.textDecoration='underline';"
+                                       onmouseout="this.style.color='#1e293b'; this.style.textDecoration='none';"
+                                       title="Ver Perfil Público de <?= htmlspecialchars($prof['nombre_profesor']) ?>">
+                                        <?= htmlspecialchars($prof['nombre_profesor']) ?>
+                                    </a>
+                                    <span style="color: #64748b; font-size: 0.75rem;"><i class="ph-bold ph-envelope-simple"></i> <?= htmlspecialchars($prof['email']) ?></span>
+                                </div>
+                                <a href="?ruta=investigadores&q=<?= urlencode($prof['nombre_profesor']) ?>&ver_perfil=1<?= !empty($prof['id_profesor']) ? '&ver_id=' . (int)$prof['id_profesor'] : '' ?>"
+                                   style="background: #ffffff; color: #505984; border: 1px solid rgba(80,89,132,0.25); padding: 0.25rem 0.55rem; border-radius: 6px; font-size: 0.72rem; font-weight: 700; text-decoration: none; white-space: nowrap;">
+                                    Perfil <i class="ph-bold ph-arrow-up-right"></i>
+                                </a>
+                            </div>
+                            <?php if (!empty($prof['ofertas'])): ?>
+                                <div style="font-size: 0.75rem; color: #475569; margin-top: 0.5rem; border-top: 1px dashed #cbd5e1; padding-top: 0.5rem;">
+                                    <strong style="color: #334155;">Proyectos en línea:</strong>
+                                    <ul style="margin: 0.3rem 0 0 0; padding-left: 1.2rem; list-style-type: disc;">
+                                        <?php foreach ($prof['ofertas'] as $of): ?>
+                                            <li><?= htmlspecialchars($of['titulo']) ?> (<?= $of['estado'] ?>)</li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
                 <?php endif; ?>
             </div>
         </div>

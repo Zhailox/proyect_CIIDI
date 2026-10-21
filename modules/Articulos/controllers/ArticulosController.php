@@ -1,5 +1,6 @@
 <?php
 require_once CORE_PATH . 'Security/Auth.php';
+require_once CORE_PATH . 'Security/AuditLogger.php';
 require_once __DIR__ . '/../models/ArticuloModel.php';
 require_once __DIR__ . '/../services/ConfigService.php';
 require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
@@ -16,9 +17,11 @@ class ArticulosController {
     }
 
     public function index() {
-        
+        $tabActiva = $_GET['tab'] ?? 'articulos';
+
         $filtros = [
             'q' => trim($_GET['q'] ?? ''),
+            'q_autor' => trim($_GET['q_autor'] ?? ''), 
             'year' => !empty($_GET['year']) ? (int) $_GET['year'] : '',
             'categorias' => array_filter(array_map('intval', $_GET['categoria'] ?? [])),
             'etiquetas' => array_filter(array_map('intval', $_GET['etiqueta'] ?? [])),
@@ -26,33 +29,58 @@ class ArticulosController {
         ];
 
         $pagina = max(1, (int) ($_GET['page'] ?? 1));
-        $porPagina = ConfigService::get('paginacion.limite_catalogo', 16); // Límite dinámico
+        $porPagina = ConfigService::get('paginacion.limite_catalogo', 16);
 
         $paginacion = $this->articuloModel->obtenerArticulosPaginados($filtros, $pagina, $porPagina);
         $categorias = $this->articuloModel->obtenerCategorias();
         $etiquetas = $this->articuloModel->obtenerEtiquetas();
+        
+        $autorPerfil = null;
+        if (!empty($filtros['q_autor'])) {
+            $autorPerfil = $this->articuloModel->obtenerAutorPorNombreExacto($filtros['q_autor']);
+        }
+
+        // ==========================================
+        // LÓGICA PARA LA PESTAÑA DE AUTORES (NUEVO)
+        // ==========================================
+        $q_autores_tab = trim($_GET['q_autores_tab'] ?? '');
+        $paginaAutores = max(1, (int) ($_GET['p_aut'] ?? 1));
+        $autoresCatalogo = [];
+        
+        if ($tabActiva === 'autores') {
+            // Reutilizamos el buscador del gestor, trayendo 12 tarjetas de autor por página
+            $autoresCatalogo = $this->articuloModel->buscarAutoresGestor($q_autores_tab, $paginaAutores, 12); 
+        }
 
         return [
+            'tabActiva' => $tabActiva,
+            'q_autores_tab' => $q_autores_tab,
+            'autoresCatalogo' => $autoresCatalogo,
+
             'articulos' => $paginacion['articulos'],
             'categorias' => $categorias,
             'etiquetas' => $etiquetas,
             'filtros' => $filtros,
-            'paginacion' => $paginacion
+            'paginacion' => $paginacion,
+            'autorPerfil' => $autorPerfil 
         ];
     }
-
     public function leer() {
         $id = (int)($_GET['id'] ?? 0);
         $maxRecomendados = ConfigService::get('paginacion.max_recomendados', 3);
+        $articulo = $this->articuloModel->obtenerArticuloPorId($id);
+        if (!$articulo && !headers_sent()) {
+            http_response_code(404);
+        }
 
         return [
-            'articulo' => $this->articuloModel->obtenerArticuloPorId($id),
-            'similares' => $this->articuloModel->getArticulosSimilares($id, $maxRecomendados)
+            'articulo' => $articulo,
+            'similares' => $articulo ? $this->articuloModel->getArticulosSimilares($id, $maxRecomendados) : []
         ];
     }
 
     public function gestor() {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'Articulos');
+        Auth::requierePrivilegioMinimo($this->nivelAdmin);
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         $filtros = [
@@ -80,7 +108,7 @@ class ArticulosController {
         
         // Obtenemos los catálogos para llenar los <select> del formulario
         $editoriales = $qb->tabla('editoriales')->orderBy('nombre', 'ASC')->get();
-        $autores = $qb->tabla('autores')->orderBy('nombre_completo', 'ASC')->get();
+        $autores = $qb->tabla('investigadores')->orderBy('nombre_completo', 'ASC')->get();
 
         return [
             'editoriales' => $editoriales,
@@ -169,7 +197,9 @@ class ArticulosController {
             if ($_FILES['imagen_portada']['error'] === UPLOAD_ERR_OK) {
                 $finfo = finfo_open(FILEINFO_MIME_TYPE);
                 $mimeType = finfo_file($finfo, $_FILES['imagen_portada']['tmp_name']);
-                finfo_close($finfo);
+                if (PHP_VERSION_ID < 80500 && is_resource($finfo)) {
+                    finfo_close($finfo);
+                }
 
                 $mimePermitidos = ['image/jpeg', 'image/png', 'image/webp'];
                 if (!in_array($mimeType, $mimePermitidos)) {
@@ -225,7 +255,7 @@ class ArticulosController {
 
         // 3. Mandar al modelo para insertar
         try {
-            $this->articuloModel->registrarArticulo(
+            $autores_vinculados = $this->articuloModel->registrarArticulo(
                 $titulo,
                 $resumen,
                 $categorias,
@@ -241,9 +271,14 @@ class ArticulosController {
                 $etiquetas
             );
 
-            AuditLogger::registrar('INFO', 'RevistaDigital', 'Publicar Artículo', "Nuevo artículo publicado: '{$titulo}' ({$anio_publicacion}).");
+            AuditLogger::registrar('INFO', 'Articulos', 'Publicar Artículo', "Nuevo artículo publicado: '{$titulo}' ({$anio_publicacion}).");
 
-            $_SESSION['mensaje_exito'] = "El artículo fue publicado correctamente en la vitrina.";
+            $msgExito = "El artículo fue publicado correctamente en la vitrina.";
+            if (!empty($autores_vinculados)) {
+                $msgExito .= " (Nota: Se vincularon automáticamente investigadores ya existentes debido a que su ORCID coincidía: " . implode(', ', array_unique($autores_vinculados)) . ").";
+            }
+
+            $_SESSION['mensaje_exito'] = $msgExito;
             header('Location: gestor-articulos');
             exit;
 
@@ -251,6 +286,7 @@ class ArticulosController {
             if ($imagenFisicaCreada && file_exists($imagenFisicaCreada)) {
                 @unlink($imagenFisicaCreada);
             }
+            AuditLogger::registrar('WARNING', 'Articulos', 'Fallo al Publicar Artículo', "Error al registrar artículo '{$titulo}': " . $e->getMessage());
             $msgOriginal = $e->getMessage();
             if (strpos($msgOriginal, '23505') !== false || strpos(strtolower($msgOriginal), 'duplicate') !== false || strpos(strtolower($msgOriginal), 'ya existe') !== false) {
                 $_SESSION['mensaje_error'] = "No se pudo registrar el artículo porque la cédula de un autor o un dato único ya existe registrado en el sistema.";
@@ -276,12 +312,13 @@ class ArticulosController {
             try {
                 $this->articuloModel->eliminarArticulo($id_articulo);
                 
-                AuditLogger::registrar('WARNING', 'RevistaDigital', 'Eliminar Artículo', "Artículo ID #{$id_articulo} eliminado del catálogo.");
+                AuditLogger::registrar('WARNING', 'Articulos', 'Eliminar Artículo', "Artículo ID #{$id_articulo} eliminado del catálogo.");
 
                 if (session_status() === PHP_SESSION_NONE) session_start();
                 $_SESSION['mensaje_exito'] = "El artículo ha sido eliminado del catálogo y sus archivos liberados.";
                 
             } catch (Exception $e) {
+                AuditLogger::registrar('ERROR', 'Articulos', 'Fallo al Eliminar Artículo', "No se pudo eliminar el artículo #{$id_articulo}: " . $e->getMessage());
                 if (session_status() === PHP_SESSION_NONE) session_start();
                 $_SESSION['mensaje_error'] = "No fue posible eliminar el artículo debido a que está asociado a otros registros activos.";
             }
@@ -306,7 +343,7 @@ class ArticulosController {
 
         $qb = new QueryBuilder();
         $editoriales = $qb->tabla('editoriales')->orderBy('nombre', 'ASC')->get();
-        $autores = $qb->tabla('autores')->orderBy('nombre_completo', 'ASC')->get();
+        $autores = $qb->tabla('investigadores')->orderBy('nombre_completo', 'ASC')->get();
 
         return [
             'articulo' => $articulo,
@@ -355,11 +392,29 @@ class ArticulosController {
         $archivo_pdf = filter_var(trim($_POST['archivo_pdf'] ?? ''), FILTER_SANITIZE_URL);
         $url_imagen = filter_var(trim($_POST['url_imagen'] ?? ''), FILTER_SANITIZE_URL);
 
+        $esUrlSegura = function($url) {
+            if (empty($url)) return true;
+            $scheme = parse_url($url, PHP_URL_SCHEME);
+            $host = parse_url($url, PHP_URL_HOST);
+            if (!in_array(strtolower((string)$scheme), ['http', 'https'])) return false;
+            if (in_array(strtolower((string)$host), ['localhost', '127.0.0.1', '::1'])) return false;
+            return true;
+        };
+
+        if (!$esUrlSegura($archivo_pdf) || !$esUrlSegura($url_imagen)) {
+            $_SESSION['mensaje_error'] = "URL no válida o esquema no permitido. Asegúrese de usar enlaces web válidos (http:// o https://).";
+            header('Location: editar-articulo?id=' . $id);
+            exit;
+        }
+
         $autores = $_POST['autores'] ?? [];
         $autores_nuevos = $_POST['autores_nuevos'] ?? [];
         $etiquetas = $_POST['etiquetas'] ?? [];
 
-        $nombreImagen = trim($_POST['imagen_actual'] ?? 'default_article.jpg');
+        $imgActualInput = trim($_POST['imagen_actual'] ?? 'default_article.jpg');
+        $nombreImagen = (strpos($imgActualInput, 'http') === 0 && $esUrlSegura($imgActualInput))
+            ? $imgActualInput
+            : basename($imgActualInput);
         
 
         if (!empty($url_imagen)) {
@@ -381,7 +436,9 @@ class ArticulosController {
                 if ($_FILES['imagen_portada']['error'] === UPLOAD_ERR_OK) {
                     $finfo = finfo_open(FILEINFO_MIME_TYPE);
                     $mimeType = finfo_file($finfo, $_FILES['imagen_portada']['tmp_name']);
-                    finfo_close($finfo);
+                    if (PHP_VERSION_ID < 80500 && is_resource($finfo)) {
+                        finfo_close($finfo);
+                    }
 
                     $mimePermitidos = ['image/jpeg', 'image/png', 'image/webp'];
                     if (!in_array($mimeType, $mimePermitidos)) {
@@ -430,7 +487,7 @@ class ArticulosController {
             }
 
         try {
-            $this->articuloModel->actualizarArticulo(
+            $autores_vinculados = $this->articuloModel->actualizarArticulo(
                 $id,
                 $titulo,
                 $resumen,
@@ -447,11 +504,19 @@ class ArticulosController {
                 $etiquetas
             );
 
+            AuditLogger::registrar('INFO', 'Articulos', 'Actualizar Artículo', "Artículo ID #{$id} actualizado: '{$titulo}'.");
+
+            $msgExito = 'El artículo fue actualizado correctamente.';
+            if (!empty($autores_vinculados)) {
+                $msgExito .= " (Nota: Algunos autores nuevos fueron reemplazados por sus perfiles originales registrados bajo el mismo ORCID: " . implode(', ', array_unique($autores_vinculados)) . ").";
+            }
+
             if (session_status() === PHP_SESSION_NONE) session_start();
-            $_SESSION['mensaje_exito'] = 'El artículo fue actualizado correctamente.';
+            $_SESSION['mensaje_exito'] = $msgExito;
             header('Location: gestor-articulos');
             exit;
         } catch (Exception $e) {
+            AuditLogger::registrar('WARNING', 'Articulos', 'Fallo al Actualizar Artículo', "Error al actualizar artículo #{$id}: " . $e->getMessage());
             if (session_status() === PHP_SESSION_NONE) session_start();
             $msg = $e->getMessage();
             if (strpos($msg, '23505') !== false || strpos(strtolower($msg), 'duplicate') !== false) {
@@ -464,7 +529,7 @@ class ArticulosController {
         }
     }
     public function gestorCatalogos() {
-        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'Articulos');
+        Auth::requierePrivilegioMinimo($this->nivelAdmin);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (session_status() === PHP_SESSION_NONE) session_start();
@@ -488,48 +553,73 @@ class ArticulosController {
             try {
                 if ($accion === 'crear_categoria' && $nombre !== '') {
                     $this->articuloModel->crearCategoria($nombre);
+                    AuditLogger::registrar('INFO', 'Articulos', 'Crear Categoría', "Nueva categoría: '{$nombre}'.");
                     $_SESSION['mensaje_exito'] = 'Categoría creada correctamente.';
                 } elseif ($accion === 'crear_etiqueta' && $nombre !== '') {
                     $this->articuloModel->crearEtiqueta($nombre);
+                    AuditLogger::registrar('INFO', 'Articulos', 'Crear Etiqueta', "Nueva etiqueta: '{$nombre}'.");
                     $_SESSION['mensaje_exito'] = 'Etiqueta creada correctamente.';
                 } elseif ($accion === 'crear_editorial' && $nombre !== '') {
                     $this->articuloModel->crearEditorial($nombre);
+                    AuditLogger::registrar('INFO', 'Articulos', 'Crear Editorial', "Nueva editorial/repositorio: '{$nombre}'.");
                     $_SESSION['mensaje_exito'] = 'Editorial/Repositorio creado correctamente.';
                 } elseif ($accion === 'eliminar_categoria') {
-                    $this->articuloModel->eliminarCategoria((int)($_POST['id'] ?? 0));
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->eliminarCategoria($idItem);
+                    AuditLogger::registrar('WARNING', 'Articulos', 'Eliminar Categoría', "Categoría ID #{$idItem} eliminada.");
                     $_SESSION['mensaje_exito'] = 'Categoría eliminada.';
                 } elseif ($accion === 'eliminar_etiqueta') {
-                    $this->articuloModel->eliminarEtiqueta((int)($_POST['id'] ?? 0));
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->eliminarEtiqueta($idItem);
+                    AuditLogger::registrar('WARNING', 'Articulos', 'Eliminar Etiqueta', "Etiqueta ID #{$idItem} eliminada.");
                     $_SESSION['mensaje_exito'] = 'Etiqueta eliminada.';
                 } elseif ($accion === 'eliminar_editorial') {
-                    $this->articuloModel->eliminarEditorial((int)($_POST['id'] ?? 0));
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->eliminarEditorial($idItem);
+                    AuditLogger::registrar('WARNING', 'Articulos', 'Eliminar Editorial', "Editorial ID #{$idItem} eliminada.");
                     $_SESSION['mensaje_exito'] = 'Editorial/Repositorio eliminado.';
                     
                 // --- NUEVAS ACCIONES DE EDICIÓN ---
                 } elseif ($accion === 'actualizar_categoria' && $nombre !== '') {
-                    $this->articuloModel->actualizarCategoria((int)($_POST['id'] ?? 0), $nombre);
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->actualizarCategoria($idItem, $nombre);
+                    AuditLogger::registrar('INFO', 'Articulos', 'Actualizar Categoría', "Categoría ID #{$idItem} renombrada a '{$nombre}'.");
                     $_SESSION['mensaje_exito'] = 'Categoría actualizada correctamente.';
                 } elseif ($accion === 'actualizar_etiqueta' && $nombre !== '') {
-                    $this->articuloModel->actualizarEtiqueta((int)($_POST['id'] ?? 0), $nombre);
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->actualizarEtiqueta($idItem, $nombre);
+                    AuditLogger::registrar('INFO', 'Articulos', 'Actualizar Etiqueta', "Etiqueta ID #{$idItem} renombrada a '{$nombre}'.");
                     $_SESSION['mensaje_exito'] = 'Etiqueta actualizada correctamente.';
                 } elseif ($accion === 'actualizar_editorial' && $nombre !== '') {
-                    $this->articuloModel->actualizarEditorial((int)($_POST['id'] ?? 0), $nombre);
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->actualizarEditorial($idItem, $nombre);
+                    AuditLogger::registrar('INFO', 'Articulos', 'Actualizar Editorial', "Editorial ID #{$idItem} renombrada a '{$nombre}'.");
                     $_SESSION['mensaje_exito'] = 'Editorial/Repositorio actualizado.';
                 } elseif ($accion === 'actualizar_autor') {
+                    $idItem = (int)($_POST['id'] ?? 0);
                     $nombre_autor = trim($_POST['nombre_completo'] ?? '');
-                    $cedula_autor = trim($_POST['cedula'] ?? '');
-                    if ($nombre_autor !== '') {
-                        $this->articuloModel->actualizarAutor((int)($_POST['id'] ?? 0), $nombre_autor, $cedula_autor);
+                    $orcid_autor = trim($_POST['orcid'] ?? ''); 
+                    $biografia_autor = trim($_POST['biografia'] ?? ''); 
+                    $pagina_web_autor = trim($_POST['pagina_web'] ?? ''); 
+                    
+                    if ($nombre_autor !== '' && $orcid_autor !== '') {
+                        $this->articuloModel->actualizarAutor($idItem, $nombre_autor, $orcid_autor, $biografia_autor, $pagina_web_autor);
+                        AuditLogger::registrar('INFO', 'Articulos', 'Actualizar Autor', "Autor ID #{$idItem} actualizado: '{$nombre_autor}'.");
                         $_SESSION['mensaje_exito'] = 'Datos del autor actualizados correctamente.';
+                    } else {
+                        $_SESSION['mensaje_error'] = 'El nombre y el ORCID son obligatorios.';
                     }
                 } elseif ($accion === 'eliminar_autor') {
-                    $this->articuloModel->eliminarAutor((int)($_POST['id'] ?? 0));
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->eliminarAutor($idItem);
+                    AuditLogger::registrar('WARNING', 'Articulos', 'Eliminar Autor', "Autor ID #{$idItem} eliminado.");
                     $_SESSION['mensaje_exito'] = 'Autor eliminado correctamente.';
                 }
             } catch (Exception $e) {
+                AuditLogger::registrar('WARNING', 'Articulos', 'Fallo Operación Catálogo', "Error en '{$accion}': " . $e->getMessage());
                 $msg = $e->getMessage();
                 if (strpos($msg, '23505') !== false || strpos(strtolower($msg), 'duplicate') !== false) {
-                    $_SESSION['mensaje_error'] = 'Ya existe un elemento registrado con este mismo nombre o cédula.';
+                    $_SESSION['mensaje_error'] = 'Ya existe un elemento registrado con este mismo nombre o número de ORCID.';
                 } elseif (strpos($msg, '23503') !== false || strpos(strtolower($msg), 'foreign key') !== false) {
                     $_SESSION['mensaje_error'] = 'No se puede eliminar el registro porque está siendo utilizado por uno o más artículos.';
                 } else {
@@ -591,9 +681,11 @@ class ArticulosController {
         $id = (int)($_GET['id'] ?? 0);
         try {
             $this->articuloModel->cambiarEstado($id);
+            AuditLogger::registrar('INFO', 'Articulos', 'Cambio Visibilidad', "Se actualizó la visibilidad del artículo ID #{$id}.");
             if (session_status() === PHP_SESSION_NONE) session_start();
             $_SESSION['mensaje_exito'] = "El estado de visibilidad del artículo ha sido actualizado.";
         } catch (Exception $e) {
+            AuditLogger::registrar('WARNING', 'Articulos', 'Fallo Visibilidad', "Error al cambiar visibilidad del artículo ID #{$id}: " . $e->getMessage());
             if (session_status() === PHP_SESSION_NONE) session_start();
             $_SESSION['mensaje_error'] = "No se pudo cambiar la visibilidad del artículo seleccionado.";
         }
@@ -659,6 +751,40 @@ class ArticulosController {
         imagedestroy($destImg);
 
         return $exito;
+    }
+    public function perfilAutor() {
+        $idAutor = (int)($_GET['id'] ?? 0);
+        $autor = $this->articuloModel->obtenerAutorPorId($idAutor);
+        
+        if (!$autor) {
+            header('Location: articulos?tab=autores');
+            exit;
+        }
+
+        $filtros = [
+            'id_autor' => $idAutor,
+            'q' => trim($_GET['q'] ?? ''),
+            'year' => !empty($_GET['year']) ? (int) $_GET['year'] : '',
+            'categorias' => array_filter(array_map('intval', $_GET['categoria'] ?? [])),
+            'etiquetas' => array_filter(array_map('intval', $_GET['etiqueta'] ?? [])),
+            'activo' => true
+        ];
+
+        $pagina = max(1, (int) ($_GET['page'] ?? 1));
+        $porPagina = ConfigService::get('paginacion.limite_catalogo', 16);
+
+        $paginacion = $this->articuloModel->obtenerArticulosPaginados($filtros, $pagina, $porPagina);
+        $categorias = $this->articuloModel->obtenerCategorias();
+        $etiquetas = $this->articuloModel->obtenerEtiquetas();
+
+        return [
+            'autor' => $autor,
+            'articulos' => $paginacion['articulos'],
+            'categorias' => $categorias,
+            'etiquetas' => $etiquetas,
+            'filtros' => $filtros,
+            'paginacion' => $paginacion
+        ];
     }
 }
 

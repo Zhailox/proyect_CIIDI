@@ -1,6 +1,8 @@
 <?php
 // core/Database/Connection.php
 
+require_once __DIR__ . '/Exceptions/DatabaseConnectionException.php';
+
 class Connection {
     // La única instancia de la clase (Patrón Singleton)
     private static $instance = null;
@@ -8,22 +10,30 @@ class Connection {
     // El objeto PDO real
     private $pdo;
 
-    // Credenciales de acceso (Asegúrate de cambiar esto por los de tu entorno local)
+    // Credenciales por defecto
     private $host = 'localhost';
-    private $port = '5432'; // Puerto por defecto de PostgreSQL
-    private $db   = 'ciidi'; // Reemplaza esto
+    private $port = '5432';
+    private $db   = 'ciidi';
     private $user = 'miki';
-    private $pass = '1234'; // Reemplaza esto
+    private $pass = '1234';
 
     private static function getConfigPath(): string {
         return defined('STORAGE_PATH') ? STORAGE_PATH . 'db_config.json' : __DIR__ . '/../../storage/db_config.json';
     }
 
-    private function cargarCredenciales() {
+    private function cargarCredenciales(): void {
+        if (class_exists('Env')) {
+            $this->host = (string)Env::get('DB_HOST', $this->host);
+            $this->port = (string)Env::get('DB_PORT', $this->port);
+            $this->db   = (string)Env::get('DB_NAME', $this->db);
+            $this->user = (string)Env::get('DB_USER', $this->user);
+            $this->pass = (string)Env::get('DB_PASS', $this->pass);
+        }
+
         $file = self::getConfigPath();
         if (file_exists($file)) {
             $data = json_decode(file_get_contents($file), true) ?: [];
-            if (!empty($data['host'])) $this->host = $data['host'];
+            if (!empty($data['host']) && (empty($this->host) || $this->host === 'localhost')) $this->host = $data['host'];
             if (!empty($data['port'])) $this->port = (string)$data['port'];
             if (!empty($data['db']))   $this->db   = $data['db'];
             if (!empty($data['user'])) $this->user = $data['user'];
@@ -31,18 +41,105 @@ class Connection {
         }
     }
 
-    // El constructor es privado para evitar que alguien use "new Connection()" desde afuera
+    /**
+     * Devuelve las credenciales de la base de datos de forma estática.
+     */
+    public static function getCredentials(): array {
+        $dummy = new self(true);
+        return [
+            'host' => $dummy->host,
+            'port' => $dummy->port,
+            'db'   => $dummy->db,
+            'user' => $dummy->user,
+            'pass' => $dummy->pass
+        ];
+    }
+
+    /**
+     * Guarda las credenciales de la base de datos en el archivo storage/db_config.json.
+     */
+    public static function saveCredentials(string $host, string $port, string $db, string $user, string $pass): bool {
+        $file = self::getConfigPath();
+        $dir = dirname($file);
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0777, true);
+        }
+
+        $saveData = [
+            'host' => trim($host),
+            'port' => trim($port),
+            'db'   => trim($db),
+            'user' => trim($user),
+            'pass' => $pass,
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        return file_put_contents($file, json_encode($saveData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) !== false;
+    }
+
+    /**
+     * Detecta la ruta ejecutable de pg_dump en el sistema operativo.
+     */
+    public static function getPgDumpPath(): string {
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            $rutasCandidatas = [
+                'C:\Program Files\PostgreSQL\18\bin\pg_dump.exe',
+                'C:\Program Files\PostgreSQL\17\bin\pg_dump.exe',
+                'C:\Program Files\PostgreSQL\16\bin\pg_dump.exe',
+                'C:\Program Files\PostgreSQL\15\bin\pg_dump.exe',
+                'C:\Program Files\PostgreSQL\14\bin\pg_dump.exe',
+                'C:\Program Files\PostgreSQL\13\bin\pg_dump.exe',
+                'C:\wamp64\bin\postgresql\bin\pg_dump.exe'
+            ];
+
+            foreach ($rutasCandidatas as $ruta) {
+                if (file_exists($ruta)) {
+                    return '"' . $ruta . '"';
+                }
+            }
+
+            return 'pg_dump';
+        }
+
+        return 'pg_dump';
+    }
+
+    /**
+     * Detecta la ruta ejecutable de psql en el sistema operativo.
+     */
+    public static function getPsqlPath(): string {
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            $rutasCandidatas = [
+                'C:\Program Files\PostgreSQL\18\bin\psql.exe',
+                'C:\Program Files\PostgreSQL\17\bin\psql.exe',
+                'C:\Program Files\PostgreSQL\16\bin\psql.exe',
+                'C:\Program Files\PostgreSQL\15\bin\psql.exe',
+                'C:\Program Files\PostgreSQL\14\bin\psql.exe',
+                'C:\Program Files\PostgreSQL\13\bin\psql.exe',
+                'C:\wamp64\bin\postgresql\bin\psql.exe'
+            ];
+
+            foreach ($rutasCandidatas as $ruta) {
+                if (file_exists($ruta)) {
+                    return '"' . $ruta . '"';
+                }
+            }
+
+            return 'psql';
+        }
+
+        return 'psql';
+    }
+
     private function __construct(bool $silencioso = false) {
         $this->cargarCredenciales();
         try {
-            // Construcción del DSN para PostgreSQL
             $dsn = "pgsql:host={$this->host};port={$this->port};dbname={$this->db}";
             
-            // Opciones de seguridad y rendimiento
             $options = [
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION, // Lanza excepciones ante errores SQL
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,       // Devuelve arreglos asociativos puros
-                PDO::ATTR_EMULATE_PREPARES   => false,                  // Delega la seguridad de parámetros a PostgreSQL
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES   => false,
             ];
 
             $this->pdo = new PDO($dsn, $this->user, $this->pass, $options);
@@ -52,97 +149,67 @@ class Connection {
                 return;
             }
 
-            if (session_status() === PHP_SESSION_NONE) {
-                session_start();
-            }
-            $_SESSION['db_connection_error'] = $e->getMessage();
+            self::logSystemError($e);
 
-            // Si es una petición AJAX / API, devolver 500 JSON
-            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-                http_response_code(500);
-                header('Content-Type: application/json');
-                echo json_encode(['error' => true, 'mensaje' => 'Error de conexión a la BD: ' . $e->getMessage()]);
-                exit;
-            }
+            $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest');
+            $appDebug = class_exists('Env') ? Env::get('APP_DEBUG', false) : false;
+            $detalleDev = $appDebug ? $e->getMessage() : "Imposible conectar con el servidor de datos. Notifique al administrador.";
 
-            http_response_code(500);
-            $dbErrorMsg = "Imposible conectar a la base de datos: " . $e->getMessage();
-            $isStandalone = true;
-            $vista_modulo_path = defined('CORE_VIEWS') ? CORE_VIEWS . '500.php' : __DIR__ . '/../Views/500.php';
-
-            if (file_exists($vista_modulo_path)) {
-                include $vista_modulo_path;
-            } else {
-                die("Error 500: Fallo Crítico del Kernel - Imposible conectar a la base de datos: " . $e->getMessage());
-            }
-            exit;
+            throw new DatabaseConnectionException(
+                'Error de infraestructura de datos. Por favor reintente más tarde.',
+                (int)$e->getCode(),
+                $e,
+                $isAjax,
+                $detalleDev
+            );
         }
     }
 
-    // Método estático para obtener la conexión
-    public static function getInstance(): PDO {
+    private static ?int $lastSyncedUserId = null;
+
+    public static function getInstance(bool $silencioso = false): ?PDO {
         if (self::$instance === null) {
-            self::$instance = new Connection();
+            $conexionObjeto = new self($silencioso);
+            self::$instance = $conexionObjeto->pdo;
+            self::$lastSyncedUserId = null;
         }
-        return self::$instance->pdo;
-    }
-
-    // Prevenir la clonación del objeto
-    private function __clone() {}
-    
-    // Prevenir la deserialización del objeto
-    public function __wakeup() {
-        throw new Exception("No se puede deserializar una conexión a base de datos.");
-    }
-
-    /**
-     * Devuelve las credenciales de PostgreSQL centralizadas del Core sin forzar error 500 si falla la BD.
-     */
-    public static function getCredentials(): array {
-        $conn = new self(true); // Pasar flag silencioso
-        return [
-            'host' => $conn->host,
-            'port' => $conn->port,
-            'db'   => $conn->db,
-            'user' => $conn->user,
-            'pass' => $conn->pass,
-        ];
-    }
-
-    /**
-     * Guarda las credenciales de la base de datos en storage/db_config.json
-     */
-    public static function saveCredentials(string $host, string $port, string $db, string $user, string $pass): bool {
-        $file = self::getConfigPath();
-        $dir = dirname($file);
-        if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
+        if (self::$instance !== null && isset($_SESSION['usuario_id']) && is_numeric($_SESSION['usuario_id'])) {
+            $uid = (int)$_SESSION['usuario_id'];
+            if ($uid > 0 && self::$lastSyncedUserId !== $uid) {
+                try {
+                    $stmt = self::$instance->prepare("SELECT set_config('app.usuario_actual', ?, false)");
+                    $stmt->execute([(string)$uid]);
+                    self::$lastSyncedUserId = $uid;
+                } catch (Throwable) {
+                    // Ignorar si la sesión de BD está en transacción abortada
+                }
+            }
         }
-        $data = [
-            'host' => trim($host),
-            'port' => trim($port),
-            'db'   => trim($db),
-            'user' => trim($user),
-            'pass' => $pass,
-            'updated_at' => date('Y-m-d H:i:s')
-        ];
-        return file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) !== false;
+        return self::$instance;
     }
 
-    /**
-     * Retorna la ruta ejecutable de pg_dump / psql según el SO (Linux / Windows)
-     */
-    public static function getPgDumpPath(): string {
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            return '"C:\\Program Files\\PostgreSQL\\18\\bin\\pg_dump.exe"';
-        }
-        return 'pg_dump';
+    public static function resetConnection(): void {
+        self::$instance = null;
+        self::$lastSyncedUserId = null;
     }
 
-    public static function getPsqlPath(): string {
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            return '"C:\\Program Files\\PostgreSQL\\18\\bin\\psql.exe"';
+    public static function logSystemError(Throwable $e): void {
+        $logDir = defined('STORAGE_PATH') ? STORAGE_PATH . 'logs/' : __DIR__ . '/../../storage/logs/';
+        if (!is_dir($logDir)) {
+            @mkdir($logDir, 0777, true);
         }
-        return 'psql';
+        $logFile = $logDir . 'system_errors.log';
+
+        $mensaje = sprintf(
+            "[%s] ERROR: %s en %s:%d\nTrace:\n%s\n%s\n",
+            date('Y-m-d H:i:s'),
+            $e->getMessage(),
+            $e->getFile(),
+            $e->getLine(),
+            $e->getTraceAsString(),
+            str_repeat('-', 80)
+        );
+
+        @file_put_contents($logFile, $mensaje, FILE_APPEND);
     }
 }

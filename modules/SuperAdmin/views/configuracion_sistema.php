@@ -12,7 +12,7 @@
             </p>
         </div>
         <div style="display: flex; gap: 0.5rem;">
-            <a href="sudoadmin" class="btn btn-outline" style="border-color: var(--color-secundario); color: var(--color-secundario) !important; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">
+            <a href="sudoadmin" class="sa-btn sa-btn-outline">
                 <i class="ph-bold ph-arrow-left"></i> Volver al Dashboard
             </a>
         </div>
@@ -20,14 +20,14 @@
 </div>
 
 <?php if (!empty($mensajeExito)): ?>
-    <div style="background: rgba(16,185,129,0.12); color: #047857; border: 1px solid rgba(16,185,129,0.3); padding: 0.85rem 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-        <i class="ph-bold ph-check-circle" style="font-size: 1.2rem;"></i> <?= htmlspecialchars($mensajeExito) ?>
+    <div class="sa-alert sa-alert-success">
+        <i class="ph-bold ph-check-circle"></i> <?= htmlspecialchars($mensajeExito) ?>
     </div>
 <?php endif; ?>
 
 <?php if (!empty($mensajeError)): ?>
-    <div style="background: rgba(239,68,68,0.12); color: #b91c1c; border: 1px solid rgba(239,68,68,0.3); padding: 0.85rem 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-        <i class="ph-bold ph-warning-circle" style="font-size: 1.2rem;"></i> <?= htmlspecialchars($mensajeError) ?>
+    <div class="sa-alert sa-alert-error">
+        <i class="ph-bold ph-warning-circle"></i> <?= htmlspecialchars($mensajeError) ?>
     </div>
 <?php endif; ?>
 
@@ -41,6 +41,9 @@
         </button>
         <button type="button" class="sa-tab-btn" onclick="switchConfigTab('tabSeguridad', this)">
             <i class="ph-bold ph-shield-check"></i> Seguridad Base
+        </button>
+        <button type="button" class="sa-tab-btn" onclick="switchConfigTab('tabEnv', this)">
+            <i class="ph-bold ph-bug"></i> Variables .env & Depuración
         </button>
         <button type="button" class="sa-tab-btn" onclick="switchConfigTab('tabAccesos', this)">
             <i class="ph-bold ph-lock-key"></i> Accesos por Módulo
@@ -97,6 +100,51 @@
         </div>
     </div>
 
+    <!-- TAB VARIABLES .ENV & DEPURACIÓN -->
+    <?php
+    $appDebugActual = class_exists('Env') ? Env::get('APP_DEBUG', false) : false;
+    $appEnvActual   = class_exists('Env') ? Env::get('APP_ENV', 'production') : 'production';
+    ?>
+    <div id="tabEnv" class="sa-tab-content" style="display:none;">
+        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-sm);">
+            <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem; font-weight: 700; color: var(--texto-titulos); display: flex; align-items: center; gap: 6px;">
+                <i class="ph-bold ph-bug" style="color: var(--color-terciario);"></i> Modo de Depuración y Entorno de Ejecución (.env Shield)
+            </h4>
+            <p style="font-size: 0.85rem; color: var(--texto-silenciado); margin-bottom: 1.25rem;">
+                Controla la exposición de excepciones PDO y errores del servidor. En producción, desactiva <code>APP_DEBUG</code> para evitar fuga de información.
+            </p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                <div style="background: #f8fafc; padding: 1.2rem; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <label style="font-size: 0.85rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 6px;">
+                        <i class="ph-bold ph-toggle-left"></i> Modo Depuración (APP_DEBUG)
+                    </label>
+                    <select name="app_debug" class="sa-filter-input" style="width: 100%; font-weight: 600;">
+                        <option value="false" <?= !$appDebugActual ? 'selected' : '' ?>>false (Producción - Errores genéricos seguros)</option>
+                        <option value="true" <?= $appDebugActual ? 'selected' : '' ?>>true (Desarrollo - Muestra trazas de excepciones PDO)</option>
+                    </select>
+                    <div style="margin-top: 8px; font-size: 0.78rem; color: var(--texto-silenciado);">
+                        Si está en <code>false</code>, los usuarios recibirán un mensaje seguro de Error 500 y las trazas se guardarán silenciosamente en <code>storage/logs/system_errors.log</code>.
+                    </div>
+                </div>
+
+                <div style="background: #f8fafc; padding: 1.2rem; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <label style="font-size: 0.85rem; font-weight: 700; color: var(--texto-titulos); display: block; margin-bottom: 6px;">
+                        <i class="ph-bold ph-tree-structure"></i> Entorno de Ejecución (APP_ENV)
+                    </label>
+                    <select name="app_env" class="sa-filter-input" style="width: 100%; font-weight: 600;">
+                        <option value="production" <?= $appEnvActual === 'production' ? 'selected' : '' ?>>Production (Servidor de Producción UPTTMBI)</option>
+                        <option value="development" <?= $appEnvActual === 'development' ? 'selected' : '' ?>>Development (Entorno Local de Desarrollo)</option>
+                        <option value="staging" <?= $appEnvActual === 'staging' ? 'selected' : '' ?>>Staging (Servidor de Pruebas / QA)</option>
+                    </select>
+                    <div style="margin-top: 8px; font-size: 0.78rem; color: var(--texto-silenciado);">
+                        Define el perfil operacional del sistema.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- TAB ACCESOS POR MÓDULO -->
     <div id="tabAccesos" class="sa-tab-content" style="display:none;">
         <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-sm);">
@@ -135,11 +183,11 @@
                     <div style="display: flex; gap: 1rem;">
                         <div style="flex: 1;">
                             <label style="font-size: 0.75rem; font-weight: 700; color: var(--texto-silenciado);">Nivel Público (Ver)</label>
-                            <input type="number" name="accesos[<?= $slug ?>][publico]" value="<?= $valPub ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
+                            <input type="number" min="0" name="accesos[<?= $slug ?>][publico]" value="<?= $valPub ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
                         </div>
                         <div style="flex: 1;">
                             <label style="font-size: 0.75rem; font-weight: 700; color: var(--texto-silenciado);">Nivel Admin (Gestionar)</label>
-                            <input type="number" name="accesos[<?= $slug ?>][admin]" value="<?= $valAdm ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
+                            <input type="number" min="0" name="accesos[<?= $slug ?>][admin]" value="<?= $valAdm ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
                         </div>
                     </div>
                 </div>
@@ -152,7 +200,7 @@
                         <div style="flex: 1;">
                             <label style="font-size: 0.75rem; font-weight: 700; color: var(--texto-silenciado);">Nivel Login/Registro</label>
                             <!-- Límite estricto establecido a 998 visualmente -->
-                            <input type="number" max="998" name="accesos[autenticacion][publico]" value="<?= $config['accesos_modulos']['autenticacion']['publico'] ?? 998 ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
+                            <input type="number" min="0" max="998" name="accesos[autenticacion][publico]" value="<?= $config['accesos_modulos']['autenticacion']['publico'] ?? 998 ?>" class="sa-filter-input" style="width: 100%; margin-top: 4px;">
                         </div>
                     </div>
                 </div>
@@ -162,7 +210,7 @@
     </div>
 
     <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
-        <button type="submit" class="btn sa-btn-primary" style="background: var(--color-secundario) !important; color: #ffffff !important; padding: 10px 24px; border-radius: 6px; font-weight: 700; font-size: 0.9rem; cursor: pointer; border: none;">
+        <button type="submit" class="sa-btn sa-btn-primary">
             <i class="ph-bold ph-floppy-disk"></i> Aplicar Cambios Globales
         </button>
     </div>

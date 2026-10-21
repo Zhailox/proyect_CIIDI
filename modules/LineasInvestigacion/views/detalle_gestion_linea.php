@@ -122,6 +122,48 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
 
     </div>
 
+    <!-- LISTA DE PROFESORES AFILIADOS -->
+    <div class="ag-list-container" style="margin-top: 2rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #e2e8f0; padding-bottom:1.2rem; margin-bottom:1.8rem;">
+            <div>
+                <h2 style="margin:0 0 0.3rem 0; font-size:1.4rem; color:var(--texto-titulos, #0f172a); font-weight: 800;"><i class="ph-bold ph-users-three"></i> Profesores Afiliados</h2>
+                <p style="margin:0; font-size:0.95rem; color:var(--texto-silenciado, #64748b);">Gestione los docentes vinculados al desarrollo de esta línea.</p>
+            </div>
+            <button type="button" onclick="abrirModalVincularProfesor()" style="background: #10b981; color: #ffffff; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(16,185,129,0.3);" onmouseover="this.style.background='#059669'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#10b981'; this.style.transform='translateY(0)'">
+                <i class="ph-bold ph-plus"></i> Vincular Profesor
+            </button>
+        </div>
+
+        <?php if (!empty($profesoresAfiliados)): ?>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+            <?php foreach($profesoresAfiliados as $prof): ?>
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 0.8rem;">
+                        <i class="ph-fill ph-user-circle" style="font-size: 2.5rem; color: #505984;"></i>
+                        <div>
+                            <div style="font-weight: 700; color: #1e293b;"><?= htmlspecialchars($prof['nombre_profesor']) ?></div>
+                            <div style="font-size: 0.8rem; color: #64748b;"><?= htmlspecialchars($prof['email']) ?></div>
+                        </div>
+                    </div>
+                    <?php if ($isSuper || true): ?>
+                    <button type="button" class="ag-btn-delete" style="padding: 0.5rem; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;" onclick="desvincularProfesor(<?= $prof['id'] ?>, '<?= htmlspecialchars(addslashes($prof['nombre_profesor'])) ?>')" title="Desvincular">
+                        <i class="ph-bold ph-x"></i>
+                    </button>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <div style="text-align:center; padding: 2rem 0;">
+                <div style="width: 60px; height: 60px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto;">
+                    <i class="ph-bold ph-users-slash" style="font-size:2rem; color:#94a3b8;"></i>
+                </div>
+                <h3 style="color:#475569; margin:0 0 0.5rem 0; font-size: 1.1rem;">No hay profesores vinculados</h3>
+                <p style="color:#64748b; font-size:0.9rem;">Vincule docentes para que aparezcan en el portal público de la línea.</p>
+            </div>
+        <?php endif; ?>
+    </div>
+
 </div>
 
 <!-- Formularios Ocultos -->
@@ -132,8 +174,75 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
     <input type="hidden" name="redirect_to" value="detalle-gestion-linea&id=<?= $linea['id'] ?>">
 </form>
 
+<form id="formProfesorAction" method="POST" action="index.php?ruta=detalle-gestion-linea&id=<?= $linea['id'] ?>" style="display:none;">
+    <input type="hidden" name="accion" id="profesorAccionValue" value="">
+    <?= CSRF::campoOculto() ?>
+    <input type="hidden" name="id_linea" value="<?= $linea['id'] ?>">
+    <input type="hidden" name="id_profesor" id="profesorIdValue" value="">
+</form>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+function abrirModalVincularProfesor() {
+    let optionsHtml = '';
+    <?php foreach ($profesoresDisponibles as $p): ?>
+    optionsHtml += `<option value="<?= $p['id'] ?>"><?= htmlspecialchars(addslashes($p['nombre_completo'])) ?> (<?= htmlspecialchars(addslashes($p['email'])) ?>)</option>`;
+    <?php endforeach; ?>
+
+    if (optionsHtml === '') {
+        Swal.fire('Información', 'No hay profesores disponibles para vincular (todos están vinculados o no hay docentes registrados).', 'info');
+        return;
+    }
+
+    Swal.fire({
+        title: 'Vincular Profesor',
+        customClass: { popup: 'ag-swal-popup' },
+        html: `
+            <div style="text-align: left; margin-top: 1rem;">
+                <label class="ag-modal-label">Seleccione un profesor</label>
+                <select id="select-profesor" class="ag-modal-input" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                    <option value="">-- Seleccionar --</option>
+                    ${optionsHtml}
+                </select>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: '<i class="ph-bold ph-link"></i> Vincular',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#10b981',
+        cancelButtonColor: '#94a3b8',
+        preConfirm: () => {
+            const val = document.getElementById('select-profesor').value;
+            if (!val) {
+                Swal.showValidationMessage('Debe seleccionar un profesor');
+                return false;
+            }
+            document.getElementById('profesorAccionValue').value = 'vincular_profesor';
+            document.getElementById('profesorIdValue').value = val;
+            document.getElementById('formProfesorAction').submit();
+        }
+    });
+}
+
+function desvincularProfesor(id, nombre) {
+    Swal.fire({
+        title: '¿Desvincular profesor?',
+        html: `El profesor <strong>${nombre}</strong> ya no aparecerá afiliado a esta línea.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: '<i class="ph-bold ph-x"></i> Desvincular',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('profesorAccionValue').value = 'desvincular_profesor';
+            document.getElementById('profesorIdValue').value = id;
+            document.getElementById('formProfesorAction').submit();
+        }
+    });
+}
+
 function abrirModalEditarLinea(linea) {
     Swal.fire({
         title: 'Editar Línea de Investigación',

@@ -13,15 +13,15 @@
             },
             "vancouver": {
                 "nombre": "Estilo Vancouver",
-                "activo": false,
+                "activo": true,
                 "plantilla": "{autores}. {titulo}. Trujillo: UPTTMBI; {anio}."
             }
         }
     },
     "paginacion": {
         "modo_carga": "paginador",
-        "limite_catalogo": 10,
-        "limite_buscador": 6,
+        "limite_catalogo": 5,
+        "limite_buscador": 4,
         "opciones_selector": [
             5,
             10,
@@ -33,29 +33,47 @@
     },
     "recursos": {
         "sufijo_tipo_recurso": "PST \/ Proyecto Socio-Tecnológico",
-        "mostrar_url_git": false,
+        "mostrar_url_git": true,
         "mostrar_comunidad": true,
         "mostrar_nivel_academico": true
     },
     "buscador": {
-        "anio_minimo_histograma": 2018,
+        "anio_minimo_histograma": 2021,
         "orden_predeterminado": "anio_desc",
         "resaltar_coincidencias": true,
         "permitir_filtro_carrera": false
     },
     "visor_pdf": {
-        "mostrar_toolbar": false,
-        "permitir_descarga": false
+        "mostrar_toolbar": true,
+        "permitir_descarga": true,
+        "nivel_minimo_descarga": 998
     },
     "archivos": {
-        "max_size_mb": 20,
+        "max_size_mb": 200,
+        "max_archivos_lote": 5,
+        "max_paginas_analisis": 35,
+        "max_xml_descomprimido_mb": 25,
         "extensiones_permitidas": [
             ".pdf",
-            ".docx"
+            ".docx",
+            ".doc"
         ]
     },
     "limites_equipo": {
-        "max_autores": 4,
+        "max_autores": 5,
         "max_tutores": 3
+    },
+    "red_onnx": {
+        "habilitar_busqueda_semantica": true,
+        "umbral_distancia_coseno": 0.82,
+        "max_resultados_semanticos": 20,
+        "max_tokens_secuencia": 192,
+        "lote_worker_embeddings": 5,
+        "fallback_busqueda_estandar": true,
+        "peso_titulo": 2,
+        "incluir_resumen": true,
+        "incluir_objetivo_general": true,
+        "incluir_palabras_clave": true,
+        "incluir_comunidad": false
     }
 }

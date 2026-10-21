@@ -1,6 +1,6 @@
 {
     "paginacion": {
-        "limite_catalogo": 2,
+        "limite_catalogo": 10,
         "opciones_selector": [
             6,
             9,
@@ -18,18 +18,24 @@
             "gif"
         ],
         "mime_permitidos": [
-            "image\/jpeg",
-            "image\/png",
-            "image\/gif",
-            "image\/webp"
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp"
         ],
         "convertir_a_webp": true,
         "lazy_load": true,
-        "carpeta_uploads": "public\/uploads\/cursos\/",
-        "placeholder_url": "https:\/\/images.unsplash.com\/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=600"
+        "carpeta_uploads": "storage/uploads/cursos/",
+        "placeholder_url": "https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=600"
     },
     "moodle": {
-        "url_fallback": "https:\/\/www.youtube.com"
+        "url_fallback": "https://www.youtube.com"
+    },
+    "formulario_google": {
+        "url_default": "https://docs.google.com/forms/d/e/1FAIpQLSean-NUF1PEU6ci8MiNIQp13OewWCofp7O7V3MV8k_CA1CHNQ/viewform",
+        "modo": "embebido",
+        "habilitado": true,
+        "titulo": "Formulario Oficial de Inscripción a Cursos CIIDI"
     },
     "seguridad": {
         "csrf_activo": true

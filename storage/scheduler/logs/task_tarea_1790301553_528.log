@@ -1,0 +1,14 @@
+========================================================
+REGISTRO DE EJECUCIÓN: Generar Embeddings Semánticos [tarea_1790301553_528]
+FECHA/HORA: 2026-10-20 23:55:19
+DURACIÓN: 306.19 ms | ESTADO: FAIL
+========================================================
+
+MENSAJE: Error de ejecución CLI (Código 1).
+
+--- SALIDA ESTÁNDAR / CONSOLA (STDOUT/STDERR) ---
+Failed loading c:/wamp64/bin/php/php8.5.0/zend_ext/php_xdebug-3.4.7-8.4-ts-vs17-x86_64.dll
+[2026-10-20 23:55:19] [EmbeddingWorker] ═══ Iniciando ciclo de generación de embeddings ═══
+[2026-10-20 23:55:19] [EmbeddingWorker] Encontrados 5 proyectos pendientes de vectorización.
+[2026-10-20 23:55:19] [EmbeddingWorker] Cargando modelo ONNX y tokenizer...
+[2026-10-20 23:55:19] [EmbeddingWorker] ❌ ERROR FATAL: Librería de ONNX Runtime no encontrada en: C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\vendor\ankane\onnxruntime\src/../lib/onnxruntime-win-x64-1.30.0/lib/onnxruntime.dll

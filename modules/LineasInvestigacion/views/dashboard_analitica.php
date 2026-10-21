@@ -1,4 +1,4 @@
-﻿<!-- modules/LineasInvestigacion/views/dashboard_analitica.php -->
+<!-- modules/LineasInvestigacion/views/dashboard_analitica.php -->
 <div class="li-gestor-wrapper animate-fade-in">
 
     <style>
@@ -91,7 +91,10 @@
                         <option value="5">5 Trimestres</option>
                         <option value="6">6 Trimestres (2 Años Académicos)</option>
                     </select>
-                    <button id="btn-proyectar" style="background: #505984; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-weight: 700; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(80, 89, 132, 0.3); transition: all 0.2s ease; transition: all 0.2s ease;" onmouseover="this.style.background=\'#3C456A\'; this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.background=\'#505984\'; this.style.transform=\'translateY(0)\'">
+                    <button id="btn-advanced" type="button" style="background: #f8fafc; color: #64748b; padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 600; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background 0.2s ease;" onclick="document.getElementById('advanced-settings-panel').style.display = document.getElementById('advanced-settings-panel').style.display === 'none' ? 'flex' : 'none';">
+    <i class="ph-bold ph-faders"></i> Controles Avanzados ML
+</button>
+<button id="btn-proyectar" style="background: #505984; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-weight: 700; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(80, 89, 132, 0.3); transition: all 0.2s ease; transition: all 0.2s ease;" onmouseover="this.style.background='#3C456A'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#505984'; this.style.transform='translateY(0)'">
                         <i class="ph-bold ph-magic-wand" style="font-size: 1.1rem;"></i> Actualizar Modelo
                     </button>
                     <button id="btn-descargar-pdf" style="display: none; background: #e11d48; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-weight: 700; font-size: 0.95rem; cursor: pointer; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(225, 29, 72, 0.3); transition: all 0.2s ease;" onmouseover="this.style.background='#be123c'" onmouseout="this.style.background='#e11d48'">
@@ -100,8 +103,38 @@
                 </div>
             </div>
 
-            <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;">
-                El motor de Inteligencia Artificial analiza el historial real de proyectos registrados en la plataforma. Mediante algoritmos de Regresión Lineal, proyecta el volumen de demanda para próximos trimestres académicos, facilitando la toma de decisiones estratégicas.
+            <!-- Controles Avanzados (Oculto por defecto) -->
+<div id="advanced-settings-panel" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-top: 15px; gap: 20px; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 200px;">
+        <label style="font-size: 0.85rem; font-weight: 700; color: #475569; display: block; margin-bottom: 5px;">Muestreo de Historial (Data Bounds)</label>
+        <select id="select-historial" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; color: #1e293b; background: white; font-size: 0.9rem;">
+            <option value="all">Todo el Historial Histórico</option>
+            <option value="2y" selected>Últimos 2 Años (Recomendado)</option>
+            <option value="1y">Último Año</option>
+        </select>
+        <small style="color: #64748b; font-size: 0.75rem; display: block; margin-top: 4px;">Previene overfitting por datos obsoletos.</small>
+    </div>
+    <div style="flex: 1; min-width: 200px;">
+        <label style="font-size: 0.85rem; font-weight: 700; color: #475569; display: block; margin-bottom: 5px;">Algoritmo ML / Modelo</label>
+        <select id="select-ml-model" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; color: #1e293b; background: white; font-size: 0.9rem;">
+            <option value="linear" selected>Regresión Lineal Múltiple</option>
+            <option value="poly">Regresión Polinómica (Grado 2)</option>
+            <option value="rf">Random Forest Regressor</option>
+        </select>
+        <small style="color: #64748b; font-size: 0.75rem; display: block; margin-top: 4px;">Selecciona el motor matemático de regresión.</small>
+    </div>
+    <div style="flex: 1; min-width: 120px;">
+        <label style="font-size: 0.85rem; font-weight: 700; color: #475569; display: block; margin-bottom: 5px;">Max Epochs</label>
+        <input type="number" id="input-epochs" value="500" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; color: #1e293b; background: white; font-size: 0.9rem;">
+    </div>
+    <div style="flex: 1; min-width: 120px;">
+        <label style="font-size: 0.85rem; font-weight: 700; color: #475569; display: block; margin-bottom: 5px;">Timeout (s)</label>
+        <input type="number" id="input-timeout" value="10" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; color: #1e293b; background: white; font-size: 0.9rem;">
+    </div>
+</div>
+
+<p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;">
+                El motor de Inteligencia Artificial analiza el historial real de proyectos registrados en la plataforma. Mediante algoritmos de regresión (Lineal, Polinómica o Random Forest, configurables en los Controles Avanzados ML), proyecta el volumen de demanda para próximos trimestres académicos, facilitando la toma de decisiones estratégicas.
             </p>
             
             <div id="loading-tendencias" style="display: none; color: #505984; font-style: italic; margin-bottom: 1rem;">
@@ -150,7 +183,7 @@
 <!-- Cargar Chart.js desde CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- Cargar el script que maneja la UI analítica -->
-<script src="../modules/LineasInvestigacion/assets/analitica_ui.js"></script>
+<script src="../modules/LineasInvestigacion/assets/analitica_ui.js?v=<?= @filemtime(__DIR__ . '/../assets/analitica_ui.js') ?: time() ?>"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

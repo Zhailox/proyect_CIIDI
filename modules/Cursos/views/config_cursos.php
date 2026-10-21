@@ -139,6 +139,67 @@ $c = $config_actual;
                     <?php endforeach; ?>
                 </div>
             </div>
+
+            <!-- TARJETA: Formulario de Google (Integración de Inscripción Externa) -->
+            <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04); grid-column: 1 / -1;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 1.5rem; border-bottom: 1px solid var(--cur-border); padding-bottom:1rem; flex-wrap:wrap; gap:1rem;">
+                    <div style="display:flex; align-items:center; gap:0.8rem;">
+                        <div style="width:40px; height:40px; border-radius:10px; background:#EDE9FE; color:#7C3AED; display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
+                            <i class="ph-fill ph-textbox"></i>
+                        </div>
+                        <div>
+                            <h3 style="font-weight:700; color:var(--cur-dark); font-size:1.2rem; margin:0;">Integración con Formulario de Google</h3>
+                            <p style="margin:0; font-size:0.85rem; color:var(--cur-muted);">Configuración global de la vista separada para inscripciones externas oficiales.</p>
+                        </div>
+                    </div>
+                    <label style="display:flex; align-items:center; gap:0.6rem; cursor:pointer; background:#F5F3FF; padding:0.5rem 1rem; border-radius:30px; border:1px solid #DDD6FE;">
+                        <input type="checkbox" name="google_form_habilitado" <?= !empty($c['formulario_google']['habilitado']) ? 'checked' : '' ?> style="width:1.2rem; height:1.2rem; accent-color:#7C3AED;">
+                        <span style="font-weight:600; font-size:0.9rem; color:#6D28D9;">Habilitar Formulario de Google</span>
+                    </label>
+                </div>
+
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem;">
+                    <div class="cur-field-group">
+                        <label for="google_form_url" class="cur-field-label">URL Predeterminada del Google Form</label>
+                        <div class="cur-field-input-wrap">
+                            <i class="ph-bold ph-link cur-field-icon"></i>
+                            <input type="url" id="google_form_url" name="google_form_url" class="cur-field-input" value="<?= htmlspecialchars($c['formulario_google']['url_default'] ?? '') ?>" placeholder="https://docs.google.com/forms/d/e/.../viewform" style="border-radius:10px; padding:0.8rem 1rem 0.8rem 2.5rem;">
+                        </div>
+                        <small style="color:var(--cur-muted); display:block; margin-top:0.4rem;"><i class="ph-bold ph-info"></i> Se usará cuando un curso no tenga una URL de formulario personalizada.</small>
+                    </div>
+
+                    <div class="cur-field-group">
+                        <label for="google_form_titulo" class="cur-field-label">Título en la Vista de Inscripción</label>
+                        <div class="cur-field-input-wrap">
+                            <i class="ph-bold ph-text-t cur-field-icon"></i>
+                            <input type="text" id="google_form_titulo" name="google_form_titulo" class="cur-field-input" value="<?= htmlspecialchars($c['formulario_google']['titulo'] ?? 'Formulario Oficial de Inscripción CIIDI') ?>" placeholder="Formulario Oficial de Inscripción" style="border-radius:10px; padding:0.8rem 1rem 0.8rem 2.5rem;">
+                        </div>
+                        <small style="color:var(--cur-muted); display:block; margin-top:0.4rem;"><i class="ph-bold ph-info"></i> Encabezado visible en la vista separada del formulario.</small>
+                    </div>
+
+                    <div class="cur-field-group">
+                        <label for="google_form_modo" class="cur-field-label">Modo de Despliegue</label>
+                        <div class="cur-field-input-wrap">
+                            <i class="ph-bold ph-browsers cur-field-icon"></i>
+                            <select id="google_form_modo" name="google_form_modo" class="cur-field-input" style="border-radius:10px; padding:0.8rem 1rem 0.8rem 2.5rem; background-color:#fff;">
+                                <option value="embebido" <?= (($c['formulario_google']['modo'] ?? 'embebido') === 'embebido') ? 'selected' : '' ?>>Embebido (Iframe interactivo dentro de CIIDI)</option>
+                                <option value="redireccion" <?= (($c['formulario_google']['modo'] ?? '') === 'redireccion') ? 'selected' : '' ?>>Redirección directa a Google Forms</option>
+                            </select>
+                        </div>
+                        <small style="color:var(--cur-muted); display:block; margin-top:0.4rem;"><i class="ph-bold ph-info"></i> Permite integrar el formulario en pantalla o abrirlo externamente.</small>
+                    </div>
+                </div>
+
+                <div style="margin-top:1.5rem; background:#F8FAFC; padding:1rem 1.2rem; border-radius:12px; border:1px dashed #CBD5E1; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+                    <div style="display:flex; align-items:center; gap:0.6rem; color:#475569; font-size:0.9rem;">
+                        <i class="ph-bold ph-eye" style="color:var(--cur-primary); font-size:1.2rem;"></i>
+                        <span>Vista previa de la ruta de inscripción dedicada:</span>
+                    </div>
+                    <a href="?ruta=cursos-formulario-google" target="_blank" style="display:inline-flex; align-items:center; gap:0.4rem; color:var(--cur-primary); font-weight:600; text-decoration:none; font-size:0.9rem; background:#fff; padding:0.4rem 0.9rem; border-radius:8px; border:1px solid rgba(80,89,132,0.2);">
+                        Abrir vista separada <i class="ph-bold ph-arrow-square-out"></i>
+                    </a>
+                </div>
+            </div>
         </div>
 
 
