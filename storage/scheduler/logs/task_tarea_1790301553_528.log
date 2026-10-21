@@ -1,7 +1,7 @@
 ========================================================
 REGISTRO DE EJECUCIÓN: Generar Embeddings Semánticos [tarea_1790301553_528]
-FECHA/HORA: 2026-10-20 04:27:25
-DURACIÓN: 0.15 ms | ESTADO: FAIL
+FECHA/HORA: 2026-10-21 19:30:49
+DURACIÓN: 0.75 ms | ESTADO: FAIL
 ========================================================
 
 MENSAJE: El archivo de script 'script_tarea_1790301553_528.php' no existe en storage/scheduler/scripts/.

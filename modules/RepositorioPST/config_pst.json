@@ -69,7 +69,7 @@
         "max_resultados_semanticos": 20,
         "max_tokens_secuencia": 192,
         "lote_worker_embeddings": 5,
-        "fallback_busqueda_estandar": true,
+        "fallback_busqueda_estandar": false,
         "peso_titulo": 2,
         "incluir_resumen": true,
         "incluir_objetivo_general": true,
