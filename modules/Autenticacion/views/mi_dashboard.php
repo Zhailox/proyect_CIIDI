@@ -120,25 +120,56 @@
                         </div>
                         <?php if ($esProfesor): ?>
                         <?php
-                            $nombresMisLineas = [];
+                            $misDimensionesIds = $misDimensionesIds ?? [];
+                            $dimensionesPorLinea = $dimensionesPorLinea ?? [];
+                            $misLineasDetalle = [];
                             foreach ($lineasDisponibles as $linItem) {
-                                if (in_array((int)$linItem['id'], $misLineasIds, true)) {
-                                    $nombresMisLineas[] = $linItem['nombre'];
+                                $idLin = (int)$linItem['id'];
+                                if (in_array($idLin, $misLineasIds, true)) {
+                                    $dimsDeEstaLinea = [];
+                                    foreach (($dimensionesPorLinea[$idLin] ?? []) as $dItem) {
+                                        if (in_array((int)$dItem['id'], $misDimensionesIds, true)) {
+                                            $dimsDeEstaLinea[] = $dItem['nombre'];
+                                        }
+                                    }
+                                    $misLineasDetalle[] = [
+                                        'nombre'   => $linItem['nombre'],
+                                        'carrera'  => $linItem['carrera_nombre'] ?? 'General / Institucional',
+                                        'dims'     => $dimsDeEstaLinea,
+                                    ];
                                 }
                             }
                         ?>
-                        <div class="db-data-item">
-                            <span class="db-data-label"><i class="ph-bold ph-git-branch"></i> Líneas de Especialidad</span>
-                            <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
-                                <?php if (!empty($nombresMisLineas)): ?>
-                                    <span class="db-data-value strong" style="text-align:right; color:#505984;">
-                                        <?= htmlspecialchars(implode(' · ', $nombresMisLineas)) ?>
-                                    </span>
+                        <div class="db-data-item" style="align-items:flex-start;">
+                            <span class="db-data-label"><i class="ph-bold ph-git-branch"></i> Líneas y Dimensiones de Especialidad</span>
+                            <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end; max-width:65%;">
+                                <?php if (!empty($misLineasDetalle)): ?>
+                                    <div style="display:flex; flex-direction:column; gap:6px; width:100%; align-items:flex-end;">
+                                        <?php foreach ($misLineasDetalle as $mld): ?>
+                                            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:6px 10px; text-align:right; width:100%;">
+                                                <div style="font-size:0.7rem; font-weight:700; color:#7090cb; text-transform:uppercase; letter-spacing:0.03em;">
+                                                    <i class="ph-bold ph-graduation-cap"></i> <?= htmlspecialchars($mld['carrera']) ?>
+                                                </div>
+                                                <div style="font-size:0.86rem; font-weight:700; color:#121a3e;">
+                                                    <?= htmlspecialchars($mld['nombre']) ?>
+                                                </div>
+                                                <?php if (!empty($mld['dims'])): ?>
+                                                    <div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:flex-end; margin-top:4px;">
+                                                        <?php foreach ($mld['dims'] as $dNom): ?>
+                                                            <span style="background:rgba(80,89,132,0.1); color:#505984; border:1px solid rgba(80,89,132,0.22); border-radius:999px; padding:1px 8px; font-size:0.72rem; font-weight:600;">
+                                                                <i class="ph-bold ph-tag" style="font-size:0.65rem;"></i> <?= htmlspecialchars($dNom) ?>
+                                                            </span>
+                                                        <?php endforeach; ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
                                 <?php else: ?>
-                                    <span class="db-data-value" style="color:#64748b; font-style:italic;">Sin líneas asignadas aún</span>
+                                    <span class="db-data-value" style="color:#64748b; font-style:italic;">Sin líneas ni dimensiones asignadas aún</span>
                                 <?php endif; ?>
                                 <button type="button" class="db-btn-verify" onclick="document.getElementById('btn-tab-vinculacion')?.click();" style="cursor:pointer;">
-                                    <i class="ph-bold ph-Sliders-horizontal"></i> Asignar Líneas y Trayectos
+                                    <i class="ph-bold ph-sliders-horizontal"></i> Asignar Líneas, Dimensiones y Trayectos
                                 </button>
                             </div>
                         </div>
@@ -315,36 +346,202 @@
         </div>
 
         <?php if ($esProfesor): ?>
+        <?php
+            // Agrupar líneas de investigación por Carrera (PNF)
+            $carrerasDisponibles = $carrerasDisponibles ?? [];
+            $dimensionesPorLinea = $dimensionesPorLinea ?? [];
+            $misDimensionesIds   = $misDimensionesIds ?? [];
+
+            $gruposPorCarrera = [];
+            foreach ($carrerasDisponibles as $carRow) {
+                $cid = (int)$carRow['id'];
+                $gruposPorCarrera[$cid] = [
+                    'id'          => $cid,
+                    'nombre'      => $carRow['nombre'],
+                    'descripcion' => $carRow['descripcion'] ?? '',
+                    'lineas'      => [],
+                ];
+            }
+            foreach ($lineasDisponibles as $linRow) {
+                $cid = !empty($linRow['id_carrera']) ? (int)$linRow['id_carrera'] : 0;
+                if (!isset($gruposPorCarrera[$cid])) {
+                    $gruposPorCarrera[$cid] = [
+                        'id'          => $cid,
+                        'nombre'      => $linRow['carrera_nombre'] ?? 'General / Institucional',
+                        'descripcion' => '',
+                        'lineas'      => [],
+                    ];
+                }
+                $gruposPorCarrera[$cid]['lineas'][] = $linRow;
+            }
+            // Filtrar grupos vacíos salvo que no haya ninguna línea
+            $gruposConLineas = array_filter($gruposPorCarrera, fn($g) => !empty($g['lineas']));
+            if (empty($gruposConLineas)) {
+                $gruposConLineas = $gruposPorCarrera;
+            }
+        ?>
         <!-- PESTAÑA: VINCULACIÓN CIIDI -->
         <div id="tab-vinculacion" class="db-tab-pane <?= ($activeTab === 'vinculacion') ? 'active' : '' ?>">
             <div class="db-card">
-                <div class="db-card-header">
-                    <h3><i class="ph-bold ph-git-branch"></i> Líneas de Investigación de Especialidad (Docente / Investigador)</h3>
+                <div class="db-card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
+                    <h3 style="margin:0;"><i class="ph-bold ph-git-branch"></i> Líneas de Investigación y Dimensiones Operativas por Carrera</h3>
+                    <span style="background:rgba(80,89,132,0.1); color:#505984; border:1px solid rgba(80,89,132,0.22); border-radius:999px; padding:4px 12px; font-size:0.78rem; font-weight:700;">
+                        <i class="ph-bold ph-check-circle"></i>
+                        <span id="counter-lineas-sel"><?= count($misLineasIds) ?></span> Línea(s) ·
+                        <span id="counter-dims-sel"><?= count($misDimensionesIds) ?></span> Dimensión(es)
+                    </span>
                 </div>
-                <form action="perfil" method="POST" class="db-form">
+                <form action="perfil" method="POST" class="db-form" id="form-especialidad-docente">
                     <?= CSRF::campoOculto() ?>
                     <input type="hidden" name="accion" value="vincular_lineas_docente">
-                    <p style="margin-bottom: 1rem; color: #4b5563;">
-                        Selecciona las líneas de investigación en las que eres especialista o tutor. Tu perfil aparecerá vinculado a estas líneas y en el directorio institucional para conectar con proyectos afines.
+                    <p style="margin-bottom: 1rem; color: #4b5563; line-height: 1.5;">
+                        Selecciona las <strong>líneas de investigación</strong> y las <strong>dimensiones operativas específicas</strong> en las que eres especialista o tutor, organizadas por <strong>Carrera / PNF</strong>. Al marcar cualquier dimensión operativa, su línea de investigación principal quedará vinculada automáticamente.
                     </p>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
-                        <?php if (empty($lineasDisponibles)): ?>
-                            <p>No hay líneas de investigación registradas en el sistema.</p>
-                        <?php else: ?>
-                            <?php foreach ($lineasDisponibles as $linea): 
-                                $estaMarcada = in_array((int)$linea['id'], $misLineasIds, true);
-                            ?>
-                                <label style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 1rem; border: 1px solid <?= $estaMarcada ? '#505984' : '#e5e7eb' ?>; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: <?= $estaMarcada ? '#f0f4ff' : '#fff' ?>;">
-                                    <input type="checkbox" name="lineas[]" value="<?= (int)$linea['id'] ?>" <?= $estaMarcada ? 'checked' : '' ?> style="margin-top: 0.2rem; transform: scale(1.2); accent-color: #505984;">
-                                    <div>
-                                        <strong style="display: block; color: #121a3e; margin-bottom: 0.25rem;"><?= htmlspecialchars($linea['nombre']) ?></strong>
-                                        <span style="font-size: 0.85rem; color: #6b7280;"><?= htmlspecialchars(mb_substr((string)$linea['descripcion'], 0, 110)) ?>...</span>
-                                    </div>
-                                </label>
+
+                    <!-- BARRA DE FILTRO POR CARRERA / PNF -->
+                    <?php if (count($gruposConLineas) > 0): ?>
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; margin-bottom:1.25rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <span style="font-size:0.76rem; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.04em; display:inline-flex; align-items:center; gap:5px; margin-right:4px;">
+                                <i class="ph-bold ph-graduation-cap" style="color:#505984; font-size:1rem;"></i> Filtrar por Carrera:
+                            </span>
+                            <button type="button" class="perfil-carrera-filter-btn active" data-carrera-filter="all" onclick="filtrarCarreraEspecialidad('all', this)"
+                                    style="background:#121a3e; color:#ffffff; border:1px solid #121a3e; border-radius:999px; padding:5px 13px; font-size:0.78rem; font-weight:700; cursor:pointer; transition:all 0.2s;">
+                                Todas las Carreras (<?= count($lineasDisponibles) ?>)
+                            </button>
+                            <?php foreach ($gruposConLineas as $cidKey => $gCar): ?>
+                                <button type="button" class="perfil-carrera-filter-btn" data-carrera-filter="<?= (int)$cidKey ?>" onclick="filtrarCarreraEspecialidad('<?= (int)$cidKey ?>', this)"
+                                        style="background:#ffffff; color:#334155; border:1px solid #cbd5e1; border-radius:999px; padding:5px 13px; font-size:0.78rem; font-weight:700; cursor:pointer; transition:all 0.2s;">
+                                    <i class="ph-bold ph-buildings"></i> <?= htmlspecialchars($gCar['nombre']) ?> (<?= count($gCar['lineas']) ?>)
+                                </button>
                             <?php endforeach; ?>
-                        <?php endif; ?>
+                        </div>
                     </div>
+                    <?php endif; ?>
+
+                    <!-- BLOQUES AGRUPADOS POR CARRERA -->
+                    <?php if (empty($lineasDisponibles)): ?>
+                        <p>No hay líneas de investigación registradas en el sistema.</p>
+                    <?php else: ?>
+                        <div id="contenedor-carreras-especialidad" style="display:flex; flex-direction:column; gap:1.5rem; margin-bottom:1.5rem;">
+                            <?php foreach ($gruposConLineas as $cidKey => $grupoCar): ?>
+                                <section class="bloque-carrera-especialidad" data-carrera-id="<?= (int)$cidKey ?>" style="border:1px solid #dbe3f0; border-radius:14px; overflow:hidden; background:#ffffff; box-shadow:0 4px 14px rgba(18,26,62,0.04);">
+                                    <!-- Cabecera de la Carrera -->
+                                    <div style="background:linear-gradient(135deg, #121a3e 0%, #505984 100%); color:#ffffff; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                                        <div style="display:flex; align-items:center; gap:10px;">
+                                            <span style="width:32px; height:32px; border-radius:8px; background:rgba(255,255,255,0.16); display:inline-flex; align-items:center; justify-content:center; font-size:1.05rem;">
+                                                <i class="ph-bold ph-graduation-cap"></i>
+                                            </span>
+                                            <div>
+                                                <h4 style="margin:0; font-size:0.98rem; font-weight:800; color:#ffffff; letter-spacing:0.01em;">
+                                                    <?= htmlspecialchars($grupoCar['nombre']) ?>
+                                                </h4>
+                                                <?php if (!empty($grupoCar['descripcion'])): ?>
+                                                    <span style="font-size:0.75rem; color:rgba(255,255,255,0.78); display:block;">
+                                                        <?= htmlspecialchars(mb_substr((string)$grupoCar['descripcion'], 0, 110)) ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                        <span style="background:rgba(255,255,255,0.18); color:#ffffff; border:1px solid rgba(255,255,255,0.28); border-radius:999px; padding:3px 11px; font-size:0.74rem; font-weight:700;">
+                                            <?= count($grupoCar['lineas']) ?> Línea(s) de Investigación
+                                        </span>
+                                    </div>
+
+                                    <!-- Grid de Líneas y sus Dimensiones dentro de la Carrera -->
+                                    <div style="padding:16px; display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:1.1rem; background:#f8fafc;">
+                                        <?php foreach ($grupoCar['lineas'] as $linea):
+                                            $idLin = (int)$linea['id'];
+                                            $estaMarcada = in_array($idLin, $misLineasIds, true);
+                                            $dimsLinea = $dimensionesPorLinea[$idLin] ?? [];
+                                            $dimsMarcadasCount = 0;
+                                            foreach ($dimsLinea as $dCheck) {
+                                                if (in_array((int)$dCheck['id'], $misDimensionesIds, true)) {
+                                                    $dimsMarcadasCount++;
+                                                }
+                                            }
+                                        ?>
+                                            <div class="tarjeta-linea-esp" id="card-linea-<?= $idLin ?>" data-linea-id="<?= $idLin ?>"
+                                                 style="display:flex; flex-direction:column; justify-content:space-between; border:1.5px solid <?= $estaMarcada ? '#505984' : '#e2e8f0' ?>; border-radius:12px; background:<?= $estaMarcada ? '#f4f7ff' : '#ffffff' ?>; transition:all 0.2s; overflow:hidden; box-shadow:0 2px 6px rgba(15,23,42,0.03);">
+                                                
+                                                <!-- Cabecera seleccionable de la Línea -->
+                                                <label style="display:flex; align-items:flex-start; gap:0.75rem; padding:1rem 1rem 0.85rem 1rem; cursor:pointer; margin:0;">
+                                                    <input type="checkbox" name="lineas[]" value="<?= $idLin ?>"
+                                                           class="chk-linea-esp" data-linea-id="<?= $idLin ?>"
+                                                           <?= $estaMarcada ? 'checked' : '' ?>
+                                                           onchange="onToggleLineaEspecialidad(<?= $idLin ?>, this.checked)"
+                                                           style="margin-top:0.2rem; width:18px; height:18px; accent-color:#505984; cursor:pointer; flex-shrink:0;">
+                                                    <div style="flex:1; min-width:0;">
+                                                        <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; flex-wrap:wrap; margin-bottom:4px;">
+                                                            <span style="font-size:0.68rem; font-weight:800; color:#505984; background:rgba(80,89,132,0.1); padding:2px 8px; border-radius:999px; text-transform:uppercase;">
+                                                                <?= htmlspecialchars($grupoCar['nombre']) ?>
+                                                            </span>
+                                                            <span id="badge-dim-count-<?= $idLin ?>" style="font-size:0.7rem; font-weight:700; color:<?= $dimsMarcadasCount > 0 ? '#1e293b' : '#64748b' ?>; background:<?= $dimsMarcadasCount > 0 ? '#dbeafe' : '#f1f5f9' ?>; padding:2px 8px; border-radius:999px;">
+                                                                <?= $dimsMarcadasCount ?> / <?= count($dimsLinea) ?> dim.
+                                                            </span>
+                                                        </div>
+                                                        <strong style="display:block; color:#121a3e; font-size:0.95rem; line-height:1.3; margin-bottom:0.25rem;">
+                                                            <?= htmlspecialchars($linea['nombre']) ?>
+                                                        </strong>
+                                                        <span style="font-size:0.81rem; color:#64748b; line-height:1.4; display:block;">
+                                                            <?= htmlspecialchars(mb_substr((string)$linea['descripcion'], 0, 120)) ?><?= mb_strlen((string)$linea['descripcion']) > 120 ? '...' : '' ?>
+                                                        </span>
+                                                    </div>
+                                                </label>
+
+                                                <!-- Sub-panel de Dimensiones Operativas de la Línea -->
+                                                <div style="border-top:1px dashed #cbd5e1; background:rgba(248,250,252,0.85); padding:0.75rem 1rem;">
+                                                    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:0.5rem;">
+                                                        <span style="font-size:0.73rem; font-weight:800; color:#334155; text-transform:uppercase; letter-spacing:0.03em; display:inline-flex; align-items:center; gap:4px;">
+                                                            <i class="ph-bold ph-tag" style="color:#505984;"></i> Dimensiones Operativas (<?= count($dimsLinea) ?>)
+                                                        </span>
+                                                        <?php if (!empty($dimsLinea)): ?>
+                                                        <div style="display:inline-flex; gap:6px; font-size:0.72rem;">
+                                                            <button type="button" onclick="seleccionarDimensionesDeLinea(<?= $idLin ?>, true)"
+                                                                    style="background:none; border:none; color:#505984; font-weight:700; cursor:pointer; padding:0; text-decoration:underline;">
+                                                                Todas
+                                                            </button>
+                                                            <span style="color:#cbd5e1;">|</span>
+                                                            <button type="button" onclick="seleccionarDimensionesDeLinea(<?= $idLin ?>, false)"
+                                                                    style="background:none; border:none; color:#64748b; font-weight:600; cursor:pointer; padding:0; text-decoration:underline;">
+                                                                Ninguna
+                                                            </button>
+                                                        </div>
+                                                        <?php endif; ?>
+                                                    </div>
+
+                                                    <?php if (empty($dimsLinea)): ?>
+                                                        <div style="font-size:0.78rem; color:#94a3b8; font-style:italic;">
+                                                            Esta línea aún no posee dimensiones operativas registradas.
+                                                        </div>
+                                                    <?php else: ?>
+                                                        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                                                            <?php foreach ($dimsLinea as $dim):
+                                                                $idDim = (int)$dim['id'];
+                                                                $dimMarcada = in_array($idDim, $misDimensionesIds, true);
+                                                            ?>
+                                                                <label class="chip-dim-esp" id="chip-dim-<?= $idDim ?>"
+                                                                       title="<?= htmlspecialchars($dim['descripcion'] ?: $dim['nombre']) ?>"
+                                                                       style="display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:999px; font-size:0.77rem; font-weight:600; cursor:pointer; transition:all 0.18s; user-select:none; border:1px solid <?= $dimMarcada ? '#505984' : '#cbd5e1' ?>; background:<?= $dimMarcada ? '#505984' : '#ffffff' ?>; color:<?= $dimMarcada ? '#ffffff' : '#334155' ?>;">
+                                                                    <input type="checkbox" name="dimensiones[]" value="<?= $idDim ?>"
+                                                                           class="chk-dim-esp" data-linea-id="<?= $idLin ?>" data-dim-id="<?= $idDim ?>"
+                                                                           <?= $dimMarcada ? 'checked' : '' ?>
+                                                                           onchange="onToggleDimensionEspecialidad(<?= $idLin ?>, <?= $idDim ?>, this.checked)"
+                                                                           style="display:none;">
+                                                                    <i class="ph-bold <?= $dimMarcada ? 'ph-check-circle' : 'ph-circle' ?>" id="icon-dim-<?= $idDim ?>" style="font-size:0.82rem;"></i>
+                                                                    <span><?= htmlspecialchars($dim['nombre']) ?></span>
+                                                                </label>
+                                                            <?php endforeach; ?>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </section>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
 
                     <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; margin-bottom: 1.25rem;">
                         <input type="hidden" name="es_investigador" value="0">
@@ -356,7 +553,7 @@
 
                     <div class="db-form-actions">
                         <button type="submit" class="db-btn-submit">
-                            <i class="ph-bold ph-floppy-disk"></i> Guardar Líneas de Especialidad
+                            <i class="ph-bold ph-floppy-disk"></i> Guardar Líneas y Dimensiones de Especialidad
                         </button>
                     </div>
                 </form>
@@ -567,8 +764,116 @@
 
 </div>
 
-<!-- SCRIPT DE INTERACCIÓN DE PESTAÑAS -->
+<!-- SCRIPT DE INTERACCIÓN DE PESTAÑAS Y VINCULACIÓN DE ESPECIALIDAD -->
 <script>
+function filtrarCarreraEspecialidad(carreraId, btnEl) {
+    const buttons = document.querySelectorAll('.perfil-carrera-filter-btn');
+    buttons.forEach(b => {
+        b.classList.remove('active');
+        b.style.background = '#ffffff';
+        b.style.color = '#334155';
+        b.style.borderColor = '#cbd5e1';
+    });
+    if (btnEl) {
+        btnEl.classList.add('active');
+        btnEl.style.background = '#121a3e';
+        btnEl.style.color = '#ffffff';
+        btnEl.style.borderColor = '#121a3e';
+    }
+
+    const bloques = document.querySelectorAll('.bloque-carrera-especialidad');
+    bloques.forEach(sec => {
+        const secId = sec.getAttribute('data-carrera-id');
+        if (String(carreraId) === 'all' || String(secId) === String(carreraId)) {
+            sec.style.display = '';
+        } else {
+            sec.style.display = 'none';
+        }
+    });
+}
+
+function actualizarEstiloChipDimension(dimId, checked) {
+    const chip = document.getElementById('chip-dim-' + dimId);
+    const icon = document.getElementById('icon-dim-' + dimId);
+    if (chip) {
+        chip.style.borderColor = checked ? '#505984' : '#cbd5e1';
+        chip.style.background  = checked ? '#505984' : '#ffffff';
+        chip.style.color       = checked ? '#ffffff' : '#334155';
+    }
+    if (icon) {
+        icon.className = 'ph-bold ' + (checked ? 'ph-check-circle' : 'ph-circle');
+    }
+}
+
+function actualizarEstiloTarjetaLinea(lineaId, checked) {
+    const card = document.getElementById('card-linea-' + lineaId);
+    if (card) {
+        card.style.borderColor = checked ? '#505984' : '#e2e8f0';
+        card.style.background  = checked ? '#f4f7ff' : '#ffffff';
+    }
+}
+
+function actualizarContadoresEspecialidad(lineaId) {
+    if (lineaId) {
+        const dimsAll = document.querySelectorAll('.chk-dim-esp[data-linea-id="' + lineaId + '"]');
+        const dimsSel = document.querySelectorAll('.chk-dim-esp[data-linea-id="' + lineaId + '"]:checked');
+        const badge = document.getElementById('badge-dim-count-' + lineaId);
+        if (badge) {
+            badge.textContent = dimsSel.length + ' / ' + dimsAll.length + ' dim.';
+            badge.style.color = dimsSel.length > 0 ? '#1e293b' : '#64748b';
+            badge.style.background = dimsSel.length > 0 ? '#dbeafe' : '#f1f5f9';
+        }
+    }
+    const totalLineas = document.querySelectorAll('.chk-linea-esp:checked').length;
+    const totalDims   = document.querySelectorAll('.chk-dim-esp:checked').length;
+    const cLin = document.getElementById('counter-lineas-sel');
+    const cDim = document.getElementById('counter-dims-sel');
+    if (cLin) cLin.textContent = totalLineas;
+    if (cDim) cDim.textContent = totalDims;
+}
+
+function onToggleLineaEspecialidad(lineaId, checked) {
+    actualizarEstiloTarjetaLinea(lineaId, checked);
+    if (!checked) {
+        // Si desmarca la línea padre, desmarcar sus dimensiones operativas hijas
+        const dims = document.querySelectorAll('.chk-dim-esp[data-linea-id="' + lineaId + '"]');
+        dims.forEach(chk => {
+            chk.checked = false;
+            actualizarEstiloChipDimension(chk.getAttribute('data-dim-id'), false);
+        });
+    }
+    actualizarContadoresEspecialidad(lineaId);
+}
+
+function onToggleDimensionEspecialidad(lineaId, dimId, checked) {
+    actualizarEstiloChipDimension(dimId, checked);
+    if (checked) {
+        // Si marca una dimensión operativa, marcar automáticamente su línea de investigación padre
+        const chkLinea = document.querySelector('.chk-linea-esp[data-linea-id="' + lineaId + '"]');
+        if (chkLinea && !chkLinea.checked) {
+            chkLinea.checked = true;
+            actualizarEstiloTarjetaLinea(lineaId, true);
+        }
+    }
+    actualizarContadoresEspecialidad(lineaId);
+}
+
+function seleccionarDimensionesDeLinea(lineaId, marcarTodas) {
+    const dims = document.querySelectorAll('.chk-dim-esp[data-linea-id="' + lineaId + '"]');
+    dims.forEach(chk => {
+        chk.checked = marcarTodas;
+        actualizarEstiloChipDimension(chk.getAttribute('data-dim-id'), marcarTodas);
+    });
+    if (marcarTodas && dims.length > 0) {
+        const chkLinea = document.querySelector('.chk-linea-esp[data-linea-id="' + lineaId + '"]');
+        if (chkLinea && !chkLinea.checked) {
+            chkLinea.checked = true;
+            actualizarEstiloTarjetaLinea(lineaId, true);
+        }
+    }
+    actualizarContadoresEspecialidad(lineaId);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const tabButtons = document.querySelectorAll('.db-tab-btn');
     const tabPanes = document.querySelectorAll('.db-tab-pane');

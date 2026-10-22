@@ -1,8 +1,14 @@
 <?php
 // modules/Investigaciones/views/showcase_investigaciones.php
 require_once CORE_PATH . 'Security/Auth.php';
-$nivel_usuario    = Auth::check() ? Auth::usuario()['nivel'] : -1;
 $is_logged        = $is_logged ?? Auth::check();
+$usuarioActualInv = $is_logged ? Auth::usuario() : null;
+$nivel_usuario    = $usuarioActualInv !== null ? (int)($usuarioActualInv['nivel'] ?? 999) : 999;
+$esSuperAdmin     = $usuarioActualInv !== null && (
+    $nivel_usuario === 0
+    || mb_strtolower(trim((string)($usuarioActualInv['rol'] ?? ''))) === 'super administrador'
+);
+$esDocenteOAdmin  = $is_logged && $nivel_usuario <= 2;
 $postuladas_ids   = $postuladas_ids ?? [];
 $misPostulaciones = $misPostulaciones ?? [];
 ?>
@@ -34,11 +40,18 @@ $misPostulaciones = $misPostulaciones ?? [];
                    onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
                     <i class="ph-bold ph-rocket-launch"></i> Ver Proyectos
                 </a>
-                <?php if ($nivel_usuario >= 1): ?>
+                <?php if ($esDocenteOAdmin): ?>
                 <a href="?ruta=mis-investigaciones"
                    style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.8rem 1.5rem; border-radius: 50px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: background 0.2s;"
                    onmouseover="this.style.background='rgba(255,255,255,0.3)';" onmouseout="this.style.background='rgba(255,255,255,0.2)';">
-                    <i class="ph-bold ph-folder-open"></i> Mis Proyectos
+                    <i class="ph-bold ph-folder-open"></i> <?= $esSuperAdmin ? 'Controlar Proyectos' : 'Mis Proyectos' ?>
+                </a>
+                <?php endif; ?>
+                <?php if ($esSuperAdmin || ($is_logged && $nivel_usuario <= 1)): ?>
+                <a href="?ruta=panel-investigaciones-admin"
+                   style="background: rgba(15,23,42,0.45); border: 1px solid rgba(255,255,255,0.35); color: white; padding: 0.8rem 1.5rem; border-radius: 50px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: background 0.2s;"
+                   onmouseover="this.style.background='rgba(15,23,42,0.65)';" onmouseout="this.style.background='rgba(15,23,42,0.45)';">
+                    <i class="ph-fill ph-shield-check"></i> Panel Admin I+D
                 </a>
                 <?php endif; ?>
             </div>
@@ -117,7 +130,7 @@ $misPostulaciones = $misPostulaciones ?? [];
                         <option value="Abierta"       <?= (isset($_GET['estado']) && $_GET['estado'] == 'Abierta')       ? 'selected' : '' ?>>Abiertas a Postulación</option>
                         <option value="En Desarrollo" <?= (isset($_GET['estado']) && $_GET['estado'] == 'En Desarrollo') ? 'selected' : '' ?>>En Desarrollo</option>
                         <option value="Finalizada"    <?= (isset($_GET['estado']) && $_GET['estado'] == 'Finalizada')    ? 'selected' : '' ?>>Finalizada</option>
-                        <?php if ($nivel_usuario >= 1): /* Cerrada: solo docentes/admin la ven */ ?>
+                        <?php if ($esDocenteOAdmin): /* Cerrada: solo docentes/admin la ven */ ?>
                         <option value="Cerrada"       <?= (isset($_GET['estado']) && $_GET['estado'] == 'Cerrada')       ? 'selected' : '' ?>>Cerrada</option>
                         <?php endif; ?>
                     </select>
@@ -195,9 +208,9 @@ $misPostulaciones = $misPostulaciones ?? [];
                     <h3 class="inv-card-title"><?= htmlspecialchars($inv['titulo'] ?? '') ?></h3>
                     <p class="inv-card-desc"><?= htmlspecialchars(mb_substr($inv['planteamiento_problema'] ?? '', 0, 150)) ?>...</p>
                     
-                    <div class="inv-card-footer">
+                    <div class="inv-card-footer" style="display:flex; gap:0.5rem; align-items:center;">
                         <button onclick="abrirDrawer(<?= (int)$inv['id'] ?>)" class="inv-btn-primary"
-                                style="padding:0.6rem 1.2rem; font-size:0.9rem; width:100%; justify-content:center;">
+                                style="padding:0.6rem 1.2rem; font-size:0.9rem; flex:1; justify-content:center;">
                             <i class="ph-bold ph-eye"></i>
                             <?php if ($inv['estado'] === 'Abierta' && !$yaPostulado): ?>
                                 Ver Detalles / Postularse
@@ -207,6 +220,15 @@ $misPostulaciones = $misPostulaciones ?? [];
                                 Ver Detalles
                             <?php endif; ?>
                         </button>
+                        <?php if ($esSuperAdmin): ?>
+                        <a href="?ruta=editar-investigacion&id=<?= (int)$inv['id'] ?>&from_admin=1"
+                           title="Control SuperAdmin: Editar o Modificar Investigación"
+                           style="width:38px; height:38px; border-radius:10px; background:#F1F5F9; color:#0369A1; border:1px solid #CBD5E1; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; flex-shrink:0; transition:all 0.2s;"
+                           onmouseover="this.style.background='#0369A1'; this.style.color='white';"
+                           onmouseout="this.style.background='#F1F5F9'; this.style.color='#0369A1';">
+                            <i class="ph-bold ph-pencil-simple"></i>
+                        </a>
+                        <?php endif; ?>
                     </div>
                 </div>
             </article>
@@ -327,6 +349,7 @@ const invById = {};
 invData.forEach(inv => { invById[inv.id] = inv; });
 
 const isLogged       = <?= json_encode($is_logged) ?>;
+const esSuperAdminJs = <?= json_encode($esSuperAdmin) ?>;
 const postuladasIds  = <?= json_encode(array_map('intval', $postuladas_ids)) ?>;
 
 const trayectoLabels = {
@@ -460,6 +483,21 @@ function abrirDrawer(id) {
 
         <!-- Título -->
         <h2 style="font-size:1.45rem; font-weight:800; color:var(--inv-dark); margin-bottom:1.5rem; line-height:1.3;">${esc(inv.titulo)}</h2>
+
+        ${esSuperAdminJs ? `
+        <div style="margin-bottom:1.5rem; padding:0.85rem 1rem; background:#EFF6FF; border:1px solid #BFDBFE; border-radius:12px; display:flex; align-items:center; justify-content:space-between; gap:0.75rem; flex-wrap:wrap;">
+            <span style="font-size:0.82rem; font-weight:700; color:#1E3A8A; display:inline-flex; align-items:center; gap:0.4rem;">
+                <i class="ph-fill ph-crown-simple"></i> Control SuperAdmin
+            </span>
+            <div style="display:flex; gap:0.5rem;">
+                <a href="?ruta=editar-investigacion&id=${parseInt(inv.id)}&from_admin=1" style="background:#0369A1; color:white; text-decoration:none; padding:0.4rem 0.85rem; border-radius:8px; font-size:0.8rem; font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
+                    <i class="ph-bold ph-pencil-simple"></i> Modificar
+                </a>
+                <a href="?ruta=panel-investigaciones-admin&q=${encodeURIComponent(inv.titulo || '')}" style="background:white; color:#0F172A; border:1px solid #CBD5E1; text-decoration:none; padding:0.4rem 0.85rem; border-radius:8px; font-size:0.8rem; font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
+                    <i class="ph-bold ph-shield-check"></i> Gestionar en Panel
+                </a>
+            </div>
+        </div>` : ''}
 
         <!-- Docente -->
         <div style="display:flex; align-items:center; justify-content:space-between; gap:0.8rem; margin-bottom:1.5rem; padding:0.9rem 1rem; background:#F8FAFC; border-radius:12px; border:1px solid var(--inv-border);">

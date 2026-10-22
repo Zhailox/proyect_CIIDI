@@ -8,7 +8,7 @@
     border-radius: 14px;
     padding: 2.5rem 3rem;
     box-shadow: 0 16px 36px rgba(15, 23, 42, 0.15);
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
     position: relative;
     overflow: hidden;
 }
@@ -42,8 +42,154 @@
     margin: 0; 
     color: #cbd5e1; 
     font-size: 1.05rem;
-    max-width: 800px;
+    max-width: 820px;
     line-height: 1.6;
+}
+
+/* Barra de controles alineada en una sola fila limpia y armónica con el banner */
+.ml-control-bar {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 14px;
+    box-shadow: 0 2px 8px rgba(30, 41, 59, 0.04);
+}
+.ml-filters-group {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 300px;
+}
+.ml-field-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+    min-width: 210px;
+    max-width: 310px;
+}
+.ml-field-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #505984;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.ml-select-control, .ml-input-control {
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #1e293b;
+    font-weight: 600;
+    font-size: 0.86rem;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    box-sizing: border-box;
+    width: 100%;
+}
+.ml-select-control:focus, .ml-input-control:focus {
+    border-color: #505984;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(80, 89, 132, 0.12);
+}
+.ml-actions-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.ml-btn {
+    height: 40px;
+    padding: 0 15px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+.ml-btn-secondary {
+    background: #f8fafc;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+}
+.ml-btn-secondary:hover, .ml-btn-secondary.active {
+    background: #eef0f7;
+    color: #1e293b;
+    border-color: #505984;
+}
+.ml-btn-primary {
+    background: #505984;
+    color: #ffffff;
+    border: 1px solid #505984;
+    box-shadow: 0 3px 8px rgba(80, 89, 132, 0.25);
+}
+.ml-btn-primary:hover {
+    background: #3e466b;
+    border-color: #3e466b;
+    transform: translateY(-1px);
+}
+.ml-btn-dark {
+    background: #1e293b;
+    color: #ffffff;
+    border: 1px solid #334155;
+    box-shadow: 0 3px 8px rgba(30, 41, 59, 0.2);
+}
+.ml-btn-dark:hover {
+    background: #0f172a;
+    transform: translateY(-1px);
+}
+.ml-line-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #1e293b;
+    transition: all 0.18s ease;
+    user-select: none;
+}
+.ml-line-chip:hover {
+    border-color: #505984;
+    background: #f8fafc;
+}
+.ml-line-chip.inactive {
+    opacity: 0.45;
+    background: #f1f5f9;
+    color: #64748b;
+    text-decoration: line-through;
+}
+@media (max-width: 960px) {
+    .ml-main-grid {
+        grid-template-columns: 1fr !important;
+    }
+    .ml-field-item {
+        max-width: 100%;
+    }
 }
 </style>
 
@@ -51,135 +197,207 @@
     <canvas id="li-nodes-canvas-1" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.6;"></canvas>
     <div style="position: relative; z-index: 1;">
         <div class="ag-header-subtitle">
-            <i class="ph-bold ph-brain"></i> SISTEMA INTEGRAL
+            <i class="ph-bold ph-brain"></i> SISTEMA INTEGRAL CIIDI · INTELIGENCIA PREDICTIVA
         </div>
         <h1 class="ag-header-title">Dashboard Analítico Predictivo (IA)</h1>
-        <p class="ag-header-desc">Proyección trimestral de volumen mediante Machine Learning.</p>
+        <p class="ag-header-desc">Proyección trimestral de demanda, adopción y saturación por Carrera (PNF) y Línea de Investigación mediante modelos supervisados de Machine Learning.</p>
     </div>
 </div>
 
-        <!-- Controles movidos a la barra de configuración abajo -->
-    </div>
-
-    <!-- •”•• SECCI“N 1: TENDENCIAS (SERIES TEMPORALES) •••••••••••••••••••••••— -->
+    <!-- SECCIÓN 1: TENDENCIAS (SERIES TEMPORALES) -->
     <div class="li-form-card" style="margin-bottom: 2rem;">
-        <div class="li-form-header">
-            <i class="ph-bold ph-chart-line-up" style="color:var(--li-emerald, #10b981);"></i>
-            <span style="color: #2c3e50; font-weight: 600;">Proyección de Tendencias (Adopción y Saturación)</span>
+        <div class="li-form-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="ph-bold ph-chart-line-up" style="color: #505984; font-size: 1.25rem;"></i>
+                <span style="color: #1e293b; font-weight: 700;">Proyección de Tendencias y Auditoría Predictiva</span>
+            </div>
+            <span style="font-size: 0.76rem; color: #505984; background: #eef0f7; border: 1px solid #d5daec; padding: 4px 11px; border-radius: 20px; font-weight: 600;">
+                <i class="ph-bold ph-check-circle"></i> Base predeterminada: Proyectos PST Culminados
+            </span>
         </div>
 
         <div class="li-form-body">
             
-            <!-- BARRA DE CONTROLES (NUEVA) -->
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px; margin-bottom: 20px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; box-shadow: 0 2px 4px -1px rgba(0,0,0,0.03);">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div style="background: #f1f5f9; color: #505984; padding: 10px; border-radius: 8px;">
-                        <i class="ph-bold ph-calendar-plus" style="font-size: 1.4rem;"></i>
+            <!-- BARRA DE CONTROLES PRINCIPAL (ALINEADA EN UNA SOLA LÍNEA) -->
+            <div class="ml-control-bar">
+                <div class="ml-filters-group">
+                    <!-- Filtro por Carrera / PNF -->
+                    <div class="ml-field-item">
+                        <label for="select-carrera" class="ml-field-label">
+                            <i class="ph-bold ph-graduation-cap"></i> Carrera / PNF
+                        </label>
+                        <select id="select-carrera" class="ml-select-control">
+                            <option value="all" selected>Todas las Carreras / PNF</option>
+                            <?php if (!empty($carreras) && is_array($carreras)): ?>
+                                <?php foreach ($carreras as $car): ?>
+                                    <?php $numLineas = (int)($car['total_lineas'] ?? 0); ?>
+                                    <option value="<?= (int)$car['id'] ?>">
+                                        <?= htmlspecialchars($car['nombre']) ?> (<?= $numLineas ?> <?= $numLineas === 1 ? 'línea' : 'líneas' ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
                     </div>
-                    <div>
-                        <strong style="color: #121a3e; font-size: 1rem; display: block;">Horizonte de Proyección</strong>
-                        <span style="color: #64748b; font-size: 0.85rem;">Define hasta qué fecha la IA calculará la demanda esperada.</span>
+
+                    <!-- Horizonte de Proyección -->
+                    <div class="ml-field-item">
+                        <label for="select-trimestres" class="ml-field-label">
+                            <i class="ph-bold ph-calendar-plus"></i> Horizonte de Proyección
+                        </label>
+                        <select id="select-trimestres" class="ml-select-control">
+                            <option value="1">1 Trimestre (Inmediato)</option>
+                            <option value="2">2 Trimestres</option>
+                            <option value="3">3 Trimestres (1 Año Académico)</option>
+                            <option value="4" selected>4 Trimestres (Recomendado)</option>
+                            <option value="5">5 Trimestres</option>
+                            <option value="6">6 Trimestres (2 Años Académicos)</option>
+                        </select>
                     </div>
                 </div>
                 
-                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                    <select id="select-trimestres" style="padding: 10px 15px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; color: #121a3e; font-weight: 600; font-size: 0.9rem; outline: none; cursor: pointer; min-width: 260px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);">
-                        <option value="1">1 Trimestre (Inmediato)</option>
-                        <option value="2">2 Trimestres</option>
-                        <option value="3">3 Trimestres (1 Año Académico)</option>
-                        <option value="4" selected>4 Trimestres</option>
-                        <option value="5">5 Trimestres</option>
-                        <option value="6">6 Trimestres (2 Años Académicos)</option>
+                <!-- Grupo de Botones Alineados -->
+                <div class="ml-actions-group">
+                    <button id="btn-advanced" type="button" class="ml-btn ml-btn-secondary">
+                        <i class="ph-bold ph-faders"></i> Controles Avanzados
+                    </button>
+                    <button id="btn-guardar-snapshot" type="button" class="ml-btn ml-btn-secondary" title="Guardar instantánea de esta proyección para compararla a futuro con datos reales">
+                        <i class="ph-bold ph-camera"></i> Guardar Snapshot
+                    </button>
+                    <button id="btn-proyectar" type="button" class="ml-btn ml-btn-primary">
+                        <i class="ph-bold ph-arrows-clockwise"></i> Actualizar Modelo
+                    </button>
+                    <button id="btn-descargar-pdf" type="button" class="ml-btn ml-btn-dark" style="display: none;">
+                        <i class="ph-bold ph-file-pdf" style="color: #94a3b8;"></i> Exportar Informe PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- CONTROLES AVANZADOS ML (Oculto por defecto) -->
+            <div id="advanced-settings-panel" style="display: none; background: #f8fafc; border: 1px solid #cbd5e1; border-left: 4px solid #505984; border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; gap: 16px; flex-wrap: wrap; align-items: flex-start;">
+                <div style="flex: 1; min-width: 200px;">
+                    <label for="select-historial" class="ml-field-label" style="margin-bottom: 5px;">
+                        <i class="ph-bold ph-clock-counter-clockwise"></i> Muestreo de Historial
+                    </label>
+                    <select id="select-historial" class="ml-select-control" style="background: #ffffff;">
+                        <option value="all">Todo el Historial Registrado</option>
+                        <option value="2y" selected>Últimos 2 Años (6 Trimestres · Recomendado)</option>
+                        <option value="1y">Último Año Académico (3 Trimestres)</option>
                     </select>
-                    <button id="btn-advanced" type="button" style="background: #f8fafc; color: #64748b; padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 600; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background 0.2s ease;" onclick="document.getElementById('advanced-settings-panel').style.display = document.getElementById('advanced-settings-panel').style.display === 'none' ? 'flex' : 'none';">
-    <i class="ph-bold ph-faders"></i> Controles Avanzados ML
-</button>
-<button id="btn-proyectar" style="background: #505984; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-weight: 700; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(80, 89, 132, 0.3); transition: all 0.2s ease; transition: all 0.2s ease;" onmouseover="this.style.background='#3C456A'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#505984'; this.style.transform='translateY(0)'">
-                        <i class="ph-bold ph-magic-wand" style="font-size: 1.1rem;"></i> Actualizar Modelo
-                    </button>
-                    <button id="btn-descargar-pdf" style="display: none; background: #e11d48; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-weight: 700; font-size: 0.95rem; cursor: pointer; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(225, 29, 72, 0.3); transition: all 0.2s ease;" onmouseover="this.style.background='#be123c'" onmouseout="this.style.background='#e11d48'">
-                        <i class="ph-bold ph-file-pdf" style="font-size: 1.1rem;"></i> Descargar en PDF
-                    </button>
+                    <small style="color: #64748b; font-size: 0.73rem; display: block; margin-top: 4px;">Acota la serie histórica analizada.</small>
+                </div>
+
+                <div style="flex: 1; min-width: 210px;">
+                    <label for="select-ml-model" class="ml-field-label" style="margin-bottom: 5px;">
+                        <i class="ph-bold ph-cpu"></i> Algoritmo ML / Regresor
+                    </label>
+                    <select id="select-ml-model" class="ml-select-control" style="background: #ffffff;">
+                        <option value="auto">Auto-ML (Mejor Ajuste por Línea)</option>
+                        <option value="linear" selected>Regresión Lineal Múltiple (OLS)</option>
+                        <option value="poly">Regresión Polinómica (Grado 2)</option>
+                        <option value="rf">Random Forest Regressor</option>
+                    </select>
+                    <small style="color: #64748b; font-size: 0.73rem; display: block; margin-top: 4px;">Motor matemático de proyección.</small>
+                </div>
+
+                <div style="flex: 1; min-width: 200px;">
+                    <label for="select-fuente" class="ml-field-label" style="margin-bottom: 5px;">
+                        <i class="ph-bold ph-database"></i> Fuente de Proyectos
+                    </label>
+                    <select id="select-fuente" class="ml-select-control" style="background: #ffffff;">
+                        <option value="pst" selected>Solo Proyectos PST Culminados (Predeterminado)</option>
+                        <option value="all">Proyectos PST + Investigaciones en Curso</option>
+                    </select>
+                    <small style="color: #64748b; font-size: 0.73rem; display: block; margin-top: 4px;">Filtra proyectos defendidos vs. ofertas activas.</small>
+                </div>
+
+                <div style="flex: 0.7; min-width: 145px;">
+                    <label for="input-capacidad" class="ml-field-label" style="margin-bottom: 5px;">
+                        <i class="ph-bold ph-users-three"></i> Capacidad / Línea
+                    </label>
+                    <input type="number" id="input-capacidad" value="25" min="5" max="500" class="ml-input-control" style="background: #ffffff;">
+                    <small style="color: #64748b; font-size: 0.73rem; display: block; margin-top: 4px;">Tope trimestral para % saturación.</small>
+                </div>
+
+                <!-- CONTROLES EXCLUSIVOS PARA RANDOM FOREST (Ocultos cuando se elige Lineal, Polinómica o Auto) -->
+                <div id="rf-only-controls" style="display: none; flex: 1.4; min-width: 270px; gap: 12px; background: #eef0f7; padding: 12px 14px; border-radius: 8px; border: 1px solid #cbd5e1; align-items: flex-start; flex-wrap: wrap;">
+                    <div style="flex-basis: 100%; font-size: 0.72rem; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+                        <i class="ph-bold ph-tree-structure" style="color: #505984;"></i> Parámetros Exclusivos de Random Forest
+                    </div>
+                    <div style="flex: 1; min-width: 120px;">
+                        <label for="input-epochs" style="font-size: 0.76rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">N° Árboles (Max Epochs)</label>
+                        <input type="number" id="input-epochs" value="150" min="10" max="500" class="ml-input-control" style="height: 36px; background: #ffffff;">
+                    </div>
+                    <div style="flex: 1; min-width: 120px;">
+                        <label for="input-timeout" style="font-size: 0.76rem; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Timeout Límite (s)</label>
+                        <input type="number" id="input-timeout" value="10" min="2" max="120" class="ml-input-control" style="height: 36px; background: #ffffff;">
+                    </div>
                 </div>
             </div>
 
-            <!-- Controles Avanzados (Oculto por defecto) -->
-<div id="advanced-settings-panel" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-top: 15px; gap: 20px; flex-wrap: wrap;">
-    <div style="flex: 1; min-width: 200px;">
-        <label style="font-size: 0.85rem; font-weight: 700; color: #475569; display: block; margin-bottom: 5px;">Muestreo de Historial (Data Bounds)</label>
-        <select id="select-historial" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; color: #1e293b; background: white; font-size: 0.9rem;">
-            <option value="all">Todo el Historial Histórico</option>
-            <option value="2y" selected>Últimos 2 Años (Recomendado)</option>
-            <option value="1y">Último Año</option>
-        </select>
-        <small style="color: #64748b; font-size: 0.75rem; display: block; margin-top: 4px;">Previene overfitting por datos obsoletos.</small>
-    </div>
-    <div style="flex: 1; min-width: 200px;">
-        <label style="font-size: 0.85rem; font-weight: 700; color: #475569; display: block; margin-bottom: 5px;">Algoritmo ML / Modelo</label>
-        <select id="select-ml-model" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; color: #1e293b; background: white; font-size: 0.9rem;">
-            <option value="linear" selected>Regresión Lineal Múltiple</option>
-            <option value="poly">Regresión Polinómica (Grado 2)</option>
-            <option value="rf">Random Forest Regressor</option>
-        </select>
-        <small style="color: #64748b; font-size: 0.75rem; display: block; margin-top: 4px;">Selecciona el motor matemático de regresión.</small>
-    </div>
-    <div style="flex: 1; min-width: 120px;">
-        <label style="font-size: 0.85rem; font-weight: 700; color: #475569; display: block; margin-bottom: 5px;">Max Epochs</label>
-        <input type="number" id="input-epochs" value="500" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; color: #1e293b; background: white; font-size: 0.9rem;">
-    </div>
-    <div style="flex: 1; min-width: 120px;">
-        <label style="font-size: 0.85rem; font-weight: 700; color: #475569; display: block; margin-bottom: 5px;">Timeout (s)</label>
-        <input type="number" id="input-timeout" value="10" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; color: #1e293b; background: white; font-size: 0.9rem;">
-    </div>
-</div>
+            <!-- INSIGNIAS DEL MOTOR IA, MODELO Y FIABILIDAD -->
+            <div id="engine-badge-tendencias" style="display: none; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;"></div>
 
-<p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;">
-                El motor de Inteligencia Artificial analiza el historial real de proyectos registrados en la plataforma. Mediante algoritmos de regresión (Lineal, Polinómica o Random Forest, configurables en los Controles Avanzados ML), proyecta el volumen de demanda para próximos trimestres académicos, facilitando la toma de decisiones estratégicas.
-            </p>
+            <!-- FILTRO INTERACTIVO DE LÍNEAS DE INVESTIGACIÓN VISIBLES -->
+            <div id="lineas-filter-bar" style="display: none; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 16px; padding: 10px 14px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px;"></div>
             
-            <div id="loading-tendencias" style="display: none; color: #505984; font-style: italic; margin-bottom: 1rem;">
-                <i class="ph-bold ph-spinner ph-spin"></i> Calculando proyecciones con IA...
+            <div id="loading-tendencias" style="display: none; color: #1e293b; background: #eef0f7; border: 1px solid #cbd5e1; padding: 12px 16px; border-radius: 8px; font-weight: 600; margin-bottom: 1rem;">
+                <i class="ph-bold ph-spinner ph-spin" style="color: #505984;"></i> Procesando series temporales y entrenando modelos de Machine Learning...
             </div>
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; align-items: start;">
+            <div class="ml-main-grid" style="display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(320px, 1fr); gap: 1.5rem; align-items: start;">
                 
-                <!-- Columna Izquierda: Gráfico + Insights -->
-                <div>
-                    <!-- Grfico de Adopcin -->
-                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); min-width: 0; overflow: hidden; position: relative;">
-                        <div style="position: relative; width: 100%;">
-                            <canvas id="tendenciasChart" height="280"></canvas>
+                <!-- Columna Izquierda: Gráfico + Insights + Estacionalidad -->
+                <div style="min-width: 0;">
+                    <!-- Gráfico de Adopción -->
+                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; box-shadow: 0 2px 6px rgba(30, 41, 59, 0.04); min-width: 0; overflow: hidden; position: relative;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                            <div style="font-size: 0.9rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 6px;">
+                                <i class="ph-bold ph-chart-line" style="color: #505984;"></i> Evolución Histórica (Proyectos Culminados) y Curva de Proyección
+                            </div>
+                            <span style="font-size: 0.74rem; color: #64748b;">
+                                <span style="display:inline-block; width:16px; height:3px; background:#1e293b; vertical-align:middle; margin-right:4px;"></span>Histórico Real
+                                &nbsp;&nbsp;
+                                <span style="display:inline-block; width:16px; height:0; border-top:3px dashed #7090cb; vertical-align:middle; margin-right:4px;"></span>Proyección IA
+                            </span>
+                        </div>
+                        <div style="position: relative; width: 100%; height: 340px;">
+                            <canvas id="tendenciasChart"></canvas>
                         </div>
                     </div>
 
-                    <!-- Insights Automáticos (Se llenará con JS) -->
-                    <div id="insights-tendencias" style="margin-top: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <!-- Insights Automáticos (4 tarjetas) -->
+                    <div id="insights-tendencias" style="margin-top: 1.15rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.9rem;">
                     </div>
                 </div>
                 
-                <!-- Panel de KPIs y Saturación -->
-                <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                    <h4 style="margin-bottom: 1rem; color: #1e293b; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">
-                        <i class="ph-fill ph-gauge"></i> Métricas de Error y Saturación
+                <!-- Panel de KPIs, Fiabilidad y Saturación -->
+                <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; box-shadow: 0 2px 6px rgba(30, 41, 59, 0.04);">
+                    <h4 style="margin: 0 0 1rem 0; color: #1e293b; font-size: 0.98rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 2px solid #eef0f7; padding-bottom: 0.65rem;">
+                        <i class="ph-fill ph-gauge" style="color: #505984;"></i> Fiabilidad, Error y Diagnóstico por Línea
                     </h4>
                     
                     <div id="metricas-tendencias-resultado" style="font-size: 0.9rem; color: #475569;">
-                        <div class="li-empty-state" style="padding: 1rem;">
-                            <i class="ph-bold ph-chart-bar" style="font-size: 2rem; color: #cbd5e1;"></i>
-                            <p style="font-size: 0.8rem; margin-top: 0.5rem; color: #94a3b8;">Presiona el botón superior para procesar el tensor histórico.</p>
+                        <div class="li-empty-state" style="padding: 1.5rem; text-align: center;">
+                            <i class="ph-bold ph-chart-bar" style="font-size: 2.2rem; color: #cbd5e1;"></i>
+                            <p style="font-size: 0.85rem; margin-top: 0.5rem; color: #94a3b8;">Procesando el tensor histórico de líneas de investigación...</p>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- MATRIZ EJECUTIVA Y RECOMENDACIONES AUTOMÁTICAS -->
+            <div id="matriz-ejecutiva-tendencias" style="display: none; margin-top: 1.5rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; box-shadow: 0 2px 6px rgba(30, 41, 59, 0.04);">
+            </div>
+
+            <!-- HISTORIAL DE SNAPSHOTS DE PREDICCIÓN (AUDITORÍA IA VS REALIDAD) -->
+            <div id="snapshots-tendencias-container" style="display: none; margin-top: 1.5rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; box-shadow: 0 2px 6px rgba(30, 41, 59, 0.04);">
+            </div>
+
         </div>
     </div>
 
-
-
 </div>
 
-<!-- Cargar html2pdf -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Cargar Chart.js desde CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- Cargar el script que maneja la UI analítica -->
@@ -250,4 +468,3 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-

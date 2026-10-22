@@ -281,6 +281,15 @@
                                     Perfil <i class="ph-bold ph-arrow-up-right"></i>
                                 </a>
                             </div>
+                            <?php if (!empty($prof['dimensiones'])): ?>
+                                <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:0.35rem;">
+                                    <?php foreach ($prof['dimensiones'] as $pDim): ?>
+                                        <span style="background:rgba(80,89,132,0.1); color:#505984; border:1px solid rgba(80,89,132,0.22); border-radius:999px; padding:1px 7px; font-size:0.7rem; font-weight:600;">
+                                            <i class="ph-bold ph-tag" style="font-size:0.62rem;"></i> <?= htmlspecialchars($pDim['nombre']) ?>
+                                        </span>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
                             <?php if (!empty($prof['ofertas'])): ?>
                                 <div style="font-size: 0.75rem; color: #475569; margin-top: 0.5rem; border-top: 1px dashed #cbd5e1; padding-top: 0.5rem;">
                                     <strong style="color: #334155;">Proyectos en línea:</strong>

@@ -67,7 +67,7 @@ class InvestigacionController {
 
     /**
      * Panel de Postulaciones (vista Kanban por trayecto).
-     * RBAC: nivel >= 1 (docentes/admin).
+     * RBAC: docentes/admin.
      * Estudiantes usan el drawer de la cartelera directamente.
      */
     public function mostrarPanelPostulaciones(): array {
@@ -140,27 +140,64 @@ class InvestigacionController {
             $filtros['id_linea'] = $id_linea;
         }
 
+        $usuarioActual = Auth::usuario();
+        $esSuperAdmin = $usuarioActual !== null && (
+            (int)($usuarioActual['nivel'] ?? 999) === 0
+            || mb_strtolower(trim((string)($usuarioActual['rol'] ?? ''))) === 'super administrador'
+        );
+
         $investigadores = $this->model->obtenerInvestigadores($filtros);
+        if (!$esSuperAdmin) {
+            foreach ($investigadores as &$inv) {
+                unset($inv['rol_nombre'], $inv['id_rol']);
+            }
+            unset($inv);
+        }
+
         $lineas = $this->model->obtenerLineas();
 
-        return compact('investigadores', 'lineas', 'busqueda', 'id_linea');
+        return compact('investigadores', 'lineas', 'busqueda', 'id_linea', 'esSuperAdmin');
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // PROFESORES (Nivel >= 1)
+    // PROFESORES Y GESTIÓN DE PROYECTOS
     // ──────────────────────────────────────────────────────────────────────────
 
-    /** Mis investigaciones con paginación. RBAC: nivel >= 1 */
+    /** Mis investigaciones con paginación (o todas para Super Administrador) */
     public function mostrarMisInvestigaciones(): array {
         Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'Investigaciones');
         $user = Auth::usuario();
+        $esSuperAdmin = ((int)($user['nivel'] ?? 999) === 0)
+            || (mb_strtolower(trim((string)($user['rol'] ?? ''))) === 'super administrador');
+
+        $alcance = $esSuperAdmin ? trim((string)($_GET['alcance'] ?? 'todas')) : 'mias';
+        if (!in_array($alcance, ['todas', 'mias'], true)) {
+            $alcance = 'todas';
+        }
 
         $filtros = [
             'por_pagina' => 10,
             'pagina'     => max(1, (int)($_GET['page'] ?? 1)),
         ];
+        if (!empty($_GET['q'])) {
+            $filtros['busqueda'] = trim(strip_tags($_GET['q']));
+        }
+        if (!empty($_GET['estado'])) {
+            $filtros['estado'] = trim(strip_tags($_GET['estado']));
+        }
+        if (!empty($_GET['linea'])) {
+            $filtros['id_linea'] = (int)$_GET['linea'];
+        }
+        if (!empty($_GET['profesor'])) {
+            $filtros['id_profesor'] = (int)$_GET['profesor'];
+        }
 
-        $resultado      = $this->model->obtenerMisInvestigaciones((int)$user['id'], $filtros);
+        if ($esSuperAdmin && $alcance === 'todas') {
+            $resultado = $this->model->obtenerTodasAdmin($filtros);
+        } else {
+            $resultado = $this->model->obtenerMisInvestigaciones((int)$user['id'], $filtros);
+        }
+
         $investigaciones = $resultado['items'];
         $paginacion = [
             'pagina'     => $resultado['pagina'],
@@ -169,10 +206,13 @@ class InvestigacionController {
             'por_pagina' => $resultado['por_pagina'],
         ];
 
-        return compact('investigaciones', 'paginacion');
+        $lineas = $this->model->obtenerLineas();
+        $responsablesDisponibles = $this->model->obtenerListaResponsablesDisponibles();
+
+        return compact('investigaciones', 'paginacion', 'esSuperAdmin', 'alcance', 'lineas', 'responsablesDisponibles');
     }
 
-    /** Formulario de creación. RBAC: nivel >= 1 */
+    /** Formulario de creación */
     public function mostrarFormCrear(): array {
         Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'Investigaciones');
         $usuario_actual = Auth::usuario();
@@ -186,17 +226,18 @@ class InvestigacionController {
         ];
         $todasDimensiones = $this->model->obtenerTodasDimensiones();
         $responsablesDisponibles = $this->model->obtenerListaResponsablesDisponibles();
-        return compact('lineas', 'investigacion', 'todasDimensiones', 'responsablesDisponibles', 'usuario_actual');
+        $from_admin = !empty($_GET['from_admin']);
+        return compact('lineas', 'investigacion', 'todasDimensiones', 'responsablesDisponibles', 'usuario_actual', 'from_admin');
     }
 
-    /** Formulario de edición. RBAC: nivel >= 1 + verificación de propiedad */
+    /** Formulario de edición + verificación de propiedad o SuperAdmin/Comité */
     public function mostrarFormEditar(): array {
         Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Investigaciones');
         $usuario_actual = Auth::usuario();
         $id   = (int)($_GET['id'] ?? 0);
 
         $investigacion = $this->model->obtenerPorId($id);
-        if (!$investigacion || ($investigacion['id_profesor'] != $usuario_actual['id'] && (int)$usuario_actual['nivel'] < 2)) {
+        if (!$investigacion || ($investigacion['id_profesor'] != $usuario_actual['id'] && (int)$usuario_actual['nivel'] > 1)) {
             $_SESSION['flash_error'] = 'No tienes permiso para editar esta investigación.';
             header('Location: ?ruta=mis-investigaciones');
             exit;
@@ -205,11 +246,12 @@ class InvestigacionController {
         $lineas = $this->model->obtenerLineas();
         $todasDimensiones = $this->model->obtenerTodasDimensiones();
         $responsablesDisponibles = $this->model->obtenerListaResponsablesDisponibles();
+        $from_admin = !empty($_GET['from_admin']);
 
-        return compact('lineas', 'todasDimensiones', 'investigacion', 'responsablesDisponibles', 'usuario_actual');
+        return compact('lineas', 'todasDimensiones', 'investigacion', 'responsablesDisponibles', 'usuario_actual', 'from_admin');
     }
 
-    /** Guardar nueva investigación. RBAC: nivel >= 1 */
+    /** Guardar nueva investigación */
     public function guardarInvestigacion(): void {
         Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'Investigaciones');
         $user = Auth::usuario();
@@ -249,9 +291,11 @@ class InvestigacionController {
             $datos['imagen'] = $imagenUrl;
         }
 
+        $fromAdmin = ((int)$user['nivel'] <= 1 && !empty($_POST['from_admin']));
+
         if (empty($datos['titulo']) || empty($datos['id_linea'])) {
             $_SESSION['flash_error'] = 'El título y al menos una línea de investigación son obligatorios.';
-            header('Location: ?ruta=crear-investigacion');
+            header('Location: ?ruta=crear-investigacion' . ($fromAdmin ? '&from_admin=1' : ''));
             exit;
         }
 
@@ -259,15 +303,15 @@ class InvestigacionController {
 
         if ($id) {
             $_SESSION['flash_success'] = 'Investigación creada exitosamente.';
-            header('Location: ?ruta=mis-investigaciones');
+            header('Location: ' . ($fromAdmin ? '?ruta=panel-investigaciones-admin' : '?ruta=mis-investigaciones'));
         } else {
             $_SESSION['flash_error'] = 'Error al crear la investigación.';
-            header('Location: ?ruta=crear-investigacion');
+            header('Location: ?ruta=crear-investigacion' . ($fromAdmin ? '&from_admin=1' : ''));
         }
         exit;
     }
 
-    /** Actualizar investigación. RBAC: nivel >= 1 + verificación de propiedad en modelo */
+    /** Actualizar investigación + verificación de propiedad o SuperAdmin/Comité en modelo */
     public function actualizarInvestigacion(): void {
         Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Investigaciones');
         $user = Auth::usuario();
@@ -312,14 +356,14 @@ class InvestigacionController {
             $_SESSION['flash_error'] = 'No tienes permiso o ocurrió un error al actualizar.';
         }
 
-        $redir = ((int)$user['nivel'] >= 2 && isset($_POST['from_admin']))
+        $redir = ((int)$user['nivel'] <= 1 && !empty($_POST['from_admin']))
             ? '?ruta=panel-investigaciones-admin'
             : '?ruta=mis-investigaciones';
         header("Location: $redir");
         exit;
     }
 
-    /** Eliminar investigación. RBAC: nivel >= 1 + verificación de propiedad en modelo */
+    /** Eliminar investigación + verificación de propiedad o SuperAdmin/Comité en modelo */
     public function eliminarInvestigacion(): void {
         Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'Investigaciones');
         $user = Auth::usuario();
@@ -333,14 +377,14 @@ class InvestigacionController {
             $_SESSION['flash_error'] = 'Error al eliminar la investigación o sin permisos.';
         }
 
-        $redir = ((int)$user['nivel'] >= 2 && isset($_POST['from_admin']))
+        $redir = ((int)$user['nivel'] <= 1 && !empty($_POST['from_admin']))
             ? '?ruta=panel-investigaciones-admin'
             : '?ruta=mis-investigaciones';
         header("Location: $redir");
         exit;
     }
 
-    /** Mis postulantes con paginación. RBAC: nivel >= 1 */
+    /** Mis postulantes con paginación */
     public function mostrarMisPostulantes(): array {
         Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'Investigaciones');
         $user = Auth::usuario();
@@ -365,7 +409,7 @@ class InvestigacionController {
         return compact('postulaciones', 'paginacion', 'stats');
     }
 
-    /** Responder postulación (Aceptar/Rechazar). RBAC: nivel >= 1 + verificación de propiedad en modelo */
+    /** Responder postulación (Aceptar/Rechazar) */
     public function responderPostulacion(): void {
         Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Investigaciones');
         $user = Auth::usuario();
@@ -386,7 +430,7 @@ class InvestigacionController {
             }
         }
 
-        $redir = ((int)$user['nivel'] >= 2 && isset($_POST['from_admin']))
+        $redir = ((int)$user['nivel'] <= 1 && !empty($_POST['from_admin']))
             ? '?ruta=panel-investigaciones-admin'
             : '?ruta=mis-postulantes';
         header("Location: $redir");
@@ -394,12 +438,15 @@ class InvestigacionController {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // ADMIN (Nivel >= 2)
+    // ADMIN (SuperAdmin y Comité)
     // ──────────────────────────────────────────────────────────────────────────
 
-    /** Panel administrativo. RBAC: nivel >= 2 */
+    /** Panel administrativo de investigaciones */
     public function mostrarPanelAdmin(): array {
         Auth::requierePrivilegioMinimo($this->nivelAdmin, 'administrar', 'Investigaciones');
+        $user = Auth::usuario();
+        $esSuperAdmin = ((int)($user['nivel'] ?? 999) === 0)
+            || (mb_strtolower(trim((string)($user['rol'] ?? ''))) === 'super administrador');
 
         // Configuración de paginación persistida en sesión
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['config_paginacion'])) {
@@ -418,6 +465,12 @@ class InvestigacionController {
         if (!empty($_GET['estado'])) {
             $filtros['estado'] = trim(strip_tags($_GET['estado']));
         }
+        if (!empty($_GET['linea'])) {
+            $filtros['id_linea'] = (int)$_GET['linea'];
+        }
+        if (!empty($_GET['profesor'])) {
+            $filtros['id_profesor'] = (int)$_GET['profesor'];
+        }
         if (!empty($_GET['q'])) {
             $filtros['busqueda'] = trim(strip_tags($_GET['q']));
         }
@@ -431,24 +484,44 @@ class InvestigacionController {
             'por_pagina' => $resultado['por_pagina'],
         ];
 
-        $postulaciones = $this->model->obtenerPostulacionesAdmin();
-        $lineas        = $this->model->obtenerLineas();
+        $postulaciones           = $this->model->obtenerPostulacionesAdmin();
+        $lineas                  = $this->model->obtenerLineas();
+        $responsablesDisponibles = $this->model->obtenerListaResponsablesDisponibles();
 
-        return compact('investigaciones', 'paginacion', 'postulaciones', 'lineas', 'porPaginaInv');
+        return compact('investigaciones', 'paginacion', 'postulaciones', 'lineas', 'porPaginaInv', 'responsablesDisponibles', 'esSuperAdmin');
     }
 
-    /** Cambiar estado de investigación. RBAC: nivel >= 2 */
+    /** Cambiar estado y/o responsable de investigación */
     public function cambiarEstado(): void {
         Auth::requierePrivilegioMinimo($this->nivelAdmin, 'administrar', 'Investigaciones');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
 
-        $id     = (int)($_POST['id'] ?? 0);
-        $estado = $_POST['estado'] ?? '';
+        $id          = (int)($_POST['id'] ?? 0);
+        $estado      = $_POST['estado'] ?? '';
+        $id_profesor = (int)($_POST['id_profesor'] ?? 0);
 
-        $this->model->cambiarEstadoInvestigacion($id, $estado);
-        $_SESSION['flash_success'] = 'Estado de investigación actualizado.';
+        $mensajes = [];
+        if ($id > 0 && $estado !== '') {
+            if ($this->model->cambiarEstadoInvestigacion($id, $estado)) {
+                $mensajes[] = "estado actualizado a '$estado'";
+            }
+        }
+        if ($id > 0 && $id_profesor > 0) {
+            if ($this->model->reasignarResponsableInvestigacion($id, $id_profesor)) {
+                $mensajes[] = 'responsable reasignado';
+            }
+        }
 
-        header('Location: ?ruta=panel-investigaciones-admin');
+        if (!empty($mensajes)) {
+            $_SESSION['flash_success'] = 'Investigación actualizada (' . implode(', ', $mensajes) . ').';
+        } else {
+            $_SESSION['flash_error'] = 'No se pudo actualizar la investigación.';
+        }
+
+        $redir = !empty($_POST['from_mis_inv'])
+            ? '?ruta=mis-investigaciones'
+            : '?ruta=panel-investigaciones-admin';
+        header("Location: $redir");
         exit;
     }
 
@@ -458,7 +531,6 @@ class InvestigacionController {
 
     /**
      * API: Retorna dimensiones operativas de una línea.
-     * RBAC: nivel >= 1 (solo docentes que usan el formulario de creación/edición).
      * Responde JSON; el routing lo marca como es_api=true.
      */
     public function apiDimensiones(): void {

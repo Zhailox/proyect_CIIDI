@@ -1,611 +1,1541 @@
 // modules/LineasInvestigacion/assets/analitica_ui.js
+(() => {
+    if (window.__ciidiAnaliticaInitialized) return;
+    window.__ciidiAnaliticaInitialized = true;
 
-const pdfScript = document.createElement('script');
-pdfScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-document.head.appendChild(pdfScript);
+    // Paleta corporativa armónica (basada en los tonos #1e293b, #505984, #7090cb del encabezado institucional)
+    const PALETA_LINEAS = [
+        '#1e293b', // Azul Pizarra Profundo
+        '#505984', // Azul Índigo Institucional
+        '#7090cb', // Azul Acero Suave
+        '#3b82f6', // Azul Real Académico
+        '#4f46e5', // Índigo Ejecutivo
+        '#0284c7', // Azul Cian Oscuro
+        '#0d9488', // Verde Azulado Sobrio
+        '#6366f1', // Violeta Pizarra
+        '#334155', // Gris Pizarra Oscuro
+        '#2563eb', // Cobalto Institucional
+        '#64748b', // Pizarra Medio
+        '#475569'  // Grafito Azulado
+    ];
 
-document.addEventListener('DOMContentLoaded', () => {
-    
-    // Variables globales para Chart.js
-    window.tendenciasChart = null;
+    document.addEventListener('DOMContentLoaded', () => {
+        window.tendenciasChart = null;
+        window.lastTendenciasData = null;
+        window.lastTendenciasParams = null;
+        window.hiddenLineNames = new Set();
 
-    // --- PROYECCIÓN DE TENDENCIAS ---
-    const btnProyectar = document.getElementById('btn-proyectar');
-    const loadingTendencias = document.getElementById('loading-tendencias');
-    const metricasTendencias = document.getElementById('metricas-tendencias-resultado');
+        const btnProyectar        = document.getElementById('btn-proyectar');
+        const btnAdvanced         = document.getElementById('btn-advanced');
+        const btnGuardarSnapshot  = document.getElementById('btn-guardar-snapshot');
+        const panelAdvanced       = document.getElementById('advanced-settings-panel');
+        const selectModelo        = document.getElementById('select-ml-model');
+        const rfOnlyControls      = document.getElementById('rf-only-controls');
+        const selectCarrera       = document.getElementById('select-carrera');
+        const selectTrimestres    = document.getElementById('select-trimestres');
+        const selectFuente        = document.getElementById('select-fuente');
+        const loadingTendencias   = document.getElementById('loading-tendencias');
+        const metricasTendencias  = document.getElementById('metricas-tendencias-resultado');
+        const btnDescargarPdf     = document.getElementById('btn-descargar-pdf');
 
-    // Lectura segura de un control numérico con valor por defecto y límites
-    function leerEntero(id, defecto, min, max) {
-        const el = document.getElementById(id);
-        const v = el ? parseInt(el.value, 10) : NaN;
-        if (isNaN(v)) return defecto;
-        return Math.min(max, Math.max(min, v));
-    }
-    function leerValor(id, defecto) {
-        const el = document.getElementById(id);
-        return el && el.value ? el.value : defecto;
-    }
-    function escaparHtml(txt) {
-        return String(txt ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    }
+        if (!btnProyectar) return;
 
-    btnProyectar.addEventListener('click', async () => {
-        // Leer la cantidad de trimestres a proyectar
-        const predSteps = leerEntero('select-trimestres', 4, 1, 12);
+        function leerEntero(id, defecto, min, max) {
+            const el = document.getElementById(id);
+            const v = el ? parseInt(el.value, 10) : NaN;
+            if (isNaN(v)) return defecto;
+            return Math.min(max, Math.max(min, v));
+        }
 
-        // Controles Avanzados ML (se envían todos al backend)
-        const params = {
-            pred_steps: predSteps,
-            historial_base: leerValor('select-historial', 'all'),
-            ml_model: leerValor('select-ml-model', 'linear'),
-            max_epochs: leerEntero('input-epochs', 500, 1, 5000),
-            timeout: leerEntero('input-timeout', 10, 1, 120)
-        };
+        function leerValor(id, defecto) {
+            const el = document.getElementById(id);
+            return el && el.value !== undefined && el.value !== '' ? el.value : defecto;
+        }
 
-        // Mostrar estado de carga
-        btnProyectar.disabled = true;
-        loadingTendencias.style.display = 'block';
-        metricasTendencias.innerHTML = '<p class="text-muted">Procesando tensor...</p>';
+        function escaparHtml(txt) {
+            return String(txt ?? '').replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
 
-        try {
-            // Llamada AJAX al controlador PHP nativo
-            const response = await fetch('api-prediccion-tendencias', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(params)
+        // Mostrar/ocultar panel avanzado
+        if (btnAdvanced && panelAdvanced) {
+            btnAdvanced.addEventListener('click', () => {
+                const isHidden = panelAdvanced.style.display === 'none' || !panelAdvanced.style.display;
+                panelAdvanced.style.display = isHidden ? 'flex' : 'none';
+                btnAdvanced.classList.toggle('active', isHidden);
             });
-
-            const data = await response.json();
-
-            if(data.error) {
-                let errorHtml = `<p style="color:#ff4444">${escaparHtml(data.error)}</p>`;
-                if (data.raw_output || data.raw) {
-                    errorHtml += `<pre style="color:#ffaa00; font-size:11px; background:#222; padding:5px; white-space:pre-wrap;">${escaparHtml(data.raw_output || data.raw)}</pre>`;
-                }
-                metricasTendencias.innerHTML = errorHtml;
-            } else {
-                // El backend puede limitar pred_steps: usamos el valor efectivo
-                const pasos = (data.future_labels && data.future_labels.length) ? data.future_labels.length : predSteps;
-                renderizarBadgeMotor(data, params);
-                renderizarGraficoTendencias(data, pasos);
-                renderizarMetricasTendencias(data, pasos);
-                renderizarInsights(data, pasos);
-                document.getElementById('btn-descargar-pdf').style.display = 'flex';
-            }
-        } catch (error) {
-            metricasTendencias.innerHTML = `<div style="background:#fff1f2; border:1px solid #fda4af; padding:10px; border-radius:6px; color:#be123c;">
-                <strong>Aviso de Motor IA:</strong> Ocurrió un fallo en el cliente de gráficos.
-                <br><span style="font-size:0.75rem;">${error.message}</span>
-            </div>`;
-            console.error(error);
-        } finally {
-            btnProyectar.disabled = false;
-            loadingTendencias.style.display = 'none';
-        }
-    });
-
-    // Insignia visible del motor que produjo el resultado (nunca silencioso)
-    function renderizarBadgeMotor(data, params) {
-        const cont = document.getElementById('engine-badge-tendencias');
-        if (!cont) return;
-        const esPython = data.engine === 'python';
-        const hist = data.history_labels || [];
-        const periodo = hist.length ? `${hist[0]} – ${hist[hist.length - 1]} (${hist.length} trimestres)` : 'sin datos';
-        const ventanas = { all: 'Todo el historial', '2y': 'Últimos 2 años', '1y': 'Último año' };
-        const extraRf = data.model_used === 'rf' && data.params && data.params.n_estimators ? ` · ${data.params.n_estimators} árboles` : '';
-
-        const chip = (icono, texto, bg, color, borde, titulo = '') =>
-            `<span title="${escaparHtml(titulo)}" style="display:inline-flex; align-items:center; gap:5px; font-size:0.75rem; font-weight:700; padding:4px 10px; border-radius:50px; background:${bg}; color:${color}; border:1px solid ${borde};"><i class="ph-bold ${icono}"></i>${texto}</span>`;
-
-        let html = esPython
-            ? chip('ph-cpu', 'Motor: Python · scikit-learn', '#dcfce7', '#166534', '#86efac', data.engine_detail || '')
-            : chip('ph-warning', 'Motor: PHP de respaldo', '#fef3c7', '#92400e', '#fcd34d', data.engine_detail || '');
-        html += chip('ph-function', escaparHtml((data.model_label || params.ml_model) + extraRf), '#eef0f7', '#505984', '#c7cbe0');
-        html += chip('ph-calendar', `${escaparHtml(ventanas[params.historial_base] || params.historial_base)}: ${escaparHtml(periodo)}`, '#f8fafc', '#475569', '#e2e8f0');
-
-        if (!esPython && data.fallback_reason) {
-            html += `<div style="flex-basis:100%; font-size:0.75rem; color:#92400e; margin-top:2px;"><i class="ph-bold ph-info"></i> Python no disponible: ${escaparHtml(data.fallback_reason)}</div>`;
-        }
-        cont.innerHTML = html;
-        cont.style.display = 'flex';
-    }
-
-    function renderizarGraficoTendencias(data, predSteps) {
-        const ctx = document.getElementById('tendenciasChart').getContext('2d');
-        
-        if (window.tendenciasChart) {
-            window.tendenciasChart.destroy();
         }
 
-        // Paleta de colores Corporativa 100% exacta
-        const baseColors = [
-            '#121a3e', // Azul Oscuro (Ingeniería de Software)
-            '#505984', // Azul Gris (Redes)
-            '#7090cb', // Azul Claro (IA)
-            '#f59e0b'  // Naranja complementario para Seguridad
-        ];
-        
-        const maxHistory = Math.max(...data.areas.map(a => a.history ? a.history.length : 0));
-        
-        // Generar Fechas Reales (3 Trimestres por Año)
-        let chartLabels = [];
-        const etiquetasBackend = Array.isArray(data.history_labels) && data.history_labels.length === maxHistory
-            && Array.isArray(data.future_labels) && data.future_labels.length >= predSteps;
-
-        if (etiquetasBackend) {
-            // El backend devuelve exactamente los trimestres analizados (ventana de historial aplicada)
-            chartLabels = [
-                ...data.history_labels,
-                ...data.future_labels.slice(0, predSteps).map(l => `${l} (Proy)`)
-            ];
-        } else {
-        let date = new Date();
-        // Un año de 3 trimestres equivale a cuatrimestres (cada 4 meses)
-        let currentT = Math.floor(date.getMonth() / 4) + 1;
-        let currentY = date.getFullYear();
-
-        // Retroceder en el tiempo para alinear el historial
-        let startT = currentT;
-        let startY = currentY;
-        for(let i = 0; i < maxHistory - 1; i++) {
-            startT--;
-            if(startT < 1) { startT = 3; startY--; }
+        // Mostrar Max Epochs y Timeout ÚNICAMENTE cuando se selecciona Random Forest ('rf')
+        function actualizarVisibilidadControlesModelo() {
+            if (!selectModelo || !rfOnlyControls) return;
+            rfOnlyControls.style.display = selectModelo.value === 'rf' ? 'flex' : 'none';
         }
 
-        let tempT = startT;
-        let tempY = startY;
-
-        // Etiquetas del Pasado
-        for(let i = 0; i < maxHistory; i++) {
-            chartLabels.push(`T${tempT} ${tempY}`);
-            tempT++;
-            if(tempT > 3) { tempT = 1; tempY++; }
-        }
-        // Etiquetas del Futuro
-        for(let i = 0; i < predSteps; i++) {
-            chartLabels.push(`T${tempT} ${tempY} (Proy)`);
-            tempT++;
-            if(tempT > 3) { tempT = 1; tempY++; }
-        }
+        if (selectModelo) {
+            selectModelo.addEventListener('change', actualizarVisibilidadControlesModelo);
+            actualizarVisibilidadControlesModelo();
         }
 
-        const lineData = data.areas.map((a, index) => {
-            const color = baseColors[index % baseColors.length];
-            const historicalData = a.history || [];
-            const predictionData = a.adoption_curve || [];
-            const combinedData = [...historicalData, ...predictionData];
-
-            return {
-                label: a.name,
-                data: combinedData,
-                borderColor: color,
-                backgroundColor: color,
-                borderWidth: 4, // Líneas más gruesas y estéticas
-                tension: 0.4, // Curvatura suave
-                pointBackgroundColor: color,
-                pointBorderColor: '#ffffff',
-                pointBorderWidth: 2,
-                pointRadius: 5,
-                pointHoverRadius: 8,
-                fill: false, // Sin relleno para que no se cubran
-                segment: {
-                    // Si el punto es del futuro, se dibuja punteado
-                    borderDash: ctx => ctx.p0DataIndex >= historicalData.length - 1 ? [8, 6] : undefined,
-                    // Reducimos un poco la opacidad de la predicción para resaltarla
-                    borderColor: ctx => ctx.p0DataIndex >= historicalData.length - 1 ? color + '80' : color
-                }
-            };
-        });
-
-        window.tendenciasChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: chartLabels,
-                datasets: lineData
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: { 
-                            font: { family: 'inherit', size: 13, weight: 'bold' },
-                            color: '#121a3e',
-                            usePointStyle: true,
-                            padding: 20
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(18, 26, 62, 0.9)', // Tooltip corporativo
-                        titleFont: { size: 14, family: 'inherit' },
-                        bodyFont: { size: 13, family: 'inherit' },
-                        padding: 12,
-                        cornerRadius: 8,
-                        callbacks: {
-                            label: function(context) {
-                                const dataIndex = context.dataIndex;
-                                const label = context.dataset.label || '';
-                                const value = context.parsed.y;
-                                if (dataIndex >= maxHistory) {
-                                    return ` ${label}: ${value} (Esperados)`;
-                                }
-                                return ` ${label}: ${value} (Histórico)`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: 'rgba(80, 89, 132, 0.1)', borderDash: [5, 5] },
-                        ticks: { color: '#505984', font: { weight: '600' } }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: '#505984', font: { weight: '600' } }
-                    }
-                }
-            }
-        });
-    }
-
-    function renderizarMetricasTendencias(data, predSteps) {
-        // Calcular etiquetas futuras para la línea de tiempo
-        let futureLabels = [];
-        if (Array.isArray(data.future_labels) && data.future_labels.length >= predSteps) {
-            // "T2 2026" -> "T2 '26"
-            futureLabels = data.future_labels.slice(0, predSteps).map(l => l.replace(/^(T\d) \d{2}(\d{2})$/, "$1 '$2"));
-        } else {
-        let date = new Date();
-        let currentMonth = date.getMonth() + 1;
-        let currentT = 1;
-        if (currentMonth >= 1 && currentMonth <= 4) currentT = 1;
-        else if (currentMonth >= 5 && currentMonth <= 8) currentT = 2;
-        else currentT = 3;
-        
-        let currentY = date.getFullYear();
-        
-        let tempT = currentT;
-        let tempY = currentY;
-        for (let i = 0; i < predSteps; i++) {
-            tempT++;
-            if (tempT > 3) { tempT = 1; tempY++; }
-            futureLabels.push(`T${tempT} '${tempY.toString().slice(-2)}`);
+        if (selectCarrera) {
+            selectCarrera.addEventListener('change', () => {
+                window.hiddenLineNames.clear();
+                ejecutarProyeccion();
+            });
         }
+        if (selectTrimestres) {
+            selectTrimestres.addEventListener('change', () => ejecutarProyeccion());
         }
-        let targetLabel = futureLabels[futureLabels.length - 1];
-
-        // RMSE con 2 decimales: redondear a entero ocultaba la diferencia entre modelos
-        const rmse = Number(data.metrics && data.metrics.global_rmse) || 0;
-        let errorText = rmse < 0.005 ? "Ajuste exacto" : `±${rmse.toFixed(2)} proy.`;
-
-        // Comparativa de RMSE de los 3 modelos sobre la misma ventana de datos
-        let comparativaHtml = '';
-        const porModelo = data.metrics && data.metrics.rmse_by_model;
-        if (porModelo) {
-            const nombres = { linear: 'Lineal', poly: 'Polinómica', rf: 'Random Forest' };
-            comparativaHtml = `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">` +
-                Object.keys(nombres).filter(k => porModelo[k] !== undefined).map(k => {
-                    const activo = k === data.model_used;
-                    return `<span title="RMSE de ajuste del modelo ${nombres[k]}" style="font-size:0.7rem; padding:2px 7px; border-radius:4px; border:1px solid ${activo ? '#505984' : '#e2e8f0'}; background:${activo ? '#505984' : '#ffffff'}; color:${activo ? '#ffffff' : '#475569'}; font-weight:${activo ? '700' : '600'};">${nombres[k]}: ${Number(porModelo[k]).toFixed(2)}</span>`;
-                }).join('') + `</div>`;
+        if (selectFuente) {
+            selectFuente.addEventListener('change', () => ejecutarProyeccion());
         }
 
-        let html = `<div style="margin-bottom: 15px; color: #1e293b; background: #f8fafc; padding: 10px; border-radius: 6px; border-left: 4px solid #7090cb;">
-            <div style="display:flex; flex-wrap: wrap; justify-content:space-between; align-items:center; gap: 5px;">
-                <strong style="font-size: 0.95rem; flex: 1; min-width: 120px;">Margen (RMSE):</strong>
-                <span style="background: rgba(112, 144, 203, 0.15); color: #121a3e; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; flex-shrink: 0;">${errorText}</span>
-            </div>
-            <div style="font-size: 0.8rem; color: #64748b; margin-top: 6px;">Margen estadístico de error en la IA (${escaparHtml(data.model_label || 'modelo')}).</div>
-            ${comparativaHtml}
-        </div>
-        
-        <strong style="color: #121a3e; font-size: 1.05rem; display:block; margin-top: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
-            Diagnóstico
-        </strong>
-        <div style="font-size: 0.8rem; color: #64748b; margin: 8px 0 15px 0;">Tendencias proyectadas hasta <strong>${targetLabel}</strong>.</div>
-        
-        <ul style="list-style:none; padding:0; margin:0;">`;
-        
-        data.areas.forEach(area => {
+        // Clasificación diagnóstica con paleta corporativa (#1e293b, #505984, #7090cb)
+        function diagnosticarLinea(area, predSteps) {
             const predictionData = area.adoption_curve || [];
-            const targetPrediction = predictionData.length > 0 ? Math.round(predictionData[predSteps - 1]) : 0;
-            
+            const targetPrediction = predictionData.length > 0
+                ? Math.round(predictionData[Math.min(predSteps, predictionData.length) - 1])
+                : 0;
             const historyData = area.history || [];
-            const lastMonth = historyData.length > 0 ? historyData[historyData.length - 1] : 0;
-            
+            const totalHist = typeof area.total_historico === 'number'
+                ? area.total_historico
+                : historyData.reduce((acc, v) => acc + (Number(v) || 0), 0);
+            const lastTermVal = historyData.length > 0 ? Number(historyData[historyData.length - 1]) : 0;
+
             let delta = 0;
-            if (lastMonth > 0) {
-                delta = ((targetPrediction - lastMonth) / lastMonth) * 100;
-            } else {
-                delta = targetPrediction > 0 ? 100 : 0;
+            if (lastTermVal > 0) {
+                delta = ((targetPrediction - lastTermVal) / lastTermVal) * 100;
+            } else if (targetPrediction > 0) {
+                delta = 100;
             }
 
+            const satInt = Math.round(Number(area.saturation_index) || 0);
             let classLabel = '';
             let classColorBg = '';
             let classColorTxt = '';
+            let recomendacion = '';
 
-            if (delta > 20) {
+            if (totalHist === 0 && targetPrediction === 0) {
+                classLabel = 'Línea Nueva / Sin Historial';
+                classColorBg = '#eef0f7';
+                classColorTxt = '#505984';
+                recomendacion = 'Línea sin proyectos PST culminados registrados aún. Se sugiere vincular nuevos equipos estudiantiles y tutores para consolidar su base estadística.';
+            } else if (delta > 20) {
                 classLabel = 'Crec. Acelerado';
-                classColorBg = '#dbeafe'; 
-                classColorTxt = '#1e3a8a';
+                classColorBg = '#1e293b';
+                classColorTxt = '#ffffff';
+                recomendacion = satInt >= 75
+                    ? 'Alta demanda proyectada con cercanía al tope de capacidad. Priorizar la asignación de nuevos tutores académicos y jurados evaluadores en esta línea.'
+                    : 'Crecimiento sostenido sobresaliente. Fortalecer alianzas institucionales para canalizar el flujo de nuevos proyectos estudiantiles.';
             } else if (delta > 5) {
                 classLabel = 'Tendencia Positiva';
-                classColorBg = '#e0e7ff';
-                classColorTxt = '#3730a3';
+                classColorBg = '#eef0f7';
+                classColorTxt = '#1e293b';
+                recomendacion = 'Evolución favorable y en expansión. Mantener la oferta actual de temas de investigación y realizar seguimiento trimestral de capacidad.';
             } else if (delta >= -5 && delta <= 5) {
                 classLabel = 'Estable';
                 classColorBg = '#f1f5f9';
                 classColorTxt = '#475569';
+                recomendacion = 'Flujo de investigación consolidado y predecible. Ideal para estandarizar bancos de problemas y optimizar tiempos de defensa.';
             } else {
-                classLabel = 'En Declive';
-                classColorBg = '#fef2f2';
-                classColorTxt = '#991b1b';
+                classLabel = 'Baja Demanda';
+                classColorBg = '#e2e8f0';
+                classColorTxt = '#334155';
+                recomendacion = 'Disminución proyectada de volumen. Se recomienda actualizar las dimensiones operativas de la línea y promover propuestas vinculadas.';
             }
 
-            let satInt = Math.round(area.saturation_index);
-            let satColor = satInt > 80 ? '#ef4444' : (satInt > 50 ? '#f59e0b' : '#10b981');
-
-            // Generar la Ruta de Etiquetas (Timeline Badges)
-            let timelineHtml = `<div style="display:flex; flex-wrap:nowrap; overflow-x:auto; gap:6px; margin-top:12px; padding-bottom:4px; align-items:center;">`;
-            for(let i=0; i<predSteps; i++) {
-                let val = Math.round(predictionData[i]);
-                timelineHtml += `
-                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:3px 6px; font-size:0.7rem; color:#475569; white-space:nowrap;">
-                        <strong style="color:#121a3e;">${futureLabels[i]}:</strong> ${val}
-                    </div>`;
-                if (i < predSteps - 1) {
-                    timelineHtml += `<i class="ph-bold ph-arrow-right" style="color:#cbd5e1; font-size:0.7rem;"></i>`;
-                }
-            }
-            timelineHtml += `</div>`;
-
-            html += `<li style="margin-bottom:12px; padding: 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                
-                <div style="display:flex; align-items:flex-start; gap: 8px; margin-bottom:8px;">
-                    <div style="flex: 1; min-width: 0;">
-                        <strong style="color:#121a3e; font-size: 0.90rem; display:block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${area.name}">
-                            ${area.name}
-                        </strong>
-                        <span style="display:inline-block; margin-top:4px; font-size:0.7rem; font-weight:bold; padding:2px 6px; border-radius:12px; background:${classColorBg}; color:${classColorTxt}; border: 1px solid ${classColorBg}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">
-                            ${classLabel}
-                        </span>
-                    </div>
-                    <div style="flex-shrink: 0; text-align: right; width: 45px;">
-                        <span style="color:${satColor}; font-weight:bold; font-size: 1rem; display:block;">${satInt}%</span>
-                        <span style="font-size: 0.65rem; color:#64748b; font-weight:bold;">SAT.</span>
-                    </div>
-                </div>
-                
-                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:6px; font-size: 0.80rem; color:#475569;">
-                    <span>Demanda Final: <strong style="color:#121a3e;">${targetPrediction} proy.</strong></span>
-                </div>
-                
-                <div style="width:100%; background:#f1f5f9; height:6px; border-radius:3px; overflow:hidden;">
-                    <div style="width:${satInt}%; background:${satColor}; height:100%; border-radius:3px; transition: width 0.8s ease-in-out;"></div>
-                </div>
-                
-                ${timelineHtml}
-            </li>`;
-        });
-        html += `</ul>`;
-        metricasTendencias.innerHTML = html;
-    }
-
-    function renderizarInsights(data, predSteps) {
-        const container = document.getElementById('insights-tendencias');
-        if (!container) return;
-        
-        // Cambiamos a Grid 2x2 para acomodar 4 insights
-        container.style.gridTemplateColumns = 'repeat(2, 1fr)';
-
-        let maxDemanda = { name: '-', val: -1 };
-        let minDemanda = { name: '-', val: 999999 };
-        let maxAceleracion = { name: '-', growthPct: -999, absoluteGrowth: 0 };
-        
-        let sumaPorTrimestre = new Array(predSteps).fill(0);
-        let totalProyectosFuturo = 0;
-
-        data.areas.forEach(area => {
-            const predData = area.adoption_curve || [];
-            const histData = area.history || [];
-            
-            if (predData.length >= predSteps) {
-                // Última predicción
-                const tPred = Math.round(predData[predSteps - 1]);
-                if (tPred > maxDemanda.val) { maxDemanda.val = tPred; maxDemanda.name = area.name; }
-                if (tPred < minDemanda.val) { minDemanda.val = tPred; minDemanda.name = area.name; }
-                
-                // Aceleración (Pendiente)
-                const slope = predData.length > 1 ? (predData[1] - predData[0]) : 0;
-                const lastHist = histData.length > 0 ? histData[histData.length - 1] : 0;
-                const growthPct = lastHist > 0 ? (slope / lastHist) * 100 : 0;
-                
-                if (growthPct > maxAceleracion.growthPct) {
-                    maxAceleracion.name = area.name;
-                    maxAceleracion.growthPct = growthPct;
-                    maxAceleracion.absoluteGrowth = Math.round(slope);
-                }
-                
-                for(let i=0; i<predSteps; i++) {
-                    sumaPorTrimestre[i] += Math.round(predData[i]);
-                    totalProyectosFuturo += Math.round(predData[i]);
-                }
-            }
-        });
-
-        let peakIndex = 0;
-        let maxSum = -1;
-        for(let i=0; i<predSteps; i++) {
-            if (sumaPorTrimestre[i] > maxSum) {
-                maxSum = sumaPorTrimestre[i];
-                peakIndex = i;
-            }
-        }
-        
-        let peakLabel = (Array.isArray(data.future_labels) && data.future_labels[peakIndex]) ? data.future_labels[peakIndex] : '';
-        if (!peakLabel) {
-        let date = new Date();
-        let currentMonth = date.getMonth() + 1;
-        let startT = (currentMonth >= 1 && currentMonth <= 4) ? 1 : ((currentMonth >= 5 && currentMonth <= 8) ? 2 : 3);
-        let startY = date.getFullYear();
-        
-        let peakT = startT;
-        let peakY = startY;
-        for(let i=0; i<=peakIndex; i++) {
-            peakT++;
-            if (peakT > 3) { peakT = 1; peakY++; }
-        }
-        peakLabel = `T${peakT} ${peakY}`;
+            return {
+                targetPrediction,
+                totalHist,
+                lastTermVal,
+                delta,
+                satInt,
+                classLabel,
+                classColorBg,
+                classColorTxt,
+                recomendacion
+            };
         }
 
-        const cPrincipal = '#121a3e';
-        const cSecundario = '#505984';
-        const cTerciario = '#7090cb';
-        const cComplemento = '#f59e0b'; // Naranja corporativo
+        function obtenerAreasVisibles(data) {
+            if (!data || !Array.isArray(data.areas)) return [];
+            const filtradas = data.areas.filter(a => !window.hiddenLineNames.has(a.name));
+            return filtradas.length > 0 ? filtradas : data.areas;
+        }
 
-        let html = `
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; box-shadow: 0 4px 6px -1px rgba(18, 26, 62, 0.05); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
-                    <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 0.70rem; color: ${cSecundario}; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Línea Líder (Demanda)</div>
-                        <div style="font-size: 1.05rem; color: ${cPrincipal}; font-weight: 800; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${maxDemanda.name}">${maxDemanda.name}</div>
-                    </div>
-                    <div style="background: rgba(18, 26, 62, 0.05); padding: 10px; border-radius: 8px; flex-shrink: 0;">
-                        <i class="ph-bold ph-rocket" style="font-size: 1.4rem; color: ${cPrincipal};"></i>
-                    </div>
-                </div>
-                <div style="margin-top: 15px; display: flex; align-items: center;">
-                    <span style="font-size: 0.85rem; color: ${cSecundario}; background: #f8fafc; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; width: 100%;">Cima de <strong style="color: ${cPrincipal};">${maxDemanda.val} proy.</strong></span>
-                </div>
-                <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: ${cPrincipal};"></div>
-            </div>
-            
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; box-shadow: 0 4px 6px -1px rgba(80, 89, 132, 0.05); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
-                    <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 0.70rem; color: ${cSecundario}; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Mayor Aceleración</div>
-                        <div style="font-size: 1.05rem; color: ${cPrincipal}; font-weight: 800; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${maxAceleracion.name}">${maxAceleracion.name}</div>
-                    </div>
-                    <div style="background: rgba(245, 158, 11, 0.1); padding: 10px; border-radius: 8px; flex-shrink: 0;">
-                        <i class="ph-bold ph-trend-up" style="font-size: 1.4rem; color: ${cComplemento};"></i>
-                    </div>
-                </div>
-                <div style="margin-top: 15px; display: flex; align-items: center;">
-                    <span style="font-size: 0.85rem; color: ${cSecundario}; background: #f8fafc; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; width: 100%;">Crece un <strong style="color: ${cComplemento};">+${maxAceleracion.growthPct.toFixed(1)}%</strong> aprox.</span>
-                </div>
-                <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: ${cComplemento};"></div>
-            </div>
+        async function ejecutarProyeccion() {
+            const predSteps = leerEntero('select-trimestres', 4, 1, 12);
+            const modeloElegido = leerValor('select-ml-model', 'linear');
 
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; box-shadow: 0 4px 6px -1px rgba(80, 89, 132, 0.05); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
-                    <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 0.70rem; color: ${cSecundario}; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Menor Interés</div>
-                        <div style="font-size: 1.05rem; color: ${cPrincipal}; font-weight: 800; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${minDemanda.name}">${minDemanda.name}</div>
-                    </div>
-                    <div style="background: rgba(80, 89, 132, 0.08); padding: 10px; border-radius: 8px; flex-shrink: 0;">
-                        <i class="ph-bold ph-arrow-down-right" style="font-size: 1.4rem; color: ${cSecundario};"></i>
-                    </div>
-                </div>
-                <div style="margin-top: 15px; display: flex; align-items: center;">
-                    <span style="font-size: 0.85rem; color: ${cSecundario}; background: #f8fafc; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; width: 100%;">Fondo de <strong style="color: ${cPrincipal};">${minDemanda.val} proy.</strong></span>
-                </div>
-                <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: ${cSecundario};"></div>
-            </div>
-            
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; box-shadow: 0 4px 6px -1px rgba(112, 144, 203, 0.05); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
-                    <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 0.70rem; color: ${cSecundario}; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Trimestre Pico</div>
-                        <div style="font-size: 1.05rem; color: ${cPrincipal}; font-weight: 800; margin-top: 6px;">${peakLabel}</div>
-                    </div>
-                    <div style="background: rgba(112, 144, 203, 0.1); padding: 10px; border-radius: 8px; flex-shrink: 0;">
-                        <i class="ph-bold ph-lightning" style="font-size: 1.4rem; color: ${cTerciario};"></i>
-                    </div>
-                </div>
-                <div style="margin-top: 15px; display: flex; align-items: center;">
-                    <span style="font-size: 0.85rem; color: ${cSecundario}; background: #f8fafc; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; width: 100%;">Carga: <strong style="color: ${cPrincipal};">${maxSum} simultáneos</strong></span>
-                </div>
-                <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: ${cTerciario};"></div>
-            </div>
-        `;
-        
-        container.innerHTML = html;
-    }
-
-    // --- EXPORTAR A PDF ---
-    const btnDescargarPdf = document.getElementById('btn-descargar-pdf');
-    if (btnDescargarPdf) {
-        btnDescargarPdf.addEventListener('click', () => {
-            const pdfWrapper = document.createElement('div');
-            pdfWrapper.style.padding = '20px';
-            pdfWrapper.style.backgroundColor = '#ffffff';
-            pdfWrapper.style.color = '#121a3e';
-            pdfWrapper.style.fontFamily = 'Arial, sans-serif';
-            
-            const header = document.createElement('div');
-            header.innerHTML = `
-                <h1 style="color:#121a3e; text-align:center; margin-bottom: 5px; font-size:24px;">Reporte Analítico - Proyección de Demanda Empresarial</h1>
-                <p style="color:#64748b; text-align:center; font-size: 14px; margin-top:0; margin-bottom: 30px;">Generado por el Sistema CIIDI - IA Analytics</p>
-            `;
-            pdfWrapper.appendChild(header);
-
-            const canvasOriginal = document.getElementById('tendenciasChart');
-            const imgData = canvasOriginal.toDataURL('image/png');
-            const img = document.createElement('img');
-            img.src = imgData;
-            img.style.width = '100%';
-            img.style.marginBottom = '30px';
-            img.style.border = '1px solid #e2e8f0';
-            img.style.borderRadius = '8px';
-            pdfWrapper.appendChild(img);
-
-            const metricasOriginal = document.getElementById('metricas-tendencias-resultado');
-            const metricasClon = metricasOriginal.cloneNode(true);
-            metricasClon.style.marginBottom = '30px';
-            
-            const tituloMetricas = document.createElement('h3');
-            tituloMetricas.style.color = '#121a3e';
-            tituloMetricas.style.borderBottom = '1px solid #cbd5e1';
-            tituloMetricas.style.paddingBottom = '5px';
-            tituloMetricas.innerText = 'Métricas de Error y Saturación';
-            pdfWrapper.appendChild(tituloMetricas);
-            pdfWrapper.appendChild(metricasClon);
-
-            const insightsOriginal = document.getElementById('insights-tendencias');
-            const insightsClon = insightsOriginal.cloneNode(true);
-            
-            const tituloInsights = document.createElement('h3');
-            tituloInsights.style.color = '#121a3e';
-            tituloInsights.style.borderBottom = '1px solid #cbd5e1';
-            tituloInsights.style.paddingBottom = '5px';
-            tituloInsights.innerText = 'Hallazgos de IA';
-            pdfWrapper.appendChild(tituloInsights);
-            pdfWrapper.appendChild(insightsClon);
-
-            pdfWrapper.style.position = 'absolute';
-            pdfWrapper.style.left = '-9999px';
-            document.body.appendChild(pdfWrapper);
-
-            const opt = {
-                margin:       10,
-                filename:     'Reporte_Proyeccion_CIIDI.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            const params = {
+                pred_steps: predSteps,
+                id_carrera: leerValor('select-carrera', 'all'),
+                historial_base: leerValor('select-historial', '2y'),
+                ml_model: modeloElegido,
+                fuente_datos: leerValor('select-fuente', 'pst'),
+                capacidad_linea: leerEntero('input-capacidad', 25, 5, 500),
+                max_epochs: modeloElegido === 'rf' ? leerEntero('input-epochs', 150, 10, 500) : 150,
+                timeout: modeloElegido === 'rf' ? leerEntero('input-timeout', 10, 2, 120) : 10
             };
 
-            const iconOriginal = btnDescargarPdf.innerHTML;
-            btnDescargarPdf.innerHTML = '<i class="ph-bold ph-spinner ph-spin" style="font-size: 1.1rem;"></i> Generando...';
-            btnDescargarPdf.disabled = true;
+            btnProyectar.disabled = true;
+            loadingTendencias.style.display = 'block';
+            metricasTendencias.innerHTML = '<p style="color:#64748b; padding:12px;">Entrenando modelos y calculando proyecciones...</p>';
 
-            html2pdf().set(opt).from(pdfWrapper).save().then(() => {
-                document.body.removeChild(pdfWrapper);
-                btnDescargarPdf.innerHTML = iconOriginal;
-                btnDescargarPdf.disabled = false;
+            try {
+                const response = await fetch('api-prediccion-tendencias', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(params)
+                });
+
+                const data = await response.json();
+
+                if (data.empty_career) {
+                    if (window.tendenciasChart) {
+                        window.tendenciasChart.destroy();
+                        window.tendenciasChart = null;
+                    }
+                    ['engine-badge-tendencias', 'lineas-filter-bar', 'estacionalidad-tendencias', 'matriz-ejecutiva-tendencias'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.style.display = 'none';
+                    });
+                    const insightsCont = document.getElementById('insights-tendencias');
+                    if (insightsCont) insightsCont.innerHTML = '';
+                    if (btnDescargarPdf) btnDescargarPdf.style.display = 'none';
+
+                    if (Array.isArray(data.snapshots)) {
+                        renderizarSnapshots(data.snapshots);
+                    }
+
+                    metricasTendencias.innerHTML = `
+                        <div style="background:#f8fafc; border:1px dashed #7090cb; padding:20px; border-radius:10px; text-align:center;">
+                            <i class="ph-bold ph-folder-simple-plus" style="font-size:2.2rem; color:#505984;"></i>
+                            <h4 style="color:#1e293b; margin:10px 0 6px 0; font-size:0.95rem;">Sin Líneas Activas en esta Carrera</h4>
+                            <p style="font-size:0.82rem; color:#64748b; margin-bottom:14px;">${escaparHtml(data.error)}</p>
+                            <a href="?ruta=gestionar-lineas" style="display:inline-flex; align-items:center; gap:6px; background:#505984; color:#ffffff; text-decoration:none; padding:8px 14px; border-radius:6px; font-size:0.8rem; font-weight:600;">
+                                <i class="ph-bold ph-plus-circle"></i> Registrar Línea en Gestor Académico
+                            </a>
+                        </div>`;
+                    return;
+                }
+
+                if (data.error) {
+                    metricasTendencias.innerHTML = `<div style="background:#f8fafc; border:1px solid #cbd5e1; padding:12px; border-radius:8px; color:#1e293b; font-weight:600;">${escaparHtml(data.error)}</div>`;
+                    if (btnDescargarPdf) btnDescargarPdf.style.display = 'none';
+                } else {
+                    window.lastTendenciasData = data;
+                    window.lastTendenciasParams = params;
+                    reRenderizarTodo();
+                    if (btnDescargarPdf) btnDescargarPdf.style.display = 'inline-flex';
+                }
+            } catch (error) {
+                metricasTendencias.innerHTML = `<div style="background:#f8fafc; border:1px solid #cbd5e1; padding:12px; border-radius:8px; color:#1e293b;">
+                    <strong>Aviso de Motor IA:</strong> Ocurrió un fallo al procesar la respuesta analítica.
+                    <br><span style="font-size:0.78rem; color:#64748b;">${escaparHtml(error.message)}</span>
+                </div>`;
+                console.error(error);
+            } finally {
+                btnProyectar.disabled = false;
+                loadingTendencias.style.display = 'none';
+            }
+        }
+
+        function reRenderizarTodo() {
+            const data = window.lastTendenciasData;
+            const params = window.lastTendenciasParams;
+            if (!data || !params) return;
+
+            const pasos = (data.future_labels && data.future_labels.length)
+                ? data.future_labels.length
+                : params.pred_steps;
+
+            renderizarBadgeMotor(data, params);
+            renderizarBarraFiltroLineas(data);
+            renderizarGraficoTendencias(data, pasos);
+            renderizarMetricasTendencias(data, pasos);
+            renderizarInsights(data, pasos);
+            renderizarMatrizEjecutiva(data, pasos);
+            renderizarSnapshots(data.snapshots || []);
+        }
+
+        btnProyectar.addEventListener('click', ejecutarProyeccion);
+
+        // Guardar Snapshot de Predicción
+        if (btnGuardarSnapshot) {
+            btnGuardarSnapshot.addEventListener('click', async () => {
+                const data = window.lastTendenciasData;
+                const params = window.lastTendenciasParams;
+                if (!data || !params || !Array.isArray(data.areas)) return;
+
+                const areasVisibles = obtenerAreasVisibles(data);
+                const pasos = (data.future_labels && data.future_labels.length) ? data.future_labels.length : params.pred_steps;
+                const futureLabels = data.future_labels || [];
+                const histLabels = data.history_labels || [];
+
+                let totalProy = 0;
+                const resumenAreas = areasVisibles.map(a => {
+                    const preds = (a.adoption_curve || []).slice(0, pasos);
+                    const sumLine = preds.reduce((acc, v) => acc + Math.round(v), 0);
+                    totalProy += sumLine;
+                    return {
+                        name: a.name,
+                        carrera: a.carrera_nombre || 'General',
+                        ultimo_real: a.ultimo_trimestre ?? 0,
+                        primer_trimestre_label: futureLabels[0] || '',
+                        primer_trimestre_pred: Math.round(preds[0] ?? 0),
+                        meta_final_pred: Math.round(preds[pasos - 1] ?? 0),
+                    };
+                });
+
+                const textoOriginal = btnGuardarSnapshot.innerHTML;
+                btnGuardarSnapshot.disabled = true;
+                btnGuardarSnapshot.innerHTML = '<i class="ph-bold ph-spinner ph-spin"></i> Guardando...';
+
+                try {
+                    const res = await fetch('api-prediccion-tendencias', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'save_snapshot',
+                            id_carrera: params.id_carrera,
+                            carrera_nombre: data.params && data.params.carrera_nombre ? data.params.carrera_nombre : 'Todas las Carreras / PNF',
+                            modelo_usado: data.model_used,
+                            modelo_label: data.model_label,
+                            fuente_datos: params.fuente_datos,
+                            ventana_historial: params.historial_base,
+                            horizonte_trimestres: pasos,
+                            trimestre_base: histLabels.length ? histLabels[histLabels.length - 1] : '',
+                            trimestre_meta: futureLabels.length ? futureLabels[futureLabels.length - 1] : '',
+                            rmse_global: data.metrics ? data.metrics.global_rmse : 0,
+                            mae_global: data.metrics ? data.metrics.global_mae : 0,
+                            confianza_pct: data.metrics ? data.metrics.confidence_score : 75,
+                            total_historico: data.metrics ? data.metrics.total_projects_analyzed : 0,
+                            total_proyectado: totalProy,
+                            estacionalidad_activa: params.seasonality,
+                            resumen_areas: resumenAreas
+                        })
+                    });
+                    const json = await res.json();
+                    if (json.ok && Array.isArray(json.snapshots)) {
+                        window.lastTendenciasData.snapshots = json.snapshots;
+                        renderizarSnapshots(json.snapshots);
+                        btnGuardarSnapshot.innerHTML = '<i class="ph-bold ph-check"></i> Snapshot Guardado';
+                        setTimeout(() => { btnGuardarSnapshot.innerHTML = textoOriginal; }, 1800);
+                    } else {
+                        btnGuardarSnapshot.innerHTML = textoOriginal;
+                    }
+                } catch (e) {
+                    console.error(e);
+                    btnGuardarSnapshot.innerHTML = textoOriginal;
+                } finally {
+                    btnGuardarSnapshot.disabled = false;
+                }
             });
-        });
-    }
-});
+        }
 
+        // 1. Insignias sobrias con paleta corporativa (#1e293b, #505984, #7090cb)
+        function renderizarBadgeMotor(data, params) {
+            const cont = document.getElementById('engine-badge-tendencias');
+            if (!cont) return;
+            const esPython = data.engine === 'python';
+            const hist = data.history_labels || [];
+            const periodo = hist.length ? `${hist[0]} – ${hist[hist.length - 1]} (${hist.length} trim.)` : 'sin datos';
+            const ventanas = { all: 'Todo el historial', '2y': 'Últimos 2 años', '1y': 'Último año' };
+            const extraRf = data.model_used === 'rf' && data.params && data.params.n_estimators ? ` · ${data.params.n_estimators} árboles` : '';
+            const carreraTxt = (data.params && data.params.carrera_nombre) ? data.params.carrera_nombre : 'Todas las Carreras / PNF';
+            const confScore = Number(data.metrics && data.metrics.confidence_score) || 75;
+            const totalProyAnalizados = Number(data.metrics && data.metrics.total_projects_analyzed) || 0;
+            const fuenteTxt = params.fuente_datos === 'all' ? 'PST + Ofertas Activas' : 'Proyectos PST Culminados';
+
+            const chip = (icono, texto, bg, color, borde, titulo = '') =>
+                `<span title="${escaparHtml(titulo)}" style="display:inline-flex; align-items:center; gap:5px; font-size:0.74rem; font-weight:600; padding:4px 11px; border-radius:50px; background:${bg}; color:${color}; border:1px solid ${borde};"><i class="ph-bold ${icono}"></i>${texto}</span>`;
+
+            let html = chip('ph-graduation-cap', `PNF: ${escaparHtml(carreraTxt)}`, '#1e293b', '#ffffff', '#1e293b');
+            html += chip('ph-function', escaparHtml((data.model_label || params.ml_model) + extraRf), '#eef0f7', '#1e293b', '#cbd5e1');
+            html += chip('ph-archive-box', `${escaparHtml(fuenteTxt)}: ${totalProyAnalizados} proy.`, '#ffffff', '#334155', '#cbd5e1');
+            html += chip('ph-calendar', `${escaparHtml(ventanas[params.historial_base] || params.historial_base)}: ${escaparHtml(periodo)}`, '#ffffff', '#475569', '#cbd5e1');
+            html += chip('ph-shield-check', `Fiabilidad: ${confScore.toFixed(0)}%`, '#eef0f7', '#505984', '#c7cbe0');
+            html += esPython
+                ? chip('ph-cpu', 'Motor: Python · scikit-learn', '#f1f5f9', '#334155', '#cbd5e1', data.engine_detail || '')
+                : chip('ph-calculator', 'Motor: Matemático PHP', '#f1f5f9', '#334155', '#cbd5e1', data.engine_detail || '');
+
+            cont.innerHTML = html;
+            cont.style.display = 'flex';
+        }
+
+        // 2. Barra de chips interactivos para filtrar líneas de investigación
+        function renderizarBarraFiltroLineas(data) {
+            const bar = document.getElementById('lineas-filter-bar');
+            if (!bar || !Array.isArray(data.areas) || data.areas.length === 0) {
+                if (bar) bar.style.display = 'none';
+                return;
+            }
+
+            let html = `<span style="font-size:0.74rem; font-weight:700; color:#505984; text-transform:uppercase; letter-spacing:0.5px; margin-right:4px; display:inline-flex; align-items:center; gap:4px;">
+                <i class="ph-bold ph-funnel"></i> Líneas Activas (${data.areas.length}):
+            </span>`;
+
+            data.areas.forEach((area, idx) => {
+                const color = PALETA_LINEAS[idx % PALETA_LINEAS.length];
+                const isHidden = window.hiddenLineNames.has(area.name);
+                const carreraTag = area.carrera_nombre ? ` · ${area.carrera_nombre}` : '';
+                html += `<button type="button" class="ml-line-chip ${isHidden ? 'inactive' : ''}" data-line-name="${escaparHtml(area.name)}" title="${escaparHtml(area.name + carreraTag)}">
+                    <span style="width:9px; height:9px; border-radius:50%; background:${color}; display:inline-block; flex-shrink:0;"></span>
+                    <span>${escaparHtml(area.name)}</span>
+                </button>`;
+            });
+
+            if (window.hiddenLineNames.size > 0) {
+                html += `<button type="button" id="btn-reset-lineas-chip" style="background:#eef0f7; color:#1e293b; border:1px solid #cbd5e1; border-radius:999px; padding:4px 10px; font-size:0.72rem; font-weight:700; cursor:pointer;">
+                    Mostrar todas
+                </button>`;
+            }
+
+            bar.innerHTML = html;
+            bar.style.display = 'flex';
+
+            bar.querySelectorAll('.ml-line-chip').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const name = btn.getAttribute('data-line-name');
+                    if (window.hiddenLineNames.has(name)) {
+                        window.hiddenLineNames.delete(name);
+                    } else if (window.hiddenLineNames.size < data.areas.length - 1) {
+                        window.hiddenLineNames.add(name);
+                    }
+                    reRenderizarTodo();
+                });
+            });
+
+            const btnReset = document.getElementById('btn-reset-lineas-chip');
+            if (btnReset) {
+                btnReset.addEventListener('click', () => {
+                    window.hiddenLineNames.clear();
+                    reRenderizarTodo();
+                });
+            }
+        }
+
+        // 3. Renderizar Gráfico Principal en Chart.js
+        function renderizarGraficoTendencias(data, predSteps) {
+            const canvas = document.getElementById('tendenciasChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            if (window.tendenciasChart) {
+                window.tendenciasChart.destroy();
+            }
+
+            const areasVisibles = obtenerAreasVisibles(data);
+            const maxHistory = Math.max(...areasVisibles.map(a => a.history ? a.history.length : 0), 1);
+
+            let chartLabels = [];
+            if (Array.isArray(data.history_labels) && data.history_labels.length === maxHistory && Array.isArray(data.future_labels)) {
+                chartLabels = [
+                    ...data.history_labels,
+                    ...data.future_labels.slice(0, predSteps).map(l => `${l} (Proy)`)
+                ];
+            } else {
+                for (let i = 1; i <= maxHistory; i++) chartLabels.push(`Hist ${i}`);
+                for (let i = 1; i <= predSteps; i++) chartLabels.push(`Proy +${i}`);
+            }
+
+            const lineData = areasVisibles.map((a) => {
+                const origIdx = data.areas.findIndex(orig => orig.name === a.name);
+                const color = PALETA_LINEAS[(origIdx >= 0 ? origIdx : 0) % PALETA_LINEAS.length];
+                const historicalData = a.history || [];
+                const predictionData = (a.adoption_curve || []).slice(0, predSteps);
+                const combinedData = [...historicalData, ...predictionData];
+
+                return {
+                    label: a.name,
+                    data: combinedData,
+                    borderColor: color,
+                    backgroundColor: color,
+                    borderWidth: 3,
+                    tension: 0.35,
+                    pointBackgroundColor: color,
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4.5,
+                    pointHoverRadius: 7,
+                    fill: false,
+                    segment: {
+                        borderDash: ctxSeg => ctxSeg.p0DataIndex >= historicalData.length - 1 ? [7, 5] : undefined,
+                        borderColor: ctxSeg => ctxSeg.p0DataIndex >= historicalData.length - 1 ? color + 'AA' : color
+                    }
+                };
+            });
+
+            window.tendenciasChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: lineData
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { family: 'Inter, sans-serif', size: 11.5, weight: '600' },
+                                color: '#1e293b',
+                                usePointStyle: true,
+                                padding: 14
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(30, 41, 59, 0.95)',
+                            titleFont: { size: 12.5, family: 'Inter, sans-serif', weight: 'bold' },
+                            bodyFont: { size: 12, family: 'Inter, sans-serif' },
+                            padding: 11,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    const dataIndex = context.dataIndex;
+                                    const label = context.dataset.label || '';
+                                    const value = context.parsed.y;
+                                    if (dataIndex >= maxHistory) {
+                                        return ` ${label}: ${value} proy. proyectados`;
+                                    }
+                                    return ` ${label}: ${value} proy. culminados`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(80, 89, 132, 0.1)', borderDash: [5, 5] },
+                            ticks: { color: '#505984', font: { weight: '600' }, precision: 0 }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#505984', font: { weight: '600', size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 4. Panel Lateral de Métricas de Fiabilidad y Diagnóstico por Línea
+        function renderizarMetricasTendencias(data, predSteps) {
+            const areasVisibles = obtenerAreasVisibles(data);
+            let futureLabels = [];
+            if (Array.isArray(data.future_labels) && data.future_labels.length >= predSteps) {
+                futureLabels = data.future_labels.slice(0, predSteps).map(l => l.replace(/^(T\d) \d{2}(\d{2})$/, "$1 '$2"));
+            } else {
+                for (let i = 1; i <= predSteps; i++) futureLabels.push(`+T${i}`);
+            }
+            const targetLabel = futureLabels[futureLabels.length - 1] || 'Horizonte';
+
+            const rmse = Number(data.metrics && data.metrics.global_rmse) || 0;
+            const mae  = Number(data.metrics && data.metrics.global_mae) || 0;
+            const conf = Number(data.metrics && data.metrics.confidence_score) || 75;
+            const errorText = rmse < 0.005 ? 'Ajuste exacto (±0.00)' : `±${rmse.toFixed(2)} proy.`;
+
+            let comparativaHtml = '';
+            const porModelo = data.metrics && data.metrics.rmse_by_model;
+            const bestGlobal = data.metrics && data.metrics.best_global_model;
+            if (porModelo) {
+                const nombres = { linear: 'Lineal', poly: 'Polinómica', rf: 'Random Forest' };
+                comparativaHtml = `
+                <div style="margin-top:8px; padding-top:8px; border-top:1px solid #e2e8f0;">
+                    <div style="font-size:0.69rem; font-weight:700; color:#505984; margin-bottom:5px; text-transform:uppercase;">Comparativa RMSE por Algoritmo:</div>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;">` +
+                    Object.keys(nombres).filter(k => porModelo[k] !== undefined).map(k => {
+                        const activo = (data.model_used === k) || (data.model_used === 'auto' && bestGlobal === k);
+                        const esMejor = bestGlobal === k;
+                        return `<span style="font-size:0.7rem; padding:3px 8px; border-radius:5px; border:1px solid ${activo ? '#505984' : '#cbd5e1'}; background:${activo ? '#505984' : '#ffffff'}; color:${activo ? '#ffffff' : '#475569'}; font-weight:${activo ? '700' : '600'};">
+                            ${nombres[k]}: ${Number(porModelo[k]).toFixed(2)}${esMejor ? ' ★' : ''}
+                        </span>`;
+                    }).join('') + `</div>
+                </div>`;
+            }
+
+            let html = `
+            <div style="margin-bottom: 14px; color: #1e293b; background: #f8fafc; padding: 12px; border-radius: 8px; border-left: 4px solid #505984; border-top: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;">
+                <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:6px;">
+                    <strong style="font-size: 0.86rem; color:#1e293b;">Margen Estadístico (RMSE):</strong>
+                    <span style="background:#eef0f7; color:#1e293b; padding:3px 9px; border-radius:5px; font-weight:700; font-size:0.8rem; border:1px solid #cbd5e1;">${errorText}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#64748b; margin-top:6px;">
+                    <span>Error Absoluto (MAE): <strong style="color:#1e293b;">${mae.toFixed(2)} proy.</strong></span>
+                    <span>Fiabilidad: <strong style="color:#505984;">${conf.toFixed(0)}%</strong></span>
+                </div>
+                ${comparativaHtml}
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin: 14px 0 10px 0; border-bottom: 2px solid #eef0f7; padding-bottom: 6px;">
+                <strong style="color: #1e293b; font-size: 0.92rem;">Diagnóstico por Línea (${areasVisibles.length})</strong>
+                <span style="font-size: 0.73rem; color: #64748b;">Meta: <strong>${escaparHtml(targetLabel)}</strong></span>
+            </div>
+
+            <ul style="list-style:none; padding:0; margin:0; max-height: 450px; overflow-y: auto; padding-right: 4px;">`;
+
+            areasVisibles.forEach((area) => {
+                const origIdx = data.areas.findIndex(orig => orig.name === area.name);
+                const lineColor = PALETA_LINEAS[(origIdx >= 0 ? origIdx : 0) % PALETA_LINEAS.length];
+                const diag = diagnosticarLinea(area, predSteps);
+                const predictionData = area.adoption_curve || [];
+                const satColor = diag.satInt > 80 ? '#1e293b' : (diag.satInt > 50 ? '#505984' : '#7090cb');
+                const rangoMin = Math.max(0, Math.round(diag.targetPrediction - (Number(area.rmse) || 0)));
+                const rangoMax = Math.round(diag.targetPrediction + (Number(area.rmse) || 0));
+
+                let timelineHtml = `<div style="display:flex; flex-wrap:nowrap; overflow-x:auto; gap:5px; margin-top:9px; padding-bottom:3px; align-items:center;">`;
+                for (let i = 0; i < predSteps; i++) {
+                    const val = Math.round(predictionData[i] ?? 0);
+                    timelineHtml += `
+                        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:2px 6px; font-size:0.68rem; color:#475569; white-space:nowrap;">
+                            <strong style="color:#1e293b;">${escaparHtml(futureLabels[i])}:</strong> ${val}
+                        </div>`;
+                    if (i < predSteps - 1) {
+                        timelineHtml += `<i class="ph-bold ph-arrow-right" style="color:#cbd5e1; font-size:0.65rem;"></i>`;
+                    }
+                }
+                timelineHtml += `</div>`;
+
+                html += `
+                <li style="margin-bottom:10px; padding: 11px 12px; background: #ffffff; border: 1px solid #e2e8f0; border-left: 4px solid ${lineColor}; border-radius: 8px;">
+                    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap: 8px; margin-bottom:6px;">
+                        <div style="flex: 1; min-width: 0;">
+                            <strong style="color:#1e293b; font-size: 0.84rem; display:block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escaparHtml(area.name)}">
+                                ${escaparHtml(area.name)}
+                            </strong>
+                            <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap; margin-top:4px;">
+                                <span style="font-size:0.65rem; font-weight:700; padding:2px 7px; border-radius:10px; background:${diag.classColorBg}; color:${diag.classColorTxt};">
+                                    ${escaparHtml(diag.classLabel)}
+                                </span>
+                                <span style="font-size:0.65rem; color:#64748b; background:#f8fafc; border:1px solid #e2e8f0; padding:1px 6px; border-radius:4px;">
+                                    ${escaparHtml(area.carrera_nombre || 'General')}
+                                </span>
+                            </div>
+                        </div>
+                        <div style="flex-shrink: 0; text-align: right;">
+                            <span style="color:${satColor}; font-weight:800; font-size: 0.92rem; display:block;">${diag.satInt}%</span>
+                            <span style="font-size: 0.6rem; color:#64748b; font-weight:700;">SAT.</span>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; font-size: 0.75rem; color:#475569;">
+                        <span>Demanda Final: <strong style="color:#1e293b;">${diag.targetPrediction} proy.</strong> <span style="color:#64748b; font-size:0.69rem;">(${rangoMin}–${rangoMax})</span></span>
+                        <span style="font-size:0.7rem; color:#64748b;">Culminados: <strong>${diag.totalHist}</strong></span>
+                    </div>
+
+                    <div style="width:100%; background:#f1f5f9; height:5px; border-radius:3px; overflow:hidden;">
+                        <div style="width:${diag.satInt}%; background:${satColor}; height:100%; border-radius:3px; transition: width 0.6s ease;"></div>
+                    </div>
+
+                    ${timelineHtml}
+                </li>`;
+            });
+
+            html += `</ul>`;
+            metricasTendencias.innerHTML = html;
+        }
+
+        // 5. Tarjetas de Hallazgos Estratégicos (KPIs Inferiores) con paleta corporativa
+        function renderizarInsights(data, predSteps) {
+            const container = document.getElementById('insights-tendencias');
+            if (!container) return;
+
+            const areasVisibles = obtenerAreasVisibles(data);
+            let maxDemanda = { name: '-', val: -1 };
+            let minDemanda = { name: '-', val: 999999 };
+            let maxAceleracion = { name: '-', growthPct: -999 };
+            let sumaPorTrimestre = new Array(predSteps).fill(0);
+
+            areasVisibles.forEach(area => {
+                const predData = area.adoption_curve || [];
+                const histData = area.history || [];
+
+                if (predData.length >= predSteps) {
+                    const tPred = Math.round(predData[predSteps - 1]);
+                    if (tPred > maxDemanda.val) maxDemanda = { name: area.name, val: tPred };
+                    if (tPred < minDemanda.val) minDemanda = { name: area.name, val: tPred };
+
+                    const lastHist = histData.length > 0 ? histData[histData.length - 1] : 0;
+                    const growthPct = lastHist > 0 ? ((predData[predSteps - 1] - lastHist) / lastHist) * 100 : (tPred > 0 ? 100 : 0);
+
+                    if (growthPct > maxAceleracion.growthPct) {
+                        maxAceleracion = { name: area.name, growthPct };
+                    }
+
+                    for (let i = 0; i < predSteps; i++) {
+                        sumaPorTrimestre[i] += Math.round(predData[i]);
+                    }
+                }
+            });
+
+            if (minDemanda.val === 999999) minDemanda.val = 0;
+            if (maxDemanda.val === -1) maxDemanda.val = 0;
+            if (maxAceleracion.growthPct === -999) maxAceleracion.growthPct = 0;
+
+            let peakIndex = 0;
+            let maxSum = -1;
+            for (let i = 0; i < predSteps; i++) {
+                if (sumaPorTrimestre[i] > maxSum) {
+                    maxSum = sumaPorTrimestre[i];
+                    peakIndex = i;
+                }
+            }
+            if (maxSum < 0) maxSum = 0;
+
+            const peakLabel = (Array.isArray(data.future_labels) && data.future_labels[peakIndex])
+                ? data.future_labels[peakIndex]
+                : `Trimestre +${peakIndex + 1}`;
+
+            const cNavy  = '#1e293b';
+            const cSlate = '#505984';
+            const cSteel = '#7090cb';
+            const signoCrec = maxAceleracion.growthPct >= 0 ? '+' : '';
+
+            container.innerHTML = `
+                <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; position: relative; overflow: hidden;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-size: 0.67rem; color: ${cSlate}; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Línea Líder (Demanda)</div>
+                            <div style="font-size: 0.92rem; color: ${cNavy}; font-weight: 800; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escaparHtml(maxDemanda.name)}">${escaparHtml(maxDemanda.name)}</div>
+                        </div>
+                        <div style="background: #eef0f7; padding: 8px; border-radius: 8px; flex-shrink: 0;">
+                            <i class="ph-bold ph-rocket" style="font-size: 1.2rem; color: ${cNavy};"></i>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <span style="display:block; font-size: 0.78rem; color: #475569; background: #f8fafc; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">Cima: <strong style="color: ${cNavy};">${maxDemanda.val} proy.</strong></span>
+                    </div>
+                    <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: ${cNavy};"></div>
+                </div>
+
+                <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; position: relative; overflow: hidden;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-size: 0.67rem; color: ${cSlate}; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Mayor Impulso</div>
+                            <div style="font-size: 0.92rem; color: ${cNavy}; font-weight: 800; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escaparHtml(maxAceleracion.name)}">${escaparHtml(maxAceleracion.name)}</div>
+                        </div>
+                        <div style="background: #eef0f7; padding: 8px; border-radius: 8px; flex-shrink: 0;">
+                            <i class="ph-bold ph-trend-up" style="font-size: 1.2rem; color: ${cSlate};"></i>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <span style="display:block; font-size: 0.78rem; color: #475569; background: #f8fafc; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">Variación: <strong style="color: ${cSlate};">${signoCrec}${maxAceleracion.growthPct.toFixed(1)}%</strong></span>
+                    </div>
+                    <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: ${cSlate};"></div>
+                </div>
+
+                <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; position: relative; overflow: hidden;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-size: 0.67rem; color: ${cSlate}; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Menor Demanda</div>
+                            <div style="font-size: 0.92rem; color: ${cNavy}; font-weight: 800; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escaparHtml(minDemanda.name)}">${escaparHtml(minDemanda.name)}</div>
+                        </div>
+                        <div style="background: #f1f5f9; padding: 8px; border-radius: 8px; flex-shrink: 0;">
+                            <i class="ph-bold ph-arrow-down-right" style="font-size: 1.2rem; color: #475569;"></i>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <span style="display:block; font-size: 0.78rem; color: #475569; background: #f8fafc; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">Flujo: <strong style="color: ${cNavy};">${minDemanda.val} proy.</strong></span>
+                    </div>
+                    <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: #64748b;"></div>
+                </div>
+
+                <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; position: relative; overflow: hidden;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-size: 0.67rem; color: ${cSlate}; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Trimestre Pico</div>
+                            <div style="font-size: 0.92rem; color: ${cNavy}; font-weight: 800; margin-top: 5px;">${escaparHtml(peakLabel)}</div>
+                        </div>
+                        <div style="background: rgba(112, 144, 203, 0.14); padding: 8px; border-radius: 8px; flex-shrink: 0;">
+                            <i class="ph-bold ph-lightning" style="font-size: 1.2rem; color: ${cSteel};"></i>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <span style="display:block; font-size: 0.78rem; color: #475569; background: #f8fafc; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">Carga: <strong style="color: ${cNavy};">${maxSum} simultáneos</strong></span>
+                    </div>
+                    <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: ${cSteel};"></div>
+                </div>
+            `;
+        }
+
+        // 6. Panel de Detección de Estacionalidad Académica (T1 / T2 / T3)
+        function renderizarEstacionalidad(data) {
+            const cont = document.getElementById('estacionalidad-tendencias');
+            if (!cont) return;
+            const seas = data.metrics && data.metrics.seasonality;
+            if (!seas || !seas.indices) {
+                cont.style.display = 'none';
+                return;
+            }
+
+            const idx = seas.indices;
+            const tots = seas.totals_by_term || { T1: 0, T2: 0, T3: 0 };
+            const trimestresInfo = [
+                { key: 'T1', nombre: 'Trimestre 1 (Ene–Abr)', desc: 'Inicio de Trayecto', factor: Number(idx.T1 || 1), total: Number(tots.T1 || 0) },
+                { key: 'T2', nombre: 'Trimestre 2 (May–Ago)', desc: 'Desarrollo Intermedio', factor: Number(idx.T2 || 1), total: Number(tots.T2 || 0) },
+                { key: 'T3', nombre: 'Trimestre 3 (Sep–Dic)', desc: 'Cierre y Defensas PST', factor: Number(idx.T3 || 1), total: Number(tots.T3 || 0) },
+            ];
+
+            let cardsTrim = trimestresInfo.map(t => {
+                const esDom = seas.dominant_term === t.key;
+                const diffPct = Math.round((t.factor - 1) * 100);
+                const diffStr = diffPct >= 0 ? `+${diffPct}% vs media` : `${diffPct}% vs media`;
+                return `
+                <div style="flex:1; min-width:170px; background:${esDom ? '#eef0f7' : '#f8fafc'}; border:1px solid ${esDom ? '#505984' : '#e2e8f0'}; border-radius:8px; padding:10px 12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong style="font-size:0.8rem; color:#1e293b;">${t.nombre}</strong>
+                        <span style="font-size:0.68rem; font-weight:700; padding:2px 7px; border-radius:10px; background:${esDom ? '#505984' : '#e2e8f0'}; color:${esDom ? '#ffffff' : '#475569'};">
+                            ×${t.factor.toFixed(2)} (${diffStr})
+                        </span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; font-size:0.74rem; color:#64748b;">
+                        <span>${t.desc}</span>
+                        <strong style="color:#1e293b;">${t.total} proy. hist.</strong>
+                    </div>
+                </div>`;
+            }).join('');
+
+            cont.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+                    <div style="font-size:0.88rem; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:6px;">
+                        <i class="ph-bold ph-waves" style="color:#505984;"></i> Patrón de Estacionalidad Académica Detectado (Ciclos T1 / T2 / T3)
+                    </div>
+                    <span style="font-size:0.72rem; color:#505984; font-weight:600;">
+                        ${seas.enabled ? 'Ajuste Estacional Activo en la Curva' : 'Modo Lineal (Sin ponderación estacional)'}
+                    </span>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    ${cardsTrim}
+                </div>
+            `;
+            cont.style.display = 'block';
+        }
+
+        // 7. Matriz Ejecutiva de Proyección y Recomendación Estratégica en Pantalla
+        function renderizarMatrizEjecutiva(data, predSteps) {
+            const cont = document.getElementById('matriz-ejecutiva-tendencias');
+            if (!cont) return;
+            const areasVisibles = obtenerAreasVisibles(data);
+            const futureLabels = (Array.isArray(data.future_labels) && data.future_labels.length >= predSteps)
+                ? data.future_labels.slice(0, predSteps)
+                : Array.from({ length: predSteps }, (_, i) => `Proy +${i + 1}`);
+
+            let thTrimestres = futureLabels.map(fl => `<th style="padding:10px 8px; text-align:center; color:#ffffff; font-size:0.74rem; white-space:nowrap;">${escaparHtml(fl)}</th>`).join('');
+
+            let filasHtml = areasVisibles.map((area, idx) => {
+                const diag = diagnosticarLinea(area, predSteps);
+                const preds = (area.adoption_curve || []).slice(0, predSteps);
+                const bgRow = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                const tdsPred = futureLabels.map((_, i) => {
+                    const v = Math.round(preds[i] ?? 0);
+                    return `<td style="padding:9px 8px; text-align:center; font-weight:700; color:#1e293b; font-size:0.8rem;">${v}</td>`;
+                }).join('');
+
+                return `
+                <tr style="background:${bgRow}; border-bottom:1px solid #e2e8f0;">
+                    <td style="padding:10px 12px; font-weight:700; color:#1e293b; font-size:0.8rem;">
+                        ${escaparHtml(area.name)}
+                        <div style="font-size:0.68rem; color:#505984; font-weight:600; margin-top:2px;">${escaparHtml(area.carrera_nombre || 'General')}</div>
+                    </td>
+                    <td style="padding:9px 8px; text-align:center; color:#475569; font-size:0.78rem;">${diag.totalHist} <span style="color:#94a3b8; font-size:0.7rem;">(prom. ${Number(area.promedio_historico || 0).toFixed(1)})</span></td>
+                    ${tdsPred}
+                    <td style="padding:9px 8px; text-align:center; font-weight:700; color:#505984; font-size:0.78rem;">±${Number(area.rmse || 0).toFixed(2)}</td>
+                    <td style="padding:9px 8px; text-align:center;">
+                        <span style="font-size:0.68rem; font-weight:700; padding:3px 8px; border-radius:12px; background:${diag.classColorBg}; color:${diag.classColorTxt}; white-space:nowrap;">
+                            ${escaparHtml(diag.classLabel)}
+                        </span>
+                    </td>
+                    <td style="padding:9px 12px; font-size:0.75rem; color:#334155; line-height:1.4; max-width:340px;">
+                        ${escaparHtml(diag.recomendacion)}
+                    </td>
+                </tr>`;
+            }).join('');
+
+            cont.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+                    <h4 style="margin:0; color:#1e293b; font-size:0.96rem; display:flex; align-items:center; gap:8px;">
+                        <i class="ph-bold ph-table" style="color:#505984;"></i> Matriz Consolidada de Proyecciones y Recomendaciones Estratégicas (IA)
+                    </h4>
+                    <span style="font-size:0.74rem; color:#64748b;">Incluida en el Informe Ejecutivo PDF</span>
+                </div>
+                <div style="overflow-x:auto; border:1px solid #e2e8f0; border-radius:8px;">
+                    <table style="width:100%; border-collapse:collapse; text-align:left;">
+                        <thead>
+                            <tr style="background: linear-gradient(135deg, #505984 0%, #1e293b 100%);">
+                                <th style="padding:10px 12px; color:#ffffff; font-size:0.74rem;">Línea de Investigación / Carrera</th>
+                                <th style="padding:10px 8px; text-align:center; color:#ffffff; font-size:0.74rem;">Culminados</th>
+                                ${thTrimestres}
+                                <th style="padding:10px 8px; text-align:center; color:#ffffff; font-size:0.74rem;">Margen RMSE</th>
+                                <th style="padding:10px 8px; text-align:center; color:#ffffff; font-size:0.74rem;">Diagnóstico</th>
+                                <th style="padding:10px 12px; color:#ffffff; font-size:0.74rem;">Recomendación Estratégica Automatizada</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filasHtml}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            cont.style.display = 'block';
+        }
+
+        // 8. Historial de Snapshots de Predicción (Auditoría Predictiva vs. Realidad)
+        function renderizarSnapshots(snapshots) {
+            const cont = document.getElementById('snapshots-tendencias-container');
+            if (!cont) return;
+
+            let contenido = '';
+            if (!Array.isArray(snapshots) || snapshots.length === 0) {
+                contenido = `
+                <div style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:14px; text-align:center; color:#64748b; font-size:0.8rem;">
+                    Aún no se han guardado instantáneas (Snapshots) de predicción. Usa el botón superior <strong>"Guardar Snapshot"</strong> para registrar el pronóstico actual y compararlo en el futuro contra los proyectos reales defendidos.
+                </div>`;
+            } else {
+                const filas = snapshots.map((s, idx) => {
+                    const bg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                    const areas = Array.isArray(s.resumen_areas) ? s.resumen_areas : [];
+                    const predT1 = areas.reduce((acc, a) => acc + (Number(a.primer_trimestre_pred) || 0), 0);
+                    const lblT1  = (areas[0] && areas[0].primer_trimestre_label) ? areas[0].primer_trimestre_label : (s.trimestre_meta || '-');
+                    const realT1 = Number(s.real_registrado_t1 || 0);
+
+                    return `
+                    <tr style="background:${bg}; border-bottom:1px solid #e2e8f0; font-size:0.78rem;">
+                        <td style="padding:8px 10px; font-weight:600; color:#1e293b;">${escaparHtml(s.fecha_formateada)}</td>
+                        <td style="padding:8px 10px; color:#334155;">${escaparHtml(s.carrera_nombre)}</td>
+                        <td style="padding:8px 10px; color:#505984; font-weight:600;">${escaparHtml(s.modelo_label)}</td>
+                        <td style="padding:8px 10px; text-align:center; color:#475569;">${escaparHtml(s.trimestre_base || '-')} → ${escaparHtml(s.trimestre_meta || '-')} (${s.horizonte_trimestres}T)</td>
+                        <td style="padding:8px 10px; text-align:center; font-weight:700; color:#1e293b;">${s.total_proyectado} proy.</td>
+                        <td style="padding:8px 10px; text-align:center; color:#334155;">
+                            <span style="background:#eef0f7; padding:2px 7px; border-radius:4px; font-size:0.73rem;">
+                                ${escaparHtml(lblT1)}: Pred. <strong>${predT1}</strong> vs Real <strong>${realT1}</strong>
+                            </span>
+                        </td>
+                        <td style="padding:8px 10px; text-align:center; color:#505984; font-weight:600;">±${Number(s.rmse_global || 0).toFixed(2)} (${Number(s.confianza_pct || 0).toFixed(0)}%)</td>
+                        <td style="padding:8px 10px; text-align:center;">
+                            <button type="button" class="btn-del-snapshot" data-id="${s.id}" title="Eliminar Snapshot" style="background:transparent; border:1px solid #cbd5e1; color:#64748b; border-radius:5px; padding:3px 7px; cursor:pointer; font-size:0.72rem;">
+                                <i class="ph-bold ph-trash"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+                }).join('');
+
+                contenido = `
+                <div style="overflow-x:auto; border:1px solid #e2e8f0; border-radius:8px;">
+                    <table style="width:100%; border-collapse:collapse; text-align:left;">
+                        <thead>
+                            <tr style="background:#f1f5f9; border-bottom:1px solid #cbd5e1;">
+                                <th style="padding:8px 10px; color:#1e293b; font-size:0.72rem;">Fecha Snapshot</th>
+                                <th style="padding:8px 10px; color:#1e293b; font-size:0.72rem;">Carrera / PNF</th>
+                                <th style="padding:8px 10px; color:#1e293b; font-size:0.72rem;">Algoritmo ML</th>
+                                <th style="padding:8px 10px; text-align:center; color:#1e293b; font-size:0.72rem;">Horizonte</th>
+                                <th style="padding:8px 10px; text-align:center; color:#1e293b; font-size:0.72rem;">Vol. Total Proy.</th>
+                                <th style="padding:8px 10px; text-align:center; color:#1e293b; font-size:0.72rem;">Auditoría 1.° Trim. (Pred. vs Real)</th>
+                                <th style="padding:8px 10px; text-align:center; color:#1e293b; font-size:0.72rem;">RMSE / Confianza</th>
+                                <th style="padding:8px 10px; text-align:center; color:#1e293b; font-size:0.72rem;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>${filas}</tbody>
+                    </table>
+                </div>`;
+            }
+
+            cont.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+                    <h4 style="margin:0; color:#1e293b; font-size:0.95rem; display:flex; align-items:center; gap:7px;">
+                        <i class="ph-bold ph-clock-counter-clockwise" style="color:#505984;"></i> Historial de Snapshots de Predicción (Auditoría Predictiva vs. Realidad)
+                    </h4>
+                    <span style="font-size:0.73rem; color:#64748b;">Registro histórico para seguimiento de precisión del modelo</span>
+                </div>
+                ${contenido}
+            `;
+            cont.style.display = 'block';
+
+            cont.querySelectorAll('.btn-del-snapshot').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = btn.getAttribute('data-id');
+                    if (!id) return;
+                    const res = await fetch('api-prediccion-tendencias', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'delete_snapshot', id_snapshot: id })
+                    });
+                    const json = await res.json();
+                    if (json.ok && Array.isArray(json.snapshots)) {
+                        if (window.lastTendenciasData) window.lastTendenciasData.snapshots = json.snapshots;
+                        renderizarSnapshots(json.snapshots);
+                    }
+                });
+            });
+        }
+
+        // =========================================================================
+        //  GENERADOR DE INFORME EJECUTIVO PDF (100% NATIVO · SIN LIBRERÍAS EXTERNAS)
+        //  Construye un documento editorial exclusivo con la paleta #505984, #1e293b,
+        //  #7090cb y ejecuta el motor nativo de exportación PDF del navegador.
+        // =========================================================================
+        if (btnDescargarPdf) {
+            btnDescargarPdf.addEventListener('click', () => {
+                const data = window.lastTendenciasData;
+                const params = window.lastTendenciasParams;
+                if (!data || !Array.isArray(data.areas) || data.areas.length === 0) {
+                    alert('Primero calcule una proyección para exportar el informe PDF.');
+                    return;
+                }
+
+                const areasVisibles = obtenerAreasVisibles(data);
+                const predSteps = (data.future_labels && data.future_labels.length)
+                    ? data.future_labels.length
+                    : (params.pred_steps || 4);
+                const futureLabels = (Array.isArray(data.future_labels) && data.future_labels.length >= predSteps)
+                    ? data.future_labels.slice(0, predSteps)
+                    : Array.from({ length: predSteps }, (_, i) => `T+${i + 1}`);
+                const histLabels = data.history_labels || [];
+
+                const ahora = new Date();
+                const fechaStr = ahora.toLocaleDateString('es-VE', { day: '2-digit', month: 'long', year: 'numeric' });
+                const horaStr  = ahora.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
+                const codigoReporte = `CIIDI-ML-${ahora.getFullYear()}${String(ahora.getMonth() + 1).padStart(2, '0')}${String(ahora.getDate()).padStart(2, '0')}-${String(ahora.getHours()).padStart(2, '0')}${String(ahora.getMinutes()).padStart(2, '0')}`;
+
+                const carreraFiltro = (data.params && data.params.carrera_nombre) ? data.params.carrera_nombre : 'Todas las Carreras / PNF';
+                const ventanasMap = { all: 'Todo el Historial', '2y': 'Últimos 2 Años (6 Trimestres)', '1y': 'Último Año (3 Trimestres)' };
+                const ventanaTxt = ventanasMap[params.historial_base] || params.historial_base;
+                const rangoHistTxt = histLabels.length ? `${histLabels[0]} a ${histLabels[histLabels.length - 1]}` : 'N/A';
+                const confGlobal = Number(data.metrics && data.metrics.confidence_score) || 75;
+                const rmseGlobal = Number(data.metrics && data.metrics.global_rmse) || 0;
+                const maeGlobal  = Number(data.metrics && data.metrics.global_mae) || 0;
+                const fuenteTxt  = params.fuente_datos === 'all' ? 'Proyectos PST + Investigaciones en Curso' : 'Solo Proyectos PST Culminados';
+
+                // Capturar imagen de alta resolución del gráfico sobre fondo blanco
+                let chartImgUrl = '';
+                const chartCanvas = document.getElementById('tendenciasChart');
+                if (chartCanvas) {
+                    const offCanvas = document.createElement('canvas');
+                    offCanvas.width = chartCanvas.width;
+                    offCanvas.height = chartCanvas.height;
+                    const offCtx = offCanvas.getContext('2d');
+                    offCtx.fillStyle = '#ffffff';
+                    offCtx.fillRect(0, 0, offCanvas.width, offCanvas.height);
+                    offCtx.drawImage(chartCanvas, 0, 0);
+                    chartImgUrl = offCanvas.toDataURL('image/png', 1.0);
+                }
+
+                // Calcular KPIs ejecutivos
+                let maxDem = { name: '-', val: -1 };
+                let minDem = { name: '-', val: 999999 };
+                let maxAcel = { name: '-', pct: -999 };
+                let sumaTrim = new Array(predSteps).fill(0);
+                let totalProyectadoHorizonte = 0;
+
+                areasVisibles.forEach(a => {
+                    const preds = a.adoption_curve || [];
+                    const hists = a.history || [];
+                    if (preds.length >= predSteps) {
+                        const fin = Math.round(preds[predSteps - 1]);
+                        if (fin > maxDem.val) maxDem = { name: a.name, val: fin };
+                        if (fin < minDem.val) minDem = { name: a.name, val: fin };
+                        const lastH = hists.length ? hists[hists.length - 1] : 0;
+                        const pct = lastH > 0 ? ((preds[predSteps - 1] - lastH) / lastH) * 100 : (fin > 0 ? 100 : 0);
+                        if (pct > maxAcel.pct) maxAcel = { name: a.name, pct };
+                        for (let i = 0; i < predSteps; i++) {
+                            sumaTrim[i] += Math.round(preds[i]);
+                            totalProyectadoHorizonte += Math.round(preds[i]);
+                        }
+                    }
+                });
+                if (minDem.val === 999999) minDem.val = 0;
+                if (maxDem.val === -1) maxDem.val = 0;
+                if (maxAcel.pct === -999) maxAcel.pct = 0;
+
+                let pIdx = 0, pMax = -1;
+                for (let i = 0; i < predSteps; i++) {
+                    if (sumaTrim[i] > pMax) { pMax = sumaTrim[i]; pIdx = i; }
+                }
+                if (pMax < 0) pMax = 0;
+                const picoTrimLabel = futureLabels[pIdx] || `T+${pIdx + 1}`;
+
+                // Construir filas de Benchmark de Modelos
+                const rmseByModel = (data.metrics && data.metrics.rmse_by_model) || {};
+                const maeByModel  = (data.metrics && data.metrics.mae_by_model) || {};
+                const r2ByModel   = (data.metrics && data.metrics.r2_by_model) || {};
+                const bestMod     = (data.metrics && data.metrics.best_global_model) || 'linear';
+
+                const modelosBench = [
+                    { key: 'linear', label: 'Regresión Lineal Múltiple (OLS)' },
+                    { key: 'poly',   label: 'Regresión Polinómica (Grado 2)' },
+                    { key: 'rf',     label: 'Random Forest Regressor (Ensamble)' }
+                ];
+                const filasBenchHtml = modelosBench.map(mb => {
+                    const rVal = rmseByModel[mb.key] !== undefined ? `±${Number(rmseByModel[mb.key]).toFixed(3)}` : 'N/A';
+                    const mVal = maeByModel[mb.key]  !== undefined ? Number(maeByModel[mb.key]).toFixed(3) : 'N/A';
+                    const qVal = r2ByModel[mb.key]   !== undefined ? `${(Number(r2ByModel[mb.key]) * 100).toFixed(1)}%` : 'N/A';
+                    const esOptimo = bestMod === mb.key;
+                    const esActivo = data.model_used === mb.key || (data.model_used === 'auto' && esOptimo);
+                    return `
+                    <tr style="${esActivo ? 'background:#eef0f7; font-weight:700;' : ''}">
+                        <td>${escaparHtml(mb.label)}</td>
+                        <td style="text-align:center;">${rVal}</td>
+                        <td style="text-align:center;">${mVal}</td>
+                        <td style="text-align:center;">${qVal}</td>
+                        <td style="text-align:center;">${esOptimo ? '<strong>Óptimo (Menor Error)</strong>' : (esActivo ? 'Modelo Seleccionado' : 'Referencia')}</td>
+                    </tr>`;
+                }).join('');
+
+                // Tabla de Matriz Cuantitativa y Recomendaciones
+                const thColsProy = futureLabels.map(fl => `<th style="text-align:center;">${escaparHtml(fl)}</th>`).join('');
+                const filasMatrizHtml = areasVisibles.map(area => {
+                    const diag = diagnosticarLinea(area, predSteps);
+                    const preds = (area.adoption_curve || []).slice(0, predSteps);
+                    const tds = futureLabels.map((_, i) => `<td style="text-align:center; font-weight:700;">${Math.round(preds[i] ?? 0)}</td>`).join('');
+                    return `
+                    <tr>
+                        <td>
+                            <strong>${escaparHtml(area.name)}</strong>
+                            <div style="font-size:10px; color:#505984;">${escaparHtml(area.carrera_nombre || 'General')}</div>
+                        </td>
+                        <td style="text-align:center;">${diag.totalHist}</td>
+                        ${tds}
+                        <td style="text-align:center;">±${Number(area.rmse || 0).toFixed(2)}</td>
+                        <td style="text-align:center;"><strong>${diag.satInt}%</strong></td>
+                        <td style="text-align:center;"><span class="badge-diag">${escaparHtml(diag.classLabel)}</span></td>
+                    </tr>`;
+                }).join('');
+
+                const bloquesRecomendacionHtml = areasVisibles.map(area => {
+                    const diag = diagnosticarLinea(area, predSteps);
+                    return `
+                    <div class="rec-item">
+                        <div class="rec-header">
+                            <strong>${escaparHtml(area.name)} (${escaparHtml(area.carrera_nombre || 'General')})</strong>
+                            <span>${escaparHtml(diag.classLabel)} · Meta: ${diag.targetPrediction} proy. · Saturación: ${diag.satInt}%</span>
+                        </div>
+                        <div class="rec-body">${escaparHtml(diag.recomendacion)}</div>
+                    </div>`;
+                }).join('');
+
+                const htmlReport = `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Informe Ejecutivo Predictivo CIIDI - ${escaparHtml(codigoReporte)}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 12mm;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        body {
+            font-family: 'Segoe UI', Inter, Arial, sans-serif;
+            color: #1e293b;
+            background: #ffffff;
+            margin: 0;
+            padding: 0;
+            font-size: 11.5px;
+            line-height: 1.45;
+        }
+        .report-container {
+            max-width: 190mm;
+            margin: 0 auto;
+        }
+        .banner {
+            background: linear-gradient(135deg, #505984 0%, #1e293b 100%);
+            color: #ffffff;
+            padding: 20px 24px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .banner-left .sub {
+            font-size: 9.5px;
+            font-weight: 800;
+            color: #cbd5e1;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+        .banner-left h1 {
+            margin: 4px 0 6px 0;
+            font-size: 19px;
+            font-weight: 800;
+            color: #ffffff;
+        }
+        .banner-left p {
+            margin: 0;
+            font-size: 11px;
+            color: #e2e8f0;
+        }
+        .banner-right {
+            text-align: right;
+            font-size: 10px;
+            color: #e2e8f0;
+            border-left: 1px solid rgba(255,255,255,0.2);
+            padding-left: 16px;
+        }
+        .banner-right .code {
+            font-weight: 800;
+            font-size: 11px;
+            color: #ffffff;
+            background: rgba(255,255,255,0.14);
+            padding: 3px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+        .meta-strip {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-left: 4px solid #505984;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+        }
+        .meta-item .lbl {
+            font-size: 9px;
+            font-weight: 800;
+            color: #505984;
+            text-transform: uppercase;
+        }
+        .meta-item .val {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 2px;
+        }
+        .meta-item .sub {
+            font-size: 9.5px;
+            color: #64748b;
+        }
+        .section-block {
+            margin-bottom: 16px;
+        }
+        .section-title {
+            font-size: 12px;
+            font-weight: 800;
+            color: #1e293b;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            border-bottom: 2px solid #505984;
+            padding-bottom: 4px;
+            margin-bottom: 10px;
+        }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .kpi-card {
+            border: 1px solid #cbd5e1;
+            border-top: 3px solid #505984;
+            border-radius: 8px;
+            padding: 10px;
+            background: #ffffff;
+        }
+        .kpi-card .k-title {
+            font-size: 8.8px;
+            font-weight: 800;
+            color: #505984;
+            text-transform: uppercase;
+        }
+        .kpi-card .k-main {
+            font-size: 11.5px;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 4px 0;
+        }
+        .kpi-card .k-sub {
+            font-size: 9.8px;
+            color: #475569;
+            background: #f8fafc;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .synthesis-box {
+            background: #eef0f7;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 10.8px;
+            color: #1e293b;
+        }
+        .chart-frame {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 10px;
+            background: #ffffff;
+        }
+        .chart-frame img {
+            max-width: 100%;
+            max-height: 230px;
+            height: auto;
+        }
+        table.corp-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10.2px;
+        }
+        table.corp-table th {
+            background: #1e293b;
+            color: #ffffff;
+            padding: 7px 8px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 9.5px;
+            text-transform: uppercase;
+        }
+        table.corp-table td {
+            border-bottom: 1px solid #cbd5e1;
+            padding: 7px 8px;
+            color: #1e293b;
+        }
+        table.corp-table tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        .badge-diag {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-size: 9px;
+            font-weight: 700;
+            background: #eef0f7;
+            color: #1e293b;
+            border: 1px solid #cbd5e1;
+        }
+        .seas-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .seas-card {
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            padding: 8px 10px;
+            background: #f8fafc;
+        }
+        .seas-card.active {
+            background: #eef0f7;
+            border-color: #505984;
+        }
+        .seas-hdr {
+            font-size: 9.5px;
+            font-weight: 700;
+            color: #505984;
+        }
+        .seas-val {
+            font-size: 11px;
+            font-weight: 800;
+            color: #1e293b;
+            margin-top: 3px;
+        }
+        .seas-val span {
+            font-weight: 500;
+            color: #64748b;
+            font-size: 9.5px;
+        }
+        .rec-item {
+            border: 1px solid #cbd5e1;
+            border-left: 4px solid #505984;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            background: #f8fafc;
+            page-break-inside: avoid;
+        }
+        .rec-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10.5px;
+            color: #1e293b;
+            margin-bottom: 3px;
+        }
+        .rec-header span {
+            font-size: 9.5px;
+            font-weight: 700;
+            color: #505984;
+        }
+        .rec-body {
+            font-size: 10px;
+            color: #334155;
+        }
+        .footer {
+            margin-top: 18px;
+            padding-top: 8px;
+            border-top: 1px solid #cbd5e1;
+            display: flex;
+            justify-content: space-between;
+            font-size: 9.5px;
+            color: #64748b;
+        }
+        .floating-actions {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 999;
+        }
+        .btn-action-pdf {
+            background: linear-gradient(135deg, #505984 0%, #1e293b 100%);
+            color: #ffffff;
+            border: none;
+            padding: 11px 18px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(30, 41, 59, 0.25);
+        }
+        @media print {
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-actions no-print">
+        <button class="btn-action-pdf" onclick="window.print()">Imprimir / Guardar como PDF</button>
+    </div>
+
+    <div class="report-container">
+        <div class="banner">
+            <div class="banner-left">
+                <div class="sub">SISTEMA INTEGRAL CIIDI · INTELIGENCIA PREDICTIVA</div>
+                <h1>Informe Ejecutivo de Proyección Analítica (IA)</h1>
+                <p>Proyección trimestral de volumen, adopción y saturación por Línea de Investigación</p>
+            </div>
+            <div class="banner-right">
+                <div class="code">${escaparHtml(codigoReporte)}</div>
+                <div>Emitido: ${escaparHtml(fechaStr)}</div>
+                <div>Hora: ${escaparHtml(horaStr)}</div>
+            </div>
+        </div>
+
+        <div class="meta-strip">
+            <div class="meta-item">
+                <div class="lbl">Carrera / PNF Filtrado</div>
+                <div class="val">${escaparHtml(carreraFiltro)}</div>
+                <div class="sub">Fuente: ${escaparHtml(fuenteTxt)} (${areasVisibles.length} líneas)</div>
+            </div>
+            <div class="meta-item">
+                <div class="lbl">Algoritmo ML Activo</div>
+                <div class="val">${escaparHtml(data.model_label || 'Regresión ML')}</div>
+                <div class="sub">RMSE: ±${rmseGlobal.toFixed(2)} | MAE: ${maeGlobal.toFixed(2)} | Fiabilidad: ${confGlobal.toFixed(0)}%</div>
+            </div>
+            <div class="meta-item">
+                <div class="lbl">Horizonte y Ventana</div>
+                <div class="val">${predSteps} Trimestres (${escaparHtml(futureLabels[0])} – ${escaparHtml(futureLabels[futureLabels.length - 1])})</div>
+                <div class="sub">${escaparHtml(ventanaTxt)} (${escaparHtml(rangoHistTxt)})</div>
+            </div>
+        </div>
+
+        <div class="section-block">
+            <div class="section-title">1. RESUMEN EJECUTIVO E INDICADORES ESTRATÉGICOS (KPIs)</div>
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="k-title">Línea Líder (Demanda)</div>
+                    <div class="k-main">${escaparHtml(maxDem.name)}</div>
+                    <div class="k-sub">Cima proyectada: <strong>${maxDem.val} proy.</strong></div>
+                </div>
+                <div class="kpi-card">
+                    <div class="k-title">Mayor Impulso</div>
+                    <div class="k-main">${escaparHtml(maxAcel.name)}</div>
+                    <div class="k-sub">Tasa: <strong>${maxAcel.pct >= 0 ? '+' : ''}${maxAcel.pct.toFixed(1)}%</strong></div>
+                </div>
+                <div class="kpi-card">
+                    <div class="k-title">Menor Flujo Esperado</div>
+                    <div class="k-main">${escaparHtml(minDem.name)}</div>
+                    <div class="k-sub">Volumen: <strong>${minDem.val} proy.</strong></div>
+                </div>
+                <div class="kpi-card">
+                    <div class="k-title">Trimestre Pico</div>
+                    <div class="k-main">${escaparHtml(picoTrimLabel)}</div>
+                    <div class="k-sub">Carga: <strong>${pMax} simultáneos</strong></div>
+                </div>
+            </div>
+            <div class="synthesis-box">
+                <strong>Síntesis Analítica de IA:</strong> Para el filtro <em>"${escaparHtml(carreraFiltro)}"</em>, el modelo <strong>${escaparHtml(data.model_label || 'seleccionado')}</strong> estima una demanda acumulada de <strong>${totalProyectadoHorizonte} proyectos</strong> en los próximos ${predSteps} trimestres académicos. El mayor pico operativo ocurrirá en <strong>${escaparHtml(picoTrimLabel)}</strong> (${pMax} proyectos simultáneos), encabezado por la línea <strong>${escaparHtml(maxDem.name)}</strong>.
+            </div>
+        </div>
+
+        <div class="section-block">
+            <div class="section-title">2. CURVA DE PROYECCIÓN MULTIVARIABLE Y BENCHMARK DE ALGORITMOS</div>
+            ${chartImgUrl ? `<div class="chart-frame"><img src="${chartImgUrl}" alt="Gráfico de Proyección IA"></div>` : ''}
+            <table class="corp-table">
+                <thead>
+                    <tr>
+                        <th>Algoritmo Evaluado en Benchmark</th>
+                        <th style="text-align:center;">Error RMSE</th>
+                        <th style="text-align:center;">Error MAE</th>
+                        <th style="text-align:center;">Ajuste R²</th>
+                        <th style="text-align:center;">Condición en el Modelo</th>
+                    </tr>
+                </thead>
+                <tbody>${filasBenchHtml}</tbody>
+            </table>
+        </div>
+
+        <div class="section-block">
+            <div class="section-title">3. MATRIZ CUANTITATIVA DE PROYECCIÓN TRIMESTRAL POR LÍNEA</div>
+            <table class="corp-table">
+                <thead>
+                    <tr>
+                        <th>Línea de Investigación / Carrera</th>
+                        <th style="text-align:center;">Culm.</th>
+                        ${thColsProy}
+                        <th style="text-align:center;">RMSE</th>
+                        <th style="text-align:center;">Sat. %</th>
+                        <th style="text-align:center;">Diagnóstico</th>
+                    </tr>
+                </thead>
+                <tbody>${filasMatrizHtml}</tbody>
+            </table>
+        </div>
+
+        <div class="section-block">
+            <div class="section-title">4. DIAGNÓSTICO DETALLADO Y PLAN DE ACCIÓN RECOMENDADO POR LÍNEA</div>
+            ${bloquesRecomendacionHtml}
+        </div>
+
+        <div class="footer">
+            <span>Universidad Politécnica Territorial (UPTTMBI) · Sistema Integral CIIDI</span>
+            <span>Documento generado automáticamente por el Motor de Inteligencia Predictiva</span>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            setTimeout(function() { window.print(); }, 350);
+        };
+    </script>
+</body>
+</html>`;
+
+                const printWin = window.open('', '_blank');
+                if (!printWin) {
+                    alert('Por favor permite las ventanas emergentes en tu navegador para abrir la vista de exportación PDF.');
+                    return;
+                }
+                printWin.document.open();
+                printWin.document.write(htmlReport);
+                printWin.document.close();
+            });
+        }
+
+        // Ejecutar proyección inicial al abrir el Dashboard
+        ejecutarProyeccion();
+    });
+})();

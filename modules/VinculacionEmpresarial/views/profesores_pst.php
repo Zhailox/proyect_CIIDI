@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // modules/VinculacionEmpresarial/views/profesores_pst.php
 // Gestión de Profesores PST (Comité / Super Administrador). Datos: ProfesorPSTController::gestionProfesores()
 require_once CORE_PATH . 'Security/CSRF.php';
@@ -183,8 +183,10 @@ $fmtTrayectos = function (array $trayectos): string {
                 <tr class="ppst-fila" data-buscar="<?= htmlspecialchars(mb_strtolower($d['nombre_completo'] . ' ' . $d['cedula'] . ' ' . $d['email'])) ?>">
                     <td>
                         <strong style="color:#1e293b;"><?= htmlspecialchars($d['nombre_completo']) ?></strong><br>
-                        <span class="ppst-muted">C.I: <?= htmlspecialchars($d['cedula'] ?? '') ?> • <?= htmlspecialchars($d['email'] ?? '') ?></span><br>
-                        <span class="ppst-muted">Rol: <?= htmlspecialchars($d['rol_nombre'] ?? 'Docente') ?></span>
+                        <span class="ppst-muted">C.I: <?= htmlspecialchars($d['cedula'] ?? '') ?> • <?= htmlspecialchars($d['email'] ?? '') ?></span>
+                        <?php if ((int)($_SESSION['nivel_privilegio'] ?? 999) === 0): ?>
+                            <br><span class="ppst-muted">Rol: <?= htmlspecialchars($d['rol_nombre'] ?? 'Docente') ?></span>
+                        <?php endif; ?>
                     </td>
                     <td>
                         <?php if ($d['estado_registro'] === 'pendiente'): ?>

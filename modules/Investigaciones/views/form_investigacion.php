@@ -1,12 +1,16 @@
 <?php
 // modules/Investigaciones/views/form_investigacion.php
-// Variables: $investigacion (array), $lineas (array), $dimensiones (array - opcional)
+// Variables: $investigacion (array), $lineas (array), $todasDimensiones (array), $responsablesDisponibles (array), $usuario_actual (array), $from_admin (bool)
 $esEdicion = !empty($investigacion['id']);
+$from_admin = !empty($from_admin) || !empty($_GET['from_admin']);
+$urlRetorno = $from_admin ? '?ruta=panel-investigaciones-admin' : '?ruta=mis-investigaciones';
 ?>
 <div class="inv-wrapper" style="max-width: 1200px; margin: 0 auto;">
 
     <div style="margin-bottom: 2rem;">
-        <a href="?ruta=mis-investigaciones" style="color:var(--inv-muted); text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem; font-weight:600; font-size:0.9rem; margin-bottom:1rem; transition:color 0.2s;" onmouseover="this.style.color='var(--inv-primary)';" onmouseout="this.style.color='var(--inv-muted)';"><i class="ph-bold ph-arrow-left"></i> Volver a Mis Proyectos</a>
+        <a href="<?= $urlRetorno ?>" style="color:var(--inv-muted); text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem; font-weight:600; font-size:0.9rem; margin-bottom:1rem; transition:color 0.2s;" onmouseover="this.style.color='var(--inv-primary)';" onmouseout="this.style.color='var(--inv-muted)';">
+            <i class="ph-bold ph-arrow-left"></i> <?= $from_admin ? 'Volver al Panel Administrativo I+D' : 'Volver a Mis Proyectos' ?>
+        </a>
         
         <h1 style="font-size: 2.5rem; font-weight: 800; color: var(--inv-dark); margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.8rem;">
             <div style="width:50px; height:50px; border-radius:12px; background: #505984; color:white; display:flex; align-items:center; justify-content:center; font-size:1.6rem; box-shadow:0 10px 20px rgba(80, 89, 132, 0.3);">
@@ -15,21 +19,21 @@ $esEdicion = !empty($investigacion['id']);
             <?= $esEdicion ? 'Editar Investigación' : 'Crear Investigación' ?>
         </h1>
         <p style="color:var(--inv-muted); font-size:1.05rem;">
-            <?= $esEdicion ? 'Actualiza los datos del proyecto y la disponibilidad de cupos.' : 'Registra un nuevo proyecto en el departamento para buscar tesistas.' ?>
+            <?= $esEdicion ? 'Actualiza los datos del proyecto, docente responsable, estado y disponibilidad de cupos.' : 'Registra un nuevo proyecto en el departamento para buscar tesistas.' ?>
         </p>
     </div>
-
-    
 
     <form action="?ruta=<?= $esEdicion ? 'actualizar-investigacion' : 'guardar-investigacion' ?>" method="POST" enctype="multipart/form-data" novalidate style="display:flex; flex-direction:column; gap:2rem;">
         
         <?php if ($esEdicion): ?>
-            <input type="hidden" name="id" value="<?= $investigacion['id'] ?>">
+            <input type="hidden" name="id" value="<?= (int)$investigacion['id'] ?>">
+        <?php endif; ?>
+        <?php if ($from_admin): ?>
+            <input type="hidden" name="from_admin" value="1">
         <?php endif; ?>
 
         <!-- SECCIÓN 1: PRINCIPAL -->
         <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04);">
-            <!-- Sección 1: icono azul #0369A1 -->
             <h3 style="font-weight:800; color:var(--inv-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;">
                 <span style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; background:#E0F2FE;">
                     <i class="ph-fill ph-info" style="color:#0369A1; font-size:1.2rem;"></i>
@@ -108,10 +112,11 @@ $esEdicion = !empty($investigacion['id']);
                         <select name="id_profesor" required style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--inv-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--inv-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--inv-border)';">
                             <?php 
                             $respActual = (int)($investigacion['id_profesor'] ?? ($usuario_actual['id'] ?? 0));
+                            $esSuperAdminForm = (int)($usuario_actual['nivel'] ?? 999) === 0;
                             if (!empty($responsablesDisponibles)):
                                 foreach ($responsablesDisponibles as $resp): ?>
                                     <option value="<?= $resp['id'] ?>" <?= ($respActual === (int)$resp['id']) ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($resp['nombre_completo']) ?> (<?= htmlspecialchars($resp['rol_nombre']) ?><?= !empty($resp['es_investigador']) ? ' · Investigador' : '' ?>)
+                                        <?= htmlspecialchars($resp['nombre_completo']) ?><?= $esSuperAdminForm ? ' (' . htmlspecialchars($resp['rol_nombre']) . (!empty($resp['es_investigador']) ? ' · Investigador' : '') . ')' : (!empty($resp['es_investigador']) ? ' (Investigador)' : '') ?>
                                     </option>
                                 <?php endforeach;
                             else: ?>
@@ -130,7 +135,7 @@ $esEdicion = !empty($investigacion['id']);
                         <select name="estado" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--inv-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--inv-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--inv-border)';">
                             <?php $estados = ['Abierta', 'En Desarrollo', 'Cerrada', 'Finalizada']; ?>
                             <?php foreach ($estados as $est): ?>
-                                <option value="<?= $est ?>" <?= (($investigacion['estado']??'Abierta') == $est) ? 'selected' : '' ?>><?= $est ?></option>
+                                <option value="<?= $est ?>" <?= (($investigacion['estado'] ?? 'Abierta') == $est) ? 'selected' : '' ?>><?= $est ?></option>
                             <?php endforeach; ?>
                         </select>
                         <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--inv-muted); pointer-events:none;"></i>
@@ -267,17 +272,31 @@ $esEdicion = !empty($investigacion['id']);
                 </div>
 
                 <div>
+                    <label style="display:block; font-weight:600; color:var(--inv-dark); margin-bottom:0.5rem;">Modalidad / Categoría</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-tag" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--inv-muted);"></i>
+                        <?php $tagActual = $investigacion['tag_que'] ?? 'Proyecto'; ?>
+                        <select name="tag_que" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--inv-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--inv-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--inv-border)';">
+                            <?php foreach (['Proyecto', 'Tesis', 'Investigación', 'Pasantía', 'Prototipo'] as $tipoTag): ?>
+                                <option value="<?= htmlspecialchars($tipoTag) ?>" <?= ($tagActual === $tipoTag) ? 'selected' : '' ?>><?= htmlspecialchars($tipoTag) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--inv-muted); pointer-events:none;"></i>
+                    </div>
+                </div>
+
+                <div>
                     <label style="display:block; font-weight:600; color:var(--inv-dark); margin-bottom:0.5rem;">Cupos Disponibles</label>
                     <div style="position:relative;">
                         <i class="ph-bold ph-users-three" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--inv-muted);"></i>
-                        <input type="number" name="cupos_disponibles" min="1" max="10" value="<?= $investigacion['cupos_disponibles'] ?? 3 ?>" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--inv-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--inv-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--inv-border)';">
+                        <input type="number" name="cupos_disponibles" min="1" max="10" value="<?= (int)($investigacion['cupos_disponibles'] ?? 3) ?>" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--inv-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--inv-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--inv-border)';">
                     </div>
                 </div>
             </div>
         </div>
 
         <div style="display:flex; justify-content:flex-end; padding-top:1rem; padding-bottom:3rem; gap:1rem;">
-            <a href="?ruta=mis-investigaciones" style="background: white; color: var(--inv-dark); border: 1px solid var(--inv-border); padding: 1rem 2rem; border-radius: 50px; font-weight: 700; font-size: 1.15rem; text-decoration:none; transition: background 0.2s;" onmouseover="this.style.background='#F1F5F9';" onmouseout="this.style.background='white';">Cancelar</a>
+            <a href="<?= $urlRetorno ?>" style="background: white; color: var(--inv-dark); border: 1px solid var(--inv-border); padding: 1rem 2rem; border-radius: 50px; font-weight: 700; font-size: 1.15rem; text-decoration:none; transition: background 0.2s;" onmouseover="this.style.background='#F1F5F9';" onmouseout="this.style.background='white';">Cancelar</a>
             
             <button type="submit" style="
                 background: #505984; 

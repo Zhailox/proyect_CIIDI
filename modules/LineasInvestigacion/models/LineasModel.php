@@ -111,7 +111,7 @@ class LineasModel extends QueryBuilder {
      */
     public function getInvestigacionesPorLinea(int $id_linea): array {
         $sql = "
-            SELECT
+            SELECT DISTINCT
                 io.*,
                 dim.nombre  AS dimension_nombre,
                 u.nombre_completo AS nombre_profesor
@@ -119,41 +119,94 @@ class LineasModel extends QueryBuilder {
             LEFT JOIN dimensiones_operativas dim ON dim.id = io.id_dimension
             LEFT JOIN usuarios              u   ON u.id   = io.id_profesor
             WHERE io.id_linea = ?
+               OR EXISTS (
+                   SELECT 1 FROM public.investigaciones_lineas il
+                   WHERE il.id_investigacion = io.id AND il.id_linea = ?
+               )
             ORDER BY io.fecha_creacion DESC
         ";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$id_linea]);
+        $stmt->execute([$id_linea, $id_linea]);
         return $stmt->fetchAll();
     }
 
     /**
-     * Retorna los profesores afiliados a una línea y sus proyectos (investigaciones ofertadas).
+     * Retorna los profesores afiliados a una línea (por perfil, dimensiones o investigaciones a cargo)
+     * y sus proyectos (investigaciones ofertadas) en dicha línea.
      */
     public function getProfesoresAfiliadosPorLinea(int $id_linea): array {
         $sql = "
-            SELECT 
-                u.id, 
+            SELECT DISTINCT
+                u.id,
+                u.id AS id_profesor,
                 u.nombre_completo AS nombre_profesor,
                 u.email
-            FROM profesor_linea pl
-            INNER JOIN usuarios u ON u.id = pl.id_usuario
-            WHERE pl.id_linea = ? AND u.activo = true
+            FROM public.usuarios u
+            WHERE u.activo = true
+              AND (
+                  EXISTS (
+                      SELECT 1 FROM public.profesor_linea pl
+                      WHERE pl.id_usuario = u.id AND pl.id_linea = ?
+                  )
+                  OR EXISTS (
+                      SELECT 1 FROM public.profesor_dimension pd
+                      WHERE pd.id_usuario = u.id AND pd.id_linea = ?
+                  )
+                  OR EXISTS (
+                      SELECT 1 FROM public.investigaciones_ofertadas io
+                      LEFT JOIN public.investigaciones_lineas il ON il.id_investigacion = io.id
+                      WHERE io.id_profesor = u.id AND (io.id_linea = ? OR il.id_linea = ?)
+                  )
+              )
             ORDER BY u.nombre_completo ASC
         ";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$id_linea]);
+        $stmt->execute([$id_linea, $id_linea, $id_linea, $id_linea]);
         $profesores = $stmt->fetchAll();
 
-        // Para cada profesor, buscamos sus proyectos en esta línea
+        $stmtDim = null;
+        try {
+            $stmtDim = $this->db->prepare("
+                SELECT DISTINCT d.id, d.nombre
+                FROM public.dimensiones_operativas d
+                WHERE d.id_linea = ? AND d.activo = true
+                  AND (
+                      EXISTS (
+                          SELECT 1 FROM public.profesor_dimension pd
+                          WHERE pd.id_dimension = d.id AND pd.id_usuario = ? AND pd.id_linea = ?
+                      )
+                      OR EXISTS (
+                          SELECT 1 FROM public.investigaciones_ofertadas io
+                          LEFT JOIN public.investigaciones_dimensiones idim ON idim.id_investigacion = io.id
+                          WHERE io.id_profesor = ? AND (io.id_dimension = d.id OR idim.id_dimension = d.id)
+                      )
+                  )
+                ORDER BY d.nombre ASC
+            ");
+        } catch (\Throwable $e) {}
+
+        $stmtIo = $this->db->prepare("
+            SELECT DISTINCT io.id, io.titulo, io.estado, io.cupos_disponibles, io.fecha_creacion
+            FROM public.investigaciones_ofertadas io
+            LEFT JOIN public.investigaciones_lineas il ON il.id_investigacion = io.id
+            WHERE io.id_profesor = ? AND (io.id_linea = ? OR il.id_linea = ?)
+            ORDER BY io.fecha_creacion DESC
+        ");
+
+        // Para cada profesor, buscamos sus dimensiones operativas y proyectos en esta línea
         foreach ($profesores as &$prof) {
-            $sqlIo = "
-                SELECT id, titulo, estado, cupos_disponibles
-                FROM investigaciones_ofertadas
-                WHERE id_profesor = ? AND id_linea = ?
-                ORDER BY fecha_creacion DESC
-            ";
-            $stmtIo = $this->db->prepare($sqlIo);
-            $stmtIo->execute([$prof['id'], $id_linea]);
+            $profId = (int)$prof['id'];
+            $prof['dimensiones'] = [];
+            if ($stmtDim) {
+                try {
+                    $stmtDim->execute([$id_linea, $profId, $id_linea, $profId]);
+                    $prof['dimensiones'] = $stmtDim->fetchAll();
+                } catch (\Throwable $e) {
+                    $prof['dimensiones'] = [];
+                }
+            }
+
+            $stmtIo->execute([$profId, $id_linea, $id_linea]);
             $prof['ofertas'] = $stmtIo->fetchAll();
         }
         return $profesores;

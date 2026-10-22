@@ -131,10 +131,12 @@ $totalInvestigadores = count($investigadores ?? []);
                         </h3>
                         
                         <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.4rem;">
-                            <span style="background: #e0e7ff; color: #3730a3; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 20px; text-transform: uppercase;">
-                                <?= htmlspecialchars($inv['rol_nombre']) ?>
-                            </span>
-                            <?php if (!empty($inv['es_investigador'])): ?>
+                            <?php if (!empty($esSuperAdmin) && !empty($inv['rol_nombre'])): ?>
+                                <span style="background: #e0e7ff; color: #3730a3; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 20px; text-transform: uppercase;">
+                                    <?= htmlspecialchars($inv['rol_nombre']) ?>
+                                </span>
+                            <?php endif; ?>
+                            <?php if (!empty($inv['es_investigador']) || empty($inv['es_profesor_pst'])): ?>
                                 <span style="background: #ede9fe; color: #6d28d9; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 20px; display: inline-flex; align-items: center; gap: 0.3rem;">
                                     <i class="ph-bold ph-flask"></i> Investigador
                                 </span>
@@ -158,11 +160,11 @@ $totalInvestigadores = count($investigadores ?? []);
                 <!-- Cuerpo de la Tarjeta: Líneas e Investigaciones -->
                 <div style="padding: 1.5rem 1.8rem; flex: 1; display: flex; flex-direction: column; gap: 1.4rem;">
                     
-                    <!-- Líneas Afiliadas -->
+                    <!-- Líneas y Dimensiones Afiliadas -->
                     <div>
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem;">
                             <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #505984; display: inline-flex; align-items: center; gap: 0.4rem;">
-                                <i class="ph-bold ph-tree-structure" style="color: #505984; font-size: 1rem;"></i> Líneas de Investigación
+                                <i class="ph-bold ph-tree-structure" style="color: #505984; font-size: 1rem;"></i> Líneas y Dimensiones
                             </span>
                             <span style="font-size: 0.75rem; font-weight: 700; background: #f1f5f9; color: #475569; padding: 0.15rem 0.5rem; border-radius: 10px;">
                                 <?= count($lineasAfiliadas) ?>
@@ -174,13 +176,28 @@ $totalInvestigadores = count($investigadores ?? []);
                                 Sin líneas de investigación afiliadas actualmente.
                             </div>
                         <?php else: ?>
+                            <?php $dimsInv = $inv['dimensiones'] ?? []; ?>
                             <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
                                 <?php foreach ($lineasAfiliadas as $la): ?>
-                                    <a href="?ruta=detalle-linea&id=<?= $la['id'] ?>" style="background: rgba(80,89,132,0.08); color: #505984; font-size: 0.8rem; font-weight: 600; padding: 0.25rem 0.7rem; border-radius: 20px; border: 1px solid rgba(80,89,132,0.18); text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#505984'; this.style.color='#ffffff';" onmouseout="this.style.background='rgba(80,89,132,0.08)'; this.style.color='#505984';">
+                                    <a href="?ruta=detalle-linea&id=<?= $la['id'] ?>" title="<?= htmlspecialchars($la['carrera_nombre'] ?? '') ?>" style="background: rgba(80,89,132,0.08); color: #505984; font-size: 0.8rem; font-weight: 600; padding: 0.25rem 0.7rem; border-radius: 20px; border: 1px solid rgba(80,89,132,0.18); text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#505984'; this.style.color='#ffffff';" onmouseout="this.style.background='rgba(80,89,132,0.08)'; this.style.color='#505984';">
                                         <i class="ph-bold ph-git-branch" style="font-size: 0.75rem;"></i> <?= htmlspecialchars($la['nombre']) ?>
                                     </a>
                                 <?php endforeach; ?>
                             </div>
+                            <?php if (!empty($dimsInv)): ?>
+                                <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.45rem;">
+                                    <?php foreach (array_slice($dimsInv, 0, 4) as $dItem): ?>
+                                        <span style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; font-size: 0.72rem; font-weight: 600; padding: 0.15rem 0.55rem; border-radius: 999px;">
+                                            <i class="ph-bold ph-tag" style="color:#505984; font-size:0.68rem;"></i> <?= htmlspecialchars($dItem['nombre']) ?>
+                                        </span>
+                                    <?php endforeach; ?>
+                                    <?php if (count($dimsInv) > 4): ?>
+                                        <span style="font-size: 0.72rem; color: #505984; font-weight: 700; padding: 0.15rem 0.4rem;">
+                                            +<?= count($dimsInv) - 4 ?> más
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
 
@@ -272,6 +289,7 @@ $totalInvestigadores = count($investigadores ?? []);
 </div>
 
 <script>
+const esSuperAdminView = <?= !empty($esSuperAdmin) ? 'true' : 'false' ?>;
 const investigadoresData = <?= json_encode(array_values($investigadores ?? []), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 const invMapById = {};
 investigadoresData.forEach(item => { invMapById[parseInt(item.id)] = item; });
@@ -291,11 +309,15 @@ function abrirPerfilInvestigador(id) {
     const iniciales = (partes.map(p => p.charAt(0)).join('') || 'IN').toUpperCase();
 
     const lineas = Array.isArray(inv.lineas) ? inv.lineas : [];
+    const dimensiones = Array.isArray(inv.dimensiones) ? inv.dimensiones : [];
     const proyectos = Array.isArray(inv.investigaciones) ? inv.investigaciones : [];
     const trayectosPst = Array.isArray(inv.trayectos_pst) ? inv.trayectos_pst : [];
 
-    let badgesHtml = `<span style="background:rgba(255,255,255,0.2); color:#ffffff; font-size:0.75rem; font-weight:700; padding:0.25rem 0.7rem; border-radius:20px; text-transform:uppercase; border:1px solid rgba(255,255,255,0.25);">${escPerfil(inv.rol_nombre)}</span>`;
-    if (inv.es_investigador) {
+    let badgesHtml = '';
+    if (esSuperAdminView && inv.rol_nombre) {
+        badgesHtml += `<span style="background:rgba(255,255,255,0.2); color:#ffffff; font-size:0.75rem; font-weight:700; padding:0.25rem 0.7rem; border-radius:20px; text-transform:uppercase; border:1px solid rgba(255,255,255,0.25);">${escPerfil(inv.rol_nombre)}</span>`;
+    }
+    if (inv.es_investigador || !inv.es_profesor_pst) {
         badgesHtml += `<span style="background:#ede9fe; color:#5b21b6; font-size:0.75rem; font-weight:700; padding:0.25rem 0.7rem; border-radius:20px; display:inline-flex; align-items:center; gap:0.3rem;"><i class="ph-bold ph-flask"></i> Investigador Acreditado</span>`;
     }
     if (inv.es_profesor_pst) {
@@ -306,12 +328,26 @@ function abrirPerfilInvestigador(id) {
     if (lineas.length === 0) {
         lineasHtml = `<div style="font-size:0.88rem; color:#64748b; font-style:italic; background:#f8fafc; padding:0.8rem 1rem; border-radius:10px; border:1px dashed #cbd5e1;">Sin líneas de investigación adscritas actualmente.</div>`;
     } else {
-        lineasHtml = `<div style="display:flex; flex-wrap:wrap; gap:0.5rem;">` +
-            lineas.map(l => `
-                <a href="?ruta=detalle-linea&id=${parseInt(l.id)}" style="background:rgba(80,89,132,0.09); color:#505984; font-size:0.85rem; font-weight:700; padding:0.4rem 0.9rem; border-radius:20px; border:1px solid rgba(80,89,132,0.22); text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem;">
-                    <i class="ph-bold ph-git-branch"></i> ${escPerfil(l.nombre)}
-                </a>
-            `).join('') + `</div>`;
+        lineasHtml = `<div style="display:flex; flex-direction:column; gap:0.65rem;">` +
+            lineas.map(l => {
+                const dimsDeLinea = dimensiones.filter(d => parseInt(d.id_linea) === parseInt(l.id));
+                const dimsBadges = dimsDeLinea.length > 0
+                    ? `<div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-top:0.45rem;">` +
+                      dimsDeLinea.map(d => `<span style="background:#ffffff; color:#334155; border:1px solid #cbd5e1; font-size:0.74rem; font-weight:600; padding:0.2rem 0.6rem; border-radius:999px; display:inline-flex; align-items:center; gap:4px;"><i class="ph-bold ph-tag" style="color:#505984; font-size:0.7rem;"></i> ${escPerfil(d.nombre)}</span>`).join('') +
+                      `</div>`
+                    : '';
+                return `
+                    <div style="background:#f8fafc; border:1px solid rgba(80,89,132,0.18); border-radius:12px; padding:0.75rem 1rem;">
+                        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; flex-wrap:wrap;">
+                            <a href="?ruta=detalle-linea&id=${parseInt(l.id)}" style="color:#121a3e; font-size:0.9rem; font-weight:800; text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem;">
+                                <i class="ph-bold ph-git-branch" style="color:#505984;"></i> ${escPerfil(l.nombre)}
+                            </a>
+                            ${l.carrera_nombre ? `<span style="background:rgba(80,89,132,0.1); color:#505984; font-size:0.7rem; font-weight:700; padding:0.15rem 0.55rem; border-radius:999px; text-transform:uppercase;">${escPerfil(l.carrera_nombre)}</span>` : ''}
+                        </div>
+                        ${dimsBadges}
+                    </div>
+                `;
+            }).join('') + `</div>`;
     }
 
     let pstHtml = '';

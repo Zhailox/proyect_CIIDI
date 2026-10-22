@@ -97,9 +97,12 @@ class PerfilController {
         $activeTab = $_SESSION['perfil_active_tab'] ?? 'resumen';
         unset($_SESSION['perfil_exito'], $_SESSION['perfil_error'], $_SESSION['perfil_active_tab']);
 
-        // Extraer líneas de investigación y trayectos si es Docente, Investigador, Comité o SuperAdmin
+        // Extraer carreras, líneas de investigación, dimensiones y trayectos si es Docente, Investigador, Comité o SuperAdmin
+        $carrerasDisponibles = [];
         $lineasDisponibles = [];
+        $dimensionesPorLinea = [];
         $misLineasIds = [];
+        $misDimensionesIds = [];
         $rolDetectado = mb_strtolower(trim((string)($datosCompletos['nombre_rol'] ?? $datosCompletos['rol_nombre'] ?? $usuarioSesion['rol'] ?? '')));
         $nivelDetectado = (int)($datosCompletos['nivel_privilegio'] ?? $usuarioSesion['nivel'] ?? 999);
         $esProfesor = str_contains($rolDetectado, 'docente')
@@ -112,13 +115,37 @@ class PerfilController {
         
         if ($esProfesor) {
             $pdo = Connection::getInstance();
-            // Comprobar si existe la tabla profesor_linea para no romper nada
+            $this->asegurarTablasEspecialidad($pdo);
             try {
-                $lineasDisponibles = $pdo->query("SELECT id, nombre, descripcion FROM lineas_investigacion ORDER BY nombre ASC")->fetchAll(PDO::FETCH_ASSOC);
+                $carrerasDisponibles = $pdo->query("SELECT id, nombre, descripcion FROM public.carreras ORDER BY id ASC")->fetchAll(PDO::FETCH_ASSOC);
+
+                $lineasDisponibles = $pdo->query("
+                    SELECT li.id, li.nombre, li.descripcion, li.id_carrera,
+                           COALESCE(c.nombre, 'General / Institucional') AS carrera_nombre
+                    FROM public.lineas_investigacion li
+                    LEFT JOIN public.carreras c ON c.id = li.id_carrera
+                    WHERE li.activo = true
+                    ORDER BY li.id_carrera ASC NULLS LAST, li.nombre ASC
+                ")->fetchAll(PDO::FETCH_ASSOC);
+
+                $dimsRaw = $pdo->query("
+                    SELECT id, id_linea, nombre, descripcion
+                    FROM public.dimensiones_operativas
+                    WHERE activo = true
+                    ORDER BY id_linea ASC, nombre ASC
+                ")->fetchAll(PDO::FETCH_ASSOC);
+                foreach ($dimsRaw as $dimRow) {
+                    $idL = (int)$dimRow['id_linea'];
+                    $dimensionesPorLinea[$idL][] = $dimRow;
+                }
                 
-                $stmtMisLineas = $pdo->prepare("SELECT id_linea FROM profesor_linea WHERE id_profesor = ?");
+                $stmtMisLineas = $pdo->prepare("SELECT id_linea FROM public.profesor_linea WHERE id_usuario = ?");
                 $stmtMisLineas->execute([$userId]);
                 $misLineasIds = array_map('intval', $stmtMisLineas->fetchAll(PDO::FETCH_COLUMN));
+
+                $stmtMisDims = $pdo->prepare("SELECT id_dimension FROM public.profesor_dimension WHERE id_usuario = ?");
+                $stmtMisDims->execute([$userId]);
+                $misDimensionesIds = array_map('intval', $stmtMisDims->fetchAll(PDO::FETCH_COLUMN));
             } catch (\Throwable $e) {}
 
             require_once __DIR__ . '/../services/PerfilPSTService.php';
@@ -135,8 +162,11 @@ class PerfilController {
 
         return [
             'esProfesor'            => $esProfesor,
+            'carrerasDisponibles'   => $carrerasDisponibles,
             'lineasDisponibles'     => $lineasDisponibles,
+            'dimensionesPorLinea'   => $dimensionesPorLinea,
             'misLineasIds'          => $misLineasIds,
+            'misDimensionesIds'     => $misDimensionesIds,
             'esPstActual'           => $esPstActual,
             'trayectosPstActuales'  => $trayectosPstActuales,
             'solicitudPstPendiente' => $solicitudPstPendiente,
@@ -494,6 +524,20 @@ class PerfilController {
         exit;
     }
 
+    private function asegurarTablasEspecialidad(\PDO $pdo): void {
+        try {
+            $pdo->exec("
+                CREATE TABLE IF NOT EXISTS public.profesor_dimension (
+                    id_usuario INT NOT NULL REFERENCES public.usuarios(id) ON DELETE CASCADE,
+                    id_dimension INT NOT NULL REFERENCES public.dimensiones_operativas(id) ON DELETE CASCADE,
+                    id_linea INT NOT NULL REFERENCES public.lineas_investigacion(id) ON DELETE CASCADE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (id_usuario, id_dimension)
+                )
+            ");
+        } catch (\Throwable $e) {}
+    }
+
     private function procesarVincularLineasDocente() {
         Auth::requierePrivilegioMinimo(998);
         if (!CSRF::validarToken($_POST['csrf_token'] ?? null)) {
@@ -508,17 +552,40 @@ class PerfilController {
         
         try {
             $pdo = Connection::getInstance();
-            $lineas = is_array($_POST["lineas"] ?? null) ? array_values(array_unique(array_map('intval', $_POST["lineas"]))) : [];
+            $this->asegurarTablasEspecialidad($pdo);
+
+            $lineas = is_array($_POST["lineas"] ?? null) ? array_values(array_unique(array_filter(array_map('intval', $_POST["lineas"]), fn($v) => $v > 0))) : [];
+            $dimensionesIds = is_array($_POST["dimensiones"] ?? null) ? array_values(array_unique(array_filter(array_map('intval', $_POST["dimensiones"]), fn($v) => $v > 0))) : [];
+
+            // Validar dimensiones seleccionadas y asegurar que su línea padre también quede vinculada
+            $dimensionesValidas = [];
+            if (!empty($dimensionesIds)) {
+                $placeholders = implode(',', array_fill(0, count($dimensionesIds), '?'));
+                $stmtDimLookup = $pdo->prepare("SELECT id, id_linea FROM public.dimensiones_operativas WHERE id IN ({$placeholders}) AND activo = true");
+                $stmtDimLookup->execute($dimensionesIds);
+                foreach ($stmtDimLookup->fetchAll(PDO::FETCH_ASSOC) as $dRow) {
+                    $idDim = (int)$dRow['id'];
+                    $idLin = (int)$dRow['id_linea'];
+                    $dimensionesValidas[$idDim] = $idLin;
+                    if (!in_array($idLin, $lineas, true)) {
+                        $lineas[] = $idLin;
+                    }
+                }
+            }
+
             $esInvestigador = isset($_POST['es_investigador']) ? (!empty($_POST['es_investigador'])) : (!empty($lineas));
             
             $pdo->beginTransaction();
-            // Eliminar actuales
-            $stmt = $pdo->prepare("DELETE FROM profesor_linea WHERE id_profesor = ?");
-            $stmt->execute([$userId]);
+            // Eliminar líneas y dimensiones actuales
+            $stmtDelLin = $pdo->prepare("DELETE FROM public.profesor_linea WHERE id_usuario = ?");
+            $stmtDelLin->execute([$userId]);
+
+            $stmtDelDim = $pdo->prepare("DELETE FROM public.profesor_dimension WHERE id_usuario = ?");
+            $stmtDelDim->execute([$userId]);
             
-            // Insertar nuevas
+            // Insertar nuevas líneas
             if (!empty($lineas)) {
-                $stmtInsert = $pdo->prepare("INSERT INTO profesor_linea (id_profesor, id_linea) VALUES (?, ?) ON CONFLICT DO NOTHING");
+                $stmtInsert = $pdo->prepare("INSERT INTO public.profesor_linea (id_usuario, id_linea) VALUES (?, ?) ON CONFLICT (id_usuario, id_linea) DO NOTHING");
                 foreach ($lineas as $id_linea) {
                     if ($id_linea > 0) {
                         $stmtInsert->execute([$userId, $id_linea]);
@@ -526,22 +593,30 @@ class PerfilController {
                 }
             }
 
+            // Insertar nuevas dimensiones operativas
+            if (!empty($dimensionesValidas)) {
+                $stmtInsertDim = $pdo->prepare("INSERT INTO public.profesor_dimension (id_usuario, id_dimension, id_linea) VALUES (?, ?, ?) ON CONFLICT (id_usuario, id_dimension) DO NOTHING");
+                foreach ($dimensionesValidas as $id_dim => $id_lin) {
+                    $stmtInsertDim->execute([$userId, $id_dim, $id_lin]);
+                }
+            }
+
             // Actualizar marca de investigador en usuarios
-            $stmtUpInv = $pdo->prepare("UPDATE usuarios SET es_investigador = ? WHERE id = ?");
+            $stmtUpInv = $pdo->prepare("UPDATE public.usuarios SET es_investigador = ? WHERE id = ?");
             $stmtUpInv->execute([$esInvestigador ? 'true' : 'false', $userId]);
 
             $pdo->commit();
 
-            AuditLogger::registrar('INFO', 'Autenticacion', 'Actualización Líneas Especialidad',
-                "El docente/investigador ID #{$userId} actualizó sus líneas de especialidad (" . count($lineas) . " asignadas).");
+            AuditLogger::registrar('INFO', 'Autenticacion', 'Actualización Líneas y Dimensiones Especialidad',
+                "El docente/investigador ID #{$userId} actualizó su especialidad (" . count($lineas) . " líneas y " . count($dimensionesValidas) . " dimensiones operativas).");
             
-            $_SESSION["perfil_exito"] = "Tus líneas de investigación de especialidad han sido actualizadas correctamente.";
+            $_SESSION["perfil_exito"] = "Tus líneas de investigación y dimensiones operativas de especialidad han sido actualizadas correctamente.";
             $_SESSION["perfil_active_tab"] = "vinculacion";
         } catch (\Throwable $e) {
             if (isset($pdo) && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
-            $_SESSION["perfil_error"] = "Error al actualizar las líneas de investigación.";
+            $_SESSION["perfil_error"] = "Error al actualizar las líneas y dimensiones de investigación.";
             $_SESSION["perfil_active_tab"] = "vinculacion";
         }
         
