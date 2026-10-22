@@ -53,7 +53,6 @@
                     <!-- TÍTULO PRINCIPAL DEL ARTÍCULO -->
                     <h1 class="art-detail-title"><?= htmlspecialchars($articulo['titulo'] ?? 'Artículo sin título') ?></h1>
 
-                    <!-- AUTORES DE LA PUBLICACIÓN -->
                     <div class="art-detail-authors-box" style="align-items: flex-start;">
                         <i class="ph-bold ph-users" style="font-size: 1.25rem; color: #7090cb; margin-top: 4px;"></i>
                         <div class="art-authors-line" style="margin-bottom: 0; gap: 0.5rem;">
@@ -64,7 +63,6 @@
                                         <a href="perfil-autor?id=<?= (int)$autorData['id'] ?>" style="color:#ffffff; text-decoration:none; font-weight:600;" title="Ver perfil de <?= htmlspecialchars($autorData['nombre']) ?>">
                                             <?= htmlspecialchars($autorData['nombre']) ?>
                                         </a>
-                                        <!-- Enlace al ORCID (Solo si existe) -->
                                         <?php if (!empty($autorData['orcid'])): ?>
                                             <?php $orcidUrl = strpos($autorData['orcid'], 'http') === 0 ? $autorData['orcid'] : 'https://orcid.org/' . $autorData['orcid']; ?>
                                             <a href="<?= htmlspecialchars($orcidUrl) ?>" target="_blank" title="Ver perfil ORCID" style="color:var(--color-terciario); display:flex; align-items:center; margin-left: 2px;">
@@ -236,7 +234,7 @@
                                             <!-- Enlace al ORCID -->
                                             <?php if (!empty($autorData['orcid'])): ?>
                                                 <?php $orcidUrl = strpos($autorData['orcid'], 'http') === 0 ? $autorData['orcid'] : 'https://orcid.org/' . $autorData['orcid']; ?>
-                                                <a href="<?= htmlspecialchars($orcidUrl) ?>" target="_blank" title="Ver perfil ORCID" style="color:#A6CE39; display:flex; align-items:center;">
+                                                <a href="<?= htmlspecialchars($orcidUrl) ?>" target="_blank" title="Ver perfil ORCID" style="color:var(--color-terciario); display:flex; align-items:center;">
                                                     <i class="ph-fill ph-identification-badge" style="font-size:1.1rem;"></i>
                                                 </a>
                                             <?php endif; ?>

@@ -1,7 +1,7 @@
 ========================================================
 REGISTRO DE EJECUCIÓN: hola [tarea_1790660917_352]
-FECHA/HORA: 2026-10-21 19:30:49
-DURACIÓN: 0.12 ms | ESTADO: FAIL
+FECHA/HORA: 2026-10-22 18:19:44
+DURACIÓN: 0.25 ms | ESTADO: FAIL
 ========================================================
 
 MENSAJE: El archivo de script 'script_tarea_1790660917_352.php' no existe en storage/scheduler/scripts/.

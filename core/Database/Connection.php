@@ -134,7 +134,7 @@ class Connection {
     private function __construct(bool $silencioso = false) {
         $this->cargarCredenciales();
         try {
-            $dsn = "pgsql:host={$this->host};port={$this->port};dbname={$this->db}";
+            $dsn = "pgsql:host={$this->host};port={$this->port};dbname={$this->db};options='--client_encoding=UTF8'";
             
             $options = [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,

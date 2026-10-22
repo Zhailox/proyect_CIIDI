@@ -87,6 +87,45 @@ require_once __DIR__ . '/../services/ConfigService.php';
                         <?php endif; ?>
                     </div>
 
+                    <!-- Nivel Académico -->
+                    <div class="filter-group-card">
+                        <h3><i class="ph ph-medal"></i> Nivel Académico</h3>
+                        <div class="minimal-input-wrapper">
+                            <select name="nivel_academico" id="nivel_academico">
+                                <option value="">Todos los niveles</option>
+                                <?php if (!empty($nivelesAcademicos)): ?>
+                                    <?php foreach ($nivelesAcademicos as $nivItem): 
+                                        $codNiv = is_array($nivItem) ? ($nivItem['codigo'] ?? '') : $nivItem;
+                                        $nomNiv = is_array($nivItem) ? ($nivItem['nombre'] ?? $codNiv) : ($labelsNiveles[$codNiv] ?? $codNiv);
+                                    ?>
+                                        <option value="<?= htmlspecialchars($codNiv) ?>" <?= (($filtros['nivel_academico'] ?? '') === $codNiv) ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($nomNiv) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                    </div>
+
+                    <!-- Trayecto -->
+                    <div class="filter-group-card">
+                        <h3><i class="ph ph-steps"></i> Trayecto</h3>
+                        <div class="minimal-input-wrapper">
+                            <select name="trayecto" id="trayecto">
+                                <option value="">Todos los trayectos</option>
+                                <?php if (!empty($trayectos)): ?>
+                                    <?php foreach ($trayectos as $trNombre): ?>
+                                        <option value="<?= htmlspecialchars($trNombre) ?>" <?= (($filtros['trayecto'] ?? '') === $trNombre) ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($trNombre) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                    </div>
+
                     <!-- Línea de Investigación -->
                     <div class="filter-group-card">
                         <h3><i class="ph ph-compass"></i> Línea de Investigación</h3>
@@ -114,6 +153,22 @@ require_once __DIR__ . '/../services/ConfigService.php';
                         </div>
                     </div>
 
+                    <!-- Ordenamiento -->
+                    <div class="filter-group-card">
+                        <h3><i class="ph ph-arrows-down-up"></i> Ordenar Resultados</h3>
+                        <div class="minimal-input-wrapper">
+                            <?php $ordenActual = $filtros['orden'] ?? 'relevancia'; ?>
+                            <select name="orden" id="ordenSelect">
+                                <option value="relevancia" <?= ($ordenActual === 'relevancia') ? 'selected' : '' ?>>Mayor relevancia</option>
+                                <option value="anio_desc" <?= ($ordenActual === 'anio_desc' || $ordenActual === 'desc') ? 'selected' : '' ?>>Año más reciente</option>
+                                <option value="anio_asc" <?= ($ordenActual === 'anio_asc' || $ordenActual === 'asc') ? 'selected' : '' ?>>Año más antiguo</option>
+                                <option value="titulo_asc" <?= ($ordenActual === 'titulo_asc') ? 'selected' : '' ?>>Título A-Z</option>
+                                <option value="vistas_desc" <?= ($ordenActual === 'vistas_desc') ? 'selected' : '' ?>>Más vistos</option>
+                            </select>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                    </div>
+
                     <div style="margin-top: 1rem;">
                         <button type="submit" class="btn-apply-filters"><i class="ph ph-funnel"></i> Aplicar Filtros</button>
                         <?php if (!empty($busquedaActiva) || !empty($_GET['usar_ia'])): ?>
@@ -132,11 +187,14 @@ require_once __DIR__ . '/../services/ConfigService.php';
                         <input type="hidden" name="ruta" value="buscador">
                         <input type="hidden" name="carrera_id" value="<?= htmlspecialchars($selectedCarrera ?? '') ?>">
                         <input type="hidden" name="anio" value="<?= htmlspecialchars($filtros['anio'] ?? '') ?>">
+                        <input type="hidden" name="nivel_academico" value="<?= htmlspecialchars($filtros['nivel_academico'] ?? '') ?>">
+                        <input type="hidden" name="trayecto" value="<?= htmlspecialchars($filtros['trayecto'] ?? '') ?>">
                         <input type="hidden" name="linea_id" value="<?= htmlspecialchars($filtros['linea_id'] ?? '') ?>">
                         <input type="hidden" name="dimension_id" value="<?= htmlspecialchars($filtros['dimension_id'] ?? '') ?>">
+                        <input type="hidden" name="orden" value="<?= htmlspecialchars($filtros['orden'] ?? '') ?>">
 
                         <div class="google-search-bar <?= !empty($_GET['usar_ia']) ? 'ia-mode-container' : '' ?>" id="searchBarContainer">
-                            <input type="text" name="q" id="searchQueryInput" value="<?= htmlspecialchars($q ?? '') ?>" placeholder="<?= !empty($_GET['usar_ia']) ? 'Describe tu propuesta o temática de investigación: Búsqueda Semántica con Redes Neuronales...' : 'Buscar por títulos, palabras clave o resumen abstract...' ?>" autocomplete="off">
+                            <input type="text" name="q" id="searchQueryInput" value="<?= htmlspecialchars($q ?? '') ?>" placeholder="<?= !empty($_GET['usar_ia']) ? 'Describe tu propuesta o temática de investigación: Búsqueda Semántica con Redes Neuronales...' : 'Buscar por título, autor, comunidad, palabras clave o resumen...' ?>" autocomplete="off">
                             <svg class="google-search-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -182,7 +240,7 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                     Resultados Obtenidos
                                 <?php endif; ?>
                                 <span style="font-size: 0.85rem; font-weight: 500; color: var(--texto-silenciado);">
-                                    · Mostrando <?= count($resultados) ?> de <?= $pagination['total_items'] ?>
+                                    · Mostrando <?= count($resultados) ?> de <?= $pagination['total_items'] ?><?php if ($pagination['total_pages'] > 1): ?> · Página <?= $pagination['current_page'] ?> de <?= $pagination['total_pages'] ?><?php endif; ?>
                                 </span>
                             </h3>
                             <?php if (!empty($usar_ia)): ?>
@@ -208,10 +266,66 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                 <?php 
                                 $resaltar = ConfigService::get('buscador.resaltar_coincidencias', true);
                                 $highlight = function($text, $query) use ($resaltar) {
-                                    $safeText = htmlspecialchars($text ?? '');
-                                    if (!$resaltar || empty($query)) return $safeText;
-                                    $pattern = '/' . preg_quote($query, '/') . '/i';
-                                    return preg_replace($pattern, '<mark style="background-color: #fef08a; color: #854d0e; padding: 0.1rem 0.25rem; border-radius: 3px; font-weight: 700;">$0</mark>', $safeText);
+                                    $rawText = (string)($text ?? '');
+                                    if (!$resaltar || trim((string)$query) === '' || $rawText === '') {
+                                        return htmlspecialchars($rawText, ENT_QUOTES, 'UTF-8');
+                                    }
+
+                                    $tokens = DocumentoModel::extraerPalabrasClave((string)$query);
+                                    $cleanQuery = DocumentoModel::normalizarTextoBusqueda((string)$query);
+                                    $cleanQuery = trim((string)preg_replace('/\s+/u', ' ', $cleanQuery));
+                                    if ($cleanQuery !== '' && !in_array($cleanQuery, $tokens, true)) {
+                                        array_unshift($tokens, $cleanQuery);
+                                    }
+
+                                    $charMap = [
+                                        'a' => '[aáàäâAÁÀÄÂ]',
+                                        'e' => '[eéèëêEÉÈËÊ]',
+                                        'i' => '[iíìïîIÍÌÏÎ]',
+                                        'o' => '[oóòöôOÓÒÖÔ]',
+                                        'u' => '[uúùüûUÚÙÜÛ]',
+                                        'n' => '[nñNÑ]'
+                                    ];
+
+                                    $regexParts = [];
+                                    foreach ($tokens as $tk) {
+                                        $tk = trim($tk);
+                                        if ($tk === '') continue;
+                                        $chars = preg_split('//u', $tk, -1, PREG_SPLIT_NO_EMPTY);
+                                        if (!$chars) continue;
+                                        $part = '';
+                                        foreach ($chars as $ch) {
+                                            if (isset($charMap[$ch])) {
+                                                $part .= $charMap[$ch];
+                                            } elseif (preg_match('/\s/u', $ch)) {
+                                                $part .= '\s+';
+                                            } else {
+                                                $part .= preg_quote($ch, '/');
+                                            }
+                                        }
+                                        $regexParts[] = $part;
+                                    }
+
+                                    if (empty($regexParts)) {
+                                        return htmlspecialchars($rawText, ENT_QUOTES, 'UTF-8');
+                                    }
+
+                                    $pattern = '/(' . implode('|', $regexParts) . ')/iu';
+                                    $segments = @preg_split($pattern, $rawText, -1, PREG_SPLIT_DELIM_CAPTURE);
+                                    if (!is_array($segments)) {
+                                        return htmlspecialchars($rawText, ENT_QUOTES, 'UTF-8');
+                                    }
+
+                                    $out = '';
+                                    foreach ($segments as $idx => $seg) {
+                                        $escapedSeg = htmlspecialchars($seg, ENT_QUOTES, 'UTF-8');
+                                        if ($idx % 2 === 1 && $seg !== '') {
+                                            $out .= '<mark style="background-color: rgba(0, 123, 255, 0.14); color: var(--color-secundario); padding: 0.08rem 0.25rem; border-radius: 3px; font-weight: 700;">' . $escapedSeg . '</mark>';
+                                        } else {
+                                            $out .= $escapedSeg;
+                                        }
+                                    }
+                                    return $out;
                                 };
                                 ?>
                                 <?php foreach ($resultados as $res): ?>
@@ -275,9 +389,15 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                         </div>
 
                                         <div class="result-meta">
-                                            <span><strong>Autores:</strong> <?= htmlspecialchars($res['autores_nombres'] ?? 'No registrados') ?></span>
+                                            <span><strong>Autores:</strong> <?= $highlight($res['autores_nombres'] ?? 'No registrados', $q) ?></span>
+                                            <?php if (!empty($res['tutores_nombres'])): ?>
+                                                <span><strong>Tutores:</strong> <?= $highlight($res['tutores_nombres'] ?? '', $q) ?></span>
+                                            <?php endif; ?>
+                                            <?php if (!empty($res['comunidad_beneficiada'])): ?>
+                                                <span><strong>Comunidad:</strong> <?= $highlight($res['comunidad_beneficiada'] ?? '', $q) ?></span>
+                                            <?php endif; ?>
                                             <?php if (!empty($res['proyecto_palabras'])): ?>
-                                                <span><strong>Palabras Clave:</strong> <?= htmlspecialchars($res['proyecto_palabras'] ?? '') ?></span>
+                                                <span><strong>Palabras Clave:</strong> <?= $highlight($res['proyecto_palabras'] ?? '', $q) ?></span>
                                             <?php endif; ?>
                                         </div>
                                         
@@ -438,8 +558,9 @@ require_once __DIR__ . '/../services/ConfigService.php';
 
 document.addEventListener('DOMContentLoaded', () => {
     initDimensionSelector(
-        <?= json_encode($dimensiones) ?>,
-        <?= json_encode($filtros['dimension_id'] ?? '') ?>
+        <?= json_encode($dimensiones ?? []) ?>,
+        <?= json_encode($filtros['dimension_id'] ?? '') ?>,
+        <?= json_encode($nivelesConTrayecto ?? ['Pregrado']) ?>
     );
 });
 </script>
