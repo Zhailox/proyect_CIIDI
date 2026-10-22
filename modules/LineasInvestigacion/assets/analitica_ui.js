@@ -24,9 +24,11 @@
         window.lastTendenciasData = null;
         window.lastTendenciasParams = null;
         window.hiddenLineNames = new Set();
+        window.currentBacktestHoldout = '2t';
 
         const btnProyectar        = document.getElementById('btn-proyectar');
         const btnAdvanced         = document.getElementById('btn-advanced');
+        const btnToggleBacktest   = document.getElementById('btn-toggle-backtest');
         const btnGuardarSnapshot  = document.getElementById('btn-guardar-snapshot');
         const panelAdvanced       = document.getElementById('advanced-settings-panel');
         const selectModelo        = document.getElementById('select-ml-model');
@@ -257,12 +259,22 @@
             renderizarMetricasTendencias(data, pasos);
             renderizarInsights(data, pasos);
             renderizarMatrizEjecutiva(data, pasos);
+            renderizarLaboratorioBacktest(data);
             renderizarSnapshots(data.snapshots || []);
+        }
+
+        if (btnToggleBacktest) {
+            btnToggleBacktest.addEventListener('click', () => {
+                const btCont = document.getElementById('backtest-tendencias-container');
+                if (!btCont) return;
+                btCont.style.display = 'block';
+                btCont.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
         }
 
         btnProyectar.addEventListener('click', ejecutarProyeccion);
 
-        // Guardar Snapshot de Predicción
+        // Guardar Snapshot de Predicción (Con desglose completo por línea y por trimestre)
         if (btnGuardarSnapshot) {
             btnGuardarSnapshot.addEventListener('click', async () => {
                 const data = window.lastTendenciasData;
@@ -271,21 +283,39 @@
 
                 const areasVisibles = obtenerAreasVisibles(data);
                 const pasos = (data.future_labels && data.future_labels.length) ? data.future_labels.length : params.pred_steps;
-                const futureLabels = data.future_labels || [];
+                const futureLabels = (data.future_labels || []).slice(0, pasos);
                 const histLabels = data.history_labels || [];
 
                 let totalProy = 0;
                 const resumenAreas = areasVisibles.map(a => {
                     const preds = (a.adoption_curve || []).slice(0, pasos);
+                    const ciLow = (a.ci_lower || []).slice(0, pasos);
+                    const ciHigh = (a.ci_upper || []).slice(0, pasos);
                     const sumLine = preds.reduce((acc, v) => acc + Math.round(v), 0);
                     totalProy += sumLine;
                     return {
+                        id_linea: a.id_linea ?? null,
                         name: a.name,
                         carrera: a.carrera_nombre || 'General',
+                        history: a.history || [],
+                        history_labels: histLabels,
+                        future_labels: futureLabels,
+                        total_historico: a.total_historico ?? 0,
+                        promedio_historico: a.promedio_historico ?? 0,
                         ultimo_real: a.ultimo_trimestre ?? 0,
+                        adoption_curve: preds,
+                        ci_lower: ciLow,
+                        ci_upper: ciHigh,
                         primer_trimestre_label: futureLabels[0] || '',
                         primer_trimestre_pred: Math.round(preds[0] ?? 0),
                         meta_final_pred: Math.round(preds[pasos - 1] ?? 0),
+                        rmse: a.rmse ?? 0,
+                        mae: a.mae ?? 0,
+                        r2: a.r2 ?? 0,
+                        saturation_index: a.saturation_index ?? 0,
+                        capacity: a.capacity ?? 25,
+                        model_applied: a.model_applied || data.model_used,
+                        model_applied_label: a.model_applied_label || data.model_label
                     };
                 });
 
@@ -321,6 +351,9 @@
                     if (json.ok && Array.isArray(json.snapshots)) {
                         window.lastTendenciasData.snapshots = json.snapshots;
                         renderizarSnapshots(json.snapshots);
+                        if (json.snapshots.length > 0) {
+                            abrirModalAuditoriaSnapshot(json.snapshots[0]);
+                        }
                         btnGuardarSnapshot.innerHTML = '<i class="ph-bold ph-check"></i> Snapshot Guardado';
                         setTimeout(() => { btnGuardarSnapshot.innerHTML = textoOriginal; }, 1800);
                     } else {
@@ -885,7 +918,168 @@
             cont.style.display = 'block';
         }
 
-        // 8. Historial de Snapshots de Predicción (Auditoría Predictiva vs. Realidad)
+        // 7b. Laboratorio de Fiabilidad ML (Validación Walk-Forward con Datos Reales Ocultados)
+        function renderizarLaboratorioBacktest(data) {
+            const cont = document.getElementById('backtest-tendencias-container');
+            if (!cont) return;
+
+            const btRoot = data && data.backtest ? data.backtest : null;
+            const mode = window.currentBacktestHoldout || '2t';
+            const bt = btRoot ? (btRoot[mode] || btRoot['2t'] || btRoot['1t']) : null;
+
+            if (!bt || !Array.isArray(bt.lines) || bt.lines.length === 0) {
+                cont.style.display = 'none';
+                return;
+            }
+
+            const trainLabels = bt.train_labels || bt.train_terms || [];
+            const testLabels  = bt.test_labels || bt.test_terms || [];
+            const rangoTrain  = trainLabels.length ? `${trainLabels[0]} → ${trainLabels[trainLabels.length - 1]} (${trainLabels.length} trim.)` : '-';
+            const rangoTest   = testLabels.join(' y ');
+            const modSummary  = bt.models_summary || {};
+            const ordenModelos = ['poly', 'rf', 'auto', 'linear'];
+
+            const cardsModelos = ordenModelos.filter(m => modSummary[m]).map(m => {
+                const ms = modSummary[m];
+                const esGanador = bt.best_overall_model === m;
+                const esActivo = data.model_used === m;
+                return `
+                <div style="flex:1; min-width:205px; background:${esGanador ? '#eef0f7' : '#f8fafc'}; border:1px solid ${esGanador ? '#505984' : '#cbd5e1'}; border-top:3px solid ${esGanador ? '#1e293b' : '#7090cb'}; border-radius:8px; padding:11px 13px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px;">
+                        <strong style="font-size:0.8rem; color:#1e293b;">${escaparHtml(ms.label)}</strong>
+                        ${esGanador ? '<span style="background:#1e293b; color:#ffffff; font-size:0.65rem; font-weight:700; padding:2px 7px; border-radius:99px; white-space:nowrap;">★ Más Preciso</span>' : (esActivo ? '<span style="background:#505984; color:#ffffff; font-size:0.65rem; font-weight:700; padding:2px 7px; border-radius:99px;">Activo</span>' : '')}
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:8px; font-size:0.74rem; color:#475569;">
+                        <div style="background:#ffffff; padding:5px 7px; border-radius:5px; border:1px solid #e2e8f0;">
+                            Error MAE Real: <strong style="color:#1e293b; display:block; font-size:0.82rem;">±${Number(ms.oos_mae).toFixed(2)} proy.</strong>
+                        </div>
+                        <div style="background:#ffffff; padding:5px 7px; border-radius:5px; border:1px solid #e2e8f0;">
+                            Precisión Vol.: <strong style="color:#505984; display:block; font-size:0.82rem;">${Number(ms.volume_accuracy_pct).toFixed(1)}%</strong>
+                        </div>
+                    </div>
+                    <div style="margin-top:6px; font-size:0.72rem; color:#64748b; display:flex; justify-content:space-between;">
+                        <span>Predicho: <strong>${ms.total_predicted} proy.</strong></span>
+                        <span>Real Ocultado: <strong>${ms.total_real} proy.</strong></span>
+                    </div>
+                </div>`;
+            }).join('');
+
+            const thTestCols = testLabels.map(tl => `
+                <th style="padding:9px 8px; text-align:center; color:#ffffff; font-size:0.72rem; background:#1e293b; border-left:1px solid rgba(255,255,255,0.15);">
+                    ${escaparHtml(tl)}<br><span style="font-size:0.65rem; color:#cbd5e1; font-weight:500;">Real vs. Modelos (L / P / RF)</span>
+                </th>
+            `).join('');
+
+            const filasLineas = bt.lines.map((ln, idx) => {
+                const bg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                const celdasTrim = testLabels.map((_, tIdx) => {
+                    const realVal = ln.real_held_out[tIdx] ?? 0;
+                    const pLin = Math.round((ln.preds_by_model.linear || [])[tIdx] ?? 0);
+                    const pPol = Math.round((ln.preds_by_model.poly || [])[tIdx] ?? 0);
+                    const pRf  = Math.round((ln.preds_by_model.rf || [])[tIdx] ?? 0);
+                    const pLinRaw = Number((ln.preds_by_model.linear || [])[tIdx] ?? 0).toFixed(1);
+                    const pPolRaw = Number((ln.preds_by_model.poly || [])[tIdx] ?? 0).toFixed(1);
+                    const pRfRaw  = Number((ln.preds_by_model.rf || [])[tIdx] ?? 0).toFixed(1);
+
+                    return `
+                    <td style="padding:9px 10px; text-align:center; border-left:1px solid #e2e8f0; font-size:0.76rem;">
+                        <div style="margin-bottom:4px;">
+                            <span style="background:#1e293b; color:#ffffff; font-weight:700; padding:2px 8px; border-radius:4px; font-size:0.74rem;">
+                                Real: ${realVal} proy.
+                            </span>
+                        </div>
+                        <div style="display:flex; justify-content:center; gap:4px; flex-wrap:wrap; font-size:0.69rem;">
+                            <span title="Regresión Lineal: ${pLinRaw}" style="background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; padding:1px 6px; border-radius:4px;">
+                                Lin: <strong>${pLin}</strong> <span style="color:#64748b;">(${pLinRaw})</span>
+                            </span>
+                            <span title="Polinómica Grado 2: ${pPolRaw}" style="background:#eef0f7; color:#1e293b; border:1px solid #cbd5e1; padding:1px 6px; border-radius:4px;">
+                                Poly: <strong>${pPol}</strong> <span style="color:#64748b;">(${pPolRaw})</span>
+                            </span>
+                            <span title="Random Forest: ${pRfRaw}" style="background:#f8fafc; color:#505984; border:1px solid #cbd5e1; padding:1px 6px; border-radius:4px;">
+                                RF: <strong>${pRf}</strong> <span style="color:#64748b;">(${pRfRaw})</span>
+                            </span>
+                        </div>
+                    </td>`;
+                }).join('');
+
+                const badgeColor = ln.trust_level.includes('Alta')
+                    ? 'background:#1e293b; color:#ffffff;'
+                    : (ln.trust_level.includes('Moderada') ? 'background:#eef0f7; color:#1e293b; border:1px solid #505984;' : 'background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;');
+
+                return `
+                <tr style="background:${bg}; border-bottom:1px solid #e2e8f0;">
+                    <td style="padding:9px 12px; font-weight:700; color:#1e293b; font-size:0.79rem;">
+                        ${escaparHtml(ln.name)}
+                        <div style="font-size:0.68rem; color:#64748b; font-weight:500; margin-top:2px;">
+                            Entrenamiento: [${(ln.train_history || []).join(', ')}]
+                        </div>
+                    </td>
+                    ${celdasTrim}
+                    <td style="padding:9px 10px; text-align:center; border-left:1px solid #e2e8f0;">
+                        <span style="font-size:0.72rem; font-weight:700; color:#505984; display:block;">${escaparHtml(ln.best_oos_model_label)}</span>
+                        <span style="font-size:0.68rem; color:#64748b;">MAE: ±${Number(ln.mae_by_model[ln.best_oos_model] || 0).toFixed(2)}</span>
+                    </td>
+                    <td style="padding:9px 12px; font-size:0.73rem; color:#334155;">
+                        <span style="display:inline-block; font-size:0.66rem; font-weight:700; padding:2px 8px; border-radius:99px; margin-bottom:3px; ${badgeColor}">
+                            ${escaparHtml(ln.trust_level)}
+                        </span>
+                        <div style="line-height:1.35; color:#475569;">${escaparHtml(ln.trust_note)}</div>
+                    </td>
+                </tr>`;
+            }).join('');
+
+            cont.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+                    <div>
+                        <h4 style="margin:0; color:#1e293b; font-size:0.96rem; display:flex; align-items:center; gap:8px;">
+                            <i class="ph-bold ph-flask" style="color:#505984;"></i> Laboratorio de Fiabilidad ML · Prueba Ciega con Datos Reales (Walk-Forward Backtesting)
+                        </h4>
+                        <p style="margin:3px 0 0 0; font-size:0.76rem; color:#64748b;">
+                            Se ocultaron los últimos trimestres reales (<strong>${escaparHtml(rangoTest)}</strong>), entrenando los modelos únicamente con el pasado (<strong>${escaparHtml(rangoTrain)}</strong>) para verificar qué tan cerca predice cada algoritmo la realidad ya conocida.
+                        </p>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span style="font-size:0.72rem; font-weight:700; color:#505984;">Corte de Prueba:</span>
+                        <button type="button" class="btn-bt-mode" data-mode="2t" style="padding:5px 10px; border-radius:6px; font-size:0.73rem; font-weight:700; cursor:pointer; border:1px solid ${mode === '2t' ? '#1e293b' : '#cbd5e1'}; background:${mode === '2t' ? '#1e293b' : '#ffffff'}; color:${mode === '2t' ? '#ffffff' : '#334155'};">
+                            Ocultar 2 Trimestres (T2 y T3 2026)
+                        </button>
+                        <button type="button" class="btn-bt-mode" data-mode="1t" style="padding:5px 10px; border-radius:6px; font-size:0.73rem; font-weight:700; cursor:pointer; border:1px solid ${mode === '1t' ? '#1e293b' : '#cbd5e1'}; background:${mode === '1t' ? '#1e293b' : '#ffffff'}; color:${mode === '1t' ? '#ffffff' : '#334155'};">
+                            Ocultar 1 Trimestre (T3 2026)
+                        </button>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+                    ${cardsModelos}
+                </div>
+
+                <div style="overflow-x:auto; border:1px solid #e2e8f0; border-radius:8px;">
+                    <table style="width:100%; border-collapse:collapse; text-align:left;">
+                        <thead>
+                            <tr style="background: linear-gradient(135deg, #505984 0%, #1e293b 100%);">
+                                <th style="padding:9px 12px; color:#ffffff; font-size:0.73rem;">Línea de Investigación (Serie de Entrenamiento)</th>
+                                ${thTestCols}
+                                <th style="padding:9px 10px; text-align:center; color:#ffffff; font-size:0.73rem; border-left:1px solid rgba(255,255,255,0.15);">Mejor Algoritmo</th>
+                                <th style="padding:9px 12px; color:#ffffff; font-size:0.73rem;">Veredicto de Confiabilidad Empírica</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filasLineas}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            cont.style.display = 'block';
+
+            cont.querySelectorAll('.btn-bt-mode').forEach(b => {
+                b.addEventListener('click', () => {
+                    window.currentBacktestHoldout = b.getAttribute('data-mode') || '2t';
+                    renderizarLaboratorioBacktest(window.lastTendenciasData);
+                });
+            });
+        }
+
+        // 8. Historial de Snapshots de Predicción (Auditoría Predictiva vs. Realidad con Ficha Detallada)
         function renderizarSnapshots(snapshots) {
             const cont = document.getElementById('snapshots-tendencias-container');
             if (!cont) return;
@@ -894,31 +1088,82 @@
             if (!Array.isArray(snapshots) || snapshots.length === 0) {
                 contenido = `
                 <div style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:14px; text-align:center; color:#64748b; font-size:0.8rem;">
-                    Aún no se han guardado instantáneas (Snapshots) de predicción. Usa el botón superior <strong>"Guardar Snapshot"</strong> para registrar el pronóstico actual y compararlo en el futuro contra los proyectos reales defendidos.
+                    Aún no se han guardado instantáneas (Snapshots) de predicción. Usa el botón superior <strong>"Guardar Snapshot"</strong> para registrar el pronóstico completo por línea y por trimestre para auditarlo contra datos reales.
                 </div>`;
             } else {
+                const ventanasLbl = { all: 'Todo el hist.', '2y': 'Últ. 2 años (6T)', '1y': 'Últ. año (3T)' };
                 const filas = snapshots.map((s, idx) => {
                     const bg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
                     const areas = Array.isArray(s.resumen_areas) ? s.resumen_areas : [];
+                    const audTrims = Array.isArray(s.auditoria_trimestres) ? s.auditoria_trimestres : [];
                     const predT1 = areas.reduce((acc, a) => acc + (Number(a.primer_trimestre_pred) || 0), 0);
                     const lblT1  = (areas[0] && areas[0].primer_trimestre_label) ? areas[0].primer_trimestre_label : (s.trimestre_meta || '-');
                     const realT1 = Number(s.real_registrado_t1 || 0);
+                    const esFuturoT1 = s.es_futuro_t1 !== undefined ? Boolean(s.es_futuro_t1) : (realT1 === 0);
+
+                    // Chips compactos de todos los trimestres proyectados en este snapshot
+                    let chipsTrimHtml = '';
+                    if (audTrims.length > 0) {
+                        chipsTrimHtml = `<div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center;">` +
+                            audTrims.map(at => {
+                                const estadoTxt = at.es_futuro
+                                    ? `<span style="color:#64748b;">En espera (0 reg.)</span>`
+                                    : `<strong style="color:#1e293b;">Real: ${at.real}</strong>`;
+                                return `<span style="background:#eef0f7; border:1px solid #cbd5e1; padding:2px 6px; border-radius:4px; font-size:0.69rem; white-space:nowrap;">
+                                    <strong>${escaparHtml(at.label)}:</strong> Pred ${at.predicho} · ${estadoTxt}
+                                </span>`;
+                            }).join('') +
+                            `</div>`;
+                    } else {
+                        chipsTrimHtml = `
+                            <span style="background:#eef0f7; padding:3px 8px; border-radius:4px; font-size:0.72rem;">
+                                ${escaparHtml(lblT1)}: Pred. <strong>${predT1}</strong> · ${esFuturoT1 ? 'En espera (trim. futuro)' : `Real <strong>${realT1}</strong>`}
+                            </span>`;
+                    }
+
+                    // Mini-resumen de las líneas incluidas
+                    const miniLineas = areas
+                        .filter(a => (Number(a.total_proyectado_linea) || Number(a.meta_final_pred) || 0) > 0)
+                        .slice(0, 2)
+                        .map(a => `${a.name}: ${a.total_proyectado_linea ?? a.meta_final_pred} proy.`)
+                        .join(' · ');
 
                     return `
                     <tr style="background:${bg}; border-bottom:1px solid #e2e8f0; font-size:0.78rem;">
-                        <td style="padding:8px 10px; font-weight:600; color:#1e293b;">${escaparHtml(s.fecha_formateada)}</td>
-                        <td style="padding:8px 10px; color:#334155;">${escaparHtml(s.carrera_nombre)}</td>
-                        <td style="padding:8px 10px; color:#505984; font-weight:600;">${escaparHtml(s.modelo_label)}</td>
-                        <td style="padding:8px 10px; text-align:center; color:#475569;">${escaparHtml(s.trimestre_base || '-')} → ${escaparHtml(s.trimestre_meta || '-')} (${s.horizonte_trimestres}T)</td>
-                        <td style="padding:8px 10px; text-align:center; font-weight:700; color:#1e293b;">${s.total_proyectado} proy.</td>
-                        <td style="padding:8px 10px; text-align:center; color:#334155;">
-                            <span style="background:#eef0f7; padding:2px 7px; border-radius:4px; font-size:0.73rem;">
-                                ${escaparHtml(lblT1)}: Pred. <strong>${predT1}</strong> vs Real <strong>${realT1}</strong>
-                            </span>
+                        <td style="padding:9px 10px; font-weight:700; color:#1e293b;">
+                            #${s.id} · ${escaparHtml(s.fecha_formateada)}
+                            <div style="font-size:0.68rem; color:#64748b; font-weight:500;">Por: ${escaparHtml(s.usuario_nombre || 'Coordinador')}</div>
                         </td>
-                        <td style="padding:8px 10px; text-align:center; color:#505984; font-weight:600;">±${Number(s.rmse_global || 0).toFixed(2)} (${Number(s.confianza_pct || 0).toFixed(0)}%)</td>
-                        <td style="padding:8px 10px; text-align:center;">
-                            <button type="button" class="btn-del-snapshot" data-id="${s.id}" title="Eliminar Snapshot" style="background:transparent; border:1px solid #cbd5e1; color:#64748b; border-radius:5px; padding:3px 7px; cursor:pointer; font-size:0.72rem;">
+                        <td style="padding:9px 10px; color:#334155;">
+                            <strong>${escaparHtml(s.carrera_nombre)}</strong>
+                            <div style="font-size:0.68rem; color:#64748b;">${areas.length} líneas evaluadas</div>
+                        </td>
+                        <td style="padding:9px 10px; color:#505984; font-weight:600;">
+                            ${escaparHtml(s.modelo_label)}
+                            <div style="font-size:0.68rem; color:#64748b; font-weight:500;">Muestreo: ${escaparHtml(ventanasLbl[s.ventana_historial] || s.ventana_historial)}</div>
+                        </td>
+                        <td style="padding:9px 10px; text-align:center; color:#475569;">
+                            <strong>${escaparHtml(s.trimestre_base || '-')} → ${escaparHtml(s.trimestre_meta || '-')}</strong>
+                            <div style="font-size:0.68rem; color:#64748b;">Horizonte: ${s.horizonte_trimestres} trimestres</div>
+                        </td>
+                        <td style="padding:9px 10px; text-align:center; font-weight:700; color:#1e293b;">
+                            <span style="font-size:0.86rem;">${s.total_proyectado} proy.</span>
+                            <div style="font-size:0.66rem; color:#505984; font-weight:600; max-width:190px; margin:2px auto 0 auto; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escaparHtml(miniLineas)}">
+                                ${escaparHtml(miniLineas || 'Ver desglose por línea')}
+                            </div>
+                        </td>
+                        <td style="padding:9px 10px; text-align:center; color:#334155;">
+                            ${chipsTrimHtml}
+                        </td>
+                        <td style="padding:9px 10px; text-align:center; color:#505984; font-weight:600;">
+                            ±${Number(s.rmse_global || 0).toFixed(2)}
+                            <div style="font-size:0.68rem; color:#475569;">Fiabilidad: ${Number(s.confianza_pct || 0).toFixed(0)}%</div>
+                        </td>
+                        <td style="padding:9px 10px; text-align:center; white-space:nowrap;">
+                            <button type="button" class="btn-ver-snapshot" data-idx="${idx}" title="Ver ficha específica línea por línea y trimestre por trimestre" style="background:#505984; border:1px solid #505984; color:#ffffff; border-radius:6px; padding:5px 10px; cursor:pointer; font-size:0.72rem; font-weight:700; display:inline-flex; align-items:center; gap:4px; margin-right:4px;">
+                                <i class="ph-bold ph-magnifying-glass-plus"></i> Ver Ficha
+                            </button>
+                            <button type="button" class="btn-del-snapshot" data-id="${s.id}" title="Eliminar Snapshot" style="background:transparent; border:1px solid #cbd5e1; color:#64748b; border-radius:6px; padding:5px 8px; cursor:pointer; font-size:0.72rem;">
                                 <i class="ph-bold ph-trash"></i>
                             </button>
                         </td>
@@ -930,14 +1175,14 @@
                     <table style="width:100%; border-collapse:collapse; text-align:left;">
                         <thead>
                             <tr style="background:#f1f5f9; border-bottom:1px solid #cbd5e1;">
-                                <th style="padding:8px 10px; color:#1e293b; font-size:0.72rem;">Fecha Snapshot</th>
-                                <th style="padding:8px 10px; color:#1e293b; font-size:0.72rem;">Carrera / PNF</th>
-                                <th style="padding:8px 10px; color:#1e293b; font-size:0.72rem;">Algoritmo ML</th>
-                                <th style="padding:8px 10px; text-align:center; color:#1e293b; font-size:0.72rem;">Horizonte</th>
-                                <th style="padding:8px 10px; text-align:center; color:#1e293b; font-size:0.72rem;">Vol. Total Proy.</th>
-                                <th style="padding:8px 10px; text-align:center; color:#1e293b; font-size:0.72rem;">Auditoría 1.° Trim. (Pred. vs Real)</th>
-                                <th style="padding:8px 10px; text-align:center; color:#1e293b; font-size:0.72rem;">RMSE / Confianza</th>
-                                <th style="padding:8px 10px; text-align:center; color:#1e293b; font-size:0.72rem;">Acción</th>
+                                <th style="padding:9px 10px; color:#1e293b; font-size:0.72rem;">ID / Fecha Snapshot</th>
+                                <th style="padding:9px 10px; color:#1e293b; font-size:0.72rem;">Carrera / Alcance</th>
+                                <th style="padding:9px 10px; color:#1e293b; font-size:0.72rem;">Algoritmo y Ventana</th>
+                                <th style="padding:9px 10px; text-align:center; color:#1e293b; font-size:0.72rem;">Horizonte Temporal</th>
+                                <th style="padding:9px 10px; text-align:center; color:#1e293b; font-size:0.72rem;">Vol. Acumulado Proy.</th>
+                                <th style="padding:9px 10px; text-align:center; color:#1e293b; font-size:0.72rem;">Seguimiento por Trimestre Proyectado (Pred. vs Real)</th>
+                                <th style="padding:9px 10px; text-align:center; color:#1e293b; font-size:0.72rem;">Error / Fiabilidad</th>
+                                <th style="padding:9px 10px; text-align:center; color:#1e293b; font-size:0.72rem;">Auditoría</th>
                             </tr>
                         </thead>
                         <tbody>${filas}</tbody>
@@ -947,14 +1192,25 @@
 
             cont.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
-                    <h4 style="margin:0; color:#1e293b; font-size:0.95rem; display:flex; align-items:center; gap:7px;">
-                        <i class="ph-bold ph-clock-counter-clockwise" style="color:#505984;"></i> Historial de Snapshots de Predicción (Auditoría Predictiva vs. Realidad)
-                    </h4>
-                    <span style="font-size:0.73rem; color:#64748b;">Registro histórico para seguimiento de precisión del modelo</span>
+                    <div>
+                        <h4 style="margin:0; color:#1e293b; font-size:0.95rem; display:flex; align-items:center; gap:7px;">
+                            <i class="ph-bold ph-clock-counter-clockwise" style="color:#505984;"></i> Historial de Snapshots de Predicción (Auditoría Específica por Línea y Trimestre)
+                        </h4>
+                        <span style="font-size:0.73rem; color:#64748b;">Haz clic en <strong>"Ver Ficha"</strong> para inspeccionar la matriz completa de líneas, curvas trimestrales, intervalos de confianza y contraste contra proyectos reales.</span>
+                    </div>
                 </div>
                 ${contenido}
             `;
             cont.style.display = 'block';
+
+            cont.querySelectorAll('.btn-ver-snapshot').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.getAttribute('data-idx'), 10);
+                    if (!isNaN(idx) && snapshots[idx]) {
+                        abrirModalAuditoriaSnapshot(snapshots[idx]);
+                    }
+                });
+            });
 
             cont.querySelectorAll('.btn-del-snapshot').forEach(btn => {
                 btn.addEventListener('click', async () => {
@@ -972,6 +1228,191 @@
                     }
                 });
             });
+        }
+
+        // Modal de Ficha Específica de Auditoría de Snapshot
+        function abrirModalAuditoriaSnapshot(s) {
+            const modal = document.getElementById('snapshot-audit-modal');
+            const content = document.getElementById('snapshot-audit-modal-content');
+            if (!modal || !content || !s) return;
+
+            const areas = Array.isArray(s.resumen_areas) ? s.resumen_areas : [];
+            const futLabels = Array.isArray(s.future_labels) && s.future_labels.length
+                ? s.future_labels
+                : ((areas[0] && Array.isArray(areas[0].future_labels)) ? areas[0].future_labels : []);
+            const audTrims = Array.isArray(s.auditoria_trimestres) ? s.auditoria_trimestres : [];
+            const ventanasMap = { all: 'Todo el Historial', '2y': 'Últimos 2 Años (6 Trimestres)', '1y': 'Último Año (3 Trimestres)' };
+            const fuenteMap = { pst: 'Solo Proyectos PST Culminados', all: 'PST + Investigaciones en Curso' };
+
+            const cardsTrimGlobal = audTrims.map(at => {
+                const badgeEstado = at.es_futuro
+                    ? `<span style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; padding:2px 7px; border-radius:99px; font-size:0.66rem; font-weight:700;">⏳ Pendiente por transcurrir</span>`
+                    : `<span style="background:#1e293b; color:#ffffff; padding:2px 7px; border-radius:99px; font-size:0.66rem; font-weight:700;">✓ Trimestre con registros (Δ ${at.diferencia >= 0 ? '+' : ''}${at.diferencia})</span>`;
+                return `
+                <div style="flex:1; min-width:175px; background:#f8fafc; border:1px solid #cbd5e1; border-top:3px solid #505984; border-radius:8px; padding:10px 12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:4px; margin-bottom:6px;">
+                        <strong style="font-size:0.84rem; color:#1e293b;">${escaparHtml(at.label)}</strong>
+                        ${badgeEstado}
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.76rem; color:#334155;">
+                        <span>Proyectado IA: <strong style="color:#505984; font-size:0.84rem;">${at.predicho} proy.</strong></span>
+                        <span>Real en BD: <strong style="color:#1e293b; font-size:0.84rem;">${at.real} proy.</strong></span>
+                    </div>
+                </div>`;
+            }).join('');
+
+            const thTrimCols = futLabels.map(fl => `
+                <th style="padding:9px 8px; text-align:center; color:#ffffff; font-size:0.72rem; border-left:1px solid rgba(255,255,255,0.15);">
+                    ${escaparHtml(fl)}<br><span style="font-size:0.63rem; color:#cbd5e1; font-weight:400;">Pred (Rango) vs Real</span>
+                </th>
+            `).join('');
+
+            const filasDetalleLineas = areas.map((a, idx) => {
+                const bg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                const curva = Array.isArray(a.curva_predicha) ? a.curva_predicha : (Array.isArray(a.adoption_curve) ? a.adoption_curve : []);
+                const ciLow = Array.isArray(a.ci_lower) ? a.ci_lower : [];
+                const ciHigh = Array.isArray(a.ci_upper) ? a.ci_upper : [];
+                const reales = Array.isArray(a.reales_por_trimestre) ? a.reales_por_trimestre : [];
+                const esFut = Array.isArray(a.es_futuro_por_trimestre) ? a.es_futuro_por_trimestre : [];
+                const histSeries = Array.isArray(a.history) ? a.history : [];
+                const histLbls = Array.isArray(a.history_labels) ? a.history_labels : [];
+
+                const histResumen = histSeries.length
+                    ? histSeries.map((v, i) => `${histLbls[i] || ('T' + (i + 1))}: ${v}`).join(' | ')
+                    : `Último trim. base: ${a.ultimo_real ?? 0} proy.`;
+
+                const tdsTrim = futLabels.map((_, i) => {
+                    const pExact = Number(curva[i] ?? 0);
+                    const pRound = Math.round(pExact);
+                    const rVal   = Number(reales[i] ?? 0);
+                    const isF    = esFut[i] !== undefined ? Boolean(esFut[i]) : (rVal === 0);
+                    const minB   = ciLow[i] !== undefined ? Math.round(Number(ciLow[i])) : Math.max(0, Math.round(pExact - Number(a.rmse || 0)));
+                    const maxB   = ciHigh[i] !== undefined ? Math.round(Number(ciHigh[i])) : Math.round(pExact + Number(a.rmse || 0));
+
+                    return `
+                    <td style="padding:8px 8px; text-align:center; border-left:1px solid #e2e8f0; font-size:0.75rem;">
+                        <div style="font-weight:800; color:#1e293b; font-size:0.82rem;">
+                            Pred: ${pRound} <span style="font-weight:500; color:#64748b; font-size:0.69rem;">(${pExact.toFixed(1)})</span>
+                        </div>
+                        <div style="font-size:0.67rem; color:#505984; margin:2px 0;">
+                            Banda: [${minB} – ${maxB}]
+                        </div>
+                        <div style="margin-top:3px;">
+                            ${isF
+                                ? `<span style="background:#f1f5f9; color:#64748b; padding:1px 6px; border-radius:4px; font-size:0.66rem;">Real: En espera (0)</span>`
+                                : `<span style="background:#eef0f7; color:#1e293b; font-weight:700; padding:1px 6px; border-radius:4px; font-size:0.68rem;">Real BD: ${rVal} proy.</span>`
+                            }
+                        </div>
+                    </td>`;
+                }).join('');
+
+                const totLineaProy = a.total_proyectado_linea !== undefined
+                    ? a.total_proyectado_linea
+                    : curva.reduce((acc, v) => acc + Math.round(Number(v) || 0), 0);
+
+                return `
+                <tr style="background:${bg}; border-bottom:1px solid #e2e8f0;">
+                    <td style="padding:9px 12px;">
+                        <strong style="color:#1e293b; font-size:0.8rem; display:block;">${escaparHtml(a.name)}</strong>
+                        <span style="font-size:0.68rem; color:#505984; font-weight:600;">${escaparHtml(a.carrera || 'General')} · ${escaparHtml(a.model_applied_label || s.modelo_label)}</span>
+                        <div style="font-size:0.67rem; color:#64748b; margin-top:3px;">
+                            <strong>Historial Base:</strong> ${escaparHtml(histResumen)}
+                        </div>
+                    </td>
+                    <td style="padding:8px 8px; text-align:center; font-size:0.76rem; color:#334155;">
+                        <strong>${a.total_historico ?? '-'}</strong>
+                        <div style="font-size:0.67rem; color:#64748b;">Últ: ${a.ultimo_real ?? 0}</div>
+                    </td>
+                    ${tdsTrim}
+                    <td style="padding:8px 8px; text-align:center; font-weight:800; color:#1e293b; font-size:0.82rem; border-left:1px solid #e2e8f0;">
+                        ${totLineaProy} proy.
+                    </td>
+                    <td style="padding:8px 8px; text-align:center; font-size:0.74rem; color:#505984; font-weight:700;">
+                        ±${Number(a.rmse || s.rmse_global || 0).toFixed(2)}
+                        <div style="font-size:0.66rem; color:#64748b;">Sat: ${Math.round(Number(a.saturation_index || 0))}%</div>
+                    </td>
+                </tr>`;
+            }).join('');
+
+            content.innerHTML = `
+                <div style="background: linear-gradient(135deg, #505984 0%, #1e293b 100%); color:#ffffff; padding:18px 22px; border-radius:13px 13px 0 0; display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+                    <div>
+                        <div style="font-size:0.7rem; font-weight:800; color:#cbd5e1; text-transform:uppercase; letter-spacing:1px;">
+                            AUDITORÍA ESPECÍFICA DE SNAPSHOT #${s.id} · ${escaparHtml(s.fecha_formateada)}
+                        </div>
+                        <h3 style="margin:4px 0; font-size:1.15rem; font-weight:800; color:#ffffff;">
+                            ${escaparHtml(s.carrera_nombre)} — ${escaparHtml(s.modelo_label)}
+                        </h3>
+                        <div style="font-size:0.78rem; color:#e2e8f0;">
+                            Registrado por <strong>${escaparHtml(s.usuario_nombre || 'Coordinador CIIDI')}</strong> · Fuente: <strong>${escaparHtml(fuenteMap[s.fuente_datos] || s.fuente_datos)}</strong> · Ventana: <strong>${escaparHtml(ventanasMap[s.ventana_historial] || s.ventana_historial)}</strong>
+                        </div>
+                    </div>
+                    <button type="button" id="btn-close-snapshot-modal" style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:#ffffff; border-radius:8px; padding:6px 12px; cursor:pointer; font-weight:700; font-size:0.8rem;">
+                        ✕ Cerrar
+                    </button>
+                </div>
+
+                <div style="padding:18px 22px;">
+                    <!-- Resumen de Parámetros y Métricas Globales del Snapshot -->
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:10px; margin-bottom:16px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:12px;">
+                        <div>
+                            <div style="font-size:0.68rem; font-weight:800; color:#505984; text-transform:uppercase;">Horizonte Temporal</div>
+                            <div style="font-size:0.88rem; font-weight:800; color:#1e293b; margin-top:2px;">${escaparHtml(s.trimestre_base || '-')} → ${escaparHtml(s.trimestre_meta || '-')} (${s.horizonte_trimestres}T)</div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.68rem; font-weight:800; color:#505984; text-transform:uppercase;">Proyectos Analizados (Base)</div>
+                            <div style="font-size:0.88rem; font-weight:800; color:#1e293b; margin-top:2px;">${s.total_historico} proyectos históricos</div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.68rem; font-weight:800; color:#505984; text-transform:uppercase;">Demanda Total Proyectada</div>
+                            <div style="font-size:0.88rem; font-weight:800; color:#505984; margin-top:2px;">${s.total_proyectado} proyectos (${areas.length} líneas)</div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.68rem; font-weight:800; color:#505984; text-transform:uppercase;">Margen de Error y Confianza</div>
+                            <div style="font-size:0.88rem; font-weight:800; color:#1e293b; margin-top:2px;">RMSE ±${Number(s.rmse_global || 0).toFixed(2)} · MAE ${Number(s.mae_global || 0).toFixed(2)} (${Number(s.confianza_pct || 0).toFixed(0)}%)</div>
+                        </div>
+                    </div>
+
+                    <!-- Seguimiento Global Trimestre a Trimestre -->
+                    <h4 style="margin:0 0 8px 0; font-size:0.86rem; color:#1e293b; text-transform:uppercase; letter-spacing:0.4px;">
+                        1. Balance Global por Trimestre Proyectado (Pronóstico IA vs. Realidad en Base de Datos)
+                    </h4>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px;">
+                        ${cardsTrimGlobal}
+                    </div>
+
+                    <!-- Matriz Desglosada Línea por Línea -->
+                    <h4 style="margin:0 0 8px 0; font-size:0.86rem; color:#1e293b; text-transform:uppercase; letter-spacing:0.4px;">
+                        2. Desglose Específico por Línea de Investigación y Curva Trimestral
+                    </h4>
+                    <div style="overflow-x:auto; border:1px solid #cbd5e1; border-radius:8px;">
+                        <table style="width:100%; border-collapse:collapse; text-align:left;">
+                            <thead>
+                                <tr style="background:#1e293b;">
+                                    <th style="padding:9px 12px; color:#ffffff; font-size:0.72rem;">Línea de Investigación / Historial de Entrenamiento</th>
+                                    <th style="padding:9px 8px; text-align:center; color:#ffffff; font-size:0.72rem;">Hist.</th>
+                                    ${thTrimCols}
+                                    <th style="padding:9px 8px; text-align:center; color:#ffffff; font-size:0.72rem; border-left:1px solid rgba(255,255,255,0.15);">Total Línea</th>
+                                    <th style="padding:9px 8px; text-align:center; color:#ffffff; font-size:0.72rem;">RMSE / Sat.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${filasDetalleLineas}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            modal.style.display = 'flex';
+
+            const btnClose = document.getElementById('btn-close-snapshot-modal');
+            if (btnClose) {
+                btnClose.onclick = () => { modal.style.display = 'none'; };
+            }
+            modal.onclick = (ev) => {
+                if (ev.target === modal) modal.style.display = 'none';
+            };
         }
 
         // =========================================================================

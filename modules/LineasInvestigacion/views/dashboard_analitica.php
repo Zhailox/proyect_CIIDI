@@ -260,7 +260,10 @@
                     <button id="btn-advanced" type="button" class="ml-btn ml-btn-secondary">
                         <i class="ph-bold ph-faders"></i> Controles Avanzados
                     </button>
-                    <button id="btn-guardar-snapshot" type="button" class="ml-btn ml-btn-secondary" title="Guardar instantánea de esta proyección para compararla a futuro con datos reales">
+                    <button id="btn-toggle-backtest" type="button" class="ml-btn ml-btn-secondary" title="Ejecutar y visualizar pruebas de validación ciega (Walk-Forward Backtesting) sobre el dataset real cargado">
+                        <i class="ph-bold ph-flask"></i> Validar Fiabilidad (Backtest)
+                    </button>
+                    <button id="btn-guardar-snapshot" type="button" class="ml-btn ml-btn-secondary" title="Guardar instantánea detallada de esta proyección por línea y trimestre para auditarla contra datos reales">
                         <i class="ph-bold ph-camera"></i> Guardar Snapshot
                     </button>
                     <button id="btn-proyectar" type="button" class="ml-btn ml-btn-primary">
@@ -389,8 +392,19 @@
             <div id="matriz-ejecutiva-tendencias" style="display: none; margin-top: 1.5rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; box-shadow: 0 2px 6px rgba(30, 41, 59, 0.04);">
             </div>
 
+            <!-- LABORATORIO DE FIABILIDAD ML (BACKTESTING WALK-FORWARD CON DATOS REALES) -->
+            <div id="backtest-tendencias-container" style="display: none; margin-top: 1.5rem; background: #ffffff; border: 1px solid #cbd5e1; border-left: 4px solid #505984; border-radius: 10px; padding: 1.25rem; box-shadow: 0 4px 12px rgba(30, 41, 59, 0.05);">
+            </div>
+
             <!-- HISTORIAL DE SNAPSHOTS DE PREDICCIÓN (AUDITORÍA IA VS REALIDAD) -->
             <div id="snapshots-tendencias-container" style="display: none; margin-top: 1.5rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; box-shadow: 0 2px 6px rgba(30, 41, 59, 0.04);">
+            </div>
+
+            <!-- MODAL DE AUDITORÍA ESPECÍFICA DE SNAPSHOT (DESGLOSE LÍNEA POR LÍNEA Y TRIMESTRE POR TRIMESTRE) -->
+            <div id="snapshot-audit-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(3px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+                <div style="background: #ffffff; border-radius: 14px; width: 100%; max-width: 1020px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(15, 23, 42, 0.28); border: 1px solid #cbd5e1;">
+                    <div id="snapshot-audit-modal-content"></div>
+                </div>
             </div>
 
         </div>

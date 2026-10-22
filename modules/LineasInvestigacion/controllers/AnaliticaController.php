@@ -419,6 +419,7 @@ class AnaliticaController {
 
     /**
      * Obtiene los últimos 10 Snapshots y calcula el volumen real actual registrado en la BD
+     * tanto globalmente como por carrera, por línea y por cada trimestre proyectado
      * para auditar la precisión histórica (Predicho vs. Real).
      */
     private function obtenerSnapshotsConAuditoria(PDO $pdo): array {
@@ -438,6 +439,8 @@ class AnaliticaController {
 
         $sqlReales = "
             SELECT COALESCE(dp.fecha_defensa, dp.created_at) AS fecha,
+                   li.id AS id_linea,
+                   li.nombre AS linea_nombre,
                    li.id_carrera
             FROM public.recurso_clasificaciones rc
             INNER JOIN public.recursos r ON rc.id_recurso = r.id
@@ -446,8 +449,10 @@ class AnaliticaController {
             WHERE COALESCE(dp.fecha_defensa, dp.created_at) IS NOT NULL
         ";
         $realesRaw = $pdo->query($sqlReales)->fetchAll(PDO::FETCH_ASSOC);
-        $realesPorTrimGlobal = [];
+        $realesPorTrimGlobal  = [];
         $realesPorTrimCarrera = [];
+        $realesPorLineaTrim   = [];
+        $maxSortKeyReal       = 0;
 
         foreach ($realesRaw as $rr) {
             $ts = strtotime((string)$rr['fecha']);
@@ -455,24 +460,138 @@ class AnaliticaController {
             $t = (int)floor(((int)date('m', $ts) - 1) / 4) + 1;
             $y = (int)date('Y', $ts);
             $lbl = "T{$t} {$y}";
+            $sortKey = $y * 10 + $t;
+            if ($sortKey > $maxSortKeyReal) {
+                $maxSortKeyReal = $sortKey;
+            }
             $cid = (int)$rr['id_carrera'];
+            $lnorm = mb_strtoupper(trim((string)$rr['linea_nombre']), 'UTF-8');
             $realesPorTrimGlobal[$lbl] = ($realesPorTrimGlobal[$lbl] ?? 0) + 1;
             $realesPorTrimCarrera[$cid][$lbl] = ($realesPorTrimCarrera[$cid][$lbl] ?? 0) + 1;
+            $realesPorLineaTrim[$lnorm][$lbl] = ($realesPorLineaTrim[$lnorm][$lbl] ?? 0) + 1;
         }
 
+        [$curY, $curT] = $this->trimestreActual();
+        $curSortKey = max($curY * 10 + $curT, $maxSortKeyReal);
+
+        $parseLabelSort = function (string $lbl): int {
+            if (preg_match('/^T([1-3])\s+(\d{4})$/', trim($lbl), $m)) {
+                return ((int)$m[2]) * 10 + ((int)$m[1]);
+            }
+            if (preg_match('/^(\d{4})-T([1-3])$/', trim($lbl), $m)) {
+                return ((int)$m[1]) * 10 + ((int)$m[2]);
+            }
+            return 0;
+        };
+
+        $generarLabelsDesdeBase = function (string $baseLbl, int $pasos): array {
+            $y = 0;
+            $t = 0;
+            if (preg_match('/^T([1-3])\s+(\d{4})$/', trim($baseLbl), $m)) {
+                $t = (int)$m[1];
+                $y = (int)$m[2];
+            } elseif (preg_match('/^(\d{4})-T([1-3])$/', trim($baseLbl), $m)) {
+                $y = (int)$m[1];
+                $t = (int)$m[2];
+            } else {
+                [$y, $t] = $this->trimestreActual();
+            }
+            $out = [];
+            for ($i = 0; $i < $pasos; $i++) {
+                if (++$t > 3) {
+                    $t = 1;
+                    $y++;
+                }
+                $out[] = "T{$t} {$y}";
+            }
+            return $out;
+        };
+
         foreach ($rows as &$r) {
-            $r['resumen_areas'] = json_decode((string)$r['resumen_json'], true) ?: [];
+            $areas = json_decode((string)$r['resumen_json'], true) ?: [];
             unset($r['resumen_json']);
 
-            $primerTrimProy = $r['resumen_areas'][0]['primer_trimestre_label'] ?? $r['trimestre_meta'];
+            $horizonte = max(1, (int)($r['horizonte_trimestres'] ?? 4));
+            $baseLbl   = (string)($r['trimestre_base'] ?? '');
+            $futLabels = [];
+            if (!empty($areas[0]['future_labels']) && is_array($areas[0]['future_labels'])) {
+                $futLabels = array_slice($areas[0]['future_labels'], 0, $horizonte);
+            } else {
+                $futLabels = $generarLabelsDesdeBase($baseLbl, $horizonte);
+            }
+            $r['future_labels'] = $futLabels;
+
             $cid = $r['id_carrera'] ? (int)$r['id_carrera'] : null;
+
+            // Enriquecer cada línea con su curva completa y sus datos reales por trimestre
+            $sumaPredPorTrim = array_fill(0, count($futLabels), 0);
+            foreach ($areas as &$a) {
+                $lnorm = mb_strtoupper(trim((string)($a['name'] ?? '')), 'UTF-8');
+                $curva = [];
+                if (!empty($a['adoption_curve']) && is_array($a['adoption_curve'])) {
+                    $curva = array_map(fn($v) => round((float)$v, 2), array_slice($a['adoption_curve'], 0, $horizonte));
+                } elseif (!empty($a['curva_predicha']) && is_array($a['curva_predicha'])) {
+                    $curva = array_map(fn($v) => round((float)$v, 2), array_slice($a['curva_predicha'], 0, $horizonte));
+                } else {
+                    // Reconstrucción lineal para snapshots antiguos que solo guardaron T1 y Meta Final
+                    $p1   = (float)($a['primer_trimestre_pred'] ?? 0);
+                    $pFin = (float)($a['meta_final_pred'] ?? $p1);
+                    for ($i = 0; $i < $horizonte; $i++) {
+                        $frac = $horizonte > 1 ? ($i / ($horizonte - 1)) : 0;
+                        $curva[] = round($p1 + ($pFin - $p1) * $frac, 2);
+                    }
+                }
+                $a['curva_predicha'] = $curva;
+                $a['future_labels']  = $futLabels;
+
+                $realesLinea = [];
+                $esFuturoTrim = [];
+                foreach ($futLabels as $idxT => $flbl) {
+                    $realVal = $realesPorLineaTrim[$lnorm][$flbl] ?? 0;
+                    $realesLinea[] = (int)$realVal;
+                    $sk = $parseLabelSort($flbl);
+                    $esFuturoTrim[] = ($sk > $curSortKey) && ($realVal === 0);
+                    $sumaPredPorTrim[$idxT] += (int)round($curva[$idxT] ?? 0);
+                }
+                $a['reales_por_trimestre'] = $realesLinea;
+                $a['es_futuro_por_trimestre'] = $esFuturoTrim;
+                $a['total_proyectado_linea'] = array_sum(array_map(fn($v) => (int)round($v), $curva));
+                $a['total_real_linea']       = array_sum($realesLinea);
+            }
+            unset($a);
+
+            $r['resumen_areas'] = $areas;
+
+            // Auditoría trimestre a trimestre a nivel global del snapshot
+            $auditoriaTrimestres = [];
+            foreach ($futLabels as $idxT => $flbl) {
+                $realGlobalT = $cid !== null
+                    ? ($realesPorTrimCarrera[$cid][$flbl] ?? 0)
+                    : ($realesPorTrimGlobal[$flbl] ?? 0);
+                $sk = $parseLabelSort($flbl);
+                $esFuturo = ($sk > $curSortKey) && ($realGlobalT === 0);
+                $predT = (int)($sumaPredPorTrim[$idxT] ?? 0);
+                $auditoriaTrimestres[] = [
+                    'label'     => $flbl,
+                    'predicho'  => $predT,
+                    'real'      => (int)$realGlobalT,
+                    'diferencia'=> (int)$realGlobalT - $predT,
+                    'es_futuro' => $esFuturo,
+                ];
+            }
+            $r['auditoria_trimestres'] = $auditoriaTrimestres;
+
+            $primerTrimProy = $futLabels[0] ?? ($r['resumen_areas'][0]['primer_trimestre_label'] ?? $r['trimestre_meta']);
             $realEnMeta = 0;
+            $esFuturoT1 = true;
             if ($primerTrimProy) {
                 $realEnMeta = $cid !== null
                     ? ($realesPorTrimCarrera[$cid][$primerTrimProy] ?? 0)
                     : ($realesPorTrimGlobal[$primerTrimProy] ?? 0);
+                $esFuturoT1 = ($parseLabelSort((string)$primerTrimProy) > $curSortKey) && ($realEnMeta === 0);
             }
             $r['real_registrado_t1'] = $realEnMeta;
+            $r['es_futuro_t1']       = $esFuturoT1;
         }
 
         return $rows;
@@ -494,6 +613,16 @@ class AnaliticaController {
         $terms = $resultado['history_terms'] ?? [];
         $resultado['history_labels'] = array_map([$this, 'formatearTrimestre'], $terms);
         $resultado['future_labels']  = $this->trimestresFuturos(end($terms) ?: null, (int)$payload['pred_steps']);
+        if (!empty($resultado['backtest']) && is_array($resultado['backtest'])) {
+            foreach (['1t', '2t'] as $btKey) {
+                if (!empty($resultado['backtest'][$btKey]) && is_array($resultado['backtest'][$btKey])) {
+                    $trTerms = $resultado['backtest'][$btKey]['train_terms'] ?? [];
+                    $teTerms = $resultado['backtest'][$btKey]['test_terms'] ?? [];
+                    $resultado['backtest'][$btKey]['train_labels'] = array_map([$this, 'formatearTrimestre'], $trTerms);
+                    $resultado['backtest'][$btKey]['test_labels']  = array_map([$this, 'formatearTrimestre'], $teTerms);
+                }
+            }
+        }
         $resultado['params']['timeout']        = $timeout;
         $resultado['params']['max_epochs']     = (int)$payload['max_epochs'];
         $resultado['params']['id_carrera']     = $payload['id_carrera'] ?? 'all';
