@@ -6,4 +6,8 @@
         "phpmailer/phpmailer": "^7.1",
         "ankane/onnxruntime": "^0.3.7"
     }
+	"scripts": {
+        "post-install-cmd": "OnnxRuntime\\Vendor::check",
+        "post-update-cmd": "OnnxRuntime\\Vendor::check"
+    }
 }
