@@ -1,11 +1,10 @@
 ========================================================
 REGISTRO DE EJECUCIÓN: Generar Embeddings Semánticos [tarea_1790301553_528]
-FECHA/HORA: 2026-09-29 01:58:49
-DURACIÓN: 187.27 ms | ESTADO: OK
+FECHA/HORA: 2026-10-22 15:25:20
+DURACIÓN: 0.18 ms | ESTADO: FAIL
 ========================================================
 
-MENSAJE: Comando ejecutado con éxito (Código 0).
+MENSAJE: El archivo de script 'script_tarea_1790301553_528.php' no existe en storage/scheduler/scripts/.
 
 --- SALIDA ESTÁNDAR / CONSOLA (STDOUT/STDERR) ---
-[2026-09-29 05:58:49] [EmbeddingWorker] ═══ Iniciando ciclo de generación de embeddings ═══
-[2026-09-29 05:58:49] [EmbeddingWorker] ✓ No hay proyectos pendientes de vectorización. Fin del ciclo.
+

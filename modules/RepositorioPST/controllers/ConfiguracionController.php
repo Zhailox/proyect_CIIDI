@@ -194,4 +194,171 @@ class ConfiguracionController {
             'error'                       => $error
         ];
     }
+
+    /**
+     * Panel dedicado de Gestión del Modelo ONNX de Redes Neuronales.
+     */
+    public function gestionRedOnnx(): array {
+        require_once CORE_PATH . 'Security/Auth.php';
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', "RepositorioPST");
+
+        if (session_status() === PHP_SESSION_NONE) {
+            @session_start();
+        }
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+
+        require_once __DIR__ . '/../models/DocumentoModel.php';
+        require_once __DIR__ . '/../services/EmbeddingService.php';
+        $documentoModel = new DocumentoModel();
+
+        $accionOnnx = $_POST['accion_onnx'] ?? $_GET['accion_onnx'] ?? '';
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($accionOnnx)) {
+            $submittedCsrf = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+            $esAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+
+            if (empty($submittedCsrf) || !hash_equals($_SESSION['csrf_token'], $submittedCsrf)) {
+                if ($esAjax) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode(['success' => false, 'message' => 'Token de seguridad no válido o expirado. Recargue la página.']);
+                    exit;
+                }
+                $_SESSION['mensaje_error'] = 'Token de seguridad no válido o expirado.';
+                header('Location: ?ruta=gestion-red-onnx');
+                exit;
+            }
+
+            if ($accionOnnx === 'procesar_lote') {
+                header('Content-Type: application/json; charset=utf-8');
+                $limite = !empty($_POST['limite']) ? (int)$_POST['limite'] : null;
+                $res = $documentoModel->procesarLoteEmbeddingsOnnx($limite);
+                if (!empty($res['success']) && ($res['procesados'] ?? 0) > 0) {
+                    AuditLogger::registrar('INFO', 'RepositorioPST', 'Vectorizar Lote ONNX', "Se generaron {$res['procesados']} vectores semánticos ONNX.");
+                }
+                echo json_encode($res);
+                exit;
+            }
+
+            if ($accionOnnx === 'reiniciar_vectores') {
+                header('Content-Type: application/json; charset=utf-8');
+                $res = $documentoModel->reiniciarVectoresSemanticos();
+                if (!empty($res['success'])) {
+                    AuditLogger::registrar('WARNING', 'RepositorioPST', 'Reiniciar Vectores ONNX', $res['message']);
+                }
+                echo json_encode($res);
+                exit;
+            }
+
+            if ($accionOnnx === 'probar_inferencia') {
+                header('Content-Type: application/json; charset=utf-8');
+                $consulta = trim((string)($_POST['consulta'] ?? ''));
+                if ($consulta === '') {
+                    echo json_encode(['success' => false, 'message' => 'Escribe una frase de prueba para evaluar el modelo.']);
+                    exit;
+                }
+
+                try {
+                    $t0 = microtime(true);
+                    $embSvc = new EmbeddingService();
+                    $tokensActivos = $embSvc->contarTokensActivos($consulta);
+                    $resultados = $documentoModel->buscarSemantico($consulta, []);
+                    $duracionMs = round((microtime(true) - $t0) * 1000, 2);
+
+                    $topItems = [];
+                    foreach (array_slice($resultados, 0, 5) as $r) {
+                        $dist = isset($r['distancia']) ? (float)$r['distancia'] : 0.35;
+                        $simPct = max(0, min(100, round((1.0 - $dist) * 100, 1)));
+                        $topItems[] = [
+                            'id'         => (int)$r['id'],
+                            'titulo'     => $r['titulo'] ?? '',
+                            'anio'       => $r['anio_publicacion'] ?? '',
+                            'linea'      => $r['linea_nombre'] ?? 'General',
+                            'distancia'  => round($dist, 4),
+                            'similitud'  => $simPct,
+                            'es_semantica' => isset($r['distancia'])
+                        ];
+                    }
+
+                    echo json_encode([
+                        'success'        => true,
+                        'duracion_ms'    => $duracionMs,
+                        'tokens_activos' => $tokensActivos,
+                        'dimension'      => $embSvc->getDimension(),
+                        'total_hallados' => count($resultados),
+                        'resultados'     => $topItems
+                    ]);
+                } catch (\Throwable $e) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Error en prueba de inferencia: ' . $e->getMessage()
+                    ]);
+                }
+                exit;
+            }
+
+            if ($accionOnnx === 'guardar_parametros') {
+                $actual = ConfigService::get() ?? [];
+                if (!isset($actual['red_onnx']) || !is_array($actual['red_onnx'])) {
+                    $actual['red_onnx'] = [];
+                }
+
+                $umbral = isset($_POST['umbral_distancia_coseno']) ? (float)$_POST['umbral_distancia_coseno'] : 0.82;
+                $umbral = max(0.20, min(0.95, round($umbral, 2)));
+
+                $maxRes = isset($_POST['max_resultados_semanticos']) ? (int)$_POST['max_resultados_semanticos'] : 20;
+                $maxRes = max(1, min(100, $maxRes));
+
+                $maxTokens = isset($_POST['max_tokens_secuencia']) ? (int)$_POST['max_tokens_secuencia'] : 128;
+                if (!in_array($maxTokens, [64, 128, 192, 256], true)) {
+                    $maxTokens = 128;
+                }
+
+                $loteWorker = isset($_POST['lote_worker_embeddings']) ? (int)$_POST['lote_worker_embeddings'] : 5;
+                $loteWorker = max(1, min(25, $loteWorker));
+
+                $pesoTitulo = isset($_POST['peso_titulo']) ? (int)$_POST['peso_titulo'] : 2;
+                $pesoTitulo = max(1, min(3, $pesoTitulo));
+
+                $actual['red_onnx']['habilitar_busqueda_semantica'] = isset($_POST['habilitar_busqueda_semantica']) && $_POST['habilitar_busqueda_semantica'] === '1';
+                $actual['red_onnx']['umbral_distancia_coseno']      = $umbral;
+                $actual['red_onnx']['max_resultados_semanticos']    = $maxRes;
+                $actual['red_onnx']['max_tokens_secuencia']         = $maxTokens;
+                $actual['red_onnx']['lote_worker_embeddings']       = $loteWorker;
+                $actual['red_onnx']['fallback_busqueda_estandar']   = isset($_POST['fallback_busqueda_estandar']) && $_POST['fallback_busqueda_estandar'] === '1';
+                $actual['red_onnx']['peso_titulo']                  = $pesoTitulo;
+                $actual['red_onnx']['incluir_resumen']              = isset($_POST['incluir_resumen']) && $_POST['incluir_resumen'] === '1';
+                $actual['red_onnx']['incluir_objetivo_general']     = isset($_POST['incluir_objetivo_general']) && $_POST['incluir_objetivo_general'] === '1';
+                $actual['red_onnx']['incluir_palabras_clave']       = isset($_POST['incluir_palabras_clave']) && $_POST['incluir_palabras_clave'] === '1';
+                $actual['red_onnx']['incluir_comunidad']            = isset($_POST['incluir_comunidad']) && $_POST['incluir_comunidad'] === '1';
+
+                if (ConfigService::save($actual)) {
+                    $_SESSION['mensaje_exito'] = 'Parámetros del Modelo ONNX de Redes Neuronales guardados correctamente.';
+                    AuditLogger::registrar('INFO', 'RepositorioPST', 'Configurar Modelo ONNX', "Se actualizaron los hiperparámetros del modelo ONNX: umbral {$umbral}, tokens {$maxTokens}, lote {$loteWorker}.");
+                } else {
+                    $_SESSION['mensaje_error'] = 'No se pudo guardar el archivo de configuración.';
+                }
+
+                header('Location: ?ruta=gestion-red-onnx');
+                exit;
+            }
+        }
+
+        $mensaje = $_SESSION['mensaje_exito'] ?? null;
+        $error = $_SESSION['mensaje_error'] ?? null;
+        unset($_SESSION['mensaje_exito'], $_SESSION['mensaje_error']);
+
+        $config = ConfigService::get();
+        $diagnosticoOnnx = EmbeddingService::obtenerDiagnosticoModelo();
+        $statsOnnx = $documentoModel->getEstadisticasFidelidadOnnx();
+
+        return [
+            'config'          => $config,
+            'diagnosticoOnnx' => $diagnosticoOnnx,
+            'statsOnnx'       => $statsOnnx,
+            'mensaje'         => $mensaje,
+            'error'           => $error
+        ];
+    }
 }

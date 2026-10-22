@@ -487,8 +487,15 @@ mark, .highlight-match {
     border-color: var(--color-secundario, rgb(80, 89, 132));
 }
 
-.ag-page-link:hover:not(.active) {
+.ag-page-link:hover:not(.active):not(.disabled) {
     background: rgba(80, 89, 132, 0.08);
+}
+
+.ag-page-link.disabled {
+    opacity: 0.55;
+    cursor: default;
+    pointer-events: none;
+    background: #f8fafc;
 }
 
 /* AJUSTES RESPONSIVOS Y MOBILE FIRST */
@@ -757,20 +764,57 @@ mark, .highlight-match {
                 <?php if ($modoCargaActual === 'paginador' && $pag['total_pages'] > 1): ?>
                     <div class="ag-pagination-bar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                         <span style="font-size: 0.82rem; font-weight: 700; color: var(--texto-silenciado, #64748B);">
-                            Página <?= $pag['current_page'] ?> de <?= $pag['total_pages'] ?> (Total: <?= $pag['total_items'] ?> proyectos)
+                            Página <?= $pag['current_page'] ?> de <?= $pag['total_pages'] ?> · Total: <?= $pag['total_items'] ?> proyectos
                         </span>
                         
                         <div class="ag-pagination-pages">
-                            <?php for ($i = 1; $i <= $pag['total_pages']; $i++): ?>
-                                <?php
-                                $query = $_GET;
-                                $query['page'] = $i;
-                                $linkUrl = '?' . http_build_query($query);
-                                ?>
-                                <a href="<?= $linkUrl ?>" class="ag-page-link <?= $i === $pag['current_page'] ? 'active' : '' ?>">
-                                    <?= $i ?>
-                                </a>
+                            <?php
+                            $currRepo = (int)$pag['current_page'];
+                            $totRepo  = (int)$pag['total_pages'];
+                            $queryRepo = $_GET;
+                            unset($queryRepo['page']);
+                            $buildRepoUrl = function($p) use ($queryRepo) {
+                                $queryRepo['page'] = $p;
+                                return '?' . http_build_query($queryRepo);
+                            };
+                            ?>
+
+                            <?php if ($currRepo > 1): ?>
+                                <a href="<?= $buildRepoUrl($currRepo - 1) ?>" class="ag-page-link">&laquo; Anterior</a>
+                            <?php else: ?>
+                                <span class="ag-page-link disabled">&laquo; Anterior</span>
+                            <?php endif; ?>
+
+                            <?php
+                            $rangoInicioRepo = max(1, $currRepo - 2);
+                            $rangoFinRepo    = min($totRepo, $currRepo + 2);
+                            if ($rangoInicioRepo > 1): ?>
+                                <a href="<?= $buildRepoUrl(1) ?>" class="ag-page-link">1</a>
+                                <?php if ($rangoInicioRepo > 2): ?>
+                                    <span class="ag-page-link disabled">...</span>
+                                <?php endif; ?>
+                            <?php endif; ?>
+
+                            <?php for ($i = $rangoInicioRepo; $i <= $rangoFinRepo; $i++): ?>
+                                <?php if ($i === $currRepo): ?>
+                                    <span class="ag-page-link active"><?= $i ?></span>
+                                <?php else: ?>
+                                    <a href="<?= $buildRepoUrl($i) ?>" class="ag-page-link"><?= $i ?></a>
+                                <?php endif; ?>
                             <?php endfor; ?>
+
+                            <?php if ($rangoFinRepo < $totRepo): ?>
+                                <?php if ($rangoFinRepo < $totRepo - 1): ?>
+                                    <span class="ag-page-link disabled">...</span>
+                                <?php endif; ?>
+                                <a href="<?= $buildRepoUrl($totRepo) ?>" class="ag-page-link"><?= $totRepo ?></a>
+                            <?php endif; ?>
+
+                            <?php if ($currRepo < $totRepo): ?>
+                                <a href="<?= $buildRepoUrl($currRepo + 1) ?>" class="ag-page-link">Siguiente &raquo;</a>
+                            <?php else: ?>
+                                <span class="ag-page-link disabled">Siguiente &raquo;</span>
+                            <?php endif; ?>
                         </div>
                     </div>
                 <?php endif; ?>

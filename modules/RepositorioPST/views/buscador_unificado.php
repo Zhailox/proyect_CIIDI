@@ -116,7 +116,7 @@ require_once __DIR__ . '/../services/ConfigService.php';
 
                     <div style="margin-top: 1rem;">
                         <button type="submit" class="btn-apply-filters"><i class="ph ph-funnel"></i> Aplicar Filtros</button>
-                        <?php if ($q !== '' || !empty($filtros['anio']) || !empty($filtros['linea_id']) || !empty($filtros['dimension_id']) || !empty($selectedCarrera) || !empty($_GET['usar_ia'])): ?>
+                        <?php if (!empty($busquedaActiva) || !empty($_GET['usar_ia'])): ?>
                             <a href="?ruta=buscador" class="btn-reset-all">Restablecer Todo</a>
                         <?php endif; ?>
                     </div>
@@ -145,6 +145,7 @@ require_once __DIR__ . '/../services/ConfigService.php';
                         </div>
                         
                         <!-- Toggle de Búsqueda Semántica (IA) -->
+                        <?php if ((bool)ConfigService::get('red_onnx.habilitar_busqueda_semantica', true)): ?>
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             <div class="semantic-toggle-wrapper">
                                 <label class="semantic-switch" for="usarIaCheckbox">
@@ -159,12 +160,13 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                 <i class="ph-bold ph-info"></i> Encuentra proyectos por significado conceptual analizando resúmenes y títulos mediante embeddings vectoriales.
                             </div>
                         </div>
+                        <?php endif; ?>
                     </form>
                 </div>
 
                 <!-- Resultados de Búsqueda -->
                 <div class="search-results-section">
-                    <?php if ($q === '' && empty($filtros['anio']) && empty($filtros['linea_id']) && empty($filtros['dimension_id']) && empty($selectedCarrera)): ?>
+                    <?php if (empty($busquedaActiva)): ?>
                         <!-- Pantalla inicial / Estado Vacío inicial -->
                         <div class="search-welcome-state">
                             <i class="ph ph-books" style="font-size: 4rem; color: var(--color-terciario); opacity: 0.8;"></i>
@@ -180,12 +182,12 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                     Resultados Obtenidos
                                 <?php endif; ?>
                                 <span style="font-size: 0.85rem; font-weight: 500; color: var(--texto-silenciado);">
-                                    (Mostrando <?= count($resultados) ?> de <?= $pagination['total_items'] ?>)
+                                    · Mostrando <?= count($resultados) ?> de <?= $pagination['total_items'] ?>
                                 </span>
                             </h3>
                             <?php if (!empty($usar_ia)): ?>
                                 <span style="background: rgba(80, 89, 132, 0.12); color: var(--color-secundario); font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(80, 89, 132, 0.25);">
-                                    <i class="ph-bold ph-cpu"></i> Modelo MiniLM ONNX
+                                    <i class="ph-bold ph-cpu"></i> Modelo XLM-RoBERTa ONNX
                                 </span>
                             <?php endif; ?>
                         </div>
@@ -315,13 +317,30 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                         <span class="page-link disabled">&laquo; Anterior</span>
                                     <?php endif; ?>
                                     
-                                    <?php for ($i = 1; $i <= $tot; $i++): ?>
+                                    <?php 
+                                    $rangoInicioBusc = max(1, $curr - 2);
+                                    $rangoFinBusc    = min($tot, $curr + 2);
+                                    if ($rangoInicioBusc > 1): ?>
+                                        <a href="<?= $build_url(1) ?>" class="page-link">1</a>
+                                        <?php if ($rangoInicioBusc > 2): ?>
+                                            <span class="page-link disabled">...</span>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+
+                                    <?php for ($i = $rangoInicioBusc; $i <= $rangoFinBusc; $i++): ?>
                                         <?php if ($i == $curr): ?>
                                             <span class="page-link active"><?= $i ?></span>
                                         <?php else: ?>
                                             <a href="<?= $build_url($i) ?>" class="page-link"><?= $i ?></a>
                                         <?php endif; ?>
                                     <?php endfor; ?>
+
+                                    <?php if ($rangoFinBusc < $tot): ?>
+                                        <?php if ($rangoFinBusc < $tot - 1): ?>
+                                            <span class="page-link disabled">...</span>
+                                        <?php endif; ?>
+                                        <a href="<?= $build_url($tot) ?>" class="page-link"><?= $tot ?></a>
+                                    <?php endif; ?>
                                     
                                     <?php if ($curr < $tot): ?>
                                         <a href="<?= $build_url($curr + 1) ?>" class="page-link">Siguiente &raquo;</a>

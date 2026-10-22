@@ -110,6 +110,19 @@ class Kernel {
             return;
         }
 
+        // 3.5. Pulso automático de tareas programadas (revisión ligera cada 60 segundos)
+        $schedulerPath = defined('MODULES_PATH')
+            ? MODULES_PATH . 'SuperAdmin/services/SchedulerService.php'
+            : __DIR__ . '/../../modules/SuperAdmin/services/SchedulerService.php';
+        if (file_exists($schedulerPath)) {
+            try {
+                require_once $schedulerPath;
+                SchedulerService::dispararCicloSiCorresponde(false);
+            } catch (\Throwable $e) {
+                // Continuar la petición normal si ocurre algún imprevisto en segundo plano
+            }
+        }
+
         // 4. Enrutamiento y Ejecución MVC
         $rutasGlobales = $this->moduleLoader->getRutasGlobales();
         $match = $this->router->resolve($ruta, $rutasGlobales);

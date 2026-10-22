@@ -40,18 +40,42 @@
 <?php endif; ?>
 
 <!-- PANEL DE DIAGNÓSTICO DEL ENTORNO CRON DEL SISTEMA OPERATIVO -->
-<div class="glass-panel mb-2" style="padding: 1.25rem; border-radius: var(--radius-sm); border-left: 4px solid var(--color-secundario); background: rgba(255,255,255,0.95); backdrop-filter: blur(12px);">
-    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; font-weight: 700; color: var(--texto-titulos); display: flex; align-items: center; gap: 8px;">
-        <i class="ph-bold ph-linux-logo" style="font-size: 1.2rem;"></i>
-        Estado del Programador del Sistema Operativo
-    </h4>
-    <p style="margin: 0 0 0.75rem 0; font-size: 0.85rem; color: #475569;">
-        <?= htmlspecialchars($diagnostico['detalles']) ?>
-    </p>
+<div class="glass-panel mb-2" style="padding: 1.25rem; border-radius: var(--radius-sm); border-left: 4px solid var(--color-secundario); background: #ffffff; border-top: 1px solid rgba(80, 89, 132, 0.15); border-right: 1px solid rgba(80, 89, 132, 0.15); border-bottom: 1px solid rgba(80, 89, 132, 0.15);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+        <div>
+            <h4 style="margin: 0 0 0.35rem 0; font-size: 0.95rem; font-weight: 700; color: var(--texto-titulos); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <i class="ph-bold ph-linux-logo" style="font-size: 1.2rem;"></i>
+                Estado del Programador del Sistema Operativo
+                <span class="sa-badge-active" style="font-size: 0.72rem; padding: 2px 10px;">
+                    <i class="ph-bold ph-check-circle"></i> MOTOR PERIÓDICO ACTIVO
+                </span>
+            </h4>
+            <p style="margin: 0; font-size: 0.85rem; color: #475569;">
+                <?= htmlspecialchars($diagnostico['detalles']) ?>
+                <?php if (!empty($diagnostico['ultimo_latido'])): ?>
+                    <span id="txtUltimoLatidoCron" style="font-weight: 700; color: var(--color-secundario); margin-left: 6px;">
+                        · Último pulso: <?= htmlspecialchars($diagnostico['ultimo_latido']) ?>
+                    </span>
+                <?php endif; ?>
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <?php if (empty($diagnostico['es_windows'])): ?>
+                <form action="instalar-cron-linux" method="POST" style="margin: 0;">
+                    <button type="submit" class="sa-btn sa-btn-primary" style="padding: 0.45rem 0.9rem; font-size: 0.78rem;">
+                        <i class="ph-bold ph-arrows-clockwise"></i> Sincronizar Crontab Debian
+                    </button>
+                </form>
+            <?php endif; ?>
+            <button type="button" onclick="copiarComandoCronServidor()" class="sa-btn sa-btn-outline" style="padding: 0.45rem 0.9rem; font-size: 0.78rem;">
+                <i class="ph-bold ph-copy"></i> <span id="lblBtnCopiarCron">Copiar Comando</span>
+            </button>
+        </div>
+    </div>
 
-    <div style="background: #0f172a; color: #38bdf8; padding: 12px 16px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; overflow-x: auto; display: flex; justify-content: space-between; align-items: center; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);">
-        <span><?= htmlspecialchars($diagnostico['es_windows'] ? $diagnostico['comando_sugerido_windows'] : $diagnostico['comando_sugerido_linux']) ?></span>
-        <span style="font-size: 0.75rem; background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 3px 10px; border-radius: 6px; font-weight: 700;"><?= $diagnostico['es_windows'] ? 'Task Scheduler Windows' : 'Sintaxis Linux Crontab' ?></span>
+    <div style="background: #0f172a; color: #38bdf8; padding: 12px 16px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; overflow-x: auto; display: flex; justify-content: space-between; align-items: center; gap: 1rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);">
+        <span id="codigoComandoCronServidor"><?= htmlspecialchars($diagnostico['es_windows'] ? $diagnostico['comando_sugerido_windows'] : $diagnostico['comando_sugerido_linux']) ?></span>
+        <span style="font-size: 0.75rem; background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 3px 10px; border-radius: 6px; font-weight: 700; white-space: nowrap;"><?= $diagnostico['es_windows'] ? 'Task Scheduler Windows' : 'Sintaxis Linux Crontab' ?></span>
     </div>
 </div>
 
@@ -602,4 +626,33 @@ document.getElementById('btnConfirmarAccionModal').addEventListener('click', fun
         formTargetParaEliminar.submit();
     }
 });
+
+function copiarComandoCronServidor() {
+    const el = document.getElementById('codigoComandoCronServidor');
+    const lbl = document.getElementById('lblBtnCopiarCron');
+    if (!el) return;
+    navigator.clipboard.writeText(el.innerText.trim()).then(() => {
+        if (lbl) {
+            lbl.innerText = '¡Copiado!';
+            setTimeout(() => { lbl.innerText = 'Copiar Comando'; }, 2000);
+        }
+    });
+}
+
+// Pulso automático cada 60 segundos mientras la pantalla esté abierta para disparar y refrescar tareas cumplidas
+setInterval(() => {
+    fetch('gestor-scheduler?ajax_tick=1', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(res => res.json())
+        .then(data => {
+            if (!data || !data.exito) return;
+            const txtLatido = document.getElementById('txtUltimoLatidoCron');
+            if (txtLatido && data.ultimo_latido) {
+                txtLatido.textContent = '· Último pulso: ' + data.ultimo_latido;
+            }
+            if (data.ejecutadas && data.ejecutadas > 0) {
+                window.location.reload();
+            }
+        })
+        .catch(() => {});
+}, 60000);
 </script>

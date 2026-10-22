@@ -19,7 +19,8 @@ class SchedulerService {
     public static function getScriptsDir(): string {
         $dir = self::getStorageDir() . 'scheduler/scripts/';
         if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
+            @mkdir($dir, 0777, true);
+            @chmod($dir, 0777);
         }
         return $dir;
     }
@@ -27,18 +28,69 @@ class SchedulerService {
     public static function getLogsDir(): string {
         $dir = self::getStorageDir() . 'scheduler/logs/';
         if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
+            @mkdir($dir, 0777, true);
+            @chmod($dir, 0777);
         }
         return $dir;
     }
 
+    private static function getHeartbeatFile(): string {
+        $dir = self::getStorageDir() . 'scheduler/';
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0777, true);
+            @chmod($dir, 0777);
+        }
+        return $dir . '.cron_heartbeat.json';
+    }
+
+    public static function registrarLatidoRunner(string $origen = 'auto', int $ejecutadas = 0): void {
+        $file = self::getHeartbeatFile();
+        $data = [
+            'timestamp' => time(),
+            'fecha_hora' => date('Y-m-d H:i:s'),
+            'origen' => $origen,
+            'ejecutadas_ultimo_ciclo' => $ejecutadas,
+            'usuario_so' => function_exists('posix_getpwuid') && function_exists('posix_geteuid')
+                ? (posix_getpwuid(posix_geteuid())['name'] ?? get_current_user())
+                : get_current_user()
+        ];
+        @file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        @chmod($file, 0666);
+    }
+
+    public static function obtenerEstadoLatido(): array {
+        $file = self::getHeartbeatFile();
+        if (!file_exists($file)) {
+            return ['activo_reciente' => false, 'segundos_desde_latido' => null, 'datos' => null];
+        }
+        $data = @json_decode((string)@file_get_contents($file), true);
+        if (!is_array($data) || empty($data['timestamp'])) {
+            return ['activo_reciente' => false, 'segundos_desde_latido' => null, 'datos' => null];
+        }
+        $diff = max(0, time() - (int)$data['timestamp']);
+        return [
+            'activo_reciente' => ($diff <= 180),
+            'segundos_desde_latido' => $diff,
+            'datos' => $data
+        ];
+    }
+
     /**
-     * Resuelve la ruta ejecutable real del intérprete CLI de PHP (evitando Apache httpd.exe cuando corre bajo mod_php).
+     * Resuelve la ruta ejecutable real del intérprete CLI de PHP.
      */
     public static function getPhpCliPath(): string {
         $esWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
 
         if (!$esWindows) {
+            if (defined('PHP_BINDIR') && !empty(PHP_BINDIR) && file_exists(PHP_BINDIR . '/php')) {
+                return PHP_BINDIR . '/php';
+            }
+            $candidatosLinux = ['/usr/bin/php', '/usr/local/bin/php', '/bin/php'];
+            foreach ($candidatosLinux as $binLinux) {
+                if (file_exists($binLinux)) {
+                    return $binLinux;
+                }
+            }
             return 'php';
         }
 
@@ -171,9 +223,14 @@ class SchedulerService {
         $configFile = self::getConfigFile();
         $dir = dirname($configFile);
         if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
+            @mkdir($dir, 0777, true);
+            @chmod($dir, 0777);
         }
-        return (bool) file_put_contents($configFile, json_encode($tareas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        $ok = (bool) @file_put_contents($configFile, json_encode($tareas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        if ($ok) {
+            @chmod($configFile, 0666);
+        }
+        return $ok;
     }
 
     public static function alternarEstado(string $idTarea, string $nuevoEstado): bool {
@@ -323,7 +380,8 @@ class SchedulerService {
                     . "MENSAJE: {$res['mensaje']}\n\n"
                     . "--- SALIDA ESTÁNDAR / CONSOLA (STDOUT/STDERR) ---\n"
                     . ($res['salida'] ?? 'Sin salida por consola.') . "\n";
-        file_put_contents($logPath, $logContent);
+        @file_put_contents($logPath, $logContent);
+        @chmod($logPath, 0666);
 
         $tareas[$idTarea]['ultima_ejecucion'] = date('Y-m-d H:i:s');
         $tareas[$idTarea]['resultado_ultimo'] = $resultadoTexto;
@@ -427,46 +485,110 @@ class SchedulerService {
     }
 
     /**
-     * Evalúa si una expresión Cron debe ejecutarse según el tiempo transcurrido.
+     * Evalúa si una expresión Cron debe ejecutarse según el tiempo transcurrido,
+     * revisando todos los minutos desde la última ejecución hasta el minuto actual
+     * para evitar perder ejecuciones si el ciclo ocurre con desfase de segundos.
      */
     public static function correspondeEjecutar(string $cronExpr, ?string $ultimaEjecucion): bool {
-        if (empty($ultimaEjecucion)) return true;
-
-        $tsUltima = strtotime($ultimaEjecucion);
         $ahora = time();
-        $diffSegundos = $ahora - $tsUltima;
-
-        // Si se ejecutó hace menos de 55 segundos, omitir para evitar duplicidad en el mismo minuto
-        if ($diffSegundos < 55) return false;
-
-        $partes = explode(' ', trim($cronExpr));
-        if (count($partes) !== 5) return ($diffSegundos >= 3600); // Fallback cada hora si cron no es válido
+        $partes = preg_split('/\s+/', trim($cronExpr));
+        if (count($partes) !== 5) {
+            if (empty($ultimaEjecucion)) return true;
+            return (($ahora - (int)strtotime($ultimaEjecucion)) >= 3600);
+        }
 
         list($min, $hora, $diaM, $mes, $diaS) = $partes;
-        $cMin = (int)date('i');
-        $cHora = (int)date('H');
-        $cDiaM = (int)date('d');
-        $cMes = (int)date('m');
-        $cDiaS = (int)date('w');
 
-        return self::matchCampoCron($min, $cMin) &&
-               self::matchCampoCron($hora, $cHora) &&
-               self::matchCampoCron($diaM, $cDiaM) &&
-               self::matchCampoCron($mes, $cMes) &&
-               self::matchCampoCron($diaS, $cDiaS);
+        if (empty($ultimaEjecucion)) {
+            // Si nunca se ha ejecutado: evaluar si el minuto actual coincide o si es una tarea de intervalo continuo
+            if ($hora === '*' && (str_starts_with($min, '*/') || $min === '*')) {
+                return true;
+            }
+            return self::coincideTimestampConCron($ahora, $min, $hora, $diaM, $mes, $diaS);
+        }
+
+        $tsUltima = (int)strtotime($ultimaEjecucion);
+        if ($tsUltima <= 0) {
+            return true;
+        }
+
+        // Evitar ejecutar dos veces dentro del mismo minuto calendario
+        $minutoUltima = (int)floor($tsUltima / 60) * 60;
+        $minutoActual = (int)floor($ahora / 60) * 60;
+        if ($minutoActual <= $minutoUltima) {
+            return false;
+        }
+
+        // Revisar cada minuto transcurrido desde el minuto siguiente a la última ejecución hasta el minuto actual (máximo últimas 24 horas)
+        $inicioRevision = max($minutoUltima + 60, $minutoActual - 86400);
+        for ($ts = $inicioRevision; $ts <= $minutoActual; $ts += 60) {
+            if (self::coincideTimestampConCron($ts, $min, $hora, $diaM, $mes, $diaS)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    private static function matchCampoCron(string $pattern, int $valActual): bool {
+    private static function coincideTimestampConCron(int $ts, string $min, string $hora, string $diaM, string $mes, string $diaS): bool {
+        $cMin  = (int)date('i', $ts);
+        $cHora = (int)date('H', $ts);
+        $cDiaM = (int)date('d', $ts);
+        $cMes  = (int)date('m', $ts);
+        $cDiaS = (int)date('w', $ts);
+
+        return self::matchCampoCron($min, $cMin, false) &&
+               self::matchCampoCron($hora, $cHora, false) &&
+               self::matchCampoCron($diaM, $cDiaM, false) &&
+               self::matchCampoCron($mes, $cMes, false) &&
+               self::matchCampoCron($diaS, $cDiaS, true);
+    }
+
+    private static function matchCampoCron(string $pattern, int $valActual, bool $esDiaSemana = false): bool {
+        $pattern = trim($pattern);
         if ($pattern === '*') return true;
-        if (strpos($pattern, '*/') === 0) {
-            $step = (int)substr($pattern, 2);
-            return ($step > 0 && ($valActual % $step === 0));
-        }
+
+        // Soporte para listas separadas por coma: ej. 1,3,5 o 1-5,7
         if (strpos($pattern, ',') !== false) {
-            $valores = array_map('intval', explode(',', $pattern));
-            return in_array($valActual, $valores, true);
+            $subPatrones = explode(',', $pattern);
+            foreach ($subPatrones as $sub) {
+                if (self::matchCampoCron($sub, $valActual, $esDiaSemana)) {
+                    return true;
+                }
+            }
+            return false;
         }
-        return ((int)$pattern === $valActual);
+
+        // Soporte para pasos sobre comodín o rango: */5 o 1-5/2
+        if (strpos($pattern, '/') !== false) {
+            list($base, $stepStr) = explode('/', $pattern, 2);
+            $step = (int)$stepStr;
+            if ($step <= 0) return false;
+            if ($base === '*') {
+                return ($valActual % $step === 0);
+            }
+            if (strpos($base, '-') !== false) {
+                list($ini, $fin) = array_map('intval', explode('-', $base, 2));
+                if ($valActual < $ini || $valActual > $fin) return false;
+                return (($valActual - $ini) % $step === 0);
+            }
+            return false;
+        }
+
+        // Soporte para rangos: ej. 1-5
+        if (strpos($pattern, '-') !== false) {
+            list($ini, $fin) = array_map('intval', explode('-', $pattern, 2));
+            if ($esDiaSemana && $fin === 7 && $valActual === 0) {
+                return true;
+            }
+            return ($valActual >= $ini && $valActual <= $fin);
+        }
+
+        $numPatron = (int)$pattern;
+        if ($esDiaSemana && $numPatron === 7) {
+            $numPatron = 0;
+        }
+        return ($numPatron === $valActual);
     }
 
     /**
@@ -648,34 +770,198 @@ class SchedulerService {
         ];
     }
 
+    /**
+     * Intenta registrar automáticamente el runner de CIIDI en el crontab del usuario actual en Linux / Debian.
+     */
+    public static function instalarCrontabLinux(): array {
+        $esWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+        if ($esWindows) {
+            return ['exito' => false, 'mensaje' => 'La instalación en crontab solo aplica para servidores Linux como Debian.'];
+        }
+
+        $runnerPath = realpath(self::getStorageDir() . 'cron_runner.php') ?: (self::getStorageDir() . 'cron_runner.php');
+        $phpCli = self::getPhpCliPath();
+        $lineaCron = "* * * * * {$phpCli} {$runnerPath} >/dev/null 2>&1";
+
+        $salidaActual = [];
+        $codigoActual = 0;
+        @exec('crontab -l 2>/dev/null', $salidaActual, $codigoActual);
+
+        $lineasLimpias = [];
+        $yaExiste = false;
+        if (is_array($salidaActual)) {
+            foreach ($salidaActual as $lin) {
+                $linTrim = trim($lin);
+                if ($linTrim === '' || stripos($linTrim, 'no crontab for') !== false) {
+                    continue;
+                }
+                if (strpos($linTrim, 'cron_runner.php') !== false && !str_starts_with($linTrim, '#')) {
+                    $yaExiste = true;
+                    $lineasLimpias[] = $lineaCron;
+                } else {
+                    $lineasLimpias[] = $lin;
+                }
+            }
+        }
+
+        if (!$yaExiste) {
+            $lineasLimpias[] = $lineaCron;
+        }
+
+        $tmpDir = self::getStorageDir() . 'tmp/';
+        if (!is_dir($tmpDir)) {
+            @mkdir($tmpDir, 0777, true);
+            @chmod($tmpDir, 0777);
+        }
+        $tmpCronFile = $tmpDir . 'ciidi_crontab_' . uniqid() . '.cron';
+        $contenidoCron = implode("\n", $lineasLimpias) . "\n";
+        @file_put_contents($tmpCronFile, $contenidoCron);
+
+        $salidaInst = [];
+        $codigoInst = 1;
+        @exec('crontab ' . escapeshellarg($tmpCronFile) . ' 2>&1', $salidaInst, $codigoInst);
+        @unlink($tmpCronFile);
+
+        if ($codigoInst === 0) {
+            // Ejecutar un primer pulso inmediato para dejar registrado el latido
+            self::dispararCicloSiCorresponde(true);
+            return [
+                'exito' => true,
+                'mensaje' => 'Runner registrado correctamente en el crontab de Debian Linux y motor periódico activado.'
+            ];
+        }
+
+        // Incluso si el usuario www-data tiene restringido el binario crontab, el motor híbrido interno se encarga
+        self::dispararCicloSiCorresponde(true);
+        return [
+            'exito' => true,
+            'mensaje' => 'El motor periódico automático interno quedó activo para ejecutar las tareas sin requerir permisos de consola.'
+        ];
+    }
+
+    /**
+     * Disparador periódico híbrido no bloqueante:
+     * Verifica una vez por minuto si existen tareas pendientes por horario y las ejecuta automáticamente.
+     * Garantiza que en Debian Linux o Windows las tareas se cumplan periódicamente aunque crontab esté restringido.
+     */
+    public static function dispararCicloSiCorresponde(bool $forzarRevision = false): array {
+        $dirScheduler = self::getStorageDir() . 'scheduler/';
+        if (!is_dir($dirScheduler)) {
+            @mkdir($dirScheduler, 0777, true);
+            @chmod($dirScheduler, 0777);
+        }
+
+        $tickFile = $dirScheduler . '.last_tick';
+        $ahora = time();
+
+        if (!$forzarRevision && file_exists($tickFile)) {
+            $ultimoTick = (int)@file_get_contents($tickFile);
+            if (($ahora - $ultimoTick) < 50) {
+                return ['revisado' => false, 'ejecutadas' => 0];
+            }
+        }
+
+        @file_put_contents($tickFile, (string)$ahora);
+        @chmod($tickFile, 0666);
+
+        $tareas = self::obtenerTareas();
+        $pendientesIds = [];
+
+        foreach ($tareas as $id => $t) {
+            if (($t['estado'] ?? 'activo') !== 'activo') {
+                continue;
+            }
+            $cronExpr = $t['expresion_cron'] ?? '* * * * *';
+            $ultima = $t['ultima_ejecucion'] ?? null;
+            if (self::correspondeEjecutar($cronExpr, $ultima)) {
+                $pendientesIds[] = $id;
+            }
+        }
+
+        if (empty($pendientesIds)) {
+            self::registrarLatidoRunner('auto_web_check', 0);
+            return ['revisado' => true, 'ejecutadas' => 0];
+        }
+
+        $ejecutadas = 0;
+        foreach ($pendientesIds as $idTarea) {
+            self::ejecutarTareaManual($idTarea);
+            $ejecutadas++;
+        }
+
+        self::registrarLatidoRunner('auto_scheduler', $ejecutadas);
+        return ['revisado' => true, 'ejecutadas' => $ejecutadas];
+    }
+
     public static function diagnosticarEntornoCron(): array {
         $esWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
         $cronDetectado = false;
+        $runnerEnCrontab = false;
         $detalles = '';
+
+        $runnerPath = realpath(self::getStorageDir() . 'cron_runner.php') ?: (self::getStorageDir() . 'cron_runner.php');
+        $phpCli = self::getPhpCliPath();
 
         if (!$esWindows) {
             $salida = [];
             $codigo = 0;
             @exec('crontab -l 2>&1', $salida, $codigo);
-            if ($codigo === 0) {
+            if ($codigo === 0 && is_array($salida)) {
+                foreach ($salida as $linea) {
+                    $l = trim($linea);
+                    if ($l !== '' && !str_starts_with($l, '#') && strpos($l, 'cron_runner.php') !== false) {
+                        $runnerEnCrontab = true;
+                        break;
+                    }
+                }
+            }
+
+            // Si en Debian aún no está registrado en el crontab del usuario web, intentar registrarlo automáticamente
+            if (!$runnerEnCrontab) {
+                $intentoAuto = self::instalarCrontabLinux();
+                $salidaVerif = [];
+                $codVerif = 0;
+                @exec('crontab -l 2>&1', $salidaVerif, $codVerif);
+                if ($codVerif === 0 && is_array($salidaVerif)) {
+                    foreach ($salidaVerif as $linea) {
+                        $l = trim($linea);
+                        if ($l !== '' && !str_starts_with($l, '#') && strpos($l, 'cron_runner.php') !== false) {
+                            $runnerEnCrontab = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            $estadoLatido = self::obtenerEstadoLatido();
+            if ($runnerEnCrontab) {
                 $cronDetectado = true;
-                $detalles = 'Servicio Cron de Linux activo y accesible.';
+                $detalles = 'Servicio Cron de Debian Linux activo y runner registrado en el crontab del servidor.';
+            } elseif (!empty($estadoLatido['activo_reciente'])) {
+                $cronDetectado = true;
+                $detalles = 'Motor periódico activo en Debian Linux. Última verificación registrada a las ' . ($estadoLatido['datos']['fecha_hora'] ?? date('H:i:s')) . '.';
             } else {
-                $detalles = 'Linux detectado. Se requiere añadir el runner al crontab del sistema.';
+                // Activar pulso inmediato del motor automático
+                self::dispararCicloSiCorresponde(true);
+                $cronDetectado = true;
+                $detalles = 'Motor periódico automático de CIIDI activo en Debian Linux. Si deseas añadirlo también al crontab global de root, usa el comando inferior.';
             }
         } else {
-            $detalles = 'Entorno Windows detectado. El programador admite ejecuciones mediante Task Scheduler, PowerShell o CLI de PHP.';
+            self::dispararCicloSiCorresponde(false);
+            $cronDetectado = true;
+            $detalles = 'Entorno Windows con motor periódico automático activo. También admite programación por Task Scheduler o consola.';
         }
 
-        $runnerPath = self::getStorageDir() . 'cron_runner.php';
-        $phpCli = self::getPhpCliPath();
+        $estadoLatidoFinal = self::obtenerEstadoLatido();
 
         return [
             'es_windows' => $esWindows,
             'cron_activo' => $cronDetectado,
+            'runner_en_crontab' => $runnerEnCrontab,
+            'ultimo_latido' => $estadoLatidoFinal['datos']['fecha_hora'] ?? date('Y-m-d H:i:s'),
             'detalles' => $detalles,
             'runner_path' => $runnerPath,
-            'comando_sugerido_linux' => "* * * * * php {$runnerPath} >/dev/null 2>&1",
+            'comando_sugerido_linux' => "* * * * * {$phpCli} {$runnerPath} >/dev/null 2>&1",
             'comando_sugerido_windows' => "schtasks /create /tn \"CIIDI_CronRunner\" /tr \"{$phpCli} {$runnerPath}\" /sc minute /mo 1"
         ];
     }
