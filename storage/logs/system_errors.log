@@ -1768,3 +1768,259 @@ Trace:
 #13 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\public\index.php(38): Kernel->run()
 #14 {main}
 --------------------------------------------------------------------------------
+[2026-10-22 14:38:29] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections? en C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\System\Kernel.php(62): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\public\index.php(49): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 14:38:33] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections? en C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(719): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(349): SchedulerService::limpiarTemporales()
+#4 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(888): SchedulerService::ejecutarTareaManual('limpieza_tempor...')
+#5 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\System\Kernel.php(123): SchedulerService::dispararCicloSiCorresponde(false)
+#6 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\public\index.php(49): Kernel->run()
+#7 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 14:38:37] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections? en C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Security\AuditLogger.php(65): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(390): AuditLogger::registrar('INFO', 'SuperAdmin', 'Ejecuci\xC3\xB3n Tare...', 'Tarea 'Limpieza...')
+#4 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(888): SchedulerService::ejecutarTareaManual('limpieza_tempor...')
+#5 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\System\Kernel.php(123): SchedulerService::dispararCicloSiCorresponde(false)
+#6 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\public\index.php(49): Kernel->run()
+#7 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 14:38:37] ERROR: Error de infraestructura de datos. Por favor reintente más tarde. en C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php:158
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#1 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Security\AuditLogger.php(65): Connection::getInstance()
+#2 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(390): AuditLogger::registrar('INFO', 'SuperAdmin', 'Ejecuci\xC3\xB3n Tare...', 'Tarea 'Limpieza...')
+#3 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(888): SchedulerService::ejecutarTareaManual('limpieza_tempor...')
+#4 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\System\Kernel.php(123): SchedulerService::dispararCicloSiCorresponde(false)
+#5 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\public\index.php(49): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 14:38:50] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections? en C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Security\AuditLogger.php(142): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Security\AuditLogger.php(24): AuditLogger::sincronizarFallback()
+#4 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(390): AuditLogger::registrar('ERROR', 'SuperAdmin', 'Ejecuci\xC3\xB3n Tare...', 'Tarea 'Respaldo...')
+#5 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(888): SchedulerService::ejecutarTareaManual('backup_automati...')
+#6 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\System\Kernel.php(123): SchedulerService::dispararCicloSiCorresponde(false)
+#7 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\public\index.php(49): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 14:38:50] ERROR: Error de infraestructura de datos. Por favor reintente más tarde. en C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php:158
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#1 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Security\AuditLogger.php(142): Connection::getInstance()
+#2 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Security\AuditLogger.php(24): AuditLogger::sincronizarFallback()
+#3 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(390): AuditLogger::registrar('ERROR', 'SuperAdmin', 'Ejecuci\xC3\xB3n Tare...', 'Tarea 'Respaldo...')
+#4 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(888): SchedulerService::ejecutarTareaManual('backup_automati...')
+#5 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\System\Kernel.php(123): SchedulerService::dispararCicloSiCorresponde(false)
+#6 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\public\index.php(49): Kernel->run()
+#7 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 14:38:54] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections? en C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Security\AuditLogger.php(65): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(390): AuditLogger::registrar('ERROR', 'SuperAdmin', 'Ejecuci\xC3\xB3n Tare...', 'Tarea 'Respaldo...')
+#4 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(888): SchedulerService::ejecutarTareaManual('backup_automati...')
+#5 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\System\Kernel.php(123): SchedulerService::dispararCicloSiCorresponde(false)
+#6 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\public\index.php(49): Kernel->run()
+#7 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 14:38:54] ERROR: Error de infraestructura de datos. Por favor reintente más tarde. en C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php:158
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#1 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Security\AuditLogger.php(65): Connection::getInstance()
+#2 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(390): AuditLogger::registrar('ERROR', 'SuperAdmin', 'Ejecuci\xC3\xB3n Tare...', 'Tarea 'Respaldo...')
+#3 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(888): SchedulerService::ejecutarTareaManual('backup_automati...')
+#4 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\System\Kernel.php(123): SchedulerService::dispararCicloSiCorresponde(false)
+#5 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\public\index.php(49): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 14:39:21] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections? en C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\System\Kernel.php(62): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\public\index.php(49): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 14:39:23] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections? en C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(331): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Views\home_bienvenida.php(13): DocumentoModel->getPSTDocumentosCount(Array)
+#4 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Views\master.php(45): include('C:\\wamp64\\www\\p...')
+#5 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Http\Dispatcher.php(86): include('C:\\wamp64\\www\\p...')
+#6 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\System\Kernel.php(145): Dispatcher->dispatch('inicio', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\public\index.php(49): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 14:39:25] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections? en C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\QueryBuilder.php(19): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\Autenticacion\models\UsuarioModel.php(11): QueryBuilder->__construct()
+#4 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(15): UsuarioModel->__construct()
+#5 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Http\Dispatcher.php(60): LoginController->__construct()
+#6 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\System\Kernel.php(145): Dispatcher->dispatch('login', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\public\index.php(49): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 14:40:14] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections? en C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\System\Kernel.php(62): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\public\index.php(49): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 14:40:19] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections? en C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\QueryBuilder.php(19): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\Autenticacion\models\UsuarioModel.php(11): QueryBuilder->__construct()
+#4 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(15): UsuarioModel->__construct()
+#5 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Http\Dispatcher.php(60): LoginController->__construct()
+#6 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\System\Kernel.php(145): Dispatcher->dispatch('login', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\public\index.php(49): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 14:40:31] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections? en C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\System\Kernel.php(62): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\public\index.php(49): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 14:40:35] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections? en C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\QueryBuilder.php(19): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\Autenticacion\models\UsuarioModel.php(11): QueryBuilder->__construct()
+#4 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(15): UsuarioModel->__construct()
+#5 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Http\Dispatcher.php(60): LoginController->__construct()
+#6 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\System\Kernel.php(145): Dispatcher->dispatch('login', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\public\index.php(49): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 14:40:46] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections? en C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\System\Kernel.php(62): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\public\index.php(49): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 14:41:15] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections? en C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(331): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Views\home_bienvenida.php(13): DocumentoModel->getPSTDocumentosCount(Array)
+#4 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Views\master.php(45): include('C:\\wamp64\\www\\p...')
+#5 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Http\Dispatcher.php(86): include('C:\\wamp64\\www\\p...')
+#6 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\System\Kernel.php(145): Dispatcher->dispatch('inicio', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\public\index.php(49): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 14:43:27] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections? en C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\System\Kernel.php(62): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\public\index.php(49): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 14:43:31] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections? en C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'miki', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Database\QueryBuilder.php(19): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\Autenticacion\models\UsuarioModel.php(11): QueryBuilder->__construct()
+#4 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(15): UsuarioModel->__construct()
+#5 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\Http\Dispatcher.php(60): LoginController->__construct()
+#6 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\core\System\Kernel.php(145): Dispatcher->dispatch('login', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\proyect_CIIDI\public\index.php(49): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------

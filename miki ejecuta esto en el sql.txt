@@ -1,0 +1,8 @@
+-- 1. Añadir campos para recuperación de contraseña y contacto en tabla usuarios
+ALTER TABLE usuarios 
+ADD COLUMN IF NOT EXISTS reset_token VARCHAR(255) DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS reset_expires TIMESTAMP DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS telefono VARCHAR(50) DEFAULT NULL;
+-- 2. Añadir campo JSON para manejar múltiples integrantes en postulaciones de estudiantes
+ALTER TABLE postulaciones_estudiantes 
+ADD COLUMN IF NOT EXISTS equipo_extra JSON DEFAULT NULL;

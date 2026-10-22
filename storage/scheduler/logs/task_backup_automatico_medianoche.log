@@ -1,10 +1,10 @@
 ========================================================
 REGISTRO DE EJECUCI√ìN: Respaldo Autom√°tico de Medianoche (PostgreSQL Dump) [backup_automatico_medianoche]
-FECHA/HORA: 2026-09-25 01:14:15
-DURACI√ìN: 433.77 ms | ESTADO: OK
+FECHA/HORA: 2026-10-22 14:38:46
+DURACI√ìN: 8374.23 ms | ESTADO: FAIL
 ========================================================
 
-MENSAJE: Respaldo generado con √©xito: auto_cron_backup_2026-09-25_01-14-15.sql.gz
+MENSAJE: Fallo en pg_dump: pg_dump: error: fallÛ la conexiÛn al servidor en ´localhostª (::1), puerto 5432: Connection refused (0x0000274D/10061) 	øEst· el servidor en ejecuciÛn en ese host y aceptando conexiones TCP/IP? fallÛ la conexiÛn al servidor en ´localhostª (127.0.0.1), puerto 5432: Connection refused (0x0000274D/10061) 	øEst· el servidor en ejecuciÛn en ese host y aceptando conexiones TCP/IP?
 
 --- SALIDA EST√ÅNDAR / CONSOLA (STDOUT/STDERR) ---
-Backup generado: auto_cron_backup_2026-09-25_01-14-15.sql.gz
+Backup generado: N/A

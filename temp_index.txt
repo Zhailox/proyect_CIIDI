@@ -1,0 +1,119 @@
+﻿<?php
+// modules/VinculacionEmpresarial/index.php
+
+require_once CORE_PATH . 'Interfaces/ModuleContract.php';
+
+class VinculacionEmpresarialModule implements ModuleContract {
+    
+    public function getNombre(): string {
+        return 'MÃ³dulo de VinculaciÃ³n Empresarial';
+    }
+
+    public function getRutas(): array {
+        // Definimos la ruta del CSS especÃ­fico de este mÃ³dulo.
+        // Asumo que crearÃ¡s una carpeta 'assets' dentro del mÃ³dulo para mantenerlo encapsulado.
+        $css_modulo = ['vinculacion.css'];
+
+        return [
+            // 1. Landing page para informar a las empresas y mostrar casos de Ã©xito
+            'empresas-inicio' => [
+                'vista'  => __DIR__ . '/views/landing_informativa.php', 
+                'titulo' => 'VinculaciÃ³n Empresarial - UPTTMBI',
+                'css'    => $css_modulo
+            ],
+            // 2. Tablero interno para que estudiantes/profesores vean y se postulen a los PST
+            'banco-propuestas' => [
+                'vista'  => __DIR__ . '/views/banco_propuestas.php', 
+                'titulo' => 'Banco de Propuestas PST',
+                'css'    => $css_modulo
+            ],
+            'guardar-propuesta' => [
+                'vista' => __DIR__ . '/controllers/VinculacionController.php',
+                'metodo' => 'guardarPropuesta',
+                'oculto' => true
+            ],
+            'procesar-propuesta' => [
+                'vista' => __DIR__ . '/controllers/VinculacionController.php',
+                'metodo' => 'procesarPropuesta',
+                'oculto' => true
+            ],
+            // Portal de Transparencia (Seguimiento de Propuestas)
+            'seguimiento-empresa' => [
+                'vista'  => __DIR__ . '/views/seguimiento_empresa.php', 
+                'titulo' => 'Rastrea tu Propuesta - CIIDI',
+                'css'    => $css_modulo
+            ],
+            // Cartelera de Oportunidades (Estudiantes)
+            'cartelera-oportunidades' => [
+                'vista'  => __DIR__ . '/views/cartelera_oportunidades.php', 
+                'titulo' => 'Cartelera de Oportunidades',
+                'css'    => $css_modulo
+            ],
+            // POST: Estudiante postula a oportunidad
+            'postular-oportunidad' => [
+                'vista' => __DIR__ . '/controllers/VinculacionController.php',
+                'metodo' => 'postularOportunidad',
+                'oculto' => true
+            ],
+            // Vista del ComitÃ©: GestiÃ³n de Postulaciones / Equipos
+            'gestion-equipos' => [
+                'vista'  => __DIR__ . '/views/gestion_equipos.php', 
+                'titulo' => 'AsignaciÃ³n de Equipos',
+                'css'    => $css_modulo
+            ],
+            // POST: ComitÃ© aprueba o rechaza una postulaciÃ³n de un equipo
+            'procesar-asignacion' => [
+                'vista' => __DIR__ . '/controllers/VinculacionController.php',
+                'metodo' => 'procesarAsignacion',
+                'oculto' => true
+            ],
+            // API AJAX para buscar propuestas
+            'api-transparencia' => [
+                'controlador'      => 'TransparenciaController',
+                'controlador_path' => __DIR__ . '/controllers/TransparenciaController.php',
+                'metodo'           => 'rastrear',
+                'oculto'           => true
+            ]
+        ];
+    }
+
+    public function getMenuConfig(): array {
+        return [
+            [
+                'tipo'        => 'parent',
+                'titulo'      => 'Sector Productivo',
+                'icono'       => 'ph-fill ph-buildings',
+                'enlace'      => 'empresas-inicio',
+                'activadores' => ['empresas-inicio', 'seguimiento-empresa', 'cartelera-oportunidades', 'banco-propuestas', 'gestion-equipos'], 
+                'subitems'    => [
+                    ['ruta' => 'empresas-inicio', 'titulo' => 'ConÃ³cenos', 'privilegio_minimo' => 0],
+                    ['ruta' => 'seguimiento-empresa', 'titulo' => 'Seguimiento', 'privilegio_minimo' => 0],
+                    ['ruta' => 'cartelera-oportunidades', 'titulo' => 'Oportunidades PST', 'privilegio_minimo' => 0],
+                    ['ruta' => 'banco-propuestas', 'titulo' => 'EvaluaciÃ³n de Propuestas', 'privilegio_minimo' => 2],
+                    ['ruta' => 'gestion-equipos', 'titulo' => 'AsignaciÃ³n de Equipos', 'privilegio_minimo' => 2]
+                ]
+            ]
+        ];
+    }
+    public function getDescripcion(): string {
+        return 'Puente con el sector productivo. Banco de problemas y recepciÃ³n de solicitudes de empresas externas.';
+    }
+    public function getDependencias(): array {
+        return [];
+    }
+    public function getHomeConfig(): array {
+        return [
+            'icono'       => 'ph-fill ph-buildings',
+            'titulo'      => 'VinculaciÃ³n Empresarial',
+            'descripcion' => 'ConexiÃ³n directa entre las necesidades tecnolÃ³gicas del sector productivo y las soluciones de nuestro talento acadÃ©mico.',
+            'enlace'      => 'empresas-inicio', 
+            'texto_boton' => 'SECTOR PRODUCTIVO',
+            'destacado'   => false 
+        ];
+    }
+     public function getHeaderConfig(): array {
+        return [];
+    }
+}
+
+return new VinculacionEmpresarialModule();
