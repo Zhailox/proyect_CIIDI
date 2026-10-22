@@ -71,7 +71,7 @@ class LineasInvestigacionModule implements ModuleContract {
                 'metodo' => 'exportarCsv',
                 'oculto' => true
             ],
-                                    'api-filtros-pdf' => [
+            'api-filtros-pdf' => [
                 'controlador' => 'GestorLineasController',
                 'controlador_path' => __DIR__ . '/controllers/GestorController.php',
                 'metodo' => 'apiFiltrosPdf',
@@ -146,6 +146,7 @@ class LineasInvestigacionModule implements ModuleContract {
             'icono' => 'ph-fill ph-graph',
             'titulo' => 'Líneas de Investigación',
             'descripcion' => 'Explorar y gestionar líneas de investigación.',
+            'enlace' => 'lineas-investigacion',
             'ruta' => 'lineas-investigacion',
             'orden' => 3,
             'texto_boton' => 'EXPLORAR LÍNEAS',
