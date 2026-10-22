@@ -40,8 +40,8 @@
         "archivo_script": "script_tarea_1790301553_528.php",
         "timeout_segundos": 60,
         "estado": "activo",
-        "ultima_ejecucion": "2026-10-22 15:25:20",
-        "resultado_ultimo": "ERROR (0.18ms): El archivo de script 'script_tarea_1790301553_528.php' no existe en storage\/scheduler\/scripts\/."
+        "ultima_ejecucion": "2026-10-22 15:31:06",
+        "resultado_ultimo": "ERROR (0.13ms): El archivo de script 'script_tarea_1790301553_528.php' no existe en storage\/scheduler\/scripts\/."
     },
     "tarea_1790660917_352": {
         "id": "tarea_1790660917_352",

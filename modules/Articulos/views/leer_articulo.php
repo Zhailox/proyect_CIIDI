@@ -234,7 +234,7 @@
                                             <!-- Enlace al ORCID -->
                                             <?php if (!empty($autorData['orcid'])): ?>
                                                 <?php $orcidUrl = strpos($autorData['orcid'], 'http') === 0 ? $autorData['orcid'] : 'https://orcid.org/' . $autorData['orcid']; ?>
-                                                <a href="<?= htmlspecialchars($orcidUrl) ?>" target="_blank" title="Ver perfil ORCID" style="color:#A6CE39; display:flex; align-items:center;">
+                                                <a href="<?= htmlspecialchars($orcidUrl) ?>" target="_blank" title="Ver perfil ORCID" style="color:var(--color-terciario); display:flex; align-items:center;">
                                                     <i class="ph-fill ph-identification-badge" style="font-size:1.1rem;"></i>
                                                 </a>
                                             <?php endif; ?>

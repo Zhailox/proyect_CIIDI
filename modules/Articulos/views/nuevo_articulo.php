@@ -68,8 +68,8 @@
                 
                 <!-- BUSCADOR DINÁMICO DE AUTORES (Estructura Limpia) -->
                 <div class="form-group mt-1 pos-relative">
-                    <label class="font-bold">Buscar y Seleccionar Autores * <span class="art-help-icon" title="Escribe el nombre o cédula. Si el autor no existe en el sistema, usa el modal para crearlo.">?</span></label>
-                    <input type="text" id="buscador-autores" class="login-flat-input w-100 p-input" placeholder="Escriba un nombre o cédula...">
+                    <label class="font-bold">Buscar y Seleccionar Autores * <span class="art-help-icon" title="Escribe el nombre u ORCID. Si el autor no existe en el sistema, usa el modal para crearlo.">?</span></label>
+                    <input type="text" id="buscador-autores" class="login-flat-input w-100 p-input" placeholder="Escriba un nombre u ORCID...">
                     
                     <div id="resultados-autores" class="autocomplete-dropdown">
                         <!-- Resultados inyectados por JS -->
