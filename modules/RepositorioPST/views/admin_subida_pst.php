@@ -514,9 +514,6 @@ if (typeof window.mammoth === 'undefined') {
                         <button type="button" class="btn-clear" id="btnLimpiarFormulario" onclick="limpiarFormularioPst()">
                             <i class="ph ph-eraser"></i> Limpiar Formulario
                         </button>
-                        <button type="button" class="btn-clear" id="btnGuardarBorrador" onclick="guardarBorradorEnCola()" style="display: none; background-color: rgba(112, 144, 203, 0.1); color: var(--color-secundario); border-color: rgba(80, 89, 132, 0.3);">
-                            <i class="ph ph-floppy-disk"></i> Guardar en Borrador
-                        </button>
                         <button type="submit" class="btn-save" id="btnSubmitFormPst">
                             <?= $accion === 'editar' ? 'Guardar Cambios' : 'Registrar Recurso' ?>
                         </button>
@@ -1761,7 +1758,6 @@ function renderizarColaUI() {
     const contenedor = document.getElementById('contenedorColaDocumentos');
     const lista = document.getElementById('listaColaItems');
     const countSpan = document.getElementById('countCola');
-    const btnGuardarBorrador = document.getElementById('btnGuardarBorrador');
     const btnSubmitFormPst = document.getElementById('btnSubmitFormPst');
     const esCrear = <?= json_encode($accion === 'crear') ?>;
 
@@ -1770,7 +1766,6 @@ function renderizarColaUI() {
     if (documentosEnCola.length === 0) {
         contenedor.style.display = 'none';
         documentoSeleccionadoIndex = -1;
-        if (btnGuardarBorrador) btnGuardarBorrador.style.display = 'none';
         if (btnSubmitFormPst && esCrear) btnSubmitFormPst.textContent = 'Registrar Recurso';
         return;
     }
@@ -1778,7 +1773,6 @@ function renderizarColaUI() {
     contenedor.style.display = 'block';
     const activosCount = documentosEnCola.filter(d => d.estado !== 'exito').length;
     if (countSpan) countSpan.textContent = activosCount;
-    if (btnGuardarBorrador) btnGuardarBorrador.style.display = 'inline-flex';
     if (btnSubmitFormPst && esCrear) {
         btnSubmitFormPst.textContent = documentosEnCola.length > 1 ? 'Subir Documento en Pantalla' : 'Registrar Recurso';
     }
@@ -1928,7 +1922,7 @@ function seleccionarDocumentoDeCola(index, guardarActual = true) {
     renderizarColaUI();
 
     if (docItem.estado === 'error' && docItem.errorMsg) {
-        mostrarModalAlerta('warning', 'Documento con Observación', `El documento "${docItem.nombreArchivo}" presentó la siguiente observación:\n\n${docItem.errorMsg}\n\nPuede completar los datos en el formulario y pulsar Subir este o Guardar en Borrador.`);
+        mostrarModalAlerta('warning', 'Documento con Observación', `El documento "${docItem.nombreArchivo}" presentó la siguiente observación:\n\n${docItem.errorMsg}\n\nPuede completar los datos en el formulario y pulsar Subir este.`);
     } else if (docItem.advertencia) {
         mostrarModalAlerta('warning', 'Título Duplicado', `Atención: ${docItem.advertencia}`);
     }
@@ -1936,55 +1930,22 @@ function seleccionarDocumentoDeCola(index, guardarActual = true) {
 
 function guardarDatosFormularioEnArray(index) {
     if (index < 0 || index >= documentosEnCola.length) return;
-    if (!documentosEnCola[index]) return;
+    const item = documentosEnCola[index];
+    if (!item) return;
+    const prevTitulo = (item.data && item.data.titulo) ? String(item.data.titulo).trim() : '';
     const currentData = obtenerDatosFormularioActual();
-    const carreraFallback = currentData.id_carrera || documentosEnCola[index].data.id_carrera || 1;
-    documentosEnCola[index].data = clonarDatosCola(Object.assign({}, documentosEnCola[index].data, currentData), carreraFallback);
-}
-
-async function guardarBorradorEnCola() {
-    if (documentoSeleccionadoIndex < 0 || documentoSeleccionadoIndex >= documentosEnCola.length) {
-        mostrarModalAlerta('warning', 'Selección Requerida', 'Seleccione un documento de la cola para guardar sus cambios en borrador.');
-        return;
+    const nuevoTitulo = String(currentData.titulo || '').trim();
+    const carreraFallback = currentData.id_carrera || item.data.id_carrera || 1;
+    item.data = clonarDatosCola(Object.assign({}, item.data, currentData), carreraFallback);
+    if (nuevoTitulo && nuevoTitulo !== prevTitulo) {
+        item.advertencia = '';
+        item.data.ya_existe_en_bd = false;
+        const alertaEl = document.getElementById('alerta_duplicado_titulo');
+        if (alertaEl) alertaEl.style.display = 'none';
     }
-    guardarDatosFormularioEnArray(documentoSeleccionadoIndex);
-    const item = documentosEnCola[documentoSeleccionadoIndex];
-
-    // Verificar si el título ya existe en la base de datos
-    if (item.data && item.data.titulo) {
-        try {
-            const resp = await fetch('?ruta=agregar-documento&accion=verificar_titulo&titulo=' + encodeURIComponent(item.data.titulo));
-            const checkData = await resp.json();
-            if (checkData.status === 'success' && checkData.existe) {
-                item.advertencia = 'Ya existe un proyecto registrado con este título en el repositorio. Modifique el título antes de registrarlo.';
-                const alertaEl = document.getElementById('alerta_duplicado_titulo');
-                if (alertaEl) alertaEl.style.display = 'block';
-            } else {
-                item.advertencia = '';
-                const alertaEl = document.getElementById('alerta_duplicado_titulo');
-                if (alertaEl) alertaEl.style.display = 'none';
-                if (item.estado === 'error' && item.data.archivo_pdf) {
-                    item.estado = 'listo';
-                    item.errorMsg = '';
-                }
-            }
-        } catch (e) {
-            console.error('Error al verificar título:', e);
-        }
-    }
-
-    if (item.estado === 'error' && item.data && item.data.archivo_pdf && !item.advertencia) {
+    if (item.estado === 'error' && item.data && item.data.archivo_pdf && nuevoTitulo && !item.advertencia) {
         item.estado = 'listo';
         item.errorMsg = '';
-    }
-
-    renderizarColaUI();
-
-    const nombre = item.nombreArchivo;
-    if (item.advertencia) {
-        mostrarModalAlerta('warning', 'Borrador Guardado con Advertencia', `Borrador guardado para "${nombre}". Sin embargo:\n\n${item.advertencia}`);
-    } else {
-        mostrarModalAlerta('success', 'Borrador Guardado', `Borrador actualizado en cola para el archivo "${nombre}".`);
     }
 }
 
@@ -2322,7 +2283,7 @@ async function subirLoteABaseDeDatos() {
     // Verificar si algún documento listo tiene advertencia de duplicado
     const conDuplicado = listos.filter(d => d.advertencia);
     if (conDuplicado.length > 0) {
-        mostrarModalAlerta('warning', 'Títulos Duplicados Detectados', 'Uno o más documentos en cola tienen títulos que ya existen en la base de datos. Por favor selecciona el documento, modifica su título y presiona Guardar en Borrador antes de subir el lote.');
+        mostrarModalAlerta('warning', 'Títulos Duplicados Detectados', 'Uno o más documentos en cola tienen títulos que ya existen en la base de datos. Selecciona el documento y modifica su título antes de subir el lote.');
         return;
     }
 
