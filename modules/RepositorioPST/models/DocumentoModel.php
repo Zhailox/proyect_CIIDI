@@ -157,6 +157,12 @@ class DocumentoModel {
             $sql .= " AND COALESCE(dp.activo, true) = true";
         } elseif ($estadoFiltro === 'ocultos') {
             $sql .= " AND COALESCE(dp.activo, true) = false";
+        } elseif ($estadoFiltro === 'con_archivo') {
+            $sql .= " AND (r.archivo_pdf IS NOT NULL AND TRIM(r.archivo_pdf) != '')";
+        } elseif ($estadoFiltro === 'formato_pdf') {
+            $sql .= " AND (r.archivo_pdf IS NOT NULL AND LOWER(TRIM(r.archivo_pdf)) LIKE '%.pdf')";
+        } elseif ($estadoFiltro === 'formato_word') {
+            $sql .= " AND (r.archivo_pdf IS NOT NULL AND (LOWER(TRIM(r.archivo_pdf)) LIKE '%.docx' OR LOWER(TRIM(r.archivo_pdf)) LIKE '%.doc'))";
         } elseif ($estadoFiltro === 'sin_archivo') {
             $sql .= " AND (r.archivo_pdf IS NULL OR TRIM(r.archivo_pdf) = '')";
         } elseif ($estadoFiltro === 'incompletos') {
@@ -386,6 +392,12 @@ class DocumentoModel {
             $sql .= " AND COALESCE(dp.activo, true) = true";
         } elseif ($estadoFiltro === 'ocultos') {
             $sql .= " AND COALESCE(dp.activo, true) = false";
+        } elseif ($estadoFiltro === 'con_archivo') {
+            $sql .= " AND (r.archivo_pdf IS NOT NULL AND TRIM(r.archivo_pdf) != '')";
+        } elseif ($estadoFiltro === 'formato_pdf') {
+            $sql .= " AND (r.archivo_pdf IS NOT NULL AND LOWER(TRIM(r.archivo_pdf)) LIKE '%.pdf')";
+        } elseif ($estadoFiltro === 'formato_word') {
+            $sql .= " AND (r.archivo_pdf IS NOT NULL AND (LOWER(TRIM(r.archivo_pdf)) LIKE '%.docx' OR LOWER(TRIM(r.archivo_pdf)) LIKE '%.doc'))";
         } elseif ($estadoFiltro === 'sin_archivo') {
             $sql .= " AND (r.archivo_pdf IS NULL OR TRIM(r.archivo_pdf) = '')";
         } elseif ($estadoFiltro === 'incompletos') {
@@ -455,6 +467,9 @@ class DocumentoModel {
                     COUNT(DISTINCT CASE WHEN COALESCE(dp.activo, true) = true THEN r.id END) AS total_activos,
                     COUNT(DISTINCT CASE WHEN COALESCE(dp.activo, true) = false THEN r.id END) AS total_ocultos,
                     COUNT(DISTINCT CASE WHEN r.archivo_pdf IS NOT NULL AND TRIM(r.archivo_pdf) != '' THEN r.id END) AS total_con_pdf,
+                    COUNT(DISTINCT CASE WHEN r.archivo_pdf IS NOT NULL AND LOWER(TRIM(r.archivo_pdf)) LIKE '%.pdf' THEN r.id END) AS total_formato_pdf,
+                    COUNT(DISTINCT CASE WHEN r.archivo_pdf IS NOT NULL AND (LOWER(TRIM(r.archivo_pdf)) LIKE '%.docx' OR LOWER(TRIM(r.archivo_pdf)) LIKE '%.doc') THEN r.id END) AS total_formato_word,
+                    COUNT(DISTINCT CASE WHEN r.archivo_pdf IS NULL OR TRIM(r.archivo_pdf) = '' THEN r.id END) AS total_sin_archivo,
                     COUNT(DISTINCT CASE WHEN dp.url_repositorio IS NOT NULL AND TRIM(dp.url_repositorio) != '' THEN r.id END) AS total_con_git,
                     COUNT(DISTINCT CASE WHEN dp.palabras_clave IS NULL OR TRIM(dp.palabras_clave) = '' OR dp.comunidad_beneficiada IS NULL OR TRIM(dp.comunidad_beneficiada) = '' OR dp.resumen IS NULL OR TRIM(dp.resumen) = '' THEN r.id END) AS total_incompletos,
                     COALESCE(SUM(COALESCE(dp.vistas, 0)), 0) AS total_vistas
@@ -469,18 +484,20 @@ class DocumentoModel {
         $tmpDir = $basePath . '/storage/documentos/tmp/';
 
         $pstBytes = 0;
-        $formatos = ['pdf' => 0, 'docx' => 0, 'doc' => 0];
         if (is_dir($pstDir)) {
             foreach (glob($pstDir . '*') ?: [] as $f) {
                 if (is_file($f) && basename($f)[0] !== '.') {
                     $pstBytes += (int)@filesize($f);
-                    $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
-                    if (isset($formatos[$ext])) {
-                        $formatos[$ext]++;
-                    }
                 }
             }
         }
+
+        $formatos = [
+            'pdf'  => $res ? (int)$res['total_formato_pdf'] : 0,
+            'word' => $res ? (int)$res['total_formato_word'] : 0,
+            'docx' => $res ? (int)$res['total_formato_word'] : 0,
+            'doc'  => 0
+        ];
 
         $tmpBytes = 0;
         $tmpCount = 0;
@@ -494,17 +511,20 @@ class DocumentoModel {
         }
 
         return [
-            'total_catalog'     => $res ? (int)$res['total_catalog'] : 0,
-            'total_activos'     => $res ? (int)$res['total_activos'] : 0,
-            'total_ocultos'     => $res ? (int)$res['total_ocultos'] : 0,
-            'total_con_pdf'     => $res ? (int)$res['total_con_pdf'] : 0,
-            'total_con_git'     => $res ? (int)$res['total_con_git'] : 0,
-            'total_incompletos' => $res ? (int)$res['total_incompletos'] : 0,
-            'total_vistas'      => $res ? (int)$res['total_vistas'] : 0,
-            'storage_pst_mb'    => round($pstBytes / (1024 * 1024), 2),
-            'storage_tmp_mb'    => round($tmpBytes / (1024 * 1024), 2),
-            'storage_tmp_count' => $tmpCount,
-            'formatos'          => $formatos
+            'total_catalog'      => $res ? (int)$res['total_catalog'] : 0,
+            'total_activos'      => $res ? (int)$res['total_activos'] : 0,
+            'total_ocultos'      => $res ? (int)$res['total_ocultos'] : 0,
+            'total_con_pdf'      => $res ? (int)$res['total_con_pdf'] : 0,
+            'total_formato_pdf'  => $res ? (int)$res['total_formato_pdf'] : 0,
+            'total_formato_word' => $res ? (int)$res['total_formato_word'] : 0,
+            'total_sin_archivo'  => $res ? (int)$res['total_sin_archivo'] : 0,
+            'total_con_git'      => $res ? (int)$res['total_con_git'] : 0,
+            'total_incompletos'  => $res ? (int)$res['total_incompletos'] : 0,
+            'total_vistas'       => $res ? (int)$res['total_vistas'] : 0,
+            'storage_pst_mb'     => round($pstBytes / (1024 * 1024), 2),
+            'storage_tmp_mb'     => round($tmpBytes / (1024 * 1024), 2),
+            'storage_tmp_count'  => $tmpCount,
+            'formatos'           => $formatos
         ];
     }
 
@@ -2558,6 +2578,7 @@ LIMIT " . (int)$maxResultados;
      * Actualiza de forma rápida la clasificación y datos clave de un proyecto desde la tabla.
      */
     public function actualizarRapidoPST(int $id, array $datos): bool {
+        $datos = $this->cleanInputDatos($datos);
         $titulo = trim((string)($datos['titulo'] ?? ''));
         if ($titulo === '') {
             throw new Exception("El título del proyecto no puede quedar vacío.");
@@ -2570,31 +2591,63 @@ LIMIT " . (int)$maxResultados;
         try {
             $db->beginTransaction();
 
-            $anio = !empty($datos['anio_publicacion']) ? (int)$datos['anio_publicacion'] : (int)date('Y');
+            $stmtActual = $db->prepare("SELECT r.anio_publicacion, dp.id_carrera, dp.nivel_academico, dp.id_trayecto, dp.comunidad_beneficiada, dp.palabras_clave, dp.url_repositorio, COALESCE(dp.activo, true) AS activo
+                                        FROM public.recursos r
+                                        LEFT JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
+                                        WHERE r.id = ? AND r.id_tipo_recurso = 1 LIMIT 1");
+            $stmtActual->execute([$id]);
+            $actual = $stmtActual->fetch(PDO::FETCH_ASSOC);
+            if (!$actual) {
+                throw new Exception("El proyecto seleccionado no existe.");
+            }
+
+            $anio = !empty($datos['anio_publicacion']) ? (int)$datos['anio_publicacion'] : (int)($actual['anio_publicacion'] ?? date('Y'));
             $stmtRec = $db->prepare("UPDATE public.recursos SET titulo = ?, anio_publicacion = ? WHERE id = ? AND id_tipo_recurso = 1");
             $stmtRec->execute([$titulo, $anio, $id]);
 
-            $idCarrera = !empty($datos['id_carrera']) ? (int)$datos['id_carrera'] : 1;
-            $nivelRaw = !empty($datos['nivel_academico']) ? trim((string)$datos['nivel_academico']) : 'Pregrado';
+            $idCarrera = !empty($datos['id_carrera']) ? (int)$datos['id_carrera'] : (int)($actual['id_carrera'] ?? 1);
+            $nivelRaw = array_key_exists('nivel_academico', $datos) && trim((string)$datos['nivel_academico']) !== ''
+                ? trim((string)$datos['nivel_academico'])
+                : (string)($actual['nivel_academico'] ?? 'Pregrado');
             $nivelMap = [
                 'Especialización' => 'Especializacion',
                 'Maestría'        => 'Maestria'
             ];
             $nivelAcademico = $nivelMap[$nivelRaw] ?? $nivelRaw;
 
-            $idTrayecto = !empty($datos['id_trayecto']) ? (int)$datos['id_trayecto'] : null;
             $nivelesConTrayecto = $this->getNivelesConTrayecto();
-            if (!$idTrayecto && !empty($datos['trayecto']) && in_array($nivelRaw, $nivelesConTrayecto, true)) {
+            $requiereTrayecto = in_array($nivelAcademico, $nivelesConTrayecto, true) || in_array($nivelRaw, $nivelesConTrayecto, true);
+
+            if (!$requiereTrayecto) {
+                $idTrayecto = null;
+            } elseif (!empty($datos['id_trayecto'])) {
+                $idTrayecto = (int)$datos['id_trayecto'];
+            } elseif (array_key_exists('trayecto', $datos) && trim((string)$datos['trayecto']) !== '') {
                 $idTrayecto = $this->resolverIdTrayecto($idCarrera, $datos['trayecto']);
+            } else {
+                $idTrayecto = !empty($actual['id_trayecto']) ? (int)$actual['id_trayecto'] : $this->resolverIdTrayecto($idCarrera, 'Trayecto I');
             }
 
-            $comunidad = isset($datos['comunidad_beneficiada']) ? trim((string)$datos['comunidad_beneficiada']) : null;
-            $palabras = isset($datos['palabras_clave']) ? trim((string)$datos['palabras_clave']) : null;
-            $urlGit = !empty($datos['url_repositorio']) ? trim((string)$datos['url_repositorio']) : null;
-            if ($urlGit && !filter_var($urlGit, FILTER_VALIDATE_URL)) {
-                $urlGit = null;
+            $comunidad = array_key_exists('comunidad_beneficiada', $datos)
+                ? (trim((string)$datos['comunidad_beneficiada']) !== '' ? trim((string)$datos['comunidad_beneficiada']) : null)
+                : $actual['comunidad_beneficiada'];
+
+            $palabras = array_key_exists('palabras_clave', $datos)
+                ? (trim((string)$datos['palabras_clave']) !== '' ? trim((string)$datos['palabras_clave']) : null)
+                : $actual['palabras_clave'];
+
+            if (array_key_exists('url_repositorio', $datos)) {
+                $urlGit = !empty($datos['url_repositorio']) ? trim((string)$datos['url_repositorio']) : null;
+                if ($urlGit && !filter_var($urlGit, FILTER_VALIDATE_URL)) {
+                    $urlGit = null;
+                }
+            } else {
+                $urlGit = $actual['url_repositorio'];
             }
-            $activo = isset($datos['activo']) ? ((string)$datos['activo'] === '1' || $datos['activo'] === true || $datos['activo'] === 1) : true;
+
+            $activo = isset($datos['activo'])
+                ? ((string)$datos['activo'] === '1' || $datos['activo'] === true || $datos['activo'] === 1)
+                : (bool)$actual['activo'];
 
             $stmtDet = $db->prepare("UPDATE public.detalles_proyectos 
                                      SET id_carrera = ?, nivel_academico = ?, id_trayecto = ?, comunidad_beneficiada = ?, palabras_clave = ?, url_repositorio = ?, activo = ?, vector_semantico = NULL

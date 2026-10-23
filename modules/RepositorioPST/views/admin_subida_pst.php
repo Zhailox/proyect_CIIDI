@@ -540,19 +540,31 @@ if (typeof window.mammoth === 'undefined') {
             $storageTmpMb        = $statsResumen['storage_tmp_mb'] ?? 0;
             $storageTmpCount     = $statsResumen['storage_tmp_count'] ?? 0;
             $formatosConteo      = $statsResumen['formatos'] ?? ['pdf' => 0, 'docx' => 0, 'doc' => 0];
+            $totalFormatoPdf     = $statsResumen['total_formato_pdf'] ?? ($formatosConteo['pdf'] ?? 0);
+            $totalFormatoWord    = $statsResumen['total_formato_word'] ?? ((int)($formatosConteo['docx'] ?? 0) + (int)($formatosConteo['doc'] ?? 0));
 
-            $fCarrera = $filtrosAdmin['carrera_id'] ?? '';
-            $fTrayecto = $filtrosAdmin['trayecto'] ?? '';
-            $fLinea = $filtrosAdmin['linea_id'] ?? '';
-            $fAnio = $filtrosAdmin['anio'] ?? '';
-            $fEstado = $filtrosAdmin['estado_filtro'] ?? '';
-            $fOrden = $filtrosAdmin['orden'] ?? 'recientes';
-            $fLimit = $pagination['limit'] ?? 10;
-            $hayFiltrosActivos = !empty($q) || !empty($fCarrera) || !empty($fTrayecto) || !empty($fLinea) || !empty($fAnio) || !empty($fEstado) || ($fOrden !== 'recientes');
+            $fCarrera   = $filtrosAdmin['carrera_id'] ?? '';
+            $fNivel     = $filtrosAdmin['nivel_academico'] ?? '';
+            $fTrayecto  = $filtrosAdmin['trayecto'] ?? '';
+            $fLinea     = $filtrosAdmin['linea_id'] ?? '';
+            $fDimension = $filtrosAdmin['dimension_id'] ?? '';
+            $fAnio      = $filtrosAdmin['anio'] ?? '';
+            $fEstado    = $filtrosAdmin['estado_filtro'] ?? '';
+            $fOrden     = $filtrosAdmin['orden'] ?? 'recientes';
+            $fLimit     = $pagination['limit'] ?? 10;
+            $hayFiltrosActivos = !empty($q) || !empty($fCarrera) || !empty($fNivel) || !empty($fTrayecto) || !empty($fLinea) || !empty($fDimension) || !empty($fAnio) || !empty($fEstado) || ($fOrden !== 'recientes');
+
+            $paramsEstadoRetorno = [];
+            foreach (['q', 'carrera_id', 'nivel_academico', 'trayecto', 'linea_id', 'dimension_id', 'anio', 'estado_filtro', 'orden', 'limit', 'page'] as $kParamRet) {
+                if (isset($_GET[$kParamRet]) && $_GET[$kParamRet] !== '') {
+                    $paramsEstadoRetorno[$kParamRet] = $_GET[$kParamRet];
+                }
+            }
+            $qsFiltrosActuales = !empty($paramsEstadoRetorno) ? ('&' . http_build_query($paramsEstadoRetorno)) : '';
 
             $exportParams = $_GET;
             $exportParams['ruta'] = 'agregar-documento';
-            $exportParams['accion'] = 'exportar_csv';
+            $exportParams['accion'] = 'exportar_excel';
             $urlExportarCsv = '?' . http_build_query($exportParams);
             ?>
 
@@ -574,32 +586,46 @@ if (typeof window.mammoth === 'undefined') {
                 </a>
 
                 <!-- Tarjeta 2: Visibles y Ocultos -->
-                <a href="?ruta=agregar-documento&estado_filtro=<?= $fEstado === 'ocultos' ? 'activos' : 'ocultos' ?>" style="text-decoration: none; background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid <?= in_array($fEstado, ['activos', 'ocultos'], true) ? 'var(--color-secundario)' : 'rgba(80, 89, 132, 0.18)' ?>; border-radius: 12px; padding: 0.95rem 1.1rem; display: flex; align-items: center; gap: 0.9rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03); transition: transform 0.15s ease;" title="Haz clic para filtrar visibles u ocultos">
-                    <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(80, 89, 132, 0.12); color: var(--color-secundario); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+                <div style="background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid <?= in_array($fEstado, ['activos', 'ocultos'], true) ? 'var(--color-secundario)' : 'rgba(80, 89, 132, 0.18)' ?>; border-radius: 12px; padding: 0.95rem 1.1rem; display: flex; align-items: center; gap: 0.9rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03);">
+                    <a href="?ruta=agregar-documento&estado_filtro=activos" style="width: 44px; height: 44px; border-radius: 10px; background: rgba(80, 89, 132, 0.12); color: var(--color-secundario); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; text-decoration: none;" title="Filtrar proyectos visibles">
                         <i class="ph ph-eye"></i>
-                    </div>
-                    <div style="min-width: 0;">
-                        <div style="font-size: 1.45rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= number_format($totalActivosReal) ?></div>
-                        <div style="font-size: 0.72rem; font-weight: 700; color: var(--texto-silenciado); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 0.15rem;">Visibles al Público</div>
-                        <div style="font-size: 0.72rem; color: var(--texto-silenciado); font-weight: 600; margin-top: 0.15rem;">
-                            <?= number_format($totalOcultosReal) ?> ocultos actualmente
+                    </a>
+                    <div style="min-width: 0; flex: 1;">
+                        <a href="?ruta=agregar-documento&estado_filtro=activos" style="text-decoration: none; display: block;" title="Filtrar proyectos visibles">
+                            <div style="font-size: 1.45rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= number_format($totalActivosReal) ?></div>
+                            <div style="font-size: 0.72rem; font-weight: 700; color: <?= $fEstado === 'activos' ? 'var(--color-secundario)' : 'var(--texto-silenciado)' ?>; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 0.15rem;">Visibles al Público</div>
+                        </a>
+                        <div style="margin-top: 0.22rem; display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap;">
+                            <a href="?ruta=agregar-documento&estado_filtro=ocultos" style="text-decoration: none; font-size: 0.68rem; font-weight: 700; padding: 0.1rem 0.42rem; border-radius: 4px; background: <?= $fEstado === 'ocultos' ? 'var(--color-secundario)' : 'rgba(80, 89, 132, 0.1)' ?>; color: <?= $fEstado === 'ocultos' ? '#ffffff' : 'var(--color-secundario)' ?>; border: 1px solid rgba(80, 89, 132, 0.22);" title="Filtrar proyectos ocultos">
+                                <?= number_format($totalOcultosReal) ?> ocultos
+                            </a>
                         </div>
                     </div>
-                </a>
+                </div>
 
                 <!-- Tarjeta 3: Archivos Digitales y Formatos -->
-                <a href="?ruta=agregar-documento&estado_filtro=con_git" style="text-decoration: none; background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid <?= $fEstado === 'con_git' ? 'var(--color-terciario)' : 'rgba(80, 89, 132, 0.18)' ?>; border-radius: 12px; padding: 0.95rem 1.1rem; display: flex; align-items: center; gap: 0.9rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03); transition: transform 0.15s ease;" title="Haz clic para ver los proyectos con enlace de código">
-                    <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(112, 144, 203, 0.15); color: var(--color-terciario); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+                <div style="background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid <?= in_array($fEstado, ['con_archivo', 'formato_pdf', 'formato_word', 'con_git'], true) ? 'var(--color-terciario)' : 'rgba(80, 89, 132, 0.18)' ?>; border-radius: 12px; padding: 0.95rem 1.1rem; display: flex; align-items: center; gap: 0.9rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03);">
+                    <a href="?ruta=agregar-documento&estado_filtro=con_archivo" style="width: 44px; height: 44px; border-radius: 10px; background: rgba(112, 144, 203, 0.15); color: var(--color-terciario); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; text-decoration: none;" title="Filtrar proyectos con documento adjunto">
                         <i class="ph ph-file-text"></i>
-                    </div>
-                    <div style="min-width: 0;">
-                        <div style="font-size: 1.45rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= number_format($totalConPdfReal) ?></div>
-                        <div style="font-size: 0.72rem; font-weight: 700; color: var(--texto-silenciado); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 0.15rem;">Documentos Adjuntos</div>
-                        <div style="font-size: 0.71rem; color: var(--color-terciario); font-weight: 600; margin-top: 0.15rem;">
-                            <?= (int)$formatosConteo['pdf'] ?> PDF • <?= (int)$formatosConteo['docx'] + (int)$formatosConteo['doc'] ?> Word • <?= number_format($totalConGitReal) ?> con Git
+                    </a>
+                    <div style="min-width: 0; flex: 1;">
+                        <a href="?ruta=agregar-documento&estado_filtro=con_archivo" style="text-decoration: none; display: block;" title="Filtrar todos los proyectos con documento adjunto">
+                            <div style="font-size: 1.45rem; font-weight: 800; color: var(--texto-titulos); line-height: 1.1;"><?= number_format($totalConPdfReal) ?></div>
+                            <div style="font-size: 0.72rem; font-weight: 700; color: <?= $fEstado === 'con_archivo' ? 'var(--color-secundario)' : 'var(--texto-silenciado)' ?>; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 0.15rem;">Documentos Adjuntos</div>
+                        </a>
+                        <div style="margin-top: 0.22rem; display: flex; align-items: center; gap: 0.28rem; flex-wrap: wrap;">
+                            <a href="?ruta=agregar-documento&estado_filtro=formato_pdf" style="text-decoration: none; font-size: 0.67rem; font-weight: 700; padding: 0.1rem 0.38rem; border-radius: 4px; background: <?= $fEstado === 'formato_pdf' ? 'var(--color-secundario)' : 'rgba(112, 144, 203, 0.12)' ?>; color: <?= $fEstado === 'formato_pdf' ? '#ffffff' : 'var(--color-secundario)' ?>; border: 1px solid rgba(112, 144, 203, 0.28);" title="Filtrar documentos en formato PDF">
+                                <?= number_format($totalFormatoPdf) ?> PDF
+                            </a>
+                            <a href="?ruta=agregar-documento&estado_filtro=formato_word" style="text-decoration: none; font-size: 0.67rem; font-weight: 700; padding: 0.1rem 0.38rem; border-radius: 4px; background: <?= $fEstado === 'formato_word' ? 'var(--color-secundario)' : 'rgba(112, 144, 203, 0.12)' ?>; color: <?= $fEstado === 'formato_word' ? '#ffffff' : 'var(--color-secundario)' ?>; border: 1px solid rgba(112, 144, 203, 0.28);" title="Filtrar documentos en formato Word">
+                                <?= number_format($totalFormatoWord) ?> Word
+                            </a>
+                            <a href="?ruta=agregar-documento&estado_filtro=con_git" style="text-decoration: none; font-size: 0.67rem; font-weight: 700; padding: 0.1rem 0.38rem; border-radius: 4px; background: <?= $fEstado === 'con_git' ? 'var(--color-secundario)' : 'rgba(80, 89, 132, 0.1)' ?>; color: <?= $fEstado === 'con_git' ? '#ffffff' : 'var(--color-secundario)' ?>; border: 1px solid rgba(80, 89, 132, 0.22);" title="Filtrar proyectos con repositorio Git">
+                                <?= number_format($totalConGitReal) ?> Git
+                            </a>
                         </div>
                     </div>
-                </a>
+                </div>
 
                 <!-- Tarjeta 4: Calidad de las Fichas -->
                 <a href="?ruta=agregar-documento&estado_filtro=incompletos" style="text-decoration: none; background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid <?= $fEstado === 'incompletos' ? 'var(--color-secundario)' : 'rgba(80, 89, 132, 0.18)' ?>; border-radius: 12px; padding: 0.95rem 1.1rem; display: flex; align-items: center; gap: 0.9rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03); transition: transform 0.15s ease;" title="Ver proyectos a los que les falta comunidad o palabras clave">
@@ -667,8 +693,8 @@ if (typeof window.mammoth === 'undefined') {
                                 <a href="?ruta=gestion-red-onnx" class="btn-cancel" style="padding: 0.5rem 0.9rem; font-size: 0.8rem; background: #ffffff; color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.3);" title="Configurar parámetros y fidelidad del modelo ONNX de Redes Neuronales">
                                     <i class="ph ph-cpu"></i> Modelo ONNX IA
                                 </a>
-                                <a href="<?= htmlspecialchars($urlExportarCsv) ?>" class="btn-cancel" style="padding: 0.5rem 0.9rem; font-size: 0.8rem; background: rgba(80, 89, 132, 0.08); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.2);" title="Descargar listado en formato compatible con Excel">
-                                    <i class="ph ph-file-csv"></i> Exportar listado
+                                <a href="<?= htmlspecialchars($urlExportarCsv) ?>" class="btn-cancel" style="padding: 0.5rem 0.9rem; font-size: 0.8rem; background: rgba(80, 89, 132, 0.08); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.2);" title="Descargar libro de Excel con filtros interactivos y gráficos">
+                                    <i class="ph ph-file-xls"></i> Exportar Excel
                                 </a>
 
                                 <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'eliminar', 'RepositorioPST', false) && $totalCatalogReal > 0): ?>
@@ -686,13 +712,26 @@ if (typeof window.mammoth === 'undefined') {
                         </div>
 
                         <!-- Fila Inferior: Selectores Multicriterio -->
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.6rem; padding-top: 0.65rem; border-top: 1px solid rgba(112, 144, 203, 0.18);">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 0.6rem; padding-top: 0.65rem; border-top: 1px solid rgba(112, 144, 203, 0.18);">
                             <div>
                                 <select name="carrera_id" class="upload-input" onchange="this.form.submit()" style="font-size: 0.8rem !important;">
                                     <option value="">Todas las carreras</option>
                                     <?php foreach ($carrerasList as $cItem): ?>
                                         <option value="<?= $cItem['id'] ?>" <?= ((string)$fCarrera === (string)$cItem['id']) ? 'selected' : '' ?>>
                                             <?= htmlspecialchars($cItem['nombre']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div>
+                                <select name="nivel_academico" class="upload-input" onchange="this.form.submit()" style="font-size: 0.8rem !important;">
+                                    <option value="">Todos los niveles</option>
+                                    <?php foreach (($nivelesAcademicos ?? ['Pregrado', 'Especialización', 'Maestría', 'Doctorado']) as $nvOpt): 
+                                        $nvLabel = preg_replace('/\s*\([^)]*\)/', '', (string)($labelsNiveles[$nvOpt] ?? $nvOpt));
+                                    ?>
+                                        <option value="<?= htmlspecialchars($nvOpt) ?>" <?= ($fNivel === $nvOpt) ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars(trim($nvLabel)) ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
@@ -719,6 +758,24 @@ if (typeof window.mammoth === 'undefined') {
                             </div>
 
                             <div>
+                                <select name="dimension_id" class="upload-input" onchange="this.form.submit()" style="font-size: 0.8rem !important;">
+                                    <option value="">Todas las dimensiones</option>
+                                    <?php 
+                                    $dimsFiltroTabla = $dimensiones ?? [];
+                                    if (!empty($fLinea)) {
+                                        $dimsFiltroTabla = array_filter($dimsFiltroTabla, function($dIt) use ($fLinea) {
+                                            return isset($dIt['id_linea']) && (string)$dIt['id_linea'] === (string)$fLinea;
+                                        });
+                                    }
+                                    foreach ($dimsFiltroTabla as $dItem): ?>
+                                        <option value="<?= $dItem['id'] ?>" <?= ((string)$fDimension === (string)$dItem['id']) ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($dItem['nombre']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div>
                                 <select name="anio" class="upload-input" onchange="this.form.submit()" style="font-size: 0.8rem !important;">
                                     <option value="">Todos los años</option>
                                     <?php for ($y = (int)date('Y') + 1; $y >= 2018; $y--): ?>
@@ -733,6 +790,9 @@ if (typeof window.mammoth === 'undefined') {
                                     <option value="activos" <?= $fEstado === 'activos' ? 'selected' : '' ?>>Solo visibles</option>
                                     <option value="ocultos" <?= $fEstado === 'ocultos' ? 'selected' : '' ?>>Solo ocultos</option>
                                     <option value="incompletos" <?= $fEstado === 'incompletos' ? 'selected' : '' ?>>Fichas por completar</option>
+                                    <option value="con_archivo" <?= $fEstado === 'con_archivo' ? 'selected' : '' ?>>Con documento adjunto</option>
+                                    <option value="formato_pdf" <?= $fEstado === 'formato_pdf' ? 'selected' : '' ?>>Formato PDF</option>
+                                    <option value="formato_word" <?= $fEstado === 'formato_word' ? 'selected' : '' ?>>Formato Word</option>
                                     <option value="con_git" <?= $fEstado === 'con_git' ? 'selected' : '' ?>>Con enlace Git</option>
                                     <option value="sin_archivo" <?= $fEstado === 'sin_archivo' ? 'selected' : '' ?>>Sin documento adjunto</option>
                                 </select>
@@ -795,7 +855,11 @@ if (typeof window.mammoth === 'undefined') {
                                         $fullDocPath = $baseRoot . '/' . ltrim($doc['archivo_pdf'], '/\\');
                                         $pesoArchivoMb = round(((int)@filesize($fullDocPath)) / (1024 * 1024), 2);
                                     }
-                                    $fichaIncompleta = empty(trim($doc['palabras_clave'] ?? '')) || empty(trim($doc['comunidad_beneficiada'] ?? '')) || empty(trim($doc['resumen'] ?? ''));
+                                    $camposFaltantesRow = [];
+                                    if (empty(trim($doc['comunidad_beneficiada'] ?? ''))) $camposFaltantesRow[] = 'comunidad';
+                                    if (empty(trim($doc['palabras_clave'] ?? ''))) $camposFaltantesRow[] = 'palabras clave';
+                                    if (empty(trim($doc['resumen'] ?? ''))) $camposFaltantesRow[] = 'resumen';
+                                    $fichaIncompleta = !empty($camposFaltantesRow);
                                 ?>
                                     <tr style="background: rgba(255, 255, 255, 0.5); transition: all 0.2s ease; border-radius: 8px;">
                                          <td style="text-align: center; vertical-align: middle; padding: 0.75rem 0.5rem; border-radius: 8px 0 0 8px;">
@@ -827,6 +891,12 @@ if (typeof window.mammoth === 'undefined') {
                                                       </span>
                                                   <?php endif; ?>
 
+                                                  <?php if (!empty($doc['dimension_nombre'])): ?>
+                                                      <span class="pst-badge-soft" style="background-color: rgba(80, 89, 132, 0.08); color: var(--color-secundario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.66rem; font-weight: 600; border: 1px solid rgba(80, 89, 132, 0.18);">
+                                                          <?= htmlspecialchars($doc['dimension_nombre']) ?>
+                                                      </span>
+                                                  <?php endif; ?>
+
                                                   <?php if (($doc['activo'] ?? true)): ?>
                                                       <span style="background: rgba(80, 89, 132, 0.1); color: var(--color-secundario); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 700; border: 1px solid rgba(80, 89, 132, 0.2); display: inline-flex; align-items: center; gap: 0.2rem;">
                                                           <span style="width: 6px; height: 6px; border-radius: 50%; background-color: var(--color-secundario); display: inline-block;"></span> Visible
@@ -848,7 +918,7 @@ if (typeof window.mammoth === 'undefined') {
                                                   <?php endif; ?>
 
                                                   <?php if ($fichaIncompleta): ?>
-                                                      <span style="background: #ffffff; color: var(--color-terciario); padding: 0.12rem 0.4rem; border-radius: 4px; font-size: 0.66rem; font-weight: 700; border: 1px solid rgba(112, 144, 203, 0.35);" title="A esta ficha le falta comunidad o palabras clave">
+                                                      <span style="background: #ffffff; color: var(--color-terciario); padding: 0.12rem 0.4rem; border-radius: 4px; font-size: 0.66rem; font-weight: 700; border: 1px solid rgba(112, 144, 203, 0.35);" title="<?= htmlspecialchars('Falta completar: ' . implode(', ', $camposFaltantesRow)) ?>">
                                                           Por completar
                                                       </span>
                                                   <?php endif; ?>
@@ -909,7 +979,7 @@ if (typeof window.mammoth === 'undefined') {
                                                      </button>
 
                                                      <!-- Alternar Visibilidad -->
-                                                     <a href="?ruta=agregar-documento&accion=toggle_estado&id=<?= $doc['id'] ?>" class="btn-action-edit" style="background: rgba(80, 89, 132, 0.08); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.2); border-radius: 6px; padding: 0.32rem 0.55rem; font-size: 0.75rem; font-weight: 700; text-decoration: none;" title="<?= ($doc['activo'] ?? true) ? 'Ocultar del catálogo público' : 'Hacer visible en el catálogo público' ?>">
+                                                     <a href="?ruta=agregar-documento&accion=toggle_estado&id=<?= $doc['id'] . htmlspecialchars($qsFiltrosActuales) ?>" class="btn-action-edit" style="background: rgba(80, 89, 132, 0.08); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.2); border-radius: 6px; padding: 0.32rem 0.55rem; font-size: 0.75rem; font-weight: 700; text-decoration: none;" title="<?= ($doc['activo'] ?? true) ? 'Ocultar del catálogo público' : 'Hacer visible en el catálogo público' ?>">
                                                          <i class="ph <?= ($doc['activo'] ?? true) ? 'ph-eye-slash' : 'ph-eye' ?>"></i> <?= ($doc['activo'] ?? true) ? 'Ocultar' : 'Mostrar' ?>
                                                      </a>
 
@@ -920,7 +990,7 @@ if (typeof window.mammoth === 'undefined') {
                                                  <?php endif; ?>
 
                                                  <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'eliminar', 'RepositorioPST', false)): ?>
-                                                     <a href="javascript:void(0)" class="btn-action-edit" style="background: #ffffff; color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.28); border-radius: 6px; padding: 0.32rem 0.55rem; font-size: 0.75rem; font-weight: 700; text-decoration: none;" title="Eliminar este proyecto" onclick="confirmarEliminacionModal('?ruta=agregar-documento&accion=eliminar&id=<?= $doc['id'] ?>')">
+                                                     <a href="javascript:void(0)" class="btn-action-edit" style="background: #ffffff; color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.28); border-radius: 6px; padding: 0.32rem 0.55rem; font-size: 0.75rem; font-weight: 700; text-decoration: none;" title="Eliminar este proyecto" onclick="confirmarEliminacionModal('?ruta=agregar-documento&accion=eliminar&id=<?= $doc['id'] . htmlspecialchars($qsFiltrosActuales) ?>')">
                                                          <i class="ph ph-trash"></i> Eliminar
                                                      </a>
                                                  <?php endif; ?>
@@ -999,6 +1069,14 @@ if (typeof window.mammoth === 'undefined') {
                     <span id="contadorSeleccionadosLote">0</span> seleccionados
                 </span>
                 <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                    <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'editar', 'RepositorioPST', false)): ?>
+                        <button type="button" onclick="ejecutarAccionMasivaTabla('activar')" class="btn-cancel" style="padding: 0.4rem 0.85rem; font-size: 0.78rem; background: rgba(80, 89, 132, 0.1); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25); display: inline-flex; align-items: center; gap: 5px; font-weight: 700;">
+                            <i class="ph ph-eye"></i> Mostrar seleccionados
+                        </button>
+                        <button type="button" onclick="ejecutarAccionMasivaTabla('ocultar')" class="btn-cancel" style="padding: 0.4rem 0.85rem; font-size: 0.78rem; background: #ffffff; color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25); display: inline-flex; align-items: center; gap: 5px; font-weight: 700;">
+                            <i class="ph ph-eye-slash"></i> Ocultar seleccionados
+                        </button>
+                    <?php endif; ?>
                     <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'eliminar', 'RepositorioPST', false)): ?>
                         <button type="button" onclick="confirmarEliminarLoteTabla()" class="btn-save" style="padding: 0.4rem 0.9rem; font-size: 0.78rem; background: var(--color-secundario); color: #ffffff; display: inline-flex; align-items: center; gap: 5px;">
                             <i class="ph ph-trash"></i> Eliminar seleccionados
@@ -1018,13 +1096,13 @@ if (typeof window.mammoth === 'undefined') {
 </div>
 
 <!-- Modal de Carga / Extracción de Datos -->
-<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; color: white;">
-    <div style="background: var(--bg-card, #ffffff); color: var(--texto-comun, #333); padding: 2.2rem; border-radius: var(--radius-lg, 16px); max-width: 480px; width: 90%; text-align: center; box-shadow: 0 12px 35px rgba(0,0,0,0.2); border: 1px solid rgba(80, 89, 132, 0.2);">
+<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; padding: 1rem; box-sizing: border-box; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; color: white;">
+    <div style="background: var(--bg-card, #ffffff); color: var(--texto-comun, #333); padding: 2rem; border-radius: var(--radius-lg, 16px); max-width: 480px; width: 92%; max-height: 88vh; overflow-y: auto; box-sizing: border-box; text-align: center; box-shadow: 0 12px 35px rgba(0,0,0,0.2); border: 1px solid rgba(80, 89, 132, 0.2);">
         <div style="font-size: 3rem; color: var(--color-secundario); margin-bottom: 1rem; animation: pulse-loader 1.5s infinite ease-in-out;">
             <i class="ph-bold ph-cpu"></i>
         </div>
-        <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--texto-titulos); margin-bottom: 0.5rem;" id="loaderTitle">Procesando Archivo</h3>
-        <p style="font-size: 0.85rem; color: var(--texto-silenciado); margin-bottom: 1.5rem;" id="loaderText">Extrayendo texto y analizando metadatos del proyecto...</p>
+        <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--texto-titulos); margin-bottom: 0.5rem; word-break: break-word;" id="loaderTitle">Procesando Archivo</h3>
+        <p style="font-size: 0.85rem; color: var(--texto-silenciado); margin-bottom: 1.5rem; word-break: break-word; overflow-wrap: anywhere; max-height: 24vh; overflow-y: auto;" id="loaderText">Extrayendo texto y analizando metadatos del proyecto...</p>
         
         <!-- Barra de Progreso -->
         <div style="width: 100%; height: 8px; background-color: rgba(80, 89, 132, 0.12); border-radius: 4px; overflow: hidden; margin-bottom: 0.5rem;">
@@ -1289,33 +1367,65 @@ function procesarArchivosSeleccionados(fileList) {
     }
 
     // Notificar al usuario si hubo archivos rechazados u omitidos por cupo, sin descartar los válidos
-    const avisosRechazo = [];
+    const bloquesRechazoHtml = [];
+    const renderizarListaOmitidos = (tituloBloque, cantidad, itemsHtml) => `
+        <div style="margin-top: 0.65rem; border: 1px solid rgba(80, 89, 132, 0.2); border-radius: 8px; background: #ffffff; overflow: hidden;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.45rem 0.7rem; background: rgba(80, 89, 132, 0.08); border-bottom: 1px solid rgba(80, 89, 132, 0.15);">
+                <span style="font-size: 0.78rem; font-weight: 800; color: var(--color-secundario);">${tituloBloque}</span>
+                <span style="font-size: 0.72rem; font-weight: 800; padding: 0.12rem 0.5rem; border-radius: 999px; background: var(--color-secundario); color: #ffffff; flex-shrink: 0;">${cantidad}</span>
+            </div>
+            <div style="max-height: 150px; overflow-y: auto; padding: 0.4rem 0.65rem; background: #f8fafc; display: flex; flex-direction: column; gap: 0.28rem;">
+                ${itemsHtml}
+            </div>
+        </div>
+    `;
+
     if (invalidFormatFiles.length > 0) {
-        const nombresInv = invalidFormatFiles.map(f => f.name).join(', ');
-        avisosRechazo.push(`Formato no admitido, solo se aceptan PDF y Word:\n• ${nombresInv}`);
+        const filasInv = invalidFormatFiles.map((f, idx) => `
+            <div style="display: flex; align-items: flex-start; gap: 0.4rem; font-size: 0.78rem; color: var(--texto-titulos); line-height: 1.35; word-break: break-word; overflow-wrap: anywhere;">
+                <span style="color: var(--color-terciario); font-weight: 700; flex-shrink: 0;">${idx + 1}.</span>
+                <span>${escapeHtml(f.name)}</span>
+            </div>
+        `).join('');
+        bloquesRechazoHtml.push(renderizarListaOmitidos('Formato no admitido · Solo PDF y Word', invalidFormatFiles.length, filasInv));
     }
     if (oversizedFiles.length > 0) {
-        const detallesOversized = oversizedFiles.map(f => `• ${f.name} con ${(f.size / (1024 * 1024)).toFixed(2)} MB`).join('\n');
-        avisosRechazo.push(`Superan el tamaño máximo permitido de ${MAX_FILE_SIZE_MB} MB:\n${detallesOversized}`);
+        const filasOver = oversizedFiles.map((f, idx) => `
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; font-size: 0.78rem; color: var(--texto-titulos); line-height: 1.35; word-break: break-word; overflow-wrap: anywhere;">
+                <span><strong style="color: var(--color-terciario);">${idx + 1}.</strong> ${escapeHtml(f.name)}</span>
+                <span style="font-size: 0.72rem; font-weight: 700; color: var(--color-secundario); flex-shrink: 0;">${(f.size / (1024 * 1024)).toFixed(2)} MB</span>
+            </div>
+        `).join('');
+        bloquesRechazoHtml.push(renderizarListaOmitidos(`Superan el límite de ${MAX_FILE_SIZE_MB} MB`, oversizedFiles.length, filasOver));
     }
     if (batchLimitFiles.length > 0) {
-        const nombresLimit = batchLimitFiles.map(f => f.name).join(', ');
-        avisosRechazo.push(`Superan el cupo máximo de ${MAX_ARCHIVOS_LOTE} archivos en cola:\n• ${nombresLimit}`);
+        const filasLimit = batchLimitFiles.map((f, idx) => `
+            <div style="display: flex; align-items: flex-start; gap: 0.4rem; font-size: 0.78rem; color: var(--texto-titulos); line-height: 1.35; word-break: break-word; overflow-wrap: anywhere;">
+                <span style="color: var(--color-terciario); font-weight: 700; flex-shrink: 0;">${idx + 1}.</span>
+                <span>${escapeHtml(f.name)}</span>
+            </div>
+        `).join('');
+        bloquesRechazoHtml.push(renderizarListaOmitidos(`Superan el cupo máximo de ${MAX_ARCHIVOS_LOTE} archivos en cola`, batchLimitFiles.length, filasLimit));
     }
 
-    if (avisosRechazo.length > 0) {
+    if (bloquesRechazoHtml.length > 0) {
+        const totalOmitidos = invalidFormatFiles.length + oversizedFiles.length + batchLimitFiles.length;
         if (validFiles.length > 0) {
-            mostrarModalAlerta(
-                'warning',
-                'Aviso de Carga por Lotes',
-                `Se procesarán ${validFiles.length} archivos válidos.\n\nLos siguientes archivos fueron omitidos:\n\n${avisosRechazo.join('\n\n')}`
-            );
+            const resumenHtml = `
+                <div style="background: rgba(80, 89, 132, 0.08); border: 1px solid rgba(80, 89, 132, 0.2); border-radius: 8px; padding: 0.55rem 0.75rem; margin-bottom: 0.5rem; font-size: 0.82rem; color: var(--texto-titulos);">
+                    Se procesarán <strong style="color: var(--color-secundario);">${validFiles.length} archivos válidos</strong> y se omitieron <strong style="color: var(--color-secundario);">${totalOmitidos} archivos</strong>:
+                </div>
+                ${bloquesRechazoHtml.join('')}
+            `;
+            mostrarModalAlerta('warning', 'Aviso de Carga por Lotes', resumenHtml, null, true);
         } else {
-            mostrarModalAlerta(
-                'warning',
-                'Archivos Rechazados',
-                `Ninguno de los archivos seleccionados pudo ser cargado:\n\n${avisosRechazo.join('\n\n')}`
-            );
+            const resumenHtml = `
+                <div style="background: rgba(80, 89, 132, 0.08); border: 1px solid rgba(80, 89, 132, 0.2); border-radius: 8px; padding: 0.55rem 0.75rem; margin-bottom: 0.5rem; font-size: 0.82rem; color: var(--texto-titulos);">
+                    Ninguno de los <strong style="color: var(--color-secundario);">${totalOmitidos} archivos seleccionados</strong> pudo ser cargado:
+                </div>
+                ${bloquesRechazoHtml.join('')}
+            `;
+            mostrarModalAlerta('warning', 'Archivos Rechazados', resumenHtml, null, true);
             return;
         }
     }
@@ -2272,29 +2382,55 @@ async function subirLoteABaseDeDatos() {
         return;
     }
 
-    let msj = `Proceso de subida finalizado.\n\n• Documentos registrados con éxito: ${exitosos}.`;
     if (fallidos > 0) {
-        msj += `\n• Documentos por revisar: ${fallidos}.\nRevisa los elementos pendientes en la cola para completar los datos faltantes.`;
         const primerConError = buscarSiguienteIndiceSeleccionable(0);
-        if (primerConError >= 0) {
-            documentoSeleccionadoIndex = -1;
-            seleccionarDocumentoDeCola(primerConError, false);
+        if (primerConError >= 0 && documentosEnCola[primerConError]) {
+            documentoSeleccionadoIndex = primerConError;
+            rellenarFormulario(documentosEnCola[primerConError].data);
+            renderizarColaUI();
         }
+
+        const docsConError = documentosEnCola.filter(d => d.estado === 'error');
+        const filasFallidosHtml = docsConError.map((d, idx) => `
+            <div style="padding: 0.35rem 0; border-bottom: 1px dashed rgba(80, 89, 132, 0.14); font-size: 0.78rem; line-height: 1.35; word-break: break-word; overflow-wrap: anywhere;">
+                <div style="font-weight: 800; color: var(--texto-titulos);">${idx + 1}. ${escapeHtml(d.nombreArchivo || 'Documento')}</div>
+                <div style="color: var(--color-secundario); font-weight: 600; margin-top: 2px;">${escapeHtml(d.errorMsg || 'Faltan datos obligatorios en la ficha')}</div>
+            </div>
+        `).join('');
+
+        const resumenLoteHtml = `
+            <div style="background: rgba(80, 89, 132, 0.08); border: 1px solid rgba(80, 89, 132, 0.2); border-radius: 8px; padding: 0.6rem 0.75rem; margin-bottom: 0.65rem; font-size: 0.82rem; color: var(--texto-titulos);">
+                <div>• Documentos registrados con éxito: <strong style="color: var(--color-secundario);">${exitosos}</strong></div>
+                <div>• Documentos pendientes por revisar: <strong style="color: var(--color-secundario);">${fallidos}</strong></div>
+            </div>
+            <div style="border: 1px solid rgba(80, 89, 132, 0.2); border-radius: 8px; background: #ffffff; overflow: hidden;">
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.45rem 0.7rem; background: rgba(80, 89, 132, 0.08); border-bottom: 1px solid rgba(80, 89, 132, 0.15);">
+                    <span style="font-size: 0.78rem; font-weight: 800; color: var(--color-secundario);">Observaciones detectadas en el lote</span>
+                    <span style="font-size: 0.72rem; font-weight: 800; padding: 0.12rem 0.5rem; border-radius: 999px; background: var(--color-secundario); color: #ffffff;">${docsConError.length}</span>
+                </div>
+                <div style="max-height: 155px; overflow-y: auto; padding: 0.35rem 0.7rem; background: #f8fafc;">
+                    ${filasFallidosHtml}
+                </div>
+            </div>
+        `;
+
         if (exitosos > 0) {
             confirmarAccionModal(
                 'warning',
                 'Carga Parcial Finalizada',
-                msj + '\n\n¿Deseas ir al catálogo para ver los proyectos registrados o quedarte aquí para revisar los pendientes?',
+                resumenLoteHtml + `<div style="margin-top: 0.65rem; font-size: 0.81rem; color: var(--texto-titulos);">¿Deseas ir al catálogo para ver los proyectos registrados o quedarte aquí para revisar los pendientes?</div>`,
                 'Ver Catálogo',
                 () => {
                     window.location.href = '?ruta=agregar-documento&msg=created';
-                }
+                },
+                true
             );
         } else {
-            mostrarModalAlerta('warning', 'Resumen de Carga', msj);
+            mostrarModalAlerta('warning', 'Resumen de Carga', resumenLoteHtml, null, true);
         }
     } else {
-        mostrarModalAlerta('success', 'Carga Completada', msj + '\n\nPresiona Aceptar para ver los proyectos registrados en el catálogo.', () => {
+        const msjExito = `Proceso de subida finalizado.\n\n• Documentos registrados con éxito: ${exitosos}.\n\nPresiona Aceptar para ver los proyectos registrados en el catálogo.`;
+        mostrarModalAlerta('success', 'Carga Completada', msjExito, () => {
             window.location.href = '?ruta=agregar-documento&msg=created';
         });
     }
@@ -2600,7 +2736,7 @@ function limpiarFormularioPst() {
 }
 
 // SISTEMA REUTILIZABLE DE MODALES (ÉXITO, ADVERTENCIA, ERROR Y CONFIRMACIÓN)
-function mostrarModalAlerta(tipo, titulo, mensaje, onAccept = null) {
+function mostrarModalAlerta(tipo, titulo, mensaje, onAccept = null, esHtml = false) {
     const modal = document.getElementById('pstSystemModal');
     const iconWrapper = document.getElementById('modalPstIconWrapper');
     const titleElem = document.getElementById('modalPstTitle');
@@ -2623,17 +2759,30 @@ function mostrarModalAlerta(tipo, titulo, mensaje, onAccept = null) {
     } else if (tipo === 'warning') {
         iconWrapper.className = 'modal-pst-icon-box warning';
         iconWrapper.innerHTML = '<i class="ph ph-warning"></i>';
+    } else if (tipo === 'info') {
+        iconWrapper.className = 'modal-pst-icon-box success';
+        iconWrapper.innerHTML = '<i class="ph ph-info"></i>';
     } else { // error
         iconWrapper.className = 'modal-pst-icon-box error';
         iconWrapper.innerHTML = '<i class="ph ph-x-circle"></i>';
     }
 
     titleElem.textContent = titulo;
-    msgElem.textContent = mensaje;
+    if (esHtml) {
+        msgElem.style.textAlign = 'left';
+        msgElem.style.whiteSpace = 'normal';
+        msgElem.innerHTML = mensaje;
+    } else {
+        const esTextoLargo = typeof mensaje === 'string' && (mensaje.length > 160 || (mensaje.match(/\n/g) || []).length >= 3);
+        msgElem.style.textAlign = esTextoLargo ? 'left' : 'center';
+        msgElem.style.whiteSpace = 'pre-line';
+        msgElem.textContent = mensaje;
+    }
+    msgElem.scrollTop = 0;
     modal.style.display = 'flex';
 }
 
-function confirmarAccionModal(tipo, titulo, mensaje, btnTexto, onConfirm) {
+function confirmarAccionModal(tipo, titulo, mensaje, btnTexto, onConfirm, esHtml = false) {
     const modal = document.getElementById('pstSystemModal');
     const iconWrapper = document.getElementById('modalPstIconWrapper');
     const titleElem = document.getElementById('modalPstTitle');
@@ -2656,7 +2805,17 @@ function confirmarAccionModal(tipo, titulo, mensaje, btnTexto, onConfirm) {
     }
 
     titleElem.textContent = titulo;
-    msgElem.textContent = mensaje;
+    if (esHtml) {
+        msgElem.style.textAlign = 'left';
+        msgElem.style.whiteSpace = 'normal';
+        msgElem.innerHTML = mensaje;
+    } else {
+        const esTextoLargo = typeof mensaje === 'string' && (mensaje.length > 160 || (mensaje.match(/\n/g) || []).length >= 3);
+        msgElem.style.textAlign = esTextoLargo ? 'left' : 'center';
+        msgElem.style.whiteSpace = 'pre-line';
+        msgElem.textContent = mensaje;
+    }
+    msgElem.scrollTop = 0;
 
     btnConfirm.onclick = () => {
         cerrarModalAlertaPst();
@@ -3450,21 +3609,30 @@ function simularExtraccionModal() {
         if (data.status === 'success') {
             const d = data.data;
             let tutoresStr = [];
-            if (d.tutor_academico_nombre) tutoresStr.push(`  - Académico: ${d.tutor_academico_nombre}${d.tutor_academico_cedula ? ' (' + d.tutor_academico_cedula + ')' : ''}`);
-            if (d.tutor_institucional_nombre) tutoresStr.push(`  - Institucional: ${d.tutor_institucional_nombre}${d.tutor_institucional_cedula ? ' (' + d.tutor_institucional_cedula + ')' : ''}`);
-            if (d.tutor_comunitario_nombre) tutoresStr.push(`  - Comunitario: ${d.tutor_comunitario_nombre}${d.tutor_comunitario_cedula ? ' (' + d.tutor_comunitario_cedula + ')' : ''}`);
-            
-            const resMsj = `METADATOS DETECTADOS POR EL EXTRACTOR:\n\n` +
-                `• Título: ${d.titulo || 'No detectado'}\n` +
-                `• Año: ${d.anio_publicacion || 's.f.'} | Fecha Defensa: ${d.fecha_defensa || 'Pendiente (' + (d.fecha_precision || 's.f.') + ')'}\n` +
-                `• Nivel Académico: ${d.nivel_academico || 'Pregrado'} | Trayecto: ${d.trayecto || 'No detectado'}\n` +
-                `• Línea ID / Dimensión ID: ${d.linea_id || 'N/A'} / ${d.dimension_id || 'N/A'}\n` +
-                `• URL Repositorio: ${d.url_repositorio || 'No detectado'}\n` +
-                `• Autores Extraídos: ${d.autores ? d.autores.map(a => (a.nombre || a.nombre_completo) + (a.cedula ? ' (' + a.cedula + ')' : '')).filter(Boolean).join(', ') : 'Ninguno'}\n` +
-                `• Tutores:\n${tutoresStr.length > 0 ? tutoresStr.join('\n') : '  No detectados'}\n` +
-                `• Comunidad Beneficiada: ${d.comunidad_beneficiada || 'No detectada'}\n\n` +
-                `FRAGMENTO DE TEXTO EXTRAÍDO:\n"${data.preview_texto}"`;
-            mostrarModalAlerta('success', 'Resultado de Simulación', resMsj);
+            if (d.tutor_academico_nombre) tutoresStr.push(`Académico: ${escapeHtml(d.tutor_academico_nombre)}${d.tutor_academico_cedula ? ' · ' + escapeHtml(d.tutor_academico_cedula) : ''}`);
+            if (d.tutor_institucional_nombre) tutoresStr.push(`Institucional: ${escapeHtml(d.tutor_institucional_nombre)}${d.tutor_institucional_cedula ? ' · ' + escapeHtml(d.tutor_institucional_cedula) : ''}`);
+            if (d.tutor_comunitario_nombre) tutoresStr.push(`Comunitario: ${escapeHtml(d.tutor_comunitario_nombre)}${d.tutor_comunitario_cedula ? ' · ' + escapeHtml(d.tutor_comunitario_cedula) : ''}`);
+
+            const autoresExtraidos = d.autores
+                ? d.autores.map(a => {
+                    const nom = a.nombre || a.nombre_completo || '';
+                    return nom ? `${escapeHtml(nom)}${a.cedula ? ' · ' + escapeHtml(a.cedula) : ''}` : '';
+                }).filter(Boolean).join(', ')
+                : 'Ninguno';
+
+            const resHtml = `
+                <div style="background: #f8fafc; border: 1px solid rgba(80, 89, 132, 0.2); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.65rem; font-size: 0.81rem; color: var(--texto-titulos); display: flex; flex-direction: column; gap: 0.35rem;">
+                    <div><strong style="color: var(--color-secundario);">Título:</strong> ${escapeHtml(d.titulo || 'No detectado')}</div>
+                    <div><strong style="color: var(--color-secundario);">Año:</strong> ${escapeHtml(d.anio_publicacion || 'Sin fecha')} · <strong style="color: var(--color-secundario);">Defensa:</strong> ${escapeHtml(d.fecha_defensa || 'Pendiente')}</div>
+                    <div><strong style="color: var(--color-secundario);">Nivel:</strong> ${escapeHtml(d.nivel_academico || 'Pregrado')} · <strong style="color: var(--color-secundario);">Trayecto:</strong> ${escapeHtml(d.trayecto || 'No detectado')}</div>
+                    <div><strong style="color: var(--color-secundario);">Autores:</strong> ${autoresExtraidos || 'Ninguno'}</div>
+                    <div><strong style="color: var(--color-secundario);">Tutores:</strong> ${tutoresStr.length > 0 ? tutoresStr.join(' | ') : 'No detectados'}</div>
+                    <div><strong style="color: var(--color-secundario);">Comunidad:</strong> ${escapeHtml(d.comunidad_beneficiada || 'No detectada')}</div>
+                </div>
+                <div style="font-size: 0.75rem; font-weight: 800; color: var(--color-secundario); text-transform: uppercase; margin-bottom: 0.3rem;">Fragmento de texto extraído</div>
+                <div style="max-height: 140px; overflow-y: auto; background: #ffffff; border: 1px solid rgba(80, 89, 132, 0.2); border-radius: 8px; padding: 0.6rem 0.75rem; font-size: 0.78rem; color: var(--texto-silenciado); white-space: pre-line; line-height: 1.45;">${escapeHtml(data.preview_texto || '')}</div>
+            `;
+            mostrarModalAlerta('success', 'Resultado de Simulación', resHtml, null, true);
         } else {
             mostrarModalAlerta('error', 'Falla en Simulación', data.message || 'No se pudo procesar la simulación.');
         }
@@ -3500,25 +3668,27 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <!-- MODAL ESTRUCTURAL DEL SISTEMA (ALERTAS Y DIÁLOGOS DE CONFIRMACIÓN) -->
-<div id="pstSystemModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 34, 68, 0.7); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center;">
-    <div style="background: var(--bg-card, #ffffff); border: 1px solid rgba(169, 168, 166, 0.2); border-radius: 8px; width: 90%; max-width: 440px; padding: 1.5rem; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.25); animation: fadeIn 0.2s ease-out;">
-        <div id="modalPstIconWrapper" class="modal-pst-icon-box success" style="margin: 0 auto 0.75rem auto; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem;">
-            <i class="ph ph-check-circle"></i>
+<div id="pstSystemModal" onclick="if(event.target===this && document.getElementById('btnModalPstCancel')?.style.display==='none'){cerrarModalAlertaPst();}" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; padding: 1rem; box-sizing: border-box; background: rgba(0, 34, 68, 0.7); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center;">
+    <div style="background: var(--bg-card, #ffffff); border: 1px solid rgba(80, 89, 132, 0.25); border-radius: 14px; width: 94%; max-width: 520px; max-height: 86vh; padding: 1.5rem; text-align: center; box-shadow: 0 20px 45px rgba(0,0,0,0.25); animation: fadeIn 0.2s ease-out; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box;">
+        <div style="flex-shrink: 0;">
+            <div id="modalPstIconWrapper" class="modal-pst-icon-box success" style="margin: 0 auto 0.65rem auto; width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.9rem;">
+                <i class="ph ph-check-circle"></i>
+            </div>
+            
+            <h3 id="modalPstTitle" style="font-size: 1.12rem; font-weight: 800; color: var(--texto-titulos); margin: 0 0 0.55rem 0; word-break: break-word;">
+                Notificación del Sistema
+            </h3>
         </div>
         
-        <h3 id="modalPstTitle" style="font-size: 1.1rem; font-weight: 800; color: var(--texto-titulos); margin: 0 0 0.5rem 0;">
-            Notificación del Sistema
-        </h3>
-        
-        <p id="modalPstMessage" style="font-size: 0.85rem; color: var(--texto-silenciado); line-height: 1.45; margin: 0 0 1.25rem 0; white-space: pre-line;">
+        <div id="modalPstMessage" style="font-size: 0.85rem; color: var(--texto-silenciado); line-height: 1.48; margin: 0 0 1rem 0; white-space: pre-line; flex: 1 1 auto; min-height: 0; max-height: 54vh; overflow-y: auto; overflow-x: hidden; word-break: break-word; overflow-wrap: anywhere; padding-right: 2px;">
             Mensaje predeterminado.
-        </p>
+        </div>
 
-        <div style="display: flex; justify-content: center; gap: 0.6rem;">
-            <button type="button" id="btnModalPstCancel" onclick="cerrarModalAlertaPst()" class="btn-cancel" style="display: none; padding: 0.45rem 1rem;">
+        <div style="display: flex; justify-content: center; gap: 0.65rem; flex-shrink: 0; padding-top: 0.75rem; border-top: 1px solid rgba(80, 89, 132, 0.14);">
+            <button type="button" id="btnModalPstCancel" onclick="cerrarModalAlertaPst()" class="btn-cancel" style="display: none; padding: 0.45rem 1.1rem;">
                 Cancelar
             </button>
-            <button type="button" id="btnModalPstConfirm" class="btn-save" style="padding: 0.45rem 1.25rem;">
+            <button type="button" id="btnModalPstConfirm" class="btn-save" style="padding: 0.45rem 1.35rem;">
                 Aceptar
             </button>
         </div>
@@ -3526,46 +3696,47 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 
 <!-- MODAL DE PREVISUALIZACIÓN DE DOCUMENTO DIGITAL (PDF/WORD) -->
-<div id="modalPreviewDocumentModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 34, 68, 0.85); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; padding: 1rem;">
-    <div style="background: var(--bg-card, #ffffff); border: 1px solid rgba(169, 168, 166, 0.2); border-radius: 8px; width: 96%; max-width: 1250px; height: 92vh; padding: 1.25rem; display: flex; flex-direction: column; box-shadow: 0 15px 35px rgba(0,0,0,0.35); animation: fadeIn 0.2s ease-out;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(169, 168, 166, 0.2); padding-bottom: 0.5rem; margin-bottom: 0.75rem;">
-            <div>
+<div id="modalPreviewDocumentModal" onclick="if(event.target===this){cerrarModalPrevisualizacion();}" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 34, 68, 0.85); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; padding: 1rem; box-sizing: border-box;">
+    <div style="background: var(--bg-card, #ffffff); border: 1px solid rgba(80, 89, 132, 0.25); border-radius: 12px; width: 96%; max-width: 1250px; height: 90vh; max-height: 92vh; padding: 1.15rem 1.35rem; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box; box-shadow: 0 15px 35px rgba(0,0,0,0.35); animation: fadeIn 0.2s ease-out;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; border-bottom: 1px solid rgba(80, 89, 132, 0.18); padding-bottom: 0.55rem; margin-bottom: 0.75rem; flex-shrink: 0; min-width: 0;">
+            <div style="min-width: 0; flex: 1;">
                 <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--texto-titulos); margin: 0; display: flex; align-items: center; gap: 0.4rem;">
-                    <i class="ph ph-file-text" style="color: var(--color-terciario);"></i> Previsualización del Documento Digital
+                    <i class="ph ph-file-text" style="color: var(--color-terciario); flex-shrink: 0;"></i>
+                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Previsualización del Documento Digital</span>
                 </h3>
-                <span id="previewFileInfo" style="font-size: 0.75rem; color: var(--texto-silenciado); font-weight: 600;"></span>
+                <span id="previewFileInfo" style="font-size: 0.75rem; color: var(--texto-silenciado); font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;"></span>
             </div>
-            <button type="button" onclick="cerrarModalPrevisualizacion()" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--texto-silenciado);">&times;</button>
+            <button type="button" onclick="cerrarModalPrevisualizacion()" style="background: rgba(80, 89, 132, 0.08); border: none; font-size: 1.3rem; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; color: var(--color-secundario); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">&times;</button>
         </div>
         
-        <div style="flex: 1; width: 100%; background: #f8fafc; border: 1px solid rgba(169, 168, 166, 0.2); border-radius: 4px; overflow: hidden;">
+        <div style="flex: 1 1 auto; min-height: 0; width: 100%; background: #f8fafc; border: 1px solid rgba(80, 89, 132, 0.18); border-radius: 6px; overflow: hidden;">
             <iframe id="iframePreviewDocument" src="about:blank" style="width: 100%; height: 100%; border: none;" title="Vista Previa Documento"></iframe>
         </div>
 
-        <div style="text-align: right; border-top: 1px solid rgba(169, 168, 166, 0.15); padding-top: 0.6rem; margin-top: 0.75rem;">
-            <button type="button" onclick="cerrarModalPrevisualizacion()" class="btn-cancel" style="padding: 0.4rem 1.2rem;">Cerrar Vista Previa</button>
+        <div style="text-align: right; border-top: 1px solid rgba(80, 89, 132, 0.15); padding-top: 0.65rem; margin-top: 0.75rem; flex-shrink: 0;">
+            <button type="button" onclick="cerrarModalPrevisualizacion()" class="btn-cancel" style="padding: 0.42rem 1.25rem;">Cerrar Vista Previa</button>
         </div>
     </div>
 </div>
 
 <!-- MODAL DE PREVISUALIZACIÓN COMPLETA DE FICHA TÉCNICA DE PROYECTO (ADMIN) -->
-<div id="modalFichaAdminPst" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(5px); z-index: 99999; align-items: center; justify-content: center; padding: 1rem;">
-    <div style="background: var(--bg-card, #ffffff); border: 1px solid rgba(80, 89, 132, 0.25); border-radius: 12px; width: 95%; max-width: 1050px; max-height: 92vh; overflow-y: auto; padding: 2rem; box-shadow: 0 20px 45px rgba(0,0,0,0.25); animation: fadeIn 0.2s ease-out;">
+<div id="modalFichaAdminPst" onclick="if(event.target===this){this.style.display='none';}" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(5px); z-index: 99999; align-items: center; justify-content: center; padding: 1rem; box-sizing: border-box;">
+    <div style="background: var(--bg-card, #ffffff); border: 1px solid rgba(80, 89, 132, 0.25); border-radius: 14px; width: 95%; max-width: 1050px; max-height: 90vh; padding: 0; box-shadow: 0 20px 45px rgba(0,0,0,0.25); animation: fadeIn 0.2s ease-out; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box;">
         
-        <!-- Encabezado de la Ficha -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid rgba(80, 89, 132, 0.15); padding-bottom: 1rem; margin-bottom: 1.25rem;">
-            <div style="flex: 1; padding-right: 1rem;">
+        <!-- Encabezado Fijo de la Ficha -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; border-bottom: 2px solid rgba(80, 89, 132, 0.15); padding: 1.35rem 1.85rem 1rem 1.85rem; background: #ffffff; flex-shrink: 0;">
+            <div style="flex: 1; min-width: 0;">
                 <div style="display: flex; gap: 0.4rem; align-items: center; margin-bottom: 0.35rem; flex-wrap: wrap;">
                     <span class="pst-badge-soft" id="modalFichaNivel" style="background: rgba(112, 144, 203, 0.12); color: var(--color-terciario); padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 800;"></span>
                     <span id="modalFichaEstado" style="padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 800;"></span>
                 </div>
-                <h2 id="modalFichaTitulo" style="font-size: 1.35rem; font-weight: 800; color: var(--texto-titulos); margin: 0; line-height: 1.35;"></h2>
+                <h2 id="modalFichaTitulo" style="font-size: 1.28rem; font-weight: 800; color: var(--texto-titulos); margin: 0; line-height: 1.35; word-break: break-word; overflow-wrap: anywhere;"></h2>
             </div>
-            <button type="button" onclick="document.getElementById('modalFichaAdminPst').style.display='none'" style="background: rgba(0,0,0,0.05); border: none; font-size: 1.6rem; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; color: var(--texto-silenciado); display: flex; align-items: center; justify-content: center;">&times;</button>
+            <button type="button" onclick="document.getElementById('modalFichaAdminPst').style.display='none'" style="background: rgba(80, 89, 132, 0.08); border: none; font-size: 1.5rem; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; color: var(--color-secundario); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">&times;</button>
         </div>
 
-        <!-- Contenido Multicolumna y Secciones -->
-        <div style="display: flex; flex-direction: column; gap: 1.25rem; font-size: 0.9rem; color: var(--texto-normal);">
+        <!-- Contenido Multicolumna y Secciones con Scroll Interno -->
+        <div id="modalFichaBodyScroll" style="padding: 1.35rem 1.85rem; flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 1.2rem; font-size: 0.9rem; color: var(--texto-normal); word-break: break-word; overflow-wrap: anywhere;">
             
             <!-- Equipo y Tutores -->
             <div class="grid-2-cols" style="gap: 1.25rem;">
@@ -3628,18 +3799,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div id="modalFichaGitWrapper" style="grid-column: span 2;">
                     <strong style="color: var(--texto-titulos); font-size: 0.78rem; display: block; text-transform: uppercase; margin-bottom: 0.2rem;">Código Fuente:</strong>
-                    <a id="modalFichaGit" href="#" target="_blank" style="color: var(--color-terciario); text-decoration: underline; font-weight: 600;"></a>
+                    <a id="modalFichaGit" href="#" target="_blank" style="color: var(--color-terciario); text-decoration: underline; font-weight: 600; word-break: break-all;"></a>
                 </div>
             </div>
 
         </div>
 
-        <!-- Botones Inferiores -->
-        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(169, 168, 166, 0.2); padding-top: 1rem; margin-top: 1.5rem;">
-            <div id="modalFichaAdjuntoWrapper">
-                <a id="btnModalFichaVerAdjunto" href="#" target="_blank" class="btn-save" style="background: var(--color-secundario); color: white; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 1rem; text-decoration: none;">
-                    <i class="ph ph-file-pdf" style="font-size: 1.1rem;"></i> Ver / Descargar Documento Adjunto
-                </a>
+        <!-- Botones Inferiores Fijos -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem; border-top: 1px solid rgba(80, 89, 132, 0.18); padding: 1rem 1.85rem; background: #f8fafc; flex-shrink: 0;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                <div id="modalFichaAdjuntoWrapper">
+                    <a id="btnModalFichaVerAdjunto" href="#" target="_blank" class="btn-save" style="background: var(--color-secundario); color: white; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 1rem; text-decoration: none;">
+                        <i class="ph ph-file-pdf" style="font-size: 1.1rem;"></i> Ver Documento Adjunto
+                    </a>
+                </div>
+                <?php if (Auth::requierePrivilegioMinimo($nivelAdminPst, 'editar', 'RepositorioPST', false)): ?>
+                    <button type="button" onclick="if (window._docFichaActualAdmin) { document.getElementById('modalFichaAdminPst').style.display='none'; abrirModalEdicionRapidaPst(window._docFichaActualAdmin); }" class="btn-cancel" style="padding: 0.45rem 0.9rem; background: rgba(80, 89, 132, 0.1); color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25); display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 700;">
+                        <i class="ph ph-sliders-horizontal"></i> Ajuste Rápido
+                    </button>
+                    <a id="btnModalFichaEditarCompleto" href="#" class="btn-cancel" style="padding: 0.45rem 0.9rem; background: #ffffff; color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25); display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 700; text-decoration: none;">
+                        <i class="ph ph-pencil-simple"></i> Editar Completo
+                    </a>
+                <?php endif; ?>
             </div>
             <button type="button" onclick="document.getElementById('modalFichaAdminPst').style.display='none'" class="btn-cancel" style="padding: 0.45rem 1.4rem;">Cerrar Ficha</button>
         </div>
@@ -3649,6 +3830,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <script>
 function abrirModalPrevisualizarFichaAdmin(doc) {
     if (!doc) return;
+    window._docFichaActualAdmin = doc;
     document.getElementById('modalFichaNivel').textContent = (doc.nivel_academico || 'Pregrado') + (doc.trayecto ? ' • ' + doc.trayecto : '');
     
     const badgeEstado = document.getElementById('modalFichaEstado');
@@ -3670,12 +3852,17 @@ function abrirModalPrevisualizarFichaAdmin(doc) {
     document.getElementById('modalFichaLinea').textContent = doc.linea_nombre || 'General';
     document.getElementById('modalFichaDimension').textContent = doc.dimension_nombre || 'Sin dimensión asociada';
     document.getElementById('modalFichaComunidad').textContent = doc.comunidad_beneficiada || 'No registrada';
-    document.getElementById('modalFichaAnio').textContent = (doc.anio_publicacion || '') + (doc.fecha_defensa ? ' (Defensa: ' + doc.fecha_defensa + ')' : '');
+    document.getElementById('modalFichaAnio').textContent = (doc.anio_publicacion || '') + (doc.fecha_defensa ? ' • Defensa: ' + doc.fecha_defensa : '');
     const vincEl = document.getElementById('modalFichaCarrerasVinculadas');
     if (vincEl) {
         vincEl.textContent = doc.carreras_vinculadas_nombres || 'Ninguna';
     }
     document.getElementById('modalFichaKeywords').textContent = doc.palabras_clave || 'Ninguna';
+
+    const btnEditarCompleto = document.getElementById('btnModalFichaEditarCompleto');
+    if (btnEditarCompleto && doc.id) {
+        btnEditarCompleto.href = '?ruta=agregar-documento&accion=editar&id=' + doc.id;
+    }
 
     const gitWrapper = document.getElementById('modalFichaGitWrapper');
     const gitLink = document.getElementById('modalFichaGit');
@@ -3696,13 +3883,16 @@ function abrirModalPrevisualizarFichaAdmin(doc) {
         btnAdjuntoWrapper.style.display = 'none';
     }
 
+    const bodyScroll = document.getElementById('modalFichaBodyScroll');
+    if (bodyScroll) bodyScroll.scrollTop = 0;
+
     document.getElementById('modalFichaAdminPst').style.display = 'flex';
 }
 </script>
 
 <!-- MODAL INTERACTIVO DE SELECCIÓN DE CARRERA PARA EXTRACCIÓN POR LOTES -->
-<div id="modalSeleccionCarreraPst" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center;">
-    <div style="background: #ffffff; border-radius: 16px; padding: 2rem; width: 90%; max-width: 460px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); text-align: center; border: 1px solid rgba(80, 89, 132, 0.2); position: relative;">
+<div id="modalSeleccionCarreraPst" onclick="if(event.target===this){cerrarModalCarreraPst();}" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; padding: 1rem; box-sizing: border-box; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center;">
+    <div style="background: #ffffff; border-radius: 16px; padding: 2rem; width: 92%; max-width: 460px; max-height: 88vh; overflow-y: auto; box-sizing: border-box; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); text-align: center; border: 1px solid rgba(80, 89, 132, 0.2); position: relative;">
         <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(80, 89, 132, 0.1); color: var(--color-secundario); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 1.2rem auto; border: 1px solid rgba(80, 89, 132, 0.25);">
             <i class="ph ph-graduation-cap"></i>
         </div>
@@ -3723,7 +3913,7 @@ function abrirModalPrevisualizarFichaAdmin(doc) {
             </select>
         </div>
 
-        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end; flex-wrap: wrap;">
             <button type="button" class="btn-cancel" onclick="cerrarModalCarreraPst()" style="padding: 9px 18px; font-size: 0.88rem;">Cancelar</button>
             <button type="button" class="btn-save" onclick="confirmarCarreraModalLote()" style="padding: 9px 20px; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px;">
                 <i class="ph ph-check-circle"></i> Continuar Extracción
@@ -3773,21 +3963,21 @@ function confirmarCarreraModalLote() {
 </script>
 
 <!-- MODAL DE EDICIÓN RÁPIDA DE PROYECTO DESDE LA TABLA -->
-<div id="modalEdicionRapidaPst" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 99998; align-items: center; justify-content: center; padding: 1rem;">
-    <div style="background: var(--bg-card, #ffffff); border-radius: 16px; width: 100%; max-width: 620px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid rgba(80, 89, 132, 0.2); overflow: hidden;">
-        <div style="padding: 1.25rem 1.5rem; background: linear-gradient(135deg, var(--color-secundario) 0%, var(--color-terciario) 100%); color: #ffffff; display: flex; justify-content: space-between; align-items: center;">
+<div id="modalEdicionRapidaPst" onclick="if(event.target===this){cerrarModalEdicionRapidaPst();}" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 99998; align-items: center; justify-content: center; padding: 1rem; box-sizing: border-box;">
+    <div style="background: var(--bg-card, #ffffff); border-radius: 16px; width: 100%; max-width: 620px; max-height: 90vh; display: flex; flex-direction: column; box-sizing: border-box; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid rgba(80, 89, 132, 0.2); overflow: hidden;">
+        <div style="padding: 1.15rem 1.5rem; background: linear-gradient(135deg, var(--color-secundario) 0%, var(--color-terciario) 100%); color: #ffffff; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
             <div>
                 <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 8px;">
                     <i class="ph ph-sliders-horizontal"></i> Ajuste Rápido de Proyecto
                 </h3>
                 <p style="margin: 3px 0 0 0; font-size: 0.8rem; color: rgba(255, 255, 255, 0.88);">Modifica los datos principales sin salir del listado</p>
             </div>
-            <button type="button" onclick="cerrarModalEdicionRapidaPst()" style="background: rgba(255,255,255,0.18); border: none; color: #ffffff; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+            <button type="button" onclick="cerrarModalEdicionRapidaPst()" style="background: rgba(255,255,255,0.18); border: none; color: #ffffff; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
                 <i class="ph ph-x"></i>
             </button>
         </div>
 
-        <div style="padding: 1.4rem 1.5rem; max-height: 78vh; overflow-y: auto;">
+        <div style="padding: 1.25rem 1.5rem; flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden;">
             <input type="hidden" id="quick_edit_id" value="">
 
             <div style="margin-bottom: 1rem;">
@@ -3812,6 +4002,28 @@ function confirmarCarreraModalLote() {
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; margin-bottom: 1rem;">
                 <div>
+                    <label style="display: block; font-size: 0.76rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 5px;">Nivel Académico</label>
+                    <select id="quick_edit_nivel" class="upload-input" onchange="alternarTrayectoEdicionRapida()" style="width: 100%; padding: 9px 12px; font-size: 0.88rem;">
+                        <?php foreach (($nivelesAcademicos ?? ['Pregrado', 'Especialización', 'Maestría', 'Doctorado']) as $nvItemModal): 
+                            $nvLblModal = preg_replace('/\s*\([^)]*\)/', '', (string)($labelsNiveles[$nvItemModal] ?? $nvItemModal));
+                        ?>
+                            <option value="<?= htmlspecialchars($nvItemModal) ?>"><?= htmlspecialchars(trim($nvLblModal)) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div id="quick_edit_trayecto_wrap">
+                    <label style="display: block; font-size: 0.76rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 5px;">Trayecto</label>
+                    <select id="quick_edit_trayecto" class="upload-input" style="width: 100%; padding: 9px 12px; font-size: 0.88rem;">
+                        <option value="">Sin trayecto</option>
+                        <?php foreach (['Trayecto I', 'Trayecto II', 'Trayecto III', 'Trayecto IV'] as $tOptModal): ?>
+                            <option value="<?= $tOptModal ?>"><?= $tOptModal ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; margin-bottom: 1rem;">
+                <div>
                     <label style="display: block; font-size: 0.76rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 5px;">Línea de Investigación</label>
                     <select id="quick_edit_linea" class="upload-input" onchange="actualizarDimensionesEdicionRapida(this.value)" style="width: 100%; padding: 9px 12px; font-size: 0.88rem;">
                         <option value="">Sin línea asignada</option>
@@ -3822,6 +4034,17 @@ function confirmarCarreraModalLote() {
                     <select id="quick_edit_dimension" class="upload-input" style="width: 100%; padding: 9px 12px; font-size: 0.88rem;">
                         <option value="">Sin dimensión asignada</option>
                     </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; margin-bottom: 1rem;">
+                <div>
+                    <label style="display: block; font-size: 0.76rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 5px;">Comunidad Beneficiada</label>
+                    <input type="text" id="quick_edit_comunidad" class="upload-input" placeholder="Nombre de la comunidad o institución" style="width: 100%; padding: 9px 12px; font-size: 0.88rem;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.76rem; font-weight: 800; color: var(--texto-titulos); text-transform: uppercase; margin-bottom: 5px;">Palabras Clave</label>
+                    <input type="text" id="quick_edit_palabras_clave" class="upload-input" placeholder="Separadas por comas" style="width: 100%; padding: 9px 12px; font-size: 0.88rem;">
                 </div>
             </div>
 
@@ -3840,7 +4063,7 @@ function confirmarCarreraModalLote() {
             </div>
         </div>
 
-        <div style="padding: 1rem 1.5rem; background: #ffffff; border-top: 1px solid rgba(80, 89, 132, 0.15); display: flex; justify-content: flex-end; gap: 0.75rem;">
+        <div style="padding: 0.95rem 1.5rem; background: #ffffff; border-top: 1px solid rgba(80, 89, 132, 0.15); display: flex; justify-content: flex-end; gap: 0.75rem; flex-shrink: 0;">
             <button type="button" class="btn-cancel" onclick="cerrarModalEdicionRapidaPst()" style="padding: 8px 18px; font-size: 0.86rem; background: #ffffff; color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25);">Cancelar</button>
             <button type="button" id="btnGuardarQuickEditPst" class="btn-save" onclick="guardarEdicionRapidaPst()" style="padding: 8px 20px; font-size: 0.86rem; display: inline-flex; align-items: center; gap: 6px;">
                 <i class="ph ph-floppy-disk"></i> Guardar Cambios
@@ -3850,9 +4073,9 @@ function confirmarCarreraModalLote() {
 </div>
 
 <!-- MODAL DE BORRADO AVANZADO Y VACIADO DEL CATÁLOGO CON AUTORIZACIÓN DEL SUPER ADMINISTRADOR -->
-<div id="modalPurgarCatalogoPst" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; padding: 1rem;">
-    <div style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 580px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid rgba(80, 89, 132, 0.25); overflow: hidden;">
-        <div style="padding: 1.2rem 1.5rem; background: linear-gradient(135deg, var(--color-secundario) 0%, var(--color-terciario) 100%); color: #ffffff; display: flex; align-items: center; gap: 12px;">
+<div id="modalPurgarCatalogoPst" onclick="if(event.target===this){cerrarModalPurgarCatalogo();}" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; padding: 1rem; box-sizing: border-box;">
+    <div style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 580px; max-height: 90vh; display: flex; flex-direction: column; box-sizing: border-box; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid rgba(80, 89, 132, 0.25); overflow: hidden;">
+        <div style="padding: 1.15rem 1.5rem; background: linear-gradient(135deg, var(--color-secundario) 0%, var(--color-terciario) 100%); color: #ffffff; display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
             <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(255, 255, 255, 0.18); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.45rem; flex-shrink: 0;">
                 <i class="ph ph-shield-check"></i>
             </div>
@@ -3860,12 +4083,12 @@ function confirmarCarreraModalLote() {
                 <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #ffffff;">Borrado Masivo y Vaciado del Catálogo</h3>
                 <p style="margin: 2px 0 0 0; font-size: 0.78rem; color: rgba(255, 255, 255, 0.88);">Elimina proyectos por rango de años, línea o dimensión, o vacía todo el catálogo</p>
             </div>
-            <button type="button" onclick="cerrarModalPurgarCatalogo()" style="background: rgba(255, 255, 255, 0.18); border: none; color: #ffffff; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+            <button type="button" onclick="cerrarModalPurgarCatalogo()" style="background: rgba(255, 255, 255, 0.18); border: none; color: #ffffff; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
                 <i class="ph ph-x"></i>
             </button>
         </div>
 
-        <div style="padding: 1.25rem 1.5rem; background: #ffffff; max-height: 78vh; overflow-y: auto;">
+        <div style="padding: 1.2rem 1.5rem; background: #ffffff; flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden;">
             <!-- Selector de modo de borrado -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 1rem;">
                 <button type="button" id="btnModoBorradoCriterios" onclick="cambiarModoBorradoCatalogo('criterios')" style="padding: 0.6rem 0.8rem; border-radius: 10px; border: 2px solid var(--color-secundario); background: var(--color-secundario); color: #ffffff; font-weight: 800; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
@@ -3959,7 +4182,7 @@ function confirmarCarreraModalLote() {
             </div>
         </div>
 
-        <div style="padding: 0.95rem 1.5rem; background: #ffffff; border-top: 1px solid rgba(80, 89, 132, 0.15); display: flex; justify-content: flex-end; gap: 0.75rem;">
+        <div style="padding: 0.95rem 1.5rem; background: #ffffff; border-top: 1px solid rgba(80, 89, 132, 0.15); display: flex; justify-content: flex-end; gap: 0.75rem; flex-shrink: 0;">
             <button type="button" class="btn-cancel" onclick="cerrarModalPurgarCatalogo()" style="padding: 8px 16px; font-size: 0.85rem; background: #ffffff; color: var(--color-secundario); border: 1px solid rgba(80, 89, 132, 0.25);">Cancelar</button>
             <button type="button" id="btnEjecutarPurgaCatalogo" class="btn-save" onclick="ejecutarPurgaTotalCatalogo()" style="padding: 8px 18px; font-size: 0.85rem; font-weight: 700; border-radius: 8px; border: 1px solid var(--color-secundario); background: var(--color-secundario); color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                 <i class="ph ph-trash"></i> <span id="textoBotonEjecutarBorrado">Eliminar proyectos filtrados</span>
@@ -3967,6 +4190,42 @@ function confirmarCarreraModalLote() {
         </div>
     </div>
 </div>
+
+<script>
+// Soporte global para cerrar el modal superior activo con la tecla Escape
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const sysModal = document.getElementById('pstSystemModal');
+    if (sysModal && sysModal.style.display === 'flex') {
+        cerrarModalAlertaPst();
+        return;
+    }
+    const prevModal = document.getElementById('modalPreviewDocumentModal');
+    if (prevModal && prevModal.style.display === 'flex') {
+        cerrarModalPrevisualizacion();
+        return;
+    }
+    const fichaModal = document.getElementById('modalFichaAdminPst');
+    if (fichaModal && fichaModal.style.display === 'flex') {
+        fichaModal.style.display = 'none';
+        return;
+    }
+    const quickModal = document.getElementById('modalEdicionRapidaPst');
+    if (quickModal && quickModal.style.display === 'flex') {
+        cerrarModalEdicionRapidaPst();
+        return;
+    }
+    const purgarModal = document.getElementById('modalPurgarCatalogoPst');
+    if (purgarModal && purgarModal.style.display === 'flex') {
+        cerrarModalPurgarCatalogo();
+        return;
+    }
+    const carreraModal = document.getElementById('modalSeleccionCarreraPst');
+    if (carreraModal && carreraModal.style.display === 'flex') {
+        cerrarModalCarreraPst();
+    }
+});
+</script>
 
 <script>
 // Utilidad para recargar la página limpiando cualquier parámetro msg previo y evitando avisos repetidos
@@ -4193,6 +4452,18 @@ function actualizarDimensionesEdicionRapida(lineaId, selectedDimId = '') {
     }
 }
 
+function alternarTrayectoEdicionRapida() {
+    const nivelSel = document.getElementById('quick_edit_nivel');
+    const traySel = document.getElementById('quick_edit_trayecto');
+    if (!nivelSel || !traySel) return;
+    const nv = nivelSel.value || 'Pregrado';
+    const usaTrayecto = Array.isArray(nivelesConTrayecto) ? nivelesConTrayecto.includes(nv) : (nv === 'Pregrado');
+    traySel.disabled = !usaTrayecto;
+    if (!usaTrayecto) {
+        traySel.value = '';
+    }
+}
+
 function abrirModalEdicionRapidaPst(doc) {
     if (!doc || !doc.id) return;
     const carreraId = doc.carrera_id || doc.id_carrera || 1;
@@ -4200,7 +4471,24 @@ function abrirModalEdicionRapidaPst(doc) {
     document.getElementById('quick_edit_titulo').value = doc.titulo || '';
     document.getElementById('quick_edit_carrera').value = carreraId;
     document.getElementById('quick_edit_anio').value = doc.anio_publicacion || new Date().getFullYear();
+    const nivelEl = document.getElementById('quick_edit_nivel');
+    if (nivelEl) {
+        nivelEl.value = doc.nivel_academico || 'Pregrado';
+    }
+    const trayEl = document.getElementById('quick_edit_trayecto');
+    if (trayEl) {
+        trayEl.value = doc.trayecto || '';
+    }
+    alternarTrayectoEdicionRapida();
     actualizarLineasEdicionRapida(carreraId, doc.linea_id || '', doc.dimension_id || '');
+    const comEl = document.getElementById('quick_edit_comunidad');
+    if (comEl) {
+        comEl.value = doc.comunidad_beneficiada || '';
+    }
+    const kwEl = document.getElementById('quick_edit_palabras_clave');
+    if (kwEl) {
+        kwEl.value = doc.palabras_clave || '';
+    }
     document.getElementById('quick_edit_git').value = doc.url_repositorio || '';
     document.getElementById('quick_edit_activo').value = (doc.activo === false || doc.activo === 0 || doc.activo === '0' || doc.activo === 'f') ? '0' : '1';
 
@@ -4236,8 +4524,12 @@ async function guardarEdicionRapidaPst() {
                 titulo: titulo,
                 id_carrera: document.getElementById('quick_edit_carrera').value,
                 anio_publicacion: document.getElementById('quick_edit_anio').value,
+                nivel_academico: document.getElementById('quick_edit_nivel')?.value || 'Pregrado',
+                trayecto: document.getElementById('quick_edit_trayecto')?.value || '',
                 linea_id: document.getElementById('quick_edit_linea').value,
                 dimension_id: document.getElementById('quick_edit_dimension').value,
+                comunidad_beneficiada: document.getElementById('quick_edit_comunidad')?.value || '',
+                palabras_clave: document.getElementById('quick_edit_palabras_clave')?.value || '',
                 url_repositorio: document.getElementById('quick_edit_git').value,
                 activo: document.getElementById('quick_edit_activo').value === '1',
                 csrf_token: window.CSRF_TOKEN || ''

@@ -1844,3 +1844,11 @@ Trace:
 #6 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
 #7 {main}
 --------------------------------------------------------------------------------
+[2026-10-22 23:15:42] ERROR: could not find driver en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(464): Connection::getInstance()
+#3 Standard input code(6): DocumentoModel->getPSTStatsResumen()
+#4 {main}
+--------------------------------------------------------------------------------
