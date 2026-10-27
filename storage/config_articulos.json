@@ -7,15 +7,15 @@
                 "plantilla": "{autores} ({anio}). {titulo}. {editorial}. Vol {volumen}({numero}). ISSN: {issn}"
             },
             "yisu": {
-                "nombre": "Yisus",
+                "nombre": "Ejemplo",
                 "activo": true,
-                "plantilla": "{autores} Yo Yisus declaro a esta gente, indigente {anio}. WAZAAAAe"
+                "plantilla": "{autores} esta es un tipo de cita inventado para demostrar que se pueden crear nuevas citas y adaptarse en caso de ser necesario {anio}. Buenas tardes"
             }
         }
     },
     "paginacion": {
         "limite_catalogo": 50,
-        "limite_gestor": 20,
+        "limite_gestor": 5,
         "max_recomendados": 4,
         "limite_gestor_catalogos": 16
     },

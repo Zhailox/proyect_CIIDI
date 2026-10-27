@@ -2127,3 +2127,36 @@ Trace:
 #4 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
 #5 {main}
 --------------------------------------------------------------------------------
+[2026-10-22 15:42:09] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.detalles_proyectos" does not exist
+LINE 3:                 LEFT JOIN public.detalles_proyectos dp ON r....
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php:422
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(422): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\InicioRepositorioController.php(12): DocumentoModel->getPSTDocumentosCount()
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): InicioRepositorioController->index()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(130): Dispatcher->dispatch('repositorio', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 16:10:50] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.detalles_proyectos" does not exist
+LINE 3:                 LEFT JOIN public.detalles_proyectos dp ON r....
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php:422
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(422): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\InicioRepositorioController.php(12): DocumentoModel->getPSTDocumentosCount()
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): InicioRepositorioController->index()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(130): Dispatcher->dispatch('repositorio', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 17:37:15] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.detalles_proyectos" does not exist
+LINE 3:                 LEFT JOIN public.detalles_proyectos dp ON r....
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php:422
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(422): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\InicioRepositorioController.php(12): DocumentoModel->getPSTDocumentosCount()
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): InicioRepositorioController->index()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(130): Dispatcher->dispatch('repositorio', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------

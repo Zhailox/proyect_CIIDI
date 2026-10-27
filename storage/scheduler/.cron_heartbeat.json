@@ -1,7 +1,7 @@
 {
-    "timestamp": 1792697794,
-    "fecha_hora": "2026-10-22 15:36:34",
-    "origen": "auto_web_check",
-    "ejecutadas_ultimo_ciclo": 0,
+    "timestamp": 1792821968,
+    "fecha_hora": "2026-10-24 02:06:08",
+    "origen": "auto_scheduler",
+    "ejecutadas_ultimo_ciclo": 4,
     "usuario_so": "SYSTEM"
 }
