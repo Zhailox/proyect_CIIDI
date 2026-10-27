@@ -2,7 +2,7 @@
     "host": "localhost",
     "port": "5432",
     "db": "ciidi",
-    "user": "postgres",
+    "user": "miki",
     "pass": "1234",
-    "updated_at": "2026-10-17 14:03:51"
+    "updated_at": "2026-10-19 23:21:07"
 }

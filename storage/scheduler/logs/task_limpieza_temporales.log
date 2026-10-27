@@ -1,7 +1,12 @@
 ========================================================
 REGISTRO DE EJECUCIÓN: Limpieza de Archivos Temporales & Caché [limpieza_temporales]
+<<<<<<< HEAD
+FECHA/HORA: 2026-10-24 02:06:07
+DURACIÓN: 6.17 ms | ESTADO: OK
+=======
 FECHA/HORA: 2026-10-22 17:27:26
 DURACIÓN: 13.06 ms | ESTADO: OK
+>>>>>>> c4dc88020dcbe9ceb33a5ce266ef600ef35f59d4
 ========================================================
 
 MENSAJE: Limpieza completada. Depurados 1 archivos temporales y cachés.

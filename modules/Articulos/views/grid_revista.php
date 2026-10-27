@@ -306,23 +306,25 @@ $buildUrlRemoveParam = function($param) use ($buildUrl) {
         <!-- ============================================== -->
         
         <header class="art-top-filter-panel">
-            <form action="articulos" method="GET" class="art-top-filter-form" style="display: flex; gap: 1rem; align-items: center; width: 100%;">
+            <form action="articulos" method="GET" class="art-top-filter-form">
                 <input type="hidden" name="tab" value="autores">
                 
-                <div class="art-search-box" style="flex: 1;">
-                    <i class="ph-bold ph-user-focus art-search-icon"></i>
-                    <input type="text" name="q_autores_tab" class="art-top-search-input" placeholder="Buscar investigador por nombre u ORCID..." value="<?= htmlspecialchars($q_autores_tab ?? '') ?>">
+                <div class="art-filter-controls-row">
+                    <div class="art-search-box">
+                        <i class="ph-bold ph-user-focus art-search-icon"></i>
+                        <input type="text" name="q_autores_tab" class="art-top-search-input" placeholder="Buscar investigador por nombre u ORCID..." value="<?= htmlspecialchars($q_autores_tab ?? '') ?>">
+                    </div>
+                    
+                    <button type="submit" class="art-btn-read art-btn-search-submit">
+                        <i class="ph-bold ph-funnel"></i> Buscar Investigador
+                    </button>
+                    
+                    <?php if (!empty($q_autores_tab)): ?>
+                        <a href="articulos?tab=autores" class="art-link-reset art-link-reset-inline">
+                            <i class="ph-bold ph-arrows-counter-clockwise"></i> Limpiar
+                        </a>
+                    <?php endif; ?>
                 </div>
-                
-                <button type="submit" class="art-btn-read" style="padding: 0.6rem 1.1rem; font-size: 0.85rem;">
-                    <i class="ph-bold ph-funnel"></i> Buscar Investigador
-                </button>
-                
-                <?php if (!empty($q_autores_tab)): ?>
-                    <a href="articulos?tab=autores" class="art-link-reset" style="margin: 0; align-self: center;">
-                        <i class="ph-bold ph-arrows-counter-clockwise"></i> Limpiar
-                    </a>
-                <?php endif; ?>
             </form>
         </header>
 

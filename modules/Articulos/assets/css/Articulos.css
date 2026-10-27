@@ -1420,6 +1420,24 @@ img.loaded {
     color: var(--color-principal);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* Sombrea la pestaña activa */
 }
+/* Asegura que el contenedor padre no encoja los paneles hijos cuando está en columna */
+.art-catalog-wrapper {
+    align-items: stretch;
+}
 
+/* Evita que el botón de búsqueda robe el ancho de la barra de texto */
+.art-filter-controls-row .art-btn-read,
+.art-btn-search-submit {
+    flex: 0 0 auto;
+    padding: 0.6rem 1.25rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.art-link-reset-inline {
+    margin: 0;
+    align-self: center;
+    white-space: nowrap;
+}
 
 

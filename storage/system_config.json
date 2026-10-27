@@ -1,12 +1,12 @@
 {
+    "seguridad": {
+        "timeout_minutos": 120,
+        "intentos_login": 5
+    },
     "paginacion": {
         "logs": 50,
         "usuarios": 15,
         "docentes": 15
-    },
-    "seguridad": {
-        "timeout_minutos": 120,
-        "intentos_login": 5
     },
     "smtp": {
         "host": "",
@@ -16,17 +16,70 @@
         "from_email": "",
         "from_name": "Sistema CIIDI - UPTTMBI"
     },
+    "footer": {
+        "columnas": [
+            {
+                "titulo": "Ubícanos",
+                "icono": "ph-fill ph-map-pin",
+                "bloques_texto": [
+                    "<strong>Dirección:<\/strong> Núcleo San Luis (Sede Rectoral)\nAv. La Feria Sector San Luis Valera, Estado Trujillo - Venezuela",
+                    "<strong><i class=\"ph-fill ph-phone\"><\/i> Teléfonos:<\/strong>\nRectorado: (58) 0271-221.29.27\nVicerrectorado Académico: 0271-221.51.47"
+                ],
+                "enlaces": [],
+                "lema": ""
+            },
+            {
+                "titulo": "Núcleos",
+                "icono": "ph-fill ph-buildings",
+                "bloques_texto": [
+                    "<strong>Boconó:<\/strong> Calle Colón con Av. Independencia (Antiguo Hospital \"Rafael Rangel\"). Tel: 0272-652.31.11\n<strong>El Dividive:<\/strong> Autopista Panamericana, El Dividive. Tel: 0272-666.01.14\n<strong>La Beatriz:<\/strong> Urb. La Beatriz Parte Alta, al lado del Parque Botánico. Tel: 0271-231.11.10\n<strong>Trujillo:<\/strong> Av. Cristóbal Mendoza detrás del Mercado Municipal. Tel: 0272-236.31.61\n<strong>Ext. Carache:<\/strong> Calle Vargas entre Av.2 y Av.3, al lado Alcaldía. Tel: 0272-999.16.05"
+                ],
+                "enlaces": [],
+                "lema": ""
+            },
+            {
+                "titulo": "Redes Sociales",
+                "icono": "ph-fill ph-share-network",
+                "bloques_texto": [],
+                "enlaces": [
+                    {
+                        "icono": "ph-fill ph-facebook-logo",
+                        "texto": "Gestión UPTTMBI",
+                        "url": "#"
+                    },
+                    {
+                        "icono": "ph-fill ph-twitter-logo",
+                        "texto": "@upttmbi",
+                        "url": "#"
+                    },
+                    {
+                        "icono": "ph-fill ph-instagram-logo",
+                        "texto": "@upttmbi",
+                        "url": "#"
+                    },
+                    {
+                        "icono": "ph-fill ph-youtube-logo",
+                        "texto": "@upttmbi",
+                        "url": "#"
+                    }
+                ],
+                "lema": "\"Somos Excelencia Académica para Construir Patria...\""
+            }
+        ],
+        "bottom_izquierda": "© 2026 UPTTMBI. Todos los derechos reservados.",
+        "bottom_derecha": "Desarrollado por PNF Informática"
+    },
     "accesos_modulos": {
         "articulos": {
             "publico": 999,
             "admin": 1
         },
         "cursos": {
-            "publico": 10,
+            "publico": 999,
             "admin": 1
         },
         "investigaciones": {
-            "publico": 10,
+            "publico": 999,
             "admin": 1
         },
         "lineas_investigacion": {
@@ -35,18 +88,15 @@
         },
         "repositorio_pst": {
             "publico": 999,
-            "admin": 2
+            "admin": 1
         },
         "vinculacion_empresarial": {
             "publico": 999,
-            "admin": 2
+            "admin": 1
         },
         "autenticacion": {
             "publico": 998
         }
-    },
-    "email_layout": {
-        "html_wrapper": "<!DOCTYPE html>\n<html lang='es'>\n<head>\n    <meta charset='UTF-8'>\n    <meta name='viewport' content='width=device-width, initial-scale=1.0'>\n    <title>{TITULO}<\/title>\n<\/head>\n<body style='margin:0; padding:0; background-color:#f8fafc; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; color:#334155; -webkit-font-smoothing: antialiased;'>\n    <table role='presentation' width='100%' cellspacing='0' cellpadding='0' style='background-color:#f8fafc; padding: 30px 15px;'>\n        <tr>\n            <td align='center'>\n                <table role='presentation' width='100%' style='max-width: 600px; background-color:#ffffff; border-radius: 12px; overflow:hidden; box-shadow: 0 10px 25px -5px rgba(18, 26, 62, 0.08); border: 1px solid #e2e8f0;'>\n                    \n                    <!-- HEADER INSTITUCIONAL CIIDI -->\n                    <tr>\n                        <td style='background: linear-gradient(135deg, rgb(80, 89, 132) 0%, rgb(112, 144, 203) 100%); padding: 32px 25px; text-align: center; color: #ffffff;'>\n                            <div style='font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #ffffff; opacity: 0.9; margin-bottom: 8px;'>\n                                UPTTMBI &bull; VALERA, TRUJILLO\n                            <\/div>\n                            <h1 style='margin:0; font-size: 24px; font-weight: 800; letter-spacing: 0.5px; color: #ffffff; text-transform: uppercase;'>\n                                SISTEMA INTEGRAL CIIDI\n                            <\/h1>\n                            <div style='font-size: 12px; color: #ffffff; opacity: 0.85; margin-top: 4px; font-weight: 500;'>\n                                Centro de Investigación, Innovación y Desarrollo Informático\n                            <\/div>\n                        <\/td>\n                    <\/tr>\n\n                    <!-- CUERPO DE NOTIFICACIÓN -->\n                    <tr>\n                        <td style='padding: 35px 30px; background-color: #ffffff;'>\n                            {CUERPO}\n                        <\/td>\n                    <\/tr>\n\n                    <!-- FOOTER INSTITUCIONAL -->\n                    <tr>\n                        <td style='background-color: #f8fafc; padding: 24px 30px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b;'>\n                            <p style='margin: 0 0 6px 0; font-weight: 700; color: #121a3e;'>\n                                Universidad Politécnica Territorial del Estado Trujillo &quot;Mario Briceño Iragorry&quot;\n                            <\/p>\n                            <p style='margin: 0; color: #64748b;'>\n                                &copy; {YEAR} CIIDI. Todos los derechos reservados.\n                            <\/p>\n                        <\/td>\n                    <\/tr>\n\n                <\/table>\n            <\/td>\n        <\/tr>\n    <\/table>\n<\/body>\n<\/html>"
     },
     "entorno": {
         "app_debug": false,

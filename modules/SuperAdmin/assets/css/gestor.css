@@ -339,7 +339,7 @@ select.sa-filter-input option, select option {
 
 .rbac-level-delete:hover {
     background: rgba(18, 26, 62, 0.08);
-    color: var(--color-principal);
+    color: var(--color-terciario);
     border-color: rgba(18, 26, 62, 0.25);
 }
 
@@ -491,4 +491,180 @@ select.sa-filter-input option, select option {
 
 .rbac-roles-section h4 i {
     color: var(--color-terciario);
+}
+/* En SuperAdmin.css o gestor.css */
+.sa-footer-builder-panel {
+    padding: 1.5rem;
+    border-radius: var(--radius-sm);
+}
+
+.sa-footer-builder-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.sa-footer-builder-header h4 {
+    margin: 0 0 0.35rem 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--texto-titulos);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sa-footer-builder-header p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--texto-silenciado);
+}
+
+.sa-footer-columns-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.sa-footer-col-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.sa-footer-col-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.5rem;
+}
+
+.sa-footer-field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.sa-footer-field label,
+.sa-footer-subbox-head label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--texto-titulos);
+    display: block;
+    margin-bottom: 4px;
+}
+
+.sa-footer-Field input,
+.sa-footer-col-card .sa-filter-input {
+    width: 100%;
+}
+
+.sa-footer-subbox {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.75rem;
+}
+
+.sa-footer-subbox-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.6rem;
+}
+
+.sa-footer-item-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+.sa-footer-link-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.2fr auto;
+    gap: 0.4rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.sa-btn-icon-danger {
+    background: var(--alert-inactive);
+    color: var(--alert-active);
+    border: 1px solid var(--alert-active);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.sa-btn-icon-danger:hover {
+    background: #fecaca;
+}
+
+.sa-footer-bottom-config {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1.1rem;
+}
+
+.sa-footer-bottom-config h5 {
+    margin: 0 0 0.85rem 0;
+    font-size: 0.9rem;
+    color: var(--texto-titulos);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* En assets/css/style.css (para el lema y espaciado de párrafos del footer público) */
+.footer-column .footer-text + .footer-text {
+    margin-top: 1rem;
+}
+
+.footer-column .footer-lema {
+    margin-top: 1.5rem;
+    font-style: italic;
+    font-weight: 700;
+    color: var(--color-secundario);
+}
+.sa-footer-builder-actions {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.sa-btn-danger-outline {
+    background: transparent;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.sa-btn-danger-outline:hover {
+    background: #fef2f2;
+    border-color: #dc2626;
 }

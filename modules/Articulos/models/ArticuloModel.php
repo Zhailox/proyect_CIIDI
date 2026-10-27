@@ -773,10 +773,6 @@ public function actualizarArticulo(
     }
 }
 public function obtenerCatalogoPaginado($tabla, $buscar = '', $pagina = 1, $porPagina = 5) {
-        $tablasPermitidas = ['categorias', 'etiquetas', 'editoriales'];
-        if (!in_array($tabla, $tablasPermitidas, true)) {
-            throw new InvalidArgumentException("Tabla de catálogo no autorizada.");
-        }
         $db = Connection::getInstance();
         $offset = ($pagina - 1) * $porPagina;
         

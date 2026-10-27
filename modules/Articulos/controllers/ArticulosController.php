@@ -765,8 +765,8 @@ class ArticulosController {
             'id_autor' => $idAutor,
             'q' => trim($_GET['q'] ?? ''),
             'year' => !empty($_GET['year']) ? (int) $_GET['year'] : '',
-            'categorias' => array_filter(array_map('intval', $_GET['categoria'] ?? [])),
-            'etiquetas' => array_filter(array_map('intval', $_GET['etiqueta'] ?? [])),
+            'categorias' => array_filter(array_map('intval', (array)($_GET['categoria'] ?? []))),
+            'etiquetas' => array_filter(array_map('intval', (array)($_GET['etiqueta'] ?? []))),
             'activo' => true
         ];
 
@@ -787,4 +787,3 @@ class ArticulosController {
         ];
     }
 }
-

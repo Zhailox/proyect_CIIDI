@@ -1741,6 +1741,18 @@ Trace:
 #5 [internal function]: MailService::{closure:MailService::enviarAsincrono():146}()
 #6 {main}
 --------------------------------------------------------------------------------
+<<<<<<< HEAD
+[2026-10-15 22:00:58] ERROR: SMTP Error: Could not connect to SMTP host. Failed to connect to server en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Thu, 15 O...', '--b1=_fiHdE2jJx...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(199): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(151): MailService::enviar('cepillinin@gmai...', 'Felipe', 'Bienvenido al S...', '<h2 style="colo...', '', false)
+#5 [internal function]: MailService::{closure:MailService::enviarAsincrono():146}()
+#6 {main}
+--------------------------------------------------------------------------------
+=======
 [2026-10-13 22:12:34] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  no existe la relación «recurso_investigadores»
 LINE 22:                     FROM recurso_investigadores ri2
                                   ^ en C:\wamp64\www\proyect_CIIDI\modules\Articulos\models\ArticuloModel.php:152
@@ -1844,6 +1856,311 @@ Trace:
 #6 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
 #7 {main}
 --------------------------------------------------------------------------------
+<<<<<<< HEAD
+>>>>>>> 6c5eea6eeadaca1fb0a8c3c0baeea97784e3d0a2
+[2026-10-16 23:54:23] ERROR: SMTP Error: Could not connect to SMTP host. Failed to connect to server en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Fri, 16 O...', '--b1=_1zhRT0slb...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(199): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(138): MailService::enviar('cepillinin@gmai...', 'Felipe', 'Restablecer Con...', '<h2 style="colo...', '', false)
+#5 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(87): MailService::enviarEvento('autenticacion.r...', 'cepillinin@gmai...', Array, 'Felipe', false)
+#6 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): LoginController->procesarRecuperacion()
+#7 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('procesar-recupe...', Array, Array, Array, Object(AssetResolver))
+#8 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#9 {main}
+--------------------------------------------------------------------------------
+[2026-10-17 00:58:08] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.detalles_proyectos" does not exist
+LINE 3:                 LEFT JOIN public.detalles_proyectos dp ON r....
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php:314
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(314): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\InicioRepositorioController.php(12): DocumentoModel->getPSTDocumentosCount()
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): InicioRepositorioController->index()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('repositorio', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-17 00:58:21] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.detalles_proyectos" does not exist
+LINE 3:                 LEFT JOIN public.detalles_proyectos dp ON r....
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php:314
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(314): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\InicioRepositorioController.php(12): DocumentoModel->getPSTDocumentosCount()
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): InicioRepositorioController->index()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('repositorio', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-17 01:01:44] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "detalles_proyectos" does not exist
+LINE 15:             LEFT  JOIN detalles_proyectos dp ON dp.id_recurs...
+                                ^ en C:\wamp64\www\proyect_CIIDI\modules\LineasInvestigacion\models\LineasModel.php:93
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\LineasInvestigacion\models\LineasModel.php(93): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\LineasInvestigacion\controllers\DetalleController.php(43): LineasModel->getProyectosPorLinea(8, 10, 0)
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): DetalleLineaController->index()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('detalle-linea', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(38): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:18:26] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:18:26] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:18:26] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Database\QueryBuilder.php(19): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\models\UsuarioModel.php(11): QueryBuilder->__construct()
+#4 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(14): UsuarioModel->__construct()
+#5 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(60): LoginController->__construct()
+#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('login', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:19:00] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:19:00] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(299): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Views\home_bienvenida.php(13): DocumentoModel->getPSTDocumentosCount(Array)
+#4 C:\wamp64\www\proyect_CIIDI\core\Views\master.php(45): include('C:\\wamp64\\www\\p...')
+#5 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(79): include('C:\\wamp64\\www\\p...')
+#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('inicio', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:19:02] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:19:02] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(299): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\InicioRepositorioController.php(12): DocumentoModel->getPSTDocumentosCount()
+#4 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): InicioRepositorioController->index()
+#5 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('repositorio', Array, Array, Array, Object(AssetResolver))
+#6 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#7 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:19:04] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:19:07] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:19:07] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Database\QueryBuilder.php(19): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\models\UsuarioModel.php(11): QueryBuilder->__construct()
+#4 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(14): UsuarioModel->__construct()
+#5 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(60): LoginController->__construct()
+#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('login', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:19:13] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:19:13] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Database\QueryBuilder.php(19): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\models\UsuarioModel.php(11): QueryBuilder->__construct()
+#4 C:\wamp64\www\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(14): UsuarioModel->__construct()
+#5 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(60): LoginController->__construct()
+#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(117): Dispatcher->dispatch('login', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:20:23] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:20:24] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:20:24] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:21:07] ERROR: SQLSTATE[08006] [7] connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres" en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(172): Connection->__construct(false)
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(304): Connection::getInstance()
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(72): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(58): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:21:07] ERROR: SQLSTATE[0A000]: Feature not supported: 7 ERROR:  extension "vector" is not available
+HINT:  The extension must first be installed on the system where PostgreSQL is running. en C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php:613
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php(613): PDO->exec('-- ============...')
+#1 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerController.php(230): InstallerService::runPendingMigrations('localhost', '5432', 'miki', '1234', 'ciidi')
+#2 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerHook.php(49): InstallerController->installSystemAjax()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(99): InstallerHook->intercept('installer-run')
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:21:07] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.detalles_proyectos" does not exist en C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php:613
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php(613): PDO->exec('-- ============...')
+#1 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerController.php(230): InstallerService::runPendingMigrations('localhost', '5432', 'miki', '1234', 'ciidi')
+#2 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerHook.php(49): InstallerController->installSystemAjax()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(99): InstallerHook->intercept('installer-run')
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:21:07] ERROR: SQLSTATE[25P02]: In failed sql transaction: 7 ERROR:  current transaction is aborted, commands ignored until end of transaction block en C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php:613
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php(613): PDO->exec('ALTER TABLE pub...')
+#1 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerController.php(230): InstallerService::runPendingMigrations('localhost', '5432', 'miki', '1234', 'ciidi')
+#2 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerHook.php(49): InstallerController->installSystemAjax()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(99): InstallerHook->intercept('installer-run')
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:21:07] ERROR: SQLSTATE[25P02]: In failed sql transaction: 7 ERROR:  current transaction is aborted, commands ignored until end of transaction block en C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php:613
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php(613): PDO->exec('ALTER TABLE aut...')
+#1 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerController.php(230): InstallerService::runPendingMigrations('localhost', '5432', 'miki', '1234', 'ciidi')
+#2 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerHook.php(49): InstallerController->installSystemAjax()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(99): InstallerHook->intercept('installer-run')
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:21:07] ERROR: SQLSTATE[25P02]: In failed sql transaction: 7 ERROR:  current transaction is aborted, commands ignored until end of transaction block en C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php:613
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php(613): PDO->exec('-- Migraci\xC3\xB3n 0...')
+#1 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerController.php(230): InstallerService::runPendingMigrations('localhost', '5432', 'miki', '1234', 'ciidi')
+#2 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerHook.php(49): InstallerController->installSystemAjax()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(99): InstallerHook->intercept('installer-run')
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-19 23:21:07] ERROR: SQLSTATE[25P02]: In failed sql transaction: 7 ERROR:  current transaction is aborted, commands ignored until end of transaction block en C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php:613
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerService.php(613): PDO->exec('-- 1. Crear la ...')
+#1 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerController.php(230): InstallerService::runPendingMigrations('localhost', '5432', 'miki', '1234', 'ciidi')
+#2 C:\wamp64\www\proyect_CIIDI\core\Installer\InstallerHook.php(49): InstallerController->installSystemAjax()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(99): InstallerHook->intercept('installer-run')
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(44): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 15:42:09] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.detalles_proyectos" does not exist
+LINE 3:                 LEFT JOIN public.detalles_proyectos dp ON r....
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php:422
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(422): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\InicioRepositorioController.php(12): DocumentoModel->getPSTDocumentosCount()
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): InicioRepositorioController->index()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(130): Dispatcher->dispatch('repositorio', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 16:10:50] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.detalles_proyectos" does not exist
+LINE 3:                 LEFT JOIN public.detalles_proyectos dp ON r....
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php:422
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(422): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\InicioRepositorioController.php(12): DocumentoModel->getPSTDocumentosCount()
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): InicioRepositorioController->index()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(130): Dispatcher->dispatch('repositorio', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-22 17:37:15] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.detalles_proyectos" does not exist
+LINE 3:                 LEFT JOIN public.detalles_proyectos dp ON r....
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php:422
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(422): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\InicioRepositorioController.php(12): DocumentoModel->getPSTDocumentosCount()
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): InicioRepositorioController->index()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(130): Dispatcher->dispatch('repositorio', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+=======
 [2026-10-22 23:15:42] ERROR: could not find driver en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:145
 Trace:
 #0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(145): PDO->__construct('pgsql:host=loca...', 'postgres', Object(SensitiveParameterValue), Array)
@@ -1851,4 +2168,89 @@ Trace:
 #2 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(464): Connection::getInstance()
 #3 Standard input code(6): DocumentoModel->getPSTStatsResumen()
 #4 {main}
+>>>>>>> c4dc88020dcbe9ceb33a5ce266ef600ef35f59d4
+--------------------------------------------------------------------------------
+[2026-10-26 21:43:00] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.detalles_proyectos" does not exist
+LINE 3:                 LEFT JOIN public.detalles_proyectos dp ON r....
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php:455
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(455): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\InicioRepositorioController.php(12): DocumentoModel->getPSTDocumentosCount()
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): InicioRepositorioController->index()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(130): Dispatcher->dispatch('repositorio', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-26 21:55:14] ERROR: SMTP Error: Could not connect to SMTP host. Failed to connect to server en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Mon, 26 O...', '--b1=_vJ3RNcGxw...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(199): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(151): MailService::enviar('ce444pillin@gma...', '444', 'Bienvenido al S...', '<h2 style="colo...', '', false)
+#5 [internal function]: MailService::{closure:MailService::enviarAsincrono():146}()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-26 22:57:24] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.detalles_proyectos" does not exist
+LINE 3:                 LEFT JOIN public.detalles_proyectos dp ON r....
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php:455
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(455): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\InicioRepositorioController.php(12): DocumentoModel->getPSTDocumentosCount()
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): InicioRepositorioController->index()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(130): Dispatcher->dispatch('repositorio', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-26 22:57:35] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.detalles_proyectos" does not exist
+LINE 3:                 LEFT JOIN public.detalles_proyectos dp ON r....
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php:455
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(455): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\InicioRepositorioController.php(12): DocumentoModel->getPSTDocumentosCount()
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): InicioRepositorioController->index()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(130): Dispatcher->dispatch('repositorio', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-27 11:54:20] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.detalles_proyectos" does not exist
+LINE 3:                 LEFT JOIN public.detalles_proyectos dp ON r....
+                                  ^ en C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php:455
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\models\DocumentoModel.php(455): PDOStatement->execute(Array)
+#1 C:\wamp64\www\proyect_CIIDI\modules\RepositorioPST\controllers\InicioRepositorioController.php(12): DocumentoModel->getPSTDocumentosCount()
+#2 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): InicioRepositorioController->index()
+#3 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(130): Dispatcher->dispatch('repositorio', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-10-27 12:04:52] ERROR: SMTP Error: Could not connect to SMTP host. Failed to connect to server en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Tue, 27 O...', '--b1=_s2c9MSHuD...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(199): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(151): MailService::enviar('eliminardo@gmai...', 'Eliminardo', 'Bienvenido al S...', '<h2 style="colo...', '', false)
+#5 [internal function]: MailService::{closure:MailService::enviarAsincrono():146}()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-27 12:15:34] ERROR: SMTP Error: Could not connect to SMTP host. Failed to connect to server en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Tue, 27 O...', '--b1=_Vg3MScUdV...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(199): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(151): MailService::enviar('123@gmail.com', 'Juan', 'Alerta de Segur...', '<h2 style="colo...', '', false)
+#5 [internal function]: MailService::{closure:MailService::enviarAsincrono():146}()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-10-27 12:31:42] ERROR: SMTP Error: Could not connect to SMTP host. Failed to connect to server en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Tue, 27 O...', '--b1=_SV8NvLJ6P...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(199): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(151): MailService::enviar('cepilli444n@gma...', '444', 'Bienvenido al S...', '<h2 style="colo...', '', false)
+#5 [internal function]: MailService::{closure:MailService::enviarAsincrono():146}()
+#6 {main}
 --------------------------------------------------------------------------------

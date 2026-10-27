@@ -284,10 +284,10 @@
             </div>
             
             <!-- BUSCADOR CLIENT-SIDE -->
-            <div style="display: flex; gap: 8px; align-items: center;">
+           <div style="display: flex; gap: 8px; align-items: center;">
                 <div style="position: relative; width: 280px;">
-                    <i class="ph-bold ph-magnifying-glass" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
-                    <input type="text" id="input-buscar-log" onkeyup="filtrarLogsHistorial()" placeholder="Buscar por email, asunto..." class="sa-filter-input" style="width: 100%; padding-left: 32px; font-size: 0.85rem;">
+                    <i class="ph-bold ph-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                    <input type="text" id="input-buscar-log" onkeyup="filtrarLogsHistorial()" placeholder="Buscar por email, asunto..." class="sa-filter-input" style="width: 100%; padding-left: 40px !important; font-size: 0.85rem; box-sizing: border-box;">
                 </div>
             </div>
         </div>
