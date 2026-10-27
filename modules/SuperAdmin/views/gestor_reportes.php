@@ -66,7 +66,9 @@ $lineasInvestigacion = $lineas ?? [];
         <div>
             <div style="font-size: 0.8rem; font-weight: 800; color: var(--color-secundario); text-transform: uppercase;">Cuentas & Usuarios</div>
             <div style="font-size: 1.6rem; font-weight: 800; color: #121a3e; margin-top: 2px;"><?= number_format($resumen['usuarios']) ?></div>
-            <div style="font-size: 0.78rem; color: #64748b;">Matrícula Registrada</div>
+            <div style="font-size: 0.75rem; color: #64748b;">
+                <?= (int)($resumen['usuarios_activos'] ?? 0) ?> activos · <?= (int)($resumen['usuarios_suspendidos'] ?? 0) ?> susp. · <?= (int)($resumen['usuarios_archivados'] ?? 0) ?> archiv.
+            </div>
         </div>
     </a>
 

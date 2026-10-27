@@ -69,7 +69,14 @@ class ReportesController {
                 $headers = ['ID', 'Cédula', 'Nombre Completo', 'Correo', 'Rol', 'Estado'];
                 fputcsv($output, $headers);
                 foreach ($datos as $r) {
-                    fputcsv($output, $sanitizeCsvRow([$r['id'], $r['cedula'], $r['nombre'], $r['correo'], $r['rol'], $r['activo'] ? 'Activo' : 'Suspendido']));
+                    fputcsv($output, $sanitizeCsvRow([
+                        $r['id'], 
+                        $r['cedula'], 
+                        $r['nombre'], 
+                        $r['correo'], 
+                        $r['rol'], 
+                        $r['estado_cuenta']
+                    ]));
                 }
                 break;
 
@@ -173,7 +180,7 @@ class ReportesController {
                     'nombre' => 'Nombre Completo',
                     'correo' => 'Correo',
                     'rol' => 'Rol',
-                    'activo' => 'Estado'
+                    'estado_cuenta' => 'Estado'
                 ];
                 break;
 
@@ -228,6 +235,7 @@ class ReportesController {
 
         $columnas = array_values($columnasMap);
         $estadisticasGrafico = $this->model->obtenerEstadisticasGrafico($dominio, $agrupar);
+        $resumen = $this->model->obtenerResumenGeneral(); 
 
         include __DIR__ . '/../views/imprimir_reporte_pdf.php';
         exit;

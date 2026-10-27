@@ -90,7 +90,7 @@ if (empty($mod)) {
 <!-- NAVEGACIÓN DE PESTAÑAS DEDICADAS -->
 <div style="border-bottom: 2px solid rgba(80,89,132,0.12); margin-bottom: 1.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
     <button type="button" onclick="switchModTab('rutas')" id="tab-btn-rutas" class="ag-tab-btn active">
-        <i class="ph-bold ph-tree-structure"></i> Rutas & Feature Flags (RBAC)
+        <i class="ph-bold ph-tree-structure"></i> Rutas & Feature Flags
     </button>
 
     <?php if ($mod['configJsonData'] !== null): ?>
@@ -117,7 +117,7 @@ if (empty($mod)) {
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 1rem;">
             <div>
                 <h3 style="margin: 0; font-weight: 800; color: var(--texto-titulos, #0f172a); font-size: 1.2rem;">
-                    Matriz de Permisos por Ruta (RBAC & Feature Flags)
+                    Integridad y Estado de Rutas Internas del Módulo
                 </h3>
                 <p style="margin: 0.2rem 0 0 0; color: var(--texto-silenciado, #64748b); font-size: 0.88rem;">
                     Configure estados y ejecute pings sintéticos de salud por ruta.

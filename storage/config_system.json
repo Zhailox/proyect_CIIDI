@@ -31,7 +31,11 @@
         },
         "articulos": {
             "estado": "online",
-            "rol_minimo": 0
+            "rol_minimo": 1
+        },
+        "inicio-pst": {
+            "estado": "online",
+            "rol_minimo": 1
         }
     }
 }

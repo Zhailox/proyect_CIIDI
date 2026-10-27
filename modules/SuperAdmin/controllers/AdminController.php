@@ -646,6 +646,7 @@ class AdminController {
                     $psqlPath = Connection::getPsqlPath();
 
                     putenv("PGPASSWORD={$creds['pass']}");
+                    putenv("PGCLIENTENCODING=UTF8");
                     $comando = "{$psqlPath} -h {$creds['host']} -p {$creds['port']} "
                     . "-U {$creds['user']} -d {$creds['db']} "
                     . "-f \"{$rutaParaPsql}\" 2>&1";
@@ -654,6 +655,7 @@ class AdminController {
                     $codigo_retorno = 0;
                     exec($comando, $salida, $codigo_retorno);
                     putenv("PGPASSWORD=");
+                    putenv("PGCLIENTENCODING=");
 
                     if ($tempSqlUnzipped && file_exists($tempSqlUnzipped)) {
                         @unlink($tempSqlUnzipped);

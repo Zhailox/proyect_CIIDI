@@ -36,18 +36,20 @@ class BackupService {
         $rutaCompleta = $backupDir . $nombreArchivo;
         $tempSqlPath = $comprimir ? $backupDir . "temp_{$fecha}.sql" : $rutaCompleta;
 
-        $flags = $soloEsquema ? "-F p -s --clean --if-exists" : "-F p --clean --if-exists --inserts";
+        $flags = $soloEsquema ? "-E UTF8 -F p -s --clean --if-exists" : "-E UTF8 -F p --clean --if-exists --inserts";
         if ($tabla) {
             $flags .= " -t " . escapeshellarg($tabla);
         }
 
         putenv("PGPASSWORD={$creds['pass']}");
+        putenv("PGCLIENTENCODING=UTF8");
         $comando = "{$pgDumpPath} -h {$creds['host']} -p {$creds['port']} -U {$creds['user']} {$flags} -d {$creds['db']} -f \"{$tempSqlPath}\" 2>&1";
 
         $salida = [];
         $codigoRetorno = 0;
         exec($comando, $salida, $codigoRetorno);
         putenv("PGPASSWORD=");
+        putenv("PGCLIENTENCODING=");
 
         if ($codigoRetorno !== 0 || !file_exists($tempSqlPath) || filesize($tempSqlPath) === 0) {
             $errText = implode(' ', $salida);

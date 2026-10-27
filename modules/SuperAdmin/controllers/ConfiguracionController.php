@@ -51,9 +51,25 @@ class ConfiguracionController {
                 header("Location: gestor-correos?tab=tabConexionSmtp");
                 exit;
             }
+
+            // Si el administrador pulsó el botón "Restaurar Footer por Defecto"
+            if (!empty($_POST['restaurar_footer_defecto']) && $_POST['restaurar_footer_defecto'] === '1') {
+                $config['footer'] = SystemConfigService::getDefaultFooter();
+                if (session_status() === PHP_SESSION_NONE) session_start();
+
+                if (SystemConfigService::save($config)) {
+                    AuditLogger::registrar('WARNING', 'SuperAdmin', 'Restaurar Footer Institucional', 'Se restauró el footer institucional a sus valores originales por defecto.');
+                    $_SESSION['mensaje_config_exito'] = "El Footer Institucional ha sido restaurado a sus valores originales por defecto.";
+                } else {
+                    $_SESSION['mensaje_config_error'] = "Error al intentar restaurar el footer en el archivo JSON.";
+                }
+
+                header("Location: configuracion-sistema?tab=tabFooter");
+                exit;
+            }
             
             // Paginación
-            $config['paginacion']['logs'] = max(1, (int)($_POST['pag_logs'] ?? 50));
+            $config['paginacion']['logs'] = max(1, (int)($_POST['paginacion_logs'] ?? $_POST['pag_logs'] ?? 50));
             $config['paginacion']['usuarios'] = max(1, (int)($_POST['pag_usuarios'] ?? 15));
             $config['paginacion']['docentes'] = max(1, (int)($_POST['pag_docentes'] ?? 15));
             
@@ -61,22 +77,14 @@ class ConfiguracionController {
             $config['seguridad']['timeout_minutos'] = max(5, (int)($_POST['seg_timeout'] ?? 120));
             $config['seguridad']['intentos_login'] = max(1, (int)($_POST['seg_intentos'] ?? 5));
             
-            // SMTP
-            $config['smtp']['host'] = trim($_POST['smtp_host'] ?? '');
-            $config['smtp']['port'] = (int)($_POST['smtp_port'] ?? 587);
-            $config['smtp']['user'] = trim($_POST['smtp_user'] ?? '');
-            $config['smtp']['from_email'] = trim($_POST['smtp_from'] ?? '');
-            
             // Accesos Dinámicos
             if (isset($_POST['accesos']) && is_array($_POST['accesos'])) {
                 foreach ($_POST['accesos'] as $slug => $niveles) {
-                    if ($slug === 'superadmin' || $slug === 'super_admin') continue; // Blindaje absoluto
+                    if ($slug === 'superadmin' || $slug === 'super_admin') continue;
                     
                     if ($slug === 'autenticacion') {
-                        // Forzamos desde el backend que jamás supere 998
                         $config['accesos_modulos'][$slug]['publico'] = min(998, (int)($niveles['publico'] ?? 998));
                     } else {
-                        // Creación y actualización automática de cualquier otro módulo
                         $config['accesos_modulos'][$slug]['publico'] = (int)($niveles['publico'] ?? 999);
                         $config['accesos_modulos'][$slug]['admin'] = (int)($niveles['admin'] ?? 1);
                     }
@@ -96,17 +104,67 @@ class ConfiguracionController {
             $config['entorno']['app_debug'] = $appDebug;
             $config['entorno']['app_env'] = $appEnv;
 
-            // Solo actualizamos la contraseña si se escribió una nueva
-            if (!empty($_POST['smtp_pass'])) {
-                $cleanPass = str_replace(' ', '', trim($_POST['smtp_pass']));
-                $config['smtp']['pass'] = Crypto::encrypt($cleanPass);
+            // Procesar configuración dinámica del Footer Institucional
+            if (isset($_POST['footer']) && is_array($_POST['footer'])) {
+                $footerPost = $_POST['footer'];
+                $columnasLimpias = [];
+
+                if (!empty($footerPost['columnas']) && is_array($footerPost['columnas'])) {
+                    foreach ($footerPost['columnas'] as $col) {
+                        $tituloCol = trim($col['titulo'] ?? '');
+                        $iconoCol  = preg_replace('/[^a-zA-Z0-9\-\s]/', '', trim($col['icono'] ?? ''));
+                        $lemaCol   = trim($col['lema'] ?? '');
+
+                        $bloquesTexto = [];
+                        if (!empty($col['bloques_texto']) && is_array($col['bloques_texto'])) {
+                            foreach ($col['bloques_texto'] as $txt) {
+                                $txtTrim = trim($txt);
+                                if ($txtTrim !== '') {
+                                    $bloquesTexto[] = $txtTrim;
+                                }
+                            }
+                        }
+
+                        $enlacesCol = [];
+                        if (!empty($col['enlaces']) && is_array($col['enlaces'])) {
+                            foreach ($col['enlaces'] as $lnk) {
+                                $textoLnk = trim($lnk['texto'] ?? '');
+                                $urlLnk   = trim($lnk['url'] ?? '#');
+                                $iconoLnk = preg_replace('/[^a-zA-Z0-9\-\s]/', '', trim($lnk['icono'] ?? 'ph-fill ph-link'));
+                                if ($textoLnk !== '') {
+                                    $enlacesCol[] = [
+                                        'icono' => $iconoLnk,
+                                        'texto' => $textoLnk,
+                                        'url'   => $urlLnk !== '' ? $urlLnk : '#'
+                                    ];
+                                }
+                            }
+                        }
+
+                        if ($tituloCol !== '' || !empty($bloquesTexto) || !empty($enlacesCol) || $lemaCol !== '') {
+                            $columnasLimpias[] = [
+                                'titulo'        => $tituloCol,
+                                'icono'         => $iconoCol,
+                                'bloques_texto' => $bloquesTexto,
+                                'enlaces'       => $enlacesCol,
+                                'lema'          => $lemaCol
+                            ];
+                        }
+                    }
+                }
+
+                $config['footer'] = [
+                    'columnas'         => $columnasLimpias,
+                    'bottom_izquierda' => trim($footerPost['bottom_izquierda'] ?? '© 2026 UPTTMBI. Todos los derechos reservados.'),
+                    'bottom_derecha'   => trim($footerPost['bottom_derecha'] ?? 'Desarrollado por PNF Informática')
+                ];
             }
 
             if (session_status() === PHP_SESSION_NONE) session_start();
             
             if (SystemConfigService::save($config)) {
-                AuditLogger::registrar('WARNING', 'SuperAdmin', 'Modificar Variables Globales', 'Se actualizaron las variables de entorno del sistema.');
-                $_SESSION['mensaje_config_exito'] = "Variables de entorno guardadas correctamente.";
+                AuditLogger::registrar('WARNING', 'SuperAdmin', 'Modificar Variables Globales', 'Se actualizaron las variables de entorno y configuración global del sistema.');
+                $_SESSION['mensaje_config_exito'] = "Variables de entorno y configuración guardadas correctamente.";
             } else {
                 $_SESSION['mensaje_config_error'] = "Error al intentar escribir en el archivo JSON.";
             }

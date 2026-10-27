@@ -61,6 +61,11 @@ class EmbeddingService {
         // ──────────────────────────────────────────────────────────────
         // 1. Garantizar que el runtime nativo C++ está disponible
         // ──────────────────────────────────────────────────────────────
+        $basePath = defined('BASE_PATH') ? rtrim(BASE_PATH, '/\\') : dirname(__DIR__, 3);
+        if (!class_exists('\OnnxRuntime\InferenceSession') && file_exists($basePath . '/vendor/autoload.php')) {
+            require_once $basePath . '/vendor/autoload.php';
+        }
+
         if (class_exists('\OnnxRuntime\Vendor')) {
             $dest = \OnnxRuntime\Vendor::defaultLib();
             if (!file_exists($dest)) {
@@ -71,7 +76,6 @@ class EmbeddingService {
         // ──────────────────────────────────────────────────────────────
         // 2. Resolver rutas por defecto y auto-extraer desde migrations si falta
         // ──────────────────────────────────────────────────────────────
-        $basePath = defined('BASE_PATH') ? rtrim(BASE_PATH, '/\\') : dirname(__DIR__, 3);
 
         self::asegurarModeloDisponible($basePath);
 
