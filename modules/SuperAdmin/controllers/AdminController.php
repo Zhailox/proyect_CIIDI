@@ -657,19 +657,24 @@ class AdminController {
                     // Auto-Checkpoint Preventivo antes de sobreescribir la BD
                     $checkpoint = BackupService::crearBackup('sql.gz', false, null, 'pre_restore_checkpoint');
 
-                    // Si está comprimido en GZIP, descomprimir temporalmente para psql
-                    $rutaParaPsql = $rutaArchivoRestaurar;
+                    // Descomprimir si es GZIP y sanitizar siempre en un archivo temporal compatible con Linux Debian (PG13-18)
+                    $tempSqlUnzipped = sys_get_temp_dir() . '/restore_temp_' . time() . '_' . mt_rand(1000, 9999) . '.sql';
                     if (!empty($verif['esGzip'])) {
-                        $tempSqlUnzipped = sys_get_temp_dir() . '/restore_temp_' . time() . '.sql';
                         $zp = gzopen($rutaArchivoRestaurar, 'rb');
-                        $fp = fopen($tempSqlUnzipped, 'wb');
+                        $rawSqlRestore = '';
                         while (!gzeof($zp)) {
-                            fwrite($fp, gzread($zp, 8192));
+                            $rawSqlRestore .= gzread($zp, 8192);
                         }
                         gzclose($zp);
-                        fclose($fp);
-                        $rutaParaPsql = $tempSqlUnzipped;
+                    } else {
+                        $rawSqlRestore = (string)file_get_contents($rutaArchivoRestaurar);
                     }
+
+                    if (method_exists('Connection', 'sanitizarSqlCompatible')) {
+                        $rawSqlRestore = Connection::sanitizarSqlCompatible($rawSqlRestore);
+                    }
+                    file_put_contents($tempSqlUnzipped, $rawSqlRestore);
+                    $rutaParaPsql = $tempSqlUnzipped;
 
                     $creds = Connection::getCredentials();
                     $psqlPath = Connection::getPsqlPath();
@@ -691,6 +696,15 @@ class AdminController {
                     }
 
                     if (session_status() === PHP_SESSION_NONE) session_start();
+
+                    // Garantizar que todas las tablas críticas (ej. detalles_proyectos y funciones unaccent) queden íntegras tras restaurar
+                    Connection::resetConnection();
+                    try {
+                        $pdoPostRestore = Connection::getInstance(true);
+                        if ($pdoPostRestore) {
+                            Connection::autoHealSchemaIfNeeded($pdoPostRestore, true);
+                        }
+                    } catch (Throwable $eHeal) {}
 
                     if ($codigo_retorno === 0) {
                         AuditLogger::registrar('WARNING', 'SuperAdmin', 'Restaurar BD', "Base de datos restaurada exitosamente.");

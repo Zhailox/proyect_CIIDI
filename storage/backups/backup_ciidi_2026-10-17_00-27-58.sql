@@ -2,7 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict JPJAHTrhtIWhPwpYVdavQAIAfErQtqaCWIJzqd5NtnNHYuc76TcHULa88YzkspB
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -10,7 +9,6 @@
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -245,7 +243,6 @@ CREATE TYPE public.accion_acceso_enum AS ENUM (
 );
 
 
-ALTER TYPE public.accion_acceso_enum OWNER TO postgres;
 
 --
 -- Name: accion_auditoria_enum; Type: TYPE; Schema: public; Owner: postgres
@@ -258,7 +255,6 @@ CREATE TYPE public.accion_auditoria_enum AS ENUM (
 );
 
 
-ALTER TYPE public.accion_auditoria_enum OWNER TO postgres;
 
 --
 -- Name: estado_curso_enum; Type: TYPE; Schema: public; Owner: postgres
@@ -271,7 +267,6 @@ CREATE TYPE public.estado_curso_enum AS ENUM (
 );
 
 
-ALTER TYPE public.estado_curso_enum OWNER TO postgres;
 
 --
 -- Name: estado_propuesta_enum; Type: TYPE; Schema: public; Owner: postgres
@@ -284,7 +279,6 @@ CREATE TYPE public.estado_propuesta_enum AS ENUM (
 );
 
 
-ALTER TYPE public.estado_propuesta_enum OWNER TO postgres;
 
 --
 -- Name: nivel_academico_enum; Type: TYPE; Schema: public; Owner: miki
@@ -298,7 +292,6 @@ CREATE TYPE public.nivel_academico_enum AS ENUM (
 );
 
 
-ALTER TYPE public.nivel_academico_enum OWNER TO miki;
 
 --
 -- Name: tipo_interaccion_enum; Type: TYPE; Schema: public; Owner: postgres
@@ -310,7 +303,6 @@ CREATE TYPE public.tipo_interaccion_enum AS ENUM (
 );
 
 
-ALTER TYPE public.tipo_interaccion_enum OWNER TO postgres;
 
 --
 -- Name: tipo_interaccion_usuario_enum; Type: TYPE; Schema: public; Owner: postgres
@@ -322,7 +314,6 @@ CREATE TYPE public.tipo_interaccion_usuario_enum AS ENUM (
 );
 
 
-ALTER TYPE public.tipo_interaccion_usuario_enum OWNER TO postgres;
 
 --
 -- Name: tipo_pregunta_enum; Type: TYPE; Schema: public; Owner: postgres
@@ -335,7 +326,6 @@ CREATE TYPE public.tipo_pregunta_enum AS ENUM (
 );
 
 
-ALTER TYPE public.tipo_pregunta_enum OWNER TO postgres;
 
 --
 -- Name: fn_auditoria_recursos(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -364,7 +354,6 @@ END;
 $$;
 
 
-ALTER FUNCTION public.fn_auditoria_recursos() OWNER TO postgres;
 
 --
 -- Name: fn_auditoria_usuarios(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -400,7 +389,6 @@ END;
 $$;
 
 
-ALTER FUNCTION public.fn_auditoria_usuarios() OWNER TO postgres;
 
 --
 -- Name: insertarproyectoaleatorio(timestamp without time zone); Type: PROCEDURE; Schema: public; Owner: postgres
@@ -479,7 +467,6 @@ END;
 $$;
 
 
-ALTER PROCEDURE public.insertarproyectoaleatorio(IN fecha_creada timestamp without time zone) OWNER TO postgres;
 
 SET default_tablespace = '';
 
@@ -498,7 +485,6 @@ CREATE TABLE public.accesos_recursos (
 );
 
 
-ALTER TABLE public.accesos_recursos OWNER TO postgres;
 
 --
 -- Name: accesos_recursos_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -513,7 +499,6 @@ CREATE SEQUENCE public.accesos_recursos_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.accesos_recursos_id_seq OWNER TO postgres;
 
 --
 -- Name: accesos_recursos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -539,7 +524,6 @@ CREATE TABLE public.auditoria (
 );
 
 
-ALTER TABLE public.auditoria OWNER TO postgres;
 
 --
 -- Name: auditoria_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -554,7 +538,6 @@ CREATE SEQUENCE public.auditoria_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.auditoria_id_seq OWNER TO postgres;
 
 --
 -- Name: auditoria_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -574,7 +557,6 @@ CREATE TABLE public.autores (
 );
 
 
-ALTER TABLE public.autores OWNER TO postgres;
 
 --
 -- Name: autores_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -589,7 +571,6 @@ CREATE SEQUENCE public.autores_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.autores_id_seq OWNER TO postgres;
 
 --
 -- Name: autores_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -609,7 +590,6 @@ CREATE TABLE public.carreras (
 );
 
 
-ALTER TABLE public.carreras OWNER TO postgres;
 
 --
 -- Name: carreras_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -624,7 +604,6 @@ CREATE SEQUENCE public.carreras_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.carreras_id_seq OWNER TO postgres;
 
 --
 -- Name: carreras_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -643,7 +622,6 @@ CREATE TABLE public.categorias (
 );
 
 
-ALTER TABLE public.categorias OWNER TO postgres;
 
 --
 -- Name: categorias_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -658,7 +636,6 @@ CREATE SEQUENCE public.categorias_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.categorias_id_seq OWNER TO postgres;
 
 --
 -- Name: categorias_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -694,7 +671,6 @@ CREATE TABLE public.cursos (
 );
 
 
-ALTER TABLE public.cursos OWNER TO postgres;
 
 --
 -- Name: cursos_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -709,7 +685,6 @@ CREATE SEQUENCE public.cursos_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.cursos_id_seq OWNER TO postgres;
 
 --
 -- Name: cursos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -736,7 +711,6 @@ CREATE TABLE public.detalles_articulos (
 );
 
 
-ALTER TABLE public.detalles_articulos OWNER TO postgres;
 
 --
 -- Name: detalles_investigaciones; Type: TABLE; Schema: public; Owner: postgres
@@ -751,7 +725,6 @@ CREATE TABLE public.detalles_investigaciones (
 );
 
 
-ALTER TABLE public.detalles_investigaciones OWNER TO postgres;
 
 --
 -- Name: dimensiones_operativas; Type: TABLE; Schema: public; Owner: postgres
@@ -766,7 +739,6 @@ CREATE TABLE public.dimensiones_operativas (
 );
 
 
-ALTER TABLE public.dimensiones_operativas OWNER TO postgres;
 
 --
 -- Name: dimensiones_operativas_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -781,7 +753,6 @@ CREATE SEQUENCE public.dimensiones_operativas_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.dimensiones_operativas_id_seq OWNER TO postgres;
 
 --
 -- Name: dimensiones_operativas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -800,7 +771,6 @@ CREATE TABLE public.editoriales (
 );
 
 
-ALTER TABLE public.editoriales OWNER TO postgres;
 
 --
 -- Name: editoriales_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -815,7 +785,6 @@ CREATE SEQUENCE public.editoriales_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.editoriales_id_seq OWNER TO postgres;
 
 --
 -- Name: editoriales_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -835,7 +804,6 @@ CREATE TABLE public.etiquetas (
 );
 
 
-ALTER TABLE public.etiquetas OWNER TO postgres;
 
 --
 -- Name: etiquetas_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -850,7 +818,6 @@ CREATE SEQUENCE public.etiquetas_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.etiquetas_id_seq OWNER TO postgres;
 
 --
 -- Name: etiquetas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -873,7 +840,6 @@ CREATE TABLE public.historico_versiones_pst (
 );
 
 
-ALTER TABLE public.historico_versiones_pst OWNER TO postgres;
 
 --
 -- Name: historico_versiones_pst_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -888,7 +854,6 @@ CREATE SEQUENCE public.historico_versiones_pst_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.historico_versiones_pst_id_seq OWNER TO postgres;
 
 --
 -- Name: historico_versiones_pst_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -917,7 +882,6 @@ CREATE TABLE public.investigaciones_ofertadas (
 );
 
 
-ALTER TABLE public.investigaciones_ofertadas OWNER TO postgres;
 
 --
 -- Name: investigaciones_ofertadas_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -932,7 +896,6 @@ CREATE SEQUENCE public.investigaciones_ofertadas_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.investigaciones_ofertadas_id_seq OWNER TO postgres;
 
 --
 -- Name: investigaciones_ofertadas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -954,7 +917,6 @@ CREATE TABLE public.investigadores (
 );
 
 
-ALTER TABLE public.investigadores OWNER TO postgres;
 
 --
 -- Name: investigadores_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -969,7 +931,6 @@ CREATE SEQUENCE public.investigadores_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.investigadores_id_seq OWNER TO postgres;
 
 --
 -- Name: investigadores_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -991,7 +952,6 @@ CREATE TABLE public.lineas_investigacion (
 );
 
 
-ALTER TABLE public.lineas_investigacion OWNER TO postgres;
 
 --
 -- Name: lineas_investigacion_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1006,7 +966,6 @@ CREATE SEQUENCE public.lineas_investigacion_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.lineas_investigacion_id_seq OWNER TO postgres;
 
 --
 -- Name: lineas_investigacion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1026,7 +985,6 @@ CREATE TABLE public.matriz_rbac (
 );
 
 
-ALTER TABLE public.matriz_rbac OWNER TO postgres;
 
 --
 -- Name: niveles_academicos; Type: TABLE; Schema: public; Owner: miki
@@ -1045,7 +1003,6 @@ CREATE TABLE public.niveles_academicos (
 );
 
 
-ALTER TABLE public.niveles_academicos OWNER TO miki;
 
 --
 -- Name: niveles_academicos_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
@@ -1060,7 +1017,6 @@ CREATE SEQUENCE public.niveles_academicos_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.niveles_academicos_id_seq OWNER TO miki;
 
 --
 -- Name: niveles_academicos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
@@ -1084,7 +1040,6 @@ CREATE TABLE public.notificaciones (
 );
 
 
-ALTER TABLE public.notificaciones OWNER TO postgres;
 
 --
 -- Name: notificaciones_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1099,7 +1054,6 @@ CREATE SEQUENCE public.notificaciones_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.notificaciones_id_seq OWNER TO postgres;
 
 --
 -- Name: notificaciones_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1122,7 +1076,6 @@ CREATE TABLE public.password_resets (
 );
 
 
-ALTER TABLE public.password_resets OWNER TO postgres;
 
 --
 -- Name: password_resets_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1137,7 +1090,6 @@ CREATE SEQUENCE public.password_resets_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.password_resets_id_seq OWNER TO postgres;
 
 --
 -- Name: password_resets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1163,7 +1115,6 @@ CREATE TABLE public.postulaciones_estudiantes (
 );
 
 
-ALTER TABLE public.postulaciones_estudiantes OWNER TO postgres;
 
 --
 -- Name: postulaciones_estudiantes_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1178,7 +1129,6 @@ CREATE SEQUENCE public.postulaciones_estudiantes_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.postulaciones_estudiantes_id_seq OWNER TO postgres;
 
 --
 -- Name: postulaciones_estudiantes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1198,7 +1148,6 @@ CREATE TABLE public.preferencias_usuario (
 );
 
 
-ALTER TABLE public.preferencias_usuario OWNER TO postgres;
 
 --
 -- Name: privilegios; Type: TABLE; Schema: public; Owner: postgres
@@ -1210,7 +1159,6 @@ CREATE TABLE public.privilegios (
 );
 
 
-ALTER TABLE public.privilegios OWNER TO postgres;
 
 --
 -- Name: privilegios_privilegio_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1225,7 +1173,6 @@ CREATE SEQUENCE public.privilegios_privilegio_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.privilegios_privilegio_id_seq OWNER TO postgres;
 
 --
 -- Name: privilegios_privilegio_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1255,7 +1202,6 @@ CREATE TABLE public.propuestas_empresa (
 );
 
 
-ALTER TABLE public.propuestas_empresa OWNER TO postgres;
 
 --
 -- Name: propuestas_empresa_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1270,7 +1216,6 @@ CREATE SEQUENCE public.propuestas_empresa_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.propuestas_empresa_id_seq OWNER TO postgres;
 
 --
 -- Name: propuestas_empresa_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1290,7 +1235,6 @@ CREATE TABLE public.proyecto_carreras_vinculadas (
 );
 
 
-ALTER TABLE public.proyecto_carreras_vinculadas OWNER TO miki;
 
 --
 -- Name: TABLE proyecto_carreras_vinculadas; Type: COMMENT; Schema: public; Owner: miki
@@ -1310,7 +1254,6 @@ CREATE TABLE public.proyecto_tutores (
 );
 
 
-ALTER TABLE public.proyecto_tutores OWNER TO postgres;
 
 --
 -- Name: recurso_autores; Type: TABLE; Schema: public; Owner: postgres
@@ -1322,7 +1265,6 @@ CREATE TABLE public.recurso_autores (
 );
 
 
-ALTER TABLE public.recurso_autores OWNER TO postgres;
 
 --
 -- Name: recurso_categorias; Type: TABLE; Schema: public; Owner: postgres
@@ -1334,7 +1276,6 @@ CREATE TABLE public.recurso_categorias (
 );
 
 
-ALTER TABLE public.recurso_categorias OWNER TO postgres;
 
 --
 -- Name: recurso_clasificaciones; Type: TABLE; Schema: public; Owner: postgres
@@ -1347,7 +1288,6 @@ CREATE TABLE public.recurso_clasificaciones (
 );
 
 
-ALTER TABLE public.recurso_clasificaciones OWNER TO postgres;
 
 --
 -- Name: recurso_etiquetas; Type: TABLE; Schema: public; Owner: postgres
@@ -1359,7 +1299,6 @@ CREATE TABLE public.recurso_etiquetas (
 );
 
 
-ALTER TABLE public.recurso_etiquetas OWNER TO postgres;
 
 --
 -- Name: recurso_investigadores; Type: TABLE; Schema: public; Owner: postgres
@@ -1371,7 +1310,6 @@ CREATE TABLE public.recurso_investigadores (
 );
 
 
-ALTER TABLE public.recurso_investigadores OWNER TO postgres;
 
 --
 -- Name: recursos; Type: TABLE; Schema: public; Owner: postgres
@@ -1386,7 +1324,6 @@ CREATE TABLE public.recursos (
 );
 
 
-ALTER TABLE public.recursos OWNER TO postgres;
 
 --
 -- Name: recursos_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1401,7 +1338,6 @@ CREATE SEQUENCE public.recursos_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.recursos_id_seq OWNER TO postgres;
 
 --
 -- Name: recursos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1424,7 +1360,6 @@ CREATE TABLE public.registro_actividad (
 );
 
 
-ALTER TABLE public.registro_actividad OWNER TO postgres;
 
 --
 -- Name: registro_actividad_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1439,7 +1374,6 @@ CREATE SEQUENCE public.registro_actividad_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.registro_actividad_id_seq OWNER TO postgres;
 
 --
 -- Name: registro_actividad_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1459,7 +1393,6 @@ CREATE TABLE public.roles (
 );
 
 
-ALTER TABLE public.roles OWNER TO postgres;
 
 --
 -- Name: roles_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1474,7 +1407,6 @@ CREATE SEQUENCE public.roles_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.roles_id_seq OWNER TO postgres;
 
 --
 -- Name: roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1501,7 +1433,6 @@ CREATE TABLE public.system_audit_log (
 );
 
 
-ALTER TABLE public.system_audit_log OWNER TO postgres;
 
 --
 -- Name: telemetria_cache; Type: TABLE; Schema: public; Owner: postgres
@@ -1513,7 +1444,6 @@ CREATE TABLE public.telemetria_cache (
 );
 
 
-ALTER TABLE public.telemetria_cache OWNER TO postgres;
 
 --
 -- Name: tipo_recurso; Type: TABLE; Schema: public; Owner: postgres
@@ -1526,7 +1456,6 @@ CREATE TABLE public.tipo_recurso (
 );
 
 
-ALTER TABLE public.tipo_recurso OWNER TO postgres;
 
 --
 -- Name: tipo_recurso_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1541,7 +1470,6 @@ CREATE SEQUENCE public.tipo_recurso_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.tipo_recurso_id_seq OWNER TO postgres;
 
 --
 -- Name: tipo_recurso_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1561,7 +1489,6 @@ CREATE TABLE public.tipo_tutor (
 );
 
 
-ALTER TABLE public.tipo_tutor OWNER TO postgres;
 
 --
 -- Name: tipo_tutor_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1576,7 +1503,6 @@ CREATE SEQUENCE public.tipo_tutor_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.tipo_tutor_id_seq OWNER TO postgres;
 
 --
 -- Name: tipo_tutor_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1600,7 +1526,6 @@ CREATE TABLE public.trayectos (
 );
 
 
-ALTER TABLE public.trayectos OWNER TO miki;
 
 --
 -- Name: trayectos_id_seq; Type: SEQUENCE; Schema: public; Owner: miki
@@ -1615,7 +1540,6 @@ CREATE SEQUENCE public.trayectos_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.trayectos_id_seq OWNER TO miki;
 
 --
 -- Name: trayectos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: miki
@@ -1635,7 +1559,6 @@ CREATE TABLE public.tutores (
 );
 
 
-ALTER TABLE public.tutores OWNER TO postgres;
 
 --
 -- Name: tutores_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1650,7 +1573,6 @@ CREATE SEQUENCE public.tutores_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.tutores_id_seq OWNER TO postgres;
 
 --
 -- Name: tutores_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1679,7 +1601,6 @@ CREATE TABLE public.usuarios (
 );
 
 
-ALTER TABLE public.usuarios OWNER TO postgres;
 
 --
 -- Name: usuarios_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1694,7 +1615,6 @@ CREATE SEQUENCE public.usuarios_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.usuarios_id_seq OWNER TO postgres;
 
 --
 -- Name: usuarios_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1715,7 +1635,6 @@ CREATE TABLE public.visitantes (
 );
 
 
-ALTER TABLE public.visitantes OWNER TO postgres;
 
 --
 -- Name: visitantes_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1730,7 +1649,6 @@ CREATE SEQUENCE public.visitantes_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.visitantes_id_seq OWNER TO postgres;
 
 --
 -- Name: visitantes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1756,7 +1674,6 @@ CREATE TABLE public.waf_rate_limiter (
 );
 
 
-ALTER TABLE public.waf_rate_limiter OWNER TO postgres;
 
 --
 -- Name: accesos_recursos id; Type: DEFAULT; Schema: public; Owner: postgres
@@ -4332,5 +4249,45 @@ ALTER TABLE ONLY public.usuarios
 -- PostgreSQL database dump complete
 --
 
-\unrestrict JPJAHTrhtIWhPwpYVdavQAIAfErQtqaCWIJzqd5NtnNHYuc76TcHULa88YzkspB
+-- ============================================================================
+-- COMPATIBILIDAD MULTIPLATAFORMA LINUX DEBIAN / POSTGRESQL (UNACCENT & PGVECTOR)
+-- ============================================================================
+DO $$
+BEGIN
+    CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END $$;
+
+DO $$
+BEGIN
+    CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END $$;
+
+DO $$
+BEGIN
+    PERFORM public.unaccent('prueba');
+EXCEPTION WHEN undefined_function THEN
+    CREATE OR REPLACE FUNCTION public.unaccent(text)
+    RETURNS text
+    LANGUAGE sql
+    IMMUTABLE STRICT
+    AS $func$
+        SELECT translate(
+            $1,
+            'áàäâãåéèëêíìïîóòöôõúùüûñçÁÀÄÂÃÅÉÈËÊÍÌÏÎÓÒÖÔÕÚÙÜÛÑÇ',
+            'aaaaaaeeeeiiiiooooouuuuncAAAAAAEEEEIIIIOOOOOUUUUNC'
+        );
+    $func$;
+END $$;
+
+CREATE OR REPLACE FUNCTION public.normalizar_busqueda_pst(input_text TEXT)
+RETURNS TEXT
+LANGUAGE sql
+IMMUTABLE
+AS $$
+    SELECT LOWER(public.unaccent(COALESCE(input_text, '')));
+$$;
 

@@ -9,7 +9,6 @@
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -22,14 +21,13 @@ SET row_security = off;
 -- Name: vector; Type: EXTENSION; Schema: -; Owner: -
 --
 
-CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
+DO $$ BEGIN CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public; EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 
 --
 -- Name: EXTENSION vector; Type: COMMENT; Schema: -; Owner: -
 --
 
-COMMENT ON EXTENSION vector IS 'vector data type and ivfflat and hnsw access methods';
 
 
 --
@@ -631,7 +629,7 @@ CREATE TABLE public.detalles_proyectos (
     url_repositorio text,
     obj_general text,
     activo boolean DEFAULT true,
-    vector_semantico public.vector(384),
+    vector_semantico text,
     id_trayecto integer,
     vistas integer DEFAULT 0 NOT NULL
 );
@@ -2157,7 +2155,13 @@ CREATE INDEX idx_detalles_proyectos_trayecto ON public.detalles_proyectos USING 
 -- Name: idx_detalles_vector_hnsw; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_detalles_vector_hnsw ON public.detalles_proyectos USING hnsw (vector_semantico public.vector_cosine_ops) WITH (m='16', ef_construction='64');
+DO $$ BEGIN
+    IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'vector') THEN
+        ALTER TABLE public.detalles_proyectos ALTER COLUMN vector_semantico TYPE public.vector(384) USING vector_semantico::public.vector;
+        CREATE INDEX IF NOT EXISTS idx_detalles_vector_hnsw ON public.detalles_proyectos USING hnsw (vector_semantico public.vector_cosine_ops) WITH (m='16', ef_construction='64');
+    END IF;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 
 
 --
@@ -2584,7 +2588,6 @@ ALTER TABLE ONLY public.usuarios
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -2873,3 +2876,46 @@ CREATE TABLE IF NOT EXISTS public.recurso_investigadores (
 --
 -- PostgreSQL database dump complete
 --
+
+-- ============================================================================
+-- COMPATIBILIDAD MULTIPLATAFORMA LINUX DEBIAN / POSTGRESQL (UNACCENT & PGVECTOR)
+-- ============================================================================
+DO $$
+BEGIN
+    CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END $$;
+
+DO $$
+BEGIN
+    CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END $$;
+
+DO $$
+BEGIN
+    PERFORM public.unaccent('prueba');
+EXCEPTION WHEN undefined_function THEN
+    CREATE OR REPLACE FUNCTION public.unaccent(text)
+    RETURNS text
+    LANGUAGE sql
+    IMMUTABLE STRICT
+    AS $func$
+        SELECT translate(
+            $1,
+            'áàäâãåéèëêíìïîóòöôõúùüûñçÁÀÄÂÃÅÉÈËÊÍÌÏÎÓÒÖÔÕÚÙÜÛÑÇ',
+            'aaaaaaeeeeiiiiooooouuuuncAAAAAAEEEEIIIIOOOOOUUUUNC'
+        );
+    $func$;
+END $$;
+
+CREATE OR REPLACE FUNCTION public.normalizar_busqueda_pst(input_text TEXT)
+RETURNS TEXT
+LANGUAGE sql
+IMMUTABLE
+AS $$
+    SELECT LOWER(public.unaccent(COALESCE(input_text, '')));
+$$;
+

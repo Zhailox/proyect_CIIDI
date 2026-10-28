@@ -1375,9 +1375,9 @@ summary::-webkit-details-marker { display: none; }
     color: #121a3e !important;
 }
 
-.btn.btn-outline,
-a.btn.btn-outline,
-button.btn.btn-outline {
+.main-content .btn.btn-outline,
+.main-content a.btn.btn-outline,
+.main-content button.btn.btn-outline {
     background-color: #ffffff !important;
     color: var(--color-secundario) !important;
     border: 1px solid rgba(80, 89, 132, 0.3) !important;
@@ -1386,9 +1386,9 @@ button.btn.btn-outline {
     transition: all 0.2s ease !important;
 }
 
-.btn.btn-outline:hover:not(:disabled),
-a.btn.btn-outline:hover,
-button.btn.btn-outline:hover:not(:disabled) {
+.main-content .btn.btn-outline:hover:not(:disabled),
+.main-content a.btn.btn-outline:hover,
+.main-content button.btn.btn-outline:hover:not(:disabled) {
     background-color: var(--color-secundario) !important;
     color: #ffffff !important;
     border-color: var(--color-secundario) !important;

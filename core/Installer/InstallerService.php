@@ -547,18 +547,24 @@ class InstallerService {
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
             ]);
 
-            $sqlContent = file_get_contents($sqlPath);
-
-            $sqlLineas = explode("\n", $sqlContent);
-            $cleanLines = [];
-            foreach ($sqlLineas as $linea) {
-                $trimmed = trim($linea);
-                if (strpos($trimmed, '\\') === 0) {
-                    continue;
-                }
-                $cleanLines[] = $linea;
+            $sqlContent = (string)file_get_contents($sqlPath);
+            if (!class_exists('Connection') && file_exists(__DIR__ . '/../Database/Connection.php')) {
+                require_once __DIR__ . '/../Database/Connection.php';
             }
-            $cleanSql = implode("\n", $cleanLines);
+            if (class_exists('Connection') && method_exists('Connection', 'sanitizarSqlCompatible')) {
+                $cleanSql = Connection::sanitizarSqlCompatible($sqlContent);
+            } else {
+                $sqlLineas = explode("\n", $sqlContent);
+                $cleanLines = [];
+                foreach ($sqlLineas as $linea) {
+                    $trimmed = trim($linea);
+                    if (strpos($trimmed, '\\') === 0 || stripos($trimmed, 'SET transaction_timeout') === 0) {
+                        continue;
+                    }
+                    $cleanLines[] = $linea;
+                }
+                $cleanSql = implode("\n", $cleanLines);
+            }
 
             $pdo->beginTransaction();
             $pdo->exec($cleanSql);

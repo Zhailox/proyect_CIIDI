@@ -69,7 +69,7 @@ body {
             max-width: 80%;
         }
 
-        .btn-outline {
+        .main-content .btn-outline {
             border: 1px solid white;
             background: transparent;
             color: white;
@@ -83,7 +83,7 @@ body {
             letter-spacing: 1px;
         }
 
-        .btn-outline:hover {
+        .main-content .btn-outline:hover {
             background: white;
             color: var(--color-principal);
         }

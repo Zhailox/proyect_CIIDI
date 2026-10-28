@@ -54,6 +54,22 @@ class Kernel {
 
         $this->sessionManager->start();
 
+        // 0. Intercepción prioritaria de acciones Break-Glass (Modo de Emergencia BD)
+        if (
+            isset($_GET['emerg_action']) ||
+            isset($_POST['emerg_login']) ||
+            isset($_POST['emerg_update_db']) ||
+            isset($_POST['emerg_repair_schema'])
+        ) {
+            $isStandalone = true;
+            $standalone = true;
+            $vistaEmergencia = defined('CORE_VIEWS') ? CORE_VIEWS . '500.php' : __DIR__ . '/../Views/500.php';
+            if (file_exists($vistaEmergencia)) {
+                include $vistaEmergencia;
+                exit;
+            }
+        }
+
         // Escudo de Seguridad Global: WAF & Rate Limiter de Capa de Aplicación
         $bloqueo = RateLimiter::estaBloqueada();
         if ($bloqueo['bloqueada']) {

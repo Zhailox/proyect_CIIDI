@@ -459,8 +459,9 @@
 .badge-edu { background: #f3e8ff; color: #7e22ce; }
 .badge-sys { background: #dcfce7; color: #16a34a; }
 
-/* Botón Outline */
-.btn-outline {
+/* Botón Outline (acotado a .main-content para no alterar el botón Salir del header) */
+.main-content .btn-outline,
+.btn-outline-repo {
     background: transparent;
     border: 1px solid var(--color-terciario);
     color: var(--color-principal);
@@ -472,7 +473,8 @@
     transition: all var(--transition-fast);
 }
 
-.btn-outline:hover {
+.main-content .btn-outline:hover,
+.btn-outline-repo:hover {
     background: var(--color-terciario);
     color: var(--blanco);
 }
