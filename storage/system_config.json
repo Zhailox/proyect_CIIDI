@@ -22,8 +22,8 @@
                 "titulo": "Ubícanos",
                 "icono": "ph-fill ph-map-pin",
                 "bloques_texto": [
-                    "<strong>Dirección:<\/strong> Núcleo San Luis (Sede Rectoral)\nAv. La Feria Sector San Luis Valera, Estado Trujillo - Venezuela",
-                    "<strong><i class=\"ph-fill ph-phone\"><\/i> Teléfonos:<\/strong>\nRectorado: (58) 0271-221.29.27\nVicerrectorado Académico: 0271-221.51.47"
+                    "<strong>Dirección:<\/strong> Núcleo San Luis (Sede Rectoral)\r\nAv. La Feria Sector San Luis Valera, Estado Trujillo - Venezuela",
+                    "<strong><i class=\"ph-fill ph-phone\"><\/i> Teléfonos:<\/strong>\r\nRectorado: (58) 0271-221.29.27\r\nVicerrectorado Académico: 0271-221.51.47"
                 ],
                 "enlaces": [],
                 "lema": ""
@@ -32,7 +32,7 @@
                 "titulo": "Núcleos",
                 "icono": "ph-fill ph-buildings",
                 "bloques_texto": [
-                    "<strong>Boconó:<\/strong> Calle Colón con Av. Independencia (Antiguo Hospital \"Rafael Rangel\"). Tel: 0272-652.31.11\n<strong>El Dividive:<\/strong> Autopista Panamericana, El Dividive. Tel: 0272-666.01.14\n<strong>La Beatriz:<\/strong> Urb. La Beatriz Parte Alta, al lado del Parque Botánico. Tel: 0271-231.11.10\n<strong>Trujillo:<\/strong> Av. Cristóbal Mendoza detrás del Mercado Municipal. Tel: 0272-236.31.61\n<strong>Ext. Carache:<\/strong> Calle Vargas entre Av.2 y Av.3, al lado Alcaldía. Tel: 0272-999.16.05"
+                    "<strong>Boconó:<\/strong> Calle Colón con Av. Independencia (Antiguo Hospital \"Rafael Rangel\"). Tel: 0272-652.31.11\r\n<strong>El Dividive:<\/strong> Autopista Panamericana, El Dividive. Tel: 0272-666.01.14\r\n<strong>La Beatriz:<\/strong> Urb. La Beatriz Parte Alta, al lado del Parque Botánico. Tel: 0271-231.11.10\r\n<strong>Trujillo:<\/strong> Av. Cristóbal Mendoza detrás del Mercado Municipal. Tel: 0272-236.31.61\r\n<strong>Ext. Carache:<\/strong> Calle Vargas entre Av.2 y Av.3, al lado Alcaldía. Tel: 0272-999.16.05"
                 ],
                 "enlaces": [],
                 "lema": ""
@@ -55,7 +55,7 @@
                     {
                         "icono": "ph-fill ph-instagram-logo",
                         "texto": "@upttmbi",
-                        "url": "#"
+                        "url": "https:\/\/www.instagram.com\/upttmbi\/?hl=es"
                     },
                     {
                         "icono": "ph-fill ph-youtube-logo",
