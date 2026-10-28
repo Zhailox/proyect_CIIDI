@@ -260,7 +260,7 @@ $blindajeCompleto = $hEnv && $hStorage && $hRoot;
             <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--texto-titulos);">
                 Añadir IP a Lista Negra Global
             </h3>
-            <button type="button" onclick="cerrarModalBloquearIP()" style="background: none; border: none; font-size: 1.2rem; color: var(--texto-silenciado); cursor: pointer; padding: 4px;">
+            <button type="button" onclick="cerrarModalBloquearIP()" class="sa-modal-close" title="Cerrar">
                 <i class="ph-bold ph-x"></i>
             </button>
         </div>
@@ -291,7 +291,7 @@ $blindajeCompleto = $hEnv && $hStorage && $hRoot;
             <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--color-secundario);">
                 Añadir IP a Lista Blanca de Confianza
             </h3>
-            <button type="button" onclick="cerrarModalWhitelist()" style="background: none; border: none; font-size: 1.2rem; color: var(--texto-silenciado); cursor: pointer; padding: 4px;">
+            <button type="button" onclick="cerrarModalWhitelist()" class="sa-modal-close" title="Cerrar">
                 <i class="ph-bold ph-x"></i>
             </button>
         </div>

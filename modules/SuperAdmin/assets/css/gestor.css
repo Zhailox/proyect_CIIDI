@@ -311,7 +311,9 @@ select.sa-filter-input option, select option {
 }
 
 .rbac-level-title i.ph-shield-star {
-    color: var(--color-terciario);
+    color: #121a3e;
+    border-color: rgba(18, 26, 62, 0.3);
+    font-weight: 700;
     font-size: 1.15rem;
 }
 
@@ -339,7 +341,9 @@ select.sa-filter-input option, select option {
 
 .rbac-level-delete:hover {
     background: rgba(18, 26, 62, 0.08);
-    color: var(--color-terciario);
+    color: #121a3e;
+    border-color: rgba(18, 26, 62, 0.3);
+    font-weight: 700;
     border-color: rgba(18, 26, 62, 0.25);
 }
 
@@ -384,7 +388,9 @@ select.sa-filter-input option, select option {
 }
 
 .rbac-roles-section h4 i {
-    color: var(--color-terciario);
+    color: #121a3e;
+    border-color: rgba(18, 26, 62, 0.3);
+    font-weight: 700;
 }
 
 /* Grid de roles */
@@ -447,7 +453,9 @@ select.sa-filter-input option, select option {
 
 .rbac-btn-danger-outline {
     background: rgba(18, 26, 62, 0.06);
-    color: var(--color-terciario);
+    color: #121a3e;
+    border-color: rgba(18, 26, 62, 0.3);
+    font-weight: 700;
     border-color: rgba(18, 26, 62, 0.3);
 }
 
@@ -490,7 +498,9 @@ select.sa-filter-input option, select option {
 }
 
 .rbac-roles-section h4 i {
-    color: var(--color-terciario);
+    color: #121a3e;
+    border-color: rgba(18, 26, 62, 0.3);
+    font-weight: 700;
 }
 /* En SuperAdmin.css o gestor.css */
 .sa-footer-builder-panel {
@@ -612,7 +622,24 @@ select.sa-filter-input option, select option {
 }
 
 .sa-btn-icon-danger:hover {
-    background: #fecaca;
+    background: #121a3e;
+    color: #ffffff;
+    border-color: #121a3e;
+}
+
+.sa-btn-sm {
+    padding: 5px 12px !important;
+    font-size: 0.78rem !important;
+    background-color: rgba(80, 89, 132, 0.1) !important;
+    color: var(--color-secundario) !important;
+    border: 1px solid rgba(80, 89, 132, 0.28) !important;
+    border-radius: 6px !important;
+}
+
+.sa-btn-sm:hover {
+    background-color: var(--color-secundario) !important;
+    color: #ffffff !important;
+    border-color: var(--color-secundario) !important;
 }
 
 .sa-footer-bottom-config {

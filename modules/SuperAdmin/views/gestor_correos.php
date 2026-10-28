@@ -788,10 +788,15 @@
             <div style="font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
                 <i class="ph-bold ph-eye"></i> Vista Previa de Renderizado Institucional
             </div>
-            <button type="button" onclick="cerrarModalPreview()" style="background: none; border: none; color: #ffffff; font-size: 1.4rem; cursor: pointer;">&times;</button>
+            <button type="button" onclick="cerrarModalPreview()" class="sa-modal-close sa-modal-close-light" title="Cerrar"><i class="ph-bold ph-x"></i></button>
         </div>
         <div style="padding: 20px; overflow-y: auto; flex: 1; background: #f4f7fb;">
             <iframe id="iframePreviewCorreo" style="width: 100%; height: 500px; border: none; background: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"></iframe>
+        </div>
+        <div class="sa-modal-footer" style="padding: 1rem 1.5rem 1.25rem 1.5rem; margin-top: 0; background: #ffffff;">
+            <button type="button" onclick="cerrarModalPreview()" class="sa-btn sa-btn-cancel" style="min-width: 120px;">
+                <i class="ph-bold ph-x-circle"></i> Cerrar Vista Previa
+            </button>
         </div>
     </div>
 </div>
@@ -817,7 +822,7 @@
             <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--texto-titulos); display: flex; align-items: center; gap: 8px;">
                 <i class="ph-bold ph-cursor-click" style="color: var(--color-terciario);"></i> Configurar Botón de Acción
             </h3>
-            <button type="button" onclick="cerrarModalConfigBoton()" style="background: none; border: none; color: #64748b; font-size: 1.3rem; cursor: pointer;">&times;</button>
+            <button type="button" onclick="cerrarModalConfigBoton()" class="sa-modal-close" title="Cerrar"><i class="ph-bold ph-x"></i></button>
         </div>
         
         <div style="margin-bottom: 1rem;">
@@ -853,7 +858,7 @@
                 <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--texto-titulos); display: flex; align-items: center; gap: 8px;">
                     <i class="ph-bold ph-floppy-disk" style="color: var(--color-terciario);"></i> Guardar como Plantilla Reusable
                 </h3>
-                <button type="button" onclick="cerrarModalGuardarPlantilla()" style="background: none; border: none; color: #64748b; font-size: 1.3rem; cursor: pointer;">&times;</button>
+                <button type="button" onclick="cerrarModalGuardarPlantilla()" class="sa-modal-close" title="Cerrar"><i class="ph-bold ph-x"></i></button>
             </div>
             
             <div style="margin-bottom: 1.25rem;">

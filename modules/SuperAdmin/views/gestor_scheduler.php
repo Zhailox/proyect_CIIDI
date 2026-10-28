@@ -171,7 +171,7 @@
             <h3 id="modalTareaTitulo" style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #121a3e;">
                 Programar Tarea / Editar Horario
             </h3>
-            <button type="button" onclick="cerrarModalTarea()" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer; padding: 4px;">
+            <button type="button" onclick="cerrarModalTarea()" class="sa-modal-close" title="Cerrar">
                 <i class="ph-bold ph-x"></i>
             </button>
         </div>
@@ -330,7 +330,7 @@
                 </h3>
                 <span id="logModalNombreTarea" style="font-size: 0.8rem; color: #64748b; font-weight: 600;"></span>
             </div>
-            <button type="button" onclick="cerrarModalLog()" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer; padding: 4px;">
+            <button type="button" onclick="cerrarModalLog()" class="sa-modal-close" title="Cerrar">
                 <i class="ph-bold ph-x"></i>
             </button>
         </div>

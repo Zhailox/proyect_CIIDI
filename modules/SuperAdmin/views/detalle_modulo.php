@@ -47,7 +47,7 @@ if (empty($mod)) {
                 <i class="ph-bold ph-broom"></i> Purgar Caché
             </button>
 
-            <a href="gestor-modulos" class="btn btn-outline" style="border-color: var(--color-secundario, #2563eb); color: var(--color-secundario, #2563eb); background: #ffffff; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; transition: all 0.2s ease;">
+            <a href="gestor-modulos" class="sa-btn sa-btn-outline">
                 <i class="ph-bold ph-arrow-left"></i> Volver a Módulos
             </a>
         </div>

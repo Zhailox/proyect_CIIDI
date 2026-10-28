@@ -55,7 +55,9 @@
 
 .ag-btn-danger-icon:hover {
     transform: translateY(-2px);
-    background: var(--color-principal) !important;
+    background: #121a3e !important;
+    color: #ffffff !important;
+    border-color: #121a3e !important;
     color: var(--color-terciario) !important;
     box-shadow: 0 4px 12px rgba(18, 26, 62, 0.25);
 }

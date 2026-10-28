@@ -4,7 +4,7 @@
             <div style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--color-terciario); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 0.3rem;">
                 <i class="ph-bold ph-shield-check"></i> MONITOREO Y MONITOREO DE EVENTOS
             </div>
-            <h1 style="font-size: 1.8rem; font-weight: 800; color: var(--color-principal); margin: 0;">
+            <h1 style="font-size: 1.8rem; font-weight: 800; color: #121a3e !important; margin: 0;">
                 Visor de Logs & Auditoría Activa
             </h1>
             <p style="margin: 0.3rem 0 0 0; color: var(--texto-silenciado); font-size: 0.9rem;">

@@ -22,7 +22,7 @@ $lineasInvestigacion = $lineas ?? [];
         </div>
 
         <div>
-            <a href="sudoadmin" class="btn btn-outline" style="border-color: var(--color-secundario); color: var(--color-secundario) !important; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px;">
+            <a href="sudoadmin" class="sa-btn sa-btn-outline">
                 <i class="ph-bold ph-arrow-left"></i> Volver al Panel
             </a>
         </div>

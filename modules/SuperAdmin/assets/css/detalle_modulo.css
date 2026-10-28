@@ -42,6 +42,9 @@
     background: none;
     color: var(--texto-silenciado, #64748b);
     border-bottom: 3px solid transparent;
+    flex: 0 0 auto !important;
+    border-radius: 8px 8px 0 0 !important;
+    box-shadow: none !important;
     cursor: pointer;
     transition: all 0.25s ease;
     display: inline-flex;

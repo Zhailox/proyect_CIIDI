@@ -71,13 +71,13 @@
 
 .ag-btn-danger {
     background: rgba(80, 89, 132, 0.1) !important;
-    color: var(--color-principal) !important;
+    color: #121a3e !important;
     border: 1px solid rgba(80, 89, 132, 0.25) !important;
 }
 
 .ag-btn-danger:hover {
     transform: translateY(-2px) !important;
-    background: var(--color-principal) !important;
+    background: #121a3e !important;
     color: #ffffff !important;
     box-shadow: 0 6px 18px rgba(18, 26, 62, 0.2) !important;
 }
