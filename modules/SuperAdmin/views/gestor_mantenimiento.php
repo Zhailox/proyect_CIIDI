@@ -114,7 +114,7 @@
      PESTAÑA 1: GESTIÓN UNIFICADA DE RESPALDOS E IMPORTACIÓN
      ========================================== -->
 <div id="tab-gestion-bd" class="ag-tab-pane active">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1.5rem;">
         
         <!-- COLUMNA IZQUIERDA: EXPORTACIÓN Y ARCHIVO DE IMPORTACIÓN EXTERNO -->
         <div style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -359,7 +359,7 @@
      PESTAÑA 2: CONFIGURACIÓN DE BASE DE DATOS Y CUENTA DE EMERGENCIA
      ========================================== -->
 <div id="tab-config-bd" class="ag-tab-pane">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1.5rem;">
         
         <!-- TARJETA: MODIFICAR PARÁMETROS DE CONEXIÓN BD -->
         <div class="ag-glass-card">
@@ -377,7 +377,7 @@
             </p>
 
             <form action="guardar-configuracion-bd" method="POST" style="display: flex; flex-direction: column; gap: 1rem;">
-                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+                <div class="sa-grid-host-port">
                     <div>
                         <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Host del Servidor</label>
                         <input type="text" name="host" class="ag-input" value="<?= htmlspecialchars($db_creds['host'] ?? 'localhost') ?>" required style="width: 100%;">
@@ -388,7 +388,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="sa-grid-2col" style="gap: 10px;">
                     <div>
                         <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Base de Datos</label>
                         <input type="text" name="db" class="ag-input" value="<?= htmlspecialchars($db_creds['db'] ?? 'ciidi') ?>" required style="width: 100%;">
@@ -450,7 +450,7 @@
                     <input type="text" name="emergency_user" class="ag-input" value="<?= htmlspecialchars($emergency_data['usuario'] ?? 'admin_emergencia') ?>" required style="width: 100%;">
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="sa-grid-2col" style="gap: 10px;">
                     <div>
                         <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Contraseña de Emergencia</label>
                         <input type="password" name="emergency_pass" class="ag-input" placeholder="Nueva Contraseña" required style="width: 100%;">
@@ -483,7 +483,7 @@
      PESTAÑA 3: VENTANA DE MANTENIMIENTO PROGRAMADO
      ========================================== -->
 <div id="tab-mantenimiento" class="ag-tab-pane">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
         
         <!-- TARJETA 1: ACTIVACIÓN / DESACTIVACIÓN INMEDIATA -->
         <div class="ag-glass-card">
@@ -545,7 +545,7 @@
                     <input type="datetime-local" name="fecha_inicio" class="ag-input" required style="width: 100%; font-weight: 600;">
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="sa-grid-2col" style="gap: 10px;">
                     <div>
                         <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Duración (Min)</label>
                         <input type="number" name="duracion_minutos" min="1" value="30" class="ag-input" required style="width: 100%;">

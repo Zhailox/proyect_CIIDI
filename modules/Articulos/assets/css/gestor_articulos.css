@@ -630,3 +630,73 @@ img.loaded {
     white-space: nowrap;
     max-width: 100%;
 }
+
+
+/* ==========================================================================
+   RESPONSIVIDAD ADICIONAL: LAPTOPS ZOOM ALTO Y MÓVILES (gestor_articulos.css)
+   ========================================================================== */
+.art-modal-overlay {
+    padding: 0.75rem !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
+}
+
+.art-modal-box,
+.art-modal-overlay > div {
+    max-height: calc(100vh - 1.5rem) !important;
+    overflow-y: auto !important;
+    margin: auto !important;
+    box-sizing: border-box !important;
+}
+
+@media (max-width: 1366px), (max-height: 780px) {
+    .art-modal-box {
+        padding: 1.5rem;
+    }
+    .art-form-card {
+        padding: 1.5rem;
+    }
+    #modalVisorImgSrc {
+        max-height: min(350px, calc(100vh - 220px)) !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .gestor-art-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    .grid-2-cols {
+        grid-template-columns: 1fr !important;
+    }
+    .art-table-card {
+        padding: 1rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .art-table {
+        min-width: 600px;
+    }
+    .art-form-card {
+        padding: 1.25rem;
+    }
+    .art-modal-box,
+    .art-modal-overlay > div {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 1.25rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    .modal-actions button,
+    .modal-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

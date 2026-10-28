@@ -17,8 +17,14 @@ if (!empty($menu_dinamico)) {
 }
 $ruta          = $ruta ?? '';
 ?>
-<aside class="sidebar">
-  <h2 class="sidebar-title">Navegación Global</h2>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileSidebar()"></div>
+<aside class="sidebar" id="appSidebar">
+  <div class="sidebar-header-row">
+    <h2 class="sidebar-title">Navegación Global</h2>
+    <button type="button" class="sidebar-close-btn" onclick="closeMobileSidebar()" aria-label="Cerrar menú" title="Cerrar menú">
+      <i class="ph-bold ph-x"></i>
+    </button>
+  </div>
   <nav class="nav-menu">
     
     <a href="inicio" class="nav-item <?php echo ($ruta == 'inicio') ? 'active' : ''; ?>">
@@ -84,7 +90,7 @@ $ruta          = $ruta ?? '';
                 <span><?php echo $item['titulo']; ?></span>
                 <?php if ($tieneSubitems): ?>
                     <i class="ph-bold ph-caret-down nav-caret" 
-                        style="font-size: 0.8rem; transition: transform 0.25s ease; cursor: pointer; padding: 4px;"
+                        style="font-size: 0.85rem; transition: transform 0.25s ease; cursor: pointer; padding: 6px;"
                         onclick="toggleSidebarParent(event)"></i>
                 <?php endif; ?>
             </span>
@@ -120,15 +126,31 @@ $ruta          = $ruta ?? '';
 
 <script>
 function toggleSidebarParent(ev) {
-    // Evitamos que el click se propague al enlace padre
     ev.preventDefault();
     ev.stopPropagation();
 
-    // Encontramos el contenedor .nav-parent más cercano al elemento clickeado
     const parentContainer = ev.target.closest('.nav-parent');
     if (!parentContainer) return;
 
-    // Alternamos la clase 'open'
     parentContainer.classList.toggle('open');
+}
+
+function toggleMobileSidebar() {
+    const sidebar = document.getElementById('appSidebar') || document.querySelector('.sidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    if (!sidebar) return;
+    const isOpen = sidebar.classList.toggle('mobile-open');
+    if (backdrop) {
+        backdrop.classList.toggle('active', isOpen);
+    }
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+
+function closeMobileSidebar() {
+    const sidebar = document.getElementById('appSidebar') || document.querySelector('.sidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    if (sidebar) sidebar.classList.remove('mobile-open');
+    if (backdrop) backdrop.classList.remove('active');
+    document.body.style.overflow = '';
 }
 </script>

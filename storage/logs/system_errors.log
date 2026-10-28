@@ -2254,3 +2254,15 @@ Trace:
 #5 [internal function]: MailService::{closure:MailService::enviarAsincrono():146}()
 #6 {main}
 --------------------------------------------------------------------------------
+[2026-10-28 01:43:27] ERROR: SMTP Error: Could not connect to SMTP host. Failed to connect to server en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Wed, 28 O...', '--b1=_2ajC7zHNO...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(251): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ConfiguracionController.php(410): MailService::enviar('andrusramirez20...', 'Administrador d...', 'Prueba de Conex...', '\r\n             ...')
+#5 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ConfiguracionController->probarSmtp()
+#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(130): Dispatcher->dispatch('probar-smtp', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\public\index.php(49): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------

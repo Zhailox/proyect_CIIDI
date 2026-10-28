@@ -5,6 +5,9 @@ $elementosCabecera = (isset($this) && method_exists($this, 'getControlesHeader')
 
 <header class="main-header">
   <div class="logo-container">
+    <button type="button" class="mobile-menu-toggle" id="mobileMenuBtn" onclick="if(typeof toggleMobileSidebar==='function') toggleMobileSidebar();" aria-label="Abrir menú de navegación" title="Menú">
+      <i class="ph-bold ph-list"></i>
+    </button>
     <a href="inicio">
       <img src="assets/img/SinfondoCIIDI.webp" alt="CIIDI" style="height: 40px; width: auto; margin-right: 0.1rem;">
       <span class="logo-text">Repositorio</span> <span class="logo-highlight">CIIDI</span>

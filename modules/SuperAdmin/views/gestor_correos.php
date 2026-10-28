@@ -52,7 +52,7 @@
 
 <!-- TAB 0: ENVIAR CORREO DIRECTO / COMUNICADO (LAYOUT 2 COLUMNAS CON SIDEBAR DE PLANTILLAS REUTILIZABLES) -->
 <div id="tabCorreoDirecto" class="sa-tab-content active">
-    <div style="display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start;">
+    <div class="sa-mail-compose-grid">
         
         <!-- COLUMNA IZQUIERDA: FORMULARIO PRINCIPAL DE COMPOSICIÓN -->
         <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-sm); background:#ffffff;">
@@ -623,7 +623,7 @@
 
 <!-- TAB 4: CATÁLOGO DE PLANTILLAS DINÁMICAS POR MÓDULO -->
 <div id="tabPlantillas" class="sa-tab-content" style="display:none;">
-    <div style="display: grid; grid-template-columns: 320px 1fr; gap: 1.5rem;">
+    <div class="sa-mail-templates-grid">
         
         <!-- SIDEBAR DE SELECCIÓN DE PLANTILLAS -->
         <div class="glass-panel" style="padding: 1rem; border-radius: var(--radius-sm); background:#ffffff;">

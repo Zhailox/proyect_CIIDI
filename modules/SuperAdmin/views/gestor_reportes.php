@@ -128,7 +128,7 @@ $lineasInvestigacion = $lineas ?? [];
     </div>
     <?php endif; ?>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="sa-grid-2col" style="gap: 1.5rem; margin-bottom: 2rem;">
         
         <!-- COLUMNA 1: FILTROS Y MÉTRICAS DE GRÁFICO -->
         <div style="background: #ffffff; border: 1px solid rgba(80, 89, 132, 0.18); border-radius: var(--radius-md); padding: 1.6rem; box-shadow: 0 4px 20px rgba(18, 26, 62, 0.04);">

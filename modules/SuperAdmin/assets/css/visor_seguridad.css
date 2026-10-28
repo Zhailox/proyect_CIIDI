@@ -139,3 +139,28 @@
     display: block;
     margin-bottom: 6px;
 }
+
+
+/* ==========================================================================
+   RESPONSIVIDAD ADICIONAL: LAPTOPS ZOOM ALTO Y MÓVILES (visor_seguridad.css)
+   ========================================================================== */
+@media (max-width: 1366px), (max-height: 780px) {
+    .vs-card {
+        padding: 1.25rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .vs-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.85rem;
+    }
+    .vs-card {
+        padding: 1rem;
+        overflow-x: auto;
+    }
+    .vs-table {
+        min-width: 580px;
+    }
+}

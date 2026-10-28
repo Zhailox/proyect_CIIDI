@@ -329,7 +329,7 @@ $buildUrlRemoveParam = function($param) use ($buildUrl) {
         </header>
 
         <main class="art-catalog-content" style="width: 100%;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 1.5rem;">
                 <?php if (empty($autoresCatalogo['data'])): ?>
                     <p class="art-empty-state" style="grid-column: 1/-1;">No se encontraron autores en el directorio del sistema.</p>
                 <?php else: ?>

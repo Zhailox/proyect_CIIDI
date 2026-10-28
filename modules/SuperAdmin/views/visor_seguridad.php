@@ -97,7 +97,7 @@ $blindajeCompleto = $hEnv && $hStorage && $hRoot;
     </div>
 </div>
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;" class="mb-2">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 1.5rem;" class="mb-2">
     
     <!-- 1. MONITOR DE FUERZA BRUTA & RATE LIMITING -->
     <div class="ag-sec-card">

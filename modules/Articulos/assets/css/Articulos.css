@@ -1441,3 +1441,315 @@ img.loaded {
 }
 
 
+
+
+/* ==========================================================================
+   RESPONSIVIDAD INTEGRAL ARTÍCULOS: LAPTOPS ZOOM ALTO (125%-150%) Y MÓVILES
+   ========================================================================== */
+
+#modalCitasContainer,
+.art-modal-overlay,
+#modalVisorImagenStorage {
+    padding: 0.75rem !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
+}
+
+#modalCitasContainer > div,
+.art-modal-overlay > div,
+.art-modal-box {
+    max-height: calc(100vh - 1.5rem) !important;
+    overflow-y: auto !important;
+    margin: auto !important;
+    box-sizing: border-box !important;
+}
+
+/* 1. Laptops con Zoom Alto (125%-150% DPI) y Baja Altura Efectiva */
+@media (max-width: 1366px), (max-height: 780px) {
+    .art-hero-content {
+        padding: 2.25rem;
+    }
+
+    .art-hero-title {
+        font-size: clamp(1.75rem, 2.5vw, 2.15rem);
+    }
+
+    .art-layout {
+        gap: 1.75rem;
+    }
+
+    .art-filters-sidebar {
+        width: 245px;
+        top: 5rem;
+    }
+
+    #listaCitasDinamicas {
+        max-height: min(320px, calc(100vh - 210px)) !important;
+    }
+}
+
+/* 2. Tablets y Laptops Compactas (<= 1024px) */
+@media (max-width: 1024px) {
+    .art-layout {
+        grid-template-columns: 1fr !important;
+        gap: 2rem;
+    }
+
+    .art-catalog-wrapper {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .art-filters-sidebar {
+        width: 100% !important;
+        position: static !important;
+    }
+
+    /* Evita que el menú desplegable lateral se salga por la derecha */
+    .art-filter-dropdown {
+        left: 0 !important;
+        top: calc(100% + 8px) !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        z-index: 200;
+    }
+}
+
+/* 3. Dispositivos Móviles y Pantallas Pequeñas (<= 768px) */
+@media (max-width: 768px) {
+    .art-hero {
+        flex-direction: column;
+    }
+
+    .art-hero-content {
+        padding: 1.6rem 1.25rem;
+    }
+
+    .art-hero-title {
+        font-size: 1.55rem;
+    }
+
+    .art-hero-image {
+        min-height: 200px;
+        width: 100%;
+    }
+
+    .art-rich-section {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 1.35rem;
+        gap: 1.25rem;
+    }
+
+    .art-rich-cover {
+        width: 160px;
+        height: 210px;
+    }
+
+    .art-featured-post {
+        flex-direction: column;
+    }
+
+    .art-featured-img {
+        width: 100%;
+        min-height: 200px;
+    }
+
+    .art-featured-info {
+        padding: 1.35rem;
+    }
+
+    .art-pill-tabs-wrapper {
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding-bottom: 0.35rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .art-pill-tab {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .art-reader-header {
+        padding: 2rem 1.25rem;
+    }
+
+    .art-reader-title {
+        font-size: 1.5rem;
+    }
+
+    .art-reader-body {
+        padding: 1.35rem 1.15rem;
+    }
+
+    .art-post-meta {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+}
+
+/* 4. Celulares Pequeños (<= 480px) */
+@media (max-width: 480px) {
+    .art-hero-title {
+        font-size: 1.35rem;
+    }
+
+    .art-reader-title {
+        font-size: 1.3rem;
+    }
+}
+
+/* Refinamiento Móvil para Selectores Reales de grid_revista.php, leer_articulo.php y showcase_articulos.php */
+.art-layout > *,
+.art-catalog-wrapper > *,
+.art-detail-grid-layout > * {
+    min-width: 0;
+    max-width: 100%;
+}
+
+@media (max-width: 768px) {
+    /* Catálogo de Artículos (grid_revista.php) */
+    .art-hero-canvas-wrapper {
+        height: auto !important;
+        min-height: 180px !important;
+        margin-bottom: 1.15rem !important;
+    }
+
+    .art-hero-canvas-overlay {
+        position: relative !important;
+        padding: 1.5rem 1rem !important;
+    }
+
+    .art-hero-content-inner h1 {
+        font-size: 1.35rem !important;
+        line-height: 1.25 !important;
+    }
+
+    .art-hero-content-inner p {
+        font-size: 0.88rem !important;
+    }
+
+    .art-catalog-wrapper {
+        padding: 0.25rem 0.5rem 2rem 0.5rem !important;
+        gap: 1.15rem !important;
+    }
+
+    .art-pill-tabs-container {
+        margin-bottom: 0.75rem !important;
+    }
+
+    .art-pill-tabs {
+        width: 100% !important;
+        display: flex !important;
+        border-radius: 14px !important;
+    }
+
+    .art-pill-tab {
+        flex: 1 !important;
+        justify-content: center !important;
+        padding: 0.55rem 0.5rem !important;
+        font-size: 0.78rem !important;
+        text-align: center !important;
+        border-radius: 10px !important;
+    }
+
+    .art-top-filter-panel {
+        padding: 0.9rem !important;
+    }
+
+    .art-category-pills-bar {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.45rem !important;
+    }
+
+    .art-pills-scroll-wrapper {
+        width: 100% !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .art-filter-controls-row {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.65rem !important;
+    }
+
+    .art-filter-controls-row > *,
+    .art-search-box,
+    .art-select-box {
+        width: 100% !important;
+        min-width: 0 !important;
+        flex: 1 1 100% !important;
+    }
+
+    .art-masonry-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.15rem !important;
+    }
+
+    /* Detalle de Artículo (leer_articulo.php) */
+    .art-detail-container {
+        padding: 0.25rem 0.4rem 2rem 0.4rem !important;
+    }
+
+    .art-detail-hero-box {
+        padding: 1.35rem 1.1rem !important;
+    }
+
+    .art-detail-title {
+        font-size: 1.35rem !important;
+        line-height: 1.3 !important;
+    }
+
+    .art-detail-actions-bar {
+        justify-content: flex-start !important;
+        flex-wrap: wrap !important;
+    }
+
+    .art-detail-grid-layout {
+        grid-template-columns: 1fr !important;
+        padding: 1.1rem !important;
+        gap: 1.25rem !important;
+    }
+
+    .art-abstract-box {
+        padding: 1.1rem !important;
+        margin-bottom: 1.25rem !important;
+    }
+
+    .art-abstract-box p {
+        font-size: 0.92rem !important;
+        text-align: left !important;
+    }
+
+    /* Showcase en Home (showcase_articulos.php) */
+    .art-main-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.35rem !important;
+    }
+
+    .art-main-header h2 {
+        font-size: 1.35rem !important;
+    }
+
+    .art-tags {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 0.4rem !important;
+    }
+
+    .art-read-link {
+        align-self: center !important;
+    }
+
+    .art-sidebar {
+        position: static !important;
+        padding: 1.25rem !important;
+        width: 100% !important;
+    }
+}

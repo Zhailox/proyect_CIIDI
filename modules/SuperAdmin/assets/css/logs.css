@@ -188,3 +188,32 @@
 .icon-reposo { font-size: 4rem; color: var(--color-secundario); opacity: 0.2; margin-bottom: 1rem; }
 .title-reposo { color: var(--texto-titulos); margin-bottom: 0.5rem; }
 .text-reposo { color: var(--gris); }
+
+
+/* ==========================================================================
+   RESPONSIVIDAD ADICIONAL: LAPTOPS ZOOM ALTO Y MÓVILES (logs.css)
+   ========================================================================== */
+@media (max-width: 1366px), (max-height: 780px) {
+    .logs-filter-card,
+    .logs-table-card {
+        padding: 1.15rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .logs-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.75rem;
+    }
+    .logs-filter-grid {
+        grid-template-columns: 1fr !important;
+    }
+    .logs-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .logs-table {
+        min-width: 640px;
+    }
+}

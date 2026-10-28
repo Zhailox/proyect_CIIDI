@@ -80,7 +80,7 @@
 </div>
 
 <!-- TARJETAS DE TAREAS PROGRAMADAS -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem;" class="mb-2">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 1.5rem;" class="mb-2">
     <?php foreach ($tareas as $id => $tarea): ?>
         <?php 
             $tipoEj = $tarea['tipo_ejecucion'] ?? 'metodo_interno';

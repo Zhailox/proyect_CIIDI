@@ -33,7 +33,7 @@
                 <!-- SEGURIDAD 1.2: TIMESTAMP DE TIEMPO HUMANO -->
                 <input type="hidden" name="_form_ts" value="<?= $segDataReg['timestamp'] ?>">
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="auth-form-grid-2">
                     <div class="login-flat-group">
                         <label for="cedula_num">Cédula:</label>
                         <div style="display: flex; gap: 0.5rem; align-items: stretch;">
@@ -57,7 +57,7 @@
                     <input type="email" id="email" name="email" class="login-flat-input" required autocomplete="email">
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="auth-form-grid-2">
                     <div class="login-flat-group">
                         <label for="password">Contraseña:</label>
                         <div class="password-field-wrapper">
