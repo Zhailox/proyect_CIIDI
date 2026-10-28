@@ -95,6 +95,11 @@ class DocumentoModel {
      */
     public function getPSTDocumentos(array $filtros = [], int $limit = 5, int $offset = 0): array {
         $db = Connection::getInstance();
+
+        $tieneBusqueda = !empty($filtros['q']) && trim((string)$filtros['q']) !== '';
+        $condQ = $tieneBusqueda
+            ? $this->construirCondicionBusquedaSQL((string)$filtros['q'], false, 'AND')
+            : ['whereSql' => '', 'whereParams' => [], 'scoreSql' => '0', 'scoreParams' => []];
         
         $sql = "SELECT r.id, r.titulo, r.anio_publicacion, r.archivo_pdf,
                        dp.resumen, dp.obj_general, dp.palabras_clave, dp.comunidad_beneficiada, dp.nivel_academico, 
@@ -126,7 +131,8 @@ class DocumentoModel {
                         FROM public.proyecto_tutores pt 
                         JOIN public.tutores t ON pt.id_tutor = t.id 
                         LEFT JOIN public.tipo_tutor tt ON pt.tipo_tutor_id = tt.id
-                        WHERE pt.id_recurso = r.id) AS tutores_nombres
+                        WHERE pt.id_recurso = r.id) AS tutores_nombres,
+                       {$condQ['scoreSql']} AS relevancia_score
                 FROM public.recursos r
                 LEFT JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
                 LEFT JOIN public.trayectos t ON dp.id_trayecto = t.id
@@ -136,7 +142,7 @@ class DocumentoModel {
                 LEFT JOIN public.carreras c ON COALESCE(dp.id_carrera, li.id_carrera) = c.id
                 WHERE r.id_tipo_recurso = 1"; 
                 
-        $execParams = [];
+        $execParams = $condQ['scoreParams'];
 
         if (!empty($filtros['carrera_id'])) {
             $sql .= " AND (COALESCE(dp.id_carrera, li.id_carrera) = ? OR EXISTS (SELECT 1 FROM public.proyecto_carreras_vinculadas pcv WHERE pcv.id_recurso = r.id AND pcv.id_carrera = ?))";
@@ -144,12 +150,9 @@ class DocumentoModel {
             $execParams[] = (int)$filtros['carrera_id'];
         }
 
-        if (!empty($filtros['q'])) {
-            $condQ = $this->construirCondicionBusquedaSQL((string)$filtros['q']);
-            if ($condQ['whereSql'] !== '') {
-                $sql .= " AND (" . $condQ['whereSql'] . ")";
-                $execParams = array_merge($execParams, $condQ['whereParams']);
-            }
+        if ($tieneBusqueda && $condQ['whereSql'] !== '') {
+            $sql .= " AND (" . $condQ['whereSql'] . ")";
+            $execParams = array_merge($execParams, $condQ['whereParams']);
         }
 
         $estadoFiltro = !empty($filtros['estado_filtro']) ? strtolower(trim((string)$filtros['estado_filtro'])) : '';
@@ -223,16 +226,18 @@ class DocumentoModel {
         }
         
         $orden = !empty($filtros['orden']) ? strtolower(trim($filtros['orden'])) : strtolower(trim((string)ConfigService::get('buscador.orden_predeterminado', 'anio_desc')));
-        if ($orden === 'recientes') {
+        if ($tieneBusqueda && ($orden === 'recientes' || $orden === 'relevancia')) {
+            $sql .= " ORDER BY relevancia_score DESC, r.id DESC LIMIT ? OFFSET ?";
+        } elseif ($orden === 'recientes') {
             $sql .= " ORDER BY r.id DESC LIMIT ? OFFSET ?";
         } elseif ($orden === 'vistas_desc') {
-            $sql .= " ORDER BY COALESCE(dp.vistas, 0) DESC, r.id DESC LIMIT ? OFFSET ?";
+            $sql .= " ORDER BY COALESCE(dp.vistas, 0) DESC, relevancia_score DESC, r.id DESC LIMIT ? OFFSET ?";
         } elseif ($orden === 'asc' || $orden === 'anio_asc') {
-            $sql .= " ORDER BY r.anio_publicacion ASC, r.id ASC LIMIT ? OFFSET ?";
+            $sql .= " ORDER BY r.anio_publicacion ASC, relevancia_score DESC, r.id ASC LIMIT ? OFFSET ?";
         } elseif ($orden === 'titulo_asc') {
             $sql .= " ORDER BY r.titulo ASC, r.id DESC LIMIT ? OFFSET ?";
         } else {
-            $sql .= " ORDER BY r.anio_publicacion DESC, r.id DESC LIMIT ? OFFSET ?";
+            $sql .= " ORDER BY r.anio_publicacion DESC, relevancia_score DESC, r.id DESC LIMIT ? OFFSET ?";
         }
         
         $execParams[] = $limit;
@@ -376,11 +381,12 @@ class DocumentoModel {
                 LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
                 LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
                 LEFT JOIN public.dimensiones_operativas dims ON rc.id_dimension_operativa = dims.id
+                LEFT JOIN public.carreras c ON COALESCE(dp.id_carrera, li.id_carrera) = c.id
                 WHERE r.id_tipo_recurso = 1";
         
         $params = [];
-        if (!empty($filtros['q'])) {
-            $condQ = $this->construirCondicionBusquedaSQL((string)$filtros['q']);
+        if (!empty($filtros['q']) && trim((string)$filtros['q']) !== '') {
+            $condQ = $this->construirCondicionBusquedaSQL((string)$filtros['q'], false, 'AND');
             if ($condQ['whereSql'] !== '') {
                 $sql .= " AND (" . $condQ['whereSql'] . ")";
                 $params = array_merge($params, $condQ['whereParams']);
@@ -1612,6 +1618,7 @@ class DocumentoModel {
                 LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
                 LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
                 LEFT JOIN public.dimensiones_operativas dims ON rc.id_dimension_operativa = dims.id
+                LEFT JOIN public.carreras c ON COALESCE(dp.id_carrera, li.id_carrera) = c.id
                 WHERE r.id_tipo_recurso = 1 AND COALESCE(dp.activo, true) = true";
         
         $params = [];
@@ -1710,16 +1717,33 @@ class DocumentoModel {
     }
 
     /**
-     * Genera la expresión PostgreSQL normalizada mediante la extensión nativa unaccent.
+     * Genera la expresión PostgreSQL normalizada mediante la extensión nativa unaccent, ignorando puntos en siglas.
      */
     private static function sqlNormalizar(string $expr): string {
-        return "LOWER(public.unaccent(COALESCE({$expr}, '')))";
+        return "REPLACE(LOWER(public.unaccent(COALESCE({$expr}, ''))), '.', '')";
+    }
+
+    /**
+     * Construye la condición SQL para un token individual según su longitud y naturaleza (sigla, palabra corta o término general).
+     */
+    private static function buildTokenMatchSql(string $colExpr, string $kw): array {
+        $len = strlen($kw);
+        if (!ctype_digit($kw) && $len <= 2) {
+            return ["{$colExpr} ~ ?", ['(^|[^a-z0-9])' . preg_quote($kw, '/') . '([^a-z0-9]|$)']];
+        }
+        if (!ctype_digit($kw) && $len === 3) {
+            if ($kw === 'lan') {
+                return ["{$colExpr} ~ ?", ['(^|[^a-z0-9])w?lan([^a-z0-9]|$)']];
+            }
+            return ["{$colExpr} ~ ?", ['(^|[^a-z0-9])' . preg_quote($kw, '/')]];
+        }
+        return ["{$colExpr} LIKE ?", ['%' . $kw . '%']];
     }
 
     /**
      * Construye las condiciones WHERE multicampo y la fórmula de relevancia ponderada para el motor SQL.
      */
-    private function construirCondicionBusquedaSQL(string $query): array {
+    private function construirCondicionBusquedaSQL(string $query, bool $incluirTextoLargo = true, string $operadorTokens = 'AND'): array {
         $query = trim($query);
         if ($query === '') {
             return [
@@ -1731,6 +1755,7 @@ class DocumentoModel {
         }
 
         $cleanPhrase = self::normalizarTextoBusqueda($query);
+        $cleanPhrase = str_replace('.', '', $cleanPhrase);
         $cleanPhrase = trim((string)preg_replace('/\s+/u', ' ', $cleanPhrase));
         $keywords = self::extraerPalabrasClave($query);
         if (empty($keywords) && $cleanPhrase !== '') {
@@ -1742,14 +1767,15 @@ class DocumentoModel {
         $colResumen    = self::sqlNormalizar('dp.resumen');
         $colObjGen     = self::sqlNormalizar('dp.obj_general');
         $colComunidad  = self::sqlNormalizar('dp.comunidad_beneficiada');
+        $colCarrera    = self::sqlNormalizar('c.nombre');
         $colLinea      = self::sqlNormalizar('li.nombre');
         $colDimension  = self::sqlNormalizar('dims.nombre');
         $colTrayecto   = self::sqlNormalizar('t.nombre');
         $colNivel      = self::sqlNormalizar('dp.nivel_academico');
         $colAutorNom   = self::sqlNormalizar('a_q.nombre_completo');
-        $colAutorCed   = "LOWER(COALESCE(a_q.cedula, ''))";
+        $colAutorCed   = "REGEXP_REPLACE(LOWER(COALESCE(a_q.cedula, '')), '[^a-z0-9]', '', 'g')";
         $colTutorNom   = self::sqlNormalizar('tu_q.nombre_completo');
-        $colTutorCed   = "LOWER(COALESCE(tu_q.cedula, ''))";
+        $colTutorCed   = "REGEXP_REPLACE(LOWER(COALESCE(tu_q.cedula, '')), '[^a-z0-9]', '', 'g')";
 
         $tokenWhereClauses = [];
         $whereParams = [];
@@ -1766,9 +1792,23 @@ class DocumentoModel {
             $scoreParams[] = $likePhrase;
             $scoreParams[] = $likePhrase;
 
-            $scoreParts[] = "(CASE WHEN ({$colResumen} LIKE ? OR {$colObjGen} LIKE ?) THEN 18 ELSE 0 END)";
+            $scoreParts[] = "(CASE WHEN EXISTS (
+                SELECT 1 FROM public.recurso_autores ra_p
+                JOIN public.autores a_p ON ra_p.id_autor = a_p.id
+                WHERE ra_p.id_recurso = r.id AND " . self::sqlNormalizar('a_p.nombre_completo') . " LIKE ?
+            ) OR EXISTS (
+                SELECT 1 FROM public.proyecto_tutores pt_p
+                JOIN public.tutores tu_p ON pt_p.id_tutor = tu_p.id
+                WHERE pt_p.id_recurso = r.id AND " . self::sqlNormalizar('tu_p.nombre_completo') . " LIKE ?
+            ) THEN 30 ELSE 0 END)";
             $scoreParams[] = $likePhrase;
             $scoreParams[] = $likePhrase;
+
+            if ($incluirTextoLargo) {
+                $scoreParts[] = "(CASE WHEN ({$colResumen} LIKE ? OR {$colObjGen} LIKE ?) THEN 18 ELSE 0 END)";
+                $scoreParams[] = $likePhrase;
+                $scoreParams[] = $likePhrase;
+            }
         }
 
         $allTokensMatchClauses = [];
@@ -1777,32 +1817,46 @@ class DocumentoModel {
         foreach ($keywords as $kw) {
             $likeKw = '%' . $kw . '%';
 
-            $singleTokenClause = "(
-                {$colTitulo} LIKE ?
-                OR {$colPalabras} LIKE ?
-                OR {$colResumen} LIKE ?
-                OR {$colObjGen} LIKE ?
-                OR {$colComunidad} LIKE ?
-                OR {$colLinea} LIKE ?
-                OR {$colDimension} LIKE ?
-                OR {$colTrayecto} LIKE ?
-                OR {$colNivel} LIKE ?
-                OR CAST(r.anio_publicacion AS TEXT) LIKE ?
-                OR EXISTS (
-                    SELECT 1 FROM public.recurso_autores ra_q
-                    JOIN public.autores a_q ON ra_q.id_autor = a_q.id
-                    WHERE ra_q.id_recurso = r.id
-                      AND ({$colAutorNom} LIKE ? OR {$colAutorCed} LIKE ?)
-                )
-                OR EXISTS (
-                    SELECT 1 FROM public.proyecto_tutores pt_q
-                    JOIN public.tutores tu_q ON pt_q.id_tutor = tu_q.id
-                    WHERE pt_q.id_recurso = r.id
-                      AND ({$colTutorNom} LIKE ? OR {$colTutorCed} LIKE ?)
-                )
-            )";
+            $textCols = [$colTitulo, $colPalabras, $colComunidad, $colCarrera, $colLinea, $colDimension, $colTrayecto, $colNivel];
+            if ($incluirTextoLargo) {
+                $textCols[] = $colResumen;
+                $textCols[] = $colObjGen;
+            }
 
-            $tokenParams = array_fill(0, 14, $likeKw);
+            $orParts = [];
+            $tokenParams = [];
+            foreach ($textCols as $tc) {
+                [$sqlPart, $p] = self::buildTokenMatchSql($tc, $kw);
+                $orParts[] = $sqlPart;
+                $tokenParams = array_merge($tokenParams, $p);
+            }
+
+            if (ctype_digit($kw)) {
+                $orParts[] = "CAST(r.anio_publicacion AS TEXT) = ?";
+                $tokenParams[] = $kw;
+                $orParts[] = "CAST(r.id AS TEXT) = ?";
+                $tokenParams[] = $kw;
+            }
+
+            [$autNomSql, $autNomP] = self::buildTokenMatchSql($colAutorNom, $kw);
+            $orParts[] = "EXISTS (
+                SELECT 1 FROM public.recurso_autores ra_q
+                JOIN public.autores a_q ON ra_q.id_autor = a_q.id
+                WHERE ra_q.id_recurso = r.id
+                  AND ({$autNomSql} OR {$colAutorCed} LIKE ?)
+            )";
+            $tokenParams = array_merge($tokenParams, $autNomP, [$likeKw]);
+
+            [$tutNomSql, $tutNomP] = self::buildTokenMatchSql($colTutorNom, $kw);
+            $orParts[] = "EXISTS (
+                SELECT 1 FROM public.proyecto_tutores pt_q
+                JOIN public.tutores tu_q ON pt_q.id_tutor = tu_q.id
+                WHERE pt_q.id_recurso = r.id
+                  AND ({$tutNomSql} OR {$colTutorCed} LIKE ?)
+            )";
+            $tokenParams = array_merge($tokenParams, $tutNomP, [$likeKw]);
+
+            $singleTokenClause = "(" . implode(' OR ', $orParts) . ")";
 
             $tokenWhereClauses[] = $singleTokenClause;
             $whereParams = array_merge($whereParams, $tokenParams);
@@ -1811,41 +1865,48 @@ class DocumentoModel {
             $allTokensMatchParams = array_merge($allTokensMatchParams, $tokenParams);
 
             // Puntaje ponderado por columna para este token
-            $scoreParts[] = "(CASE WHEN {$colTitulo} LIKE ? THEN 14 ELSE 0 END)";
-            $scoreParams[] = $likeKw;
+            [$titScoreSql, $titScoreP] = self::buildTokenMatchSql($colTitulo, $kw);
+            $scoreParts[] = "(CASE WHEN {$titScoreSql} THEN 14 ELSE 0 END)";
+            $scoreParams = array_merge($scoreParams, $titScoreP);
 
-            $scoreParts[] = "(CASE WHEN {$colPalabras} LIKE ? THEN 10 ELSE 0 END)";
-            $scoreParams[] = $likeKw;
+            [$palScoreSql, $palScoreP] = self::buildTokenMatchSql($colPalabras, $kw);
+            $scoreParts[] = "(CASE WHEN {$palScoreSql} THEN 10 ELSE 0 END)";
+            $scoreParams = array_merge($scoreParams, $palScoreP);
 
+            [$autScoreSql, $autScoreP] = self::buildTokenMatchSql(self::sqlNormalizar('a_s.nombre_completo'), $kw);
             $scoreParts[] = "(CASE WHEN EXISTS (
                 SELECT 1 FROM public.recurso_autores ra_s
                 JOIN public.autores a_s ON ra_s.id_autor = a_s.id
                 WHERE ra_s.id_recurso = r.id
-                  AND (" . self::sqlNormalizar('a_s.nombre_completo') . " LIKE ? OR LOWER(COALESCE(a_s.cedula, '')) LIKE ?)
+                  AND ({$autScoreSql} OR REGEXP_REPLACE(LOWER(COALESCE(a_s.cedula, '')), '[^a-z0-9]', '', 'g') LIKE ?)
             ) THEN 10 ELSE 0 END)";
-            $scoreParams[] = $likeKw;
-            $scoreParams[] = $likeKw;
+            $scoreParams = array_merge($scoreParams, $autScoreP, [$likeKw]);
 
+            [$tutScoreSql, $tutScoreP] = self::buildTokenMatchSql(self::sqlNormalizar('tu_s.nombre_completo'), $kw);
             $scoreParts[] = "(CASE WHEN EXISTS (
                 SELECT 1 FROM public.proyecto_tutores pt_s
                 JOIN public.tutores tu_s ON pt_s.id_tutor = tu_s.id
                 WHERE pt_s.id_recurso = r.id
-                  AND (" . self::sqlNormalizar('tu_s.nombre_completo') . " LIKE ? OR LOWER(COALESCE(tu_s.cedula, '')) LIKE ?)
+                  AND ({$tutScoreSql} OR REGEXP_REPLACE(LOWER(COALESCE(tu_s.cedula, '')), '[^a-z0-9]', '', 'g') LIKE ?)
             ) THEN 9 ELSE 0 END)";
-            $scoreParams[] = $likeKw;
-            $scoreParams[] = $likeKw;
+            $scoreParams = array_merge($scoreParams, $tutScoreP, [$likeKw]);
 
-            $scoreParts[] = "(CASE WHEN {$colComunidad} LIKE ? THEN 8 ELSE 0 END)";
-            $scoreParams[] = $likeKw;
+            [$comScoreSql, $comScoreP] = self::buildTokenMatchSql($colComunidad, $kw);
+            $scoreParts[] = "(CASE WHEN {$comScoreSql} THEN 8 ELSE 0 END)";
+            $scoreParams = array_merge($scoreParams, $comScoreP);
 
-            $scoreParts[] = "(CASE WHEN {$colObjGen} LIKE ? THEN 6 ELSE 0 END)";
-            $scoreParams[] = $likeKw;
+            if ($incluirTextoLargo) {
+                [$objScoreSql, $objScoreP] = self::buildTokenMatchSql($colObjGen, $kw);
+                $scoreParts[] = "(CASE WHEN {$objScoreSql} THEN 6 ELSE 0 END)";
+                $scoreParams = array_merge($scoreParams, $objScoreP);
 
-            $scoreParts[] = "(CASE WHEN ({$colLinea} LIKE ? OR {$colDimension} LIKE ? OR {$colTrayecto} LIKE ? OR {$colNivel} LIKE ? OR CAST(r.anio_publicacion AS TEXT) LIKE ?) THEN 5 ELSE 0 END)";
-            array_push($scoreParams, $likeKw, $likeKw, $likeKw, $likeKw, $likeKw);
+                [$resScoreSql, $resScoreP] = self::buildTokenMatchSql($colResumen, $kw);
+                $scoreParts[] = "(CASE WHEN {$resScoreSql} THEN 4 ELSE 0 END)";
+                $scoreParams = array_merge($scoreParams, $resScoreP);
+            }
 
-            $scoreParts[] = "(CASE WHEN {$colResumen} LIKE ? THEN 4 ELSE 0 END)";
-            $scoreParams[] = $likeKw;
+            $scoreParts[] = "(CASE WHEN ({$colCarrera} LIKE ? OR {$colLinea} LIKE ? OR {$colDimension} LIKE ? OR {$colTrayecto} LIKE ? OR {$colNivel} LIKE ? OR CAST(r.anio_publicacion AS TEXT) = ?) THEN 5 ELSE 0 END)";
+            array_push($scoreParams, $likeKw, $likeKw, $likeKw, $likeKw, $likeKw, $kw);
         }
 
         // Bono de cobertura total si el documento cumple TODOS los términos buscados
@@ -1854,17 +1915,19 @@ class DocumentoModel {
             $scoreParams = array_merge($scoreParams, $allTokensMatchParams);
         }
 
+        $glue = (strtoupper(trim($operadorTokens)) === 'OR') ? ' OR ' : ' AND ';
+
         return [
-            'whereSql'    => implode(' OR ', $tokenWhereClauses),
+            'whereSql'    => implode($glue, $tokenWhereClauses),
             'whereParams' => $whereParams,
             'scoreSql'    => !empty($scoreParts) ? '(' . implode(' + ', $scoreParts) . ')' : '0',
             'scoreParams' => $scoreParams
         ];
     }
 
-    public function buscarPST(string $query, array $filtros = [], int $limit = 5, int $offset = 0): array {
+    public function buscarPST(string $query, array $filtros = [], int $limit = 5, int $offset = 0, string $operadorTokens = 'AND'): array {
         $db = Connection::getInstance();
-        $condBusqueda = $this->construirCondicionBusquedaSQL($query);
+        $condBusqueda = $this->construirCondicionBusquedaSQL($query, true, $operadorTokens);
 
         $selectParams = $condBusqueda['scoreParams'];
         $whereClauses = [
@@ -1988,12 +2051,16 @@ class DocumentoModel {
         $stmt->execute($execParams);
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        if (empty($results) && $operadorTokens === 'AND' && count(self::extraerPalabrasClave($query)) >= 3) {
+            return $this->buscarPST($query, $filtros, $limit, $offset, 'OR');
+        }
+
         return $this->cleanArray($results);
     }
 
-    public function buscarPSTCount(string $query, array $filtros = []): int {
+    public function buscarPSTCount(string $query, array $filtros = [], string $operadorTokens = 'AND'): int {
         $db = Connection::getInstance();
-        $condBusqueda = $this->construirCondicionBusquedaSQL($query);
+        $condBusqueda = $this->construirCondicionBusquedaSQL($query, true, $operadorTokens);
 
         $whereClauses = [
             'r.id_tipo_recurso = 1',
@@ -2063,19 +2130,34 @@ class DocumentoModel {
                 LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
                 LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
                 LEFT JOIN public.dimensiones_operativas dims ON rc.id_dimension_operativa = dims.id
+                LEFT JOIN public.carreras c ON COALESCE(dp.id_carrera, li.id_carrera) = c.id
                 WHERE " . implode(' AND ', $whereClauses);
 
         $stmt = $db->prepare($sql);
         $stmt->execute($whereParams);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $total = $row ? (int)$row['total'] : 0;
 
-        return $row ? (int)$row['total'] : 0;
+        if ($total === 0 && $operadorTokens === 'AND' && count(self::extraerPalabrasClave($query)) >= 3) {
+            return $this->buscarPSTCount($query, $filtros, 'OR');
+        }
+
+        return $total;
     }
 
     public static function extraerPalabrasClave(string $query): array {
         $query = self::normalizarTextoBusqueda($query);
+        // 1. Unir puntos o comas separadores de miles en números/cédulas (ej. 30.737.939 -> 30737939)
+        $query = (string)preg_replace('/(?<=\d)[\.,](?=\d)/u', '', $query);
+        // 2. Quitar prefijos V- / E- antes de números de cédula (ej. v-30737939 -> 30737939)
+        $query = (string)preg_replace('/\b[ve][-\s]*(?=\d{4,})/u', '', $query);
+        // 3. Unir siglas separadas por puntos (ej. m.q. -> mq, c.a. -> ca, f.p. -> fp, e.t. -> et)
+        $query = (string)preg_replace_callback('/\b(?:[a-z]\.){1,}[a-z]?\.?/u', function($m) {
+            return str_replace('.', '', $m[0]);
+        }, $query);
+        // 4. Limpiar resto de signos de puntuación
         $query = (string)preg_replace('/[^a-z0-9\s]/u', ' ', $query);
-        $words = array_filter(explode(' ', $query), fn($w) => $w !== '');
+        $words = array_values(array_filter(explode(' ', $query), fn($w) => $w !== ''));
         
         $stopwords = [
             'dame', 'algo', 'de', 'un', 'una', 'unos', 'unas', 'el', 'la', 'los', 'las', 'y', 'o', 'en', 
@@ -2083,15 +2165,15 @@ class DocumentoModel {
             'este', 'esta', 'estos', 'estas', 'buscar', 'encuentra', 'quiero',
             'necesito', 'proyectos', 'proyecto', 'investigacion', 'pst'
         ];
-
-        $shortAllowed = ['ia', 'ti', 'bd', 'ui', 'ux', 'ip', 'js', 'ii', 'iv', '3d', '2d', '5g', 'qr'];
         
         $keywords = [];
-        foreach ($words as $w) {
+        foreach ($words as $idx => $w) {
             if (in_array($w, $stopwords, true)) {
                 continue;
             }
-            if (strlen($w) > 2 || in_array($w, $shortAllowed, true) || ctype_digit($w)) {
+            $prevWord = $idx > 0 ? $words[$idx - 1] : '';
+            $esRomanoTrayecto = ($prevWord === 'trayecto' && in_array($w, ['i', 'v'], true));
+            if (strlen($w) >= 2 || ctype_digit($w) || $esRomanoTrayecto) {
                 if (!in_array($w, $keywords, true)) {
                     $keywords[] = $w;
                 }

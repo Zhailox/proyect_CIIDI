@@ -43,12 +43,20 @@ class ArticuloModel {
         if (!empty($filtros['q'])) {
             $texto = trim($filtros['q']);
             $condiciones[] = "(
-                LOWER(r.titulo) LIKE LOWER(:q) OR
-                LOWER(d.resumen) LIKE LOWER(:q) OR
+                LOWER(public.unaccent(COALESCE(r.titulo, ''))) LIKE LOWER(public.unaccent(:q)) OR
+                LOWER(public.unaccent(COALESCE(d.resumen, ''))) LIKE LOWER(public.unaccent(:q)) OR
                 EXISTS (
                     SELECT 1 FROM recurso_investigadores ri 
                     JOIN investigadores i ON ri.id_investigador = i.id 
-                    WHERE ri.id_recurso = r.id AND LOWER(i.nombre_completo) LIKE LOWER(:q)
+                    WHERE ri.id_recurso = r.id AND (
+                        LOWER(public.unaccent(COALESCE(i.nombre_completo, ''))) LIKE LOWER(public.unaccent(:q)) OR
+                        LOWER(COALESCE(i.orcid, '')) LIKE LOWER(:q)
+                    )
+                ) OR
+                EXISTS (
+                    SELECT 1 FROM recurso_categorias rc 
+                    JOIN categorias c ON rc.id_categoria = c.id 
+                    WHERE rc.id_recurso = r.id AND LOWER(public.unaccent(COALESCE(c.nombre, ''))) LIKE LOWER(public.unaccent(:q))
                 )
             )";
             $parametros[':q'] = '%' . $texto . '%';
@@ -188,15 +196,23 @@ public function contarArticulos(array $filtros = []) {
             $condiciones[] = "COALESCE(d.activo, true) = true";
         }
 
-    if (!empty($filtros['q'])) {
+        if (!empty($filtros['q'])) {
             $texto = trim($filtros['q']);
             $condiciones[] = "(
-                LOWER(r.titulo) LIKE LOWER(:q) OR
-                LOWER(d.resumen) LIKE LOWER(:q) OR
+                LOWER(public.unaccent(COALESCE(r.titulo, ''))) LIKE LOWER(public.unaccent(:q)) OR
+                LOWER(public.unaccent(COALESCE(d.resumen, ''))) LIKE LOWER(public.unaccent(:q)) OR
+                EXISTS (
+                    SELECT 1 FROM recurso_investigadores ri 
+                    JOIN investigadores i ON ri.id_investigador = i.id 
+                    WHERE ri.id_recurso = r.id AND (
+                        LOWER(public.unaccent(COALESCE(i.nombre_completo, ''))) LIKE LOWER(public.unaccent(:q)) OR
+                        LOWER(COALESCE(i.orcid, '')) LIKE LOWER(:q)
+                    )
+                ) OR
                 EXISTS (
                     SELECT 1 FROM recurso_categorias rc 
                     JOIN categorias c ON rc.id_categoria = c.id 
-                    WHERE rc.id_recurso = r.id AND LOWER(c.nombre) LIKE LOWER(:q)
+                    WHERE rc.id_recurso = r.id AND LOWER(public.unaccent(COALESCE(c.nombre, ''))) LIKE LOWER(public.unaccent(:q))
                 )
             )";
             $parametros[':q'] = '%' . $texto . '%';
