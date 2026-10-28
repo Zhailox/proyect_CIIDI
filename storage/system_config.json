@@ -9,6 +9,7 @@
         "docentes": 15
     },
     "smtp": {
+        "modo_envio": "local",
         "host": "",
         "port": 587,
         "user": "",

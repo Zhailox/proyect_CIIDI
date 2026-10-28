@@ -516,10 +516,39 @@ class AdminController {
                 if ($esParaAhora) {
                     $this->cerrarSesionesNoAdmin();
                 }
-                AuditLogger::registrar('INFO', 'SuperAdmin', 'Programar Mantenimiento', "Ventana agendada para: {$fechaFormateada}");
+
+                // Notificar a los usuarios activos con la plantilla superadmin.mantenimiento_programado si se marcó la opción
+                $notificarCorreo = !empty($_POST['notificar_correo']) && ($_POST['notificar_correo'] === '1' || $_POST['notificar_correo'] === 'on');
+                $notificados = 0;
+                if ($notificarCorreo) {
+                    require_once CORE_PATH . 'Services/MailService.php';
+                    $todosUsuarios = $this->usuarioModel->obtenerTodosLosUsuarios();
+                    $fechaLegible = date('d/m/Y H:i', $timestampInicio);
+                    foreach ($todosUsuarios as $usr) {
+                        if (!empty($usr['activo']) && !empty($usr['email'])) {
+                            $resEnv = MailService::enviarEvento(
+                                'superadmin.mantenimiento_programado',
+                                $usr['email'],
+                                [
+                                    'NOMBRE_USUARIO'    => $usr['nombre_completo'] ?? 'Usuario',
+                                    'FECHA_INICIO'      => $fechaLegible,
+                                    'DURACION_ESTIMADA' => $duracionMinutos . ' minutos',
+                                    'MOTIVO'            => $mensaje
+                                ],
+                                $usr['nombre_completo'] ?? 'Usuario',
+                                false
+                            );
+                            if (!empty($resEnv['exito'])) {
+                                $notificados++;
+                            }
+                        }
+                    }
+                }
+
+                AuditLogger::registrar('INFO', 'SuperAdmin', 'Programar Mantenimiento', "Ventana agendada para: {$fechaFormateada} (Notificados: {$notificados})");
 
                 if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['mensaje_admin_exito'] = "Ventana de Mantenimiento agendada para " . date('H:i - d/m/Y', $timestampInicio);
+                $_SESSION['mensaje_admin_exito'] = "Ventana de Mantenimiento agendada para " . date('H:i - d/m/Y', $timestampInicio) . ($notificados > 0 ? " ({$notificados} usuario(s) notificado(s) por correo)." : ".");
             }
         } catch (Throwable $e) {
             if (session_status() === PHP_SESSION_NONE) session_start();

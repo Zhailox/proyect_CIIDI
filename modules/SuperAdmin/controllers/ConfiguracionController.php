@@ -27,12 +27,20 @@ class ConfiguracionController {
             $config = SystemConfigService::get();
             $origen = trim($_POST['origen'] ?? '');
             
-            // Si la petición proviene del Gestor de Correos, solo alteramos las credenciales SMTP
+            // Si la petición proviene del Gestor de Correos, alteramos el modo de envío y credenciales SMTP
             if ($origen === 'gestor-correos') {
+                $modoEnvio = strtolower(trim($_POST['smtp_modo_envio'] ?? 'smtp'));
+                if (!in_array($modoEnvio, ['smtp', 'local'], true)) {
+                    $modoEnvio = 'smtp';
+                }
+
+                $config['smtp']['modo_envio'] = $modoEnvio;
                 $config['smtp']['host'] = trim($_POST['smtp_host'] ?? '');
                 $config['smtp']['port'] = (int)($_POST['smtp_port'] ?? 587);
                 $config['smtp']['user'] = trim($_POST['smtp_user'] ?? '');
                 $config['smtp']['from_email'] = trim($_POST['smtp_from'] ?? '');
+                $fromNamePost = trim($_POST['smtp_from_name'] ?? '');
+                $config['smtp']['from_name'] = $fromNamePost !== '' ? $fromNamePost : ($config['smtp']['from_name'] ?? 'Sistema CIIDI - UPTTMBI');
 
                 if (!empty($_POST['smtp_pass'])) {
                     $cleanPass = str_replace(' ', '', trim($_POST['smtp_pass']));
@@ -42,8 +50,9 @@ class ConfiguracionController {
                 if (session_status() === PHP_SESSION_NONE) session_start();
 
                 if (SystemConfigService::save($config)) {
-                    AuditLogger::registrar('INFO', 'SuperAdmin', 'Configurar SMTP', 'Se actualizaron las credenciales del servidor SMTP institucional (cifrado AES-256).');
-                    $_SESSION['mensaje_mail_exito'] = "Credenciales SMTP guardadas y aseguradas con cifrado AES-256 exitosamente.";
+                    $descModo = ($modoEnvio === 'local') ? 'Modo Servidor Local / Bandeja del Sistema' : 'Modo Servidor SMTP';
+                    AuditLogger::registrar('INFO', 'SuperAdmin', 'Configurar Correo', "Se actualizó la configuración de correo ({$descModo}, cifrado AES-256).");
+                    $_SESSION['mensaje_mail_exito'] = "Configuración de correo ({$descModo}) y credenciales guardadas exitosamente.";
                 } else {
                     $_SESSION['mensaje_mail_error'] = "Error al intentar escribir la configuración en storage/system_config.json.";
                 }

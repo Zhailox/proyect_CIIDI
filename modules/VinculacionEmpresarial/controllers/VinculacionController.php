@@ -40,6 +40,23 @@ class VinculacionController
 
             $id = $this->modelo->guardar($datos);
             if ($id) {
+                if (!empty($datos['correo_contacto'])) {
+                    require_once CORE_PATH . 'Services/MailService.php';
+                    $resumenProblema = mb_strlen($datos['descripcion_problema']) > 90
+                        ? mb_substr($datos['descripcion_problema'], 0, 90) . '...'
+                        : $datos['descripcion_problema'];
+                    @MailService::enviarEvento(
+                        'vinculacion.nueva_solicitud',
+                        $datos['correo_contacto'],
+                        [
+                            'NOMBRE_EMPRESA'      => $datos['nombre_empresa'],
+                            'TITULO_PROBLEMATICA' => $resumenProblema,
+                            'CODIGO_SEGUIMIENTO'  => $codigo_seguimiento
+                        ],
+                        $datos['persona_contacto'] ?: $datos['nombre_empresa'],
+                        false
+                    );
+                }
                 $_SESSION['mensaje_exito'] = "Su propuesta fue enviada correctamente.";
                 $_SESSION['codigo_seguimiento'] = $codigo_seguimiento;
             } else {
@@ -337,32 +354,21 @@ class VinculacionController
 
     private function enviarCorreoNotificacion(string $destinatarioEmail, string $destinatarioNombre, string $asunto, string $cuerpoHtml): bool
     {
-        require_once CORE_PATH . 'Helpers/PHPMailer/Exception.php';
-        require_once CORE_PATH . 'Helpers/PHPMailer/PHPMailer.php';
-        require_once CORE_PATH . 'Helpers/PHPMailer/SMTP.php';
+        require_once CORE_PATH . 'Services/MailService.php';
 
-        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
         try {
-            $mail->isSMTP();
-            $mail->Host = 'smtp.gmail.com';
-            $mail->SMTPAuth = true;
-            $mail->Username = 'orlando5711666@gmail.com';
-            $mail->Password = 'hkwtkytxrqxslngb';
-            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = 587;
-            $mail->CharSet = 'UTF-8';
-
-            $mail->setFrom('no-reply@ciidi.edu.ve', 'Sistema CIIDI');
-            $mail->addAddress($destinatarioEmail, $destinatarioNombre);
-
-            $mail->isHTML(true);
-            $mail->Subject = $asunto;
-            $mail->Body = $cuerpoHtml;
-
-            $mail->send();
-            return true;
+            $res = MailService::enviar(
+                $destinatarioEmail,
+                $destinatarioNombre,
+                $asunto,
+                $cuerpoHtml,
+                '',
+                false,
+                'Vinculación Empresarial'
+            );
+            return !empty($res['exito']);
         } catch (\Throwable $e) {
-            error_log("Error enviando correo a $destinatarioEmail: " . $mail->ErrorInfo);
+            error_log("Error enviando correo a $destinatarioEmail: " . $e->getMessage());
             return false;
         }
     }

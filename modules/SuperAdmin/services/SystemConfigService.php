@@ -67,7 +67,7 @@ class SystemConfigService {
             $default = [
                 "paginacion" => ["logs" => 50, "usuarios" => 15, "docentes" => 15],
                 "seguridad" => ["timeout_minutos" => 120, "intentos_login" => 5],
-                "smtp" => ["host" => "", "port" => 587, "user" => "sistema@universidad.edu", "pass" => "", "from_email" => "sistema@universidad.edu"],
+                "smtp" => ["modo_envio" => "local", "host" => "", "port" => 587, "user" => "sistema@universidad.edu", "pass" => "", "from_email" => "sistema@universidad.edu", "from_name" => "Sistema CIIDI - UPTTMBI"],
                 "accesos_modulos" => $accesosDinamicos,
                 "footer" => self::getDefaultFooter()
             ];

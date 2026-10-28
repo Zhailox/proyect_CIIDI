@@ -556,6 +556,11 @@
                     </div>
                 </div>
 
+                <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 700; color: var(--texto-titulos, #0f172a); cursor: pointer;">
+                    <input type="checkbox" name="notificar_correo" value="1" checked style="width: 16px; height: 16px;">
+                    Notificar por correo a los usuarios activos (Plantilla de Mantenimiento)
+                </label>
+
                 <button type="submit" class="ag-btn-flat" style="width: 100%; justify-content: center; padding: 11px !important;">
                     <i class="ph-bold ph-calendar-check"></i> Agendar Mantenimiento
                 </button>

@@ -433,6 +433,7 @@ class InstallerService {
             $passEnc = !empty($passRaw) ? Crypto::encrypt($passRaw) : '';
 
             $currentConfig['smtp'] = [
+                'modo_envio' => 'smtp',
                 'host'       => trim($smtp['host'] ?? 'localhost'),
                 'port'       => (int)($smtp['port'] ?? 587),
                 'user'       => trim($smtp['user'] ?? ''),
@@ -442,6 +443,7 @@ class InstallerService {
             ];
         } elseif (!isset($currentConfig['smtp'])) {
             $currentConfig['smtp'] = [
+                'modo_envio' => 'local',
                 'host'       => '',
                 'port'       => 587,
                 'user'       => '',

@@ -304,9 +304,10 @@
                         <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
                             <th style="padding: 10px 12px; font-weight: 700; color: #475569;">Fecha / Hora</th>
                             <th style="padding: 10px 12px; font-weight: 700; color: #475569;">Destinatario</th>
-                            <th style="padding: 10px 12px; font-weight: 700; color: #475569;">Asunto</th>
+                            <th style="padding: 10px 12px; font-weight: 700; color: #475569;">Asunto / Evento</th>
                             <th style="padding: 10px 12px; font-weight: 700; color: #475569;">Estado</th>
                             <th style="padding: 10px 12px; font-weight: 700; color: #475569;">Detalle</th>
+                            <th style="padding: 10px 12px; font-weight: 700; color: #475569; text-align: center;">Acción</th>
                         </tr>
                     </thead>
                     <tbody id="tbody-logs-correo">
@@ -320,7 +321,10 @@
                                     <span style="color: #64748b; font-size: 0.75rem;"><?= htmlspecialchars($log['destino_email']) ?></span>
                                 </td>
                                 <td style="padding: 10px 12px; font-weight: 600; color: #334155;" class="col-asunto">
-                                    <?= htmlspecialchars($log['asunto']) ?>
+                                    <div><?= htmlspecialchars($log['asunto']) ?></div>
+                                    <?php if (!empty($log['tipo'])): ?>
+                                        <span style="font-size: 0.7rem; color: var(--color-terciario); font-weight: 700;"><?= htmlspecialchars($log['tipo']) ?></span>
+                                    <?php endif; ?>
                                 </td>
                                 <td style="padding: 10px 12px;">
                                     <?php if ($log['exito']): ?>
@@ -333,8 +337,17 @@
                                         </span>
                                     <?php endif; ?>
                                 </td>
-                                <td style="padding: 10px 12px; color: #64748b; font-size: 0.8rem; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                <td style="padding: 10px 12px; color: #64748b; font-size: 0.8rem; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="<?= htmlspecialchars($log['detalle'] ?? '') ?>">
                                     <?= htmlspecialchars($log['detalle'] ?? '') ?>
+                                </td>
+                                <td style="padding: 10px 12px; text-align: center;">
+                                    <?php if (!empty($log['cuerpo_html'])): ?>
+                                        <button type="button" onclick="verCorreoHistorial(<?= (int)$index ?>)" class="btn" style="background: #eff6ff; color: var(--color-secundario) !important; border: 1px solid #bfdbfe; padding: 5px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                                            <i class="ph-bold ph-eye" style="color: var(--color-secundario) !important;"></i> Ver Correo
+                                        </button>
+                                    <?php else: ?>
+                                        <span style="font-size: 0.75rem; color: #94a3b8;">Sin vista</span>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -359,48 +372,75 @@
 <div id="tabConexionSmtp" class="sa-tab-content" style="display:none;">
     <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         
-        <!-- SECCIÓN SUPERIOR: CONFIGURACIÓN DE CREDENCIALES -->
+        <!-- SECCIÓN SUPERIOR: CONFIGURACIÓN DE CREDENCIALES Y MODO DE ENVÍO -->
         <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-sm); background:#ffffff;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
                 <div>
                     <h4 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #121a3e; display: flex; align-items: center; gap: 8px;">
-                        <i class="ph-bold ph-gear" style="color: var(--color-terciario);"></i> Ajustes de Conexión del Servidor SMTP Institucional
+                        <i class="ph-bold ph-gear" style="color: var(--color-terciario);"></i> Motor de Envío y Credenciales SMTP Institucionales
                     </h4>
                     <p style="font-size: 0.85rem; color: #64748b; margin: 4px 0 0 0;">
-                        Credenciales utilizadas para la autenticación y transmisión masiva e individual de notificaciones.
+                        Configure si el sistema operará con <strong>Servidor Local / Bandeja del Sistema</strong> (sin requerir contraseña de aplicación externa) o mediante un <strong>Servidor SMTP</strong>.
                     </p>
                 </div>
             </div>
             
+            <?php $modoEnvioActual = strtolower(trim($config['smtp']['modo_envio'] ?? 'smtp')); ?>
             <form action="guardar-configuracion-sistema" method="POST">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                 <input type="hidden" name="origen" value="gestor-correos">
+
+                <!-- SELECTOR DE MODO DE OPERACIÓN (SERVIDOR LOCAL VS SMTP) -->
+                <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem;">
+                    <label style="font-size: 0.85rem; font-weight: 800; color: #121a3e; display: block; margin-bottom: 8px;">
+                        <i class="ph-bold ph-plugs-connected" style="color: var(--color-secundario);"></i> Modo de Operación del Motor de Correos
+                    </label>
+                    <select name="smtp_modo_envio" id="select_smtp_modo_envio" onchange="actualizarVisibilidadCamposSmtp(this.value)" class="sa-filter-input" style="width: 100%; font-weight: 700; font-size: 0.9rem;">
+                        <option value="local" <?= $modoEnvioActual === 'local' ? 'selected' : '' ?>>
+                            Modo Servidor Local / Bandeja del Sistema (No requiere cuenta externa ni Contraseña de Aplicación)
+                        </option>
+                        <option value="smtp" <?= $modoEnvioActual !== 'local' ? 'selected' : '' ?>>
+                            Modo Servidor SMTP (Gmail, Office365, Servidor Institucional o Demonio Local por Puerto)
+                        </option>
+                    </select>
+                    <p id="hint_modo_envio" style="font-size: 0.8rem; color: #475569; margin: 8px 0 0 0; line-height: 1.45;">
+                        <?php if ($modoEnvioActual === 'local'): ?>
+                            <strong>Modo Servidor Local Activo:</strong> Todos los correos, PINs de registro, enlaces de activación y notificaciones del sistema se procesan con su plantilla HTML institucional y se entregan instantáneamente en la pestaña <em>Historial de Envíos</em> (con vista previa interactiva), sin depender de credenciales externas.
+                        <?php else: ?>
+                            <strong>Modo Servidor SMTP Activo:</strong> Los correos se transmiten por red hacia el servidor y puerto configurados abajo (además de guardar copia auditable en el <em>Historial de Envíos</em>).
+                        <?php endif; ?>
+                    </p>
+                </div>
                 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
+                <div id="grid_campos_smtp" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem; <?= $modoEnvioActual === 'local' ? 'opacity: 0.75;' : '' ?>">
                     <div>
                         <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Servidor Host (SMTP)</label>
-                        <input type="text" name="smtp_host" value="<?= htmlspecialchars($config['smtp']['host'] ?? '') ?>" placeholder="smtp.gmail.com / smtp.office365.com" class="sa-filter-input" style="width: 100%;">
+                        <input type="text" name="smtp_host" value="<?= htmlspecialchars($config['smtp']['host'] ?? '') ?>" placeholder="smtp.gmail.com / localhost" class="sa-filter-input" style="width: 100%;">
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Puerto (TLS / SSL)</label>
+                        <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Puerto (587 TLS / 465 SSL / 1025 Local)</label>
                         <input type="number" name="smtp_port" value="<?= (int)($config['smtp']['port'] ?? 587) ?>" class="sa-filter-input" style="width: 100%;">
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Usuario Authenticated Email</label>
+                        <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Usuario / Correo Autenticado</label>
                         <input type="email" name="smtp_user" value="<?= htmlspecialchars($config['smtp']['user'] ?? '') ?>" placeholder="ciidi@upttmbi.edu.ve" class="sa-filter-input" style="width: 100%;">
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Contraseña de Aplicación</label>
+                        <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Contraseña SMTP / Aplicación</label>
                         <input type="password" name="smtp_pass" placeholder="Dejar vacío para conservar actual" class="sa-filter-input" style="width: 100%;">
                     </div>
-                    <div style="grid-column: 1 / -1;">
+                    <div>
                         <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Email Remitente Público (Header From)</label>
                         <input type="email" name="smtp_from" value="<?= htmlspecialchars($config['smtp']['from_email'] ?? '') ?>" placeholder="no-reply@upttmbi.edu.ve" class="sa-filter-input" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Nombre Público del Remitente</label>
+                        <input type="text" name="smtp_from_name" value="<?= htmlspecialchars($config['smtp']['from_name'] ?? 'Sistema CIIDI - UPTTMBI') ?>" placeholder="Sistema CIIDI - UPTTMBI" class="sa-filter-input" style="width: 100%;">
                     </div>
                 </div>
 
                 <button type="submit" class="btn" style="background-color: var(--color-secundario) !important; color: #ffffff !important; border:none; padding: 10px 22px; border-radius: 6px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
-                    <i class="ph-bold ph-floppy-disk" style="color: #ffffff !important;"></i> <span style="color: #ffffff !important;">Guardar Credenciales SMTP</span>
+                    <i class="ph-bold ph-floppy-disk" style="color: #ffffff !important;"></i> <span style="color: #ffffff !important;">Guardar Configuración de Correo</span>
                 </button>
             </form>
         </div>
@@ -412,11 +452,12 @@
                     <i class="ph-bold ph-paper-plane-right" style="color: var(--color-terciario);"></i> Diagnóstico & Prueba de Conectividad en Tiempo Real
                 </h4>
                 <p style="font-size: 0.85rem; color: #64748b; margin: 4px 0 0 0;">
-                    Envíe un mensaje instantáneo de prueba para comprobar el apretón de manos SMTP, autenticación y la renderización en bandeja.
+                    Envíe un mensaje instantáneo de prueba para comprobar el motor activo (Servidor Local o SMTP) y la renderización de plantillas.
                 </p>
             </div>
 
             <form action="probar-smtp" method="POST" style="max-width: 650px;">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
                     <div>
                         <label style="font-size: 0.8rem; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">Seleccionar Tipo de Mensaje:</label>
@@ -508,6 +549,7 @@
         ?>
 
         <form action="guardar-layout-correo" method="POST" onsubmit="sincronizarLayoutFinal()">
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                 <div>
                     <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
@@ -619,6 +661,7 @@
                 <div id="editor-tpl-<?= str_replace('.', '-', $key) ?>" class="tpl-editor-panel" style="display: none;">
                     
                     <form action="guardar-plantilla-correo" method="POST">
+                        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                         <input type="hidden" name="template_key" value="<?= htmlspecialchars($key) ?>">
 
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
@@ -1218,11 +1261,66 @@ function alternarModoEditorLayout(modo) {
     }
 }
 
+const mailLogsJS = <?= json_encode(array_values($mailLogs ?? [])) ?>;
+
+function verCorreoHistorial(index) {
+    const item = mailLogsJS[index];
+    if (!item || !item.cuerpo_html) {
+        mostrarAvisoModal('Este registro no dispone de vista previa HTML almacenada.', 'Sin Vista Previa', 'info');
+        return;
+    }
+
+    const iframe = document.getElementById('iframePreviewCorreo');
+    const modal = document.getElementById('modalPreviewCorreo');
+    if (!iframe || !modal) return;
+
+    modal.style.display = 'flex';
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(item.cuerpo_html);
+    doc.close();
+
+    // Permitir que los enlaces reales (activación, recuperación, etc.) se abran en nueva pestaña
+    setTimeout(() => {
+        try {
+            const links = iframe.contentWindow.document.querySelectorAll('a');
+            links.forEach(link => {
+                const href = link.getAttribute('href') || '';
+                if (href && href !== '#' && !href.startsWith('javascript:')) {
+                    link.setAttribute('target', '_blank');
+                    link.setAttribute('rel', 'noopener noreferrer');
+                }
+            });
+        } catch(err){}
+    }, 100);
+}
+
+function actualizarVisibilidadCamposSmtp(modo) {
+    const grid = document.getElementById('grid_campos_smtp');
+    const hint = document.getElementById('hint_modo_envio');
+    if (grid) {
+        grid.style.opacity = (modo === 'local') ? '0.75' : '1';
+    }
+    if (hint) {
+        if (modo === 'local') {
+            hint.innerHTML = '<strong>Modo Servidor Local Activo:</strong> Todos los correos, PINs de registro, enlaces de activación y notificaciones del sistema se procesan con su plantilla HTML institucional y se entregan instantáneamente en la pestaña <em>Historial de Envíos</em> (con vista previa interactiva), sin depender de credenciales externas.';
+        } else {
+            hint.innerHTML = '<strong>Modo Servidor SMTP Activo:</strong> Los correos se transmiten por red hacia el servidor y puerto configurados abajo (además de guardar copia auditable en el <em>Historial de Envíos</em>).';
+        }
+    }
+}
+
 function sincronizarCodigoDesdeWysiwygLayout() {
     const wysiwyg = document.getElementById('wysiwyg-layout');
     const area = document.getElementById('area-html-wrapper');
     if (wysiwyg && area) {
-        area.value = wysiwyg.innerHTML;
+        const currentCode = area.value || '';
+        const bodyMatch = currentCode.match(/(<body[^>]*>)([\s\S]*)(<\/body>)/i);
+        if (bodyMatch) {
+            area.value = currentCode.replace(/(<body[^>]*>)[\s\S]*(<\/body>)/i, `$1\n${wysiwyg.innerHTML}\n$2`);
+        } else {
+            area.value = wysiwyg.innerHTML;
+        }
     }
 }
 
@@ -1230,12 +1328,17 @@ function sincronizarWysiwygDesdeCodigoLayout() {
     const wysiwyg = document.getElementById('wysiwyg-layout');
     const area = document.getElementById('area-html-wrapper');
     if (wysiwyg && area) {
-        wysiwyg.innerHTML = area.value;
+        const currentCode = area.value || '';
+        const bodyMatch = currentCode.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+        wysiwyg.innerHTML = bodyMatch ? bodyMatch[1] : currentCode;
     }
 }
 
 function sincronizarLayoutFinal() {
-    sincronizarCodigoDesdeWysiwygLayout();
+    const wrapCode = document.getElementById('wrapper-code-layout');
+    if (wrapCode && wrapCode.style.display === 'none') {
+        sincronizarCodigoDesdeWysiwygLayout();
+    }
 }
 
 function ejecutarComandoEditorLayout(comando, val = null) {

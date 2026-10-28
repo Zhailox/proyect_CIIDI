@@ -336,11 +336,14 @@ class PerfilController {
         ";
 
         try {
-            MailService::enviarCorreoPersonalizado(
-                $email, 
-                "Verificación de Correo Institucional - CIIDI UPTTMBI", 
-                $cuerpoHtml, 
-                $nombre
+            MailService::enviar(
+                $email,
+                $nombre,
+                "Verificación de Correo Institucional - CIIDI UPTTMBI",
+                $cuerpoHtml,
+                '',
+                false,
+                'Verificación Perfil'
             );
         } catch (Throwable) {
             // No bloquear en entornos locales de prueba sin servidor de correo
@@ -423,13 +426,16 @@ class PerfilController {
             $nombreUsuario = $_SESSION['usuario_nombre'] ?? 'Usuario';
             if (!empty($emailUsuario)) {
                 try {
-                    MailService::enviarCorreoPersonalizado(
+                    MailService::enviar(
                         $emailUsuario,
+                        $nombreUsuario,
                         "Aviso de Seguridad: Contraseña Modificada - CIIDI",
                         "<p>Hola <strong>" . htmlspecialchars($nombreUsuario) . "</strong>,</p>" .
                         "<p>Te informamos que la contraseña de tu cuenta institucional ha sido actualizada exitosamente el día de hoy.</p>" .
                         "<p>Si tú no realizaste este cambio, por favor contacta de inmediato al administrador del sistema.</p>",
-                        $nombreUsuario
+                        '',
+                        false,
+                        'Seguridad Perfil'
                     );
                 } catch (Throwable) {
                     // Continuar sin interrumpir al usuario si el servidor SMTP no está disponible
