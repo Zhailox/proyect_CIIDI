@@ -2266,3 +2266,13 @@ Trace:
 #7 C:\wamp64\www\proyect_CIIDI\public\index.php(49): Kernel->run()
 #8 {main}
 --------------------------------------------------------------------------------
+[2026-10-28 13:30:03] ERROR: SQLSTATE[XX000]: Internal error: 7 ERROR:  tuple concurrently updated en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:400
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(400): PDO->exec('\n              ...')
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(238): Connection::autoHealSchemaIfNeeded(Object(PDO))
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(305): Connection::getInstance(true)
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(73): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(74): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(49): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
