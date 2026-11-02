@@ -122,12 +122,6 @@ $url_moodle = !empty($curso['url_moodle']) ? htmlspecialchars($curso['url_moodle
                         <a href="?ruta=cursos-formulario-google&curso_id=<?= $curso['id'] ?>" style="background: #505984; color: white; padding: 0.9rem 1.8rem; border-radius: 12px; font-weight: 700; text-decoration: none; text-align: center; font-size: 1.05rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem; box-shadow: 0 4px 14px rgba(80, 89, 132, 0.25); transition: all 0.2s;" onmouseover="this.style.background='#3C456A'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='#505984'; this.style.transform='translateY(0)';">
                             <i class="ph-bold ph-google-logo" style="font-size:1.3rem;"></i> Inscribirme (Formulario Google)
                         </a>
-
-                        <?php if (!empty($curso['url_moodle'])): ?>
-                            <a href="<?= $url_moodle ?>" target="_blank" style="background: #121a3e; color: white; padding: 0.9rem 1.6rem; border-radius: 12px; font-weight: 700; text-decoration: none; text-align: center; font-size: 1.05rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem; box-shadow: 0 4px 14px rgba(18, 26, 62, 0.25); transition: transform 0.2s;">
-                                <i class="ph-bold ph-student"></i> Aula Virtual
-                            </a>
-                        <?php endif; ?>
                     <?php else: ?>
                         <button style="background: #E5E7EB; color: #9CA3AF; padding: 0.9rem 1.8rem; border-radius: 12px; font-weight: 700; border: none; font-size: 1.05rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem; cursor: not-allowed;">
                             <i class="ph-bold ph-lock"></i> Inscripciones <?= $est_insc ?>

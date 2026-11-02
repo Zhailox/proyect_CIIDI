@@ -44,14 +44,14 @@
         "api_key": "ciidi_sync_secret_2026",
         "webhook_url": "https:\/\/ciidi.iutetvirtual.org.ve\/api_sync.php",
         "ultimo_sync": {
-            "fecha": "2026-11-02 13:28:08",
+            "fecha": "2026-11-02 13:40:07",
             "ok": true,
             "codigo_http": 200,
             "evento": "curso_editado",
             "mensaje": "Base de datos externa (MYSQL) actualizada por Push (curso_editado).",
             "cursos_enviados": 3,
             "inv_enviados": 7,
-            "version_hash": "84e02fd2a46f9cc0586386f71756205165e06b484acfe79c837fd3f143f40ad0"
+            "version_hash": "88852a0b3f2b45a86101d16cf39e2f534aa0a221e4aae885fadc150850ccc08b"
         }
     },
     "seguridad": {
