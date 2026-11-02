@@ -16,11 +16,22 @@ $es_admin_cursos = !empty($es_admin_cursos)
     || str_contains($rol_usr, 'comit');
 $puede_gestionar_cursos = $es_admin_cursos || ($nivel_usr >= 0 && $nivel_usr <= 2);
 
-// DB stores 'public/uploads/cursos/x.webp' but web root IS public/, so strip 'public/'
+// DB stores 'public/uploads/cursos/x.webp' or 'storage/uploads/cursos/x.webp'; resolve relative to public/
 if (!function_exists('curImgUrl')) {
     function curImgUrl(string $raw): string {
-        if (empty($raw)) return '';
-        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) return $raw;
+        $raw = trim(str_replace('\\', '/', $raw));
+        if ($raw === '') return '';
+        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://') || str_starts_with($raw, 'data:image/')) {
+            return $raw;
+        }
+        $clean = ltrim(preg_replace('#^(public|storage)/#', '', $raw), '/');
+        $rootDir = dirname(__DIR__, 3);
+        if (file_exists($rootDir . '/public/' . $clean)) {
+            return $clean;
+        }
+        if (file_exists($rootDir . '/storage/' . $clean)) {
+            return '../storage/' . $clean;
+        }
         return ltrim(preg_replace('#^public/#', '', $raw), '/');
     }
 }
@@ -184,17 +195,26 @@ if ($f_linea) $url_params .= "&linea=$f_linea";
                         };
                         $lineasCurso = $curso['lineas'] ?? [];
                         $dimsCurso   = $curso['dimensiones'] ?? [];
+                        $videoPreviewCurso = trim((string)($curso['url_video_preview'] ?? ''));
                         $puede_editar_este = $es_admin_cursos || (!empty($usuario_actual['id']) && (int)$curso['id_docente'] === (int)$usuario_actual['id']);
                     ?>
                     <div class="cur-card" style="display: flex; flex-direction: column; background: #fff; border: 1px solid #E2E8F0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.04); transition: transform 0.25s, box-shadow 0.25s;">
-                        <a href="?ruta=cursos-detalle&slug=<?= $slug ?>" style="text-decoration: none; color: inherit;">
-                            <div class="cur-card-img-wrap" style="position: relative; height: 180px; overflow: hidden; background: #0F172A;">
+                        <div class="cur-card-img-wrap" style="position: relative; height: 185px; overflow: hidden; background: #0F172A;">
+                            <a href="?ruta=cursos-detalle&slug=<?= $slug ?>" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
                                 <img src="<?= $img ?>" alt="<?= $titulo ?>" loading="<?= $lazy_attr ?>" onerror="this.src='<?= $placeholder ?>'" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;">
                                 <span class="cur-badge" style="position: absolute; top: 12px; left: 12px; background: rgba(18, 26, 62, 0.85); color: #fff; padding: 4px 10px; border-radius: 50px; font-size: 0.78rem; font-weight: 700; backdrop-filter: blur(4px);">
                                     <i class="ph-fill <?= $icon_mod ?>"></i> <?= $modalidad ?>
                                 </span>
-                            </div>
-                        </a>
+                            </a>
+                            <?php if ($videoPreviewCurso !== ''): ?>
+                                <button type="button"
+                                        onclick="reproducirVideoShowcase(event, <?= (int)$curso['id'] ?>, <?= htmlspecialchars(json_encode($videoPreviewCurso), ENT_QUOTES, 'UTF-8') ?>)"
+                                        style="position: absolute; bottom: 10px; right: 10px; z-index: 6; background: rgba(15, 23, 42, 0.86); color: #ffffff; border: 1.5px solid rgba(255, 255, 255, 0.75); padding: 0.36rem 0.8rem; border-radius: 999px; font-size: 0.76rem; font-weight: 800; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem; backdrop-filter: blur(6px); box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                                    <i class="ph-fill ph-play-circle" style="font-size: 1rem; color: #38bdf8;"></i> Ver Video
+                                </button>
+                                <div id="cur-video-overlay-<?= (int)$curso['id'] ?>" style="display: none; position: absolute; inset: 0; z-index: 15; background: #000;"></div>
+                            <?php endif; ?>
+                        </div>
                         <div class="cur-card-content" style="padding: 1.3rem; display: flex; flex-direction: column; flex: 1;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
                                 <span style="font-size: 0.73rem; font-weight: 800; color: <?= $color_est ?>; background: <?= $color_est ?>15; padding: 0.2rem 0.6rem; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
@@ -292,8 +312,39 @@ if ($f_linea) $url_params .= "&linea=$f_linea";
 </div>
 </div>
 
-<!-- Script animacion canvas del inicio -->
+<!-- Script animacion canvas del inicio y reproductor de video sobrepuesto -->
 <script>
+function reproducirVideoShowcase(ev, idCurso, rawUrl) {
+    if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+    const container = document.getElementById('cur-video-overlay-' + idCurso);
+    if (!container || !rawUrl) return;
+    const url = String(rawUrl).trim();
+    let playerHtml = '';
+    const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (ytMatch && ytMatch[1]) {
+        playerHtml = `<iframe src="https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&rel=0" style="width:100%;height:100%;border:none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+    } else if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(url)) {
+        playerHtml = `<video src="${url}" controls autoplay style="width:100%;height:100%;object-fit:cover;background:#000;"></video>`;
+    } else {
+        playerHtml = `<iframe src="${url}" style="width:100%;height:100%;border:none;" allowfullscreen></iframe>`;
+    }
+    container.innerHTML = `
+        <button type="button" onclick="cerrarVideoShowcase(event, ${idCurso})" style="position:absolute;top:8px;right:8px;z-index:20;background:rgba(15,23,42,0.85);color:#fff;border:1px solid rgba(255,255,255,0.5);border-radius:999px;padding:0.25rem 0.65rem;font-size:0.72rem;font-weight:700;cursor:pointer;">
+            ✕ Cerrar video
+        </button>
+        ${playerHtml}
+    `;
+    container.style.display = 'block';
+}
+
+function cerrarVideoShowcase(ev, idCurso) {
+    if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+    const container = document.getElementById('cur-video-overlay-' + idCurso);
+    if (!container) return;
+    container.innerHTML = '';
+    container.style.display = 'none';
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     const canvas = document.getElementById("landingCanvasBg");
     if(!canvas) return;

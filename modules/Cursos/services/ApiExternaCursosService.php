@@ -61,31 +61,37 @@ class ApiExternaCursosService {
         $relPath = ltrim(str_replace('\\', '/', $raw), '/');
         $urlAbsoluta = rtrim($baseUrl, '/') . '/' . $relPath;
 
-        $dataUri = null;
-        if ($incluirBase64) {
-            $rootPath = defined('BASE_PATH') ? rtrim(BASE_PATH, '/\\') : dirname(__DIR__, 3);
-            $candidatos = [
-                $rootPath . '/' . $relPath,
-                $rootPath . '/public/' . $relPath,
-            ];
-            foreach ($candidatos as $filePath) {
-                if (file_exists($filePath) && is_file($filePath) && filesize($filePath) <= 1572864) {
-                    $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
-                    $mimeMap = [
-                        'webp' => 'image/webp',
-                        'png'  => 'image/png',
-                        'jpg'  => 'image/jpeg',
-                        'jpeg' => 'image/jpeg',
-                        'gif'  => 'image/gif',
-                    ];
-                    $mime = $mimeMap[$ext] ?? 'image/webp';
-                    $bin = @file_get_contents($filePath);
-                    if ($bin !== false) {
-                        $dataUri = 'data:' . $mime . ';base64,' . base64_encode($bin);
-                    }
-                    break;
+        $rootPath = defined('BASE_PATH') ? rtrim(BASE_PATH, '/\\') : dirname(__DIR__, 3);
+        $baseName = basename($relPath);
+        $candidatos = [
+            $rootPath . '/' . $relPath,
+            $rootPath . '/public/' . $relPath,
+            $rootPath . '/public/uploads/cursos/' . $baseName,
+            $rootPath . '/storage/uploads/cursos/' . $baseName,
+            $rootPath . '/public/uploads/perfiles/' . $baseName,
+        ];
+        foreach ($candidatos as $filePath) {
+            if (file_exists($filePath) && is_file($filePath) && filesize($filePath) <= 1572864) {
+                $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+                $mimeMap = [
+                    'webp' => 'image/webp',
+                    'png'  => 'image/png',
+                    'jpg'  => 'image/jpeg',
+                    'jpeg' => 'image/jpeg',
+                    'gif'  => 'image/gif',
+                ];
+                $mime = $mimeMap[$ext] ?? 'image/webp';
+                $bin = @file_get_contents($filePath);
+                if ($bin !== false) {
+                    $dataUri = 'data:' . $mime . ';base64,' . base64_encode($bin);
                 }
+                break;
             }
+        }
+
+        // Evitar enviar URLs 'http://localhost/...' a dominios públicos (evita el aviso de Chrome "quiere acceder a otros servicios y apps en este dispositivo")
+        if (preg_match('#^https?://(localhost|127\.0\.0\.1)#i', $urlAbsoluta)) {
+            $urlAbsoluta = $dataUri ?? $placeholder;
         }
 
         return [
@@ -193,8 +199,9 @@ class ApiExternaCursosService {
                 $fotoDataUri = null;
                 if ($fotoRaw !== '') {
                     $fotoInfo = $this->resolverImagenCurso($fotoRaw, $baseUrl, $incluirBase64);
-                    $fotoUrl = $fotoInfo['url_absoluta'] ?? '';
                     $fotoDataUri = $fotoInfo['data_uri'] ?? null;
+                    $candidateUrl = $fotoInfo['url_absoluta'] ?? '';
+                    $fotoUrl = ($fotoDataUri !== null) ? $fotoDataUri : (preg_match('#^https?://(localhost|127\.0\.0\.1)#i', $candidateUrl) ? '' : $candidateUrl);
                 }
 
                 $orcidRaw = trim((string)($inv['orcid'] ?? ''));
@@ -220,6 +227,7 @@ class ApiExternaCursosService {
                     'orcid_url'             => $orcidUrl,
                     'sitio_web'             => trim((string)($inv['sitio_web'] ?? '')),
                     'grado_academico'       => trim((string)($inv['grado_academico'] ?? '')),
+                    'biografia'             => trim((string)($inv['biografia'] ?? '')),
                     'total_investigaciones' => count($proyectos),
                     'lineas'                => array_map(fn($l) => [
                         'id'             => (int)$l['id'],
@@ -244,9 +252,9 @@ class ApiExternaCursosService {
         $hashSource = json_encode([
             'lineas'         => $lineasFormateadas,
             'cursos_count'   => count($cursosFormateados),
-            'cursos_ids'     => array_map(fn($c) => [$c['id'], $c['titulo'], $c['estado_inscripcion'], $c['url_formulario_google'], $c['descripcion']], $cursosFormateados),
+            'cursos_ids'     => array_map(fn($c) => [$c['id'], $c['titulo'], $c['estado_inscripcion'], $c['url_formulario_google'], $c['url_video_preview'], $c['descripcion']], $cursosFormateados),
             'inv_count'      => count($investigadoresFormateados),
-            'inv_ids'        => array_map(fn($i) => [$i['id'], $i['nombre_completo'], $i['email'], $i['orcid'], $i['sitio_web'], $i['grado_academico'], $i['foto_perfil'], $i['total_investigaciones'], count($i['lineas'])], $investigadoresFormateados),
+            'inv_ids'        => array_map(fn($i) => [$i['id'], $i['nombre_completo'], $i['email'], $i['orcid'], $i['sitio_web'], $i['grado_academico'], $i['biografia'], $i['foto_perfil'], $i['total_investigaciones'], count($i['lineas'])], $investigadoresFormateados),
             'google_form'    => $cfgGoogle,
         ], JSON_UNESCAPED_UNICODE);
         $versionHash = hash('sha256', (string)$hashSource);
@@ -311,6 +319,21 @@ class ApiExternaCursosService {
         $payload = $this->construirPayloadCompleto('todo', true);
         $payload['evento_origen'] = $evento;
         $jsonBody = json_encode($payload, JSON_UNESCAPED_UNICODE);
+
+        // Si existe la carpeta local PORTAL_EXTERNO_MYSQL en el mismo servidor (WAMP), actualizarla de inmediato
+        $localSyncDone = false;
+        $localPortalDir = dirname(__DIR__, 4) . '/PORTAL_EXTERNO_MYSQL';
+        if (is_dir($localPortalDir) && file_exists($localPortalDir . '/includes/SyncEngine.php') && file_exists($localPortalDir . '/config.php')) {
+            try {
+                require_once $localPortalDir . '/includes/SyncEngine.php';
+                $localCfg = require $localPortalDir . '/config.php';
+                $localEngine = new \SyncEngine($localCfg);
+                $localEngine->guardarPayload($payload, 'local_push_' . $evento);
+                $localSyncDone = true;
+            } catch (\Throwable $e) {
+                error_log('Aviso sync portal local: ' . $e->getMessage());
+            }
+        }
 
         $signature = hash_hmac('sha256', (string)$jsonBody, $key);
         $headers = [
@@ -381,11 +404,18 @@ class ApiExternaCursosService {
         }
 
         $decoded = @json_decode($responseBody, true);
-        $ok = ($httpCode >= 200 && $httpCode < 300) && (is_array($decoded) ? (($decoded['status'] ?? '') === 'success') : true);
+        $remoteOk = ($httpCode >= 200 && $httpCode < 300) && (is_array($decoded) ? (($decoded['status'] ?? '') === 'success') : true);
+        $ok = $remoteOk || $localSyncDone;
 
-        $detalleMensaje = $ok
-            ? ($decoded['message'] ?? 'Sincronización completada exitosamente con el servidor externo.')
-            : ($errorMsg !== '' ? "Error de conexión: {$errorMsg}" : ($decoded['message'] ?? "Respuesta HTTP {$httpCode} del servidor externo."));
+        if ($remoteOk && $localSyncDone) {
+            $detalleMensaje = 'Portal Externo Local y Subdominio Remoto sincronizados correctamente.';
+        } elseif ($localSyncDone) {
+            $detalleMensaje = 'Portal Externo Local (PORTAL_EXTERNO_MYSQL) sincronizado al instante.';
+        } else {
+            $detalleMensaje = $remoteOk
+                ? ($decoded['message'] ?? 'Sincronización completada exitosamente con el servidor externo.')
+                : ($errorMsg !== '' ? "Error de conexión: {$errorMsg}" : ($decoded['message'] ?? "Respuesta HTTP {$httpCode} del servidor externo."));
+        }
 
         // Registrar estado del último sync en config_cursos.json
         $this->cfg['api_externa']['ultimo_sync'] = [

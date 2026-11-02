@@ -213,9 +213,25 @@ $totalInvestigadores = count($investigadores ?? []);
                     </div>
                 </div>
 
-                <!-- Cuerpo de la Tarjeta: Líneas e Investigaciones -->
-                <div style="padding: 1.5rem 1.8rem; flex: 1; display: flex; flex-direction: column; gap: 1.4rem;">
+                <!-- Cuerpo de la Tarjeta: Acerca de mí, Líneas e Investigaciones -->
+                <?php $biografiaInv = trim((string)($inv['biografia'] ?? '')); ?>
+                <div style="padding: 1.4rem 1.6rem; flex: 1; display: flex; flex-direction: column; gap: 1.25rem;">
                     
+                    <?php if ($biografiaInv !== ''): ?>
+                    <!-- Acerca de mí con tamaño predeterminado (3 líneas) y lectura completa en el modal -->
+                    <div onclick='abrirModalInvestigador(<?= htmlspecialchars(json_encode($inv, JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') ?>)' title="Clic para leer la reseña completa en la ficha del investigador" style="background: #f8fafc; border: 1px solid rgba(80, 89, 132, 0.16); border-left: 3.5px solid #505984; border-radius: 10px; padding: 0.75rem 0.95rem; cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='#f1f5f9';" onmouseout="this.style.background='#f8fafc';">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.3rem;">
+                            <span style="font-size: 0.73rem; font-weight: 800; text-transform: uppercase; color: #505984; letter-spacing: 0.4px; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                <i class="ph-bold ph-user-focus"></i> Acerca de mí
+                            </span>
+                            <span style="font-size: 0.71rem; font-weight: 700; color: #505984; opacity: 0.85;">Ver más →</span>
+                        </div>
+                        <p style="margin: 0; font-size: 0.81rem; color: #334155; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; height: 3.65rem;">
+                            <?= htmlspecialchars($biografiaInv) ?>
+                        </p>
+                    </div>
+                    <?php endif; ?>
+
                     <!-- Líneas y Dimensiones Afiliadas -->
                     <div>
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem;">
@@ -391,12 +407,13 @@ function abrirPerfilInvestigador(id) {
     const orcidUrlStr = orcidIdStr ? ('https://orcid.org/' + orcidIdStr) : '';
     const sitioWebStr = String(inv.sitio_web || '').trim();
     const gradoAcadStr = String(inv.grado_academico || '').trim();
+    const biografiaStr = String(inv.biografia || '').trim();
 
     let linksAcadHtml = '';
     if (orcidUrlStr || sitioWebStr) {
         linksAcadHtml = `<div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:0.65rem;">` +
-            (orcidUrlStr ? `<a href="${escPerfil(orcidUrlStr)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:0.4rem; background:rgba(255,255,255,0.95); color:#1e293b; border:1px solid rgba(255,255,255,0.4); padding:0.28rem 0.75rem; border-radius:999px; font-size:0.78rem; font-weight:700; text-decoration:none;"><svg width="17" height="17" viewBox="0 0 256 256" aria-hidden="true"><circle cx="128" cy="128" r="128" fill="#A6CE39"/><path fill="#FFF" d="M86.3 186.2H70.9V79.1h15.4v107.1zM78.6 47.2c-5.7 0-10.3 4.6-10.3 10.3 0 5.7 4.6 10.3 10.3 10.3s10.3-4.6 10.3-10.3c0-5.7-4.6-10.3-10.3-10.3zm30.3 31.9h41.6c39.6 0 57 28.3 57 53.6 0 27.5-21.5 53.6-56.8 53.6h-41.8V79.1zm15.4 93.3h24.5c34.9 0 42.9-26.5 42.9-39.7C191.7 111.2 178.9 93 148 93h-23.7v79.4z"/></svg> ORCID: ${escPerfil(orcidIdStr)}</a>` : '') +
-            (sitioWebStr ? `<a href="${escPerfil(sitioWebStr)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:0.4rem; background:rgba(255,255,255,0.95); color:#505984; border:1px solid rgba(255,255,255,0.4); padding:0.28rem 0.75rem; border-radius:999px; font-size:0.78rem; font-weight:700; text-decoration:none;"><svg width="17" height="17" viewBox="0 0 256 256" aria-hidden="true"><circle cx="128" cy="128" r="128" fill="#505984"/><circle cx="128" cy="128" r="78" fill="none" stroke="#FFF" stroke-width="14"/><ellipse cx="128" cy="128" rx="38" ry="78" fill="none" stroke="#FFF" stroke-width="13"/><line x1="50" y1="128" x2="206" y2="128" stroke="#FFF" stroke-width="13"/></svg> Sitio Personal: ${escPerfil(sitioWebStr.replace(/^https?:\/\//i, '').replace(/\/$/, ''))}</a>` : '') +
+            (orcidUrlStr ? `<a href="${escPerfil(orcidUrlStr)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:0.4rem; background:rgba(255,255,255,0.95); color:#1e293b; border:1px solid rgba(255,255,255,0.4); padding:0.28rem 0.75rem; border-radius:999px; font-size:0.78rem; font-weight:700; text-decoration:none;"><svg width="17" height="17" viewBox="0 0 256 256" aria-hidden="true"><circle cx="128" cy="128" r="128" fill="#A6CE39"/><path fill="#FFF" d="M86.3 186.2H70.9V79.1h15.4v107.1zM78.6 47.2c-5.7 0-10.3 4.6-10.3 10.3 0 5.7 4.6 10.3 10.3 10.3s10.3-4.6 10.3-10.3c0-5.7-4.6-10.3-10.3-10.3zm30.3 31.9h41.6c39.6 0 57 28.3 57 53.6 0 27.5-21.5 53.6-56.8 53.6h-41.8V79.1zm15.4 93.3h24.5c34.9 0 42.9-26.5 42.9-39.7C191.7 111.2 178.9 93 148 93h-23.7v79.4z"/></svg> ${escPerfil(orcidIdStr)}</a>` : '') +
+            (sitioWebStr ? `<a href="${escPerfil(sitioWebStr)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:0.4rem; background:rgba(255,255,255,0.95); color:#505984; border:1px solid rgba(255,255,255,0.4); padding:0.28rem 0.75rem; border-radius:999px; font-size:0.78rem; font-weight:700; text-decoration:none;"><svg width="17" height="17" viewBox="0 0 256 256" aria-hidden="true"><circle cx="128" cy="128" r="128" fill="#505984"/><circle cx="128" cy="128" r="78" fill="none" stroke="#FFF" stroke-width="14"/><ellipse cx="128" cy="128" rx="38" ry="78" fill="none" stroke="#FFF" stroke-width="13"/><line x1="50" y1="128" x2="206" y2="128" stroke="#FFF" stroke-width="13"/></svg> Sitio Personal</a>` : '') +
             `</div>`;
     }
 
@@ -503,6 +520,14 @@ function abrirPerfilInvestigador(id) {
 
         <!-- Cuerpo de la ficha pública -->
         <div style="padding:1.8rem 2rem; display:flex; flex-direction:column; gap:1.5rem;">
+            ${biografiaStr ? `
+            <div style="background:#f8fafc; border:1px solid rgba(80,89,132,0.18); border-left:4px solid #505984; border-radius:12px; padding:1rem 1.2rem;">
+                <h4 style="font-size:0.8rem; font-weight:800; text-transform:uppercase; color:#505984; letter-spacing:0.5px; margin:0 0 0.45rem 0; display:flex; align-items:center; gap:0.4rem;">
+                    <i class="ph-bold ph-user-focus"></i> Acerca de mí
+                </h4>
+                <p style="margin:0; font-size:0.88rem; color:#334155; line-height:1.6;">${escPerfil(biografiaStr)}</p>
+            </div>
+            ` : ''}
             <div>
                 <h4 style="font-size:0.82rem; font-weight:800; text-transform:uppercase; color:#505984; letter-spacing:0.5px; margin:0 0 0.6rem 0; display:flex; align-items:center; gap:0.4rem;">
                     <i class="ph-bold ph-tree-structure"></i> Líneas de Investigación Adscritas (${lineas.length})

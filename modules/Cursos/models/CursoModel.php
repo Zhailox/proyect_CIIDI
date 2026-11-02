@@ -46,7 +46,7 @@ class CursoModel {
                 'mime_permitidos'       => ['image/jpeg','image/png','image/gif','image/webp'],
                 'convertir_a_webp'      => true,
                 'lazy_load'             => true,
-                'carpeta_uploads'       => 'storage/uploads/cursos/',
+                'carpeta_uploads'       => 'public/uploads/cursos/',
                 'placeholder_url'       => 'https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=600',
             ],
             'moodle' => [

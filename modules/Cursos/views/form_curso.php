@@ -13,11 +13,22 @@ $f_id      = $curso['id']       ?? '';
 $f_titulo  = htmlspecialchars($curso['titulo']          ?? '');
 $f_desc    = htmlspecialchars($curso['descripcion']     ?? '');
 $f_img_raw = $curso['imagen_portada'] ?? '';
-// DB stores 'public/uploads/cursos/x.webp' but web root IS public/, so strip 'public/'
+// DB stores 'public/uploads/cursos/x.webp' or 'storage/uploads/cursos/x.webp'; resolve relative to public/
 if (!function_exists('curImgUrl')) {
     function curImgUrl(string $raw): string {
-        if (empty($raw)) return '';
-        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) return $raw;
+        $raw = trim(str_replace('\\', '/', $raw));
+        if ($raw === '') return '';
+        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://') || str_starts_with($raw, 'data:image/')) {
+            return $raw;
+        }
+        $clean = ltrim(preg_replace('#^(public|storage)/#', '', $raw), '/');
+        $rootDir = dirname(__DIR__, 3);
+        if (file_exists($rootDir . '/public/' . $clean)) {
+            return $clean;
+        }
+        if (file_exists($rootDir . '/storage/' . $clean)) {
+            return '../storage/' . $clean;
+        }
         return ltrim(preg_replace('#^public/#', '', $raw), '/');
     }
 }
@@ -261,11 +272,12 @@ $selectedDims     = $curso['dimensiones_ids'] ?? [];
                 </div>
 
                 <!-- Panel: URL de imagen -->
+                <?php $f_img_url_only = (str_starts_with($f_img_raw ?? '', 'http://') || str_starts_with($f_img_raw ?? '', 'https://')) ? $f_img_raw : ''; ?>
                 <div id="panel-url" style="display:none; margin-bottom:1rem;">
                     <label style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">URL de la imagen <span style="color:var(--cur-muted); font-weight:400; font-size:0.85rem;">(pega el enlace directo a la imagen)</span></label>
                     <div style="position:relative;">
                         <i class="ph-bold ph-link" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
-                        <input type="url" name="imagen_portada_url" id="imagen_url" value="<?= htmlspecialchars($f_img_raw ?? '') ?>" placeholder="https://ejemplo.com/imagen.jpg"
+                        <input type="url" name="imagen_portada_url" id="imagen_url" value="<?= htmlspecialchars($f_img_url_only) ?>" placeholder="https://ejemplo.com/imagen.jpg"
                             style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1rem; outline:none; box-sizing:border-box;"
                             onfocus="this.style.borderColor='var(--cur-primary)';" onblur="this.style.borderColor='var(--cur-border)';"
                             oninput="previsualizarUrl(this.value)">

@@ -25,7 +25,7 @@
         ],
         "convertir_a_webp": true,
         "lazy_load": true,
-        "carpeta_uploads": "storage\/uploads\/cursos\/",
+        "carpeta_uploads": "public\/uploads\/cursos\/",
         "placeholder_url": "https:\/\/images.unsplash.com\/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=600"
     },
     "moodle": {
@@ -44,14 +44,14 @@
         "api_key": "ciidi_sync_secret_2026",
         "webhook_url": "https:\/\/ciidi.iutetvirtual.org.ve\/api_sync.php",
         "ultimo_sync": {
-            "fecha": "2026-11-02 13:40:07",
+            "fecha": "2026-11-02 20:32:51",
             "ok": true,
             "codigo_http": 200,
-            "evento": "curso_editado",
-            "mensaje": "Base de datos externa (MYSQL) actualizada por Push (curso_editado).",
+            "evento": "fix_localhost_urls",
+            "mensaje": "Portal Externo Local y Subdominio Remoto sincronizados correctamente.",
             "cursos_enviados": 3,
             "inv_enviados": 7,
-            "version_hash": "88852a0b3f2b45a86101d16cf39e2f534aa0a221e4aae885fadc150850ccc08b"
+            "version_hash": "3302cc4c3503be314adb7354942156d16b2a4a6b2d419532a118a68828077ed2"
         }
     },
     "seguridad": {

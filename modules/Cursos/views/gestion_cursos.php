@@ -17,11 +17,22 @@ $docentes  = $docentes ?? [];
 
 $placeholder = htmlspecialchars($config_vista['imagenes']['placeholder_url'] ?? '', ENT_QUOTES, 'UTF-8');
 
-// DB stores 'public/uploads/cursos/x.webp' but web root IS public/, so strip 'public/'
+// DB stores 'public/uploads/cursos/x.webp' or 'storage/uploads/cursos/x.webp'; resolve relative to public/
 if (!function_exists('curImgUrl')) {
     function curImgUrl(string $raw): string {
-        if (empty($raw)) return '';
-        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) return $raw;
+        $raw = trim(str_replace('\\', '/', $raw));
+        if ($raw === '') return '';
+        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://') || str_starts_with($raw, 'data:image/')) {
+            return $raw;
+        }
+        $clean = ltrim(preg_replace('#^(public|storage)/#', '', $raw), '/');
+        $rootDir = dirname(__DIR__, 3);
+        if (file_exists($rootDir . '/public/' . $clean)) {
+            return $clean;
+        }
+        if (file_exists($rootDir . '/storage/' . $clean)) {
+            return '../storage/' . $clean;
+        }
         return ltrim(preg_replace('#^public/#', '', $raw), '/');
     }
 }
@@ -59,6 +70,12 @@ $total_paginas = (int)$pag['total_paginas'];
                 <i class="ph-bold ph-eye"></i> Ver Catálogo
             </a>
             <?php if ($es_admin_cursos): ?>
+            <a href="/proyect_CIIDI/PORTAL_EXTERNO_MYSQL/" target="_blank" style="background:white; color:#0284C7; border:1px solid #BAE6FD; border-radius:50px; padding: 0.75rem 1.3rem; font-size:0.95rem; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:0.45rem;" title="Abrir el Portal Externo en Localhost">
+                <i class="ph-bold ph-arrow-square-out"></i> Portal Externo Local
+            </a>
+            <button type="button" id="btn-quick-sync-gestion" onclick="sincronizarPortalDesdeGestion()" style="background:#ECFDF5; color:#059669; border:1px solid #A7F3D0; border-radius:50px; padding: 0.75rem 1.3rem; font-size:0.95rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:0.45rem; transition:all 0.2s;" title="Enviar cursos e investigadores al Portal Externo MySQL">
+                <i class="ph-bold ph-arrows-clockwise"></i> Sincronizar Portal
+            </button>
             <a href="?ruta=cursos-config" style="background:white; color:#1E293B; border:1px solid #CBD5E1; border-radius:50px; padding: 0.75rem 1.3rem; font-size:0.95rem; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:0.45rem;">
                 <i class="ph-bold ph-sliders"></i> Configuración
             </a>
@@ -223,6 +240,39 @@ function cerrarModal() {
 document.getElementById('modal-eliminar').addEventListener('click', function(e) {
     if (e.target === this) cerrarModal();
 });
+
+function sincronizarPortalDesdeGestion() {
+    const btn = document.getElementById('btn-quick-sync-gestion');
+    if (!btn) return;
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph-bold ph-spinner ph-spin"></i> Sincronizando...';
+
+    const fd = new FormData();
+    fd.append('ajax', '1');
+
+    fetch('?ruta=cursos-sincronizar-externo', {
+        method: 'POST',
+        body: fd,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        if (data && data.ok) {
+            btn.innerHTML = '<i class="ph-bold ph-check-circle"></i> ¡Sincronizado (' + data.cursos_enviados + ' cursos)!';
+            setTimeout(() => { btn.innerHTML = originalHtml; }, 3500);
+        } else {
+            btn.innerHTML = originalHtml;
+            alert((data && data.mensaje) ? data.mensaje : 'No se pudo conectar con el servidor externo. Revisa la URL en Configuración.');
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+        alert('Error de red al sincronizar: ' + err.message);
+    });
+}
 </script>
 
 <!-- Modal de Éxito -->

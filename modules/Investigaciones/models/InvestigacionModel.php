@@ -549,6 +549,7 @@ class InvestigacionModel {
             $this->db->exec("ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS orcid VARCHAR(150)");
             $this->db->exec("ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS sitio_web VARCHAR(255)");
             $this->db->exec("ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS grado_academico VARCHAR(255)");
+            $this->db->exec("ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS biografia TEXT");
         } catch (\Throwable $e) {}
 
         $where = "
@@ -600,6 +601,7 @@ class InvestigacionModel {
                 u.orcid,
                 u.sitio_web,
                 u.grado_academico,
+                u.biografia,
                 r.nombre as rol_nombre
             FROM public.usuarios u
             INNER JOIN public.roles r ON u.id_rol = r.id

@@ -27,12 +27,22 @@ $vpreview   = $curso['url_video_preview'] ?? '';
 
 $placeholder = htmlspecialchars($config_vista['imagenes']['placeholder_url'] ?? '', ENT_QUOTES, 'UTF-8');
 $img_raw = $curso['imagen_portada'] ?? '';
-// DB stores 'public/uploads/cursos/x.webp' but web root IS public/, so strip 'public/'
-// External URLs (http/https) are left untouched.
+// DB stores 'public/uploads/cursos/x.webp' or 'storage/uploads/cursos/x.webp'; resolve relative to public/
 if (!function_exists('curImgUrl')) {
     function curImgUrl(string $raw): string {
-        if (empty($raw)) return '';
-        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) return $raw;
+        $raw = trim(str_replace('\\', '/', $raw));
+        if ($raw === '') return '';
+        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://') || str_starts_with($raw, 'data:image/')) {
+            return $raw;
+        }
+        $clean = ltrim(preg_replace('#^(public|storage)/#', '', $raw), '/');
+        $rootDir = dirname(__DIR__, 3);
+        if (file_exists($rootDir . '/public/' . $clean)) {
+            return $clean;
+        }
+        if (file_exists($rootDir . '/storage/' . $clean)) {
+            return '../storage/' . $clean;
+        }
         return ltrim(preg_replace('#^public/#', '', $raw), '/');
     }
 }
@@ -57,8 +67,16 @@ $url_moodle = !empty($curso['url_moodle']) ? htmlspecialchars($curso['url_moodle
 
     <div class="cur-detail-hero" style="display: flex; gap: 3rem; background: #fff; border-radius: 24px; padding: 3rem; box-shadow: 0 20px 40px rgba(0,0,0,0.04); margin-bottom: 3rem; flex-wrap: wrap;">
         
-        <div style="flex: 1; min-width: 300px;">
-            <img src="<?= $img ?>" alt="<?= $titulo ?>" style="width: 100%; border-radius: 16px; object-fit: cover; aspect-ratio: 4/3; box-shadow: 0 10px 20px rgba(0,0,0,0.08);" onerror="this.src='<?= $placeholder ?>'">
+        <div style="flex: 1; min-width: 300px; position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.08); aspect-ratio: 4/3; background: #0f172a;">
+            <img src="<?= $img ?>" alt="<?= $titulo ?>" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='<?= $placeholder ?>'">
+            <?php if (!empty($vpreview)): ?>
+                <button type="button"
+                        onclick="reproducirVideoDetalleCurso(<?= htmlspecialchars(json_encode($vpreview), ENT_QUOTES, 'UTF-8') ?>)"
+                        style="position: absolute; bottom: 14px; right: 14px; z-index: 6; background: rgba(15, 23, 42, 0.88); color: #ffffff; border: 1.5px solid rgba(255, 255, 255, 0.8); padding: 0.5rem 1.05rem; border-radius: 999px; font-size: 0.85rem; font-weight: 800; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 0.45rem; backdrop-filter: blur(6px); box-shadow: 0 6px 18px rgba(0,0,0,0.35);">
+                    <i class="ph-fill ph-play-circle" style="font-size: 1.15rem; color: #38bdf8;"></i> Ver Video del Curso
+                </button>
+                <div id="detalle-curso-video-overlay" style="display: none; position: absolute; inset: 0; z-index: 15; background: #000;"></div>
+            <?php endif; ?>
         </div>
         
         <div class="cur-detail-info" style="flex: 1.5; min-width: 350px; display: flex; flex-direction: column; justify-content: center;">
@@ -158,3 +176,33 @@ $url_moodle = !empty($curso['url_moodle']) ? htmlspecialchars($curso['url_moodle
         <?php endif; ?>
     </div>
 </div>
+
+<script>
+function reproducirVideoDetalleCurso(rawUrl) {
+    const container = document.getElementById('detalle-curso-video-overlay');
+    if (!container || !rawUrl) return;
+    const url = String(rawUrl).trim();
+    let playerHtml = '';
+    const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (ytMatch && ytMatch[1]) {
+        playerHtml = `<iframe src="https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&rel=0" style="width:100%;height:100%;border:none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+    } else if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(url)) {
+        playerHtml = `<video src="${url}" controls autoplay style="width:100%;height:100%;object-fit:cover;background:#000;"></video>`;
+    } else {
+        playerHtml = `<iframe src="${url}" style="width:100%;height:100%;border:none;" allowfullscreen></iframe>`;
+    }
+    container.innerHTML = `
+        <button type="button" onclick="cerrarVideoDetalleCurso()" style="position:absolute;top:10px;right:10px;z-index:20;background:rgba(15,23,42,0.88);color:#fff;border:1px solid rgba(255,255,255,0.5);border-radius:999px;padding:0.3rem 0.75rem;font-size:0.76rem;font-weight:700;cursor:pointer;">
+            ✕ Cerrar video
+        </button>
+        ${playerHtml}
+    `;
+    container.style.display = 'block';
+}
+function cerrarVideoDetalleCurso() {
+    const container = document.getElementById('detalle-curso-video-overlay');
+    if (!container) return;
+    container.innerHTML = '';
+    container.style.display = 'none';
+}
+</script>
