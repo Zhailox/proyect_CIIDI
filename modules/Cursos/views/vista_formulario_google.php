@@ -3,19 +3,41 @@
 // Vista dedicada y separada para el Formulario de Google de Cursos
 $curso        = $curso ?? null;
 $cursos       = $cursos ?? [];
-$id_curso     = $id_curso ?? ($curso['id'] ?? 0);
-$url_form     = $url_form ?? ($config_vista['formulario_google']['url_default'] ?? '');
+if (!$curso && !empty($cursos)) {
+    $curso = $cursos[0];
+}
+$id_curso     = $id_curso ?: ($curso['id'] ?? 0);
+$url_form     = !empty($curso['url_formulario_google'])
+    ? $curso['url_formulario_google']
+    : ($url_form ?? ($config_vista['formulario_google']['url_default'] ?? ''));
 $modo         = $modo ?? ($config_vista['formulario_google']['modo'] ?? 'embebido');
-$titulo_form  = $titulo_form ?? ($config_vista['formulario_google']['titulo'] ?? 'Formulario Oficial de Inscripción');
+$titulo_form  = $curso
+    ? ('Inscripción al Curso: ' . $curso['titulo'])
+    : ($titulo_form ?? 'Inscripción Oficial a Cursos CIIDI');
 
-// Asegurar formato embebible y limpio para Google Forms si es URL estándar
-$url_embed = $url_form;
-if (strpos($url_embed, 'docs.google.com/forms') !== false) {
-    // Si viene con /edit o con parámetros como ?usp=..., normalizar a /viewform
-    $base_form = preg_replace('/(\/viewform|\/edit).*$/', '/viewform', $url_embed);
-    $url_embed = $base_form . '?embedded=true';
-    if (strpos($url_form, 'usp=') !== false || strpos($url_form, '/edit') !== false) {
-        $url_form = $base_form;
+// Si el curso usa su propio Google Form externo distinto del genérico, embeberlo;
+// de lo contrario usar el formulario Google específico del curso con el nombre del curso integrado.
+$esFormGenerico = empty($url_form) || strpos($url_form, '1FAIpQLSean-NUF1PEU6ci8MiNIQp13OewWCofp7O7V3MV8k_CA1CHNQ') !== false;
+if ($curso && $esFormGenerico) {
+    $url_embed = 'public/google_form_curso.php?' . http_build_query([
+        'curso_id'  => (int)($curso['id'] ?? 1),
+        'titulo'    => (string)($curso['titulo'] ?? ''),
+        'docente'   => (string)($curso['nombre_docente'] ?? 'Docente Asignado'),
+        'modalidad' => (string)($curso['modalidad'] ?? 'Virtual'),
+        'duracion'  => (string)($curso['duracion'] ?? '40 horas'),
+        'nivel'     => (string)($curso['nivel'] ?? 'Básico'),
+    ]);
+    $url_form = $url_embed;
+} else {
+    $url_embed = $url_form;
+    if (strpos($url_embed, 'docs.google.com/forms') !== false) {
+        $parts = explode('?', $url_embed, 2);
+        $base_form = preg_replace('/(\/viewform|\/edit).*$/', '/viewform', $parts[0]);
+        $queryStr = $parts[1] ?? '';
+        parse_str($queryStr, $qParams);
+        unset($qParams['usp']);
+        $qParams['embedded'] = 'true';
+        $url_embed = $base_form . '?' . http_build_query($qParams);
     }
 }
 ?>
@@ -102,10 +124,9 @@ if (strpos($url_embed, 'docs.google.com/forms') !== false) {
             <?php if (!empty($cursos)): ?>
             <div style="min-width: 260px;">
                 <label for="selector_curso" style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 0.3rem;">
-                    Cambiar de curso:
+                    Seleccionar curso a inscribir:
                 </label>
-                <select id="selector_curso" onchange="if(this.value){ window.location.href='?ruta=cursos-formulario-google&curso_id='+this.value; }else{ window.location.href='?ruta=cursos-formulario-google'; }" style="width: 100%; padding: 0.6rem 0.8rem; border-radius: 8px; border: 1px solid #CBD5E1; font-size: 0.88rem; outline: none; background: #F8FAFC;">
-                    <option value="">-- General / Sin especificar --</option>
+                <select id="selector_curso" onchange="if(this.value){ window.location.href='?ruta=cursos-formulario-google&curso_id='+this.value; }" style="width: 100%; padding: 0.6rem 0.8rem; border-radius: 8px; border: 1px solid #CBD5E1; font-size: 0.88rem; outline: none; background: #F8FAFC; font-weight: 600;">
                     <?php foreach ($cursos as $c): ?>
                         <option value="<?= $c['id'] ?>" <?= ($id_curso == $c['id']) ? 'selected' : '' ?>>
                             <?= htmlspecialchars($c['titulo']) ?>

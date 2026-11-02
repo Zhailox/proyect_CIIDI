@@ -159,7 +159,7 @@ class AdminUsuarioModel {
         $nombreArchivado = '[Archivado] ' . $usuario['nombre_completo'];
         $hashInvalido    = password_hash('DISABLED_ACCOUNT_' . bin2hex(random_bytes(16)), PASSWORD_BCRYPT);
 
-        $sql = "UPDATE usuarios SET cedula = ?, email = ?, nombre_completo = ?, contrasena = ?, activo = false WHERE id = ?";
+        $sql = "UPDATE usuarios SET cedula = ?, email = ?, nombre_completo = ?, contrasena = ?, id_rol = NULL, activo = false WHERE id = ?";
         $stmtUpdate = $db->prepare($sql);
         return $stmtUpdate->execute([$cedulaArchivada, $emailArchivado, $nombreArchivado, $hashInvalido, $id]);
     }

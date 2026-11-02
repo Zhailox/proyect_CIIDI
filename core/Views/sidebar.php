@@ -126,8 +126,14 @@ $sidebarRenderItem = function(array $item, bool $anidado = false) use ($ruta, $s
     <?php
 };
 ?>
-<aside class="sidebar">
-  <h2 class="sidebar-title">Navegación Global</h2>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileSidebar()"></div>
+<aside class="sidebar" id="appSidebar">
+  <div class="sidebar-header-row">
+    <h2 class="sidebar-title">Navegación Global</h2>
+    <button type="button" class="sidebar-close-btn" onclick="closeMobileSidebar()" aria-label="Cerrar menú" title="Cerrar menú">
+      <i class="ph-bold ph-x"></i>
+    </button>
+  </div>
   <nav class="nav-menu">
     
     <a href="inicio" class="nav-item <?php echo ($ruta == 'inicio') ? 'active' : ''; ?>">
@@ -192,6 +198,25 @@ function toggleSidebarParent(ev) {
 
     const link = parentContainer.querySelector(':scope > .nav-grupo-link');
     if (link) link.setAttribute('aria-expanded', parentContainer.classList.contains('open') ? 'true' : 'false');
+}
+
+function toggleMobileSidebar() {
+    const sidebar = document.getElementById('appSidebar') || document.querySelector('.sidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    if (!sidebar) return;
+    const isOpen = sidebar.classList.toggle('mobile-open');
+    if (backdrop) {
+        backdrop.classList.toggle('active', isOpen);
+    }
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+
+function closeMobileSidebar() {
+    const sidebar = document.getElementById('appSidebar') || document.querySelector('.sidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    if (sidebar) sidebar.classList.remove('mobile-open');
+    if (backdrop) backdrop.classList.remove('active');
+    document.body.style.overflow = '';
 }
 
 // Macro Módulos: se ocultan si todos sus módulos hijos quedan ocultos

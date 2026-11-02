@@ -312,8 +312,120 @@ class PerfilController {
             }
         }
 
+        // 4. ACTUALIZACIÓN DE FOTO DE PERFIL, ORCID, SITIO PERSONAL Y GRADO ACADÉMICO
+        $fotoActual = trim((string)($datosActuales['foto_perfil'] ?? ''));
+        $nuevaFoto = $fotoActual;
+
+        if (!empty($_FILES['foto_perfil_file']['name']) && (int)($_FILES['foto_perfil_file']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
+            $tmpFile = $_FILES['foto_perfil_file']['tmp_name'];
+            $fileSize = (int)($_FILES['foto_perfil_file']['size'] ?? 0);
+            $mime = @mime_content_type($tmpFile) ?: '';
+            $allowedMimes = [
+                'image/jpeg' => 'jpg',
+                'image/png'  => 'png',
+                'image/webp' => 'webp',
+                'image/gif'  => 'gif',
+            ];
+            if (!isset($allowedMimes[$mime])) {
+                $_SESSION['perfil_error'] = "El archivo de foto de perfil debe ser una imagen válida (.jpg, .png, .webp o .gif).";
+                $_SESSION['perfil_active_tab'] = 'editar';
+                header("Location: perfil");
+                exit;
+            }
+            if ($fileSize > 5 * 1024 * 1024) {
+                $_SESSION['perfil_error'] = "La foto de perfil no debe superar los 5 MB.";
+                $_SESSION['perfil_active_tab'] = 'editar';
+                header("Location: perfil");
+                exit;
+            }
+            $rootDir = defined('BASE_PATH') ? rtrim(BASE_PATH, '/\\') : dirname(__DIR__, 3);
+            $uploadDir = $rootDir . '/public/uploads/perfiles';
+            if (!is_dir($uploadDir)) {
+                @mkdir($uploadDir, 0775, true);
+            }
+            $ext = $allowedMimes[$mime];
+            $fileName = 'perfil_u' . $userId . '_' . time() . '.' . $ext;
+            $destPath = $uploadDir . '/' . $fileName;
+            if (@move_uploaded_file($tmpFile, $destPath)) {
+                $nuevaFoto = 'public/uploads/perfiles/' . $fileName;
+                $cambiosRealizados[] = "foto de perfil";
+            }
+        } elseif (isset($_POST['foto_perfil_url'])) {
+            $urlInput = trim((string)$_POST['foto_perfil_url']);
+            if ($urlInput !== '' && $urlInput !== $fotoActual && preg_match('#^https?://#i', $urlInput)) {
+                $nuevaFoto = $urlInput;
+                $cambiosRealizados[] = "foto de perfil (URL)";
+            } elseif (!empty($_POST['eliminar_foto_perfil'])) {
+                $nuevaFoto = '';
+                $cambiosRealizados[] = "eliminación de foto de perfil";
+            }
+        }
+
+        $orcidRaw = trim((string)($_POST['orcid'] ?? ($datosActuales['orcid'] ?? '')));
+        if ($orcidRaw !== '') {
+            if (preg_match('/(\d{4}-\d{4}-\d{4}-\d{3}[\dX])/i', $orcidRaw, $m)) {
+                $orcidClean = strtoupper($m[1]);
+            } else {
+                $_SESSION['perfil_error'] = "El identificador ORCID debe tener el formato válido 0000-0000-0000-0000 (o su URL https://orcid.org/0000-0000-0000-0000).";
+                $_SESSION['perfil_active_tab'] = 'editar';
+                header("Location: perfil");
+                exit;
+            }
+        } else {
+            $orcidClean = '';
+        }
+
+        $sitioWebRaw = trim((string)($_POST['sitio_web'] ?? ($datosActuales['sitio_web'] ?? '')));
+        if ($sitioWebRaw !== '') {
+            if (!preg_match('#^https?://#i', $sitioWebRaw)) {
+                $sitioWebRaw = 'https://' . $sitioWebRaw;
+            }
+            if (!filter_var($sitioWebRaw, FILTER_VALIDATE_URL)) {
+                $_SESSION['perfil_error'] = "El enlace del sitio web personal no tiene un formato de URL válido.";
+                $_SESSION['perfil_active_tab'] = 'editar';
+                header("Location: perfil");
+                exit;
+            }
+        }
+
+        $gradoAcademicoRaw = trim((string)($_POST['grado_academico'] ?? ($datosActuales['grado_academico'] ?? '')));
+
+        if (
+            $nuevaFoto !== $fotoActual
+            || $orcidClean !== trim((string)($datosActuales['orcid'] ?? ''))
+            || $sitioWebRaw !== trim((string)($datosActuales['sitio_web'] ?? ''))
+            || $gradoAcademicoRaw !== trim((string)($datosActuales['grado_academico'] ?? ''))
+        ) {
+            $this->usuarioModel->actualizarPerfilAcademico(
+                $userId,
+                $nuevaFoto !== '' ? $nuevaFoto : null,
+                $orcidClean !== '' ? $orcidClean : null,
+                $sitioWebRaw !== '' ? $sitioWebRaw : null,
+                $gradoAcademicoRaw !== '' ? $gradoAcademicoRaw : null
+            );
+            if ($orcidClean !== trim((string)($datosActuales['orcid'] ?? ''))) {
+                $cambiosRealizados[] = "ORCID";
+            }
+            if ($sitioWebRaw !== trim((string)($datosActuales['sitio_web'] ?? ''))) {
+                $cambiosRealizados[] = "sitio web personal";
+            }
+            if ($gradoAcademicoRaw !== trim((string)($datosActuales['grado_academico'] ?? ''))) {
+                $cambiosRealizados[] = "grado académico";
+            }
+
+            // Sincronizar automáticamente con el portal externo si está habilitado
+            try {
+                $apiServiceFile = dirname(__DIR__, 2) . '/Cursos/services/ApiExternaCursosService.php';
+                if (file_exists($apiServiceFile)) {
+                    require_once $apiServiceFile;
+                    $syncSvc = new ApiExternaCursosService();
+                    $syncSvc->empujarAServidorExterno(null, null, 'perfil_investigador_actualizado');
+                }
+            } catch (Throwable) {}
+        }
+
         if (!empty($cambiosRealizados)) {
-            $_SESSION['perfil_exito'] = "Se actualizaron correctamente los siguientes datos: " . implode(', ', $cambiosRealizados) . ".";
+            $_SESSION['perfil_exito'] = "Se actualizaron correctamente los siguientes datos: " . implode(', ', array_unique($cambiosRealizados)) . ".";
             $_SESSION['perfil_active_tab'] = 'resumen';
         } else {
             $_SESSION['perfil_exito'] = "No se detectaron modificaciones en los datos ingresados.";
@@ -413,11 +525,14 @@ class PerfilController {
         ";
 
         try {
-            MailService::enviarCorreoPersonalizado(
-                $email, 
-                "Verificación de Correo Institucional - CIIDI UPTTMBI", 
-                $cuerpoHtml, 
-                $nombre
+            MailService::enviar(
+                $email,
+                $nombre,
+                "Verificación de Correo Institucional - CIIDI UPTTMBI",
+                $cuerpoHtml,
+                '',
+                false,
+                'Verificación Perfil'
             );
         } catch (Throwable) {
             // No bloquear en entornos locales de prueba sin servidor de correo
@@ -500,13 +615,16 @@ class PerfilController {
             $nombreUsuario = $_SESSION['usuario_nombre'] ?? 'Usuario';
             if (!empty($emailUsuario)) {
                 try {
-                    MailService::enviarCorreoPersonalizado(
+                    MailService::enviar(
                         $emailUsuario,
+                        $nombreUsuario,
                         "Aviso de Seguridad: Contraseña Modificada - CIIDI",
                         "<p>Hola <strong>" . htmlspecialchars($nombreUsuario) . "</strong>,</p>" .
                         "<p>Te informamos que la contraseña de tu cuenta institucional ha sido actualizada exitosamente el día de hoy.</p>" .
                         "<p>Si tú no realizaste este cambio, por favor contacta de inmediato al administrador del sistema.</p>",
-                        $nombreUsuario
+                        '',
+                        false,
+                        'Seguridad Perfil'
                     );
                 } catch (Throwable) {
                     // Continuar sin interrumpir al usuario si el servidor SMTP no está disponible

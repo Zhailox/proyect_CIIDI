@@ -14,6 +14,14 @@ $f_inicio = !empty($curso['fecha_inicio']) ? date('d/m/Y', strtotime($curso['fec
 $f_fin    = !empty($curso['fecha_fin']) ? date('d/m/Y', strtotime($curso['fecha_fin'])) : null;
 $est_insc = htmlspecialchars($curso['estado_inscripcion'] ?? 'Abierta');
 
+$nivel_usr = isset($usuario_actual['nivel']) ? (int)$usuario_actual['nivel'] : 999;
+$rol_usr   = strtolower((string)($usuario_actual['rol'] ?? ''));
+$es_admin_cursos = !empty($es_admin_cursos)
+    || ($nivel_usr >= 0 && $nivel_usr <= 1)
+    || str_contains($rol_usr, 'super')
+    || str_contains($rol_usr, 'admin')
+    || str_contains($rol_usr, 'comit');
+$puede_editar_este = $es_admin_cursos || (!empty($usuario_actual['id']) && (int)$curso['id_docente'] === (int)$usuario_actual['id']);
 
 $vpreview   = $curso['url_video_preview'] ?? '';
 
@@ -21,17 +29,31 @@ $placeholder = htmlspecialchars($config_vista['imagenes']['placeholder_url'] ?? 
 $img_raw = $curso['imagen_portada'] ?? '';
 // DB stores 'public/uploads/cursos/x.webp' but web root IS public/, so strip 'public/'
 // External URLs (http/https) are left untouched.
-function curImgUrl(string $raw): string {
-    if (empty($raw)) return '';
-    if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) return $raw;
-    return ltrim(preg_replace('#^public/#', '', $raw), '/');
+if (!function_exists('curImgUrl')) {
+    function curImgUrl(string $raw): string {
+        if (empty($raw)) return '';
+        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) return $raw;
+        return ltrim(preg_replace('#^public/#', '', $raw), '/');
+    }
 }
 $img = !empty($img_raw) ? htmlspecialchars(curImgUrl($img_raw)) : $placeholder;
 $url_fallback = htmlspecialchars($config_vista['moodle']['url_fallback'] ?? '#', ENT_QUOTES, 'UTF-8');
 $url_moodle = !empty($curso['url_moodle']) ? htmlspecialchars($curso['url_moodle']) : $url_fallback;
 ?>
 <div class="cur-wrapper" style="max-width: 1100px; margin: 0 auto; font-family: 'Inter', sans-serif;">
-    <a href="?ruta=cursos" class="cur-btn-secondary" style="margin-bottom: 2rem; border:none; padding: 0.5rem 1rem; color: #4B5563; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;"><i class="ph-bold ph-arrow-left"></i> Volver al Catálogo</a>
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom: 2rem;">
+        <a href="?ruta=cursos" class="cur-btn-secondary" style="border:none; padding: 0.5rem 1rem; color: #4B5563; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;"><i class="ph-bold ph-arrow-left"></i> Volver al Catálogo</a>
+        <?php if ($puede_editar_este): ?>
+        <div style="display:flex; gap:0.65rem; flex-wrap:wrap;">
+            <a href="?ruta=cursos-gestion" style="background:white; color:#505984; border:1px solid rgba(80,89,132,0.25); padding:0.55rem 1.1rem; border-radius:50px; font-weight:700; font-size:0.88rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem;">
+                <i class="ph-bold ph-squares-four"></i> Panel de Gestión
+            </a>
+            <a href="?ruta=cursos-editar&id=<?= (int)$curso['id'] ?>" style="background:#505984; color:white; padding:0.55rem 1.2rem; border-radius:50px; font-weight:700; font-size:0.88rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem; box-shadow:0 4px 12px rgba(80,89,132,0.2);">
+                <i class="ph-bold ph-pencil-simple"></i> Editar este Curso
+            </a>
+        </div>
+        <?php endif; ?>
+    </div>
 
     <div class="cur-detail-hero" style="display: flex; gap: 3rem; background: #fff; border-radius: 24px; padding: 3rem; box-shadow: 0 20px 40px rgba(0,0,0,0.04); margin-bottom: 3rem; flex-wrap: wrap;">
         
@@ -44,7 +66,7 @@ $url_moodle = !empty($curso['url_moodle']) ? htmlspecialchars($curso['url_moodle
                 <?php if ($estado !== 'publicado'): ?>
                     <span style="background: #FEF3C7; color: #D97706; padding: 0.35rem 0.9rem; border-radius: 50px; font-weight: 600; font-size: 0.85rem;"><?= ucfirst($estado) ?></span>
                 <?php endif; ?>
-                <span style="background: #EEF2FF; color: #4F46E5; padding: 0.35rem 0.9rem; border-radius: 50px; font-weight: 700; font-size: 0.85rem; border: 1px solid #C7D2FE;">Inscripción: <?= $est_insc ?></span>
+                <span style="background: rgba(80,89,132,0.1); color: #505984; padding: 0.35rem 0.9rem; border-radius: 50px; font-weight: 700; font-size: 0.85rem; border: 1px solid rgba(80,89,132,0.25);">Inscripción: <?= $est_insc ?></span>
             </div>
 
             <h1 style="font-size: 2.3rem; font-weight: 800; color: #121a3e; margin-bottom: 1rem; line-height: 1.25;"><?= $titulo ?></h1>
@@ -142,4 +164,3 @@ $url_moodle = !empty($curso['url_moodle']) ? htmlspecialchars($curso['url_moodle
         <?php endif; ?>
     </div>
 </div>
-

@@ -22,7 +22,7 @@ $lineasInvestigacion = $lineas ?? [];
         </div>
 
         <div>
-            <a href="sudoadmin" class="btn btn-outline" style="border-color: var(--color-secundario); color: var(--color-secundario) !important; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px;">
+            <a href="sudoadmin" class="sa-btn sa-btn-outline">
                 <i class="ph-bold ph-arrow-left"></i> Volver al Panel
             </a>
         </div>
@@ -66,7 +66,9 @@ $lineasInvestigacion = $lineas ?? [];
         <div>
             <div style="font-size: 0.8rem; font-weight: 800; color: var(--color-secundario); text-transform: uppercase;">Cuentas & Usuarios</div>
             <div style="font-size: 1.6rem; font-weight: 800; color: #121a3e; margin-top: 2px;"><?= number_format($resumen['usuarios']) ?></div>
-            <div style="font-size: 0.78rem; color: #64748b;">Matrícula Registrada</div>
+            <div style="font-size: 0.75rem; color: #64748b;">
+                <?= (int)($resumen['usuarios_activos'] ?? 0) ?> activos · <?= (int)($resumen['usuarios_suspendidos'] ?? 0) ?> susp. · <?= (int)($resumen['usuarios_archivados'] ?? 0) ?> archiv.
+            </div>
         </div>
     </a>
 
@@ -126,7 +128,7 @@ $lineasInvestigacion = $lineas ?? [];
     </div>
     <?php endif; ?>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="sa-grid-2col" style="gap: 1.5rem; margin-bottom: 2rem;">
         
         <!-- COLUMNA 1: FILTROS Y MÉTRICAS DE GRÁFICO -->
         <div style="background: #ffffff; border: 1px solid rgba(80, 89, 132, 0.18); border-radius: var(--radius-md); padding: 1.6rem; box-shadow: 0 4px 20px rgba(18, 26, 62, 0.04);">

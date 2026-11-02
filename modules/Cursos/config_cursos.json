@@ -18,24 +18,41 @@
             "gif"
         ],
         "mime_permitidos": [
-            "image/jpeg",
-            "image/png",
-            "image/gif",
-            "image/webp"
+            "image\/jpeg",
+            "image\/png",
+            "image\/gif",
+            "image\/webp"
         ],
         "convertir_a_webp": true,
         "lazy_load": true,
-        "carpeta_uploads": "storage/uploads/cursos/",
-        "placeholder_url": "https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=600"
+        "carpeta_uploads": "storage\/uploads\/cursos\/",
+        "placeholder_url": "https:\/\/images.unsplash.com\/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=600"
     },
     "moodle": {
-        "url_fallback": "https://www.youtube.com"
+        "url_fallback": "https:\/\/www.youtube.com"
     },
     "formulario_google": {
-        "url_default": "https://docs.google.com/forms/d/e/1FAIpQLSean-NUF1PEU6ci8MiNIQp13OewWCofp7O7V3MV8k_CA1CHNQ/viewform",
+        "url_default": "https:\/\/docs.google.com\/forms\/d\/e\/1FAIpQLSean-NUF1PEU6ci8MiNIQp13OewWCofp7O7V3MV8k_CA1CHNQ\/viewform",
         "modo": "embebido",
         "habilitado": true,
         "titulo": "Formulario Oficial de Inscripción a Cursos CIIDI"
+    },
+    "api_externa": {
+        "habilitada": true,
+        "auto_push": true,
+        "requiere_api_key_lectura": false,
+        "api_key": "ciidi_sync_secret_2026",
+        "webhook_url": "https:\/\/ciidi.iutetvirtual.org.ve\/api_sync.php",
+        "ultimo_sync": {
+            "fecha": "2026-11-02 13:28:08",
+            "ok": true,
+            "codigo_http": 200,
+            "evento": "curso_editado",
+            "mensaje": "Base de datos externa (MYSQL) actualizada por Push (curso_editado).",
+            "cursos_enviados": 3,
+            "inv_enviados": 7,
+            "version_hash": "84e02fd2a46f9cc0586386f71756205165e06b484acfe79c837fd3f143f40ad0"
+        }
     },
     "seguridad": {
         "csrf_activo": true

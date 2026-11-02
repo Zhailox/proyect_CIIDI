@@ -58,6 +58,14 @@ class CursoModel {
                 'habilitado'  => true,
                 'titulo'      => 'Formulario Oficial de Inscripción CIIDI',
             ],
+            'api_externa' => [
+                'habilitada'               => true,
+                'auto_push'                => true,
+                'requiere_api_key_lectura' => false,
+                'api_key'                  => 'ciidi_sync_secret_2026',
+                'webhook_url'              => 'http://localhost/proyect_CIIDI/3_PORTAL_EXTERNO_MYSQL/api_sync.php',
+                'ultimo_sync'              => null,
+            ],
             'seguridad' => [
                 'csrf_activo' => true,
             ],
@@ -107,15 +115,16 @@ class CursoModel {
         }
 
         if (!empty($filtros['busqueda'])) {
-            $condiciones[] = "(c.titulo ILIKE ? OR c.descripcion ILIKE ?)";
+            $condiciones[] = "(c.titulo ILIKE ? OR c.descripcion ILIKE ? OR u.nombre_completo ILIKE ?)";
             $term          = '%' . $filtros['busqueda'] . '%';
+            $parametros[]  = $term;
             $parametros[]  = $term;
             $parametros[]  = $term;
         }
 
         $where = !empty($condiciones) ? 'WHERE ' . implode(' AND ', $condiciones) : '';
 
-        $sqlTotal = "SELECT COUNT(*) AS total FROM public.cursos c {$where}";
+        $sqlTotal = "SELECT COUNT(*) AS total FROM public.cursos c LEFT JOIN public.usuarios u ON c.id_docente = u.id {$where}";
         $stmtTotal = $this->db->prepare($sqlTotal);
         $stmtTotal->execute($parametros);
         $total = (int)($stmtTotal->fetch()['total'] ?? 0);
@@ -314,7 +323,7 @@ class CursoModel {
                     trim($datos['titulo']),
                     trim($datos['descripcion'] ?? ''),
                     trim($datos['imagen_portada'] ?? '') ?: '',
-                    $datos['estado'] ?? 'borrador',
+            $datos['estado'] ?? 'borrador',
             (float) ($datos['nota_minima_aprobacion'] ?? 70.00),
                     $datos['url_moodle'] ?? '',
                     $datos['modalidad'] ?? 'Virtual',
@@ -360,7 +369,13 @@ class CursoModel {
     }
 
     public function listarDocentes(): array {
-        $sql  = "SELECT id, nombre_completo FROM public.usuarios WHERE activo = true ORDER BY nombre_completo ASC";
+        $sql = "
+            SELECT u.id, u.nombre_completo, r.nombre AS rol_nombre
+            FROM public.usuarios u
+            LEFT JOIN public.roles r ON u.id_rol = r.id
+            WHERE u.activo = true AND (u.id_rol IN (1, 2, 4) OR u.id IN (SELECT DISTINCT id_docente FROM public.cursos WHERE id_docente IS NOT NULL))
+            ORDER BY CASE WHEN u.id_rol = 4 THEN 0 WHEN u.id_rol = 2 THEN 1 ELSE 2 END, u.nombre_completo ASC
+        ";
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

@@ -3275,3 +3275,44 @@ ALTER TABLE public.postulaciones_estudiantes
 ALTER TABLE public.postulaciones_estudiantes
     ADD CONSTRAINT chk_postulacion_trayecto CHECK (trayecto IS NULL OR (trayecto BETWEEN 1 AND 99));
 
+-- ============================================================================
+-- COMPATIBILIDAD MULTIPLATAFORMA LINUX DEBIAN / POSTGRESQL (UNACCENT & PGVECTOR)
+-- ============================================================================
+DO $$
+BEGIN
+    CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END $$;
+
+DO $$
+BEGIN
+    CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END $$;
+
+DO $$
+BEGIN
+    PERFORM public.unaccent('prueba');
+EXCEPTION WHEN undefined_function THEN
+    CREATE OR REPLACE FUNCTION public.unaccent(text)
+    RETURNS text
+    LANGUAGE sql
+    IMMUTABLE STRICT
+    AS $func$
+        SELECT translate(
+            $1,
+            'áàäâãåéèëêíìïîóòöôõúùüûñçÁÀÄÂÃÅÉÈËÊÍÌÏÎÓÒÖÔÕÚÙÜÛÑÇ',
+            'aaaaaaeeeeiiiiooooouuuuncAAAAAAEEEEIIIIOOOOOUUUUNC'
+        );
+    $func$;
+END $$;
+
+CREATE OR REPLACE FUNCTION public.normalizar_busqueda_pst(input_text TEXT)
+RETURNS TEXT
+LANGUAGE sql
+IMMUTABLE
+AS $$
+    SELECT LOWER(public.unaccent(COALESCE(input_text, '')));
+$$;

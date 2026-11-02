@@ -129,6 +129,21 @@ class CursosModule implements ModuleContract {
                 'metodo'           => 'guardarConfig',
                 'seguridad_accion' => 'configurar',
             ],
+
+            // ── API REST Externa (Cursos + Investigadores para Servidor MySQL Externo) ──
+            'api-cursos-externo' => [
+                'controlador_path' => $ctrl,
+                'controlador'      => 'PromoController',
+                'metodo'           => 'apiCatalogoExterno',
+                'es_api'           => true,
+                'seguridad_accion' => 'ver',
+            ],
+            'cursos-sincronizar-externo' => [
+                'controlador_path' => $ctrl,
+                'controlador'      => 'PromoController',
+                'metodo'           => 'sincronizarServidorExterno',
+                'seguridad_accion' => 'configurar',
+            ],
         ];
     }
 
@@ -148,10 +163,10 @@ class CursosModule implements ModuleContract {
                 'privilegio_minimo' => $nivelPublico,
                 'activadores' => ['cursos', 'cursos-detalle', 'cursos-formulario-google', 'cursos-gestion', 'cursos-crear', 'cursos-editar', 'cursos-config'],
                 'subitems'    => [
-                    ['ruta' => 'cursos',                   'titulo' => 'Oferta Formativa',       'privilegio_minimo' => $nivelPublico],
-                    ['ruta' => 'cursos-formulario-google', 'titulo' => 'Inscripción Google Form', 'privilegio_minimo' => $nivelPublico],
-                    ['ruta' => 'cursos-gestion',           'titulo' => 'Gestión de Cursos',      'privilegio_minimo' => $nivelAdmin],
-                    ['ruta' => 'cursos-config',            'titulo' => 'Configuración',          'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'cursos',         'titulo' => 'Oferta Formativa',  'privilegio_minimo' => $nivelPublico],
+                    ['ruta' => 'cursos-gestion', 'titulo' => 'Gestión de Cursos', 'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'cursos-crear',   'titulo' => 'Crear Nuevo Curso', 'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'cursos-config',  'titulo' => 'Configuración',     'privilegio_minimo' => 1],
                 ],
             ],
         ];

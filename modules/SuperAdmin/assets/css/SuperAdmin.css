@@ -311,7 +311,7 @@ summary::-webkit-details-marker { display: none; }
     border-radius: var(--radius-md);
 }
 .admin-banner.dark {
-    background-color: var(--color-principal);
+    background-color: #121a3e !important;
     color: var(--texto-blanco);
 }
 .admin-banner.dark p {
@@ -388,7 +388,7 @@ summary::-webkit-details-marker { display: none; }
     transition: background-color var(--transition-fast);
 }
 .btn-term-danger:hover {
-    background-color: var(--color-principal);
+    background-color: #121a3e !important;
 }
 /* ==========================================================================
    SUPERADMIN V2 - ESTÉTICA DINÁMICA Y COMPONENTES
@@ -597,7 +597,7 @@ summary::-webkit-details-marker { display: none; }
 
 /* Botones específicos */
 .btn-danger {
-    background-color: var(--color-principal);
+    background-color: #121a3e !important;
     color: #ffffff;
     border-radius: var(--radius-sm);
 }
@@ -1036,7 +1036,7 @@ summary::-webkit-details-marker { display: none; }
     background: rgba(241, 245, 249, 0.8);
 }
 
-.sa-tab-btn.active {
+.sa-tab-btn.active, .sa-tab-btn.tab-active {
     background: #002244;
     color: #ffffff;
     box-shadow: 0 4px 12px rgba(0, 34, 68, 0.25);
@@ -1242,9 +1242,9 @@ summary::-webkit-details-marker { display: none; }
 }
 
 .sa-btn-dark {
-    background-color: var(--btn-primary) !important;
-    color: var(--color-principal) !important;
-    border-color: var(--color-principal) !important;
+    background-color: #121a3e !important;
+    color: #ffffff !important;
+    border-color: #121a3e !important;
 }
 
 .sa-btn-dark:hover {
@@ -1268,9 +1268,142 @@ summary::-webkit-details-marker { display: none; }
     background-color: #f1f5f9 !important;
     color: var(--texto-silenciado) !important;
     border: 1px solid #cbd5e1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 9px 18px !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    line-height: 1.4 !important;
+    border-radius: var(--radius-sm) !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    transition: all var(--transition-fast) !important;
+    box-sizing: border-box !important;
 }
 
 .sa-btn-cancel:hover {
+    background-color: #e2e8f0 !important;
+    color: var(--texto-titulos) !important;
+}
+
+.sa-btn-sm {
+    padding: 5px 12px !important;
+    font-size: 0.78rem !important;
+    background-color: rgba(80, 89, 132, 0.1) !important;
+    color: var(--color-secundario) !important;
+    border: 1px solid rgba(80, 89, 132, 0.3) !important;
+    border-radius: 6px !important;
+}
+
+.sa-btn-sm:hover {
+    background-color: var(--color-secundario) !important;
+    color: #ffffff !important;
+    border-color: var(--color-secundario) !important;
+}
+
+.sa-btn-danger-outline {
+    background: rgba(18, 26, 62, 0.05) !important;
+    color: #121a3e !important;
+    border: 1px solid rgba(18, 26, 62, 0.28) !important;
+}
+
+.sa-btn-danger-outline:hover {
+    background: #121a3e !important;
+    color: #ffffff !important;
+    border-color: #121a3e !important;
+}
+
+.sa-btn-icon-danger {
+    background: var(--alert-inactive) !important;
+    color: var(--alert-active) !important;
+    border: 1px solid rgba(26, 45, 77, 0.35) !important;
+    border-radius: 6px !important;
+    padding: 6px 10px !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    transition: all 0.2s ease !important;
+}
+
+.sa-btn-icon-danger:hover {
+    background: #121a3e !important;
+    color: #ffffff !important;
+    border-color: #121a3e !important;
+    transform: translateY(-1px);
+}
+
+.sa-modal-close {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: var(--radius-sm, 8px) !important;
+    background: rgba(148, 163, 184, 0.14) !important;
+    border: 1px solid rgba(148, 163, 184, 0.28) !important;
+    color: #475569 !important;
+    font-size: 1.1rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    flex-shrink: 0 !important;
+}
+
+.sa-modal-close:hover {
+    background: #121a3e !important;
+    border-color: #121a3e !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+}
+
+.sa-modal-close-light {
+    background: rgba(255, 255, 255, 0.16) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #ffffff !important;
+}
+
+.sa-modal-close-light:hover {
+    background: #ffffff !important;
+    border-color: #ffffff !important;
+    color: #121a3e !important;
+}
+
+.main-content .btn.btn-outline,
+.main-content a.btn.btn-outline,
+.main-content button.btn.btn-outline {
+    background-color: #ffffff !important;
+    color: var(--color-secundario) !important;
+    border: 1px solid rgba(80, 89, 132, 0.3) !important;
+    border-radius: var(--radius-sm, 8px) !important;
+    font-weight: 700 !important;
+    transition: all 0.2s ease !important;
+}
+
+.main-content .btn.btn-outline:hover:not(:disabled),
+.main-content a.btn.btn-outline:hover,
+.main-content button.btn.btn-outline:hover:not(:disabled) {
+    background-color: var(--color-secundario) !important;
+    color: #ffffff !important;
+    border-color: var(--color-secundario) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(80, 89, 132, 0.2) !important;
+}
+
+.tpl-item-btn:hover {
+    border-color: var(--color-terciario) !important;
+    background: #ffffff !important;
+    transform: translateX(2px);
+    box-shadow: 0 4px 12px rgba(18, 26, 62, 0.05);
+}
+
+.sa-skip-old-cancel-hover {
     background-color: #e2e8f0 !important;
     color: var(--texto-titulos) !important;
 }
@@ -1339,7 +1472,7 @@ summary::-webkit-details-marker { display: none; }
     background: rgba(80, 89, 132, 0.12) !important;
     border: 1px solid rgba(80, 89, 132, 0.35) !important;
     border-left: 4px solid var(--color-secundario) !important;
-    color: var(--color-principal) !important;
+    color: var(--texto-titulos) !important;
 }
 
 .sa-alert-error i {
@@ -1392,7 +1525,7 @@ summary::-webkit-details-marker { display: none; }
     padding-top: 1rem !important;
 }
 
-.sa-modal-footer .sa-btn {
+.sa-modal-footer .sa-btn, .sa-modal-footer .sa-btn-cancel {
     min-width: 110px !important;
     height: 40px !important;
     border-radius: var(--radius-sm) !important;
@@ -1402,11 +1535,11 @@ summary::-webkit-details-marker { display: none; }
 /* Overrides para Clases de Estilo Heredadas */
 .ag-btn-danger-flat,
 .ag-btn-danger {
-    background: var(--color-principal) !important;
-    color: var(--negro) !important;
-    border: none !important;
+    background: rgba(80, 89, 132, 0.12) !important;
+    color: #121a3e !important;
+    border: 1px solid rgba(80, 89, 132, 0.28) !important;
     border-radius: var(--radius-sm) !important;
-    box-shadow: 0 4px 12px rgba(18, 26, 62, 0.2) !important;
+    box-shadow: 0 2px 6px rgba(18, 26, 62, 0.08) !important;
 }
 
 .ag-btn-danger-flat:hover,
@@ -1419,12 +1552,14 @@ summary::-webkit-details-marker { display: none; }
 .ag-btn-danger-icon {
     border: 1px solid rgba(80, 89, 132, 0.25) !important;
     background: rgba(80, 89, 132, 0.08) !important;
-    color: var(--color-principal) !important;
+    color: #121a3e !important;
     border-radius: var(--radius-sm) !important;
 }
 
 .ag-btn-danger-icon:hover {
-    background: var(--color-principal) !important;
+    background: rgba(80, 89, 132, 0.12) !important;
+    background: #121a3e !important;
+    border: 1px solid #121a3e !important;
     color: #ffffff !important;
     box-shadow: 0 4px 12px rgba(18, 26, 62, 0.2) !important;
 }
@@ -1534,9 +1669,9 @@ summary::-webkit-details-marker { display: none; }
 }
 
 .ag-btn-danger-flat {
-    background: var(--color-principal) !important;
-    color: var(--negro) !important;
-    border: none !important;
+    background: rgba(80, 89, 132, 0.12) !important;
+    color: #121a3e !important;
+    border: 1px solid rgba(80, 89, 132, 0.28) !important;
     padding: 9px 18px !important;
     border-radius: var(--radius-sm) !important;
     font-weight: 700 !important;
@@ -1678,4 +1813,264 @@ summary::-webkit-details-marker { display: none; }
 
 .ag-modal-overlay.active .ag-modal-box {
     transform: scale(1);
+}
+
+
+/* ==========================================================================
+   RESPONSIVIDAD INTEGRAL SUPERADMIN: LAPTOPS ZOOM ALTO (125%-150%) Y MÓVILES
+   ========================================================================== */
+
+/* Regla universal de seguridad para todos los modales de SuperAdmin en pantallas de baja altura (Zoom 125%-150%) y móviles */
+#ag-core-health-modal-overlay,
+#modalPreviewCorreo,
+#modalAvisoAlert,
+#modalConfigBoton,
+#modalGuardarPlantilla,
+#modalCatalogoPlantillas,
+#ag-modal-overlay,
+#modalTareaScheduler,
+#modalVisorLog,
+#modalConfirmacionGenerico,
+#modalCrearUsuario,
+#modalEditarUsuario,
+#modalCrearRol,
+#modalConfirmacionUsuarios,
+#modalInvitarProfesor,
+#modalBloquearIP,
+#modalWhitelist {
+    padding: 1rem !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
+}
+
+#ag-core-health-modal-overlay > div,
+#modalPreviewCorreo > div,
+#modalAvisoAlert > div,
+#modalConfigBoton > div,
+#modalGuardarPlantilla > div,
+#modalCatalogoPlantillas > div,
+#ag-modal-overlay > div,
+#modalTareaScheduler > div,
+#modalVisorLog > div,
+#modalConfirmacionGenerico > div,
+#modalCrearUsuario > div,
+#modalEditarUsuario > div,
+#modalCrearRol > div,
+#modalConfirmacionUsuarios > div,
+#modalInvitarProfesor > div,
+#modalBloquearIP > div,
+#modalWhitelist > div,
+.sa-modal-card,
+.ag-modal-box {
+    max-height: calc(100vh - 2rem) !important;
+    overflow-y: auto !important;
+    margin: auto !important;
+    box-sizing: border-box !important;
+}
+
+/* Clases utilitarias para grillas complejas de SuperAdmin */
+.sa-mail-compose-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.sa-mail-templates-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 1.5rem;
+}
+
+.sa-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+}
+
+.sa-grid-host-port {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 10px;
+}
+
+/* 1. Laptops con Zoom Alto (125%-150% DPI) y Baja Altura Efectiva */
+@media (max-width: 1366px), (max-height: 780px) {
+    #iframePreviewCorreo {
+        height: min(420px, calc(100vh - 210px)) !important;
+    }
+
+    #ag-core-health-body {
+        max-height: calc(100vh - 200px) !important;
+        padding: 1.15rem !important;
+    }
+
+    #modalTareaScheduler > div,
+    #modalVisorLog > div,
+    #modalCrearUsuario > div,
+    #modalEditarUsuario > div,
+    #modalInvitarProfesor > div,
+    #modalBloquearIP > div,
+    #modalWhitelist > div {
+        padding: 1.25rem 1.4rem !important;
+    }
+
+    .sa-header {
+        margin-bottom: 1.25rem;
+    }
+
+    .sa-header h1 {
+        font-size: 1.6rem !important;
+    }
+
+    .sa-stat-card {
+        padding: 1rem 1.15rem;
+    }
+
+    .sa-panel {
+        padding: 1.25rem;
+    }
+}
+
+/* 2. Tablets y Laptops con Zoom 150% (<= 1150px) */
+@media (max-width: 1150px) {
+    .sa-mail-compose-grid,
+    .sa-mail-templates-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* 3. Dispositivos Móviles y Tablets Verticales (<= 768px) */
+@media (max-width: 768px) {
+    .sa-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.85rem;
+    }
+
+    .sa-header h1 {
+        font-size: 1.4rem !important;
+    }
+
+    .sa-tabs-bar {
+        overflow-x: auto;
+        flex-wrap: nowrap !important;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 0.35rem;
+        width: 100%;
+    }
+
+    .sa-tab-btn {
+        white-space: nowrap;
+        flex-shrink: 0;
+        padding: 0.55rem 0.9rem;
+        font-size: 0.82rem;
+    }
+
+    .sa-grid-2col,
+    .sa-grid-host-port,
+    .sa-footer-field-row,
+    .sa-footer-link-row {
+        grid-template-columns: 1fr !important;
+    }
+
+    .sa-panel {
+        padding: 1rem !important;
+        overflow-x: auto;
+    }
+
+    .sa-table,
+    #userDirectoryTable,
+    #tabla-logs-correo {
+        min-width: 620px;
+    }
+
+    .sa-modal-footer {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    #ag-core-health-modal-overlay > div,
+    #modalPreviewCorreo > div,
+    #modalAvisoAlert > div,
+    #modalConfigBoton > div,
+    #modalGuardarPlantilla > div,
+    #modalCatalogoPlantillas > div,
+    #ag-modal-overlay > div,
+    #modalTareaScheduler > div,
+    #modalVisorLog > div,
+    #modalConfirmacionGenerico > div,
+    #modalCrearUsuario > div,
+    #modalEditarUsuario > div,
+    #modalCrearRol > div,
+    #modalConfirmacionUsuarios > div,
+    #modalInvitarProfesor > div,
+    #modalBloquearIP > div,
+    #modalWhitelist > div {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 1.15rem !important;
+    }
+}
+
+/* 4. Celulares Pequeños (<= 480px) */
+@media (max-width: 480px) {
+    .sa-modal-footer .sa-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .sa-stats-grid,
+    .sa-quick-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Refinamiento Móvil Adicional para Vistas de SuperAdmin (<= 768px) */
+@media (max-width: 768px) {
+    .sa-hero-header,
+    .ag-header-banner {
+        padding: 1.15rem !important;
+    }
+
+    .sa-hero-header h1,
+    .ag-header-banner h1 {
+        font-size: 1.35rem !important;
+    }
+
+    .sa-hero-header .sa-btn {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+
+    .sa-tabs-header,
+    .ag-tabs-nav {
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .ag-tab-btn {
+        white-space: nowrap;
+        flex: 0 0 auto;
+    }
+
+    .glass-panel,
+    .ag-glass-card,
+    .ag-sec-card {
+        padding: 1rem !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow-x: auto;
+    }
+
+    #filterUserText {
+        width: 100% !important;
+    }
+}
+
+.sa-btn-dark,
+.sa-btn-dark i,
+.sa-btn-dark span {
+    color: #ffffff !important;
 }

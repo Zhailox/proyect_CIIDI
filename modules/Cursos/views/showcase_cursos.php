@@ -7,6 +7,15 @@ $lazy_attr    = !empty($config_vista['imagenes']['lazy_load']) ? 'lazy' : 'eager
 $placeholder  = htmlspecialchars($config_vista['imagenes']['placeholder_url'] ?? '', ENT_QUOTES, 'UTF-8');
 $url_fallback = htmlspecialchars($config_vista['moodle']['url_fallback']      ?? '#', ENT_QUOTES, 'UTF-8');
 
+$nivel_usr = isset($usuario_actual['nivel']) ? (int)$usuario_actual['nivel'] : 999;
+$rol_usr   = strtolower((string)($usuario_actual['rol'] ?? ''));
+$es_admin_cursos = !empty($es_admin_cursos)
+    || ($nivel_usr >= 0 && $nivel_usr <= 1)
+    || str_contains($rol_usr, 'super')
+    || str_contains($rol_usr, 'admin')
+    || str_contains($rol_usr, 'comit');
+$puede_gestionar_cursos = $es_admin_cursos || ($nivel_usr >= 0 && $nivel_usr <= 2);
+
 // DB stores 'public/uploads/cursos/x.webp' but web root IS public/, so strip 'public/'
 if (!function_exists('curImgUrl')) {
     function curImgUrl(string $raw): string {
@@ -127,11 +136,16 @@ if ($f_linea) $url_params .= "&linea=$f_linea";
             </div>
             <?php endif; ?>
 
-            <div style="margin-left: auto;">
-                <a href="?ruta=cursos-formulario-google" style="padding: 0.8rem 1.6rem; background: #505984; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 0.6rem; transition: all 0.2s; box-shadow: 0 4px 12px rgba(80, 89, 132, 0.25); border: none;" onmouseover="this.style.background='#3C456A'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='#505984'; this.style.transform='translateY(0)';">
-                    <i class="ph-bold ph-google-logo" style="color: #ffffff; font-size: 1.1rem;"></i> Inscripción Oficial (Google Form)
+            <?php if ($puede_gestionar_cursos): ?>
+            <div style="margin-left: auto; display: flex; gap: 0.65rem; flex-wrap: wrap;">
+                <a href="?ruta=cursos-gestion" style="padding: 0.8rem 1.4rem; background: #505984; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 0.55rem; transition: all 0.2s; box-shadow: 0 4px 12px rgba(80, 89, 132, 0.25); border: none;" onmouseover="this.style.background='#3C456A'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='#505984'; this.style.transform='translateY(0)';">
+                    <i class="ph-bold ph-squares-four" style="font-size: 1.1rem;"></i> Gestionar Cursos
+                </a>
+                <a href="?ruta=cursos-crear" style="padding: 0.8rem 1.4rem; background: #1E293B; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 0.55rem; transition: all 0.2s; border: none;">
+                    <i class="ph-bold ph-plus" style="font-size: 1.1rem;"></i> Crear Curso
                 </a>
             </div>
+            <?php endif; ?>
         </form>
     </div>
 
@@ -170,6 +184,7 @@ if ($f_linea) $url_params .= "&linea=$f_linea";
                         };
                         $lineasCurso = $curso['lineas'] ?? [];
                         $dimsCurso   = $curso['dimensiones'] ?? [];
+                        $puede_editar_este = $es_admin_cursos || (!empty($usuario_actual['id']) && (int)$curso['id_docente'] === (int)$usuario_actual['id']);
                     ?>
                     <div class="cur-card" style="display: flex; flex-direction: column; background: #fff; border: 1px solid #E2E8F0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.04); transition: transform 0.25s, box-shadow 0.25s;">
                         <a href="?ruta=cursos-detalle&slug=<?= $slug ?>" style="text-decoration: none; color: inherit;">
@@ -237,9 +252,16 @@ if ($f_linea) $url_params .= "&linea=$f_linea";
                                     <i class="ph-fill ph-chalkboard-teacher" style="color: #505984;"></i> <?= $docente ?>
                                 </span>
                                 
-                                <a href="?ruta=cursos-formulario-google&curso_id=<?= $curso['id'] ?>" style="background: #505984; color: #fff; padding: 0.45rem 0.9rem; border-radius: 8px; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem; transition: background 0.2s;" onmouseover="this.style.background='#3C456A';" onmouseout="this.style.background='#505984';">
-                                    <i class="ph-bold ph-google-logo"></i> Inscribirme
-                                </a>
+                                <div style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                                    <?php if ($puede_editar_este): ?>
+                                        <a href="?ruta=cursos-editar&id=<?= (int)$curso['id'] ?>" title="Editar Curso" style="background: rgba(80,89,132,0.12); color: #505984; padding: 0.45rem 0.65rem; border-radius: 8px; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center;">
+                                            <i class="ph-bold ph-pencil-simple"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                    <a href="?ruta=cursos-formulario-google&curso_id=<?= $curso['id'] ?>" style="background: #505984; color: #fff; padding: 0.45rem 0.9rem; border-radius: 8px; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem; transition: background 0.2s;" onmouseover="this.style.background='#3C456A';" onmouseout="this.style.background='#505984';">
+                                        <i class="ph-bold ph-google-logo"></i> Inscribirme
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -306,4 +328,3 @@ document.addEventListener("DOMContentLoaded", function() {
     draw();
 });
 </script>
-

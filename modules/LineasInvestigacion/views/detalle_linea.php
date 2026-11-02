@@ -262,10 +262,30 @@
                 </div>
                 <?php else: ?>
                     <div style="display: flex; flex-direction: column; gap: 0.8rem;">
-                        <?php foreach ($profesores as $prof): ?>
-                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.8rem;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                <i class="ph-fill ph-user-circle" style="font-size: 1.5rem; color: #505984;"></i>
+                        <?php foreach ($profesores as $prof):
+                            $pFotoRaw = trim((string)($prof['foto_perfil'] ?? ''));
+                            $pFotoUrl = '';
+                            if ($pFotoRaw !== '') {
+                                $pFotoUrl = (preg_match('#^https?://#i', $pFotoRaw) || str_starts_with($pFotoRaw, 'data:image/'))
+                                    ? $pFotoRaw
+                                    : ltrim(preg_replace('#^public/#i', '', str_replace('\\', '/', $pFotoRaw)), '/');
+                            }
+                            $pOrcidRaw = trim((string)($prof['orcid'] ?? ''));
+                            $pOrcidId = '';
+                            $pOrcidHref = '';
+                            if ($pOrcidRaw !== '' && preg_match('/(\d{4}-\d{4}-\d{4}-\d{3}[\dX])/i', $pOrcidRaw, $mPO)) {
+                                $pOrcidId = strtoupper($mPO[1]);
+                                $pOrcidHref = 'https://orcid.org/' . $pOrcidId;
+                            }
+                            $pSitioWeb = trim((string)($prof['sitio_web'] ?? ''));
+                        ?>
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.85rem;">
+                            <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.5rem;">
+                                <?php if ($pFotoUrl !== ''): ?>
+                                    <img src="<?= htmlspecialchars($pFotoUrl) ?>" alt="<?= htmlspecialchars($prof['nombre_profesor']) ?>" style="width: 38px; height: 38px; border-radius: 10px; object-fit: cover; flex-shrink: 0; border: 1px solid #cbd5e1;" onerror="this.style.display='none';">
+                                <?php else: ?>
+                                    <i class="ph-fill ph-user-circle" style="font-size: 2rem; color: #505984;"></i>
+                                <?php endif; ?>
                                 <div style="flex: 1; min-width: 0;">
                                     <a href="?ruta=investigadores&q=<?= urlencode($prof['nombre_profesor']) ?>&ver_perfil=1<?= !empty($prof['id_profesor']) ? '&ver_id=' . (int)$prof['id_profesor'] : '' ?>"
                                        style="color: #1e293b; font-size: 0.9rem; font-weight: 700; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none;"
@@ -281,6 +301,22 @@
                                     Perfil <i class="ph-bold ph-arrow-up-right"></i>
                                 </a>
                             </div>
+                            <?php if ($pOrcidHref !== '' || $pSitioWeb !== ''): ?>
+                                <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-bottom:0.4rem;">
+                                    <?php if ($pOrcidHref !== ''): ?>
+                                        <a href="<?= htmlspecialchars($pOrcidHref) ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:4px; background:#f8fafc; color:#1e293b; border:1px solid rgba(80,89,132,0.25); padding:2px 7px; border-radius:999px; font-size:0.68rem; font-weight:700; text-decoration:none;">
+                                            <svg width="13" height="13" viewBox="0 0 256 256" aria-hidden="true"><circle cx="128" cy="128" r="128" fill="#A6CE39"/><path fill="#FFF" d="M86.3 186.2H70.9V79.1h15.4v107.1zM78.6 47.2c-5.7 0-10.3 4.6-10.3 10.3 0 5.7 4.6 10.3 10.3 10.3s10.3-4.6 10.3-10.3c0-5.7-4.6-10.3-10.3-10.3zm30.3 31.9h41.6c39.6 0 57 28.3 57 53.6 0 27.5-21.5 53.6-56.8 53.6h-41.8V79.1zm15.4 93.3h24.5c34.9 0 42.9-26.5 42.9-39.7C191.7 111.2 178.9 93 148 93h-23.7v79.4z"/></svg>
+                                            <?= htmlspecialchars($pOrcidId) ?>
+                                        </a>
+                                    <?php endif; ?>
+                                    <?php if ($pSitioWeb !== ''): ?>
+                                        <a href="<?= htmlspecialchars($pSitioWeb) ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:4px; background:rgba(80,89,132,0.08); color:#505984; border:1px solid rgba(80,89,132,0.24); padding:2px 7px; border-radius:999px; font-size:0.68rem; font-weight:700; text-decoration:none;">
+                                            <svg width="13" height="13" viewBox="0 0 256 256" aria-hidden="true"><circle cx="128" cy="128" r="128" fill="#505984"/><circle cx="128" cy="128" r="78" fill="none" stroke="#FFF" stroke-width="14"/><ellipse cx="128" cy="128" rx="38" ry="78" fill="none" stroke="#FFF" stroke-width="13"/><line x1="50" y1="128" x2="206" y2="128" stroke="#FFF" stroke-width="13"/></svg>
+                                            Sitio Personal
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
                             <?php if (!empty($prof['dimensiones'])): ?>
                                 <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:0.35rem;">
                                     <?php foreach ($prof['dimensiones'] as $pDim): ?>

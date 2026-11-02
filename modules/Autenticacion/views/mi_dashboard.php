@@ -1,6 +1,24 @@
 <?php
 // modules/Autenticacion/views/mi_dashboard.php
 // Vista principal del perfil de usuario - CIIDI UPTTMBI
+$fotoRawPerfil = trim((string)($usuarioActual['foto_perfil'] ?? ''));
+$fotoSrcPerfil = '';
+if ($fotoRawPerfil !== '') {
+    if (preg_match('#^https?://#i', $fotoRawPerfil) || str_starts_with($fotoRawPerfil, 'data:image/')) {
+        $fotoSrcPerfil = $fotoRawPerfil;
+    } else {
+        $fotoSrcPerfil = ltrim(preg_replace('#^public/#i', '', str_replace('\\', '/', $fotoRawPerfil)), '/');
+    }
+}
+$orcidRawPerfil = trim((string)($usuarioActual['orcid'] ?? ''));
+$orcidIdLimpio = '';
+$orcidUrlCompleta = '';
+if ($orcidRawPerfil !== '' && preg_match('/(\d{4}-\d{4}-\d{4}-\d{3}[\dX])/i', $orcidRawPerfil, $mOrcid)) {
+    $orcidIdLimpio = strtoupper($mOrcid[1]);
+    $orcidUrlCompleta = 'https://orcid.org/' . $orcidIdLimpio;
+}
+$sitioWebPerfil = trim((string)($usuarioActual['sitio_web'] ?? ''));
+$gradoAcademicoPerfil = trim((string)($usuarioActual['grado_academico'] ?? ''));
 ?>
 
 <div class="db-wrapper">
@@ -8,11 +26,21 @@
     <!-- CABECERA INSTITUCIONAL DEL PERFIL -->
     <header class="db-account-header">
         <div class="db-profile-meta">
-            <div class="db-avatar-container" title="Inicial de <?= htmlspecialchars($usuarioActual['nombre_completo']) ?>">
-                <?= htmlspecialchars($usuarioActual['iniciales'] ?? 'U') ?>
+            <div class="db-avatar-container" title="<?= htmlspecialchars($usuarioActual['nombre_completo']) ?>" style="overflow:hidden; position:relative;">
+                <?php if ($fotoSrcPerfil !== ''): ?>
+                    <img src="<?= htmlspecialchars($fotoSrcPerfil) ?>" alt="<?= htmlspecialchars($usuarioActual['nombre_completo']) ?>" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <span style="display:none; width:100%; height:100%; align-items:center; justify-content:center;"><?= htmlspecialchars($usuarioActual['iniciales'] ?? 'U') ?></span>
+                <?php else: ?>
+                    <?= htmlspecialchars($usuarioActual['iniciales'] ?? 'U') ?>
+                <?php endif; ?>
             </div>
             <div class="db-user-details">
                 <h1><?= htmlspecialchars($usuarioActual['nombre_completo']) ?></h1>
+                <?php if ($gradoAcademicoPerfil !== ''): ?>
+                    <p style="margin: 0.15rem 0 0.45rem 0; font-size: 0.9rem; color: rgba(255,255,255,0.92); font-weight: 600;">
+                        <i class="ph-bold ph-graduation-cap"></i> <?= htmlspecialchars($gradoAcademicoPerfil) ?>
+                    </p>
+                <?php endif; ?>
                 <div class="db-user-badges">
                     <span class="db-badge-role">
                         <i class="ph-bold ph-shield-star"></i> <?= htmlspecialchars($usuarioActual['nombre_rol']) ?>
@@ -118,6 +146,48 @@
                             <span class="db-data-label"><i class="ph-bold ph-buildings"></i> Dependencia Académica</span>
                             <span class="db-data-value">PNF en Informática — UPTTMBI</span>
                         </div>
+                        <?php if ($gradoAcademicoPerfil !== ''): ?>
+                        <div class="db-data-item">
+                            <span class="db-data-label"><i class="ph-bold ph-graduation-cap"></i> Títulos y Grado Académico</span>
+                            <span class="db-data-value strong"><?= htmlspecialchars($gradoAcademicoPerfil) ?></span>
+                        </div>
+                        <?php endif; ?>
+                        <?php if ($orcidUrlCompleta !== '' || $esProfesor): ?>
+                        <div class="db-data-item">
+                            <span class="db-data-label" style="display:inline-flex; align-items:center; gap:0.4rem;">
+                                <svg width="18" height="18" viewBox="0 0 256 256" aria-hidden="true" style="flex-shrink:0;"><circle cx="128" cy="128" r="128" fill="#A6CE39"/><path fill="#FFF" d="M86.3 186.2H70.9V79.1h15.4v107.1zM78.6 47.2c-5.7 0-10.3 4.6-10.3 10.3 0 5.7 4.6 10.3 10.3 10.3s10.3-4.6 10.3-10.3c0-5.7-4.6-10.3-10.3-10.3zm30.3 31.9h41.6c39.6 0 57 28.3 57 53.6 0 27.5-21.5 53.6-56.8 53.6h-41.8V79.1zm15.4 93.3h24.5c34.9 0 42.9-26.5 42.9-39.7C191.7 111.2 178.9 93 148 93h-23.7v79.4z"/></svg>
+                                Identificador ORCID
+                            </span>
+                            <span class="db-data-value">
+                                <?php if ($orcidUrlCompleta !== ''): ?>
+                                    <a href="<?= htmlspecialchars($orcidUrlCompleta) ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:6px; color:#121a3e; font-weight:700; text-decoration:none; background:#f7fee7; border:1px solid #bef264; padding:3px 10px; border-radius:999px; font-size:0.84rem;">
+                                        <svg width="16" height="16" viewBox="0 0 256 256" aria-hidden="true"><circle cx="128" cy="128" r="128" fill="#A6CE39"/><path fill="#FFF" d="M86.3 186.2H70.9V79.1h15.4v107.1zM78.6 47.2c-5.7 0-10.3 4.6-10.3 10.3 0 5.7 4.6 10.3 10.3 10.3s10.3-4.6 10.3-10.3c0-5.7-4.6-10.3-10.3-10.3zm30.3 31.9h41.6c39.6 0 57 28.3 57 53.6 0 27.5-21.5 53.6-56.8 53.6h-41.8V79.1zm15.4 93.3h24.5c34.9 0 42.9-26.5 42.9-39.7C191.7 111.2 178.9 93 148 93h-23.7v79.4z"/></svg>
+                                        <?= htmlspecialchars($orcidIdLimpio) ?>
+                                    </a>
+                                <?php else: ?>
+                                    <span style="color:#94a3b8; font-style:italic;">No configurado</span>
+                                <?php endif; ?>
+                            </span>
+                        </div>
+                        <?php endif; ?>
+                        <?php if ($sitioWebPerfil !== '' || $esProfesor): ?>
+                        <div class="db-data-item">
+                            <span class="db-data-label" style="display:inline-flex; align-items:center; gap:0.4rem;">
+                                <svg width="18" height="18" viewBox="0 0 256 256" aria-hidden="true" style="flex-shrink:0;"><circle cx="128" cy="128" r="128" fill="#505984"/><circle cx="128" cy="128" r="78" fill="none" stroke="#FFF" stroke-width="14"/><ellipse cx="128" cy="128" rx="38" ry="78" fill="none" stroke="#FFF" stroke-width="13"/><line x1="50" y1="128" x2="206" y2="128" stroke="#FFF" stroke-width="13"/></svg>
+                                Sitio Web Personal
+                            </span>
+                            <span class="db-data-value">
+                                <?php if ($sitioWebPerfil !== ''): ?>
+                                    <a href="<?= htmlspecialchars($sitioWebPerfil) ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:6px; color:#505984; font-weight:700; text-decoration:none; background:rgba(80,89,132,0.08); border:1px solid rgba(80,89,132,0.24); padding:3px 10px; border-radius:999px; font-size:0.84rem;">
+                                        <svg width="16" height="16" viewBox="0 0 256 256" aria-hidden="true"><circle cx="128" cy="128" r="128" fill="#505984"/><circle cx="128" cy="128" r="78" fill="none" stroke="#FFF" stroke-width="14"/><ellipse cx="128" cy="128" rx="38" ry="78" fill="none" stroke="#FFF" stroke-width="13"/><line x1="50" y1="128" x2="206" y2="128" stroke="#FFF" stroke-width="13"/></svg>
+                                        <?= htmlspecialchars(preg_replace('#^https?://#i', '', rtrim($sitioWebPerfil, '/'))) ?>
+                                    </a>
+                                <?php else: ?>
+                                    <span style="color:#94a3b8; font-style:italic;">No configurado</span>
+                                <?php endif; ?>
+                            </span>
+                        </div>
+                        <?php endif; ?>
                         <?php if ($esProfesor): ?>
                         <?php
                             $misDimensionesIds = $misDimensionesIds ?? [];
@@ -217,10 +287,10 @@
         <div id="tab-editar" class="db-tab-pane <?= ($activeTab === 'editar') ? 'active' : '' ?>">
             <div class="db-card">
                 <div class="db-card-header">
-                    <h3><i class="ph-bold ph-pencil-simple"></i> Datos Personales y de Cuenta</h3>
+                    <h3><i class="ph-bold ph-pencil-simple"></i> Datos Personales, Fotografía y Perfil de Investigador</h3>
                 </div>
 
-                <form action="perfil" method="POST" class="db-form">
+                <form action="perfil" method="POST" class="db-form" enctype="multipart/form-data">
                     <?= CSRF::campoOculto() ?>
                     <input type="hidden" name="accion" value="actualizar_datos">
 
@@ -317,6 +387,93 @@
                         <span class="db-form-hint">
                             Puedes actualizar tu correo electrónico. Si lo modificas, el sistema enviará un enlace de verificación a tu nueva dirección.
                         </span>
+                    </div>
+
+                    <!-- FOTOGRAFÍA Y PERFIL ACADÉMICO PÚBLICO (ORCID, SITIO PERSONAL Y GRADO) -->
+                    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px dashed #cbd5e1;">
+                        <h4 style="margin: 0 0 1rem 0; font-size: 1rem; font-weight: 800; color: #121a3e; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="ph-bold ph-identification-badge" style="color: #505984;"></i>
+                            Fotografía e Identidad Académica (Directorio Público de Investigadores y Docentes)
+                        </h4>
+
+                        <div class="db-form-row">
+                            <div class="db-form-group">
+                                <label for="foto_perfil_file">
+                                    <i class="ph-bold ph-camera"></i> Subir Fotografía de Perfil (Opcional)
+                                </label>
+                                <input
+                                    type="file"
+                                    id="foto_perfil_file"
+                                    name="foto_perfil_file"
+                                    accept="image/jpeg,image/png,image/webp,image/gif"
+                                    style="padding: 0.55rem;"
+                                >
+                                <span class="db-form-hint">Formatos permitidos: JPG, PNG o WebP (máx. 5 MB).</span>
+                            </div>
+
+                            <div class="db-form-group">
+                                <label for="foto_perfil_url">
+                                    <i class="ph-bold ph-link"></i> O Enlace Directo a tu Foto (URL)
+                                </label>
+                                <input
+                                    type="url"
+                                    id="foto_perfil_url"
+                                    name="foto_perfil_url"
+                                    value="<?= preg_match('#^https?://#i', $fotoRawPerfil) ? htmlspecialchars($fotoRawPerfil) : '' ?>"
+                                    placeholder="https://ricardojdsg.github.io/assets/images/Ricardo-Verde.jpg"
+                                >
+                                <span class="db-form-hint">Si subes un archivo arriba, tendrá prioridad sobre la URL.</span>
+                            </div>
+                        </div>
+
+                        <div class="db-form-group" style="margin-top: 0.5rem;">
+                            <label for="grado_academico">
+                                <i class="ph-bold ph-graduation-cap"></i> Títulos / Grado Académico
+                            </label>
+                            <input
+                                type="text"
+                                id="grado_academico"
+                                name="grado_academico"
+                                value="<?= htmlspecialchars($gradoAcademicoPerfil) ?>"
+                                maxlength="250"
+                                placeholder="Ej: Ingeniero de Sistemas · Magister Scientiae en Computación · Doctor en Ciencias Aplicadas"
+                            >
+                            <span class="db-form-hint">Se mostrará debajo de tu nombre en el Directorio de Investigadores y en el Portal Externo.</span>
+                        </div>
+
+                        <div class="db-form-row" style="margin-top: 0.5rem;">
+                            <div class="db-form-group">
+                                <label for="orcid" style="display:inline-flex; align-items:center; gap:0.45rem;">
+                                    <svg width="18" height="18" viewBox="0 0 256 256" aria-hidden="true"><circle cx="128" cy="128" r="128" fill="#A6CE39"/><path fill="#FFF" d="M86.3 186.2H70.9V79.1h15.4v107.1zM78.6 47.2c-5.7 0-10.3 4.6-10.3 10.3 0 5.7 4.6 10.3 10.3 10.3s10.3-4.6 10.3-10.3c0-5.7-4.6-10.3-10.3-10.3zm30.3 31.9h41.6c39.6 0 57 28.3 57 53.6 0 27.5-21.5 53.6-56.8 53.6h-41.8V79.1zm15.4 93.3h24.5c34.9 0 42.9-26.5 42.9-39.7C191.7 111.2 178.9 93 148 93h-23.7v79.4z"/></svg>
+                                    Identificador ORCID (ID o URL)
+                                </label>
+                                <input
+                                    type="text"
+                                    id="orcid"
+                                    name="orcid"
+                                    value="<?= htmlspecialchars($orcidUrlCompleta ?: $orcidIdLimpio) ?>"
+                                    maxlength="120"
+                                    placeholder="https://orcid.org/0000-0001-8752-8550"
+                                >
+                                <span class="db-form-hint">Puedes pegar la URL completa de ORCID o los 16 dígitos (0000-0000-0000-0000).</span>
+                            </div>
+
+                            <div class="db-form-group">
+                                <label for="sitio_web" style="display:inline-flex; align-items:center; gap:0.45rem;">
+                                    <svg width="18" height="18" viewBox="0 0 256 256" aria-hidden="true"><circle cx="128" cy="128" r="128" fill="#2563EB"/><circle cx="128" cy="128" r="78" fill="none" stroke="#FFF" stroke-width="14"/><ellipse cx="128" cy="128" rx="38" ry="78" fill="none" stroke="#FFF" stroke-width="13"/><line x1="50" y1="128" x2="206" y2="128" stroke="#FFF" stroke-width="13"/></svg>
+                                    Sitio Web Personal / Portafolio Académico
+                                </label>
+                                <input
+                                    type="url"
+                                    id="sitio_web"
+                                    name="sitio_web"
+                                    value="<?= htmlspecialchars($sitioWebPerfil) ?>"
+                                    maxlength="255"
+                                    placeholder="https://ricardojdsg.github.io/"
+                                >
+                                <span class="db-form-hint">Enlace a tu página personal, portafolio académico o GitHub Pages.</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="db-form-actions">

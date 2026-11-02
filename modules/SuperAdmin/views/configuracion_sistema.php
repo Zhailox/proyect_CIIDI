@@ -48,6 +48,9 @@
         <button type="button" class="sa-tab-btn" onclick="switchConfigTab('tabAccesos', this)">
             <i class="ph-bold ph-lock-key"></i> Accesos por Módulo
         </button>
+        <button type="button" class="sa-tab-btn" onclick="switchConfigTab('tabFooter', this)">
+            <i class="ph-bold ph-layout"></i> Footer Institucional
+        </button>
     </div>
 
     <!-- TAB PAGINACIÓN -->
@@ -208,6 +211,117 @@
             </div>
         </div>
     </div>
+    <!-- TAB FOOTER INSTITUCIONAL -->
+    <?php
+    $footerConfig = $config['footer'] ?? (class_exists('SystemConfigService') ? SystemConfigService::getDefaultFooter() : []);
+    $columnasActuales = $footerConfig['columnas'] ?? [];
+    ?>
+    <div id="tabFooter" class="sa-tab-content">
+        <div class="glass-panel sa-footer-builder-panel">
+            <div class="sa-footer-builder-header">
+                <div>
+                    <h4>
+                        <i class="ph-bold ph-layout"></i> Personalización Escalable del Footer Institucional
+                    </h4>
+                    <p>
+                        Añade, edita o elimina columnas, bloques de texto, enlaces con íconos Phosphor y los textos de la barra inferior.
+                    </p>
+                </div>
+                <div class="sa-footer-builder-actions">
+                    <input type="hidden" name="restaurar_footer_defecto" id="inputRestaurarFooter" value="0">
+                    <button type="button" class="sa-btn sa-btn-danger-outline" onclick="confirmarRestaurarFooter()">
+                        <i class="ph-bold ph-arrow-counter-clockwise"></i> Restaurar por Defecto
+                    </button>
+                    <button type="button" class="sa-btn sa-btn-outline" onclick="agregarColumnaFooter()">
+                        <i class="ph-bold ph-plus-circle"></i> Añadir Columna
+                    </button>
+                </div>
+            </div>
+
+            <div id="contenedorColumnasFooter" class="sa-footer-columns-grid">
+                <?php foreach ($columnasActuales as $cIdx => $col): ?>
+                <div class="sa-footer-col-card" data-col-index="<?= $cIdx ?>">
+                    <div class="sa-footer-col-card-top">
+                        <strong>Columna #<span class="col-num-label"><?= $cIdx + 1 ?></span></strong>
+                        <button type="button" class="sa-btn-icon-danger" onclick="eliminarElementoPadre(this, '.sa-footer-col-card')" title="Eliminar Columna">
+                            <i class="ph-bold ph-trash"></i> Eliminar Columna
+                        </button>
+                    </div>
+
+                    <div class="sa-footer-field-row">
+                        <div class="sa-footer-field">
+                            <label>Título de la Columna</label>
+                            <input type="text" name="footer[columnas][<?= $cIdx ?>][titulo]" value="<?= htmlspecialchars($col['titulo'] ?? '') ?>" class="sa-filter-input" placeholder="Ej: Ubícanos">
+                        </div>
+                        <div class="sa-footer-field">
+                            <label>Ícono del Título (Phosphor)</label>
+                            <input type="text" name="footer[columnas][<?= $cIdx ?>][icono]" value="<?= htmlspecialchars($col['icono'] ?? '') ?>" class="sa-filter-input" placeholder="ph-fill ph-map-pin">
+                        </div>
+                    </div>
+
+                    <div class="sa-footer-subbox">
+                        <div class="sa-footer-subbox-head">
+                            <label>Bloques de Texto / Párrafos (Soporta &lt;strong&gt; y saltos de línea)</label>
+                            <button type="button" class="sa-btn sa-btn-sm" onclick="agregarBloqueTexto(this, <?= $cIdx ?>)">
+                                <i class="ph-bold ph-plus"></i> Párrafo
+                            </button>
+                        </div>
+                        <div class="lista-bloques-texto">
+                            <?php foreach (($col['bloques_texto'] ?? []) as $bloqueTxt): ?>
+                            <div class="sa-footer-item-row">
+                                <textarea name="footer[columnas][<?= $cIdx ?>][bloques_texto][]" rows="3" class="sa-filter-input"><?= htmlspecialchars($bloqueTxt) ?></textarea>
+                                <button type="button" class="sa-btn-icon-danger" onclick="eliminarElementoPadre(this, '.sa-footer-item-row')" title="Quitar párrafo">
+                                    <i class="ph-bold ph-x"></i>
+                                </button>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <div class="sa-footer-subbox">
+                        <div class="sa-footer-subbox-head">
+                            <label>Enlaces / Redes Sociales</label>
+                            <button type="button" class="sa-btn sa-btn-sm" onclick="agregarEnlaceFooter(this, <?= $cIdx ?>)">
+                                <i class="ph-bold ph-plus"></i> Enlace
+                            </button>
+                        </div>
+                        <div class="lista-enlaces-footer">
+                            <?php foreach (($col['enlaces'] ?? []) as $lIdx => $lnk): ?>
+                            <div class="sa-footer-link-row">
+                                <input type="text" name="footer[columnas][<?= $cIdx ?>][enlaces][<?= $lIdx ?>][icono]" value="<?= htmlspecialchars($lnk['icono'] ?? '') ?>" class="sa-filter-input" placeholder="Ícono (ph-fill ph-link)">
+                                <input type="text" name="footer[columnas][<?= $cIdx ?>][enlaces][<?= $lIdx ?>][texto]" value="<?= htmlspecialchars($lnk['texto'] ?? '') ?>" class="sa-filter-input" placeholder="Texto del enlace">
+                                <input type="text" name="footer[columnas][<?= $cIdx ?>][enlaces][<?= $lIdx ?>][url]" value="<?= htmlspecialchars($lnk['url'] ?? '#') ?>" class="sa-filter-input" placeholder="URL (https://... o #)">
+                                <button type="button" class="sa-btn-icon-danger" onclick="eliminarElementoPadre(this, '.sa-footer-link-row')" title="Quitar enlace">
+                                    <i class="ph-bold ph-x"></i>
+                                </button>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <div class="sa-footer-field">
+                        <label>Lema o Nota Destacada (Opcional)</label>
+                        <input type="text" name="footer[columnas][<?= $cIdx ?>][lema]" value="<?= htmlspecialchars($col['lema'] ?? '') ?>" class="sa-filter-input" placeholder="Ej: &quot;Somos Excelencia Académica...&quot;">
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+
+            <div class="sa-footer-bottom-config">
+                <h5><i class="ph-bold ph-rows"></i> Barra Inferior de Derechos y Créditos (Footer Bottom)</h5>
+                <div class="sa-footer-field-row">
+                    <div class="sa-footer-field">
+                        <label>Texto Izquierdo (Copyright)</label>
+                        <input type="text" name="footer[bottom_izquierda]" value="<?= htmlspecialchars($footerConfig['bottom_izquierda'] ?? '© 2026 UPTTMBI. Todos los derechos reservados.') ?>" class="sa-filter-input">
+                    </div>
+                    <div class="sa-footer-field">
+                        <label>Texto Derecho (Créditos / Desarrollador)</label>
+                        <input type="text" name="footer[bottom_derecha]" value="<?= htmlspecialchars($footerConfig['bottom_derecha'] ?? 'Desarrollado por PNF Informática') ?>" class="sa-filter-input">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
         <button type="submit" class="sa-btn sa-btn-primary">
@@ -215,22 +329,20 @@
         </button>
     </div>
 </form>
-</div>
 
 <script>
+let contadorColumnasFooter = <?= count($columnasActuales) ?>;
+
 function switchConfigTab(tabId, btnElement) {
-    // Ocultar contenidos
     const tabs = document.querySelectorAll('.sa-tab-content');
     tabs.forEach(tab => {
         tab.style.display = 'none';
         tab.classList.remove('active');
     });
 
-    // Desactivar botones
     const buttons = document.querySelectorAll('.sa-tab-btn');
     buttons.forEach(button => button.classList.remove('tab-active'));
 
-    // Activar seleccionado
     const selectedTab = document.getElementById(tabId);
     if (selectedTab) {
         selectedTab.style.display = 'block';
@@ -241,19 +353,106 @@ function switchConfigTab(tabId, btnElement) {
         btnElement.classList.add('tab-active');
     }
 
-    // Guardar en persistencia
     sessionStorage.setItem('gestorConfigTab', tabId);
 }
 
-// Carga Inicial
+function eliminarElementoPadre(btn, selector) {
+    const el = btn.closest(selector);
+    if (el) el.remove();
+}
+
+function agregarBloqueTexto(btn, colIdx) {
+    const contenedor = btn.closest('.sa-footer-subbox').querySelector('.lista-bloques-texto');
+    const div = document.createElement('div');
+    div.className = 'sa-footer-item-row';
+    div.innerHTML = `
+        <textarea name="footer[columnas][${colIdx}][bloques_texto][]" rows="3" class="sa-filter-input" placeholder="Escribe el contenido del párrafo..."></textarea>
+        <button type="button" class="sa-btn-icon-danger" onclick="eliminarElementoPadre(this, '.sa-footer-item-row')">
+            <i class="ph-bold ph-x"></i>
+        </button>
+    `;
+    contenedor.appendChild(div);
+}
+
+function agregarEnlaceFooter(btn, colIdx) {
+    const contenedor = btn.closest('.sa-footer-subbox').querySelector('.lista-enlaces-footer');
+    const linkIdx = Date.now() + Math.floor(Math.random() * 1000);
+    const div = document.createElement('div');
+    div.className = 'sa-footer-link-row';
+    div.innerHTML = `
+        <input type="text" name="footer[columnas][${colIdx}][enlaces][${linkIdx}][icono]" class="sa-filter-input" placeholder="ph-fill ph-globe">
+        <input type="text" name="footer[columnas][${colIdx}][enlaces][${linkIdx}][texto]" class="sa-filter-input" placeholder="Nombre del enlace">
+        <input type="text" name="footer[columnas][${colIdx}][enlaces][${linkIdx}][url]" value="#" class="sa-filter-input" placeholder="https://...">
+        <button type="button" class="sa-btn-icon-danger" onclick="eliminarElementoPadre(this, '.sa-footer-link-row')">
+            <i class="ph-bold ph-x"></i>
+        </button>
+    `;
+    contenedor.appendChild(div);
+}
+
+function agregarColumnaFooter() {
+    const idx = contadorColumnasFooter++;
+    const contenedor = document.getElementById('contenedorColumnasFooter');
+    const card = document.createElement('div');
+    card.className = 'sa-footer-col-card';
+    card.innerHTML = `
+        <div class="sa-footer-col-card-top">
+            <strong>Nueva Columna</strong>
+            <button type="button" class="sa-btn-icon-danger" onclick="eliminarElementoPadre(this, '.sa-footer-col-card')">
+                <i class="ph-bold ph-trash"></i> Eliminar Columna
+            </button>
+        </div>
+        <div class="sa-footer-field-row">
+            <div class="sa-footer-field">
+                <label>Título de la Columna</label>
+                <input type="text" name="footer[columnas][${idx}][titulo]" class="sa-filter-input" placeholder="Ej: Enlaces de Interés">
+            </div>
+            <div class="sa-footer-field">
+                <label>Ícono del Título (Phosphor)</label>
+                <input type="text" name="footer[columnas][${idx}][icono]" value="ph-fill ph-star" class="sa-filter-input" placeholder="ph-fill ph-star">
+            </div>
+        </div>
+        <div class="sa-footer-subbox">
+            <div class="sa-footer-subbox-head">
+                <label>Bloques de Texto / Párrafos</label>
+                <button type="button" class="sa-btn sa-btn-sm" onclick="agregarBloqueTexto(this, ${idx})">
+                    <i class="ph-bold ph-plus"></i> Párrafo
+                </button>
+            </div>
+            <div class="lista-bloques-texto"></div>
+        </div>
+        <div class="sa-footer-subbox">
+            <div class="sa-footer-subbox-head">
+                <label>Enlaces / Redes Sociales</label>
+                <button type="button" class="sa-btn sa-btn-sm" onclick="agregarEnlaceFooter(this, ${idx})">
+                    <i class="ph-bold ph-plus"></i> Enlace
+                </button>
+            </div>
+            <div class="lista-enlaces-footer"></div>
+        </div>
+        <div class="sa-footer-field">
+            <label>Lema o Nota Destacada (Opcional)</label>
+            <input type="text" name="footer[columnas][${idx}][lema]" class="sa-filter-input" placeholder="Frase opcional al pie de la columna">
+        </div>
+    `;
+    contenedor.appendChild(card);
+}
+
+function confirmarRestaurarFooter() {
+    if (confirm('¿Estás seguro de que deseas restaurar el Footer Institucional a sus valores originales de la UPTTMBI? Se descartarán las columnas y enlaces personalizados actuales.')) {
+        const inputReset = document.getElementById('inputRestaurarFooter');
+        if (inputReset) {
+            inputReset.value = '1';
+            inputReset.closest('form').submit();
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const parametros = new URLSearchParams(window.location.search);
     const tabDesdeUrl = parametros.get('tab');
     const tabGuardada = sessionStorage.getItem('gestorConfigTab');
-    
-    // Por defecto al Paginacion si no hay nada guardado
     const tabId = tabDesdeUrl || tabGuardada || 'tabPaginacion';
-    
     const boton = document.querySelector(`.sa-tab-btn[onclick*="'${tabId}'"]`);
     if (boton) {
         switchConfigTab(tabId, boton);

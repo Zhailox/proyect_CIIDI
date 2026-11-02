@@ -808,12 +808,13 @@ class AnaliticaController {
             }
             if (count($history) === 0) continue;
             $y = array_map('floatval', $history);
+            $yDamped = $this->amortiguarPicosPhp($y);
             $totalHistArea = (int)array_sum($y);
             $totalProjects += $totalHistArea;
 
             $candidatos = [];
             foreach (self::BASE_MODELOS as $tipo) {
-                [$curva, $rmse, $mae, $r2] = $this->ajustarModeloPhp($tipo, $y, $predSteps);
+                [$curva, $rmse, $mae, $r2] = $this->ajustarModeloPhp($tipo, $yDamped, $predSteps);
                 $candidatos[$tipo] = [
                     'curva' => $curva,
                     'rmse'  => $rmse,
@@ -924,7 +925,164 @@ class AnaliticaController {
                 'pred_steps'     => $predSteps,
                 'n_estimators'   => null,
             ],
+            'backtest'      => $this->calcularBacktestPhp($areas, $trimmedLabels, $ventana),
         ];
+    }
+
+    private function amortiguarPicosPhp(array $y): array {
+        $n = count($y);
+        if ($n < 4) return $y;
+        $out = $y;
+        for ($i = 0; $i < $n; $i++) {
+            $otros = [];
+            for ($j = 0; $j < $n; $j++) {
+                if ($j !== $i) $otros[] = $y[$j];
+            }
+            sort($otros);
+            $cnt = count($otros);
+            $med = $cnt % 2 === 1 ? $otros[(int)floor($cnt / 2)] : (($otros[$cnt / 2 - 1] + $otros[$cnt / 2]) / 2.0);
+            $desv = array_map(fn($v) => abs($v - $med), $otros);
+            sort($desv);
+            $mad = $cnt % 2 === 1 ? $desv[(int)floor($cnt / 2)] : (($desv[$cnt / 2 - 1] + $desv[$cnt / 2]) / 2.0);
+            $umbral = max($med + 3.2 * max($mad * 1.4826, 1.0), $med * 2.5 + 3.0);
+            if ($out[$i] > $umbral) {
+                $out[$i] = round($umbral + 0.22 * ($out[$i] - $umbral), 4);
+            }
+        }
+        return $out;
+    }
+
+    private function calcularBacktestPhp(array $areas, array $trimmedLabels, int $ventana): array {
+        $out = [];
+        foreach ([1 => '1t', 2 => '2t'] as $holdout => $key) {
+            $modelErrors = ['linear' => [], 'poly' => [], 'rf' => [], 'auto' => []];
+            $modelSqErrors = ['linear' => [], 'poly' => [], 'rf' => [], 'auto' => []];
+            $totalReal = 0.0;
+            $totalPred = ['linear' => 0.0, 'poly' => 0.0, 'rf' => 0.0, 'auto' => 0.0];
+            $totalAbsErr = ['linear' => 0.0, 'poly' => 0.0, 'rf' => 0.0, 'auto' => 0.0];
+            $lineasEval = [];
+            $holdoutTerms = ($trimmedLabels && count($trimmedLabels) >= $holdout)
+                ? array_map([$this, 'formatearTrimestre'], array_slice($trimmedLabels, -$holdout))
+                : array_map(fn($i) => "T-Holdout " . ($i + 1), range(0, $holdout - 1));
+
+            foreach ($areas as $a) {
+                $hist = array_values($a['history'] ?? []);
+                if ($ventana > 0 && count($hist) > $ventana) {
+                    $hist = array_slice($hist, -$ventana);
+                }
+                if (count($hist) < $holdout + 3) continue;
+                $trainRaw = array_map('floatval', array_slice($hist, 0, -$holdout));
+                $testReal = array_map('floatval', array_slice($hist, -$holdout));
+                $trainDamped = $this->amortiguarPicosPhp($trainRaw);
+
+                $predsPorModelo = [];
+                $inSampleScore = [];
+                foreach (self::BASE_MODELOS as $m) {
+                    [$curva, $rmseIn] = $this->ajustarModeloPhp($m, $trainDamped, $holdout);
+                    $predsPorModelo[$m] = $curva;
+                    $pen = $m === 'poly' ? 1.06 : ($m === 'rf' ? 1.15 : 1.0);
+                    $inSampleScore[$m] = $rmseIn * $pen;
+                }
+                asort($inSampleScore);
+                $bestTrainModel = array_key_first($inSampleScore) ?: 'linear';
+                $predsPorModelo['auto'] = $predsPorModelo[$bestTrainModel];
+
+                $realSum = array_sum($testReal);
+                $totalReal += $realSum;
+
+                $mejorModeloReal = 'linear';
+                $menorErrLinea = INF;
+                $detalleModelos = [];
+
+                foreach (['linear', 'poly', 'rf', 'auto'] as $m) {
+                    $pArr = $predsPorModelo[$m];
+                    $absErrs = [];
+                    $sqErrs = [];
+                    for ($idx = 0; $idx < $holdout; $idx++) {
+                        $ae = abs(($testReal[$idx] ?? 0.0) - ($pArr[$idx] ?? 0.0));
+                        $absErrs[] = $ae;
+                        $sqErrs[] = $ae * $ae;
+                        $modelErrors[$m][] = $ae;
+                        $modelSqErrors[$m][] = $ae * $ae;
+                    }
+                    $maeL = array_sum($absErrs) / max(1, count($absErrs));
+                    $rmseL = sqrt(array_sum($sqErrs) / max(1, count($sqErrs)));
+                    $predSum = array_sum($pArr);
+                    $totalPred[$m] += $predSum;
+                    $totalAbsErr[$m] += array_sum($absErrs);
+
+                    $denomL = max($realSum, $predSum, 1.0);
+                    $accL = round(max(0.0, min(100.0, (1.0 - (array_sum($absErrs) / ($denomL + $holdout * 0.75))) * 100.0)), 1);
+
+                    if ($m !== 'auto' && $maeL < $menorErrLinea) {
+                        $menorErrLinea = $maeL;
+                        $mejorModeloReal = $m;
+                    }
+
+                    $detalleModelos[$m] = [
+                        'pred'        => array_map(fn($v) => round($v, 2), $pArr),
+                        'pred_sum'    => round($predSum, 2),
+                        'mae'         => round($maeL, 3),
+                        'rmse'        => round($rmseL, 3),
+                        'accuracy_pct'=> $accL,
+                    ];
+                }
+
+                $lineasEval[] = [
+                    'id_linea'        => $a['id_linea'] ?? null,
+                    'name'            => $a['area'] ?? ($a['name'] ?? 'Línea'),
+                    'carrera_nombre'  => $a['carrera_nombre'] ?? 'General',
+                    'train_points'    => count($trainRaw),
+                    'real'            => array_map(fn($v) => (int)round($v), $testReal),
+                    'real_sum'        => (int)round($realSum),
+                    'auto_selected'   => $bestTrainModel,
+                    'best_actual_model'=> $mejorModeloReal,
+                    'models'          => $detalleModelos,
+                ];
+            }
+
+            $resumenModelos = [];
+            $ganadorBacktest = 'linear';
+            $mejorRmseBt = INF;
+            foreach (['linear', 'poly', 'rf', 'auto'] as $m) {
+                $errs = $modelErrors[$m];
+                $sq = $modelSqErrors[$m];
+                $maeG = $errs ? round(array_sum($errs) / count($errs), 4) : 0.0;
+                $rmseG = $sq ? round(sqrt(array_sum($sq) / count($sq)), 4) : 0.0;
+                $denomG = max($totalReal, $totalPred[$m], 1.0);
+                $nPts = max(1, count($errs));
+                $wmape = $totalAbsErr[$m] / ($denomG + $nPts * 0.5);
+                $accG = round(max(0.0, min(99.5, (1.0 - $wmape) * 100.0)), 1);
+                $resumenModelos[$m] = [
+                    'label'       => self::MODELOS[$m] ?? $m,
+                    'mae'         => $maeG,
+                    'rmse'        => $rmseG,
+                    'accuracy_pct'=> $accG,
+                    'total_pred'  => round($totalPred[$m], 2),
+                    'total_real'  => (int)round($totalReal),
+                ];
+                if ($m !== 'auto' && $rmseG < $mejorRmseBt) {
+                    $mejorRmseBt = $rmseG;
+                    $ganadorBacktest = $m;
+                }
+            }
+
+            $bestAcc = $resumenModelos[$ganadorBacktest]['accuracy_pct'] ?? 0.0;
+            $veredicto = $bestAcc >= 80.0 ? 'Alta Fiabilidad Empírica' : ($bestAcc >= 65.0 ? 'Fiabilidad Moderada / Aceptable' : 'Precaución: Alta Volatilidad Histórica');
+
+            $out[$key] = [
+                'holdout_steps'      => $holdout,
+                'holdout_terms'      => $holdoutTerms,
+                'lines_evaluated'    => count($lineasEval),
+                'winner_model'       => $ganadorBacktest,
+                'winner_model_label' => self::MODELOS[$ganadorBacktest] ?? $ganadorBacktest,
+                'winner_accuracy_pct'=> $bestAcc,
+                'verdict'            => $veredicto,
+                'models_summary'     => $resumenModelos,
+                'lines'              => $lineasEval,
+            ];
+        }
+        return $out;
     }
 
     private function ajustarModeloPhp(string $tipo, array $y, int $pasos): array {

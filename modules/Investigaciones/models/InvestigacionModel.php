@@ -544,11 +544,18 @@ class InvestigacionModel {
     }
 
     public function obtenerInvestigadores(array $filtros = []): array {
+        try {
+            $this->db->exec("ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS foto_perfil TEXT");
+            $this->db->exec("ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS orcid VARCHAR(150)");
+            $this->db->exec("ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS sitio_web VARCHAR(255)");
+            $this->db->exec("ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS grado_academico VARCHAR(255)");
+        } catch (\Throwable $e) {}
+
         $where = "
             WHERE u.activo = true 
               AND (
                   u.es_investigador = true 
-                  OR u.id_rol IN (1, 2, 4) 
+                  OR u.id_rol = 4 
                   OR u.es_profesor_pst = true 
                   OR EXISTS (SELECT 1 FROM public.profesor_linea pl WHERE pl.id_usuario = u.id)
                   OR EXISTS (SELECT 1 FROM public.investigaciones_ofertadas io WHERE io.id_profesor = u.id)
@@ -557,8 +564,9 @@ class InvestigacionModel {
         $params = [];
 
         if (!empty($filtros['busqueda'])) {
-            $where .= " AND (u.nombre_completo ILIKE ? OR u.email ILIKE ?)";
+            $where .= " AND (u.nombre_completo ILIKE ? OR u.email ILIKE ? OR COALESCE(u.grado_academico, '') ILIKE ?)";
             $term = '%' . trim($filtros['busqueda']) . '%';
+            $params[] = $term;
             $params[] = $term;
             $params[] = $term;
         }
@@ -588,6 +596,10 @@ class InvestigacionModel {
                 u.id_rol,
                 u.es_investigador,
                 u.es_profesor_pst,
+                u.foto_perfil,
+                u.orcid,
+                u.sitio_web,
+                u.grado_academico,
                 r.nombre as rol_nombre
             FROM public.usuarios u
             INNER JOIN public.roles r ON u.id_rol = r.id

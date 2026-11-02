@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../models/CursoModel.php';
 require_once __DIR__ . '/../services/CsrfService.php';
 require_once __DIR__ . '/../services/ImagenService.php';
+require_once __DIR__ . '/../services/ApiExternaCursosService.php';
 require_once CORE_PATH . 'Security/Auth.php';
 require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
 
@@ -16,6 +17,20 @@ class PromoController {
         $this->model = new CursoModel();
         $this->cfg   = $this->model->cargarConfig();
         $this->nivelAdmin = SystemConfigService::get('accesos_modulos.cursos.admin', 1);
+    }
+
+    /**
+     * Determina si el usuario actual es Super Administrador (nivel 0) o Comité/Admin (nivel 1)
+     * con privilegios para gestionar absolutamente todos los cursos del sistema.
+     */
+    private function esAdminTotalCursos(?array $usuario): bool {
+        if (!$usuario) return false;
+        $nivel = isset($usuario['nivel']) ? (int)$usuario['nivel'] : 999;
+        $rol   = strtolower((string)($usuario['rol'] ?? ''));
+        return ($nivel >= 0 && $nivel <= 1)
+            || str_contains($rol, 'super')
+            || str_contains($rol, 'admin')
+            || str_contains($rol, 'comit');
     }
 
     private function limpiarTexto(string $valor, int $maxLen = 5000): string {
@@ -80,20 +95,21 @@ class PromoController {
         $mensaje_error = $_SESSION['cur_error'] ?? null;
         unset($_SESSION['cur_exito'], $_SESSION['cur_error']);
 
-        $config_vista = $this->cfg;
+        $config_vista    = $this->cfg;
+        $es_admin_cursos = $this->esAdminTotalCursos($usuario_actual);
 
         return compact(
             'cursos', 'lineas', 'estadisticas', 'filtros', 'paginacion',
-            'mensaje_exito', 'mensaje_error', 'usuario_actual', 'config_vista'
+            'mensaje_exito', 'mensaje_error', 'usuario_actual', 'config_vista', 'es_admin_cursos'
         );
     }
 
     public function mostrarGestion(): array {
         Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'Cursos');
         
-        $usuario_actual = Auth::usuario();
-        $nivel = (int)($usuario_actual['nivel'] ?? -1);
-        $id_usuario = (int)($usuario_actual['id'] ?? 0);
+        $usuario_actual  = Auth::usuario();
+        $id_usuario      = (int)($usuario_actual['id'] ?? 0);
+        $es_admin_cursos = $this->esAdminTotalCursos($usuario_actual);
         
         $filtros  = [];
         $pagina   = max(1, (int)($_GET['pagina'] ?? 1));
@@ -110,11 +126,15 @@ class PromoController {
             $filtros['busqueda'] = $this->limpiarTexto($_GET['busqueda'], 200);
         }
 
-        $nivel_admin = $this->cfg['roles']['nivel_eliminar_curso'] ?? 2;
-        if ($nivel < $nivel_admin) {
+        if ($es_admin_cursos) {
+            if (!empty($_GET['docente']) && (int)$_GET['docente'] > 0) {
+                $filtros['id_docente'] = (int)$_GET['docente'];
+            }
+        } else {
             $filtros['id_docente'] = $id_usuario;
         }
 
+        $docentes  = $this->model->listarDocentes();
         $resultado = $this->model->listarCursos($filtros, $pagina, $porPagina);
         $cursos    = $resultado['cursos'];
         $total     = $resultado['total'];
@@ -134,8 +154,8 @@ class PromoController {
         $config_vista = $this->cfg;
 
         return compact(
-            'cursos', 'filtros', 'paginacion', 'mensaje_exito', 'mensaje_error', 
-            'usuario_actual', 'config_vista'
+            'cursos', 'docentes', 'filtros', 'paginacion', 'mensaje_exito', 'mensaje_error', 
+            'usuario_actual', 'config_vista', 'es_admin_cursos'
         );
     }
 
@@ -153,9 +173,10 @@ class PromoController {
         $csrf_token       = CursosCsrfService::campoHidden();
         $config_vista     = $this->cfg;
         $usuario_actual   = Auth::usuario();
+        $es_admin_cursos  = $this->esAdminTotalCursos($usuario_actual);
         unset($_SESSION['cur_form_error']);
 
-        return compact('docentes', 'lineas', 'todasDimensiones', 'curso', 'meta', 'modo', 'titulo_form', 'error', 'csrf_token', 'config_vista', 'usuario_actual');
+        return compact('docentes', 'lineas', 'todasDimensiones', 'curso', 'meta', 'modo', 'titulo_form', 'error', 'csrf_token', 'config_vista', 'usuario_actual', 'es_admin_cursos');
     }
 
     public function procesarCrear(): void {
@@ -180,12 +201,11 @@ class PromoController {
             header('Location: ?ruta=cursos-crear'); exit;
         }
 
-        $usuario_actual = Auth::usuario();
-        $nivel_usuario = (int)($usuario_actual['nivel'] ?? -1);
+        $usuario_actual  = Auth::usuario();
+        $es_admin_cursos = $this->esAdminTotalCursos($usuario_actual);
 
-        $nivel_admin = $this->cfg['roles']['nivel_ver_config'] ?? 3; // admin configurado
-        if ($nivel_usuario >= $nivel_admin) {
-            $id_docente = (int)($_POST['id_docente'] ?? 0);
+        if ($es_admin_cursos) {
+            $id_docente = (int)($_POST['id_docente'] ?? ($usuario_actual['id'] ?? 0));
             if ($id_docente <= 0) {
                 $_SESSION['cur_form_error'] = 'Debe seleccionar un docente responsable.';
                 header('Location: ?ruta=cursos-crear'); exit;
@@ -266,6 +286,7 @@ class PromoController {
         try {
             $nuevo_id = $this->model->crearCurso($datos);
             if ($nuevo_id) {
+                ApiExternaCursosService::dispararAutoPushSiHabilitado('curso_creado');
                 $_SESSION['cur_exito'] = 'Curso creado exitosamente.';
             } else {
                 $_SESSION['cur_error'] = 'No se pudo crear el curso. Intente nuevamente.';
@@ -290,10 +311,9 @@ class PromoController {
             header('Location: ?ruta=cursos-gestion'); exit;
         }
 
-        $usuario_actual = Auth::usuario();
-        $nivel_usuario = (int)($usuario_actual['nivel'] ?? -1);
-        $nivel_admin = $this->cfg['roles']['nivel_eliminar_curso'] ?? 2;
-        if ($nivel_usuario < $nivel_admin && $curso['id_docente'] != $usuario_actual['id']) {
+        $usuario_actual  = Auth::usuario();
+        $es_admin_cursos = $this->esAdminTotalCursos($usuario_actual);
+        if (!$es_admin_cursos && (int)$curso['id_docente'] !== (int)($usuario_actual['id'] ?? 0)) {
             $_SESSION['cur_error'] = 'No tienes permiso para editar este curso.';
             header('Location: ?ruta=cursos-gestion'); exit;
         }
@@ -309,7 +329,7 @@ class PromoController {
         $config_vista     = $this->cfg;
         unset($_SESSION['cur_form_error']);
 
-        return compact('docentes', 'lineas', 'todasDimensiones', 'curso', 'meta', 'modo', 'titulo_form', 'error', 'csrf_token', 'config_vista', 'usuario_actual');
+        return compact('docentes', 'lineas', 'todasDimensiones', 'curso', 'meta', 'modo', 'titulo_form', 'error', 'csrf_token', 'config_vista', 'usuario_actual', 'es_admin_cursos');
     }
 
     public function procesarEditar(): void {
@@ -332,12 +352,11 @@ class PromoController {
             header('Location: ?ruta=cursos-gestion'); exit;
         }
 
-        $usuario_actual = Auth::usuario();
-        $nivel_usuario = (int)($usuario_actual['nivel'] ?? -1);
-        $nivel_admin_edit = $this->cfg['roles']['nivel_eliminar_curso'] ?? 2;
+        $usuario_actual  = Auth::usuario();
+        $es_admin_cursos = $this->esAdminTotalCursos($usuario_actual);
         
-        // AUDITORIA: PREVENCIÓN IDOR
-        if ($nivel_usuario < $nivel_admin_edit && $curso_actual['id_docente'] != $usuario_actual['id']) {
+        // AUDITORIA: PREVENCIÓN IDOR (SuperAdmin y Comité pueden editar todos los cursos)
+        if (!$es_admin_cursos && (int)$curso_actual['id_docente'] !== (int)($usuario_actual['id'] ?? 0)) {
             $_SESSION['cur_error'] = 'Acceso denegado: No puedes editar un curso que no te pertenece.';
             header('Location: ?ruta=cursos-gestion'); exit;
         }
@@ -353,9 +372,8 @@ class PromoController {
             header("Location: ?ruta=cursos-editar&id={$id}"); exit;
         }
 
-        $nivel_admin_docente = $this->cfg['roles']['nivel_ver_config'] ?? 3;
-        if ($nivel_usuario >= $nivel_admin_docente) {
-            $id_docente = (int)($_POST['id_docente'] ?? 0);
+        if ($es_admin_cursos) {
+            $id_docente = (int)($_POST['id_docente'] ?? ($curso_actual['id_docente'] ?? 0));
             if ($id_docente <= 0) {
                 $_SESSION['cur_form_error'] = 'Debe seleccionar un docente responsable.';
                 header("Location: ?ruta=cursos-editar&id={$id}"); exit;
@@ -443,6 +461,7 @@ class PromoController {
         try {
             $ok = $this->model->editarCurso($id, $datos);
             if ($ok !== false) {
+                ApiExternaCursosService::dispararAutoPushSiHabilitado('curso_editado');
                 $_SESSION['cur_exito'] = 'Curso actualizado correctamente.';
             } else {
                 $_SESSION['cur_error'] = 'No se encontraron cambios o el curso no existe.';
@@ -478,11 +497,10 @@ class PromoController {
             header('Location: ?ruta=cursos-gestion'); exit;
         }
 
-        // AUDITORIA: PREVENCIÓN IDOR
-        $usuario_actual = Auth::usuario();
-        $nivel_usuario = (int)($usuario_actual['nivel'] ?? -1);
-        $nivel_admin = $this->cfg['roles']['nivel_eliminar_curso'] ?? 2;
-        if ($nivel_usuario < $nivel_admin && $curso['id_docente'] != $usuario_actual['id']) {
+        // AUDITORIA: PREVENCIÓN IDOR (SuperAdmin y Comité pueden eliminar cualquier curso)
+        $usuario_actual  = Auth::usuario();
+        $es_admin_cursos = $this->esAdminTotalCursos($usuario_actual);
+        if (!$es_admin_cursos && (int)$curso['id_docente'] !== (int)($usuario_actual['id'] ?? 0)) {
             $_SESSION['cur_error'] = 'Acceso denegado: No puedes eliminar este curso.';
             header('Location: ?ruta=cursos-gestion'); exit;
         }
@@ -497,6 +515,7 @@ class PromoController {
                         @unlink($old_path);
                     }
                 }
+                ApiExternaCursosService::dispararAutoPushSiHabilitado('curso_eliminado');
                 $_SESSION['cur_exito'] = "Curso eliminado del sistema.";
             } else {
                 $_SESSION['cur_error'] = 'No se pudo eliminar el curso.';
@@ -535,8 +554,9 @@ class PromoController {
             exit;
         }
 
-        $nivelAdmin = (int)($this->cfg['roles']['nivel_crear_curso'] ?? 1);
-        if ($curso['estado'] !== 'publicado' && $nivel > $nivelAdmin) {
+        $es_admin_cursos = $this->esAdminTotalCursos($usuario_actual);
+        $es_propietario  = !empty($usuario_actual['id']) && (int)$curso['id_docente'] === (int)$usuario_actual['id'];
+        if ($curso['estado'] !== 'publicado' && !$es_admin_cursos && !$es_propietario) {
             $_SESSION['cur_error'] = 'El curso solicitado no está disponible.';
             header('Location: ?ruta=cursos');
             exit;
@@ -547,7 +567,7 @@ class PromoController {
         }
 
         $config_vista = $this->cfg;
-        return compact('curso', 'usuario_actual', 'config_vista');
+        return compact('curso', 'usuario_actual', 'config_vista', 'es_admin_cursos');
     }
 
     public function mostrarConfig(): array {
@@ -588,8 +608,25 @@ class PromoController {
         $cfg['formulario_google']['habilitado'] = isset($_POST['google_form_habilitado']);
         $cfg['formulario_google']['titulo'] = $this->limpiarTexto($_POST['google_form_titulo'] ?? 'Formulario Oficial de Inscripción CIIDI', 150);
 
+        // Configuración API REST Externa y Sincronización con Servidor Externo (MySQL)
+        if (!isset($cfg['api_externa']) || !is_array($cfg['api_externa'])) {
+            $cfg['api_externa'] = [];
+        }
+        $cfg['api_externa']['habilitada'] = isset($_POST['api_externa_habilitada']);
+        $cfg['api_externa']['auto_push'] = isset($_POST['api_externa_auto_push']);
+        $cfg['api_externa']['requiere_api_key_lectura'] = isset($_POST['api_externa_requiere_key']);
+        $webhookUrl = $this->limpiarUrl($_POST['api_externa_webhook_url'] ?? '');
+        if ($webhookUrl !== '' || isset($_POST['api_externa_webhook_url'])) {
+            $cfg['api_externa']['webhook_url'] = $webhookUrl;
+        }
+        $apiKeyInput = $this->limpiarTexto($_POST['api_externa_api_key'] ?? '', 120);
+        if ($apiKeyInput !== '') {
+            $cfg['api_externa']['api_key'] = $apiKeyInput;
+        }
+
         try {
             $this->model->guardarConfig($cfg);
+            ApiExternaCursosService::dispararAutoPushSiHabilitado('config_actualizada');
             $_SESSION['cur_exito'] = 'Configuración del módulo guardada correctamente.';
         } catch (Exception $e) {
             error_log('Error guardar config: ' . $e->getMessage());
@@ -597,6 +634,130 @@ class PromoController {
         }
 
         header('Location: ?ruta=cursos-config'); exit;
+    }
+
+    /**
+     * Endpoint API REST Público/Autenticado para consumo desde el Servidor Externo (MySQL).
+     * Soporta GET ?ruta=api-cursos-externo&recurso=todo|cursos|investigadores|ping|curso
+     */
+    public function apiCatalogoExterno(): void {
+        if (!headers_sent()) {
+            header('Access-Control-Allow-Origin: *');
+            header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+            header('Access-Control-Allow-Headers: Content-Type, Authorization, X-CIIDI-API-Key');
+            header('Content-Type: application/json; charset=utf-8');
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
+            http_response_code(204);
+            exit;
+        }
+
+        $apiCfg = $this->cfg['api_externa'] ?? [];
+        if (isset($apiCfg['habilitada']) && !$apiCfg['habilitada']) {
+            http_response_code(503);
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'La API REST externa de Cursos e Investigadores se encuentra deshabilitada temporalmente en el CIIDI.',
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        if (!empty($apiCfg['requiere_api_key_lectura'])) {
+            $expectedKey = (string)($apiCfg['api_key'] ?? '');
+            $providedKey = (string)($_SERVER['HTTP_X_CIIDI_API_KEY'] ?? ($_GET['api_key'] ?? ''));
+            if ($expectedKey !== '' && !hash_equals($expectedKey, $providedKey)) {
+                http_response_code(401);
+                echo json_encode([
+                    'status'  => 'error',
+                    'message' => 'API Key inválida o no suministrada.',
+                ], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+        }
+
+        try {
+            $recurso = strtolower(trim((string)($_GET['recurso'] ?? 'todo')));
+            $incluirBase64 = ($_GET['base64'] ?? '1') !== '0';
+            $service = new ApiExternaCursosService($this->model);
+
+            if ($recurso === 'ping') {
+                $payload = $service->construirPayloadCompleto('todo', false);
+                echo json_encode([
+                    'status'       => 'success',
+                    'version_hash' => $payload['meta']['version_hash'],
+                    'generado_en'  => $payload['meta']['generado_en'],
+                    'estadisticas' => $payload['estadisticas'],
+                ], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+
+            if ($recurso === 'curso') {
+                $id   = (int)($_GET['id'] ?? 0);
+                $slug = trim((string)($_GET['slug'] ?? ''));
+                $payload = $service->construirPayloadCompleto('cursos', $incluirBase64);
+                $encontrado = null;
+                foreach ($payload['cursos'] as $c) {
+                    if (($id > 0 && $c['id'] === $id) || ($slug !== '' && $c['slug'] === $slug)) {
+                        $encontrado = $c;
+                        break;
+                    }
+                }
+                if (!$encontrado) {
+                    http_response_code(404);
+                    echo json_encode(['status' => 'error', 'message' => 'Curso no encontrado.'], JSON_UNESCAPED_UNICODE);
+                    exit;
+                }
+                echo json_encode([
+                    'status' => 'success',
+                    'meta'   => $payload['meta'],
+                    'curso'  => $encontrado,
+                ], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+
+            if (!in_array($recurso, ['todo', 'cursos', 'investigadores'], true)) {
+                $recurso = 'todo';
+            }
+
+            $payload = $service->construirPayloadCompleto($recurso, $incluirBase64);
+            echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        } catch (\Throwable $e) {
+            http_response_code(500);
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'Error interno al generar el catálogo API REST: ' . $e->getMessage(),
+            ], JSON_UNESCAPED_UNICODE);
+        }
+        exit;
+    }
+
+    /**
+     * Sincronización manual inmediata (Push Webhook) desde el CIIDI hacia el Servidor Externo MySQL.
+     */
+    public function sincronizarServidorExterno(): void {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Cursos');
+
+        $webhookUrl = !empty($_POST['webhook_url']) ? $this->limpiarUrl($_POST['webhook_url']) : null;
+        $apiKey     = !empty($_POST['api_key']) ? $this->limpiarTexto($_POST['api_key'], 120) : null;
+
+        $service = new ApiExternaCursosService($this->model);
+        $res = $service->empujarAServidorExterno($webhookUrl, $apiKey, 'manual_admin');
+
+        if (!empty($_POST['ajax']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest') {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode($res, JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        if ($res['ok']) {
+            $_SESSION['cur_exito'] = "Sincronización exitosa con el servidor externo: {$res['cursos_enviados']} cursos y {$res['inv_enviados']} investigadores actualizados en MySQL.";
+        } else {
+            $_SESSION['cur_error'] = "No se pudo completar el Push al servidor externo: " . $res['mensaje'];
+        }
+        header('Location: ?ruta=cursos-config');
+        exit;
     }
 
     public function mostrarFormularioGoogle(): array {

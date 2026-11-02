@@ -225,9 +225,26 @@ class UsuarioModel {
     }
 
     /**
+     * Garantiza que existan las columnas académicas (foto_perfil, orcid, sitio_web, grado_academico)
+     */
+    public function asegurarColumnasPerfilAcademico(): void {
+        static $verificado = false;
+        if ($verificado) return;
+        $verificado = true;
+        try {
+            $db = Connection::getInstance();
+            $db->exec("ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS foto_perfil TEXT");
+            $db->exec("ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS orcid VARCHAR(150)");
+            $db->exec("ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS sitio_web VARCHAR(255)");
+            $db->exec("ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS grado_academico VARCHAR(255)");
+        } catch (Throwable $e) {}
+    }
+
+    /**
      * Obtiene los datos detallados del perfil para el panel de usuario
      */
     public function obtenerPerfilCompleto(int $id) {
+        $this->asegurarColumnasPerfilAcademico();
         $db = Connection::getInstance();
         $sql = "
             SELECT 
@@ -239,6 +256,10 @@ class UsuarioModel {
                 u.activo, 
                 u.email_verified,
                 u.contrasena,
+                u.foto_perfil,
+                u.orcid,
+                u.sitio_web,
+                u.grado_academico,
                 COALESCE(u.es_investigador, false) AS es_investigador,
                 COALESCE(u.es_profesor_pst, false) AS es_profesor_pst,
                 r.nombre AS nombre_rol,
@@ -257,6 +278,23 @@ class UsuarioModel {
         $stmt = $db->prepare($sql);
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Actualiza foto de perfil, ORCID, sitio web personal y grado académico del usuario/investigador
+     */
+    public function actualizarPerfilAcademico(int $id, ?string $fotoPerfil, ?string $orcid, ?string $sitioWeb, ?string $gradoAcademico): bool {
+        $this->asegurarColumnasPerfilAcademico();
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("
+            UPDATE public.usuarios
+            SET foto_perfil = ?,
+                orcid = ?,
+                sitio_web = ?,
+                grado_academico = ?
+            WHERE id = ?
+        ");
+        return $stmt->execute([$fotoPerfil, $orcid, $sitioWeb, $gradoAcademico, $id]);
     }
 
     /**

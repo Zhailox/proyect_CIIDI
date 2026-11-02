@@ -89,8 +89,17 @@ $selectedDims     = $curso['dimensiones_ids'] ?? [];
             </div>
 
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:1.5rem;">
-                <?php $nivel_usuario = (int)($usuario_actual['nivel'] ?? -1); ?>
-                <?php if ($nivel_usuario >= 3): ?>
+                <?php
+                    $nivel_usuario = isset($usuario_actual['nivel']) ? (int)$usuario_actual['nivel'] : 999;
+                    $rol_usuario   = strtolower((string)($usuario_actual['rol'] ?? ''));
+                    $puede_asignar_docente = !empty($es_admin_cursos)
+                        || ($nivel_usuario >= 0 && $nivel_usuario <= 1)
+                        || str_contains($rol_usuario, 'super')
+                        || str_contains($rol_usuario, 'admin')
+                        || str_contains($rol_usuario, 'comit');
+                    $docente_seleccionado = $f_docente !== '' ? (int)$f_docente : (int)($usuario_actual['id'] ?? 0);
+                ?>
+                <?php if ($puede_asignar_docente): ?>
                 <div>
                     <label for="id_docente" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Docente Responsable <span style="color:var(--cur-danger);">*</span></label>
                     <div style="position:relative;">
@@ -98,7 +107,9 @@ $selectedDims     = $curso['dimensiones_ids'] ?? [];
                         <select id="id_docente" name="id_docente" required style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
                             <option value="">— Seleccionar docente —</option>
                             <?php foreach ($docentes as $doc): ?>
-                            <option value="<?= (int)$doc['id'] ?>" <?= ($f_docente == $doc['id']) ? 'selected' : '' ?>><?= htmlspecialchars($doc['nombre_completo']) ?></option>
+                            <option value="<?= (int)$doc['id'] ?>" <?= ($docente_seleccionado === (int)$doc['id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($doc['nombre_completo']) ?><?= !empty($doc['rol_nombre']) ? ' (' . htmlspecialchars($doc['rol_nombre']) . ')' : '' ?>
+                            </option>
                             <?php endforeach; ?>
                         </select>
                         <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted); pointer-events:none;"></i>
@@ -374,13 +385,13 @@ $selectedDims     = $curso['dimensiones_ids'] ?? [];
 
                 <div style="grid-column: 1 / -1;">
                     <label for="url_formulario_google" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">
-                        <i class="ph-bold ph-google-logo" style="color:#EA4335;"></i> Formulario de Google (Inscripción específica de este curso - Opcional)
+                        <i class="ph-bold ph-google-logo" style="color:#EA4335;"></i> Formulario de Inscripción Propio del Curso (Google Forms)
                     </label>
                     <div style="position:relative;">
                         <i class="ph-bold ph-link" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
-                        <input type="url" id="url_formulario_google" name="url_formulario_google" value="<?= $f_gform ?>" placeholder="Ej: https://docs.google.com/forms/d/e/.../viewform (Dejar en blanco para usar el global del sistema)" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                        <input type="url" id="url_formulario_google" name="url_formulario_google" value="<?= $f_gform ?>" placeholder="Ej: https://docs.google.com/forms/d/e/.../viewform" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
                     </div>
-                    <small style="color:var(--cur-muted); display:block; margin-top:0.4rem;">Si se define una URL de Google Form aquí, la vista de inscripción separada cargará este formulario para este curso en particular.</small>
+                    <small style="color:var(--cur-muted); display:block; margin-top:0.4rem;">Ingresa el enlace del formulario de Google exclusivo para las inscripciones de este curso.</small>
                 </div>
 
             </div>

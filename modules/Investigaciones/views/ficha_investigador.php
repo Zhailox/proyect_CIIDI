@@ -8,17 +8,29 @@ $totalInvestigadores = count($investigadores ?? []);
 <div class="inv-wrapper" style="max-width: 1300px; margin: 0 auto; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;">
 
     <!-- HERO HEADER -->
-    <header class="inv-hero" style="background: linear-gradient(135deg, #121a3e 0%, #2a3666 50%, #505984 100%); padding: 3rem 2.5rem; border-radius: 20px; color: white; margin-bottom: 2rem; box-shadow: 0 15px 35px rgba(18, 26, 62, 0.15); position: relative; overflow: hidden;">
-        <div style="position: absolute; right: -40px; top: -40px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(112,144,203,0.25) 0%, rgba(255,255,255,0) 70%); border-radius: 50%; pointer-events: none;"></div>
+    <header class="inv-hero" style="background: linear-gradient(135deg, rgba(80, 89, 132, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%); padding: 3rem 2.5rem; border-radius: 16px; color: white; margin-bottom: 2rem; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06); border: 1px solid rgba(255, 255, 255, 0.15); position: relative; overflow: hidden;">
+        <svg style="position:absolute; inset:0; width:100%; height:100%; opacity:0.18; pointer-events:none;" xmlns="http://www.w3.org/2000/svg">
+            <line x1="8%" y1="25%" x2="18%" y2="65%" stroke="#7090cb" stroke-width="1"/>
+            <line x1="18%" y1="65%" x2="32%" y2="30%" stroke="#7090cb" stroke-width="1"/>
+            <line x1="75%" y1="20%" x2="88%" y2="55%" stroke="#7090cb" stroke-width="1"/>
+            <line x1="88%" y1="55%" x2="78%" y2="80%" stroke="#7090cb" stroke-width="1"/>
+            <line x1="75%" y1="20%" x2="78%" y2="80%" stroke="#7090cb" stroke-width="1"/>
+            <circle cx="8%" cy="25%" r="3" fill="#7090cb"/>
+            <circle cx="18%" cy="65%" r="3.5" fill="#7090cb"/>
+            <circle cx="32%" cy="30%" r="2.5" fill="#7090cb"/>
+            <circle cx="75%" cy="20%" r="3.5" fill="#7090cb"/>
+            <circle cx="88%" cy="55%" r="3" fill="#7090cb"/>
+            <circle cx="78%" cy="80%" r="3" fill="#7090cb"/>
+        </svg>
         
-        <div style="position: relative; z-index: 2; max-width: 800px;">
-            <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.12); padding: 0.4rem 1rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2);">
-                <i class="ph-bold ph-identification-badge" style="color: #7090cb;"></i> Directorio Académico I+D
+        <div style="position: relative; z-index: 2; max-width: 820px; margin: 0 auto; text-align: center;">
+            <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(112, 144, 203, 0.25); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.3); padding: 5px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 1.1rem;">
+                <i class="ph-bold ph-identification-badge"></i> Directorio Académico I+D UPTTMBI
             </div>
-            <h1 style="font-size: 2.4rem; font-weight: 800; color: white; margin: 0 0 0.8rem 0; line-height: 1.2;">
+            <h1 style="font-size: 2.2rem; font-weight: 800; color: white; margin: 0 0 0.8rem 0; line-height: 1.25;">
                 Investigadores y Docentes
             </h1>
-            <p style="color: rgba(255,255,255,0.85); font-size: 1.1rem; line-height: 1.5; margin: 0;">
+            <p style="color: rgba(255,255,255,0.85); font-size: 1rem; line-height: 1.6; margin: 0;">
                 Conoce al cuerpo docente e investigadores adscritos a las líneas de investigación institucionales y los proyectos científicos y tecnológicos bajo su responsabilidad.
             </p>
         </div>
@@ -66,7 +78,7 @@ $totalInvestigadores = count($investigadores ?? []);
             </div>
 
             <div style="display: flex; gap: 0.8rem; align-items: center;">
-                <button type="submit" style="background: linear-gradient(135deg, #121a3e 0%, #505984 100%); color: white; border: none; padding: 0.75rem 1.6rem; border-radius: 10px; font-weight: 700; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 12px rgba(80,89,132,0.25);" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
+                <button type="submit" style="background: #505984; color: white; border: none; padding: 0.75rem 1.6rem; border-radius: 8px; font-weight: 700; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.25s; box-shadow: 0 4px 12px rgba(80,89,132,0.25);" onmouseover="this.style.background='#3C456A'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='#505984'; this.style.transform='translateY(0)';">
                     <i class="ph-bold ph-funnel"></i> Filtrar
                 </button>
 
@@ -117,43 +129,87 @@ $totalInvestigadores = count($investigadores ?? []);
                     if (!empty($p)) $iniciales .= mb_substr($p, 0, 1, 'UTF-8');
                 }
                 $iniciales = strtoupper($iniciales ?: 'IN');
+
+                $fotoRaw = trim((string)($inv['foto_perfil'] ?? ''));
+                $fotoUrl = '';
+                if ($fotoRaw !== '') {
+                    if (preg_match('#^https?://#i', $fotoRaw) || str_starts_with($fotoRaw, 'data:image/')) {
+                        $fotoUrl = $fotoRaw;
+                    } else {
+                        $fotoUrl = ltrim(preg_replace('#^public/#i', '', str_replace('\\', '/', $fotoRaw)), '/');
+                    }
+                }
+                $orcidRaw = trim((string)($inv['orcid'] ?? ''));
+                $orcidId = '';
+                $orcidHref = '';
+                if ($orcidRaw !== '' && preg_match('/(\d{4}-\d{4}-\d{4}-\d{3}[\dX])/i', $orcidRaw, $mO)) {
+                    $orcidId = strtoupper($mO[1]);
+                    $orcidHref = 'https://orcid.org/' . $orcidId;
+                }
+                $sitioWeb = trim((string)($inv['sitio_web'] ?? ''));
+                $gradoAcademico = trim((string)($inv['grado_academico'] ?? ''));
             ?>
             <div style="background: #ffffff; border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(18, 26, 62, 0.03); display: flex; flex-direction: column; transition: transform 0.25s, box-shadow 0.25s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 15px 35px rgba(80,89,132,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 25px rgba(18, 26, 62, 0.03)';">
                 
                 <!-- Encabezado de la Tarjeta -->
-                <div style="padding: 1.8rem 1.8rem 1.2rem 1.8rem; border-bottom: 1px solid #f1f5f9; display: flex; gap: 1.2rem; align-items: center;">
-                    <div style="width: 65px; height: 65px; min-width: 65px; border-radius: 16px; background: linear-gradient(135deg, #121a3e 0%, #505984 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 800; box-shadow: 0 8px 18px rgba(80,89,132,0.25); border: 2px solid white;">
-                        <?= $iniciales ?>
+                <div style="padding: 1.6rem 1.6rem 1.2rem 1.6rem; border-bottom: 1px solid #f1f5f9; display: flex; gap: 1.15rem; align-items: flex-start;">
+                    <div style="width: 72px; height: 72px; min-width: 72px; border-radius: 18px; background: linear-gradient(135deg, #505984 0%, #1e293b 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 800; box-shadow: 0 8px 18px rgba(80,89,132,0.22); border: 2px solid white; overflow: hidden;">
+                        <?php if ($fotoUrl !== ''): ?>
+                            <img src="<?= htmlspecialchars($fotoUrl) ?>" alt="<?= htmlspecialchars($inv['nombre_completo']) ?>" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <span style="display:none; width:100%; height:100%; align-items:center; justify-content:center;"><?= $iniciales ?></span>
+                        <?php else: ?>
+                            <?= $iniciales ?>
+                        <?php endif; ?>
                     </div>
                     <div style="flex: 1; min-width: 0;">
-                        <h3 style="color: #121a3e; margin: 0 0 0.3rem 0; font-size: 1.2rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="<?= htmlspecialchars($inv['nombre_completo']) ?>">
+                        <h3 style="color: #1e293b; margin: 0 0 0.2rem 0; font-size: 1.15rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="<?= htmlspecialchars($inv['nombre_completo']) ?>">
                             <?= htmlspecialchars($inv['nombre_completo']) ?>
                         </h3>
+                        <?php if ($gradoAcademico !== ''): ?>
+                            <div style="font-size: 0.78rem; color: #475569; font-weight: 600; margin-bottom: 0.45rem; line-height: 1.35;">
+                                <i class="ph-bold ph-graduation-cap" style="color: #505984;"></i> <?= htmlspecialchars($gradoAcademico) ?>
+                            </div>
+                        <?php endif; ?>
                         
-                        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.4rem;">
-                            <?php if (!empty($esSuperAdmin) && !empty($inv['rol_nombre'])): ?>
-                                <span style="background: #e0e7ff; color: #3730a3; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 20px; text-transform: uppercase;">
-                                    <?= htmlspecialchars($inv['rol_nombre']) ?>
-                                </span>
-                            <?php endif; ?>
+                        <div style="display: flex; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.45rem;">
+                            <span style="background: rgba(80, 89, 132, 0.1); color: #505984; border: 1px solid rgba(80, 89, 132, 0.22); font-size: 0.72rem; font-weight: 700; padding: 0.18rem 0.55rem; border-radius: 20px; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                <i class="ph-bold ph-chalkboard-teacher"></i> Profesor / Docente
+                            </span>
                             <?php if (!empty($inv['es_investigador']) || empty($inv['es_profesor_pst'])): ?>
-                                <span style="background: #ede9fe; color: #6d28d9; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 20px; display: inline-flex; align-items: center; gap: 0.3rem;">
-                                    <i class="ph-bold ph-flask"></i> Investigador
+                                <span style="background: rgba(112, 144, 203, 0.16); color: #3c456a; border: 1px solid rgba(112, 144, 203, 0.32); font-size: 0.72rem; font-weight: 700; padding: 0.18rem 0.55rem; border-radius: 20px; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                    <i class="ph-bold ph-flask"></i> Investigador Acreditado
                                 </span>
                             <?php endif; ?>
                             <?php if (!empty($inv['es_profesor_pst'])): ?>
-                                <span style="background: #dcfce7; color: #166534; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 20px;">
-                                    Prof. PST
+                                <span style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 0.72rem; font-weight: 700; padding: 0.18rem 0.55rem; border-radius: 20px;">
+                                    Docente PST
                                 </span>
                             <?php endif; ?>
                         </div>
 
-                        <div style="color: #64748b; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        <div style="color: #64748b; font-size: 0.83rem; display: flex; align-items: center; gap: 0.35rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: <?= ($orcidHref !== '' || $sitioWeb !== '') ? '0.5rem' : '0' ?>;">
                             <i class="ph-fill ph-envelope-simple" style="color: #505984;"></i>
                             <a href="mailto:<?= htmlspecialchars($inv['email']) ?>" style="color: #64748b; text-decoration: none;" onmouseover="this.style.color='#505984';" onmouseout="this.style.color='#64748b;'">
                                 <?= htmlspecialchars($inv['email'] ?: 'Sin correo registrado') ?>
                             </a>
                         </div>
+
+                        <?php if ($orcidHref !== '' || $sitioWeb !== ''): ?>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center;">
+                            <?php if ($orcidHref !== ''): ?>
+                                <a href="<?= htmlspecialchars($orcidHref) ?>" target="_blank" rel="noopener noreferrer" title="ORCID verificado: <?= htmlspecialchars($orcidId) ?>" style="display: inline-flex; align-items: center; gap: 0.35rem; background: #f8fafc; color: #1e293b; border: 1px solid rgba(80, 89, 132, 0.25); padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.74rem; font-weight: 700; text-decoration: none; transition: all 0.15s;" onmouseover="this.style.borderColor='#505984'; this.style.background='rgba(80,89,132,0.06)';" onmouseout="this.style.borderColor='rgba(80,89,132,0.25)'; this.style.background='#f8fafc';">
+                                    <svg width="16" height="16" viewBox="0 0 256 256" aria-hidden="true" style="flex-shrink:0;"><circle cx="128" cy="128" r="128" fill="#A6CE39"/><path fill="#FFF" d="M86.3 186.2H70.9V79.1h15.4v107.1zM78.6 47.2c-5.7 0-10.3 4.6-10.3 10.3 0 5.7 4.6 10.3 10.3 10.3s10.3-4.6 10.3-10.3c0-5.7-4.6-10.3-10.3-10.3zm30.3 31.9h41.6c39.6 0 57 28.3 57 53.6 0 27.5-21.5 53.6-56.8 53.6h-41.8V79.1zm15.4 93.3h24.5c34.9 0 42.9-26.5 42.9-39.7C191.7 111.2 178.9 93 148 93h-23.7v79.4z"/></svg>
+                                    <span><?= htmlspecialchars($orcidId) ?></span>
+                                </a>
+                            <?php endif; ?>
+                            <?php if ($sitioWeb !== ''): ?>
+                                <a href="<?= htmlspecialchars($sitioWeb) ?>" target="_blank" rel="noopener noreferrer" title="Sitio Web Personal: <?= htmlspecialchars($sitioWeb) ?>" style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(80, 89, 132, 0.08); color: #505984; border: 1px solid rgba(80, 89, 132, 0.24); padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.74rem; font-weight: 700; text-decoration: none; transition: all 0.15s;" onmouseover="this.style.background='#505984'; this.style.color='#ffffff';" onmouseout="this.style.background='rgba(80,89,132,0.08)'; this.style.color='#505984';">
+                                    <svg width="16" height="16" viewBox="0 0 256 256" aria-hidden="true" style="flex-shrink:0;"><circle cx="128" cy="128" r="128" fill="#505984"/><circle cx="128" cy="128" r="78" fill="none" stroke="#FFF" stroke-width="14"/><ellipse cx="128" cy="128" rx="38" ry="78" fill="none" stroke="#FFF" stroke-width="13"/><line x1="50" y1="128" x2="206" y2="128" stroke="#FFF" stroke-width="13"/></svg>
+                                    <span>Sitio Personal</span>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -262,7 +318,7 @@ $totalInvestigadores = count($investigadores ?? []);
                     </div>
 
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <button type="button" onclick="abrirPerfilInvestigador(<?= (int)$inv['id'] ?>)" style="background: linear-gradient(135deg, #121a3e 0%, #505984 100%); color: #ffffff; border: none; padding: 0.5rem 0.9rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s; box-shadow: 0 3px 10px rgba(80,89,132,0.22);" onmouseover="this.style.transform='translateY(-1px)';" onmouseout="this.style.transform='translateY(0)';">
+                        <button type="button" onclick="abrirPerfilInvestigador(<?= (int)$inv['id'] ?>)" style="background: #505984; color: #ffffff; border: none; padding: 0.5rem 0.9rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s; box-shadow: 0 3px 10px rgba(80,89,132,0.22);" onmouseover="this.style.background='#3C456A'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='#505984'; this.style.transform='translateY(0)';">
                             <i class="ph-bold ph-identification-card"></i> Ver Perfil
                         </button>
                         <a href="?ruta=investigaciones&q=<?= urlencode($inv['nombre_completo']) ?>" style="background: #ffffff; color: #505984; border: 1px solid rgba(80,89,132,0.25); padding: 0.5rem 0.85rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.2s;" onmouseover="this.style.background='#505984'; this.style.color='#ffffff';" onmouseout="this.style.background='#ffffff'; this.style.color='#505984';">
@@ -314,14 +370,34 @@ function abrirPerfilInvestigador(id) {
     const trayectosPst = Array.isArray(inv.trayectos_pst) ? inv.trayectos_pst : [];
 
     let badgesHtml = '';
-    if (esSuperAdminView && inv.rol_nombre) {
-        badgesHtml += `<span style="background:rgba(255,255,255,0.2); color:#ffffff; font-size:0.75rem; font-weight:700; padding:0.25rem 0.7rem; border-radius:20px; text-transform:uppercase; border:1px solid rgba(255,255,255,0.25);">${escPerfil(inv.rol_nombre)}</span>`;
-    }
+    badgesHtml += `<span style="background:rgba(255,255,255,0.16); color:#ffffff; border:1px solid rgba(255,255,255,0.28); font-size:0.75rem; font-weight:700; padding:0.25rem 0.7rem; border-radius:20px; display:inline-flex; align-items:center; gap:0.3rem;"><i class="ph-bold ph-chalkboard-teacher"></i> Profesor / Docente UPTTMBI</span>`;
     if (inv.es_investigador || !inv.es_profesor_pst) {
-        badgesHtml += `<span style="background:#ede9fe; color:#5b21b6; font-size:0.75rem; font-weight:700; padding:0.25rem 0.7rem; border-radius:20px; display:inline-flex; align-items:center; gap:0.3rem;"><i class="ph-bold ph-flask"></i> Investigador Acreditado</span>`;
+        badgesHtml += `<span style="background:rgba(112,144,203,0.28); color:#ffffff; border:1px solid rgba(255,255,255,0.32); font-size:0.75rem; font-weight:700; padding:0.25rem 0.7rem; border-radius:20px; display:inline-flex; align-items:center; gap:0.3rem;"><i class="ph-bold ph-flask"></i> Investigador Acreditado</span>`;
     }
     if (inv.es_profesor_pst) {
-        badgesHtml += `<span style="background:#dcfce7; color:#166534; font-size:0.75rem; font-weight:700; padding:0.25rem 0.7rem; border-radius:20px; display:inline-flex; align-items:center; gap:0.3rem;"><i class="ph-bold ph-chalkboard-teacher"></i> Docente PST</span>`;
+        badgesHtml += `<span style="background:rgba(255,255,255,0.12); color:#e2e8f0; border:1px solid rgba(255,255,255,0.24); font-size:0.75rem; font-weight:700; padding:0.25rem 0.7rem; border-radius:20px; display:inline-flex; align-items:center; gap:0.3rem;"><i class="ph-bold ph-graduation-cap"></i> Docente PST</span>`;
+    }
+
+    let fotoModalUrl = String(inv.foto_perfil || '').trim();
+    if (fotoModalUrl && !/^https?:\/\//i.test(fotoModalUrl) && !fotoModalUrl.startsWith('data:image/')) {
+        fotoModalUrl = fotoModalUrl.replace(/^\\\\+|\/+/g, '').replace(/^public\//i, '');
+    }
+    const avatarModalHtml = fotoModalUrl
+        ? `<img src="${escPerfil(fotoModalUrl)}" alt="${escPerfil(inv.nombre_completo)}" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><span style="display:none; width:100%; height:100%; align-items:center; justify-content:center;">${iniciales}</span>`
+        : iniciales;
+
+    const orcidMatch = String(inv.orcid || '').match(/(\d{4}-\d{4}-\d{4}-\d{3}[\dX])/i);
+    const orcidIdStr = orcidMatch ? orcidMatch[1].toUpperCase() : '';
+    const orcidUrlStr = orcidIdStr ? ('https://orcid.org/' + orcidIdStr) : '';
+    const sitioWebStr = String(inv.sitio_web || '').trim();
+    const gradoAcadStr = String(inv.grado_academico || '').trim();
+
+    let linksAcadHtml = '';
+    if (orcidUrlStr || sitioWebStr) {
+        linksAcadHtml = `<div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:0.65rem;">` +
+            (orcidUrlStr ? `<a href="${escPerfil(orcidUrlStr)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:0.4rem; background:rgba(255,255,255,0.95); color:#1e293b; border:1px solid rgba(255,255,255,0.4); padding:0.28rem 0.75rem; border-radius:999px; font-size:0.78rem; font-weight:700; text-decoration:none;"><svg width="17" height="17" viewBox="0 0 256 256" aria-hidden="true"><circle cx="128" cy="128" r="128" fill="#A6CE39"/><path fill="#FFF" d="M86.3 186.2H70.9V79.1h15.4v107.1zM78.6 47.2c-5.7 0-10.3 4.6-10.3 10.3 0 5.7 4.6 10.3 10.3 10.3s10.3-4.6 10.3-10.3c0-5.7-4.6-10.3-10.3-10.3zm30.3 31.9h41.6c39.6 0 57 28.3 57 53.6 0 27.5-21.5 53.6-56.8 53.6h-41.8V79.1zm15.4 93.3h24.5c34.9 0 42.9-26.5 42.9-39.7C191.7 111.2 178.9 93 148 93h-23.7v79.4z"/></svg> ORCID: ${escPerfil(orcidIdStr)}</a>` : '') +
+            (sitioWebStr ? `<a href="${escPerfil(sitioWebStr)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:0.4rem; background:rgba(255,255,255,0.95); color:#505984; border:1px solid rgba(255,255,255,0.4); padding:0.28rem 0.75rem; border-radius:999px; font-size:0.78rem; font-weight:700; text-decoration:none;"><svg width="17" height="17" viewBox="0 0 256 256" aria-hidden="true"><circle cx="128" cy="128" r="128" fill="#505984"/><circle cx="128" cy="128" r="78" fill="none" stroke="#FFF" stroke-width="14"/><ellipse cx="128" cy="128" rx="38" ry="78" fill="none" stroke="#FFF" stroke-width="13"/><line x1="50" y1="128" x2="206" y2="128" stroke="#FFF" stroke-width="13"/></svg> Sitio Personal: ${escPerfil(sitioWebStr.replace(/^https?:\/\//i, '').replace(/\/$/, ''))}</a>` : '') +
+            `</div>`;
     }
 
     let lineasHtml = '';
@@ -401,24 +477,26 @@ function abrirPerfilInvestigador(id) {
 
     document.getElementById('inv-perfil-content').innerHTML = `
         <!-- Banner superior -->
-        <div style="background:linear-gradient(135deg, #121a3e 0%, #2a3666 55%, #505984 100%); padding:2rem 2rem 1.8rem 2rem; color:white; position:relative;">
+        <div style="background:linear-gradient(135deg, rgba(80, 89, 132, 0.96) 0%, rgba(30, 41, 59, 0.98) 100%); padding:2rem 2rem 1.8rem 2rem; color:white; position:relative;">
             <button type="button" onclick="cerrarPerfilInvestigador()"
                     style="position:absolute; right:1.2rem; top:1.2rem; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.25); color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1rem;">
                 <i class="ph-bold ph-x"></i>
             </button>
             <div style="display:flex; align-items:center; gap:1.3rem; flex-wrap:wrap;">
-                <div style="width:76px; height:76px; border-radius:20px; background:rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.4); display:flex; align-items:center; justify-content:center; font-size:1.7rem; font-weight:800; color:white; flex-shrink:0;">
-                    ${iniciales}
+                <div style="width:82px; height:82px; border-radius:20px; background:rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.4); display:flex; align-items:center; justify-content:center; font-size:1.7rem; font-weight:800; color:white; flex-shrink:0; overflow:hidden;">
+                    ${avatarModalHtml}
                 </div>
                 <div style="flex:1; min-width:220px;">
                     <div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.5rem;">
                         ${badgesHtml}
                     </div>
-                    <h2 style="margin:0 0 0.35rem 0; font-size:1.45rem; font-weight:800; color:white;">${escPerfil(inv.nombre_completo)}</h2>
+                    <h2 style="margin:0 0 0.25rem 0; font-size:1.45rem; font-weight:800; color:white;">${escPerfil(inv.nombre_completo)}</h2>
+                    ${gradoAcadStr ? `<div style="font-size:0.86rem; color:rgba(255,255,255,0.92); font-weight:600; margin-bottom:0.35rem;"><i class="ph-bold ph-graduation-cap"></i> ${escPerfil(gradoAcadStr)}</div>` : ''}
                     <div style="font-size:0.9rem; color:rgba(255,255,255,0.85); display:flex; align-items:center; gap:0.4rem;">
                         <i class="ph-fill ph-envelope-simple"></i>
                         <a href="mailto:${escPerfil(inv.email)}" style="color:white; text-decoration:underline;">${escPerfil(inv.email || 'Sin correo registrado')}</a>
                     </div>
+                    ${linksAcadHtml}
                 </div>
             </div>
         </div>

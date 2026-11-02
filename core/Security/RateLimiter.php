@@ -1,5 +1,6 @@
 <?php
 // core/Security/RateLimiter.php
+require_once __DIR__ . '/../Database/Connection.php';
 
 class RateLimiter {
     private static ?array $memoryWhitelist = null;
@@ -242,7 +243,7 @@ class RateLimiter {
 
     public static function desbloquearIP(string $ip): bool {
         try {
-            $db = Connection::getInstance();
+            $db = Connection::getInstance(true);
             if ($db) {
                 $stmt = $db->prepare("DELETE FROM waf_rate_limiter WHERE ip = ?");
                 $stmt->execute([$ip]);
@@ -301,7 +302,7 @@ class RateLimiter {
         }
 
         try {
-            $db = Connection::getInstance();
+            $db = Connection::getInstance(true);
             if ($db) {
                 $stmt = $db->prepare("SELECT ip, razon AS nota, creado_el AS fecha_alta, datos_adicionales FROM waf_rate_limiter WHERE tipo = 'whitelist'");
                 $stmt->execute();
@@ -333,7 +334,7 @@ class RateLimiter {
     private static function guardarListaBlanca(array $whitelist): bool {
         self::$memoryWhitelist = $whitelist;
         try {
-            $db = Connection::getInstance();
+            $db = Connection::getInstance(true);
             if ($db) {
                 $db->exec("DELETE FROM waf_rate_limiter WHERE tipo = 'whitelist'");
                 $stmt = $db->prepare("INSERT INTO waf_rate_limiter (ip, tipo, razon, datos_adicionales) VALUES (?, 'whitelist', ?, ?)");
@@ -360,7 +361,7 @@ class RateLimiter {
 
     public static function obtenerIntentos(): array {
         try {
-            $db = Connection::getInstance();
+            $db = Connection::getInstance(true);
             if ($db) {
                 $stmt = $db->prepare("SELECT ip, intentos, EXTRACT(EPOCH FROM primer_intento)::bigint AS primer_intento, EXTRACT(EPOCH FROM ultimo_intento)::bigint AS ultimo_intento, EXTRACT(EPOCH FROM bloqueado_hasta)::bigint AS bloqueado_hasta, datos_adicionales FROM waf_rate_limiter WHERE tipo = 'attempt'");
                 $stmt->execute();
@@ -388,7 +389,7 @@ class RateLimiter {
 
     private static function guardarIntentos(array $attempts): bool {
         try {
-            $db = Connection::getInstance();
+            $db = Connection::getInstance(true);
             if ($db) {
                 $db->exec("DELETE FROM waf_rate_limiter WHERE tipo = 'attempt'");
                 $stmt = $db->prepare("INSERT INTO waf_rate_limiter (ip, tipo, intentos, primer_intento, ultimo_intento, bloqueado_hasta, datos_adicionales) VALUES (?, 'attempt', ?, (to_timestamp(?) AT TIME ZONE 'UTC'), (to_timestamp(?) AT TIME ZONE 'UTC'), (to_timestamp(?) AT TIME ZONE 'UTC'), ?)");
@@ -422,7 +423,7 @@ class RateLimiter {
         }
 
         try {
-            $db = Connection::getInstance();
+            $db = Connection::getInstance(true);
             if ($db) {
                 $stmt = $db->prepare("SELECT ip, razon, creado_el AS fecha_bloqueo, datos_adicionales FROM waf_rate_limiter WHERE tipo = 'blacklist'");
                 $stmt->execute();
@@ -454,7 +455,7 @@ class RateLimiter {
     private static function guardarListaNegra(array $blacklist): bool {
         self::$memoryBlacklist = $blacklist;
         try {
-            $db = Connection::getInstance();
+            $db = Connection::getInstance(true);
             if ($db) {
                 $db->exec("DELETE FROM waf_rate_limiter WHERE tipo = 'blacklist'");
                 $stmt = $db->prepare("INSERT INTO waf_rate_limiter (ip, tipo, razon, datos_adicionales) VALUES (?, 'blacklist', ?, ?)");

@@ -135,12 +135,23 @@ class LineasModel extends QueryBuilder {
      * y sus proyectos (investigaciones ofertadas) en dicha línea.
      */
     public function getProfesoresAfiliadosPorLinea(int $id_linea): array {
+        try {
+            $this->db->exec("ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS foto_perfil TEXT");
+            $this->db->exec("ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS orcid VARCHAR(150)");
+            $this->db->exec("ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS sitio_web VARCHAR(255)");
+            $this->db->exec("ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS grado_academico VARCHAR(255)");
+        } catch (\Throwable $e) {}
+
         $sql = "
             SELECT DISTINCT
                 u.id,
                 u.id AS id_profesor,
                 u.nombre_completo AS nombre_profesor,
-                u.email
+                u.email,
+                u.foto_perfil,
+                u.orcid,
+                u.sitio_web,
+                u.grado_academico
             FROM public.usuarios u
             WHERE u.activo = true
               AND (

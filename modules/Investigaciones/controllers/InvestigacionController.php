@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../models/InvestigacionModel.php';
 require_once CORE_PATH . 'Security/Auth.php';
 require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
+@include_once __DIR__ . '/../../Cursos/services/ApiExternaCursosService.php';
 
 class InvestigacionController {
 
@@ -302,6 +303,7 @@ class InvestigacionController {
         $id = $this->model->crearInvestigacion($datos, $id_profesor);
 
         if ($id) {
+            if (class_exists('ApiExternaCursosService')) ApiExternaCursosService::dispararAutoPushSiHabilitado('investigacion_creada');
             $_SESSION['flash_success'] = 'Investigación creada exitosamente.';
             header('Location: ' . ($fromAdmin ? '?ruta=panel-investigaciones-admin' : '?ruta=mis-investigaciones'));
         } else {
@@ -351,6 +353,7 @@ class InvestigacionController {
         $ok = $this->model->actualizarInvestigacion($id, $datos, (int)$user['id'], (int)$user['nivel']);
 
         if ($ok) {
+            if (class_exists('ApiExternaCursosService')) ApiExternaCursosService::dispararAutoPushSiHabilitado('investigacion_actualizada');
             $_SESSION['flash_success'] = 'Investigación actualizada exitosamente.';
         } else {
             $_SESSION['flash_error'] = 'No tienes permiso o ocurrió un error al actualizar.';
@@ -372,6 +375,7 @@ class InvestigacionController {
         $ok = $this->model->eliminarInvestigacion($id, (int)$user['id'], (int)$user['nivel']);
 
         if ($ok) {
+            if (class_exists('ApiExternaCursosService')) ApiExternaCursosService::dispararAutoPushSiHabilitado('investigacion_eliminada');
             $_SESSION['flash_success'] = 'Investigación eliminada correctamente.';
         } else {
             $_SESSION['flash_error'] = 'Error al eliminar la investigación o sin permisos.';
@@ -513,6 +517,7 @@ class InvestigacionController {
         }
 
         if (!empty($mensajes)) {
+            if (class_exists('ApiExternaCursosService')) ApiExternaCursosService::dispararAutoPushSiHabilitado('investigacion_estado');
             $_SESSION['flash_success'] = 'Investigación actualizada (' . implode(', ', $mensajes) . ').';
         } else {
             $_SESSION['flash_error'] = 'No se pudo actualizar la investigación.';
