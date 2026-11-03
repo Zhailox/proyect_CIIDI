@@ -1,8 +1,14 @@
 <?php
 // modules/Investigaciones/views/showcase_investigaciones.php
 require_once CORE_PATH . 'Security/Auth.php';
-$nivel_usuario    = Auth::check() ? Auth::usuario()['nivel'] : -1;
 $is_logged        = $is_logged ?? Auth::check();
+$usuarioActualInv = $is_logged ? Auth::usuario() : null;
+$nivel_usuario    = $usuarioActualInv !== null ? (int)($usuarioActualInv['nivel'] ?? 999) : 999;
+$esSuperAdmin     = $usuarioActualInv !== null && (
+    $nivel_usuario === 0
+    || mb_strtolower(trim((string)($usuarioActualInv['rol'] ?? ''))) === 'super administrador'
+);
+$esDocenteOAdmin  = $is_logged && $nivel_usuario <= 2;
 $postuladas_ids   = $postuladas_ids ?? [];
 $misPostulaciones = $misPostulaciones ?? [];
 ?>
@@ -34,11 +40,18 @@ $misPostulaciones = $misPostulaciones ?? [];
                    onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
                     <i class="ph-bold ph-rocket-launch"></i> Ver Proyectos
                 </a>
-                <?php if ($nivel_usuario >= 1): ?>
+                <?php if ($esDocenteOAdmin): ?>
                 <a href="?ruta=mis-investigaciones"
                    style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.8rem 1.5rem; border-radius: 50px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: background 0.2s;"
                    onmouseover="this.style.background='rgba(255,255,255,0.3)';" onmouseout="this.style.background='rgba(255,255,255,0.2)';">
-                    <i class="ph-bold ph-folder-open"></i> Mis Proyectos
+                    <i class="ph-bold ph-folder-open"></i> <?= $esSuperAdmin ? 'Controlar Proyectos' : 'Mis Proyectos' ?>
+                </a>
+                <?php endif; ?>
+                <?php if ($esSuperAdmin || ($is_logged && $nivel_usuario <= 1)): ?>
+                <a href="?ruta=panel-investigaciones-admin"
+                   style="background: rgba(15,23,42,0.45); border: 1px solid rgba(255,255,255,0.35); color: white; padding: 0.8rem 1.5rem; border-radius: 50px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: background 0.2s;"
+                   onmouseover="this.style.background='rgba(15,23,42,0.65)';" onmouseout="this.style.background='rgba(15,23,42,0.45)';">
+                    <i class="ph-fill ph-shield-check"></i> Panel Admin I+D
                 </a>
                 <?php endif; ?>
             </div>
@@ -117,7 +130,7 @@ $misPostulaciones = $misPostulaciones ?? [];
                         <option value="Abierta"       <?= (isset($_GET['estado']) && $_GET['estado'] == 'Abierta')       ? 'selected' : '' ?>>Abiertas a Postulación</option>
                         <option value="En Desarrollo" <?= (isset($_GET['estado']) && $_GET['estado'] == 'En Desarrollo') ? 'selected' : '' ?>>En Desarrollo</option>
                         <option value="Finalizada"    <?= (isset($_GET['estado']) && $_GET['estado'] == 'Finalizada')    ? 'selected' : '' ?>>Finalizada</option>
-                        <?php if ($nivel_usuario >= 1): /* Cerrada: solo docentes/admin la ven */ ?>
+                        <?php if ($esDocenteOAdmin): /* Cerrada: solo docentes/admin la ven */ ?>
                         <option value="Cerrada"       <?= (isset($_GET['estado']) && $_GET['estado'] == 'Cerrada')       ? 'selected' : '' ?>>Cerrada</option>
                         <?php endif; ?>
                     </select>
@@ -167,7 +180,7 @@ $misPostulaciones = $misPostulaciones ?? [];
             <article class="inv-card">
                 <div class="inv-card-img-wrap">
                     <?php $img = !empty($inv['imagen']) ? $inv['imagen'] : 'assets/img/default-inv.png'; ?>
-                    <img src="<?= htmlspecialchars($img) ?>" alt="<?= htmlspecialchars($inv['titulo']) ?>"
+                    <img src="<?= htmlspecialchars($img) ?>" alt="<?= htmlspecialchars($inv['titulo'] ?? '') ?>"
                          onerror="this.src='https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=400'">
                     <span class="inv-badge" style="background: rgba(15,23,42,0.85);"><i class="ph-fill ph-pulse"></i> <?= htmlspecialchars($inv['estado']) ?></span>
                     <?php if ($yaPostulado): ?>
@@ -179,20 +192,25 @@ $misPostulaciones = $misPostulaciones ?? [];
                 
                 <div class="inv-card-content">
                     <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem;">
-                        <span style="background: #F1F5F9; color:#475569; padding:0.2rem 0.6rem; border-radius:6px; font-size:0.75rem; font-weight:600; display:flex; align-items:center; gap:0.3rem;" title="Docente/Tutor">
-                            <i class="ph-fill ph-chalkboard-teacher"></i> <?= htmlspecialchars($inv['profesor'] ?? $inv['tag_quien'] ?? 'Tutor') ?>
-                        </span>
+                        <?php $nombreDocenteCard = $inv['profesor'] ?? $inv['tag_quien'] ?? 'Tutor'; ?>
+                        <a href="?ruta=investigadores&q=<?= urlencode($nombreDocenteCard) ?>&ver_perfil=1<?= !empty($inv['id_profesor']) ? '&ver_id=' . (int)$inv['id_profesor'] : '' ?>"
+                           style="background: #F1F5F9; color:#475569; padding:0.2rem 0.6rem; border-radius:6px; font-size:0.75rem; font-weight:600; display:flex; align-items:center; gap:0.3rem; text-decoration:none; transition:all 0.2s;"
+                           onmouseover="this.style.background='#505984'; this.style.color='white';"
+                           onmouseout="this.style.background='#F1F5F9'; this.style.color='#475569';"
+                           title="Ver Perfil Público del Investigador/Docente">
+                            <i class="ph-fill ph-chalkboard-teacher"></i> <?= htmlspecialchars($nombreDocenteCard) ?>
+                        </a>
                         <span style="background: var(--inv-primary-light); color:var(--inv-primary); padding:0.2rem 0.6rem; border-radius:6px; font-size:0.75rem; font-weight:600; display:flex; align-items:center; gap:0.3rem;" title="Línea de Investigación">
-                        <i class="ph-bold ph-git-branch"></i> <?= htmlspecialchars($inv['linea_nombre']) ?>
+                        <i class="ph-bold ph-git-branch"></i> <?= htmlspecialchars($inv['linea_nombre'] ?? '') ?>
                     </span>
                     </div>
 
-                    <h3 class="inv-card-title"><?= htmlspecialchars($inv['titulo']) ?></h3>
-                    <p class="inv-card-desc"><?= htmlspecialchars(mb_substr($inv['planteamiento_problema'], 0, 150)) ?>...</p>
+                    <h3 class="inv-card-title"><?= htmlspecialchars($inv['titulo'] ?? '') ?></h3>
+                    <p class="inv-card-desc"><?= htmlspecialchars(mb_substr($inv['planteamiento_problema'] ?? '', 0, 150)) ?>...</p>
                     
-                    <div class="inv-card-footer">
+                    <div class="inv-card-footer" style="display:flex; gap:0.5rem; align-items:center;">
                         <button onclick="abrirDrawer(<?= (int)$inv['id'] ?>)" class="inv-btn-primary"
-                                style="padding:0.6rem 1.2rem; font-size:0.9rem; width:100%; justify-content:center;">
+                                style="padding:0.6rem 1.2rem; font-size:0.9rem; flex:1; justify-content:center;">
                             <i class="ph-bold ph-eye"></i>
                             <?php if ($inv['estado'] === 'Abierta' && !$yaPostulado): ?>
                                 Ver Detalles / Postularse
@@ -202,6 +220,15 @@ $misPostulaciones = $misPostulaciones ?? [];
                                 Ver Detalles
                             <?php endif; ?>
                         </button>
+                        <?php if ($esSuperAdmin): ?>
+                        <a href="?ruta=editar-investigacion&id=<?= (int)$inv['id'] ?>&from_admin=1"
+                           title="Control SuperAdmin: Editar o Modificar Investigación"
+                           style="width:38px; height:38px; border-radius:10px; background:#F1F5F9; color:#0369A1; border:1px solid #CBD5E1; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; flex-shrink:0; transition:all 0.2s;"
+                           onmouseover="this.style.background='#0369A1'; this.style.color='white';"
+                           onmouseout="this.style.background='#F1F5F9'; this.style.color='#0369A1';">
+                            <i class="ph-bold ph-pencil-simple"></i>
+                        </a>
+                        <?php endif; ?>
                     </div>
                 </div>
             </article>
@@ -258,7 +285,7 @@ $misPostulaciones = $misPostulaciones ?? [];
             <?php for ($i = $inicio; $i <= $fin; $i++): ?>
             <a href="<?= $basePaginacion . $i ?>"
                style="width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; text-decoration:none; font-weight:700; transition:all 0.2s;
-                      <?= $i === $pagActual ? 'background:linear-gradient(135deg, var(--color-principal, #121a3e), var(--color-secundario, #505984)); color:white; border:none; box-shadow:0 4px 12px rgba(80,89,132,0.35);' : 'background:white; border:1px solid var(--inv-border); color:var(--inv-dark);' ?>"
+                      <?= $i === $pagActual ? 'background:#505984; color:white; border:none; box-shadow:0 4px 12px rgba(80,89,132,0.35);' : 'background:white; border:1px solid var(--inv-border); color:var(--inv-dark);' ?>"
                <?php if ($i !== $pagActual): ?>
                onmouseover="this.style.background='var(--inv-primary)'; this.style.color='white'; this.style.borderColor='var(--inv-primary)';"
                onmouseout="this.style.background='white'; this.style.color='var(--inv-dark)'; this.style.borderColor='var(--inv-border)';"
@@ -322,6 +349,7 @@ const invById = {};
 invData.forEach(inv => { invById[inv.id] = inv; });
 
 const isLogged       = <?= json_encode($is_logged) ?>;
+const esSuperAdminJs = <?= json_encode($esSuperAdmin) ?>;
 const postuladasIds  = <?= json_encode(array_map('intval', $postuladas_ids)) ?>;
 
 const trayectoLabels = {
@@ -365,7 +393,7 @@ function abrirDrawer(id) {
                     <i class="ph-fill ph-lock-key" style="font-size:3rem; color:#F59E0B; margin-bottom:1rem; display:block;"></i>
                     <p style="font-size:1rem; color:var(--inv-dark); font-weight:700; margin-bottom:0.5rem;">Inicia sesión para postularte</p>
                     <p style="font-size:0.9rem; color:var(--inv-muted); margin-bottom:1.5rem;">Necesitas una cuenta para aplicar a este proyecto de investigación.</p>
-                    <a href="?ruta=login" style="background:linear-gradient(135deg,var(--color-principal),var(--inv-primary)); color:white; padding:0.8rem 2rem; border-radius:50px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:0.5rem; box-shadow:0 4px 15px rgba(80,89,132,0.35);">
+                    <a href="?ruta=login" style="background:#505984; color:white; padding:0.8rem 2rem; border-radius:50px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:0.5rem; box-shadow:0 4px 12px rgba(80,89,132,0.25); transition:all 0.2s;" onmouseover="this.style.background='#3C456A';" onmouseout="this.style.background='#505984';">
                         <i class="ph-bold ph-sign-in"></i> Iniciar Sesión
                     </a>
                 </div>`;
@@ -411,9 +439,9 @@ function abrirDrawer(id) {
                             </div>
                         </div>
                         <button type="submit"
-                            style="width:100%; background:linear-gradient(135deg, var(--color-principal, #121a3e) 0%, var(--color-secundario, #505984) 100%); color:white; border:none; padding:1rem; border-radius:50px; font-weight:700; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.6rem; transition:all 0.2s; box-shadow:0 4px 15px rgba(80,89,132,0.35);"
-                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(80,89,132,0.45)';" 
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(80,89,132,0.35)';">
+                            style="width:100%; background:#505984; color:white; border:none; padding:1rem; border-radius:50px; font-weight:700; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.6rem; transition:all 0.2s; box-shadow:0 4px 15px rgba(80,89,132,0.25);"
+                            onmouseover="this.style.background='#3C456A'; this.style.transform='translateY(-2px)';" 
+                            onmouseout="this.style.background='#505984'; this.style.transform='translateY(0)';">
                             <i class="ph-bold ph-paper-plane-tilt"></i> Enviar Postulación
                         </button>
                     </form>
@@ -456,15 +484,37 @@ function abrirDrawer(id) {
         <!-- Título -->
         <h2 style="font-size:1.45rem; font-weight:800; color:var(--inv-dark); margin-bottom:1.5rem; line-height:1.3;">${esc(inv.titulo)}</h2>
 
+        ${esSuperAdminJs ? `
+        <div style="margin-bottom:1.5rem; padding:0.85rem 1rem; background:#EFF6FF; border:1px solid #BFDBFE; border-radius:12px; display:flex; align-items:center; justify-content:space-between; gap:0.75rem; flex-wrap:wrap;">
+            <span style="font-size:0.82rem; font-weight:700; color:#1E3A8A; display:inline-flex; align-items:center; gap:0.4rem;">
+                <i class="ph-fill ph-crown-simple"></i> Control SuperAdmin
+            </span>
+            <div style="display:flex; gap:0.5rem;">
+                <a href="?ruta=editar-investigacion&id=${parseInt(inv.id)}&from_admin=1" style="background:#0369A1; color:white; text-decoration:none; padding:0.4rem 0.85rem; border-radius:8px; font-size:0.8rem; font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
+                    <i class="ph-bold ph-pencil-simple"></i> Modificar
+                </a>
+                <a href="?ruta=panel-investigaciones-admin&q=${encodeURIComponent(inv.titulo || '')}" style="background:white; color:#0F172A; border:1px solid #CBD5E1; text-decoration:none; padding:0.4rem 0.85rem; border-radius:8px; font-size:0.8rem; font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
+                    <i class="ph-bold ph-shield-check"></i> Gestionar en Panel
+                </a>
+            </div>
+        </div>` : ''}
+
         <!-- Docente -->
-        <div style="display:flex; align-items:center; gap:0.8rem; margin-bottom:1.5rem; padding:0.9rem 1rem; background:#F8FAFC; border-radius:12px; border:1px solid var(--inv-border);">
-            <div style="width:40px; height:40px; background:linear-gradient(135deg, var(--color-principal, #121a3e), var(--color-secundario, #505984)); border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                <i class="ph-fill ph-chalkboard-teacher" style="color:white; font-size:1.1rem;"></i>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.8rem; margin-bottom:1.5rem; padding:0.9rem 1rem; background:#F8FAFC; border-radius:12px; border:1px solid var(--inv-border);">
+            <div style="display:flex; align-items:center; gap:0.8rem;">
+                <div style="width:40px; height:40px; background:#505984; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <i class="ph-fill ph-chalkboard-teacher" style="color:white; font-size:1.1rem;"></i>
+                </div>
+                <div>
+                    <div style="font-size:0.72rem; color:var(--inv-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Docente Responsable</div>
+                    <div style="font-weight:700; color:var(--inv-dark); font-size:0.95rem; margin-top:0.15rem;">${esc(inv.profesor || 'Por asignar')}</div>
+                </div>
             </div>
-            <div>
-                <div style="font-size:0.72rem; color:var(--inv-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Docente Responsable</div>
-                <div style="font-weight:700; color:var(--inv-dark); font-size:0.95rem; margin-top:0.15rem;">${esc(inv.profesor || 'Por asignar')}</div>
-            </div>
+            ${inv.profesor ? `
+            <a href="?ruta=investigadores&q=${encodeURIComponent(inv.profesor)}&ver_perfil=1${inv.id_profesor ? '&ver_id=' + parseInt(inv.id_profesor) : ''}"
+               style="background:white; color:#505984; border:1px solid rgba(80,89,132,0.3); padding:0.4rem 0.85rem; border-radius:8px; font-size:0.8rem; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:0.35rem; white-space:nowrap;">
+                <i class="ph-bold ph-identification-card"></i> Ver Perfil
+            </a>` : ''}
         </div>
 
         <!-- Planteamiento -->

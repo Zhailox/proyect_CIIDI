@@ -423,7 +423,7 @@ if (isset($privilegios)) {
             <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: flex; align-items: center; gap: 8px;">
                 <i class="ph-bold ph-user-plus" style="color: var(--color-secundario, #2563eb);"></i> Registrar Nuevo Usuario
             </h3>
-            <button type="button" onclick="toggleModalCrearUsuario(false)" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b;">✕</button>
+            <button type="button" onclick="toggleModalCrearUsuario(false)" class="sa-modal-close" title="Cerrar"><i class="ph-bold ph-x"></i></button>
         </div>
 
         <form action="crear-usuario" method="POST" style="display: flex; flex-direction: column; gap: 0.85rem;" onsubmit="actualizarCedulaCrearUsuario()">
@@ -484,7 +484,7 @@ if (isset($privilegios)) {
 
             <button type="button"
                     onclick="toggleModalEditarUsuario(false)"
-                    style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b;">
+                    class="sa-modal-close" title="Cerrar">
                 ✕
             </button>
         </div>
@@ -587,7 +587,7 @@ if (isset($privilegios)) {
             <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--texto-titulos); display: flex; align-items: center; gap: 8px;">
                 <i class="ph-bold ph-shield-plus" style="color: var(--color-secundario);"></i> Crear Nuevo Rol
             </h3>
-            <button type="button" onclick="toggleModalCrearRol(false)" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b;">✕</button>
+            <button type="button" onclick="toggleModalCrearRol(false)" class="sa-modal-close" title="Cerrar"><i class="ph-bold ph-x"></i></button>
         </div>
 
         <form action="crear-rol" method="POST" style="display: flex; flex-direction: column; gap: 0.85rem;">
@@ -953,7 +953,7 @@ function toggleModalInvitarProfesor(show) {
             <h3 style="margin: 0; font-size: 1.1rem; color: #121a3e; font-weight: 800; display: flex; align-items: center; gap: 8px;">
                 <i class="ph-bold ph-envelope-simple-open" style="color: #7090cb;"></i> Invitar Nuevo Docente / Profesor
             </h3>
-            <button type="button" onclick="toggleModalInvitarProfesor(false)" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer;">&times;</button>
+            <button type="button" onclick="toggleModalInvitarProfesor(false)" class="sa-modal-close" title="Cerrar"><i class="ph-bold ph-x"></i></button>
         </div>
         <p style="font-size: 0.85rem; color: #64748b; margin-top: 0; margin-bottom: 1.25rem;">
             Emita un token de invitación firmado enviado al correo institucional del docente para que defina su propia contraseña y active su cuenta.

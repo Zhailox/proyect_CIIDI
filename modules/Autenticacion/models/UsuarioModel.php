@@ -22,7 +22,7 @@ class UsuarioModel {
 
         // Quitamos el filtro de 'activo' para poder saber el estado real de la cuenta
         return $this->qb->tabla('usuarios u')
-            ->select('u.id, u.cedula, u.nombre_completo, u.email, u.contrasena, u.activo, r.nombre AS nombre_rol, p.nivel_privilegio')
+            ->select('u.id, u.cedula, u.nombre_completo, u.email, u.contrasena, u.activo, u.estado_registro, r.nombre AS nombre_rol, p.nivel_privilegio')
             ->join('roles r', 'u.id_rol = r.id')
             ->join('privilegios p', 'r.privilegio_id = p.privilegio_id')
             ->whereRaw('(u.cedula = ? OR u.cedula = ? OR u.cedula = ? OR u.cedula = ?)', [$cedulaTrim, $soloDigitos, $conPrefijo, $conPrefijoE]) 
@@ -91,6 +91,28 @@ class UsuarioModel {
         $stmt = $db->prepare($sql);
         $stmt->execute([$cedula, $nombre, $email, $hash, $emailVerificado ? 'true' : 'false', $tokenActivacion]);
         return $stmt->fetch() !== false;
+    }
+
+    /**
+     * Registro de profesores en línea: crea la cuenta docente INACTIVA con estado_registro = 'pendiente'
+     * a la espera de aprobación del Comité/Administración. Retorna el ID creado o null.
+     */
+    public function registrarDocentePendiente(string $cedula, string $nombre, string $email, string $hash, int $idRolDocente): ?int {
+        $db = Connection::getInstance();
+        $sql = "
+            INSERT INTO usuarios (cedula, nombre_completo, email, contrasena, id_rol, activo, email_verified, activation_token, estado_registro)
+            VALUES (?, ?, ?, ?, ?, false, false, NULL, 'pendiente')
+            RETURNING id
+        ";
+        try {
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$cedula, $nombre, $email, $hash, $idRolDocente]);
+            $id = $stmt->fetchColumn();
+            return $id ? (int)$id : null;
+        } catch (Throwable $e) {
+            error_log('UsuarioModel::registrarDocentePendiente -> ' . $e->getMessage());
+            return null;
+        }
     }
 
     public function activarCuentaPorToken(string $tokenActivacion): bool {
@@ -217,7 +239,14 @@ class UsuarioModel {
                 u.activo, 
                 u.email_verified,
                 u.contrasena,
-                r.nombre AS nombre_rol, 
+                u.foto_perfil,
+                u.orcid,
+                u.sitio_web,
+                u.grado_academico,
+                COALESCE(u.es_investigador, false) AS es_investigador,
+                COALESCE(u.es_profesor_pst, false) AS es_profesor_pst,
+                r.nombre AS nombre_rol,
+                r.nombre AS rol_nombre,
                 p.nivel_privilegio,
                 ra.fecha_inicial,
                 ra.ultima_actividad,
@@ -232,6 +261,22 @@ class UsuarioModel {
         $stmt = $db->prepare($sql);
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Actualiza foto de perfil, ORCID, sitio web personal y grado académico del usuario/investigador
+     */
+    public function actualizarPerfilAcademico(int $id, ?string $fotoPerfil, ?string $orcid, ?string $sitioWeb, ?string $gradoAcademico): bool {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("
+            UPDATE public.usuarios
+            SET foto_perfil = ?,
+                orcid = ?,
+                sitio_web = ?,
+                grado_academico = ?
+            WHERE id = ?
+        ");
+        return $stmt->execute([$fotoPerfil, $orcid, $sitioWeb, $gradoAcademico, $id]);
     }
 
     /**

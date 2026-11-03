@@ -151,6 +151,11 @@ mark, .highlight-match {
     align-items: start;
 }
 
+.ag-pst-layout-grid > * {
+    min-width: 0;
+    max-width: 100%;
+}
+
 @media (max-width: 992px) {
     .ag-pst-layout-grid {
         grid-template-columns: 1fr;
@@ -513,6 +518,10 @@ mark, .highlight-match {
         gap: 8px;
         background: rgba(255, 255, 255, 0.98);
         padding: 10px;
+    }
+
+    .ag-pst-search-box > i.ph-magnifying-glass {
+        display: none;
     }
 
     .ag-pst-search-box input {

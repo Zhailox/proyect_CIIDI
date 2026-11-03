@@ -17,7 +17,7 @@ require_once CORE_PATH . 'Security/Auth.php';
     <div class="inv-header-gestion" style="margin-bottom: 2rem;">
         <div>
             <h1 style="font-size: 2rem; font-weight: 800; color: var(--inv-dark); margin: 0; display:flex; align-items:center; gap:0.6rem;">
-                <div style="width:44px; height:44px; border-radius:10px; background: linear-gradient(135deg, var(--color-principal, #121a3e) 0%, var(--color-secundario, #505984) 100%); color:white; display:flex; align-items:center; justify-content:center; font-size:1.3rem; box-shadow:0 6px 15px rgba(80, 89, 132, 0.3);">
+                <div style="width:44px; height:44px; border-radius:10px; background: #505984; color:white; display:flex; align-items:center; justify-content:center; font-size:1.3rem; box-shadow:0 6px 15px rgba(80, 89, 132, 0.25);">
                     <i class="ph-fill ph-users-three"></i>
                 </div>
                 Postulantes a Mis Proyectos
@@ -97,7 +97,7 @@ require_once CORE_PATH . 'Security/Auth.php';
                         <!-- Columna Estudiante -->
                         <td>
                             <div style="display:flex; align-items:center; gap:0.7rem;">
-                                <div style="width:38px; height:38px; border-radius:50%; background: linear-gradient(135deg, var(--color-principal, #121a3e) 0%, var(--color-secundario, #505984) 100%); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                <div style="width:38px; height:38px; border-radius:50%; background: #505984; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                                     <i class="ph-bold ph-user" style="color:white; font-size:1rem;"></i>
                                 </div>
                                 <div>
@@ -221,3 +221,4 @@ require_once CORE_PATH . 'Security/Auth.php';
     <?php endif; ?>
 
 </div>
+

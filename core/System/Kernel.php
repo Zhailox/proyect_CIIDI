@@ -13,6 +13,7 @@ require_once CORE_PATH . 'System/AssetResolver.php';
 require_once CORE_PATH . 'Security/RateLimiter.php';
 require_once CORE_PATH . 'Security/CSRF.php';
 require_once CORE_PATH . 'Http/FeatureFlagMiddleware.php';
+require_once CORE_PATH . 'Http/RouteGuardMiddleware.php';
 require_once CORE_PATH . 'Http/Router.php';
 require_once CORE_PATH . 'Http/Dispatcher.php';
 
@@ -23,6 +24,7 @@ class Kernel {
     private ModuleLoader $moduleLoader;
     private AssetResolver $assetResolver;
     private FeatureFlagMiddleware $featureFlagMiddleware;
+    private RouteGuardMiddleware $routeGuardMiddleware;
     private Router $router;
     private Dispatcher $dispatcher;
 
@@ -40,6 +42,8 @@ class Kernel {
         if (file_exists($archivo_candado)) {
             $this->moduleLoader->loadModules();
         }
+
+        $this->routeGuardMiddleware = new RouteGuardMiddleware($this->moduleLoader);
     }
 
     public function run(): void {
@@ -53,6 +57,22 @@ class Kernel {
         }
 
         $this->sessionManager->start();
+
+        // 0. Intercepción prioritaria de acciones Break-Glass (Modo de Emergencia BD)
+        if (
+            isset($_GET['emerg_action']) ||
+            isset($_POST['emerg_login']) ||
+            isset($_POST['emerg_update_db']) ||
+            isset($_POST['emerg_repair_schema'])
+        ) {
+            $isStandalone = true;
+            $standalone = true;
+            $vistaEmergencia = defined('CORE_VIEWS') ? CORE_VIEWS . '500.php' : __DIR__ . '/../Views/500.php';
+            if (file_exists($vistaEmergencia)) {
+                include $vistaEmergencia;
+                exit;
+            }
+        }
 
         // Escudo de Seguridad Global: WAF & Rate Limiter de Capa de Aplicación
         $bloqueo = RateLimiter::estaBloqueada();
@@ -110,22 +130,33 @@ class Kernel {
             return;
         }
 
-        // 3.5. Pulso automático de tareas programadas (revisión ligera cada 60 segundos)
-        $schedulerPath = defined('MODULES_PATH')
-            ? MODULES_PATH . 'SuperAdmin/services/SchedulerService.php'
-            : __DIR__ . '/../../modules/SuperAdmin/services/SchedulerService.php';
-        if (file_exists($schedulerPath)) {
-            try {
-                require_once $schedulerPath;
-                SchedulerService::dispararCicloSiCorresponde(false);
-            } catch (\Throwable $e) {
-                // Continuar la petición normal si ocurre algún imprevisto en segundo plano
+        // 3.5 Pulso Automático de Tareas Programadas (Auto-Scheduler embebido sin bloquear petición)
+        try {
+            $schedulerServiceFile = defined('MODULES_PATH') ? MODULES_PATH . 'SuperAdmin/services/SchedulerService.php' : __DIR__ . '/../../modules/SuperAdmin/services/SchedulerService.php';
+            if (file_exists($schedulerServiceFile)) {
+                require_once $schedulerServiceFile;
+                if (class_exists('SchedulerService')) {
+                    SchedulerService::dispararCicloSiCorresponde(false);
+                }
             }
+        } catch (\Throwable $e) {
+            // Fallo silencioso del scheduler embebido para no interrumpir el ciclo de vida HTTP
         }
 
         // 4. Enrutamiento y Ejecución MVC
         $rutasGlobales = $this->moduleLoader->getRutasGlobales();
         $match = $this->router->resolve($ruta, $rutasGlobales);
+
+        // 5. Guardianes de Rutas (módulos que implementan RouteGuardContract, p. ej. Seguridad de Líneas)
+        if ($match['type'] === 'module_route') {
+            $bloqueo = $this->routeGuardMiddleware->intercept($ruta, $match['config']);
+            if ($bloqueo !== null) {
+                if ($this->routeGuardMiddleware->responderDirecto($bloqueo, $match['config'])) {
+                    return;
+                }
+                $match = RouteGuardMiddleware::construirMatch($bloqueo);
+            }
+        }
 
         $this->dispatcher->dispatch(
             $ruta,

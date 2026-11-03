@@ -516,10 +516,39 @@ class AdminController {
                 if ($esParaAhora) {
                     $this->cerrarSesionesNoAdmin();
                 }
-                AuditLogger::registrar('INFO', 'SuperAdmin', 'Programar Mantenimiento', "Ventana agendada para: {$fechaFormateada}");
+
+                // Notificar a los usuarios activos con la plantilla superadmin.mantenimiento_programado si se marcó la opción
+                $notificarCorreo = !empty($_POST['notificar_correo']) && ($_POST['notificar_correo'] === '1' || $_POST['notificar_correo'] === 'on');
+                $notificados = 0;
+                if ($notificarCorreo) {
+                    require_once CORE_PATH . 'Services/MailService.php';
+                    $todosUsuarios = $this->usuarioModel->obtenerTodosLosUsuarios();
+                    $fechaLegible = date('d/m/Y H:i', $timestampInicio);
+                    foreach ($todosUsuarios as $usr) {
+                        if (!empty($usr['activo']) && !empty($usr['email'])) {
+                            $resEnv = MailService::enviarEvento(
+                                'superadmin.mantenimiento_programado',
+                                $usr['email'],
+                                [
+                                    'NOMBRE_USUARIO'    => $usr['nombre_completo'] ?? 'Usuario',
+                                    'FECHA_INICIO'      => $fechaLegible,
+                                    'DURACION_ESTIMADA' => $duracionMinutos . ' minutos',
+                                    'MOTIVO'            => $mensaje
+                                ],
+                                $usr['nombre_completo'] ?? 'Usuario',
+                                false
+                            );
+                            if (!empty($resEnv['exito'])) {
+                                $notificados++;
+                            }
+                        }
+                    }
+                }
+
+                AuditLogger::registrar('INFO', 'SuperAdmin', 'Programar Mantenimiento', "Ventana agendada para: {$fechaFormateada} (Notificados: {$notificados})");
 
                 if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['mensaje_admin_exito'] = "Ventana de Mantenimiento agendada para " . date('H:i - d/m/Y', $timestampInicio);
+                $_SESSION['mensaje_admin_exito'] = "Ventana de Mantenimiento agendada para " . date('H:i - d/m/Y', $timestampInicio) . ($notificados > 0 ? " ({$notificados} usuario(s) notificado(s) por correo)." : ".");
             }
         } catch (Throwable $e) {
             if (session_status() === PHP_SESSION_NONE) session_start();
@@ -628,19 +657,24 @@ class AdminController {
                     // Auto-Checkpoint Preventivo antes de sobreescribir la BD
                     $checkpoint = BackupService::crearBackup('sql.gz', false, null, 'pre_restore_checkpoint');
 
-                    // Si está comprimido en GZIP, descomprimir temporalmente para psql
-                    $rutaParaPsql = $rutaArchivoRestaurar;
+                    // Descomprimir si es GZIP y sanitizar siempre en un archivo temporal compatible con Linux Debian (PG13-18)
+                    $tempSqlUnzipped = sys_get_temp_dir() . '/restore_temp_' . time() . '_' . mt_rand(1000, 9999) . '.sql';
                     if (!empty($verif['esGzip'])) {
-                        $tempSqlUnzipped = sys_get_temp_dir() . '/restore_temp_' . time() . '.sql';
                         $zp = gzopen($rutaArchivoRestaurar, 'rb');
-                        $fp = fopen($tempSqlUnzipped, 'wb');
+                        $rawSqlRestore = '';
                         while (!gzeof($zp)) {
-                            fwrite($fp, gzread($zp, 8192));
+                            $rawSqlRestore .= gzread($zp, 8192);
                         }
                         gzclose($zp);
-                        fclose($fp);
-                        $rutaParaPsql = $tempSqlUnzipped;
+                    } else {
+                        $rawSqlRestore = (string)file_get_contents($rutaArchivoRestaurar);
                     }
+
+                    if (method_exists('Connection', 'sanitizarSqlCompatible')) {
+                        $rawSqlRestore = Connection::sanitizarSqlCompatible($rawSqlRestore);
+                    }
+                    file_put_contents($tempSqlUnzipped, $rawSqlRestore);
+                    $rutaParaPsql = $tempSqlUnzipped;
 
                     $creds = Connection::getCredentials();
                     $psqlPath = Connection::getPsqlPath();
@@ -662,6 +696,15 @@ class AdminController {
                     }
 
                     if (session_status() === PHP_SESSION_NONE) session_start();
+
+                    // Garantizar que todas las tablas críticas (ej. detalles_proyectos y funciones unaccent) queden íntegras tras restaurar
+                    Connection::resetConnection();
+                    try {
+                        $pdoPostRestore = Connection::getInstance(true);
+                        if ($pdoPostRestore) {
+                            Connection::autoHealSchemaIfNeeded($pdoPostRestore, true);
+                        }
+                    } catch (Throwable $eHeal) {}
 
                     if ($codigo_retorno === 0) {
                         AuditLogger::registrar('WARNING', 'SuperAdmin', 'Restaurar BD', "Base de datos restaurada exitosamente.");

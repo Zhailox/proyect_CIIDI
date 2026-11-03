@@ -1,15 +1,12 @@
 ========================================================
 REGISTRO DE EJECUCIÓN: Generar Embeddings Semánticos [tarea_1790301553_528]
-<<<<<<< HEAD
-FECHA/HORA: 2026-10-24 02:06:08
-DURACIÓN: 0.2 ms | ESTADO: FAIL
-=======
-FECHA/HORA: 2026-10-22 21:04:42
-DURACIÓN: 0.14 ms | ESTADO: FAIL
->>>>>>> c4dc88020dcbe9ceb33a5ce266ef600ef35f59d4
+FECHA/HORA: 2026-11-03 00:30:01
+DURACIÓN: 158.95 ms | ESTADO: OK
 ========================================================
 
-MENSAJE: El archivo de script 'script_tarea_1790301553_528.php' no existe en storage/scheduler/scripts/.
+MENSAJE: Comando ejecutado con éxito (Código 0).
 
 --- SALIDA ESTÁNDAR / CONSOLA (STDOUT/STDERR) ---
-
+Failed loading c:/wamp64/bin/php/php8.5.0/zend_ext/php_xdebug-3.4.7-8.4-ts-vs17-x86_64.dll
+[2026-11-03 00:30:01] [EmbeddingWorker] ═══ Iniciando ciclo de generación de embeddings ═══
+[2026-11-03 00:30:01] [EmbeddingWorker] ✓ No hay proyectos pendientes de vectorización. Fin del ciclo.

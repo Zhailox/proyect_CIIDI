@@ -13,11 +13,22 @@ $f_id      = $curso['id']       ?? '';
 $f_titulo  = htmlspecialchars($curso['titulo']          ?? '');
 $f_desc    = htmlspecialchars($curso['descripcion']     ?? '');
 $f_img_raw = $curso['imagen_portada'] ?? '';
-// DB stores 'public/uploads/cursos/x.webp' but web root IS public/, so strip 'public/'
+// DB stores 'public/uploads/cursos/x.webp' or 'storage/uploads/cursos/x.webp'; resolve relative to public/
 if (!function_exists('curImgUrl')) {
     function curImgUrl(string $raw): string {
-        if (empty($raw)) return '';
-        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) return $raw;
+        $raw = trim(str_replace('\\', '/', $raw));
+        if ($raw === '') return '';
+        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://') || str_starts_with($raw, 'data:image/')) {
+            return $raw;
+        }
+        $clean = ltrim(preg_replace('#^(public|storage)/#', '', $raw), '/');
+        $rootDir = dirname(__DIR__, 3);
+        if (file_exists($rootDir . '/public/' . $clean)) {
+            return $clean;
+        }
+        if (file_exists($rootDir . '/storage/' . $clean)) {
+            return '../storage/' . $clean;
+        }
         return ltrim(preg_replace('#^public/#', '', $raw), '/');
     }
 }
@@ -42,6 +53,12 @@ $f_f_inicio = $curso['fecha_inicio'] ?? '';
 $f_f_fin = $curso['fecha_fin'] ?? '';
 $f_vpreview = htmlspecialchars($curso['url_video_preview'] ?? '');
 $f_est_insc = $curso['estado_inscripcion'] ?? 'Abierta';
+$f_gform    = htmlspecialchars($curso['url_formulario_google'] ?? '');
+
+$lineas           = $lineas ?? [];
+$todasDimensiones = $todasDimensiones ?? [];
+$selectedLineas   = $curso['lineas_ids'] ?? [];
+$selectedDims     = $curso['dimensiones_ids'] ?? [];
 ?>
 
 <div class="cur-wrapper" style="max-width: 1200px;">
@@ -83,8 +100,17 @@ $f_est_insc = $curso['estado_inscripcion'] ?? 'Abierta';
             </div>
 
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:1.5rem;">
-                <?php $nivel_usuario = (int)($usuario_actual['nivel'] ?? -1); ?>
-                <?php if ($nivel_usuario >= 3): ?>
+                <?php
+                    $nivel_usuario = isset($usuario_actual['nivel']) ? (int)$usuario_actual['nivel'] : 999;
+                    $rol_usuario   = strtolower((string)($usuario_actual['rol'] ?? ''));
+                    $puede_asignar_docente = !empty($es_admin_cursos)
+                        || ($nivel_usuario >= 0 && $nivel_usuario <= 1)
+                        || str_contains($rol_usuario, 'super')
+                        || str_contains($rol_usuario, 'admin')
+                        || str_contains($rol_usuario, 'comit');
+                    $docente_seleccionado = $f_docente !== '' ? (int)$f_docente : (int)($usuario_actual['id'] ?? 0);
+                ?>
+                <?php if ($puede_asignar_docente): ?>
                 <div>
                     <label for="id_docente" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Docente Responsable <span style="color:var(--cur-danger);">*</span></label>
                     <div style="position:relative;">
@@ -92,7 +118,9 @@ $f_est_insc = $curso['estado_inscripcion'] ?? 'Abierta';
                         <select id="id_docente" name="id_docente" required style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
                             <option value="">— Seleccionar docente —</option>
                             <?php foreach ($docentes as $doc): ?>
-                            <option value="<?= (int)$doc['id'] ?>" <?= ($f_docente == $doc['id']) ? 'selected' : '' ?>><?= htmlspecialchars($doc['nombre_completo']) ?></option>
+                            <option value="<?= (int)$doc['id'] ?>" <?= ($docente_seleccionado === (int)$doc['id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($doc['nombre_completo']) ?><?= !empty($doc['rol_nombre']) ? ' (' . htmlspecialchars($doc['rol_nombre']) . ')' : '' ?>
+                            </option>
                             <?php endforeach; ?>
                         </select>
                         <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted); pointer-events:none;"></i>
@@ -129,6 +157,64 @@ $f_est_insc = $curso['estado_inscripcion'] ?? 'Abierta';
                             <option value="archivado" <?= $f_estado === 'archivado' ? 'selected' : '' ?>>Archivado</option>
                         </select>
                         <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted); pointer-events:none;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Líneas y Dimensiones (Pills interactivas) -->
+            <div style="margin-top:2rem; padding-top:1.5rem; border-top:1px solid #E2E8F0;">
+                <style>
+                .cb-pill input[type="checkbox"] { display: none; }
+                .cb-pill-text {
+                    display: inline-flex; align-items: center; gap: 0.4rem;
+                    padding: 0.6rem 1.2rem; background: #F1F5F9; color: #475569;
+                    border: 1px solid var(--cur-border); border-radius: 50px;
+                    font-size: 0.92rem; font-weight: 600; cursor: pointer;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); user-select: none;
+                }
+                .cb-pill input[type="checkbox"]:checked + .cb-pill-text {
+                    background: var(--cur-primary-light); color: var(--cur-primary);
+                    border-color: var(--cur-primary); box-shadow: 0 4px 12px rgba(80,89,132,0.15);
+                }
+                .cb-pill:hover .cb-pill-text { border-color: var(--cur-primary); transform: translateY(-1px); }
+                </style>
+
+                <!-- Líneas de Investigación -->
+                <div style="margin-bottom:1.5rem;">
+                    <label style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.8rem;">
+                        <i class="ph-bold ph-git-branch" style="color:var(--cur-primary);"></i> Líneas de Investigación a las que tributa el curso (Puede seleccionar varias)
+                    </label>
+                    <div style="display:flex; flex-wrap:wrap; gap:0.6rem;">
+                        <?php if (empty($lineas)): ?>
+                            <span style="color:var(--cur-muted); font-size:0.9rem;">No hay líneas de investigación registradas.</span>
+                        <?php else: ?>
+                            <?php foreach ($lineas as $l): ?>
+                                <label class="cb-pill">
+                                    <input type="checkbox" name="id_linea[]" value="<?= $l['id'] ?>" class="linea-cb" <?= in_array($l['id'], $selectedLineas) ? 'checked' : '' ?>>
+                                    <span class="cb-pill-text"><i class="ph-bold ph-git-branch"></i> <?= htmlspecialchars($l['nombre']) ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Dimensiones Operativas -->
+                <div>
+                    <label style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.8rem;">
+                        <i class="ph-bold ph-circles-three" style="color:var(--cur-primary);"></i> Dimensiones Operativas en las que opera (Puede seleccionar varias)
+                    </label>
+                    <div id="dimensiones-container" style="display:flex; flex-wrap:wrap; gap:0.6rem; min-height:45px; padding:1.2rem; border:1px dashed var(--cur-border); border-radius:12px; background:#F8FAFC;">
+                        <?php if (!empty($todasDimensiones)): ?>
+                            <?php foreach ($todasDimensiones as $d): ?>
+                                <label class="cb-pill dim-pill" data-linea="<?= $d['id_linea'] ?>" style="display:none;">
+                                    <input type="checkbox" name="id_dimension[]" value="<?= $d['id'] ?>" <?= in_array($d['id'], $selectedDims) ? 'checked' : '' ?>>
+                                    <span class="cb-pill-text"><i class="ph-bold ph-circles-three"></i> <?= htmlspecialchars($d['nombre']) ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                            <span id="no-dims-msg" style="color:var(--cur-muted); font-size:0.9rem;">Seleccione primero al menos una línea de investigación arriba.</span>
+                        <?php else: ?>
+                            <span style="color:var(--cur-muted); font-size:0.9rem;">No hay dimensiones operativas registradas.</span>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -186,11 +272,12 @@ $f_est_insc = $curso['estado_inscripcion'] ?? 'Abierta';
                 </div>
 
                 <!-- Panel: URL de imagen -->
+                <?php $f_img_url_only = (str_starts_with($f_img_raw ?? '', 'http://') || str_starts_with($f_img_raw ?? '', 'https://')) ? $f_img_raw : ''; ?>
                 <div id="panel-url" style="display:none; margin-bottom:1rem;">
                     <label style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">URL de la imagen <span style="color:var(--cur-muted); font-weight:400; font-size:0.85rem;">(pega el enlace directo a la imagen)</span></label>
                     <div style="position:relative;">
                         <i class="ph-bold ph-link" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
-                        <input type="url" name="imagen_portada_url" id="imagen_url" value="<?= htmlspecialchars($f_img_raw ?? '') ?>" placeholder="https://ejemplo.com/imagen.jpg"
+                        <input type="url" name="imagen_portada_url" id="imagen_url" value="<?= htmlspecialchars($f_img_url_only) ?>" placeholder="https://ejemplo.com/imagen.jpg"
                             style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1rem; outline:none; box-sizing:border-box;"
                             onfocus="this.style.borderColor='var(--cur-primary)';" onblur="this.style.borderColor='var(--cur-border)';"
                             oninput="previsualizarUrl(this.value)">
@@ -306,6 +393,17 @@ $f_est_insc = $curso['estado_inscripcion'] ?? 'Abierta';
                         <i class="ph-bold ph-video" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
                         <input type="url" id="url_video_preview" name="url_video_preview" value="<?= $f_vpreview ?>" placeholder="Ej: https://youtube.com/watch?v=..." style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
                     </div>
+                </div>
+
+                <div style="grid-column: 1 / -1;">
+                    <label for="url_formulario_google" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">
+                        <i class="ph-bold ph-google-logo" style="color:#EA4335;"></i> Formulario de Inscripción Propio del Curso (Google Forms)
+                    </label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-link" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <input type="url" id="url_formulario_google" name="url_formulario_google" value="<?= $f_gform ?>" placeholder="Ej: https://docs.google.com/forms/d/e/.../viewform" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                    </div>
+                    <small style="color:var(--cur-muted); display:block; margin-top:0.4rem;">Ingresa el enlace del formulario de Google exclusivo para las inscripciones de este curso.</small>
                 </div>
 
             </div>
@@ -446,6 +544,45 @@ document.getElementById('form-curso').addEventListener('submit', function(e) {
 
 // Init: default tab = archivo
 cambiarTab('archivo');
+
+// ── Filtro dinámico de Dimensiones Operativas según Líneas seleccionadas ────
+function actualizarDimensiones() {
+    const lineasSeleccionadas = Array.from(document.querySelectorAll('.linea-cb:checked')).map(cb => cb.value);
+    const dimPills = document.querySelectorAll('.dim-pill');
+    const noDimsMsg = document.getElementById('no-dims-msg');
+    let visibles = 0;
+
+    dimPills.forEach(pill => {
+        const idLinea = pill.getAttribute('data-linea');
+        if (lineasSeleccionadas.includes(idLinea)) {
+            pill.style.display = 'inline-flex';
+            visibles++;
+        } else {
+            pill.style.display = 'none';
+            const cb = pill.querySelector('input[type="checkbox"]');
+            if (cb && !lineasSeleccionadas.includes(idLinea)) {
+                cb.checked = false;
+            }
+        }
+    });
+
+    if (noDimsMsg) {
+        if (lineasSeleccionadas.length === 0) {
+            noDimsMsg.style.display = 'block';
+            noDimsMsg.textContent = 'Seleccione al menos una línea de investigación para ver sus dimensiones.';
+        } else if (visibles === 0) {
+            noDimsMsg.style.display = 'block';
+            noDimsMsg.textContent = 'Las líneas seleccionadas no tienen dimensiones operativas asociadas.';
+        } else {
+            noDimsMsg.style.display = 'none';
+        }
+    }
+}
+
+document.querySelectorAll('.linea-cb').forEach(cb => {
+    cb.addEventListener('change', actualizarDimensiones);
+});
+actualizarDimensiones();
 </script>
 
 

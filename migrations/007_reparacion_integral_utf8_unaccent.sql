@@ -1,20 +1,40 @@
 -- ============================================================================
 -- MIGRACIÓN 007: Reparación Integral de Codificación UTF-8 y Extensión UNACCENT
 -- Archivo: migrations/007_reparacion_integral_utf8_unaccent.sql
---
--- Objetivo:
--- 1. Garantizar client_encoding = 'UTF8' durante toda la sesión.
--- 2. Activar las extensiones nativas 'unaccent' y 'pg_trgm' en PostgreSQL para
---    búsquedas insensibles a tildes y diacríticos de alto rendimiento.
--- 3. Crear función SQL public.normalizar_busqueda_pst(text) basada en unaccent.
 -- ============================================================================
 
 SET client_encoding = 'UTF8';
 
-BEGIN;
+DO $$
+BEGIN
+    CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END $$;
 
-CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
-CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
+DO $$
+BEGIN
+    CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END $$;
+
+DO $$
+BEGIN
+    PERFORM public.unaccent('prueba');
+EXCEPTION WHEN undefined_function THEN
+    CREATE OR REPLACE FUNCTION public.unaccent(text)
+    RETURNS text
+    LANGUAGE sql
+    IMMUTABLE STRICT
+    AS $func$
+        SELECT translate(
+            $1,
+            'áàäâãåéèëêíìïîóòöôõúùüûñçÁÀÄÂÃÅÉÈËÊÍÌÏÎÓÒÖÔÕÚÙÜÛÑÇ',
+            'aaaaaaeeeeiiiiooooouuuuncAAAAAAEEEEIIIIOOOOOUUUUNC'
+        );
+    $func$;
+END $$;
 
 CREATE OR REPLACE FUNCTION public.normalizar_busqueda_pst(input_text TEXT)
 RETURNS TEXT
@@ -40,5 +60,3 @@ UPDATE public.niveles_academicos SET descripcion = REPLACE(descripcion, 'investi
 UPDATE public.tipo_recurso SET descripcion = REPLACE(descripcion, 'investigaciónn', 'investigación') WHERE descripcion LIKE '%investigaciónn%';
 UPDATE public.detalles_proyectos SET resumen = REPLACE(resumen, 'investigaciónn', 'investigación') WHERE resumen LIKE '%investigaciónn%';
 UPDATE public.detalles_articulos SET resumen = REPLACE(resumen, 'investigaciónn', 'investigación') WHERE resumen LIKE '%investigaciónn%';
-
-COMMIT;

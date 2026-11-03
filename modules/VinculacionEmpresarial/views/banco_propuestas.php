@@ -83,14 +83,17 @@ $esProfesor = isset($_SESSION['rol_nombre']) && in_array($_SESSION['rol_nombre']
         <div class="ge-tabs" id="filtro-estado" style="border-bottom:none; margin-top:-10px;">
             <span style="font-size:0.85rem; color:#94a3b8; font-weight:bold; padding: 0.8rem 0; margin-right: 1rem; text-transform:uppercase;">ESTADO:</span>
             <button class="ge-tab-btn" data-filter="estado" data-value="Todos">Todos</button>
-            <button class="ge-tab-btn active" data-filter="estado" data-value="pendiente">
+            <button class="ge-tab-btn <?= (isset($_GET['filtro']) && $_GET['filtro'] === 'pendiente' ? 'active' : (!isset($_GET['filtro']) ? 'active' : '')) ?>" data-filter="estado" data-value="pendiente">
                 Pendientes <span style="background:#e2e8f0; padding:2px 6px; border-radius:10px; font-size:0.75rem; margin-left:5px;"><?= $estados['pendiente'] ?></span>
             </button>
-            <button class="ge-tab-btn" data-filter="estado" data-value="aceptada">
+            <button class="ge-tab-btn <?= (isset($_GET['filtro']) && $_GET['filtro'] === 'aceptada' ? 'active' : '') ?>" data-filter="estado" data-value="aceptada">
                 Aceptadas <span style="background:#f4f7fb; color:#505984; padding:2px 6px; border-radius:10px; font-size:0.75rem; margin-left:5px; border:1px solid #7090cb;"><?= $estados['aceptada'] ?></span>
             </button>
-            <button class="ge-tab-btn" data-filter="estado" data-value="rechazada">
+            <button class="ge-tab-btn <?= (isset($_GET['filtro']) && $_GET['filtro'] === 'rechazada' ? 'active' : '') ?>" data-filter="estado" data-value="rechazada">
                 Rechazadas <span style="background:#f4f7fb; color:#a9a8a6; padding:2px 6px; border-radius:10px; font-size:0.75rem; margin-left:5px; border:1px solid #a9a8a6;"><?= $estados['rechazada'] ?></span>
+            </button>
+            <button class="ge-tab-btn <?= (isset($_GET['filtro']) && $_GET['filtro'] === 'archivada' ? 'active' : '') ?>" data-filter="estado" data-value="archivada">
+                Archivadas <span style="background:#f4f7fb; color:#e11d48; padding:2px 6px; border-radius:10px; font-size:0.75rem; margin-left:5px; border:1px solid #e11d48;"><?= $estados['archivada'] ?></span>
             </button>
         </div>
 
@@ -104,17 +107,24 @@ $esProfesor = isset($_SESSION['rol_nombre']) && in_array($_SESSION['rol_nombre']
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($todas as $p): 
+                <?php 
+                require_once __DIR__ . '/../services/FormularioPropuestaService.php';
+                $listaCombinada = array_merge($todas, $archivadas ?? []);
+                foreach ($listaCombinada as $p): 
                     $nivelFila = !empty($p['nivel_trayecto']) ? $p['nivel_trayecto'] : 'Sin Asignar';
-                    $estadoFila = $p['estado'];
+                    $estadoFila = !empty($p['eliminado_en']) ? 'archivada' : $p['estado'];
                     
+                    $extrasDecoded = FormularioPropuestaService::decodificarExtras($p['campos_extra'] ?? null);
+                    $extrasHtml = FormularioPropuestaService::extrasHtmlCorreo($extrasDecoded);
+
                     // XSS Safe Data
                     $evalData = [
                         'id' => $p['id'],
                         'empresa' => $p['nombre_empresa'],
                         'contacto' => $p['persona_contacto'],
                         'area' => $p['area_afectada'],
-                        'problema' => $p['descripcion_problema']
+                        'problema' => $p['descripcion_problema'],
+                        'extras_html' => $extrasHtml
                     ];
                 ?>
                 <tr class="propuesta-row" data-trayecto="<?= htmlspecialchars($nivelFila) ?>" data-estado="<?= htmlspecialchars($estadoFila) ?>">
@@ -130,11 +140,12 @@ $esProfesor = isset($_SESSION['rol_nombre']) && in_array($_SESSION['rol_nombre']
                     </td>
                     <td>
                         <div class="ge-project-info">
-                            <span class="ge-project-title" style="margin-bottom: 5px; font-size: 1.1rem;"><i class="ph-bold ph-lightbulb" style="color:#7090cb;"></i> <?php echo htmlspecialchars($p['area_afectada']); ?></span>
+                            <span class="ge-project-title" style="margin-bottom: 5px; font-size: 1.1rem;"><i class="ph-bold ph-lightbulb" style="color:#7090cb;"></i> <?php echo htmlspecialchars($p['area_afectada'] ?: 'Por evaluar'); ?></span>
                             
                             <div style="background:#fff; padding:12px; border-radius:4px; border-left:4px solid #7090cb; margin-top:5px; border-top:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">
                                 <strong style="color:#475569; font-size:0.85rem; display:block; margin-bottom:5px; text-transform:uppercase;"><i class="ph-bold ph-warning-circle"></i> Problemática a Resolver:</strong>
                                 <p style="margin:0; font-size:0.95rem; color:#334155; line-height:1.4;"><?php echo nl2br(htmlspecialchars($p['descripcion_problema'])); ?></p>
+                                <?= $extrasHtml ?>
                             </div>
                         </div>
                     </td>
@@ -152,6 +163,18 @@ $esProfesor = isset($_SESSION['rol_nombre']) && in_array($_SESSION['rol_nombre']
                                     <i><?php echo htmlspecialchars($p['motivo_rechazo']); ?></i>
                                 </div>
                             <?php endif; ?>
+                            <?php if ($estadoFila === 'archivada' && !empty($p['motivo_archivo'])): ?>
+                                <div style="margin-top:10px; font-size:0.85rem; color:#e11d48; background:#fff1f2; padding:8px; border-radius:4px; border: 1px dashed #e11d48;">
+                                    <b>Motivo de Archivo:</b><br>
+                                    <i><?php echo htmlspecialchars($p['motivo_archivo']); ?></i>
+                                    <br><small>Por: <?= htmlspecialchars($p['archivado_por_nombre'] ?? 'Desconocido') ?></small>
+                                </div>
+                            <?php endif; ?>
+                            <?php if ($p['revertido_en']): ?>
+                                <div style="margin-top:10px; font-size:0.8rem; color:#f59e0b;">
+                                    <i class="ph-fill ph-warning"></i> Revertida el <?= date('d/m/Y', strtotime($p['revertido_en'])) ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </td>
                     <td>
@@ -160,14 +183,33 @@ $esProfesor = isset($_SESSION['rol_nombre']) && in_array($_SESSION['rol_nombre']
                                 <button class="ge-btn-aprobar btn-evaluar" data-eval="<?php echo htmlspecialchars(json_encode($evalData), ENT_QUOTES, 'UTF-8'); ?>">
                                     <i class="ph-bold ph-magnifying-glass"></i> Evaluar
                                 </button>
+                                <button class="btn-action-post" data-accion="archivar" data-id="<?= $p['id'] ?>" data-prompt="Indique el motivo para archivar esta propuesta:" style="background:#f1f5f9; color:#e11d48; border:1px solid #cbd5e1; padding:0.6rem 1rem; border-radius:6px; cursor:pointer; font-weight:bold; transition:background 0.2s; width:100%; text-align:center; margin-top:5px;">
+                                    <i class="ph-bold ph-archive"></i> Archivar
+                                </button>
                             <?php elseif ($estadoFila === 'aceptada'): ?>
-                                <div style="background:#f4f7fb; color:#505984; padding:10px; border-radius:6px; text-align:center; font-weight:bold; font-size:0.9rem; border:1px solid #505984;">
+                                <div style="background:#f4f7fb; color:#505984; padding:10px; border-radius:6px; text-align:center; font-weight:bold; font-size:0.9rem; border:1px solid #505984; margin-bottom:5px;">
                                     <i class="ph-bold ph-check-circle"></i> Aceptada
                                 </div>
+                                <button class="btn-action-post" data-accion="revertir" data-id="<?= $p['id'] ?>" data-prompt="Indique el motivo para revertir a pendiente (esto cancelará postulaciones y cerrará la oferta):" style="background:#f1f5f9; color:#f59e0b; border:1px solid #cbd5e1; padding:0.6rem 1rem; border-radius:6px; cursor:pointer; font-weight:bold; transition:background 0.2s; width:100%; text-align:center; margin-bottom:5px;">
+                                    <i class="ph-bold ph-arrow-u-up-left"></i> Revertir
+                                </button>
+                                <button class="btn-action-post" data-accion="archivar" data-id="<?= $p['id'] ?>" data-prompt="Indique el motivo para archivar esta propuesta:" style="background:#f1f5f9; color:#e11d48; border:1px solid #cbd5e1; padding:0.6rem 1rem; border-radius:6px; cursor:pointer; font-weight:bold; transition:background 0.2s; width:100%; text-align:center;">
+                                    <i class="ph-bold ph-archive"></i> Archivar
+                                </button>
                             <?php elseif ($estadoFila === 'rechazada'): ?>
-                                <div style="background:#f4f7fb; color:#a9a8a6; padding:10px; border-radius:6px; text-align:center; font-weight:bold; font-size:0.9rem; border:1px solid #a9a8a6;">
+                                <div style="background:#f4f7fb; color:#a9a8a6; padding:10px; border-radius:6px; text-align:center; font-weight:bold; font-size:0.9rem; border:1px solid #a9a8a6; margin-bottom:5px;">
                                     <i class="ph-bold ph-x-circle"></i> Rechazada
                                 </div>
+                                <button class="btn-action-post" data-accion="archivar" data-id="<?= $p['id'] ?>" data-prompt="Indique el motivo para archivar esta propuesta:" style="background:#f1f5f9; color:#e11d48; border:1px solid #cbd5e1; padding:0.6rem 1rem; border-radius:6px; cursor:pointer; font-weight:bold; transition:background 0.2s; width:100%; text-align:center;">
+                                    <i class="ph-bold ph-archive"></i> Archivar
+                                </button>
+                            <?php elseif ($estadoFila === 'archivada'): ?>
+                                <div style="background:#fff1f2; color:#e11d48; padding:10px; border-radius:6px; text-align:center; font-weight:bold; font-size:0.9rem; border:1px solid #e11d48; margin-bottom:5px;">
+                                    <i class="ph-bold ph-archive"></i> Archivada
+                                </div>
+                                <button class="btn-action-post" data-accion="restaurar" data-id="<?= $p['id'] ?>" style="background:#f1f5f9; color:#10b981; border:1px solid #cbd5e1; padding:0.6rem 1rem; border-radius:6px; cursor:pointer; font-weight:bold; transition:background 0.2s; width:100%; text-align:center;">
+                                    <i class="ph-bold ph-arrows-clockwise"></i> Restaurar
+                                </button>
                             <?php endif; ?>
                         </div>
                     </td>
@@ -177,6 +219,13 @@ $esProfesor = isset($_SESSION['rol_nombre']) && in_array($_SESSION['rol_nombre']
         </table>
         
         <div id="bp-pagination-container" class="ge-pagination-controls"></div>
+        
+        <form id="form-actions-post" method="POST" action="?ruta=procesar-propuesta" style="display:none;">
+            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?? ''; ?>">
+            <input type="hidden" name="id_propuesta" id="act_id" value="">
+            <input type="hidden" name="accion" id="act_accion" value="">
+            <input type="hidden" name="motivo" id="act_motivo" value="">
+        </form>
         
     <?php endif; ?>
 </div>
@@ -219,12 +268,15 @@ $esProfesor = isset($_SESSION['rol_nombre']) && in_array($_SESSION['rol_nombre']
                             <input type="text" name="area_afectada" id="input_area_afectada" class="ve-input" style="width: 100%;" placeholder="Ej. Control de Inventario y Ventas">
                         </div>
                         <div style="flex: 1; min-width: 250px;">
-                            <label style="font-weight: 600; font-size: 0.9rem; margin-bottom: 5px; display: block; color:#505984;">Asignar a Trayecto:</label>
+                            <label style="font-weight: 600; font-size: 0.9rem; margin-bottom: 5px; display: block; color:#505984;">Asignar a Trayecto / Nivel:</label>
+                            <?php
+                            require_once __DIR__ . '/../../Autenticacion/services/PerfilPSTService.php';
+                            $catTrayectosBanco = PerfilPSTService::catalogoTrayectos();
+                            ?>
                             <select name="nivel_trayecto" class="ve-input" style="width: 100%;">
-                                <option value="Trayecto I">Trayecto I</option>
-                                <option value="Trayecto II">Trayecto II</option>
-                                <option value="Trayecto III">Trayecto III</option>
-                                <option value="Trayecto IV">Trayecto IV</option>
+                                <?php foreach ($catTrayectosBanco as $numTr => $nomTr): ?>
+                                    <option value="<?php echo htmlspecialchars($nomTr); ?>"><?php echo htmlspecialchars($nomTr); ?></option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                         <div style="flex: 1; min-width: 250px;">
@@ -278,7 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('modalContacto').textContent = data.contacto;
             document.getElementById('modalArea').textContent = data.area;
             document.getElementById('input_area_afectada').value = data.area;
-            document.getElementById('modalDescripcion').innerHTML = data.problema.replace(/\n/g, '<br>');
+            document.getElementById('modalDescripcion').innerHTML = data.problema.replace(/\n/g, '<br>') + (data.extras_html || '');
             
             // Reset
             selectDecision('');
@@ -499,6 +551,58 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     renderTable();
+
+    // 5. Lógica para botones de acciones (revertir, archivar, restaurar)
+    document.querySelectorAll('.btn-action-post').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const accion = this.getAttribute('data-accion');
+            const id = this.getAttribute('data-id');
+            const promptText = this.getAttribute('data-prompt');
+            
+            if (accion === 'restaurar') {
+                Swal.fire({
+                    title: '¿Restaurar propuesta?',
+                    text: 'La propuesta volverá a ser visible en listados y carrusel.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, restaurar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('act_id').value = id;
+                        document.getElementById('act_accion').value = accion;
+                        document.getElementById('act_motivo').value = '';
+                        document.getElementById('form-actions-post').submit();
+                    }
+                });
+            } else {
+                Swal.fire({
+                    title: accion === 'archivar' ? 'Archivar Propuesta' : 'Revertir Propuesta',
+                    text: promptText,
+                    input: 'textarea',
+                    inputPlaceholder: 'Escriba el motivo aquí...',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: accion === 'archivar' ? '#e11d48' : '#f59e0b',
+                    confirmButtonText: 'Confirmar',
+                    cancelButtonText: 'Cancelar',
+                    preConfirm: (motivo) => {
+                        if (!motivo || motivo.trim() === '') {
+                            Swal.showValidationMessage('Debe ingresar un motivo');
+                        }
+                        return motivo;
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('act_id').value = id;
+                        document.getElementById('act_accion').value = accion;
+                        document.getElementById('act_motivo').value = result.value;
+                        document.getElementById('form-actions-post').submit();
+                    }
+                });
+            }
+        });
+    });
 });
 </script>
 

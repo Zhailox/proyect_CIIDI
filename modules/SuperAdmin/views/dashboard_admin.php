@@ -41,7 +41,7 @@ $stats = array_merge([
         </div>
 
         <div>
-            <button type="button" onclick="ejecutarTestCore()" class="btn btn-primary" style="font-weight: 700; padding: 10px 18px; border-radius: 8px; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(80,89,132,0.25); cursor: pointer; transition: all 0.25s ease;">
+            <button type="button" onclick="ejecutarTestCore()" class="sa-btn sa-btn-primary" style="font-weight: 700; padding: 10px 18px; border-radius: 8px; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(80,89,132,0.25); cursor: pointer; transition: all 0.25s ease;">
                 <i class="ph-bold ph-heartbeat"></i> Testear Respuesta del Core
             </button>
         </div>
@@ -376,7 +376,7 @@ if (typeof Chart === 'undefined') {
 <!-- MODAL GLASSMORPHISM PARA DIAGNÓSTICO DE SALUD DEL CORE -->
 <div id="ag-core-health-modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18, 26, 62, 0.65); backdrop-filter: blur(8px); z-index: 99999; align-items: center; justify-content: center; padding: 1.5rem;">
     <div class="sa-modal-card" style="width: 100%; max-width: 640px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden; animation: agModalFade 0.25s cubic-bezier(0.16, 1, 0.3, 1);">
-        <div style="padding: 1.25rem 1.6rem; background: var(--color-principal); color: var(--texto-titulos); display: flex; justify-content: space-between; align-items: center;">
+        <div style="padding: 1.25rem 1.6rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: var(--texto-titulos); display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(112, 144, 203, 0.2); display: flex; align-items: center; justify-content: center; color: var(--color-terciario); font-size: 1.3rem;">
                     <i class="ph-bold ph-heartbeat"></i>
@@ -386,7 +386,7 @@ if (typeof Chart === 'undefined') {
                     <p style="margin: 2px 0 0 0; font-size: 0.78rem; color: #94a3b8;">Prueba en tiempo real del Núcleo del Sistema</p>
                 </div>
             </div>
-            <button type="button" onclick="cerrarTestCoreModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.4rem; cursor: pointer;">&times;</button>
+            <button type="button" onclick="cerrarTestCoreModal()" title="Cerrar" class="sa-modal-close"><i class="ph-bold ph-x"></i></button>
         </div>
 
         <div id="ag-core-health-body" style="padding: 1.6rem; max-height: 480px; overflow-y: auto;">
@@ -396,9 +396,9 @@ if (typeof Chart === 'undefined') {
             </div>
         </div>
 
-        <div class="sa-modal-footer">
-            <button type="button" onclick="cerrarTestCoreModal()" class="sa-btn-cancel">
-                Cerrar Diagnóstico
+        <div class="sa-modal-footer" style="padding: 1rem 1.6rem 1.25rem 1.6rem; margin-top: 0; background: #f8fafc;">
+            <button type="button" onclick="cerrarTestCoreModal()" class="sa-btn sa-btn-cancel" style="min-width: 120px;">
+                <i class="ph-bold ph-x-circle"></i> Cerrar Diagnóstico
             </button>
         </div>
     </div>
@@ -430,7 +430,7 @@ function ejecutarTestCore() {
             data.pruebas.forEach(item => {
                 const esOk = item.estado === 'OK';
                 const bgIcon = esOk ? 'rgba(112, 144, 203, 0.15)' : 'rgba(18, 26, 62, 0.12)';
-                const colorIcon = esOk ? 'var(--color-terciario)' : 'var(--color-principal)';
+                const colorIcon = esOk ? 'var(--color-terciario)' : '#121a3e';
                 const iconClass = esOk ? 'ph-check-circle' : 'ph-x-circle';
 
                 htmlPruebas += `

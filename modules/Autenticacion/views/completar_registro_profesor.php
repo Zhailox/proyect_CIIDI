@@ -70,6 +70,12 @@
                     </ul>
                 </div>
 
+                <!-- PERFIL PST: TRAYECTOS / TRIMESTRES QUE DICTA -->
+                <?php
+                $pstIdPrefijo = 'docpst';
+                include __DIR__ . '/partials/selector_pst.php';
+                ?>
+
                 <!-- SEGURIDAD 2: CAPTCHA VISUAL DISTORSIONADO GD -->
                 <div class="recovery-flat-group" style="margin-bottom: 1.25rem;">
                     <label for="captcha_ans">Verificación Anti-Bot:</label>

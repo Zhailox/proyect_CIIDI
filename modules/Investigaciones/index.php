@@ -21,6 +21,7 @@ class InvestigacionesModule implements ModuleContract {
                 'vista'            => __DIR__ . '/views/showcase_investigaciones.php',
                 'titulo'           => 'Cartelera — Investigaciones I+D',
                 'css'              => ['Investigaciones.css'],
+                'seguridad_accion' => 'ver',
             ],
             'postulaciones-investigacion' => [
                 'controlador_path' => __DIR__ . '/controllers/InvestigacionController.php',
@@ -37,6 +38,7 @@ class InvestigacionesModule implements ModuleContract {
                 'vista'            => __DIR__ . '/views/ficha_investigador.php',
                 'titulo'           => 'Directorio de Investigadores',
                 'css'              => ['Investigaciones.css'],
+                'seguridad_accion' => 'ver',
             ],
 
             // ── ACCIONES AUTENTICADAS ─────────────────────────────────
@@ -119,13 +121,15 @@ class InvestigacionesModule implements ModuleContract {
 
     public function getMenuConfig(): array {
         $nivelAdmin = SystemConfigService::get('accesos_modulos.investigaciones.admin', 1);
-        $nivelPublico = SystemConfigService::get('accesos_modulos.investigaciones.publico', 10);
+        $nivelPublico = SystemConfigService::get('accesos_modulos.investigaciones.publico', 999);
         return [
             [
                 'tipo'        => 'parent',
                 'titulo'      => 'Investigaciones',
                 'icono'       => 'ph-fill ph-flask',
                 'orden'       => 30,
+                'grupo'       => 'lineas-investigacion',
+                'orden_en_grupo' => 30,
                 'enlace'      => 'investigaciones',
                 'privilegio_minimo' => $nivelPublico,
                 'activadores' => [

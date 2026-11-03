@@ -2254,3 +2254,168 @@ Trace:
 #5 [internal function]: MailService::{closure:MailService::enviarAsincrono():146}()
 #6 {main}
 --------------------------------------------------------------------------------
+[2026-10-28 01:43:27] ERROR: SMTP Error: Could not connect to SMTP host. Failed to connect to server en C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php:2465
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(2235): PHPMailer\PHPMailer\PHPMailer->smtpConnect(Array)
+#1 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1855): PHPMailer\PHPMailer\PHPMailer->smtpSend('Date: Wed, 28 O...', '--b1=_2ajC7zHNO...')
+#2 C:\wamp64\www\proyect_CIIDI\vendor\phpmailer\phpmailer\src\PHPMailer.php(1670): PHPMailer\PHPMailer\PHPMailer->postSend()
+#3 C:\wamp64\www\proyect_CIIDI\core\Services\MailService.php(251): PHPMailer\PHPMailer\PHPMailer->send()
+#4 C:\wamp64\www\proyect_CIIDI\modules\SuperAdmin\controllers\ConfiguracionController.php(410): MailService::enviar('andrusramirez20...', 'Administrador d...', 'Prueba de Conex...', '\r\n             ...')
+#5 C:\wamp64\www\proyect_CIIDI\core\Http\Dispatcher.php(61): ConfiguracionController->probarSmtp()
+#6 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(130): Dispatcher->dispatch('probar-smtp', Array, Array, Array, Object(AssetResolver))
+#7 C:\wamp64\www\proyect_CIIDI\public\index.php(49): Kernel->run()
+#8 {main}
+--------------------------------------------------------------------------------
+[2026-10-28 13:30:03] ERROR: SQLSTATE[XX000]: Internal error: 7 ERROR:  tuple concurrently updated en C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php:400
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(400): PDO->exec('\n              ...')
+#1 C:\wamp64\www\proyect_CIIDI\core\Database\Connection.php(238): Connection::autoHealSchemaIfNeeded(Object(PDO))
+#2 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(305): Connection::getInstance(true)
+#3 C:\wamp64\www\proyect_CIIDI\core\Security\RateLimiter.php(73): RateLimiter::obtenerListaBlanca()
+#4 C:\wamp64\www\proyect_CIIDI\core\System\Kernel.php(74): RateLimiter::estaBloqueada()
+#5 C:\wamp64\www\proyect_CIIDI\public\index.php(49): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-11-02 23:39:34] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.investigaciones_lineas" does not exist
+LINE 8: ...   NULLIF((SELECT string_agg(l.nombre, ', ') FROM public.inv...
+                                                             ^ en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\models\InvestigacionModel.php:148
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\models\InvestigacionModel.php(148): PDOStatement->execute(Array)
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\controllers\InvestigacionController.php(43): InvestigacionModel->listarInvestigaciones(Array)
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): InvestigacionController->mostrarCartelera()
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('investigaciones', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-11-02 23:39:48] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.investigaciones_lineas" does not exist
+LINE 8: ...   NULLIF((SELECT string_agg(l.nombre, ', ') FROM public.inv...
+                                                             ^ en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\models\InvestigacionModel.php:148
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\models\InvestigacionModel.php(148): PDOStatement->execute(Array)
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\controllers\InvestigacionController.php(43): InvestigacionModel->listarInvestigaciones(Array)
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): InvestigacionController->mostrarCartelera()
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('investigaciones', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-11-02 23:43:44] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.investigaciones_lineas" does not exist
+LINE 8: ...   NULLIF((SELECT string_agg(l.nombre, ', ') FROM public.inv...
+                                                             ^ en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\models\InvestigacionModel.php:148
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\models\InvestigacionModel.php(148): PDOStatement->execute(Array)
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\controllers\InvestigacionController.php(43): InvestigacionModel->listarInvestigaciones(Array)
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): InvestigacionController->mostrarCartelera()
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('investigaciones', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 00:07:06] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.investigaciones_lineas" does not exist
+LINE 11:                    SELECT 1 FROM public.investigaciones_line...
+                                          ^ en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\LineasInvestigacion\models\LineasModel.php:129
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\LineasInvestigacion\models\LineasModel.php(129): PDOStatement->execute(Array)
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\LineasInvestigacion\controllers\DetalleController.php(48): LineasModel->getInvestigacionesPorLinea(7)
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): DetalleLineaController->index()
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('detalle-linea', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 00:07:11] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.investigaciones_lineas" does not exist
+LINE 11:                    SELECT 1 FROM public.investigaciones_line...
+                                          ^ en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\LineasInvestigacion\models\LineasModel.php:129
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\LineasInvestigacion\models\LineasModel.php(129): PDOStatement->execute(Array)
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\LineasInvestigacion\controllers\DetalleController.php(48): LineasModel->getInvestigacionesPorLinea(8)
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): DetalleLineaController->index()
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('detalle-linea', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 00:07:13] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.investigaciones_lineas" does not exist
+LINE 11:                    SELECT 1 FROM public.investigaciones_line...
+                                          ^ en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\LineasInvestigacion\models\LineasModel.php:129
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\LineasInvestigacion\models\LineasModel.php(129): PDOStatement->execute(Array)
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\LineasInvestigacion\controllers\DetalleController.php(48): LineasModel->getInvestigacionesPorLinea(8)
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): DetalleLineaController->index()
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('detalle-linea', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 00:07:15] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.investigaciones_lineas" does not exist
+LINE 11:                    SELECT 1 FROM public.investigaciones_line...
+                                          ^ en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\LineasInvestigacion\models\LineasModel.php:129
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\LineasInvestigacion\models\LineasModel.php(129): PDOStatement->execute(Array)
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\LineasInvestigacion\controllers\DetalleController.php(48): LineasModel->getInvestigacionesPorLinea(8)
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): DetalleLineaController->index()
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('detalle-linea', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 00:07:19] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.investigaciones_lineas" does not exist
+LINE 8: ...   NULLIF((SELECT string_agg(l.nombre, ', ') FROM public.inv...
+                                                             ^ en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\models\InvestigacionModel.php:148
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\models\InvestigacionModel.php(148): PDOStatement->execute(Array)
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\controllers\InvestigacionController.php(43): InvestigacionModel->listarInvestigaciones(Array)
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): InvestigacionController->mostrarCartelera()
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('investigaciones', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 00:07:26] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.investigaciones_lineas" does not exist
+LINE 8: ...   NULLIF((SELECT string_agg(l.nombre, ', ') FROM public.inv...
+                                                             ^ en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\models\InvestigacionModel.php:148
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\models\InvestigacionModel.php(148): PDOStatement->execute(Array)
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\controllers\InvestigacionController.php(43): InvestigacionModel->listarInvestigaciones(Array)
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): InvestigacionController->mostrarCartelera()
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('investigaciones', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 00:09:46] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.investigaciones_lineas" does not exist
+LINE 24:                       LEFT JOIN public.investigaciones_linea...
+                                         ^ en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\LineasInvestigacion\models\LineasModel.php:168
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\LineasInvestigacion\models\LineasModel.php(168): PDOStatement->execute(Array)
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\LineasInvestigacion\controllers\GestorController.php(203): LineasModel->getProfesoresAfiliadosPorLinea(7)
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorLineasController->detalleGestionLinea()
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('detalle-gestion...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 00:10:00] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.investigaciones_lineas" does not exist
+LINE 24:                       LEFT JOIN public.investigaciones_linea...
+                                         ^ en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\LineasInvestigacion\models\LineasModel.php:168
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\LineasInvestigacion\models\LineasModel.php(168): PDOStatement->execute(Array)
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\LineasInvestigacion\controllers\GestorController.php(203): LineasModel->getProfesoresAfiliadosPorLinea(8)
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorLineasController->detalleGestionLinea()
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('detalle-gestion...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 00:25:33] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.investigaciones_lineas" does not exist
+LINE 8: ...   NULLIF((SELECT string_agg(l.nombre, ', ') FROM public.inv...
+                                                             ^ en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\models\InvestigacionModel.php:148
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\models\InvestigacionModel.php(148): PDOStatement->execute(Array)
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\controllers\InvestigacionController.php(43): InvestigacionModel->listarInvestigaciones(Array)
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): InvestigacionController->mostrarCartelera()
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('investigaciones', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 00:25:38] ERROR: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "public.investigaciones_lineas" does not exist
+LINE 8: ...   NULLIF((SELECT string_agg(l.nombre, ', ') FROM public.inv...
+                                                             ^ en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\models\InvestigacionModel.php:148
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\models\InvestigacionModel.php(148): PDOStatement->execute(Array)
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Investigaciones\controllers\InvestigacionController.php(43): InvestigacionModel->listarInvestigaciones(Array)
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): InvestigacionController->mostrarCartelera()
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('investigaciones', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------

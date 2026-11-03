@@ -82,13 +82,13 @@ ksort($lineasArray);
 ksort($dimensionesArray);
 ?>
 
-<!-- Pestañas Filtro: Trayecto -->
+        <!-- Pestañas Filtro: Trayecto -->
         <div class="ge-tabs" id="filtro-trayecto">
             <span style="font-size:0.85rem; color:#94a3b8; font-weight:bold; padding: 0.8rem 0; margin-right: 1rem; text-transform:uppercase;">TRAYECTO:</span>
-            <button class="ge-tab-btn active" data-filter="trayecto" data-value="Todas">Todas <span style="background:#e2e8f0; padding:2px 6px; border-radius:10px; font-size:0.75rem; margin-left:5px;"><?php echo count($postulaciones); ?></span></button>
+            <button class="ge-tab-btn active" data-filter="trayecto" data-value="Todas">Todos <span style="background:#e2e8f0; padding:2px 6px; border-radius:10px; font-size:0.75rem; margin-left:5px;"><?php echo count($postulaciones); ?></span></button>
             <?php foreach ($trayectos as $nivel => $count): ?>
                 <button class="ge-tab-btn" data-filter="trayecto" data-value="<?= htmlspecialchars($nivel) ?>">
-                    <?= htmlspecialchars($nivel) ?> <span style="background:#e2e8f0; padding:2px 6px; border-radius:10px; font-size:0.75rem; margin-left:5px;"><?= $count ?></span>
+                    <?= is_numeric($nivel) ? 'Trayecto ' . htmlspecialchars($nivel) : htmlspecialchars($nivel) ?> <span style="background:#e2e8f0; padding:2px 6px; border-radius:10px; font-size:0.75rem; margin-left:5px;"><?= $count ?></span>
                 </button>
             <?php endforeach; ?>
         </div>
@@ -128,6 +128,15 @@ ksort($dimensionesArray);
                     <?php endforeach; ?>
                 </select>
             </div>
+            <div style="flex: 1; min-width: 250px;">
+                <label style="font-size:0.85rem; color:#94a3b8; font-weight:bold; display:block; margin-bottom:5px; text-transform:uppercase;">Trimestre PST:</label>
+                <select id="filtro-pst-trimestre" class="ge-extended-filter" style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; font-size: 0.95rem; color: #121a3e; outline:none;">
+                    <option value="Todos">Todos los Trimestres</option>
+                    <option value="1">Trimestre 1</option>
+                    <option value="2">Trimestre 2</option>
+                    <option value="3">Trimestre 3</option>
+                </select>
+            </div>
         </div>
 
 
@@ -135,16 +144,18 @@ ksort($dimensionesArray);
         <table class="ge-table" id="tablaEquipos">
             <thead>
                 <tr>
-                    <th style="width: 30%;">Estudiantes (Equipo)</th>
+                    <th style="width: 25%;">Estudiantes (Equipo)</th>
                     <th style="width: 25%;">Proyecto Seleccionado</th>
-                    <th style="width: 30%;">Razones de Postulación</th>
-                    <th style="width: 15%;">Acción</th>
+                    <th style="width: 25%;">Datos PST & Motivación</th>
+                    <th style="width: 25%;">Acción</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($postulaciones as $p): 
                     $nivelFila = !empty($p['nivel_trayecto']) ? $p['nivel_trayecto'] : 'General';
                     $estadoFila = $p['estado'];
+                    $pstTrayecto = $p['pst_trayecto'] ?? 'N/A';
+                    $pstTrimestre = $p['pst_trimestre'] ?? 'N/A';
                     
                     $listaEquipoHTML = '<div style="display:flex; flex-direction:column; gap:5px; text-align:left; margin-top:10px; background:#f8fafc; padding:15px; border-radius:6px; border:1px solid #cbd5e1;">';
                     $listaEquipoHTML .= '<strong style="color:#1e293b; border-bottom:1px solid #e2e8f0; padding-bottom:5px; margin-bottom:5px; font-size:1.1rem;">Integrantes del Proyecto</strong>';
@@ -165,7 +176,7 @@ ksort($dimensionesArray);
                     }
                     $listaEquipoHTML .= '</div>';
                 ?>
-                <tr class="equipo-row" data-trayecto="<?= htmlspecialchars($nivelFila) ?>" data-estado="<?= htmlspecialchars($estadoFila) ?>" data-linea="<?= htmlspecialchars(!empty($p['linea_nombre']) ? $p['linea_nombre'] : 'Sin Línea') ?>" data-dimension="<?= htmlspecialchars(!empty($p['dimension_nombre']) ? $p['dimension_nombre'] : 'Sin Dimensión') ?>">
+                <tr class="equipo-row" data-trayecto="<?= htmlspecialchars($pstTrayecto) ?>" data-pst-trimestre="<?= htmlspecialchars($pstTrimestre) ?>" data-estado="<?= htmlspecialchars($estadoFila) ?>" data-linea="<?= htmlspecialchars(!empty($p['linea_nombre']) ? $p['linea_nombre'] : 'Sin Línea') ?>" data-dimension="<?= htmlspecialchars(!empty($p['dimension_nombre']) ? $p['dimension_nombre'] : 'Sin Dimensión') ?>">
                     <td>
                         <div class="ge-student-info">
                             <span class="ge-student-name" title="Líder del Proyecto">
@@ -192,7 +203,7 @@ ksort($dimensionesArray);
                             <span class="ge-company-badge"><i class="ph-bold ph-buildings"></i> <?php echo htmlspecialchars($p['nombre_empresa']); ?></span>
                             <span class="ge-project-title" style="margin-bottom: 5px;"><?php echo htmlspecialchars($p['titulo']); ?></span>
                             
-                            <span style="font-size: 0.85rem; color: #7090cb; font-weight:bold; margin-bottom: 2px;"><i class="ph-bold ph-graduation-cap"></i> <?php echo htmlspecialchars($nivelFila); ?></span>
+                            <span style="font-size: 0.85rem; color: #7090cb; font-weight:bold; margin-bottom: 2px;"><i class="ph-bold ph-graduation-cap"></i> <?php echo htmlspecialchars($nivelFila); ?> (Req)</span>
                             <span style="font-size: 0.8rem; color: #64748b; font-family: monospace; margin-bottom: 2px;">Ref: <?php echo htmlspecialchars($p['codigo_seguimiento'] ?? 'N/A'); ?></span>
                             <span style="font-size: 0.85rem; color: #505984; font-weight:bold; margin-top:3px;"><i class="ph-bold ph-users"></i> Cupos Límite: <?php echo htmlspecialchars($p['cupos_disponibles'] ?? 3); ?></span>
                             
@@ -218,6 +229,20 @@ ksort($dimensionesArray);
                         </div>
                     </td>
                     <td>
+                        <div style="margin-bottom: 10px; font-size: 0.85rem; color: #334155; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+                            <div style="font-weight:bold; color: #121a3e; margin-bottom:4px;"><i class="ph-bold ph-graduation-cap"></i> Trayecto <?= htmlspecialchars($pstTrayecto) ?> - Trimestre <?= htmlspecialchars($pstTrimestre) ?></div>
+                            <div style="margin-bottom:2px;"><i class="ph-bold ph-chalkboard-teacher"></i> <b>Docente PST:</b> <?= htmlspecialchars($p['profesor_nombre'] ?? 'N/A') ?></div>
+                            <div>
+                                <b>Aval Docente:</b> 
+                                <?php if ($p['aprobacion_profesor'] === 'Aprobado'): ?>
+                                    <span style="color: #10b981; font-weight:bold;"><i class="ph-bold ph-check"></i> El profesor ya lo aceptó</span>
+                                <?php elseif ($p['aprobacion_profesor'] === 'Devuelto'): ?>
+                                    <span style="color: #e11d48; font-weight:bold;"><i class="ph-bold ph-arrow-u-up-left"></i> Devuelto</span>
+                                <?php else: ?>
+                                    <span style="color: #f59e0b; font-weight:bold;"><i class="ph-bold ph-clock"></i> En Espera</span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
                         <div class="ge-motivation">
                             <?php if (!empty(trim($p['mensaje_motivacion']))): ?>
                                 "<?php echo nl2br(htmlspecialchars($p['mensaje_motivacion'])); ?>"
@@ -229,6 +254,11 @@ ksort($dimensionesArray);
                     <td>
                         <div class="ge-actions">
                             <?php if ($estadoFila === 'Pendiente'): ?>
+                                <?php if ($p['aprobacion_profesor'] !== 'Aprobado'): ?>
+                                    <div style="background:#fff7ed; color:#c2410c; padding:8px; border-radius:6px; font-size:0.8rem; text-align:center; border:1px solid #fdba74; margin-bottom:8px;">
+                                        <i class="ph-bold ph-warning-circle"></i> Requiere aval del docente PST antes de ser asignado.
+                                    </div>
+                                <?php endif; ?>
                                 <form action="?ruta=procesar-asignacion" method="POST" class="form-aprobar">
                                     <input type="hidden" name="id_postulacion" value="<?php echo $p['id_postulacion']; ?>">
                                     <input type="hidden" name="id_investigacion" value="<?php echo $p['id_investigacion']; ?>">
@@ -362,7 +392,8 @@ document.addEventListener('DOMContentLoaded', function() {
         'trayecto': 'Todas',
         'estado': 'Pendiente',
         'linea': 'Todas',
-        'dimension': 'Todas'
+        'dimension': 'Todas',
+        'pstTrimestre': 'Todos'
     };
 
     // Listeners para selects
@@ -378,6 +409,11 @@ document.addEventListener('DOMContentLoaded', function() {
         renderTable();
     });
 
+    document.getElementById('filtro-pst-trimestre').addEventListener('change', function() {
+        activeFilter.pstTrimestre = this.value;
+        currentPage = 1;
+        renderTable();
+    });
 
     function renderTable() {
         // Calcular conteos dinámicos
@@ -429,11 +465,12 @@ document.addEventListener('DOMContentLoaded', function() {
         rows.forEach(r => r.style.display = 'none');
         
         filteredRows = rows.filter(r => {
-            const matchTrayecto = (activeFilter.trayecto === 'Todas') || (r.getAttribute('data-trayecto') === activeFilter.trayecto);
+            const matchTrayecto = (activeFilter.trayecto === 'Todas') || (r.getAttribute('data-trayecto') == activeFilter.trayecto);
             const matchEstado = (activeFilter.estado === 'Todos') || (r.getAttribute('data-estado') === activeFilter.estado);
             const matchLinea = (activeFilter.linea === 'Todas') || (r.getAttribute('data-linea') === activeFilter.linea);
             const matchDimension = (activeFilter.dimension === 'Todas') || (r.getAttribute('data-dimension') === activeFilter.dimension);
-            return matchTrayecto && matchEstado && matchLinea && matchDimension;
+            const matchTrimestre = (activeFilter.pstTrimestre === 'Todos') || (r.getAttribute('data-pst-trimestre') == activeFilter.pstTrimestre);
+            return matchTrayecto && matchEstado && matchLinea && matchDimension && matchTrimestre;
         });
 
         const totalPages = Math.ceil(filteredRows.length / itemsPerPage) || 1;

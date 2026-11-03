@@ -20,6 +20,9 @@
         },
         "LineasInvestigacion": {
             "estado": "online"
+        },
+        "SeguridadLineas": {
+            "estado": "online"
         }
     },
     "rutas": {

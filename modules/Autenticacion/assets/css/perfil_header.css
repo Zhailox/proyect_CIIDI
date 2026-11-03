@@ -158,3 +158,20 @@
     color: var(--color-titulos, #0f172a);
 }
 
+
+
+/* ==========================================================================
+   RESPONSIVIDAD ADICIONAL: LAPTOPS ZOOM ALTO Y MÓVILES (perfil_header.css)
+   ========================================================================== */
+@media (max-width: 768px) {
+    .header-user-info {
+        display: none;
+    }
+    .user-profile-trigger {
+        padding: 0.25rem;
+    }
+    .profile-dropdown-menu {
+        right: 0;
+        width: min(260px, calc(100vw - 2rem));
+    }
+}

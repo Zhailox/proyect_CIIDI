@@ -5,13 +5,8 @@
         "descripcion": "Elimina archivos temporales en storage\/tmp\/, cachés expiradas y residuos de descargas.",
         "expresion_cron": "0 3 * * *",
         "estado": "activo",
-<<<<<<< HEAD
-        "ultima_ejecucion": "2026-10-24 02:06:07",
-        "resultado_ultimo": "ÉXITO (6.17ms): Limpieza completada. Depurados 1 archivos temporales y cachés.",
-=======
-        "ultima_ejecucion": "2026-10-22 17:27:26",
-        "resultado_ultimo": "ÉXITO (13.06ms): Limpieza completada. Depurados 1 archivos temporales y cachés.",
->>>>>>> c4dc88020dcbe9ceb33a5ce266ef600ef35f59d4
+        "ultima_ejecucion": "2026-11-02 23:17:12",
+        "resultado_ultimo": "ÉXITO (8.17ms): Limpieza completada. Depurados 1 archivos temporales y cachés.",
         "script": "limpiarTemporales"
     },
     "backup_automatico_medianoche": {
@@ -20,13 +15,8 @@
         "descripcion": "Genera un backup completo comprimido (.sql.gz) de la base de datos y purga respaldos antiguos.",
         "expresion_cron": "0 0 * * *",
         "estado": "activo",
-<<<<<<< HEAD
-        "ultima_ejecucion": "2026-10-24 02:06:08",
-        "resultado_ultimo": "ÉXITO (616.65ms): Respaldo generado con éxito: auto_cron_backup_2026-10-24_02-06-07.sql.gz",
-=======
-        "ultima_ejecucion": "2026-10-22 17:27:29",
-        "resultado_ultimo": "ÉXITO (2272.36ms): Respaldo generado con éxito: auto_cron_backup_2026-10-22_17-27-26.sql.gz",
->>>>>>> c4dc88020dcbe9ceb33a5ce266ef600ef35f59d4
+        "ultima_ejecucion": "2026-11-03 00:05:33",
+        "resultado_ultimo": "ÉXITO (451.43ms): Respaldo generado con éxito: auto_cron_backup_2026-11-03_00-05-32.sql.gz",
         "script": "ejecutarBackupAutomatico"
     },
     "purga_logs_viejos": {
@@ -50,31 +40,7 @@
         "archivo_script": "script_tarea_1790301553_528.php",
         "timeout_segundos": 60,
         "estado": "activo",
-<<<<<<< HEAD
-        "ultima_ejecucion": "2026-10-24 02:06:08",
-        "resultado_ultimo": "ERROR (0.2ms): El archivo de script 'script_tarea_1790301553_528.php' no existe en storage\/scheduler\/scripts\/."
-=======
-        "ultima_ejecucion": "2026-10-22 21:04:42",
-        "resultado_ultimo": "ERROR (0.14ms): El archivo de script 'script_tarea_1790301553_528.php' no existe en storage\/scheduler\/scripts\/."
->>>>>>> c4dc88020dcbe9ceb33a5ce266ef600ef35f59d4
-    },
-    "tarea_1790660917_352": {
-        "id": "tarea_1790660917_352",
-        "nombre": "hola",
-        "descripcion": "",
-        "expresion_cron": "1 * * * *",
-        "tipo_ejecucion": "script_archivo",
-        "script": "limpiarTemporales",
-        "comando_custom": "",
-        "archivo_script": "script_tarea_1790660917_352.php",
-        "timeout_segundos": 60,
-        "estado": "activo",
-<<<<<<< HEAD
-        "ultima_ejecucion": "2026-10-24 02:06:08",
-        "resultado_ultimo": "ERROR (0.15ms): El archivo de script 'script_tarea_1790660917_352.php' no existe en storage\/scheduler\/scripts\/."
-=======
-        "ultima_ejecucion": "2026-10-22 21:04:42",
-        "resultado_ultimo": "ERROR (0.16ms): El archivo de script 'script_tarea_1790660917_352.php' no existe en storage\/scheduler\/scripts\/."
->>>>>>> c4dc88020dcbe9ceb33a5ce266ef600ef35f59d4
+        "ultima_ejecucion": "2026-11-03 00:30:01",
+        "resultado_ultimo": "ÉXITO (158.95ms): Comando ejecutado con éxito (Código 0)."
     }
 }

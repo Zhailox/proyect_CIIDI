@@ -10,7 +10,7 @@
         <div class="modal-overlay">
             <div class="card modal-content">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(169, 168, 166, 0.2);">
-                    <h2 style="font-size: 1.4rem; color: var(--color-principal); font-weight: 700;">Postulación a Proyecto</h2>
+                    <h2 style="font-size: 1.4rem; color: var(--texto-titulos, #121a3e); font-weight: 700;">Postulación a Proyecto</h2>
                     <span class="close-btn" title="Cerrar">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -35,3 +35,4 @@
         </div>
         
     </div>
+

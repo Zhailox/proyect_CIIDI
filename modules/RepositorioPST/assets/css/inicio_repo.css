@@ -186,3 +186,33 @@
     background-color: rgba(112, 144, 203, 0.1);
     color: var(--color-secundario);
 }
+
+
+/* ==========================================================================
+   RESPONSIVIDAD ADICIONAL: LAPTOPS ZOOM ALTO Y MÓVILES (inicio_repo.css)
+   ========================================================================== */
+@media (max-width: 1366px), (max-height: 780px) {
+    .repo-internal-header h1 {
+        font-size: 1.75rem;
+    }
+    .repo-action-card {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .repo-internal-header h1 {
+        font-size: 1.45rem;
+    }
+    .repo-menu-cards {
+        grid-template-columns: 1fr;
+        gap: 1.15rem;
+    }
+    .recent-docs-panel {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .data-table-repo {
+        min-width: 580px;
+    }
+}
