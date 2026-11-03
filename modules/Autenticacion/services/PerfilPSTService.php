@@ -76,13 +76,14 @@ class PerfilPSTService {
 
         $catalogo = self::catalogoPorDefecto();
 
-        // 1. Intentar sincronizar nombres base 1..4 desde public.trayectos si existen
+        // 1. Intentar sincronizar nombres base 1..4 desde trayectos si existen
         try {
             $db = Connection::getInstance();
-            $rows = $db->query("SELECT DISTINCT ON (numero) numero, nombre
+            $rows = $db->query("SELECT numero, MIN(nombre) AS nombre
                                 FROM trayectos
-                                WHERE activo = true AND numero BETWEEN 1 AND 4
-                                ORDER BY numero, id_carrera")->fetchAll(PDO::FETCH_ASSOC);
+                                WHERE activo = 1 AND numero BETWEEN 1 AND 4
+                                GROUP BY numero
+                                ORDER BY numero ASC")->fetchAll(PDO::FETCH_ASSOC);
             foreach ($rows as $r) {
                 $num = (int)$r['numero'];
                 if (isset($catalogo[$num]) && !empty($r['nombre'])) {
@@ -331,10 +332,10 @@ class PerfilPSTService {
         if ($propiaTransaccion) $db->beginTransaction();
         try {
             $db->prepare("UPDATE usuarios SET es_profesor_pst = ? WHERE id = ?")
-               ->execute([$esPst ? 'true' : 'false', $idUsuario]);
+               ->execute([$esPst ? 1 : 0, $idUsuario]);
             $db->prepare("DELETE FROM profesores_pst WHERE id_profesor = ?")->execute([$idUsuario]);
             if ($esPst) {
-                $ins = $db->prepare("INSERT INTO profesores_pst (id_profesor, trayecto, trimestre) VALUES (?, ?, 1) ON CONFLICT DO NOTHING");
+                $ins = $db->prepare("INSERT IGNORE INTO profesores_pst (id_profesor, trayecto, trimestre) VALUES (?, ?, 1)");
                 $trList = self::parsearTrayectos($trayectos);
                 foreach ($trList as $t) {
                     $ins->execute([$idUsuario, $t]);
@@ -368,13 +369,13 @@ class PerfilPSTService {
 
             if ($existenteId) {
                 $stmt = $db->prepare("UPDATE solicitudes_docentes_pst 
-                                      SET es_profesor_pst = ?, trayectos = ?::jsonb, fecha_solicitud = CURRENT_TIMESTAMP
+                                      SET es_profesor_pst = ?, trayectos = ?, fecha_solicitud = CURRENT_TIMESTAMP
                                       WHERE id = ?");
-                return $stmt->execute([$esPst ? 'true' : 'false', json_encode($trList), $existenteId]);
+                return $stmt->execute([$esPst ? 1 : 0, json_encode($trList), $existenteId]);
             } else {
                 $stmt = $db->prepare("INSERT INTO solicitudes_docentes_pst (id_profesor, es_profesor_pst, trayectos, estado) 
-                                      VALUES (?, ?, ?::jsonb, 'pendiente')");
-                return $stmt->execute([$idProfesor, $esPst ? 'true' : 'false', json_encode($trList)]);
+                                      VALUES (?, ?, ?, 'pendiente')");
+                return $stmt->execute([$idProfesor, $esPst ? 1 : 0, json_encode($trList)]);
             }
         } catch (Throwable $e) {
             error_log('PerfilPSTService::crearSolicitud -> ' . $e->getMessage());

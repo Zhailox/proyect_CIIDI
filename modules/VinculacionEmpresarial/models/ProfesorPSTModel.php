@@ -22,12 +22,11 @@ class ProfesorPSTModel {
      */
     public function getProfesoresPST(bool $soloActivos = true): array {
         $sql = "SELECT u.id, u.nombre_completo, u.email,
-                       COALESCE(json_agg(DISTINCT pp.trayecto) FILTER (WHERE pp.id IS NOT NULL), '[]') AS trayectos,
-                       COALESCE(json_agg(json_build_object('trayecto', pp.trayecto, 'trimestre', COALESCE(pp.trimestre, 1))
-                                ORDER BY pp.trayecto) FILTER (WHERE pp.id IS NOT NULL), '[]') AS asignaciones
+                       CONCAT('[', COALESCE(GROUP_CONCAT(DISTINCT pp.trayecto ORDER BY pp.trayecto ASC SEPARATOR ','), ''), ']') AS trayectos,
+                       CONCAT('[', COALESCE(GROUP_CONCAT(CASE WHEN pp.id IS NOT NULL THEN JSON_OBJECT('trayecto', pp.trayecto, 'trimestre', COALESCE(pp.trimestre, 1)) ELSE NULL END ORDER BY pp.trayecto ASC SEPARATOR ','), ''), ']') AS asignaciones
                 FROM usuarios u
                 LEFT JOIN profesores_pst pp ON pp.id_profesor = u.id
-                WHERE u.es_profesor_pst = true" . ($soloActivos ? " AND u.activo = true" : "") . "
+                WHERE u.es_profesor_pst = 1" . ($soloActivos ? " AND u.activo = 1" : "") . "
                 GROUP BY u.id, u.nombre_completo, u.email
                 ORDER BY u.nombre_completo ASC";
         $rows = $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
@@ -156,18 +155,17 @@ class ProfesorPSTModel {
     public function getDocentes(): array {
         $sql = "SELECT u.id, u.nombre_completo, u.cedula, u.email, u.activo, u.estado_registro, u.es_profesor_pst,
                        r.nombre AS rol_nombre,
-                       COALESCE(json_agg(DISTINCT pp.trayecto) FILTER (WHERE pp.id IS NOT NULL), '[]') AS trayectos,
-                       COALESCE(json_agg(json_build_object('trayecto', pp.trayecto, 'trimestre', COALESCE(pp.trimestre, 1))
-                                ORDER BY pp.trayecto) FILTER (WHERE pp.id IS NOT NULL), '[]') AS asignaciones
+                       CONCAT('[', COALESCE(GROUP_CONCAT(DISTINCT pp.trayecto ORDER BY pp.trayecto ASC SEPARATOR ','), ''), ']') AS trayectos,
+                       CONCAT('[', COALESCE(GROUP_CONCAT(CASE WHEN pp.id IS NOT NULL THEN JSON_OBJECT('trayecto', pp.trayecto, 'trimestre', COALESCE(pp.trimestre, 1)) ELSE NULL END ORDER BY pp.trayecto ASC SEPARATOR ','), ''), ']') AS asignaciones
                 FROM usuarios u
                 LEFT JOIN roles r ON r.id = u.id_rol
                 LEFT JOIN profesores_pst pp ON pp.id_profesor = u.id
-                WHERE (u.es_profesor_pst = true
+                WHERE (u.es_profesor_pst = 1
                        OR u.estado_registro IS NOT NULL
                        OR LOWER(r.nombre) LIKE '%docente%' OR LOWER(r.nombre) LIKE '%profesor%')
                   AND u.email NOT LIKE '%\\_deleted\\_%'
                 GROUP BY u.id, r.nombre
-                ORDER BY (u.estado_registro = 'pendiente') DESC NULLS LAST, u.nombre_completo ASC";
+                ORDER BY (COALESCE(u.estado_registro, '') = 'pendiente') DESC, u.nombre_completo ASC";
         $rows = $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
         foreach ($rows as &$r) {
             $r['trayectos'] = json_decode($r['trayectos'], true) ?: [];

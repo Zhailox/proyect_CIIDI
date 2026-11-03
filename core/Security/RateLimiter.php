@@ -119,7 +119,7 @@ class RateLimiter {
         $patronesSQLi = [
             '/\b(union\s+all\s+select|union\s+select)\b/i',
             '/\b(select\s+.*\s+from|insert\s+into|delete\s+from|drop\s+table|drop\s+database|alter\s+table)\b/i',
-            '/(\'|\"|`|\b)\s*(or|and)\s*(\'|\"|`)?([a-zA-Z0-9_]+)(\'|\"|`)?\s*=\s*(\'|\"|`)?\4(\'|\"|`|\b)/i', // Detecta 0=0, 1=1, 'a'='a', etc.
+            '/(\'|\"|`|\b)\s*(or|and)\s*(\'|\"|`)?([a-zA-Z0-9_]+)(\'|\"|`)?\s*=\s*(\'|\"|`)?\4(\'|\"|`|\b)/i',
             '/(\'|\")\s*(or|and)\s+(\'|\")?(\d+|true)(\'|\")?\s*(--|#|\/\*)/i',
             '/(\'|\")\s*(or|and)\s+(\'|\")?(\d+|true)/i',
             '/\b(exec\s*\(|execute\s*\(|pg_sleep\(|sleep\(|benchmark\()\b/i',
@@ -363,7 +363,7 @@ class RateLimiter {
         try {
             $db = Connection::getInstance(true);
             if ($db) {
-                $stmt = $db->prepare("SELECT ip, intentos, EXTRACT(EPOCH FROM primer_intento)::bigint AS primer_intento, EXTRACT(EPOCH FROM ultimo_intento)::bigint AS ultimo_intento, EXTRACT(EPOCH FROM bloqueado_hasta)::bigint AS bloqueado_hasta, datos_adicionales FROM waf_rate_limiter WHERE tipo = 'attempt'");
+                $stmt = $db->prepare("SELECT ip, intentos, UNIX_TIMESTAMP(primer_intento) AS primer_intento, UNIX_TIMESTAMP(ultimo_intento) AS ultimo_intento, UNIX_TIMESTAMP(bloqueado_hasta) AS bloqueado_hasta, datos_adicionales FROM waf_rate_limiter WHERE tipo = 'attempt'");
                 $stmt->execute();
                 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 $res = [];
@@ -392,7 +392,7 @@ class RateLimiter {
             $db = Connection::getInstance(true);
             if ($db) {
                 $db->exec("DELETE FROM waf_rate_limiter WHERE tipo = 'attempt'");
-                $stmt = $db->prepare("INSERT INTO waf_rate_limiter (ip, tipo, intentos, primer_intento, ultimo_intento, bloqueado_hasta, datos_adicionales) VALUES (?, 'attempt', ?, (to_timestamp(?) AT TIME ZONE 'UTC'), (to_timestamp(?) AT TIME ZONE 'UTC'), (to_timestamp(?) AT TIME ZONE 'UTC'), ?)");
+                $stmt = $db->prepare("INSERT INTO waf_rate_limiter (ip, tipo, intentos, primer_intento, ultimo_intento, bloqueado_hasta, datos_adicionales) VALUES (?, 'attempt', ?, FROM_UNIXTIME(?), FROM_UNIXTIME(?), FROM_UNIXTIME(?), ?)");
                 foreach ($attempts as $ip => $data) {
                     $primerTs = (int)($data['primer_intento'] ?? time());
                     $ultimoTs = (int)($data['ultimo_intento'] ?? time());

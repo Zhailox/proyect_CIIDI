@@ -15,16 +15,16 @@ class BackupService {
     }
 
     /**
-     * Genera un respaldo PostgreSQL en formato comprimido (.sql.gz), SQL plano (.sql) o texto (.txt) con políticas de retención.
+     * Genera un respaldo nativo MariaDB 10.6 vía PDO (sin depender de binarios externos ni exec)
+     * en formato comprimido (.sql.gz), SQL plano (.sql) o texto (.txt) con políticas de retención.
      */
     public static function crearBackup(string $formato = 'sql.gz', bool $soloEsquema = false, ?string $tabla = null, ?string $prefijoCustom = null): array {
         $creds = Connection::getCredentials();
-        $pgDumpPath = Connection::getPgDumpPath();
         $backupDir = self::getBackupDir();
 
         $fecha = date('Y-m-d_H-i-s');
         $prefix = $prefijoCustom ?: ($tabla ? "tabla_{$tabla}" : ($soloEsquema ? "esquema_ciidi" : "backup_ciidi"));
-        
+
         $formatoLimpio = strtolower($formato);
         if (!in_array($formatoLimpio, ['sql.gz', 'sql', 'txt'], true)) {
             $formatoLimpio = 'sql.gz';
@@ -34,49 +34,97 @@ class BackupService {
         $ext = ".{$formatoLimpio}";
         $nombreArchivo = "{$prefix}_{$fecha}{$ext}";
         $rutaCompleta = $backupDir . $nombreArchivo;
-        $tempSqlPath = $comprimir ? $backupDir . "temp_{$fecha}.sql" : $rutaCompleta;
 
-        $flags = $soloEsquema
-            ? "-E UTF8 -F p -s --clean --if-exists --no-owner --no-privileges"
-            : "-E UTF8 -F p --clean --if-exists --no-owner --no-privileges --inserts";
-        if ($tabla) {
-            $flags .= " -t " . escapeshellarg($tabla);
-        }
+        try {
+            $db = Connection::getInstance();
+            $tablas = [];
+            if ($tabla) {
+                $tablas = [$tabla];
+            } else {
+                $stmtT = $db->query("SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE' ORDER BY table_name ASC");
+                $tablas = $stmtT->fetchAll(PDO::FETCH_COLUMN) ?: [];
+            }
 
-        putenv("PGPASSWORD={$creds['pass']}");
-        putenv("PGCLIENTENCODING=UTF8");
-        $comando = "{$pgDumpPath} -h {$creds['host']} -p {$creds['port']} -U {$creds['user']} {$flags} -d {$creds['db']} -f \"{$tempSqlPath}\" 2>&1";
+            if (empty($tablas)) {
+                return [
+                    'exito' => false,
+                    'mensaje' => 'No se encontraron tablas en la base de datos para respaldar.'
+                ];
+            }
 
-        $salida = [];
-        $codigoRetorno = 0;
-        exec($comando, $salida, $codigoRetorno);
-        putenv("PGPASSWORD=");
-        putenv("PGCLIENTENCODING=");
+            $sqlLines = [];
+            $sqlLines[] = "-- =============================================================================";
+            $sqlLines[] = "-- CIIDI — Respaldo Nativo MariaDB 10.6 (InnoDB / utf8mb4)";
+            $sqlLines[] = "-- Base de Datos: " . ($creds['db'] ?? 'ciidi') . " | Fecha: " . date('Y-m-d H:i:s');
+            $sqlLines[] = "-- =============================================================================";
+            $sqlLines[] = "SET NAMES utf8mb4;";
+            $sqlLines[] = "SET FOREIGN_KEY_CHECKS = 0;";
+            $sqlLines[] = "SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';";
+            $sqlLines[] = "";
 
-        if ($codigoRetorno !== 0 || !file_exists($tempSqlPath) || filesize($tempSqlPath) === 0) {
-            $errText = implode(' ', $salida);
-            if (file_exists($tempSqlPath)) @unlink($tempSqlPath);
+            foreach ($tablas as $tb) {
+                if (!preg_match('/^[a-zA-Z0-9_]+$/', $tb)) {
+                    continue;
+                }
+                $stmtCreate = $db->query("SHOW CREATE TABLE `{$tb}`");
+                $rowCreate = $stmtCreate ? $stmtCreate->fetch(PDO::FETCH_ASSOC) : null;
+                $createSql = $rowCreate['Create Table'] ?? ($rowCreate['Create View'] ?? null);
+                if (!$createSql) {
+                    continue;
+                }
+
+                $sqlLines[] = "-- -----------------------------------------------------------------------------";
+                $sqlLines[] = "-- Estructura de tabla para `{$tb}`";
+                $sqlLines[] = "-- -----------------------------------------------------------------------------";
+                $sqlLines[] = "DROP TABLE IF EXISTS `{$tb}`;";
+                $sqlLines[] = $createSql . ";";
+                $sqlLines[] = "";
+
+                if (!$soloEsquema) {
+                    $stmtRows = $db->query("SELECT * FROM `{$tb}`");
+                    $rows = $stmtRows ? $stmtRows->fetchAll(PDO::FETCH_ASSOC) : [];
+                    if (!empty($rows)) {
+                        $cols = array_map(fn($col) => "`{$col}`", array_keys($rows[0]));
+                        $colList = implode(', ', $cols);
+                        $chunks = array_chunk($rows, 100);
+                        foreach ($chunks as $chunk) {
+                            $valuesList = [];
+                            foreach ($chunk as $r) {
+                                $vals = [];
+                                foreach ($r as $val) {
+                                    if ($val === null) {
+                                        $vals[] = 'NULL';
+                                    } elseif (is_int($val) || is_float($val)) {
+                                        $vals[] = (string)$val;
+                                    } else {
+                                        $vals[] = $db->quote((string)$val);
+                                    }
+                                }
+                                $valuesList[] = '(' . implode(', ', $vals) . ')';
+                            }
+                            $sqlLines[] = "INSERT INTO `{$tb}` ({$colList}) VALUES\n" . implode(",\n", $valuesList) . ";";
+                        }
+                        $sqlLines[] = "";
+                    }
+                }
+            }
+
+            $sqlLines[] = "SET FOREIGN_KEY_CHECKS = 1;";
+            $rawContent = implode("\n", $sqlLines) . "\n";
+
+            if ($comprimir) {
+                $compressedData = gzencode($rawContent, 9);
+                file_put_contents($rutaCompleta, $compressedData);
+            } else {
+                file_put_contents($rutaCompleta, $rawContent);
+            }
+        } catch (Throwable $e) {
             return [
                 'exito' => false,
-                'mensaje' => "Fallo en pg_dump: " . ($errText ?: "Código {$codigoRetorno}")
+                'mensaje' => 'Fallo al generar respaldo PDO MariaDB: ' . $e->getMessage()
             ];
         }
 
-        // Sanitizar SQL para compatibilidad entre Windows (PG17/18 + pgvector) y Linux Debian (PG13-16)
-        $rawContent = (string)file_get_contents($tempSqlPath);
-        if (method_exists('Connection', 'sanitizarSqlCompatible')) {
-            $rawContent = Connection::sanitizarSqlCompatible($rawContent);
-            file_put_contents($tempSqlPath, $rawContent);
-        }
-
-        // Compresión GZIP si se solicitó
-        if ($comprimir) {
-            $compressedData = gzencode($rawContent, 9);
-            file_put_contents($rutaCompleta, $compressedData);
-            @unlink($tempSqlPath);
-        }
-
-        // Ejecutar Auto-Cleanup de respaldos de más de 30 días
         $eliminadosCount = self::limpiarRespaldosAntiguos(30);
 
         AuditLogger::registrar('INFO', 'SuperAdmin', 'Crear Backup', "Respaldo {$nombreArchivo} generado exitosamente. Respaldos antiguos purgados: {$eliminadosCount}");
@@ -127,7 +175,7 @@ class BackupService {
 
         $extensionGzip = str_ends_with(strtolower($rutaArchivo), '.gz');
         $archivoInicial = file_get_contents($rutaArchivo, false, null, 0, 2);
-        $firmaGzip = $archivoInicial === "\x1f\x8b"; //Inicio de binario de los gzip
+        $firmaGzip = $archivoInicial === "\x1f\x8b";
 
         $esGzip = $extensionGzip || $firmaGzip;
         $contenido = '';
@@ -140,7 +188,7 @@ class BackupService {
             $buffer = '';
             while (!gzeof($zp)) {
                 $buffer .= gzread($zp, 8192);
-                if (strlen($buffer) > 150000) break; // Inspeccionar encabezados sin sobrecargar memoria
+                if (strlen($buffer) > 150000) break;
             }
             gzclose($zp);
             $contenido = $buffer;
@@ -152,12 +200,11 @@ class BackupService {
             return ['valido' => false, 'detalles' => 'No se pudo extraer contenido SQL del archivo de respaldo.'];
         }
 
-        // Inspeccionar sintaxis SQL esencial y contar objetos
         $patronesValidos = [
-            'PostgreSQL database dump',
+            'MariaDB',
             'CREATE TABLE',
             'INSERT INTO',
-            'SET statement_timeout',
+            'SET FOREIGN_KEY_CHECKS',
             'ALTER TABLE',
             'DROP TABLE'
         ];
@@ -172,12 +219,11 @@ class BackupService {
         if ($coincidencias === 0) {
             return [
                 'valido' => false,
-                'detalles' => 'Sintaxis SQL no reconocida. El archivo no contiene un dump válido de PostgreSQL.'
+                'detalles' => 'Sintaxis SQL no reconocida. El archivo no contiene un dump válido de MariaDB/MySQL.'
             ];
         }
 
-        // Extraer estadísticas adicionales para inspección previa
-        preg_match_all('/CREATE TABLE\s+(?:IF NOT EXISTS\s+)?([a-zA-Z0-9_\.]+)/i', $contenido, $tablaMatches);
+        preg_match_all('/CREATE TABLE\s+(?:IF NOT EXISTS\s+)?`?([a-zA-Z0-9_\.]+)`?/i', $contenido, $tablaMatches);
         $tablasEncontradas = array_unique($tablaMatches[1] ?? []);
 
         preg_match_all('/INSERT INTO/i', $contenido, $insertMatches);
@@ -193,4 +239,3 @@ class BackupService {
         ];
     }
 }
-

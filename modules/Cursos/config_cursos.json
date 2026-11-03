@@ -44,14 +44,14 @@
         "api_key": "ciidi_sync_secret_2026",
         "webhook_url": "https:\/\/ciidi.iutetvirtual.org.ve\/api_sync.php",
         "ultimo_sync": {
-            "fecha": "2026-11-02 20:32:51",
-            "ok": true,
-            "codigo_http": 200,
-            "evento": "fix_localhost_urls",
-            "mensaje": "Portal Externo Local y Subdominio Remoto sincronizados correctamente.",
-            "cursos_enviados": 3,
-            "inv_enviados": 7,
-            "version_hash": "3302cc4c3503be314adb7354942156d16b2a4a6b2d419532a118a68828077ed2"
+            "fecha": "2026-11-03 17:18:01",
+            "ok": false,
+            "codigo_http": 0,
+            "evento": "perfil_investigador_actualizado",
+            "mensaje": "Error de conexión: SSL certificate problem: unable to get local issuer certificate",
+            "cursos_enviados": 5,
+            "inv_enviados": 10,
+            "version_hash": "41551483b442f6af008297a17ad8c5e4b564087372759af00064f6a215013b8a"
         }
     },
     "seguridad": {

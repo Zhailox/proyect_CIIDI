@@ -106,7 +106,7 @@ final class SeguridadMotor {
     }
 
     public static function error(Throwable $e): void {
-        if ($e instanceof PDOException && $e->getCode() === '42P01') {
+        if ($e instanceof PDOException && in_array($e->getCode(), ['42P01', '42S02'], true)) {
             // Tabla inexistente: se fuerza la reinstalación del esquema en el próximo request
             SeguridadSchema::invalidar();
         }
@@ -174,7 +174,7 @@ final class SeguridadMotor {
         $db = self::db();
         if ($db) {
             try {
-                foreach ($db->query("SELECT clave, valor::text AS valor FROM seg_lineas_politicas") as $fila) {
+                foreach ($db->query("SELECT clave, valor FROM seg_lineas_politicas") as $fila) {
                     if (array_key_exists($fila['clave'], $p)) {
                         $p[$fila['clave']] = json_decode($fila['valor'], true);
                     }
@@ -198,9 +198,9 @@ final class SeguridadMotor {
         $autor = self::firmaActor();
         $stmt  = $db->prepare("
             INSERT INTO seg_lineas_politicas (clave, valor, actualizado_por, actualizado_en)
-            VALUES (?, CAST(? AS JSONB), ?, ?)
-            ON CONFLICT (clave) DO UPDATE
-               SET valor = EXCLUDED.valor, actualizado_por = EXCLUDED.actualizado_por, actualizado_en = EXCLUDED.actualizado_en
+            VALUES (?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+               valor = VALUES(valor), actualizado_por = VALUES(actualizado_por), actualizado_en = VALUES(actualizado_en)
         ");
         foreach ($valores as $clave => $valor) {
             if (!array_key_exists($clave, self::POLITICAS_DEFECTO)) {
@@ -599,14 +599,13 @@ final class SeguridadMotor {
             if ($propia) {
                 $db->beginTransaction();
             }
-            $db->query("SELECT pg_advisory_xact_lock(" . self::LOCK_ID . ")");
-
-            $prev = $db->query("SELECT hash FROM seg_lineas_logs ORDER BY id DESC LIMIT 1")->fetchColumn();
+            $ult = $db->query("SELECT id, hash FROM seg_lineas_logs ORDER BY id DESC LIMIT 1 FOR UPDATE")->fetch(PDO::FETCH_ASSOC);
+            $prev = $ult['hash'] ?? null;
             if (!$prev) {
                 $prev = (string) self::politica('ancla_cadena') ?: self::GENESIS;
             }
             $registro['hash_anterior'] = $prev;
-            $registro['id']            = (int) $db->query("SELECT nextval(pg_get_serial_sequence('seg_lineas_logs', 'id'))")->fetchColumn();
+            $registro['id']            = $ult ? ((int) $ult['id'] + 1) : 1;
             $registro['hash']          = self::firmar($registro);
 
             $stmt = $db->prepare("
@@ -723,8 +722,7 @@ final class SeguridadMotor {
 
         $db->beginTransaction();
         try {
-            $db->query("SELECT pg_advisory_xact_lock(" . self::LOCK_ID . ")");
-            $stmtUlt = $db->prepare("SELECT hash FROM seg_lineas_logs WHERE fecha < ? ORDER BY id DESC LIMIT 1");
+            $stmtUlt = $db->prepare("SELECT hash FROM seg_lineas_logs WHERE fecha < ? ORDER BY id DESC LIMIT 1 FOR UPDATE");
             $stmtUlt->execute([$corte]);
             $ultimoBorrado = $stmtUlt->fetchColumn();
 
@@ -737,15 +735,15 @@ final class SeguridadMotor {
                 $ancla   = $primero ?: $ultimoBorrado;
                 $up = $db->prepare("
                     INSERT INTO seg_lineas_politicas (clave, valor, actualizado_por, actualizado_en)
-                    VALUES (?, CAST(? AS JSONB), ?, ?)
-                    ON CONFLICT (clave) DO UPDATE SET valor = EXCLUDED.valor, actualizado_por = EXCLUDED.actualizado_por, actualizado_en = EXCLUDED.actualizado_en
+                    VALUES (?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE valor = VALUES(valor), actualizado_por = VALUES(actualizado_por), actualizado_en = VALUES(actualizado_en)
                 ");
                 $up->execute(['ancla_cadena', json_encode($ancla), self::firmaActor(), self::ahora()]);
             }
             $up2 = $db->prepare("
                 INSERT INTO seg_lineas_politicas (clave, valor, actualizado_por, actualizado_en)
-                VALUES ('ultima_purga', CAST(? AS JSONB), ?, ?)
-                ON CONFLICT (clave) DO UPDATE SET valor = EXCLUDED.valor, actualizado_por = EXCLUDED.actualizado_por, actualizado_en = EXCLUDED.actualizado_en
+                VALUES ('ultima_purga', ?, ?, ?)
+                ON DUPLICATE KEY UPDATE valor = VALUES(valor), actualizado_por = VALUES(actualizado_por), actualizado_en = VALUES(actualizado_en)
             ");
             $up2->execute([json_encode(self::ahora()), self::firmaActor(), self::ahora()]);
             $db->commit();
@@ -846,12 +844,12 @@ final class SeguridadMotor {
         if (!$db) {
             throw new RuntimeException('Motor de seguridad sin base de datos.');
         }
-        $db->prepare("UPDATE seg_lineas_bloqueos SET activo = FALSE, levantado_por = ?, levantado_en = ? WHERE ip = ? AND activo = TRUE")
+        $db->prepare("UPDATE seg_lineas_bloqueos SET activo = 0, levantado_por = ?, levantado_en = ? WHERE ip = ? AND activo = 1")
            ->execute(['Reemplazado por nuevo bloqueo', self::ahora(), $ip]);
 
         $stmt = $db->prepare("
             INSERT INTO seg_lineas_bloqueos (ip, motivo, origen, creado_en, expira_en, creado_por, activo)
-            VALUES (?, ?, ?, ?, ?, ?, TRUE) RETURNING id
+            VALUES (?, ?, ?, ?, ?, ?, 1)
         ");
         $stmt->execute([
             $ip, $motivo, $origen, self::ahora(),
@@ -860,6 +858,6 @@ final class SeguridadMotor {
         ]);
         unset(self::$bloqueoCache[$ip]);
         self::$evaluacionCache = [];
-        return (int) $stmt->fetchColumn();
+        return (int) $db->lastInsertId();
     }
 }

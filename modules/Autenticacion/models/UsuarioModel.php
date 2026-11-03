@@ -85,12 +85,10 @@ class UsuarioModel {
         $emailVerificado = ($tokenActivacion === null);
         $sql = "
             INSERT INTO usuarios (cedula, nombre_completo, email, contrasena, id_rol, activo, email_verified, activation_token) 
-            VALUES (?, ?, ?, ?, 3, true, ?, ?) 
-            RETURNING id
+            VALUES (?, ?, ?, ?, 3, 1, ?, ?)
         ";
         $stmt = $db->prepare($sql);
-        $stmt->execute([$cedula, $nombre, $email, $hash, $emailVerificado ? 'true' : 'false', $tokenActivacion]);
-        return $stmt->fetch() !== false;
+        return $stmt->execute([$cedula, $nombre, $email, $hash, $emailVerificado ? 1 : 0, $tokenActivacion]);
     }
 
     /**
@@ -101,14 +99,13 @@ class UsuarioModel {
         $db = Connection::getInstance();
         $sql = "
             INSERT INTO usuarios (cedula, nombre_completo, email, contrasena, id_rol, activo, email_verified, activation_token, estado_registro)
-            VALUES (?, ?, ?, ?, ?, false, false, NULL, 'pendiente')
-            RETURNING id
+            VALUES (?, ?, ?, ?, ?, 0, 0, NULL, 'pendiente')
         ";
         try {
             $stmt = $db->prepare($sql);
             $stmt->execute([$cedula, $nombre, $email, $hash, $idRolDocente]);
-            $id = $stmt->fetchColumn();
-            return $id ? (int)$id : null;
+            $id = (int)$db->lastInsertId();
+            return $id > 0 ? $id : null;
         } catch (Throwable $e) {
             error_log('UsuarioModel::registrarDocentePendiente -> ' . $e->getMessage());
             return null;
@@ -156,7 +153,7 @@ class UsuarioModel {
         $stmtCancel = $db->prepare("UPDATE password_resets SET utilizado = true WHERE email = ? AND utilizado = false");
         $stmtCancel->execute([$email]);
 
-        $sql = "INSERT INTO password_resets (email, token_hash, expiracion, utilizado) VALUES (?, ?, CURRENT_TIMESTAMP + INTERVAL '15 minutes', false)";
+        $sql = "INSERT INTO password_resets (email, token_hash, expiracion, utilizado) VALUES (?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 15 MINUTE), false)";
         $stmt = $db->prepare($sql);
         $stmt->execute([$email, $tokenHash]);
     }
@@ -207,7 +204,7 @@ class UsuarioModel {
 
     public function guardarTokenRecuperacion(int $id, string $token) {
         $db = Connection::getInstance();
-        $stmt = $db->prepare("UPDATE usuarios SET reset_token = ?, reset_expires = CURRENT_TIMESTAMP + INTERVAL '15 minutes' WHERE id = ?");
+        $stmt = $db->prepare("UPDATE usuarios SET reset_token = ?, reset_expires = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 15 MINUTE) WHERE id = ?");
         $stmt->execute([$token, $id]);
     }
     
@@ -269,7 +266,7 @@ class UsuarioModel {
     public function actualizarPerfilAcademico(int $id, ?string $fotoPerfil, ?string $orcid, ?string $sitioWeb, ?string $gradoAcademico): bool {
         $db = Connection::getInstance();
         $stmt = $db->prepare("
-            UPDATE public.usuarios
+            UPDATE usuarios
             SET foto_perfil = ?,
                 orcid = ?,
                 sitio_web = ?,

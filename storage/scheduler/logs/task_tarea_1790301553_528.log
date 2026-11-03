@@ -1,12 +1,11 @@
 ========================================================
 REGISTRO DE EJECUCIÓN: Generar Embeddings Semánticos [tarea_1790301553_528]
-FECHA/HORA: 2026-11-03 02:30:26
-DURACIÓN: 151.05 ms | ESTADO: OK
+FECHA/HORA: 2026-11-03 19:30:04
+DURACIÓN: 101.05 ms | ESTADO: OK
 ========================================================
 
 MENSAJE: Comando ejecutado con éxito (Código 0).
 
 --- SALIDA ESTÁNDAR / CONSOLA (STDOUT/STDERR) ---
 Failed loading c:/wamp64/bin/php/php8.5.0/zend_ext/php_xdebug-3.4.7-8.4-ts-vs17-x86_64.dll
-[2026-11-03 02:30:25] [EmbeddingWorker] ═══ Iniciando ciclo de generación de embeddings ═══
-[2026-11-03 02:30:26] [EmbeddingWorker] ✓ No hay proyectos pendientes de vectorización. Fin del ciclo.
+[2026-11-03 19:30:04] [EmbeddingWorker] Búsqueda híbrida nativa MariaDB 10.6 (FULLTEXT + LIKE) activa. No se requiere vectorización ONNX.

@@ -33,17 +33,17 @@ class SeguridadRepositorio {
 
         $s = $this->db->prepare("
             SELECT
-                COUNT(*)                                                         AS eventos_24h,
-                COUNT(*) FILTER (WHERE resultado = 'PERMITIDO')                  AS permitidos_24h,
-                COUNT(*) FILTER (WHERE resultado IN ('DENEGADO', 'BLOQUEADO'))   AS denegados_24h,
-                COUNT(*) FILTER (WHERE severidad IN ('ALERTA', 'CRITICO'))       AS criticos_24h,
-                COUNT(DISTINCT ip)                                               AS ips_24h
+                COUNT(*)                                                                             AS eventos_24h,
+                COALESCE(SUM(CASE WHEN resultado = 'PERMITIDO' THEN 1 ELSE 0 END), 0)                AS permitidos_24h,
+                COALESCE(SUM(CASE WHEN resultado IN ('DENEGADO', 'BLOQUEADO') THEN 1 ELSE 0 END), 0) AS denegados_24h,
+                COALESCE(SUM(CASE WHEN severidad IN ('ALERTA', 'CRITICO') THEN 1 ELSE 0 END), 0)     AS criticos_24h,
+                COUNT(DISTINCT ip)                                                                   AS ips_24h
             FROM seg_lineas_logs WHERE fecha >= ?
         ");
         $s->execute([$h24]);
         $k = $s->fetch() ?: [];
 
-        $s = $this->db->prepare("SELECT COUNT(DISTINCT COALESCE(usuario_id::text, ip)) FROM seg_lineas_logs WHERE fecha >= ? AND resultado <> 'SISTEMA'");
+        $s = $this->db->prepare("SELECT COUNT(DISTINCT COALESCE(CAST(usuario_id AS CHAR), ip)) FROM seg_lineas_logs WHERE fecha >= ? AND resultado <> 'SISTEMA'");
         $s->execute([$m15]);
         $k['activos_15m'] = (int) $s->fetchColumn();
 
@@ -76,10 +76,10 @@ class SeguridadRepositorio {
     public function serieHoras(int $horas = 24): array {
         $inicio = strtotime(date('Y-m-d H:00:00')) - ($horas - 1) * 3600;
         $s = $this->db->prepare("
-            SELECT to_char(date_trunc('hour', fecha), 'YYYY-MM-DD HH24') AS h,
-                   COUNT(*) FILTER (WHERE resultado = 'PERMITIDO')                AS permitidos,
-                   COUNT(*) FILTER (WHERE resultado IN ('DENEGADO', 'BLOQUEADO')) AS denegados,
-                   COUNT(*) FILTER (WHERE resultado IN ('ADMIN', 'SISTEMA'))      AS sistema
+            SELECT DATE_FORMAT(fecha, '%Y-%m-%d %H') AS h,
+                   COALESCE(SUM(CASE WHEN resultado = 'PERMITIDO' THEN 1 ELSE 0 END), 0)                AS permitidos,
+                   COALESCE(SUM(CASE WHEN resultado IN ('DENEGADO', 'BLOQUEADO') THEN 1 ELSE 0 END), 0) AS denegados,
+                   COALESCE(SUM(CASE WHEN resultado IN ('ADMIN', 'SISTEMA') THEN 1 ELSE 0 END), 0)      AS sistema
               FROM seg_lineas_logs
              WHERE fecha >= ?
              GROUP BY 1
@@ -106,7 +106,7 @@ class SeguridadRepositorio {
     public function porSubmodulo(): array {
         $s = $this->db->prepare("
             SELECT submodulo, COUNT(*) AS total,
-                   COUNT(*) FILTER (WHERE resultado IN ('DENEGADO', 'BLOQUEADO')) AS denegados
+                   COALESCE(SUM(CASE WHEN resultado IN ('DENEGADO', 'BLOQUEADO') THEN 1 ELSE 0 END), 0) AS denegados
               FROM seg_lineas_logs WHERE fecha >= ?
              GROUP BY submodulo ORDER BY total DESC
         ");
@@ -115,13 +115,14 @@ class SeguridadRepositorio {
     }
 
     public function topIpsDenegadas(int $limite = 6): array {
+        $lim = max(1, (int)$limite);
         $s = $this->db->prepare("
             SELECT ip, COUNT(*) AS total, MAX(fecha) AS ultima
               FROM seg_lineas_logs
              WHERE resultado IN ('DENEGADO', 'BLOQUEADO') AND fecha >= ?
-             GROUP BY ip ORDER BY total DESC LIMIT ?
+             GROUP BY ip ORDER BY total DESC LIMIT {$lim}
         ");
-        $s->execute([SeguridadMotor::ahora(-86400), $limite]);
+        $s->execute([SeguridadMotor::ahora(-86400)]);
         return $s->fetchAll();
     }
 
@@ -129,7 +130,7 @@ class SeguridadRepositorio {
         $s = $this->db->prepare("
             SELECT usuario_id, MAX(usuario_nombre) AS nombre, MAX(nivel) AS nivel, MAX(ip) AS ip,
                    MAX(fecha) AS ultima, COUNT(*) AS eventos,
-                   COUNT(*) FILTER (WHERE resultado IN ('DENEGADO', 'BLOQUEADO')) AS denegados
+                   COALESCE(SUM(CASE WHEN resultado IN ('DENEGADO', 'BLOQUEADO') THEN 1 ELSE 0 END), 0) AS denegados
               FROM seg_lineas_logs
              WHERE fecha >= ? AND usuario_id IS NOT NULL
              GROUP BY usuario_id ORDER BY ultima DESC LIMIT 25
@@ -139,12 +140,13 @@ class SeguridadRepositorio {
     }
 
     public function ultimosEventos(int $limite = 40, int $desdeId = 0): array {
+        $lim = max(1, (int)$limite);
         $s = $this->db->prepare("
             SELECT id, fecha, severidad, submodulo, accion, ruta, resultado, usuario_id, usuario_nombre, nivel, ip, metodo, detalles
               FROM seg_lineas_logs WHERE id > ?
-             ORDER BY id DESC LIMIT ?
+             ORDER BY id DESC LIMIT {$lim}
         ");
-        $s->execute([$desdeId, $limite]);
+        $s->execute([$desdeId]);
         return $s->fetchAll();
     }
 
@@ -154,7 +156,7 @@ class SeguridadRepositorio {
         $where = [];
         $params = [];
         if (!empty($f['q'])) {
-            $where[] = "(detalles ILIKE ? OR ruta ILIKE ? OR usuario_nombre ILIKE ? OR ip ILIKE ? OR accion ILIKE ?)";
+            $where[] = "(detalles LIKE ? OR ruta LIKE ? OR usuario_nombre LIKE ? OR ip LIKE ? OR accion LIKE ?)";
             $like = '%' . $f['q'] . '%';
             array_push($params, $like, $like, $like, $like, $like);
         }
@@ -277,7 +279,7 @@ class SeguridadRepositorio {
         try {
             $s = $this->db->query("
                 SELECT p.nivel_privilegio AS nivel,
-                       COALESCE(string_agg(DISTINCT r.nombre, ', '), '') AS roles,
+                       COALESCE(GROUP_CONCAT(DISTINCT r.nombre SEPARATOR ', '), '') AS roles,
                        COUNT(DISTINCT u.id) AS usuarios
                   FROM privilegios p
                   LEFT JOIN roles r    ON r.privilegio_id = p.privilegio_id
@@ -313,14 +315,14 @@ class SeguridadRepositorio {
         $stmt = $this->db->prepare("
             INSERT INTO seg_lineas_permisos (nivel, submodulo, accion, permitido, actualizado_por, actualizado_en)
             VALUES (?, ?, ?, ?, ?, ?)
-            ON CONFLICT (nivel, submodulo, accion) DO UPDATE
-               SET permitido = EXCLUDED.permitido, actualizado_por = EXCLUDED.actualizado_por, actualizado_en = EXCLUDED.actualizado_en
+            ON DUPLICATE KEY UPDATE
+               permitido = VALUES(permitido), actualizado_por = VALUES(actualizado_por), actualizado_en = VALUES(actualizado_en)
         ");
         $n = 0;
         $this->db->beginTransaction();
         try {
             foreach ($celdas as $c) {
-                $stmt->execute([(int) $c['nivel'], $c['submodulo'], $c['accion'], $c['permitido'] ? 'true' : 'false', $autor, $ahora]);
+                $stmt->execute([(int) $c['nivel'], $c['submodulo'], $c['accion'], $c['permitido'] ? 1 : 0, $autor, $ahora]);
                 $n++;
             }
             $this->db->commit();
@@ -352,16 +354,22 @@ class SeguridadRepositorio {
     public function crearExcepcion(int $usuarioId, string $sub, string $acc, string $efecto, string $motivo, ?string $expira): int {
         $s = $this->db->prepare("
             INSERT INTO seg_lineas_excepciones (usuario_id, submodulo, accion, efecto, motivo, expira_en, creado_por, creado_en)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $s->execute([$usuarioId, $sub, $acc, $efecto, $motivo, $expira, SeguridadMotor::firmaActor(), SeguridadMotor::ahora()]);
-        return (int) $s->fetchColumn();
+        return (int) $this->db->lastInsertId();
     }
 
     public function eliminarExcepcion(int $id): ?array {
-        $s = $this->db->prepare("DELETE FROM seg_lineas_excepciones WHERE id = ? RETURNING *");
+        $sel = $this->db->prepare("SELECT * FROM seg_lineas_excepciones WHERE id = ?");
+        $sel->execute([$id]);
+        $fila = $sel->fetch();
+        if (!$fila) {
+            return null;
+        }
+        $s = $this->db->prepare("DELETE FROM seg_lineas_excepciones WHERE id = ?");
         $s->execute([$id]);
-        return $s->fetch() ?: null;
+        return $fila;
     }
 
     public function usuario(int $id): ?array {
@@ -383,7 +391,7 @@ class SeguridadRepositorio {
               FROM usuarios u
               JOIN roles r       ON r.id = u.id_rol
               JOIN privilegios p ON p.privilegio_id = r.privilegio_id
-             WHERE (u.cedula ILIKE ? OR u.nombre_completo ILIKE ? OR u.email ILIKE ?)
+             WHERE (u.cedula LIKE ? OR u.nombre_completo LIKE ? OR u.email LIKE ?)
                AND u.cedula NOT LIKE '%\\_x%' AND u.email NOT LIKE '%\\_deleted\\_%'
              ORDER BY u.nombre_completo ASC LIMIT 10
         ");
@@ -400,14 +408,14 @@ class SeguridadRepositorio {
         }
         $this->db->prepare("
             INSERT INTO seg_lineas_rutas (ruta, accion, actualizado_por, actualizado_en) VALUES (?, ?, ?, ?)
-            ON CONFLICT (ruta) DO UPDATE SET accion = EXCLUDED.accion, actualizado_por = EXCLUDED.actualizado_por, actualizado_en = EXCLUDED.actualizado_en
+            ON DUPLICATE KEY UPDATE accion = VALUES(accion), actualizado_por = VALUES(actualizado_por), actualizado_en = VALUES(actualizado_en)
         ")->execute([$ruta, $accion, SeguridadMotor::firmaActor(), SeguridadMotor::ahora()]);
     }
 
     /** Estadística de uso por ruta (últimos 7 días). */
     public function usoRutas(): array {
         $s = $this->db->prepare("
-            SELECT ruta, COUNT(*) AS total, COUNT(*) FILTER (WHERE resultado IN ('DENEGADO', 'BLOQUEADO')) AS denegados
+            SELECT ruta, COUNT(*) AS total, COALESCE(SUM(CASE WHEN resultado IN ('DENEGADO', 'BLOQUEADO') THEN 1 ELSE 0 END), 0) AS denegados
               FROM seg_lineas_logs WHERE fecha >= ? GROUP BY ruta
         ");
         $s->execute([SeguridadMotor::ahora(-7 * 86400)]);

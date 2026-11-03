@@ -72,7 +72,7 @@ class LineasModel extends QueryBuilder {
                 dp.palabras_clave,
                 dp.fecha_defensa,
                 dim.nombre AS dimension_nombre,
-                STRING_AGG(DISTINCT a.nombre_completo, ', ') AS autores
+                GROUP_CONCAT(DISTINCT a.nombre_completo SEPARATOR ', ') AS autores
             FROM recurso_clasificaciones rc
             INNER JOIN recursos r          ON r.id   = rc.id_recurso
             LEFT  JOIN detalles_proyectos dp ON dp.id_recurso = r.id
@@ -120,7 +120,7 @@ class LineasModel extends QueryBuilder {
             LEFT JOIN usuarios              u   ON u.id   = io.id_profesor
             WHERE io.id_linea = ?
                OR EXISTS (
-                   SELECT 1 FROM public.investigaciones_lineas il
+                   SELECT 1 FROM investigaciones_lineas il
                    WHERE il.id_investigacion = io.id AND il.id_linea = ?
                )
             ORDER BY io.fecha_creacion DESC
@@ -145,20 +145,20 @@ class LineasModel extends QueryBuilder {
                 u.orcid,
                 u.sitio_web,
                 u.grado_academico
-            FROM public.usuarios u
+            FROM usuarios u
             WHERE u.activo = true
               AND (
                   EXISTS (
-                      SELECT 1 FROM public.profesor_linea pl
+                      SELECT 1 FROM profesor_linea pl
                       WHERE pl.id_usuario = u.id AND pl.id_linea = ?
                   )
                   OR EXISTS (
-                      SELECT 1 FROM public.profesor_dimension pd
+                      SELECT 1 FROM profesor_dimension pd
                       WHERE pd.id_usuario = u.id AND pd.id_linea = ?
                   )
                   OR EXISTS (
-                      SELECT 1 FROM public.investigaciones_ofertadas io
-                      LEFT JOIN public.investigaciones_lineas il ON il.id_investigacion = io.id
+                      SELECT 1 FROM investigaciones_ofertadas io
+                      LEFT JOIN investigaciones_lineas il ON il.id_investigacion = io.id
                       WHERE io.id_profesor = u.id AND (io.id_linea = ? OR il.id_linea = ?)
                   )
               )
@@ -172,16 +172,16 @@ class LineasModel extends QueryBuilder {
         try {
             $stmtDim = $this->db->prepare("
                 SELECT DISTINCT d.id, d.nombre
-                FROM public.dimensiones_operativas d
+                FROM dimensiones_operativas d
                 WHERE d.id_linea = ? AND d.activo = true
                   AND (
                       EXISTS (
-                          SELECT 1 FROM public.profesor_dimension pd
+                          SELECT 1 FROM profesor_dimension pd
                           WHERE pd.id_dimension = d.id AND pd.id_usuario = ? AND pd.id_linea = ?
                       )
                       OR EXISTS (
-                          SELECT 1 FROM public.investigaciones_ofertadas io
-                          LEFT JOIN public.investigaciones_dimensiones idim ON idim.id_investigacion = io.id
+                          SELECT 1 FROM investigaciones_ofertadas io
+                          LEFT JOIN investigaciones_dimensiones idim ON idim.id_investigacion = io.id
                           WHERE io.id_profesor = ? AND (io.id_dimension = d.id OR idim.id_dimension = d.id)
                       )
                   )
@@ -191,8 +191,8 @@ class LineasModel extends QueryBuilder {
 
         $stmtIo = $this->db->prepare("
             SELECT DISTINCT io.id, io.titulo, io.estado, io.cupos_disponibles, io.fecha_creacion
-            FROM public.investigaciones_ofertadas io
-            LEFT JOIN public.investigaciones_lineas il ON il.id_investigacion = io.id
+            FROM investigaciones_ofertadas io
+            LEFT JOIN investigaciones_lineas il ON il.id_investigacion = io.id
             WHERE io.id_profesor = ? AND (io.id_linea = ? OR il.id_linea = ?)
             ORDER BY io.fecha_creacion DESC
         ");

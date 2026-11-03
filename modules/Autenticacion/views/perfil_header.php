@@ -32,7 +32,7 @@ if (($fotoRawHeader === '' || !str_ends_with(strtolower($fotoRawHeader), '.webp'
     try {
         require_once CORE_PATH . 'Database/Connection.php';
         $pdoHeader = Connection::getInstance();
-        $stmtFotoHdr = $pdoHeader->prepare("SELECT foto_perfil FROM public.usuarios WHERE id = ? LIMIT 1");
+        $stmtFotoHdr = $pdoHeader->prepare("SELECT foto_perfil FROM usuarios WHERE id = ? LIMIT 1");
         $stmtFotoHdr->execute([(int)$_SESSION['usuario_id']]);
         $fotoDbHdr = trim((string)($stmtFotoHdr->fetchColumn() ?: ''));
         if ($fotoDbHdr !== '') {
@@ -75,7 +75,7 @@ if ($fotoRawHeader !== '' && !preg_match('#^https?://#i', $fotoRawHeader) && !st
             if (!empty($_SESSION['usuario_id'])) {
                 try {
                     require_once CORE_PATH . 'Database/Connection.php';
-                    $stmtUpdWebp = Connection::getInstance()->prepare("UPDATE public.usuarios SET foto_perfil = ? WHERE id = ?");
+                    $stmtUpdWebp = Connection::getInstance()->prepare("UPDATE usuarios SET foto_perfil = ? WHERE id = ?");
                     $stmtUpdWebp->execute([$webpRelHdr, (int)$_SESSION['usuario_id']]);
                 } catch (Throwable) {}
             }

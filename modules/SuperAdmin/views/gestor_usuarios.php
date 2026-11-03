@@ -382,10 +382,26 @@ if (isset($privilegios)) {
             <?php if (empty($profesores)): ?>
                 <p style="font-size: 0.85rem; color: #94a3b8; margin: 1rem 0;">No hay profesores o docentes registrados actualmente en la base de datos.</p>
             <?php else: ?>
-                <?php foreach ($profesores as $profe): ?>
+                <?php foreach ($profesores as $profe): 
+                    $fotoRawProfe = trim((string)($profe['foto_perfil'] ?? ''));
+                    $fotoUrlProfe = '';
+                    if ($fotoRawProfe !== '') {
+                        if (preg_match('#^https?://#i', $fotoRawProfe) || str_starts_with($fotoRawProfe, 'data:image/')) {
+                            $fotoUrlProfe = $fotoRawProfe;
+                        } else {
+                            $fotoUrlProfe = ltrim(preg_replace('#^public/#i', '', str_replace('\\', '/', $fotoRawProfe)), '/');
+                        }
+                    }
+                    $inicialProfe = strtoupper(substr(trim((string)($profe['nombre_completo'] ?? '')), 0, 1) ?: 'D');
+                ?>
                     <div class="gestor-teacher-card teacher-card-item">
                         <div class="gestor-teacher-avatar">
-                            <?= strtoupper(substr($profe['nombre_completo'], 0, 1)) ?>
+                            <?php if ($fotoUrlProfe !== ''): ?>
+                                <img src="<?= htmlspecialchars($fotoUrlProfe) ?>" alt="<?= htmlspecialchars($profe['nombre_completo']) ?>" class="gestor-teacher-avatar-img" loading="lazy" decoding="async" onerror="this.classList.add('is-hidden'); this.nextElementSibling.classList.add('is-visible');">
+                                <span class="gestor-teacher-avatar-fallback"><?= htmlspecialchars($inicialProfe) ?></span>
+                            <?php else: ?>
+                                <?= htmlspecialchars($inicialProfe) ?>
+                            <?php endif; ?>
                         </div>
                         <div class="gestor-teacher-info">
                             <h4 class="gestor-teacher-name"><?= htmlspecialchars($profe['nombre_completo']) ?></h4>

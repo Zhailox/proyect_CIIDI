@@ -2578,3 +2578,178 @@ Trace:
 #4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
 #5 {main}
 --------------------------------------------------------------------------------
+[2026-11-03 22:47:04] ERROR: could not find driver en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Database\Connection.php:211
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Database\Connection.php(211): PDO->__construct('mysql:host=loca...', 'root', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Database\Connection.php(255): Connection->__construct(false)
+#2 C:\Users\Mikey\.gemini\antigravity\brain\7296514d-bec4-4328-b48f-e1e71f7510a7\scratch\test_pdo.php(3): Connection::getInstance()
+#3 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 22:47:43] ERROR: SQLSTATE[HY000] [2002] An attempt was made to access a socket in a way forbidden by its access permissions en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Database\Connection.php:211
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Database\Connection.php(211): PDO->__construct('mysql:host=loca...', 'root', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Database\Connection.php(255): Connection->__construct(false)
+#2 C:\Users\Mikey\.gemini\antigravity\brain\7296514d-bec4-4328-b48f-e1e71f7510a7\scratch\test_pdo.php(3): Connection::getInstance()
+#3 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 19:02:18] ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ctid' in 'order clause' en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php:71
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(71): PDO->query('SELECT hash_int...')
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(390): AuditLogger::registrar('INFO', 'SuperAdmin', 'Ejecuci\xC3\xB3n Tare...', 'Tarea 'Generar ...')
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(888): SchedulerService::ejecutarTareaManual('tarea_179030155...')
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(139): SchedulerService::dispararCicloSiCorresponde(false)
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 19:02:21] ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ctid' in 'order clause' en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php:158
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(158): PDO->query('SELECT hash_int...')
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(24): AuditLogger::sincronizarFallback()
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(398): AuditLogger::registrar('INFO', 'Autenticacion', 'Cierre de Sesi\xC3...', 'El usuario 'Mig...')
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): LoginController->cerrarSesion()
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('cerrar-sesion', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 19:02:21] ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ctid' in 'order clause' en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php:71
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(71): PDO->query('SELECT hash_int...')
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(398): AuditLogger::registrar('INFO', 'Autenticacion', 'Cierre de Sesi\xC3...', 'El usuario 'Mig...')
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): LoginController->cerrarSesion()
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('cerrar-sesion', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 19:02:32] ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ctid' in 'order clause' en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php:158
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(158): PDO->query('SELECT hash_int...')
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(24): AuditLogger::sincronizarFallback()
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(377): AuditLogger::registrar('INFO', 'Autenticacion', 'Inicio de Sesi\xC3...', 'Acceso exitoso ...')
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): LoginController->procesar()
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('procesar-login', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 19:02:32] ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ctid' in 'order clause' en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php:71
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(71): PDO->query('SELECT hash_int...')
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(377): AuditLogger::registrar('INFO', 'Autenticacion', 'Inicio de Sesi\xC3...', 'Acceso exitoso ...')
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): LoginController->procesar()
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('procesar-login', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 19:05:23] ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ctid' in 'order clause' en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php:158
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(158): PDO->query('SELECT hash_int...')
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(24): AuditLogger::sincronizarFallback()
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\RepositorioPST\controllers\ConfiguracionController.php(248): AuditLogger::registrar('WARNING', 'RepositorioPST', 'Reiniciar Vecto...', 'El motor de b\xC3\xBA...')
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): ConfiguracionController->gestionRedOnnx()
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('gestion-red-onn...', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 19:05:23] ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ctid' in 'order clause' en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php:71
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(71): PDO->query('SELECT hash_int...')
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\RepositorioPST\controllers\ConfiguracionController.php(248): AuditLogger::registrar('WARNING', 'RepositorioPST', 'Reiniciar Vecto...', 'El motor de b\xC3\xBA...')
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): ConfiguracionController->gestionRedOnnx()
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('gestion-red-onn...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 19:05:25] ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ctid' in 'order clause' en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php:158
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(158): PDO->query('SELECT hash_int...')
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(24): AuditLogger::sincronizarFallback()
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\RepositorioPST\controllers\ConfiguracionController.php(248): AuditLogger::registrar('WARNING', 'RepositorioPST', 'Reiniciar Vecto...', 'El motor de b\xC3\xBA...')
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): ConfiguracionController->gestionRedOnnx()
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('gestion-red-onn...', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 19:05:25] ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ctid' in 'order clause' en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php:71
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(71): PDO->query('SELECT hash_int...')
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\RepositorioPST\controllers\ConfiguracionController.php(248): AuditLogger::registrar('WARNING', 'RepositorioPST', 'Reiniciar Vecto...', 'El motor de b\xC3\xBA...')
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): ConfiguracionController->gestionRedOnnx()
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('gestion-red-onn...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 19:20:03] ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ctid' in 'order clause' en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php:158
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(158): PDO->query('SELECT hash_int...')
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(24): AuditLogger::sincronizarFallback()
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(390): AuditLogger::registrar('INFO', 'SuperAdmin', 'Ejecuci\xC3\xB3n Tare...', 'Tarea 'Generar ...')
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(888): SchedulerService::ejecutarTareaManual('tarea_179030155...')
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(139): SchedulerService::dispararCicloSiCorresponde(false)
+#5 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 19:20:03] ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ctid' in 'order clause' en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php:71
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(71): PDO->query('SELECT hash_int...')
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(390): AuditLogger::registrar('INFO', 'SuperAdmin', 'Ejecuci\xC3\xB3n Tare...', 'Tarea 'Generar ...')
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(888): SchedulerService::ejecutarTareaManual('tarea_179030155...')
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(139): SchedulerService::dispararCicloSiCorresponde(false)
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 19:22:56] ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ctid' in 'order clause' en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php:158
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(158): PDO->query('SELECT hash_int...')
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(24): AuditLogger::sincronizarFallback()
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(421): AuditLogger::registrar('INFO', 'SuperAdmin', 'Editar Usuario', 'Datos actualiza...')
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorUsuariosController->procesarEdicion()
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('procesar-edicio...', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 19:22:56] ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ctid' in 'order clause' en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php:71
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(71): PDO->query('SELECT hash_int...')
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\SuperAdmin\controllers\GestorUsuariosController.php(421): AuditLogger::registrar('INFO', 'SuperAdmin', 'Editar Usuario', 'Datos actualiza...')
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): GestorUsuariosController->procesarEdicion()
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('procesar-edicio...', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 19:23:43] ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ctid' in 'order clause' en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php:158
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(158): PDO->query('SELECT hash_int...')
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(24): AuditLogger::sincronizarFallback()
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(377): AuditLogger::registrar('INFO', 'Autenticacion', 'Inicio de Sesi\xC3...', 'Acceso exitoso ...')
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): LoginController->procesar()
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('procesar-login', Array, Array, Array, Object(AssetResolver))
+#5 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 19:23:43] ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ctid' in 'order clause' en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php:71
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(71): PDO->query('SELECT hash_int...')
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\Autenticacion\controllers\LoginController.php(377): AuditLogger::registrar('INFO', 'Autenticacion', 'Inicio de Sesi\xC3...', 'Acceso exitoso ...')
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Http\Dispatcher.php(61): LoginController->procesar()
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(161): Dispatcher->dispatch('procesar-login', Array, Array, Array, Object(AssetResolver))
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 19:30:04] ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ctid' in 'order clause' en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php:158
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(158): PDO->query('SELECT hash_int...')
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(24): AuditLogger::sincronizarFallback()
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(390): AuditLogger::registrar('INFO', 'SuperAdmin', 'Ejecuci\xC3\xB3n Tare...', 'Tarea 'Generar ...')
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(888): SchedulerService::ejecutarTareaManual('tarea_179030155...')
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(139): SchedulerService::dispararCicloSiCorresponde(false)
+#5 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#6 {main}
+--------------------------------------------------------------------------------
+[2026-11-03 19:30:04] ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ctid' in 'order clause' en C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php:71
+Trace:
+#0 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\Security\AuditLogger.php(71): PDO->query('SELECT hash_int...')
+#1 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(390): AuditLogger::registrar('INFO', 'SuperAdmin', 'Ejecuci\xC3\xB3n Tare...', 'Tarea 'Generar ...')
+#2 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\modules\SuperAdmin\services\SchedulerService.php(888): SchedulerService::ejecutarTareaManual('tarea_179030155...')
+#3 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\core\System\Kernel.php(139): SchedulerService::dispararCicloSiCorresponde(false)
+#4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
+#5 {main}
+--------------------------------------------------------------------------------

@@ -23,7 +23,6 @@ require_once __DIR__ . '/../services/ConfigService.php';
                 <input type="hidden" name="ruta" value="buscador">
                 <input type="hidden" name="q" id="searchQueryHidden" value="<?= htmlspecialchars($q ?? '') ?>">
                 <input type="hidden" name="anio" id="searchYearInput" value="<?= htmlspecialchars($filtros['anio'] ?? '') ?>">
-                <input type="hidden" name="usar_ia" id="searchUsarIaHidden" value="<?= !empty($_GET['usar_ia']) ? '1' : '' ?>">
 
                 <?php 
                 $permitirFiltroCarrera = (bool)ConfigService::get('buscador.permitir_filtro_carrera', true);
@@ -171,7 +170,7 @@ require_once __DIR__ . '/../services/ConfigService.php';
 
                     <div style="margin-top: 1rem;">
                         <button type="submit" class="btn-apply-filters"><i class="ph ph-funnel"></i> Aplicar Filtros</button>
-                        <?php if (!empty($busquedaActiva) || !empty($_GET['usar_ia'])): ?>
+                        <?php if (!empty($busquedaActiva)): ?>
                             <a href="?ruta=buscador" class="btn-reset-all">Restablecer Todo</a>
                         <?php endif; ?>
                     </div>
@@ -181,7 +180,7 @@ require_once __DIR__ . '/../services/ConfigService.php';
             <!-- Columna Derecha: Entrada de Búsqueda y Resultados -->
             <main class="search-main-column">
                 
-                <!-- Input de búsqueda y modo switch -->
+                <!-- Input de búsqueda -->
                 <div class="search-bar-panel">
                     <form id="searchBarForm" action="" method="GET">
                         <input type="hidden" name="ruta" value="buscador">
@@ -193,32 +192,14 @@ require_once __DIR__ . '/../services/ConfigService.php';
                         <input type="hidden" name="dimension_id" value="<?= htmlspecialchars($filtros['dimension_id'] ?? '') ?>">
                         <input type="hidden" name="orden" value="<?= htmlspecialchars($filtros['orden'] ?? '') ?>">
 
-                        <div class="google-search-bar <?= !empty($_GET['usar_ia']) ? 'ia-mode-container' : '' ?>" id="searchBarContainer">
-                            <input type="text" name="q" id="searchQueryInput" value="<?= htmlspecialchars($q ?? '') ?>" placeholder="<?= !empty($_GET['usar_ia']) ? 'Describe tu propuesta o temática de investigación: Búsqueda Semántica con Redes Neuronales...' : 'Buscar por título, autor, comunidad, palabras clave o resumen...' ?>" autocomplete="off">
+                        <div class="google-search-bar" id="searchBarContainer">
+                            <input type="text" name="q" id="searchQueryInput" value="<?= htmlspecialchars($q ?? '') ?>" placeholder="Buscar por título, autor, comunidad, palabras clave o resumen..." autocomplete="off">
                             <svg class="google-search-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                             </svg>
                             <button type="submit" class="btn-search-inner-submit" title="Buscar"><i class="ph ph-magnifying-glass"></i></button>
                         </div>
-                        
-                        <!-- Toggle de Búsqueda Semántica (IA) -->
-                        <?php if ((bool)ConfigService::get('red_onnx.habilitar_busqueda_semantica', true)): ?>
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <div class="semantic-toggle-wrapper">
-                                <label class="semantic-switch" for="usarIaCheckbox">
-                                    <input type="checkbox" id="usarIaCheckbox" name="usar_ia" value="1" <?= !empty($_GET['usar_ia']) ? 'checked' : '' ?> onchange="handleSemanticToggle(this)">
-                                    <span class="semantic-slider"></span>
-                                </label>
-                                <label for="usarIaCheckbox" class="semantic-toggle-label <?= !empty($_GET['usar_ia']) ? 'active' : '' ?>">
-                                    <i class="ph-bold ph-sparkle"></i> Búsqueda Semántica con Redes Neuronales
-                                </label>
-                            </div>
-                            <div class="ia-hint <?= !empty($_GET['usar_ia']) ? 'visible' : '' ?>">
-                                <i class="ph-bold ph-info"></i> Encuentra proyectos por significado conceptual analizando resúmenes y títulos mediante embeddings vectoriales.
-                            </div>
-                        </div>
-                        <?php endif; ?>
                     </form>
                 </div>
 
@@ -234,31 +215,18 @@ require_once __DIR__ . '/../services/ConfigService.php';
                     <?php else: ?>
                         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
                             <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--texto-titulos);">
-                                <?php if (!empty($usar_ia)): ?>
-                                    <i class="ph-bold ph-sparkle" style="color: var(--color-secundario);"></i> Resultados por Coincidencia Semántica IA
-                                <?php else: ?>
-                                    Resultados Obtenidos
-                                <?php endif; ?>
+                                Resultados Obtenidos
                                 <span style="font-size: 0.85rem; font-weight: 500; color: var(--texto-silenciado);">
                                     · Mostrando <?= count($resultados) ?> de <?= $pagination['total_items'] ?><?php if ($pagination['total_pages'] > 1): ?> · Página <?= $pagination['current_page'] ?> de <?= $pagination['total_pages'] ?><?php endif; ?>
                                 </span>
                             </h3>
-                            <?php if (!empty($usar_ia)): ?>
-                                <span style="background: rgba(80, 89, 132, 0.12); color: var(--color-secundario); font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(80, 89, 132, 0.25);">
-                                    <i class="ph-bold ph-cpu"></i> Modelo XLM-RoBERTa ONNX
-                                </span>
-                            <?php endif; ?>
                         </div>
                         
                         <?php if (empty($resultados)): ?>
                             <div class="no-results-card">
                                 <i class="ph ph-warning-circle"></i>
                                 <p>
-                                    <?php if (!empty($usar_ia)): ?>
-                                        No se encontraron proyectos con similitud semántica suficiente para tu consulta. Prueba con términos más descriptivos o desactiva la Búsqueda Semántica.
-                                    <?php else: ?>
-                                        No se encontraron proyectos PST que coincidan con la búsqueda.
-                                    <?php endif; ?>
+                                    No se encontraron proyectos PST que coincidan con la búsqueda.
                                 </p>
                             </div>
                         <?php else: ?>
@@ -332,15 +300,6 @@ require_once __DIR__ . '/../services/ConfigService.php';
                                     <div class="result-card">
                                         <div class="result-card-header">
                                             <span class="badge-tipo"><i class="ph ph-file-text"></i> <?= htmlspecialchars(ConfigService::get('recursos.sufijo_tipo_recurso', 'PST / Proyecto Socio-Tecnológico')) ?></span>
-                                            <?php if (isset($res['distancia'])): ?>
-                                                <?php 
-                                                    $dist = (float)$res['distancia'];
-                                                    $similitud = max(0, min(100, round((1 - $dist) * 100, 1)));
-                                                ?>
-                                                <span class="badge-similitud" title="Distancia Coseno: <?= number_format($dist, 4) ?>">
-                                                    <i class="ph-bold ph-sparkle"></i> <?= $similitud ?>% Similitud IA
-                                                </span>
-                                            <?php endif; ?>
                                             <span class="result-year"><?= $res['anio_publicacion'] ?></span>
                                         </div>
                                         <h4 class="result-title">
@@ -564,5 +523,3 @@ document.addEventListener('DOMContentLoaded', () => {
     );
 });
 </script>
-
-

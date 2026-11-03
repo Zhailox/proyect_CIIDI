@@ -61,7 +61,7 @@ class TransparenciaController {
         $sql = "SELECT p.*, i.estado as estado_oferta, i.id as id_oferta 
                 FROM propuestas_empresa p
                 LEFT JOIN investigaciones_ofertadas i ON p.id = i.id_propuesta_empresa
-                WHERE (p.rif_empresa = :val OR p.nombre_empresa ILIKE :val2) 
+                WHERE (p.rif_empresa = :val OR p.nombre_empresa LIKE :val2) 
                 AND p.correo_contacto = :correo
                 ORDER BY p.fecha_creacion DESC";
         $stmt = $pdo->prepare($sql);

@@ -69,27 +69,11 @@ class RepositorioPSTModule implements ModuleContract {
                 'metodo' => 'index',
                 'titulo' => 'Configuración de Repositorio',
                 'css'    => ['RepositorioPST.css']
-            ],
-            'gestion-red-onnx' => [
-                'vista'  => __DIR__ . '/views/gestion_red_neuronal.php',
-                'controlador' => 'ConfiguracionController',
-                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
-                'metodo' => 'gestionRedOnnx',
-                'titulo' => 'Gestión del Modelo ONNX IA',
-                'css'    => ['RepositorioPST.css']
-            ],
-            'gestion-red-neuronal' => [
-                'vista'  => __DIR__ . '/views/gestion_red_neuronal.php',
-                'controlador' => 'ConfiguracionController',
-                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
-                'metodo' => 'gestionRedOnnx',
-                'titulo' => 'Gestión del Modelo ONNX IA',
-                'css'    => ['RepositorioPST.css']
             ]
         ];
     }
 
-    // NUEVO: El plano visual del menú para este módulo
+    // El plano visual del menú para este módulo
     public function getMenuConfig(): array {
         $nivelAdmin = SystemConfigService::get('accesos_modulos.repositorio_pst.admin', 0);
         $nivelPublico = SystemConfigService::get('accesos_modulos.repositorio_pst.publico', 999);
@@ -101,12 +85,11 @@ class RepositorioPSTModule implements ModuleContract {
                 'orden'       => 10,
                 'privilegio_minimo' => $nivelPublico,
                 'enlace'      => 'repositorio',
-                'activadores' => ['repositorio', 'detalles-pst', 'agregar-documento', 'buscador', 'configuracion-pst', 'gestion-red-onnx', 'gestion-red-neuronal'],
+                'activadores' => ['repositorio', 'detalles-pst', 'agregar-documento', 'buscador', 'configuracion-pst'],
                 'subitems'    => [
                     ['ruta' => 'repositorio', 'titulo' => 'Explorar Proyectos', 'privilegio_minimo' => $nivelPublico],
                     ['ruta' => 'buscador', 'titulo' => 'Buscador Unificado', 'privilegio_minimo' => $nivelPublico],
                     ['ruta' => 'agregar-documento', 'titulo' => 'Gestión Documental', 'privilegio_minimo' => $nivelAdmin],
-                    ['ruta' => 'gestion-red-onnx', 'titulo' => 'Modelo ONNX IA', 'privilegio_minimo' => $nivelAdmin],
                     ['ruta' => 'configuracion-pst', 'titulo' => 'Configuración Repositorio', 'privilegio_minimo' => $nivelAdmin, 'permiso_rbac' => 'auditar', 'modulo_rbac' => 'RepositorioPST']
                 ]
             ]
@@ -118,7 +101,6 @@ class RepositorioPSTModule implements ModuleContract {
     public function getDependencias(): array {
         return ['Autenticacion', 'Investigaciones']; // Requiere que el usuario exista para saber quién sube el PST
     }
-    // Añadir a modules/RepositorioPST/index.php
 
     public function getHomeConfig(): array {
         return [

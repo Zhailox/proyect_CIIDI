@@ -124,20 +124,20 @@ class PerfilController {
         if ($esProfesor) {
             $pdo = Connection::getInstance();
             try {
-                $carrerasDisponibles = $pdo->query("SELECT id, nombre, descripcion FROM public.carreras ORDER BY id ASC")->fetchAll(PDO::FETCH_ASSOC);
+                $carrerasDisponibles = $pdo->query("SELECT id, nombre, descripcion FROM carreras ORDER BY id ASC")->fetchAll(PDO::FETCH_ASSOC);
 
                 $lineasDisponibles = $pdo->query("
                     SELECT li.id, li.nombre, li.descripcion, li.id_carrera,
                            COALESCE(c.nombre, 'General / Institucional') AS carrera_nombre
-                    FROM public.lineas_investigacion li
-                    LEFT JOIN public.carreras c ON c.id = li.id_carrera
+                    FROM lineas_investigacion li
+                    LEFT JOIN carreras c ON c.id = li.id_carrera
                     WHERE li.activo = true
-                    ORDER BY li.id_carrera ASC NULLS LAST, li.nombre ASC
+                    ORDER BY (li.id_carrera IS NULL) ASC, li.id_carrera ASC, li.nombre ASC
                 ")->fetchAll(PDO::FETCH_ASSOC);
 
                 $dimsRaw = $pdo->query("
                     SELECT id, id_linea, nombre, descripcion
-                    FROM public.dimensiones_operativas
+                    FROM dimensiones_operativas
                     WHERE activo = true
                     ORDER BY id_linea ASC, nombre ASC
                 ")->fetchAll(PDO::FETCH_ASSOC);
@@ -146,11 +146,11 @@ class PerfilController {
                     $dimensionesPorLinea[$idL][] = $dimRow;
                 }
                 
-                $stmtMisLineas = $pdo->prepare("SELECT id_linea FROM public.profesor_linea WHERE id_usuario = ?");
+                $stmtMisLineas = $pdo->prepare("SELECT id_linea FROM profesor_linea WHERE id_usuario = ?");
                 $stmtMisLineas->execute([$userId]);
                 $misLineasIds = array_map('intval', $stmtMisLineas->fetchAll(PDO::FETCH_COLUMN));
 
-                $stmtMisDims = $pdo->prepare("SELECT id_dimension FROM public.profesor_dimension WHERE id_usuario = ?");
+                $stmtMisDims = $pdo->prepare("SELECT id_dimension FROM profesor_dimension WHERE id_usuario = ?");
                 $stmtMisDims->execute([$userId]);
                 $misDimensionesIds = array_map('intval', $stmtMisDims->fetchAll(PDO::FETCH_COLUMN));
             } catch (\Throwable $e) {}
@@ -739,7 +739,7 @@ class PerfilController {
             $dimensionesValidas = [];
             if (!empty($dimensionesIds)) {
                 $placeholders = implode(',', array_fill(0, count($dimensionesIds), '?'));
-                $stmtDimLookup = $pdo->prepare("SELECT id, id_linea FROM public.dimensiones_operativas WHERE id IN ({$placeholders}) AND activo = true");
+                $stmtDimLookup = $pdo->prepare("SELECT id, id_linea FROM dimensiones_operativas WHERE id IN ({$placeholders}) AND activo = true");
                 $stmtDimLookup->execute($dimensionesIds);
                 foreach ($stmtDimLookup->fetchAll(PDO::FETCH_ASSOC) as $dRow) {
                     $idDim = (int)$dRow['id'];
@@ -755,15 +755,15 @@ class PerfilController {
             
             $pdo->beginTransaction();
             // Eliminar líneas y dimensiones actuales
-            $stmtDelLin = $pdo->prepare("DELETE FROM public.profesor_linea WHERE id_usuario = ?");
+            $stmtDelLin = $pdo->prepare("DELETE FROM profesor_linea WHERE id_usuario = ?");
             $stmtDelLin->execute([$userId]);
 
-            $stmtDelDim = $pdo->prepare("DELETE FROM public.profesor_dimension WHERE id_usuario = ?");
+            $stmtDelDim = $pdo->prepare("DELETE FROM profesor_dimension WHERE id_usuario = ?");
             $stmtDelDim->execute([$userId]);
             
             // Insertar nuevas líneas
             if (!empty($lineas)) {
-                $stmtInsert = $pdo->prepare("INSERT INTO public.profesor_linea (id_usuario, id_linea) VALUES (?, ?) ON CONFLICT (id_usuario, id_linea) DO NOTHING");
+                $stmtInsert = $pdo->prepare("INSERT IGNORE INTO profesor_linea (id_usuario, id_linea) VALUES (?, ?)");
                 foreach ($lineas as $id_linea) {
                     if ($id_linea > 0) {
                         $stmtInsert->execute([$userId, $id_linea]);
@@ -773,15 +773,15 @@ class PerfilController {
 
             // Insertar nuevas dimensiones operativas
             if (!empty($dimensionesValidas)) {
-                $stmtInsertDim = $pdo->prepare("INSERT INTO public.profesor_dimension (id_usuario, id_dimension, id_linea) VALUES (?, ?, ?) ON CONFLICT (id_usuario, id_dimension) DO NOTHING");
+                $stmtInsertDim = $pdo->prepare("INSERT IGNORE INTO profesor_dimension (id_usuario, id_dimension, id_linea) VALUES (?, ?, ?)");
                 foreach ($dimensionesValidas as $id_dim => $id_lin) {
                     $stmtInsertDim->execute([$userId, $id_dim, $id_lin]);
                 }
             }
 
             // Actualizar marca de investigador en usuarios
-            $stmtUpInv = $pdo->prepare("UPDATE public.usuarios SET es_investigador = ? WHERE id = ?");
-            $stmtUpInv->execute([$esInvestigador ? 'true' : 'false', $userId]);
+            $stmtUpInv = $pdo->prepare("UPDATE usuarios SET es_investigador = ? WHERE id = ?");
+            $stmtUpInv->execute([$esInvestigador ? 1 : 0, $userId]);
 
             $pdo->commit();
 

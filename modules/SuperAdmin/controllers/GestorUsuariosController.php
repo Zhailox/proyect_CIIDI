@@ -230,7 +230,7 @@ class GestorUsuariosController {
                 
                 // Inicializar en la matriz RBAC en BD
                 $db = Connection::getInstance();
-                $stmt = $db->prepare("INSERT INTO matriz_rbac (nivel_privilegio, modulo, permisos) VALUES (?, 'Sistema', ?) ON CONFLICT DO NOTHING");
+                $stmt = $db->prepare("INSERT IGNORE INTO matriz_rbac (nivel_privilegio, modulo, permisos) VALUES (?, 'Sistema', ?)");
                 $stmt->execute([$privilegioId, json_encode(['ver' => true, 'editar' => false, 'eliminar' => false])]);
 
                 AuditLogger::registrar('WARNING', 'SuperAdmin', 'Crear Rol', "Nuevo rol creado: {$nombre} (Privilegio ID: {$privilegioId})");
@@ -738,7 +738,7 @@ class GestorUsuariosController {
 
             if ($duplicado) {
                 // Si el usuario existe pero es una invitación pendiente (activo = false y con activation_token)
-                if ($duplicado['activo'] === false && !empty($duplicado['activation_token'])) {
+                if (empty($duplicado['activo']) && !empty($duplicado['activation_token'])) {
                     $stmtReinv = $db->prepare("UPDATE usuarios SET activation_token = ?, nombre_completo = ?, email = ?, id_rol = ? WHERE id = ?");
                     $exito = $stmtReinv->execute([$tokenHash, $nombre, $email, $idRolProfesor, $duplicado['id']]);
                 } else {
@@ -753,7 +753,7 @@ class GestorUsuariosController {
             } else {
                 // Crear usuario en estado inactivo (esperando que establezca clave por token)
                 $hashClaveDummy = password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT);
-                $sql = "INSERT INTO usuarios (cedula, nombre_completo, email, id_rol, contrasena, activo, email_verified, activation_token) VALUES (?, ?, ?, ?, ?, false, false, ?)";
+                $sql = "INSERT INTO usuarios (cedula, nombre_completo, email, id_rol, contrasena, activo, email_verified, activation_token) VALUES (?, ?, ?, ?, ?, 0, 0, ?)";
                 
                 try {
                     $stmt = $db->prepare($sql);

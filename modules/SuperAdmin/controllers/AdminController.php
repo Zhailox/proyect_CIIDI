@@ -61,15 +61,15 @@ class AdminController {
             $tDbDuracion = round((microtime(true) - $tDbInicio) * 1000, 2);
 
             $pruebas[] = [
-                'modulo'   => 'Base de Datos PostgreSQL',
+                'modulo'   => 'Base de Datos MariaDB',
                 'estado'   => 'OK',
                 'detalles' => "Conexión estable. Latencia: {$tDbDuracion} ms",
-                'info'     => substr($resDb['version_db'] ?? 'PostgreSQL Active', 0, 45)
+                'info'     => substr($resDb['version_db'] ?? 'MariaDB Active', 0, 45)
             ];
         } catch (Throwable $e) {
             $saludGlobal = false;
             $pruebas[] = [
-                'modulo'   => 'Base de Datos PostgreSQL',
+                'modulo'   => 'Base de Datos MariaDB',
                 'estado'   => 'ERROR',
                 'detalles' => 'Fallo de conexión a la BD: ' . $e->getMessage(),
                 'info'     => 'Sin respuesta'
@@ -657,8 +657,6 @@ class AdminController {
                     // Auto-Checkpoint Preventivo antes de sobreescribir la BD
                     $checkpoint = BackupService::crearBackup('sql.gz', false, null, 'pre_restore_checkpoint');
 
-                    // Descomprimir si es GZIP y sanitizar siempre en un archivo temporal compatible con Linux Debian (PG13-18)
-                    $tempSqlUnzipped = sys_get_temp_dir() . '/restore_temp_' . time() . '_' . mt_rand(1000, 9999) . '.sql';
                     if (!empty($verif['esGzip'])) {
                         $zp = gzopen($rutaArchivoRestaurar, 'rb');
                         $rawSqlRestore = '';
@@ -670,66 +668,15 @@ class AdminController {
                         $rawSqlRestore = (string)file_get_contents($rutaArchivoRestaurar);
                     }
 
-                    if (method_exists('Connection', 'sanitizarSqlCompatible')) {
-                        $rawSqlRestore = Connection::sanitizarSqlCompatible($rawSqlRestore);
-                    }
-                    file_put_contents($tempSqlUnzipped, $rawSqlRestore);
-                    $rutaParaPsql = $tempSqlUnzipped;
-
-                    $creds = Connection::getCredentials();
-                    $psqlPath = Connection::getPsqlPath();
-
-                    putenv("PGPASSWORD={$creds['pass']}");
-                    putenv("PGCLIENTENCODING=UTF8");
-                    $comando = "{$psqlPath} -h {$creds['host']} -p {$creds['port']} "
-                    . "-U {$creds['user']} -d {$creds['db']} "
-                    . "-f \"{$rutaParaPsql}\" 2>&1";
-
-                    $salida = [];
-                    $codigo_retorno = 0;
-                    exec($comando, $salida, $codigo_retorno);
-                    putenv("PGPASSWORD=");
-                    putenv("PGCLIENTENCODING=");
-
-                    if ($tempSqlUnzipped && file_exists($tempSqlUnzipped)) {
-                        @unlink($tempSqlUnzipped);
-                    }
-
                     if (session_status() === PHP_SESSION_NONE) session_start();
 
-                    // Garantizar que todas las tablas críticas (ej. detalles_proyectos y funciones unaccent) queden íntegras tras restaurar
-                    Connection::resetConnection();
-                    try {
-                        $pdoPostRestore = Connection::getInstance(true);
-                        if ($pdoPostRestore) {
-                            Connection::autoHealSchemaIfNeeded($pdoPostRestore, true);
-                        }
-                    } catch (Throwable $eHeal) {}
+                    $dbRestore = Connection::getInstance();
+                    $dbRestore->exec('SET FOREIGN_KEY_CHECKS = 0');
+                    $dbRestore->exec($rawSqlRestore);
+                    $dbRestore->exec('SET FOREIGN_KEY_CHECKS = 1');
 
-                    if ($codigo_retorno === 0) {
-                        AuditLogger::registrar('WARNING', 'SuperAdmin', 'Restaurar BD', "Base de datos restaurada exitosamente.");
-                        $_SESSION['mensaje_admin_exito'] = "Base de datos restaurada correctamente. Integridad verificada antes del proceso.";
-                    } else {
-                        // Filtrar la salida ruidosa de psql (SET, ALTER, DROP, CREATE) y extraer solo los mensajes de ERROR reales
-                        $erroresReales = array_filter($salida, function($linea) {
-                            $t = trim($linea);
-                            return preg_match('/^(psql:.*:)?\s*ERROR:/i', $t) || preg_match('/FATAL:|CRITICAL:/i', $t);
-                        });
-
-                        if (!empty($erroresReales)) {
-                            $errDetalle = implode(' | ', array_map('trim', $erroresReales));
-                        } else {
-                            // Si psql falló por ON_ERROR_STOP pero la última línea no contiene 'ERROR:', tomar las últimas líneas relevantes
-                            $lineasRelevantes = array_filter($salida, function($l) {
-                                $t = trim($l);
-                                return !empty($t) && !preg_match('/^(SET|ALTER|DROP|CREATE|TRUNCATE)\b/i', $t);
-                            });
-                            $errDetalle = !empty($lineasRelevantes) ? implode(' | ', array_slice(array_map('trim', $lineasRelevantes), -3)) : implode(' ', array_slice($salida, -5));
-                        }
-
-                        AuditLogger::registrar('CRITICAL', 'SuperAdmin', 'Fallo Restauración BD', $errDetalle);
-                        $_SESSION['mensaje_admin_error'] = "Error al restaurar la BD: " . ($errDetalle ?: "Código de salida: {$codigo_retorno}");
-                    }
+                    AuditLogger::registrar('WARNING', 'SuperAdmin', 'Restaurar BD', 'Base de datos restaurada exitosamente en MariaDB.');
+                    $_SESSION['mensaje_admin_exito'] = 'Base de datos restaurada correctamente en MariaDB. Integridad verificada antes del proceso.';
                 } else {
                     if (session_status() === PHP_SESSION_NONE) session_start();
                     $_SESSION['mensaje_admin_error'] = "No se proporcionó un archivo de respaldo válido.";
@@ -755,7 +702,7 @@ class AdminController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $host = trim($_POST['host'] ?? 'localhost');
-                $port = trim($_POST['port'] ?? '5432');
+                $port = trim($_POST['port'] ?? '3306');
                 $db   = trim($_POST['db'] ?? 'ciidi');
                 $user = trim($_POST['user'] ?? 'miki');
                 $pass = $_POST['pass'] ?? '';

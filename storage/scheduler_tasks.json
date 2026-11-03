@@ -5,8 +5,8 @@
         "descripcion": "Elimina archivos temporales en storage\/tmp\/, cachés expiradas y residuos de descargas.",
         "expresion_cron": "0 3 * * *",
         "estado": "activo",
-        "ultima_ejecucion": "2026-11-02 23:17:12",
-        "resultado_ultimo": "ÉXITO (8.17ms): Limpieza completada. Depurados 1 archivos temporales y cachés.",
+        "ultima_ejecucion": "2026-11-03 11:19:29",
+        "resultado_ultimo": "ÉXITO (6.28ms): Limpieza completada. Depurados 1 archivos temporales y cachés.",
         "script": "limpiarTemporales"
     },
     "backup_automatico_medianoche": {
@@ -40,7 +40,7 @@
         "archivo_script": "script_tarea_1790301553_528.php",
         "timeout_segundos": 60,
         "estado": "activo",
-        "ultima_ejecucion": "2026-11-03 02:30:26",
-        "resultado_ultimo": "ÉXITO (151.05ms): Comando ejecutado con éxito (Código 0)."
+        "ultima_ejecucion": "2026-11-03 19:30:04",
+        "resultado_ultimo": "ÉXITO (101.05ms): Comando ejecutado con éxito (Código 0)."
     }
 }

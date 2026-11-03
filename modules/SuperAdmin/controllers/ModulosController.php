@@ -308,7 +308,7 @@ class ModulosController {
                 require_once CORE_PATH . 'Database/Connection.php';
                 $db = Connection::getInstance();
                 $stmt = $db->query("
-                    SELECT p.nivel_privilegio, string_agg(r.nombre, ' / ') AS nombres_roles
+                    SELECT p.nivel_privilegio, GROUP_CONCAT(r.nombre SEPARATOR ' / ') AS nombres_roles
                     FROM privilegios p
                     LEFT JOIN roles r ON r.privilegio_id = p.privilegio_id
                     GROUP BY p.nivel_privilegio

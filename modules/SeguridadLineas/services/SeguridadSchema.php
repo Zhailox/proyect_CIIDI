@@ -3,11 +3,7 @@
 
 /**
  * Instalador autónomo del esquema de base de datos del módulo de Seguridad
- * del macro módulo "Líneas de Investigación".
- *
- * Se ejecuta una sola vez por versión (candado en storage/seg_lineas_schema.json).
- * Si alguna tabla desaparece (p. ej. restauración de un respaldo antiguo), basta con
- * invocar SeguridadSchema::invalidar() y el siguiente request la recrea.
+ * del macro módulo "Líneas de Investigación" (MariaDB 10.6 InnoDB).
  */
 final class SeguridadSchema {
 
@@ -34,15 +30,10 @@ final class SeguridadSchema {
         }
 
         try {
-            $db->beginTransaction();
             foreach (self::sentencias() as $sql) {
                 $db->exec($sql);
             }
-            $db->commit();
         } catch (Throwable $e) {
-            if ($db->inTransaction()) {
-                $db->rollBack();
-            }
             if (class_exists('Connection')) {
                 Connection::logSystemError($e);
             }
@@ -50,7 +41,7 @@ final class SeguridadSchema {
         }
 
         @file_put_contents($candado, json_encode([
-            'version'     => self::VERSION,
+            'version'      => self::VERSION,
             'instalado_en' => date('Y-m-d H:i:s'),
         ], JSON_PRETTY_PRINT));
 
@@ -63,104 +54,97 @@ final class SeguridadSchema {
     }
 
     /**
-     * DDL idempotente. Se mantiene sincronizado con migrations/004_seguridad_lineas.sql
+     * DDL idempotente para MariaDB 10.6.
      */
     public static function sentencias(): array {
         return [
-            // Bitácora con encadenamiento criptográfico (HMAC-SHA256)
             "CREATE TABLE IF NOT EXISTS seg_lineas_logs (
-                id              BIGSERIAL PRIMARY KEY,
-                fecha           TIMESTAMP(0) NOT NULL,
+                id              BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                fecha           DATETIME     NOT NULL,
                 severidad       VARCHAR(10)  NOT NULL DEFAULT 'INFO',
                 submodulo       VARCHAR(80)  NOT NULL DEFAULT '',
                 accion          VARCHAR(30)  NOT NULL DEFAULT '',
                 ruta            VARCHAR(160) NOT NULL DEFAULT '',
                 resultado       VARCHAR(12)  NOT NULL DEFAULT 'PERMITIDO',
-                usuario_id      INTEGER      NULL,
+                usuario_id      INT          NULL,
                 usuario_nombre  VARCHAR(160) NOT NULL DEFAULT '',
-                nivel           INTEGER      NOT NULL DEFAULT 999,
+                nivel           INT          NOT NULL DEFAULT 999,
                 ip              VARCHAR(64)  NOT NULL DEFAULT '',
                 metodo          VARCHAR(10)  NOT NULL DEFAULT 'GET',
                 user_agent      VARCHAR(255) NOT NULL DEFAULT '',
-                detalles        TEXT         NOT NULL DEFAULT '',
+                detalles        TEXT         NULL,
                 hash_anterior   VARCHAR(64)  NOT NULL,
-                hash            VARCHAR(64)  NOT NULL
-            )",
-            "CREATE INDEX IF NOT EXISTS idx_seg_lineas_logs_fecha   ON seg_lineas_logs (fecha)",
-            "CREATE INDEX IF NOT EXISTS idx_seg_lineas_logs_ip_res  ON seg_lineas_logs (ip, resultado, fecha)",
-            "CREATE INDEX IF NOT EXISTS idx_seg_lineas_logs_usuario ON seg_lineas_logs (usuario_id, fecha)",
+                hash            VARCHAR(64)  NOT NULL,
+                INDEX idx_seg_lineas_logs_fecha (fecha),
+                INDEX idx_seg_lineas_logs_ip_res (ip, resultado, fecha),
+                INDEX idx_seg_lineas_logs_usuario (usuario_id, fecha)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
-            // Matriz de permisos: nivel de privilegio × submódulo × acción
             "CREATE TABLE IF NOT EXISTS seg_lineas_permisos (
-                nivel            INTEGER      NOT NULL,
+                nivel            INT          NOT NULL,
                 submodulo        VARCHAR(80)  NOT NULL,
                 accion           VARCHAR(30)  NOT NULL,
-                permitido        BOOLEAN      NOT NULL,
+                permitido        TINYINT(1)   NOT NULL,
                 actualizado_por  VARCHAR(160) NOT NULL DEFAULT '',
-                actualizado_en   TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                actualizado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (nivel, submodulo, accion)
-            )",
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
-            // Excepciones individuales por usuario (tienen prioridad sobre la matriz)
             "CREATE TABLE IF NOT EXISTS seg_lineas_excepciones (
-                id          SERIAL PRIMARY KEY,
-                usuario_id  INTEGER      NOT NULL,
+                id          INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                usuario_id  INT          NOT NULL,
                 submodulo   VARCHAR(80)  NOT NULL,
                 accion      VARCHAR(30)  NOT NULL,
-                efecto      VARCHAR(10)  NOT NULL CHECK (efecto IN ('permitir', 'denegar')),
-                motivo      TEXT         NOT NULL DEFAULT '',
-                expira_en   TIMESTAMP(0) NULL,
+                efecto      VARCHAR(10)  NOT NULL,
+                motivo      TEXT         NULL,
+                expira_en   DATETIME     NULL,
                 creado_por  VARCHAR(160) NOT NULL DEFAULT '',
-                creado_en   TIMESTAMP(0) NOT NULL
-            )",
-            "CREATE INDEX IF NOT EXISTS idx_seg_lineas_exc_usuario ON seg_lineas_excepciones (usuario_id)",
+                creado_en   DATETIME     NOT NULL,
+                INDEX idx_seg_lineas_exc_usuario (usuario_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
-            // Bloqueos de IP (manuales o automáticos por ráfaga de denegaciones)
             "CREATE TABLE IF NOT EXISTS seg_lineas_bloqueos (
-                id             SERIAL PRIMARY KEY,
+                id             INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 ip             VARCHAR(64)  NOT NULL,
-                motivo         TEXT         NOT NULL DEFAULT '',
+                motivo         TEXT         NULL,
                 origen         VARCHAR(10)  NOT NULL DEFAULT 'manual',
-                creado_en      TIMESTAMP(0) NOT NULL,
-                expira_en      TIMESTAMP(0) NULL,
+                creado_en      DATETIME     NOT NULL,
+                expira_en      DATETIME     NULL,
                 creado_por     VARCHAR(160) NOT NULL DEFAULT '',
-                activo         BOOLEAN      NOT NULL DEFAULT TRUE,
+                activo         TINYINT(1)   NOT NULL DEFAULT 1,
                 levantado_por  VARCHAR(160) NULL,
-                levantado_en   TIMESTAMP(0) NULL
-            )",
-            "CREATE INDEX IF NOT EXISTS idx_seg_lineas_bloq_ip ON seg_lineas_bloqueos (ip, activo)",
+                levantado_en   DATETIME     NULL,
+                INDEX idx_seg_lineas_bloq_ip (ip, activo)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
-            // Alertas de seguridad
             "CREATE TABLE IF NOT EXISTS seg_lineas_alertas (
-                id            SERIAL PRIMARY KEY,
-                fecha         TIMESTAMP(0) NOT NULL,
+                id            INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                fecha         DATETIME     NOT NULL,
                 tipo          VARCHAR(40)  NOT NULL,
                 severidad     VARCHAR(10)  NOT NULL,
                 titulo        VARCHAR(200) NOT NULL,
-                detalle       TEXT         NOT NULL DEFAULT '',
+                detalle       TEXT         NULL,
                 ip            VARCHAR(64)  NOT NULL DEFAULT '',
-                usuario_id    INTEGER      NULL,
+                usuario_id    INT          NULL,
                 estado        VARCHAR(10)  NOT NULL DEFAULT 'abierta',
                 atendida_por  VARCHAR(160) NULL,
-                atendida_en   TIMESTAMP(0) NULL
-            )",
-            "CREATE INDEX IF NOT EXISTS idx_seg_lineas_alertas_estado ON seg_lineas_alertas (estado, fecha)",
+                atendida_en   DATETIME     NULL,
+                INDEX idx_seg_lineas_alertas_estado (estado, fecha)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
-            // Políticas (clave → valor JSON)
             "CREATE TABLE IF NOT EXISTS seg_lineas_politicas (
                 clave            VARCHAR(60)  PRIMARY KEY,
-                valor            JSONB        NOT NULL,
+                valor            LONGTEXT     NOT NULL,
                 actualizado_por  VARCHAR(160) NOT NULL DEFAULT '',
-                actualizado_en   TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP
-            )",
+                actualizado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
-            // Reclasificación manual de rutas → acción
             "CREATE TABLE IF NOT EXISTS seg_lineas_rutas (
                 ruta             VARCHAR(160) PRIMARY KEY,
                 accion           VARCHAR(30)  NOT NULL,
                 actualizado_por  VARCHAR(160) NOT NULL DEFAULT '',
-                actualizado_en   TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP
-            )",
+                actualizado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
         ];
     }
 }

@@ -26,9 +26,6 @@ class BusquedaGlobalController {
             $carreraId = $carreraDefaultId > 0 ? $carreraDefaultId : 1;
         }
 
-        $semanticaHabilitada = (bool)ConfigService::get('red_onnx.habilitar_busqueda_semantica', true);
-        $usar_ia = ($semanticaHabilitada && !empty($_GET['usar_ia'])) ? true : false;
-
         $ordenConfig = (string)ConfigService::get('buscador.orden_predeterminado', 'anio_desc');
         $ordenDefault = ($q !== '') ? 'relevancia' : $ordenConfig;
         $orden = !empty($_GET['orden']) ? trim((string)$_GET['orden']) : $ordenDefault;
@@ -36,7 +33,6 @@ class BusquedaGlobalController {
         // Filtros avanzados dinámicos
         $filtrosExtra = [
             'q'               => $q,
-            'usar_ia'         => $usar_ia,
             'anio'            => !empty($_GET['anio']) ? (int)$_GET['anio'] : null,
             'carrera_id'      => $carreraId,
             'linea_id'        => !empty($_GET['linea_id']) ? (int)$_GET['linea_id'] : null,
@@ -64,18 +60,8 @@ class BusquedaGlobalController {
             $totalResults = 0;
             $totalPages = 1;
             $page = 1;
-        } elseif ($usar_ia && $q !== '') {
-            // Modo IA: búsqueda semántica con paginación real por página
-            $todosSemanticos = $model->buscarSemantico($q, $filtrosExtra);
-            $totalResults = count($todosSemanticos);
-            $totalPages = ($totalResults > 0 && $limit > 0) ? (int)ceil($totalResults / $limit) : 1;
-            if ($page > $totalPages) {
-                $page = $totalPages;
-            }
-            $offset = ($page - 1) * $limit;
-            $resultados = array_slice($todosSemanticos, $offset, $limit);
         } else {
-            // Modo estándar SQL con ranking de relevancia y paginación validada
+            // Búsqueda híbrida nativa en MariaDB (MATCH AGAINST + LIKE) con ranking de relevancia y paginación validada
             $totalResults = $model->buscarPSTCount($q, $filtrosExtra);
             $totalPages = ($totalResults > 0 && $limit > 0) ? (int)ceil($totalResults / $limit) : 1;
             if ($page > $totalPages) {
@@ -100,7 +86,6 @@ class BusquedaGlobalController {
             'resultados'         => $resultados,
             'busquedaActiva'     => $busquedaActiva,
             'q'                  => $q,
-            'usar_ia'            => $usar_ia,
             'carreras'           => $carreras,
             'lineas'             => $lineas,
             'dimensiones'        => $dimensiones,
@@ -119,6 +104,3 @@ class BusquedaGlobalController {
         ];
     }
 }
-
-
-

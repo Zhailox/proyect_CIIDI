@@ -20,15 +20,20 @@ class PropuestaEmpresaModel {
     public function getTodas(): array {
         require_once CORE_PATH . 'Database/Connection.php';
         $pdo = Connection::getInstance();
-        $sql = "SELECT p.*, io.id AS id_investigacion, io.estado AS estado_oferta,
+        $sql = "SELECT p.*,
+                       (SELECT i.id FROM investigaciones_ofertadas i
+                        WHERE i.id_propuesta_empresa = p.id
+                        ORDER BY (i.estado <> 'Cerrada') DESC, i.id DESC LIMIT 1) AS id_investigacion,
+                       (SELECT i.estado FROM investigaciones_ofertadas i
+                        WHERE i.id_propuesta_empresa = p.id
+                        ORDER BY (i.estado <> 'Cerrada') DESC, i.id DESC LIMIT 1) AS estado_oferta,
                        (SELECT COUNT(*) FROM postulaciones_estudiantes pe
-                         WHERE pe.id_investigacion = io.id AND pe.estado IN ('Pendiente', 'Aceptado')) AS postulaciones_activas
+                        WHERE pe.id_investigacion = (
+                            SELECT i2.id FROM investigaciones_ofertadas i2
+                            WHERE i2.id_propuesta_empresa = p.id
+                            ORDER BY (i2.estado <> 'Cerrada') DESC, i2.id DESC LIMIT 1
+                        ) AND pe.estado IN ('Pendiente', 'Aceptado')) AS postulaciones_activas
                 FROM propuestas_empresa p
-                LEFT JOIN LATERAL (
-                    SELECT i.id, i.estado FROM investigaciones_ofertadas i
-                    WHERE i.id_propuesta_empresa = p.id
-                    ORDER BY (i.estado <> 'Cerrada') DESC, i.id DESC LIMIT 1
-                ) io ON TRUE
                 WHERE p.eliminado_en IS NULL
                 ORDER BY p.fecha_creacion DESC";
         return $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);

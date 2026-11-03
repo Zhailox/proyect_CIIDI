@@ -89,7 +89,7 @@ $stats = array_merge([
         </div>
         <div>
             <h4 style="margin:0; font-size: 0.95rem; font-weight: 700; color: var(--texto-titulos);">Mantenimiento & Respaldos BD</h4>
-            <p style="margin:3px 0 0 0; font-size: 0.78rem; color: var(--texto-silenciado);">Dump PostgreSQL, respaldo por tablas y modo mantenimiento.</p>
+            <p style="margin:3px 0 0 0; font-size: 0.78rem; color: var(--texto-silenciado);">Dump MariaDB, respaldo por tablas y modo mantenimiento.</p>
         </div>
     </a>
 
@@ -166,7 +166,7 @@ $stats = array_merge([
             <i class="ph-bold ph-database"></i>
         </div>
         <div class="sa-telemetry-info">
-            <h4>Base de Datos PostgreSQL</h4>
+            <h4>Base de Datos MariaDB</h4>
             <div class="sa-telemetry-val"><?= $telemetria['db_size'] ?></div>
             <div class="sa-telemetry-sub">Conex: <?= $telemetria['active_connections'] ?>/<?= $telemetria['max_connections'] ?> (<?= htmlspecialchars($telemetria['db_name']) ?>)</div>
         </div>
@@ -212,7 +212,7 @@ $stats = array_merge([
         <div class="sa-telemetry-info">
             <h4>Entorno de Ejecución</h4>
             <div class="sa-telemetry-val">PHP v<?= $telemetria['php_version'] ?></div>
-            <div class="sa-telemetry-sub">PGSQL <?= htmlspecialchars($telemetria['pg_version']) ?> (<?= $telemetria['pg_status'] ?>)</div>
+            <div class="sa-telemetry-sub">MariaDB <?= htmlspecialchars($telemetria['pg_version']) ?> (<?= $telemetria['pg_status'] ?>)</div>
         </div>
     </div>
 </div>

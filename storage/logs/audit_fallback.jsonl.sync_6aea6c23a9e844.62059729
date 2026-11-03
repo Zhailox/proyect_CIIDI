@@ -1,0 +1,1 @@
+{"id":"log_6aea68b54a74b2.42753927","fecha_hora":"2026-11-03 19:05:25","nivel":"WARNING","modulo":"RepositorioPST","accion":"Reiniciar Vectores ONNX","detalles":"El motor de búsqueda utiliza índices FULLTEXT nativos de MariaDB (sin vectores de ML).","responsable":"Miguel González (ID: 7)","ip":"::1"}
