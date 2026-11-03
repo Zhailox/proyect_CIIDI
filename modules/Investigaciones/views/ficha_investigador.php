@@ -219,7 +219,7 @@ $totalInvestigadores = count($investigadores ?? []);
                     
                     <?php if ($biografiaInv !== ''): ?>
                     <!-- Acerca de mí con tamaño predeterminado (3 líneas) y lectura completa en el modal -->
-                    <div onclick='abrirModalInvestigador(<?= htmlspecialchars(json_encode($inv, JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') ?>)' title="Clic para leer la reseña completa en la ficha del investigador" style="background: #f8fafc; border: 1px solid rgba(80, 89, 132, 0.16); border-left: 3.5px solid #505984; border-radius: 10px; padding: 0.75rem 0.95rem; cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='#f1f5f9';" onmouseout="this.style.background='#f8fafc';">
+                    <div onclick="abrirPerfilInvestigador(<?= (int)$inv['id'] ?>)" title="Clic para leer la reseña completa en la ficha del investigador" style="background: #f8fafc; border: 1px solid rgba(80, 89, 132, 0.16); border-left: 3.5px solid #505984; border-radius: 10px; padding: 0.75rem 0.95rem; cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='#f1f5f9';" onmouseout="this.style.background='#f8fafc';">
                         <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.3rem;">
                             <span style="font-size: 0.73rem; font-weight: 800; text-transform: uppercase; color: #505984; letter-spacing: 0.4px; display: inline-flex; align-items: center; gap: 0.35rem;">
                                 <i class="ph-bold ph-user-focus"></i> Acerca de mí
@@ -396,7 +396,7 @@ function abrirPerfilInvestigador(id) {
 
     let fotoModalUrl = String(inv.foto_perfil || '').trim();
     if (fotoModalUrl && !/^https?:\/\//i.test(fotoModalUrl) && !fotoModalUrl.startsWith('data:image/')) {
-        fotoModalUrl = fotoModalUrl.replace(/^\\\\+|\/+/g, '').replace(/^public\//i, '');
+        fotoModalUrl = fotoModalUrl.replace(/\\/g, '/').replace(/^\/+/, '').replace(/^public\//i, '');
     }
     const avatarModalHtml = fotoModalUrl
         ? `<img src="${escPerfil(fotoModalUrl)}" alt="${escPerfil(inv.nombre_completo)}" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><span style="display:none; width:100%; height:100%; align-items:center; justify-content:center;">${iniciales}</span>`

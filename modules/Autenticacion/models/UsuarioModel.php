@@ -22,7 +22,7 @@ class UsuarioModel {
 
         // Quitamos el filtro de 'activo' para poder saber el estado real de la cuenta
         return $this->qb->tabla('usuarios u')
-            ->select('u.id, u.cedula, u.nombre_completo, u.email, u.contrasena, u.activo, u.estado_registro, r.nombre AS nombre_rol, p.nivel_privilegio')
+            ->select('u.id, u.cedula, u.nombre_completo, u.email, u.contrasena, u.activo, u.estado_registro, u.foto_perfil, r.nombre AS nombre_rol, p.nivel_privilegio')
             ->join('roles r', 'u.id_rol = r.id')
             ->join('privilegios p', 'r.privilegio_id = p.privilegio_id')
             ->whereRaw('(u.cedula = ? OR u.cedula = ? OR u.cedula = ? OR u.cedula = ?)', [$cedulaTrim, $soloDigitos, $conPrefijo, $conPrefijoE]) 

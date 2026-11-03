@@ -43,7 +43,7 @@ $slUsuarioCorto = preg_replace('/[^a-z0-9]+/', '', strtolower(@iconv('UTF-8', 'A
         <div class="sl-hero-inner">
             <div>
                 <span class="sl-kicker">// MACRO MÓDULO · LÍNEAS DE INVESTIGACIÓN</span>
-                <h1 class="sl-glitch" id="sec-lineas-title" style="cursor: pointer; user-select: none;" title="Toggle Hacker Mode" data-text="SEC::LINEAS">SEC::LINEAS</h1>
+                <h1 class="sl-glitch" id="sec-lineas-title" data-text="SEC::LINEAS">SEC::LINEAS</h1>
                 <p class="sl-sub">Seguridad perimetral de <b>Líneas</b>, <b>Investigaciones</b>, <b>Formación</b> y <b>Sector Productivo</b> · <?= sl_e($slTabActual['titulo']) ?></p>
             </div>
             <div class="sl-status">

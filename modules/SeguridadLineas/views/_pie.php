@@ -35,65 +35,10 @@ $slConfigJs = [
 
 <script>
     window.SEG_LINEAS = <?= json_encode($slConfigJs, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;
-
-                    // --- Easter Egg: Toggle Hacker Theme & Audio ---
-    document.addEventListener('DOMContentLoaded', () => {
-        const titleEl = document.getElementById('sec-lineas-title');
-        const appEl = document.getElementById('sec-lineas-app');
-        
-        // Elemento de audio con ruta relativa correcta
-        const easterEggAudio = new Audio('../modules/SeguridadLineas/assets/audio/cancion_hacker.mp3');
-        easterEggAudio.loop = true;
-        let autoplayBlocked = false;
-
-        // Guardar el tiempo actual continuamente para que al cambiar de pestaa no se pierda
-        easterEggAudio.addEventListener('timeupdate', () => {
-            if (!easterEggAudio.paused) {
-                sessionStorage.setItem('sl_hacker_time', easterEggAudio.currentTime);
-            }
-        });
-
-        // Al cargar la pgina, revisar si el modo est activo
-        if (localStorage.getItem('sl_theme') === 'hacker') {
-            appEl.classList.add('theme-hacker');
-            
-            // Restaurar el segundo exacto en el que iba la cancin
-            const savedTime = sessionStorage.getItem('sl_hacker_time');
-            if (savedTime) {
-                easterEggAudio.currentTime = parseFloat(savedTime);
-            }
-
-            easterEggAudio.play().catch(e => { 
-                autoplayBlocked = true;
-                console.log('El autoplay fue bloqueado por el navegador tras recargar la pgina. Haz clic en cualquier parte para reanudar la cancin.'); 
-            });
-        }
-
-        // Si el autoplay se bloque al cambiar de pestaa, reanudar al primer clic en la pantalla
-        document.body.addEventListener('click', () => {
-            if (autoplayBlocked && localStorage.getItem('sl_theme') === 'hacker') {
-                easterEggAudio.play().catch(e => {});
-                autoplayBlocked = false;
-            }
-        });
-
-        if (titleEl && appEl) {
-            titleEl.addEventListener('click', () => {
-                appEl.classList.toggle('theme-hacker');
-                if (appEl.classList.contains('theme-hacker')) {
-                    localStorage.setItem('sl_theme', 'hacker');
-                    easterEggAudio.currentTime = 0; // Al activarlo manualmente, empieza de cero
-                    easterEggAudio.play().catch(e => { console.error('Error de audio:', e); }); window.dispatchEvent(new Event('resize'));
-                } else {
-                    localStorage.removeItem('sl_theme');
-                    sessionStorage.removeItem('sl_hacker_time');
-                    easterEggAudio.pause();
-                    easterEggAudio.currentTime = 0;
-                    console.log('Audio pausado y modo desactivado.');
-                }
-            });
-        }
-    });
+    try {
+        localStorage.removeItem('sl_theme');
+        sessionStorage.removeItem('sl_hacker_time');
+    } catch (e) {}
 </script>
 
 

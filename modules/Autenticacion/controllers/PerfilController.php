@@ -66,6 +66,14 @@ class PerfilController {
             $datosCompletos['iniciales'] .= strtoupper(substr($partesNombre[1], 0, 1));
         }
 
+        // Asegurar que la foto de perfil local esté en formato .webp y sincronizada en sesión para el widget del header
+        $fotoActualDashboard = trim((string)($datosCompletos['foto_perfil'] ?? ''));
+        if ($fotoActualDashboard !== '' && !preg_match('#^https?://#i', $fotoActualDashboard) && !str_starts_with($fotoActualDashboard, 'data:image/')) {
+            $fotoActualDashboard = $this->asegurarFotoLocalWebp($userId, $fotoActualDashboard, $datosCompletos);
+            $datosCompletos['foto_perfil'] = $fotoActualDashboard;
+        }
+        $_SESSION['foto_perfil'] = $fotoActualDashboard;
+
         // 3. Información del entorno de sesión actual
         $ipActual = RateLimiter::obtenerIPCliente();
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'Desconocido';
@@ -342,12 +350,25 @@ class PerfilController {
             if (!is_dir($uploadDir)) {
                 @mkdir($uploadDir, 0775, true);
             }
-            $ext = $allowedMimes[$mime];
-            $fileName = 'perfil_u' . $userId . '_' . time() . '.' . $ext;
-            $destPath = $uploadDir . '/' . $fileName;
-            if (@move_uploaded_file($tmpFile, $destPath)) {
-                $nuevaFoto = 'public/uploads/perfiles/' . $fileName;
-                $cambiosRealizados[] = "foto de perfil";
+            $baseName = 'perfil_u' . $userId . '_' . time();
+            if (function_exists('imagewebp')) {
+                $fileName = $baseName . '.webp';
+                $destPath = $uploadDir . '/' . $fileName;
+                if ($this->convertirImagenAWebp($tmpFile, $destPath, $mime, 85)) {
+                    $nuevaFoto = 'public/uploads/perfiles/' . $fileName;
+                    $cambiosRealizados[] = "foto de perfil (WebP)";
+                } elseif (@move_uploaded_file($tmpFile, $uploadDir . '/' . $baseName . '.' . $allowedMimes[$mime])) {
+                    $nuevaFoto = 'public/uploads/perfiles/' . $baseName . '.' . $allowedMimes[$mime];
+                    $cambiosRealizados[] = "foto de perfil";
+                }
+            } else {
+                $ext = $allowedMimes[$mime];
+                $fileName = $baseName . '.' . $ext;
+                $destPath = $uploadDir . '/' . $fileName;
+                if (@move_uploaded_file($tmpFile, $destPath)) {
+                    $nuevaFoto = 'public/uploads/perfiles/' . $fileName;
+                    $cambiosRealizados[] = "foto de perfil";
+                }
             }
         } elseif (isset($_POST['foto_perfil_url'])) {
             $urlInput = trim((string)$_POST['foto_perfil_url']);
@@ -402,6 +423,7 @@ class PerfilController {
                 $sitioWebRaw !== '' ? $sitioWebRaw : null,
                 $gradoAcademicoRaw !== '' ? $gradoAcademicoRaw : null
             );
+            $_SESSION['foto_perfil'] = $nuevaFoto;
             if ($orcidClean !== trim((string)($datosActuales['orcid'] ?? ''))) {
                 $cambiosRealizados[] = "ORCID";
             }
@@ -497,6 +519,60 @@ class PerfilController {
         $_SESSION['perfil_exito'] = "Hemos enviado un enlace de confirmación a tu correo: {$email}. Revisa tu bandeja de entrada o carpeta de Spam.";
         header("Location: perfil");
         exit;
+    }
+
+    private function convertirImagenAWebp(string $origen, string $destino, string $mime, int $calidad = 85): bool {
+        if (!function_exists('imagewebp')) {
+            return false;
+        }
+        $img = match ($mime) {
+            'image/jpeg' => @imagecreatefromjpeg($origen),
+            'image/png'  => @imagecreatefrompng($origen),
+            'image/webp' => @imagecreatefromwebp($origen),
+            'image/gif'  => @imagecreatefromgif($origen),
+            default      => false,
+        };
+        if (!$img) {
+            return false;
+        }
+        $w = imagesx($img);
+        $h = imagesy($img);
+        $canvas = imagecreatetruecolor($w, $h);
+        $white = imagecolorallocate($canvas, 255, 255, 255);
+        imagefill($canvas, 0, 0, $white);
+        imagecopy($canvas, $img, 0, 0, 0, 0, $w, $h);
+        imagedestroy($img);
+        $ok = @imagewebp($canvas, $destino, $calidad);
+        imagedestroy($canvas);
+        return (bool)$ok;
+    }
+
+    private function asegurarFotoLocalWebp(int $userId, string $rutaRelativa, array $datosActuales): string {
+        if (str_ends_with(strtolower($rutaRelativa), '.webp') || !function_exists('imagewebp')) {
+            return $rutaRelativa;
+        }
+        $rootDir = defined('BASE_PATH') ? rtrim(BASE_PATH, '/\\') : dirname(__DIR__, 3);
+        $cleanRel = ltrim(str_replace('\\', '/', $rutaRelativa), '/');
+        $absPath = $rootDir . '/' . (str_starts_with($cleanRel, 'public/') ? $cleanRel : 'public/' . $cleanRel);
+        if (!is_file($absPath)) {
+            return $rutaRelativa;
+        }
+        $mime = @mime_content_type($absPath) ?: '';
+        $webpAbs = preg_replace('/\.(jpe?g|png|gif)$/i', '.webp', $absPath);
+        $webpRel = preg_replace('/\.(jpe?g|png|gif)$/i', '.webp', $cleanRel);
+        if ($webpAbs && $webpRel && $webpAbs !== $absPath) {
+            if (is_file($webpAbs) || $this->convertirImagenAWebp($absPath, $webpAbs, $mime, 85)) {
+                $this->usuarioModel->actualizarPerfilAcademico(
+                    $userId,
+                    $webpRel,
+                    $datosActuales['orcid'] ?? null,
+                    $datosActuales['sitio_web'] ?? null,
+                    $datosActuales['grado_academico'] ?? null
+                );
+                return $webpRel;
+            }
+        }
+        return $rutaRelativa;
     }
 
     private function enviarTokenVerificacion(int $userId, string $email, string $nombre): void {

@@ -2,7 +2,7 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://cdn.tailwindcss.com?plugins=container-queries"></script>
 <script>
     tailwind.config = {
       corePlugins: {
@@ -72,9 +72,23 @@
 .oportunidades-module * { box-sizing: border-box; }
 .oportunidades-module *, .oportunidades-module ::before, .oportunidades-module ::after { border-width: 0; border-style: solid; border-color: #e2e8f0; }
 :where(.oportunidades-module) input, :where(.oportunidades-module) select { font-family: inherit; font-size: 100%; line-height: 1.15; margin: 0; border: 1px solid var(--color-borde); border-radius: 4px; padding: 0.5rem; }
+:where(.oportunidades-module) #search-hero { border: none !important; padding: 0 !important; background: transparent !important; box-shadow: none !important; }
 :where(.oportunidades-module) button { background-color: transparent; border: none; padding: 0; cursor: pointer; }
 .oportunidades-module h1, .oportunidades-module h2, .oportunidades-module h3 { margin: 0; font-weight: inherit; }
 .oportunidades-module p { margin: 0; }
+/* Blindaje del buscador global del header frente a resets externos */
+.main-header .search-input {
+    background-color: rgba(var(--blanco-puro-rgb), 0.05) !important;
+    border: 1px solid rgba(var(--negro-rgb), 0.1) !important;
+    border-radius: var(--radius-lg) !important;
+    padding: 10px 16px 10px 40px !important;
+}
+@media (max-width: 768px) {
+    .main-header .search-input,
+    .main-header .search-input:focus {
+        padding: 6px 14px 6px 36px !important;
+    }
+}
 </style>
 
 <div class="oportunidades-module" style="background-color: var(--color-fondo);">
@@ -268,7 +282,7 @@
 <!-- Controls & Scope Header Bar -->
 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-surface-container-highest pb-3">
 <div class="flex items-center gap-2">
-<span class="font-body-md font-semibold text-on-surface"><span id="contador-proyectos-sub"><?= count($oportunidades) ?></span> Proyectos Disponibles para Postulación>
+<span class="font-body-md font-semibold text-on-surface"><span id="contador-proyectos-sub"><?= count($oportunidades) ?></span> Proyectos Disponibles para Postulación</span>
 <span class="text-outline-variant font-meta-code">•</span>
 <span class="font-meta-code text-meta-code text-outline">Listado Completo</span>
 </div>

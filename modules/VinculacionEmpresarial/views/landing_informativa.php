@@ -198,7 +198,7 @@ $segDataPropuesta = CaptchaService::generarCamposSeguridad();
 
                 <div class="ve-form-group ve-captcha-row" style="margin-top: 1.5rem;">
                     <label class="ve-form-label" style="width:100%;">Seguridad: ¿Cuánto es?</label>
-                    <img src="?ruta=captcha-imagen&_t=<?= time() ?>" alt="Captcha" id="ve-captcha-img" onclick="this.src='?ruta=captcha-imagen&_t='+Date.now()">
+                    <img src="?ruta=captcha-imagen&_t=<?= time() ?>" alt="Captcha" id="ve-captcha-img" loading="lazy" decoding="async" onclick="this.src='?ruta=captcha-imagen&_t='+Date.now()">
                     <input type="number" name="captcha_ans" class="ve-input" required placeholder="?" autocomplete="off" style="width: 100px;">
                     <span style="font-size:0.8rem; color:#64748b;">(Clic en la imagen para recargar)</span>
                 </div>

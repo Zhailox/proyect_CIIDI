@@ -99,7 +99,7 @@ class InvestigacionController {
 
     /** Procesar postulación de estudiante (autenticado, privilegio <= 10) */
     public function procesarPostulacion(): void {
-        Auth::requierePrivilegioMinimo(10, 'crear', 'Investigaciones');
+        Auth::requierePrivilegioMinimo(10, 'Investigaciones');
         $user = Auth::usuario();
 
         $id_inv     = (int)($_POST['id_investigacion'] ?? 0);

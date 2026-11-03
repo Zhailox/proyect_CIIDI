@@ -11,8 +11,8 @@
     
     display: flex;
     flex-direction: column;
-    margin: -2.5rem; 
-    width: calc(100% + 5rem);
+    margin: -1.5rem -2rem;
+    width: calc(100% + 4rem);
     background-color: var(--ve-blanco);
     overflow-x: hidden;
 }
@@ -32,7 +32,7 @@
         135deg, 
         rgba(18, 26, 62, 0.9) 0%, 
         rgba(80, 89, 132, 0.75) 100% 
-    ), url('../img/hero_graduacion.jpg') center/cover no-repeat fixed;
+    ), url('../img/hero_graduacion.jpg') center/cover no-repeat;
 }
 
 .ve-hero-content {
@@ -830,3 +830,89 @@
     color: #ffffff;
 }
 html { scroll-behavior: smooth; }
+
+/* =========================================
+   RESPONSIVIDAD MÓVIL Y TABLET (SECTOR PRODUCTIVO)
+   ========================================= */
+@media (max-width: 768px) {
+    .ve-wrapper {
+        margin: -0.85rem !important;
+        width: calc(100% + 1.7rem) !important;
+    }
+
+    .ve-hero {
+        min-height: auto;
+        padding: 3rem 1.25rem 5rem;
+        background-attachment: scroll;
+    }
+
+    .ve-hero-content h1 {
+        font-size: 1.85rem;
+        line-height: 1.25;
+        margin-bottom: 1rem;
+    }
+
+    .ve-hero-content p {
+        font-size: 0.98rem;
+        line-height: 1.55;
+    }
+
+    .ve-wave-bottom svg {
+        height: 45px;
+    }
+
+    .ve-marquee-section {
+        padding: 2rem 1rem;
+    }
+
+    .ve-marquee-title {
+        font-size: 0.95rem;
+        letter-spacing: 1px;
+        margin-bottom: 1.25rem;
+    }
+
+    .ve-marquee-container::before,
+    .ve-marquee-container::after {
+        width: 28px;
+    }
+
+    .ve-section {
+        padding: 3rem 1.15rem;
+    }
+
+    .ve-steps-title {
+        font-size: 1.55rem;
+    }
+
+    .ve-steps-subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
+    }
+
+    .ve-steps-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    .ve-step-card {
+        padding: 1.75rem 1.35rem;
+    }
+
+    .ve-form-container {
+        padding: 1.75rem 1.15rem;
+    }
+
+    .ve-form-container h2 {
+        font-size: 1.4rem;
+    }
+
+    .ve-form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .ve-btn-submit {
+        padding: 0.95rem 1rem;
+        font-size: 0.98rem;
+    }
+}

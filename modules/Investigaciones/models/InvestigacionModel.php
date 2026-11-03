@@ -131,6 +131,7 @@ class InvestigacionModel {
                 i.titulo, i.planteamiento_problema, i.objetivo_general,
                 i.cupos_disponibles, i.estado, i.fecha_creacion,
                 COALESCE(u.nombre_completo, 'Sin responsable asignado') AS profesor,
+                u.foto_perfil AS profesor_foto,
                 COALESCE(
                     NULLIF((SELECT string_agg(l.nombre, ', ') FROM public.investigaciones_lineas il JOIN public.lineas_investigacion l ON il.id_linea = l.id WHERE il.id_investigacion = i.id), ''),
                     (SELECT l2.nombre FROM public.lineas_investigacion l2 WHERE l2.id = i.id_linea),
@@ -184,6 +185,7 @@ class InvestigacionModel {
             SELECT
                 i.*,
                 COALESCE(u.nombre_completo, 'Sin responsable asignado') AS profesor,
+                u.foto_perfil AS profesor_foto,
                 COALESCE(
                     NULLIF((SELECT string_agg(l.nombre, ', ') FROM public.investigaciones_lineas il JOIN public.lineas_investigacion l ON il.id_linea = l.id WHERE il.id_investigacion = i.id), ''),
                     (SELECT l2.nombre FROM public.lineas_investigacion l2 WHERE l2.id = i.id_linea),
@@ -213,6 +215,7 @@ class InvestigacionModel {
             SELECT 
                 i.*, 
                 u.nombre_completo AS profesor,
+                u.foto_perfil AS profesor_foto,
                 (SELECT string_agg(l.nombre, ', ') FROM public.investigaciones_lineas il JOIN public.lineas_investigacion l ON il.id_linea = l.id WHERE il.id_investigacion = i.id) AS linea_nombre,
                 (SELECT json_agg(il.id_linea) FROM public.investigaciones_lineas il WHERE il.id_investigacion = i.id) AS lineas_ids,
                 (SELECT json_agg(idd.id_dimension) FROM public.investigaciones_dimensiones idd WHERE idd.id_investigacion = i.id) AS dimensiones_ids

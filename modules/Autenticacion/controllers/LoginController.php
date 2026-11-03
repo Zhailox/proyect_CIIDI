@@ -366,6 +366,7 @@ class LoginController {
         $_SESSION['rol'] = $usuario['nombre_rol'];
         $_SESSION['usuario_rol'] = $usuario['nombre_rol'];
         $_SESSION['nivel_privilegio'] = (int) $usuario['nivel_privilegio'];
+        $_SESSION['foto_perfil'] = trim((string)($usuario['foto_perfil'] ?? ''));
 
         try {
             $this->usuarioModel->registrarAcceso($usuario['id']);

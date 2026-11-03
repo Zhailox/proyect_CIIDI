@@ -215,7 +215,8 @@
 }
 
 /* ── Botón primario — paleta institucional ── */
-.inv-btn-primary {
+.inv-btn-primary,
+.inv-btn-create {
     background: #505984 !important;
     color: #ffffff !important;
     padding: 0.8rem 1.5rem;
@@ -232,7 +233,8 @@
     font-size: 1rem;
 }
 
-.inv-btn-primary:hover {
+.inv-btn-primary:hover,
+.inv-btn-create:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 18px rgba(80, 89, 132, 0.4);
     background: #3C456A !important;

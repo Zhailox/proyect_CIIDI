@@ -229,6 +229,7 @@ $trayectoLabels = [
                                         "id" => (int)$inv["id"],
                                         "titulo" => (string)($inv["titulo"] ?? ""),
                                         "profesor" => (string)($inv["profesor"] ?? ""),
+                                        "profesor_foto" => (string)($inv["profesor_foto"] ?? ""),
                                         "linea" => (string)($inv["linea_nombre"] ?? ""),
                                         "estado" => (string)($inv["estado"] ?? ""),
                                         "trayecto" => $trayectoTexto,
@@ -430,6 +431,14 @@ function verDetalleInvestigacionAdmin(inv) {
         return d.innerHTML;
     };
 
+    let profFotoUrl = String(inv.profesor_foto || '').trim();
+    if (profFotoUrl && !/^https?:\/\//i.test(profFotoUrl) && !profFotoUrl.startsWith('data:image/')) {
+        profFotoUrl = profFotoUrl.replace(/\\/g, '/').replace(/^\/+/, '').replace(/^public\//i, '');
+    }
+    const profAvatarHtml = profFotoUrl
+        ? `<img src="${esc(profFotoUrl)}" alt="${esc(inv.profesor)}" style="width:24px; height:24px; border-radius:50%; object-fit:cover; vertical-align:middle; margin-right:0.3rem;" onerror="this.style.display='none';">`
+        : `<i class="ph-fill ph-chalkboard-teacher" style="color:#0369A1;"></i> `;
+
     overlay.innerHTML = `
         <div style="background:white; border-radius:20px; max-width:680px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px -12px rgba(0,0,0,0.35); border:1px solid #E2E8F0;">
             <div style="padding:1.5rem 2rem; border-bottom:1px solid #F1F5F9; display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; background:linear-gradient(135deg,#F8FAFC,#EFF6FF);">
@@ -450,7 +459,7 @@ function verDetalleInvestigacionAdmin(inv) {
                 <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; background:#F8FAFC; padding:1rem 1.25rem; border-radius:12px; border:1px solid #E2E8F0;">
                     <div>
                         <div style="font-size:0.75rem; text-transform:uppercase; color:#64748B; font-weight:700;">Docente Responsable</div>
-                        <div style="font-weight:700; color:#0F172A; margin-top:0.2rem;"><i class="ph-fill ph-chalkboard-teacher" style="color:#0369A1;"></i> ${esc(inv.profesor)}</div>
+                        <div style="font-weight:700; color:#0F172A; margin-top:0.2rem; display:flex; align-items:center; gap:0.25rem;">${profAvatarHtml}${esc(inv.profesor)}</div>
                     </div>
                     <div>
                         <div style="font-size:0.75rem; text-transform:uppercase; color:#64748B; font-weight:700;">Línea de Investigación</div>

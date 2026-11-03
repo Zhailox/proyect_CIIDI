@@ -81,7 +81,7 @@ $selectedDims     = $curso['dimensiones_ids'] ?? [];
         <div class="cur-flash cur-flash-error" style="border-radius:12px; margin-bottom:2rem;"><i class="ph-fill ph-warning-circle"></i> <?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
 
-    <form method="POST" action="<?= $accion_url ?>" id="form-curso" enctype="multipart/form-data" novalidate style="display:flex; flex-direction:column; gap:2rem;">
+    <form method="POST" action="<?= $accion_url ?>" id="form-curso" enctype="multipart/form-data"  style="display:flex; flex-direction:column; gap:2rem;">
         <?= $csrf_token ?? '' ?>
         <?php if ($es_editar): ?>
             <input type="hidden" name="id" value="<?= (int)$f_id ?>">
@@ -401,7 +401,7 @@ $selectedDims     = $curso['dimensiones_ids'] ?? [];
                     </label>
                     <div style="position:relative;">
                         <i class="ph-bold ph-link" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
-                        <input type="url" id="url_formulario_google" name="url_formulario_google" value="<?= $f_gform ?>" placeholder="Ej: https://docs.google.com/forms/d/e/.../viewform" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                        <input required type="url" id="url_formulario_google" name="url_formulario_google" value="<?= $f_gform ?>" placeholder="Ej: https://docs.google.com/forms/d/e/.../viewform" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
                     </div>
                     <small style="color:var(--cur-muted); display:block; margin-top:0.4rem;">Ingresa el enlace del formulario de Google exclusivo para las inscripciones de este curso.</small>
                 </div>

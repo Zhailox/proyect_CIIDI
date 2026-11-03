@@ -184,13 +184,14 @@ $endpointRestUrl = $scheme . '://' . $host . $scriptDir . '/?ruta=api-cursos-ext
                             <i class="ph-bold ph-plugs-connected" style="color:#059669;"></i> Endpoint Público API REST del CIIDI (Consumo GET desde el Servidor Externo):
                         </strong>
                         <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-                            <a href="?ruta=api-cursos-externo&recurso=todo" target="_blank" style="background:#fff; color:#059669; border:1px solid #A7F3D0; padding:0.35rem 0.8rem; border-radius:8px; font-size:0.8rem; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:0.35rem;">
+                            <?php $apiKeyQuery = !empty($apiExt['api_key']) ? '&api_key=' . urlencode((string)$apiExt['api_key']) : ''; ?>
+                            <a href="?ruta=api-cursos-externo&recurso=todo<?= htmlspecialchars($apiKeyQuery) ?>" target="_blank" style="background:#fff; color:#059669; border:1px solid #A7F3D0; padding:0.35rem 0.8rem; border-radius:8px; font-size:0.8rem; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:0.35rem;">
                                 <i class="ph-bold ph-file-code"></i> Ver JSON Completo
                             </a>
-                            <a href="?ruta=api-cursos-externo&recurso=cursos" target="_blank" style="background:#fff; color:#4F46E5; border:1px solid #C7D2FE; padding:0.35rem 0.8rem; border-radius:8px; font-size:0.8rem; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:0.35rem;">
+                            <a href="?ruta=api-cursos-externo&recurso=cursos<?= htmlspecialchars($apiKeyQuery) ?>" target="_blank" style="background:#fff; color:#4F46E5; border:1px solid #C7D2FE; padding:0.35rem 0.8rem; border-radius:8px; font-size:0.8rem; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:0.35rem;">
                                 <i class="ph-bold ph-graduation-cap"></i> Solo Cursos
                             </a>
-                            <a href="?ruta=api-cursos-externo&recurso=investigadores" target="_blank" style="background:#fff; color:#0284C7; border:1px solid #BAE6FD; padding:0.35rem 0.8rem; border-radius:8px; font-size:0.8rem; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:0.35rem;">
+                            <a href="?ruta=api-cursos-externo&recurso=investigadores<?= htmlspecialchars($apiKeyQuery) ?>" target="_blank" style="background:#fff; color:#0284C7; border:1px solid #BAE6FD; padding:0.35rem 0.8rem; border-radius:8px; font-size:0.8rem; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:0.35rem;">
                                 <i class="ph-bold ph-users-three"></i> Solo Investigadores
                             </a>
                         </div>

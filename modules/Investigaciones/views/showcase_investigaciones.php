@@ -192,13 +192,30 @@ $misPostulaciones = $misPostulaciones ?? [];
                 
                 <div class="inv-card-content">
                     <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem;">
-                        <?php $nombreDocenteCard = $inv['profesor'] ?? $inv['tag_quien'] ?? 'Tutor'; ?>
+                        <?php
+                        $nombreDocenteCard = $inv['profesor'] ?? $inv['tag_quien'] ?? 'Tutor';
+                        $fotoDocenteRaw = trim((string)($inv['profesor_foto'] ?? ''));
+                        $fotoDocenteUrl = '';
+                        if ($fotoDocenteRaw !== '') {
+                            $fotoDocenteUrl = (preg_match('#^https?://#i', $fotoDocenteRaw) || str_starts_with($fotoDocenteRaw, 'data:image/'))
+                                ? $fotoDocenteRaw
+                                : ltrim(preg_replace('#^public/#i', '', str_replace('\\', '/', $fotoDocenteRaw)), '/');
+                        }
+                        ?>
                         <a href="?ruta=investigadores&q=<?= urlencode($nombreDocenteCard) ?>&ver_perfil=1<?= !empty($inv['id_profesor']) ? '&ver_id=' . (int)$inv['id_profesor'] : '' ?>"
-                           style="background: #F1F5F9; color:#475569; padding:0.2rem 0.6rem; border-radius:6px; font-size:0.75rem; font-weight:600; display:flex; align-items:center; gap:0.3rem; text-decoration:none; transition:all 0.2s;"
+                           style="background: #F1F5F9; color:#475569; padding:0.2rem 0.6rem; border-radius:6px; font-size:0.75rem; font-weight:600; display:flex; align-items:center; gap:0.35rem; text-decoration:none; transition:all 0.2s;"
                            onmouseover="this.style.background='#505984'; this.style.color='white';"
                            onmouseout="this.style.background='#F1F5F9'; this.style.color='#475569';"
                            title="Ver Perfil Público del Investigador/Docente">
-                            <i class="ph-fill ph-chalkboard-teacher"></i> <?= htmlspecialchars($nombreDocenteCard) ?>
+                            <?php if ($fotoDocenteUrl !== ''): ?>
+                                <img src="<?= htmlspecialchars($fotoDocenteUrl) ?>" alt="<?= htmlspecialchars($nombreDocenteCard) ?>"
+                                     style="width:18px; height:18px; border-radius:50%; object-fit:cover; flex-shrink:0;"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                                <i class="ph-fill ph-chalkboard-teacher" style="display:none;"></i>
+                            <?php else: ?>
+                                <i class="ph-fill ph-chalkboard-teacher"></i>
+                            <?php endif; ?>
+                            <?= htmlspecialchars($nombreDocenteCard) ?>
                         </a>
                         <span style="background: var(--inv-primary-light); color:var(--inv-primary); padding:0.2rem 0.6rem; border-radius:6px; font-size:0.75rem; font-weight:600; display:flex; align-items:center; gap:0.3rem;" title="Línea de Investigación">
                         <i class="ph-bold ph-git-branch"></i> <?= htmlspecialchars($inv['linea_nombre'] ?? '') ?>
@@ -458,6 +475,14 @@ function abrirDrawer(id) {
     // ─── Construcción del HTML del drawer ────────────────────────
     const trayLabel = trayectoLabels[inv.trayecto] || esc(inv.trayecto);
 
+    let fotoDocenteDrawer = String(inv.profesor_foto || '').trim();
+    if (fotoDocenteDrawer && !/^https?:\/\//i.test(fotoDocenteDrawer) && !fotoDocenteDrawer.startsWith('data:image/')) {
+        fotoDocenteDrawer = fotoDocenteDrawer.replace(/\\/g, '/').replace(/^\/+/, '').replace(/^public\//i, '');
+    }
+    const avatarDocenteDrawerHtml = fotoDocenteDrawer
+        ? `<img src="${esc(fotoDocenteDrawer)}" alt="${esc(inv.profesor || 'Docente')}" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><span style="display:none; width:100%; height:100%; align-items:center; justify-content:center;"><i class="ph-fill ph-chalkboard-teacher" style="color:white; font-size:1.1rem;"></i></span>`
+        : `<i class="ph-fill ph-chalkboard-teacher" style="color:white; font-size:1.1rem;"></i>`;
+
     document.getElementById('inv-drawer-content').innerHTML = `
         <!-- Imagen -->
         <div style="border-radius:14px; overflow:hidden; margin-bottom:1.5rem; height:200px; background:#F1F5F9;">
@@ -502,8 +527,8 @@ function abrirDrawer(id) {
         <!-- Docente -->
         <div style="display:flex; align-items:center; justify-content:space-between; gap:0.8rem; margin-bottom:1.5rem; padding:0.9rem 1rem; background:#F8FAFC; border-radius:12px; border:1px solid var(--inv-border);">
             <div style="display:flex; align-items:center; gap:0.8rem;">
-                <div style="width:40px; height:40px; background:#505984; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                    <i class="ph-fill ph-chalkboard-teacher" style="color:white; font-size:1.1rem;"></i>
+                <div style="width:42px; height:42px; background:#505984; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; border:2px solid rgba(80,89,132,0.2);">
+                    ${avatarDocenteDrawerHtml}
                 </div>
                 <div>
                     <div style="font-size:0.72rem; color:var(--inv-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Docente Responsable</div>

@@ -94,37 +94,42 @@ class VinculacionEmpresarialModule implements ModuleContract {
                 'metodo' => 'panel'
             ],
             'revisar-postulacion-pst' => [
-                'vista' => __DIR__ . '/controllers/ProfesorPSTController.php',
-                'metodo' => 'revisarPostulacion',
-                'oculto' => true
+                'controlador'      => 'ProfesorPSTController',
+                'controlador_path' => __DIR__ . '/controllers/ProfesorPSTController.php',
+                'metodo'           => 'revisarPostulacion',
+                'oculto'           => true
             ],
             'guardar-mi-perfil-pst' => [
-                'vista' => __DIR__ . '/controllers/ProfesorPSTController.php',
-                'metodo' => 'guardarMiPerfil',
-                'oculto' => true
+                'controlador'      => 'ProfesorPSTController',
+                'controlador_path' => __DIR__ . '/controllers/ProfesorPSTController.php',
+                'metodo'           => 'guardarMiPerfil',
+                'oculto'           => true
             ],
             'profesores-pst' => [
-                'vista'  => __DIR__ . '/views/profesores_pst.php',
-                'titulo' => 'Docentes PST',
-                'css'    => $css_modulo,
-                'controlador' => 'ProfesorPSTController',
+                'vista'            => __DIR__ . '/views/profesores_pst.php',
+                'titulo'           => 'Docentes PST',
+                'css'              => $css_modulo,
+                'controlador'      => 'ProfesorPSTController',
                 'controlador_path' => __DIR__ . '/controllers/ProfesorPSTController.php',
-                'metodo' => 'gestionProfesores'
+                'metodo'           => 'gestionProfesores'
             ],
             'guardar-profesor-pst' => [
-                'vista' => __DIR__ . '/controllers/ProfesorPSTController.php',
-                'metodo' => 'guardarProfesor',
-                'oculto' => true
+                'controlador'      => 'ProfesorPSTController',
+                'controlador_path' => __DIR__ . '/controllers/ProfesorPSTController.php',
+                'metodo'           => 'guardarProfesor',
+                'oculto'           => true
             ],
             'resolver-registro-docente' => [
-                'vista' => __DIR__ . '/controllers/ProfesorPSTController.php',
-                'metodo' => 'resolverRegistro',
-                'oculto' => true
+                'controlador'      => 'ProfesorPSTController',
+                'controlador_path' => __DIR__ . '/controllers/ProfesorPSTController.php',
+                'metodo'           => 'resolverRegistro',
+                'oculto'           => true
             ],
             'resolver-solicitud-pst' => [
-                'vista' => __DIR__ . '/controllers/ProfesorPSTController.php',
-                'metodo' => 'resolverSolicitudAcreditacion',
-                'oculto' => true
+                'controlador'      => 'ProfesorPSTController',
+                'controlador_path' => __DIR__ . '/controllers/ProfesorPSTController.php',
+                'metodo'           => 'resolverSolicitudAcreditacion',
+                'oculto'           => true
             ]
         ];
     }

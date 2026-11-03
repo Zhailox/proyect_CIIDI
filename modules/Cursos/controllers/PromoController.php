@@ -664,8 +664,14 @@ class PromoController {
             exit;
         }
 
-        if (!empty($apiCfg['requiere_api_key_lectura'])) {
-            $expectedKey = (string)($apiCfg['api_key'] ?? '');
+        $usuarioSesion = Auth::usuario();
+        $esSesionAdmin = !empty($usuarioSesion['id']) && $this->esAdminTotalCursos($usuarioSesion);
+
+        if (!empty($apiCfg['requiere_api_key_lectura']) && !$esSesionAdmin) {
+            $envKey = getenv('CIIDI_SYNC_API_KEY');
+            $expectedKey = ($envKey !== false && trim((string)$envKey) !== '')
+                ? trim((string)$envKey)
+                : (string)($apiCfg['api_key'] ?? '');
             $providedKey = (string)($_SERVER['HTTP_X_CIIDI_API_KEY'] ?? ($_GET['api_key'] ?? ''));
             if ($expectedKey !== '' && !hash_equals($expectedKey, $providedKey)) {
                 http_response_code(401);
