@@ -5,8 +5,8 @@
         "descripcion": "Elimina archivos temporales en storage\/tmp\/, cachés expiradas y residuos de descargas.",
         "expresion_cron": "0 3 * * *",
         "estado": "activo",
-        "ultima_ejecucion": "2026-10-21 19:30:45",
-        "resultado_ultimo": "ÉXITO (13ms): Limpieza completada. Depurados 1 archivos temporales y cachés.",
+        "ultima_ejecucion": "2026-11-03 10:32:37",
+        "resultado_ultimo": "ÉXITO (4.54ms): Limpieza completada. Depurados 1 archivos temporales y cachés.",
         "script": "limpiarTemporales"
     },
     "backup_automatico_medianoche": {
@@ -15,8 +15,8 @@
         "descripcion": "Genera un backup completo comprimido (.sql.gz) de la base de datos y purga respaldos antiguos.",
         "expresion_cron": "0 0 * * *",
         "estado": "activo",
-        "ultima_ejecucion": "2026-10-21 19:30:49",
-        "resultado_ultimo": "ÉXITO (3215.83ms): Respaldo generado con éxito: auto_cron_backup_2026-10-21_19-30-46.sql.gz",
+        "ultima_ejecucion": "2026-11-04 00:44:46",
+        "resultado_ultimo": "ÉXITO (1742.4ms): Respaldo generado con éxito: auto_cron_backup_2026-11-04_00-44-44.sql.gz",
         "script": "ejecutarBackupAutomatico"
     },
     "purga_logs_viejos": {
@@ -40,21 +40,7 @@
         "archivo_script": "script_tarea_1790301553_528.php",
         "timeout_segundos": 60,
         "estado": "activo",
-        "ultima_ejecucion": "2026-10-21 19:30:49",
-        "resultado_ultimo": "ERROR (0.75ms): El archivo de script 'script_tarea_1790301553_528.php' no existe en storage\/scheduler\/scripts\/."
-    },
-    "tarea_1790660917_352": {
-        "id": "tarea_1790660917_352",
-        "nombre": "hola",
-        "descripcion": "",
-        "expresion_cron": "1 * * * *",
-        "tipo_ejecucion": "script_archivo",
-        "script": "limpiarTemporales",
-        "comando_custom": "",
-        "archivo_script": "script_tarea_1790660917_352.php",
-        "timeout_segundos": 60,
-        "estado": "activo",
-        "ultima_ejecucion": "2026-10-21 19:30:49",
-        "resultado_ultimo": "ERROR (0.12ms): El archivo de script 'script_tarea_1790660917_352.php' no existe en storage\/scheduler\/scripts\/."
+        "ultima_ejecucion": "2026-11-04 02:33:01",
+        "resultado_ultimo": "ÉXITO (358.05ms): Comando ejecutado con éxito (Código 0)."
     }
 }

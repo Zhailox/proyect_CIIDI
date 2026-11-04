@@ -1,5 +1,5 @@
 .login {
     color: #ffffff;
     text-align: center;
-    background-color:rgb(56, 43, 241);
+    background-color: var(--color-secundario, #505984);
 }

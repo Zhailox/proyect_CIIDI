@@ -70,6 +70,12 @@
                     </ul>
                 </div>
 
+                <!-- PERFIL PST: TRAYECTOS / TRIMESTRES QUE DICTA -->
+                <?php
+                $pstIdPrefijo = 'docpst';
+                include __DIR__ . '/partials/selector_pst.php';
+                ?>
+
                 <!-- SEGURIDAD 2: CAPTCHA VISUAL DISTORSIONADO GD -->
                 <div class="recovery-flat-group" style="margin-bottom: 1.25rem;">
                     <label for="captcha_ans">Verificación Anti-Bot:</label>
@@ -148,14 +154,14 @@ function evaluarFortalezaClave(val) {
         label.style.color = '#ef4444';
     } else if (score === 2) {
         bar.style.width = '50%';
-        bar.style.backgroundColor = '#f59e0b';
+        bar.style.backgroundColor = '#7090CB';
         label.textContent = 'Aceptable';
-        label.style.color = '#d97706';
+        label.style.color = '#505984';
     } else if (score === 3) {
         bar.style.width = '75%';
-        bar.style.backgroundColor = '#3b82f6';
+        bar.style.backgroundColor = '#505984';
         label.textContent = 'Segura';
-        label.style.color = '#2563eb';
+        label.style.color = '#3C456A';
     } else if (score === 4) {
         bar.style.width = '100%';
         bar.style.backgroundColor = '#10b981';

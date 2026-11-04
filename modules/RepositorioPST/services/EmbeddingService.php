@@ -19,8 +19,11 @@ require_once __DIR__ . '/ConfigService.php';
 
 class EmbeddingService {
 
-    /** @var \OnnxRuntime\InferenceSession|\OnnxRuntime\Model Sesión ONNX activa */
-    private $session;
+    /** @var \OnnxRuntime\InferenceSession|\OnnxRuntime\Model|null Sesión ONNX activa */
+    private $session = null;
+
+    /** @var bool Si el proceso actual (ej. Apache sin reiniciar) no tiene FFI cargado en memoria, delega a PHP CLI */
+    private bool $usarPuenteCli = false;
 
     /** @var TokenizerService Tokenizer activo */
     private TokenizerService $tokenizer;
@@ -64,6 +67,17 @@ class EmbeddingService {
         if (class_exists('\OnnxRuntime\Vendor')) {
             $dest = \OnnxRuntime\Vendor::defaultLib();
             if (!file_exists($dest)) {
+                try {
+                    @ini_set('memory_limit', '1G');
+                    @set_time_limit(300);
+                    ob_start();
+                    \OnnxRuntime\Vendor::check();
+                    ob_end_clean();
+                } catch (\Throwable $e) {
+                    @ob_end_clean();
+                }
+            }
+            if (!file_exists($dest)) {
                 throw new RuntimeException("Librería de ONNX Runtime no encontrada en: {$dest}");
             }
         }
@@ -93,6 +107,7 @@ class EmbeddingService {
             $cached                = self::$runtimeCache[$cacheKey];
             $this->tokenizer       = $cached['tokenizer'];
             $this->session         = $cached['session'];
+            $this->usarPuenteCli   = $cached['usarPuenteCli'] ?? false;
             $this->modelInputNames = $cached['inputs'];
             $this->dimension       = $cached['dimension'];
             return;
@@ -104,29 +119,43 @@ class EmbeddingService {
         $this->tokenizer = new TokenizerService($this->vocabPath, $this->maxTokens);
 
         // ──────────────────────────────────────────────────────────────
-        // 4. Cargar el modelo ONNX
+        // 4. Cargar el modelo ONNX (directo vía FFI o puente CLI si Apache aún no recargó FFI)
         // ──────────────────────────────────────────────────────────────
-        if (class_exists('\OnnxRuntime\InferenceSession')) {
-            $this->session = new \OnnxRuntime\InferenceSession($this->modelPath);
-        } elseif (class_exists('\OnnxRuntime\Model')) {
-            $this->session = new \OnnxRuntime\Model($this->modelPath);
+        $ffiDisponible = class_exists('FFI');
+        if ($ffiDisponible) {
+            try {
+                if (class_exists('\OnnxRuntime\InferenceSession')) {
+                    $this->session = new \OnnxRuntime\InferenceSession($this->modelPath);
+                } elseif (class_exists('\OnnxRuntime\Model')) {
+                    $this->session = new \OnnxRuntime\Model($this->modelPath);
+                } else {
+                    throw new RuntimeException(
+                        "No se encontró ninguna clase ONNX Runtime compatible. Verifica que ankane/onnxruntime esté instalado."
+                    );
+                }
+                $this->modelInputNames = $this->detectarInputsModelo();
+                $this->dimension       = $this->detectarDimension();
+            } catch (\Throwable $e) {
+                if (stripos($e->getMessage(), 'FFI') !== false) {
+                    $this->usarPuenteCli   = true;
+                    $this->modelInputNames = ['input_ids', 'attention_mask'];
+                    $this->dimension       = 384;
+                } else {
+                    throw $e;
+                }
+            }
         } else {
-            throw new RuntimeException(
-                "No se encontró ninguna clase ONNX Runtime compatible. Verifica que ankane/onnxruntime esté instalado."
-            );
+            $this->usarPuenteCli   = true;
+            $this->modelInputNames = ['input_ids', 'attention_mask'];
+            $this->dimension       = 384;
         }
 
-        // ──────────────────────────────────────────────────────────────
-        // 5. Detectar los nombres de inputs y dimensión del modelo
-        // ──────────────────────────────────────────────────────────────
-        $this->modelInputNames = $this->detectarInputsModelo();
-        $this->dimension       = $this->detectarDimension();
-
         self::$runtimeCache[$cacheKey] = [
-            'tokenizer' => $this->tokenizer,
-            'session'   => $this->session,
-            'inputs'    => $this->modelInputNames,
-            'dimension' => $this->dimension,
+            'tokenizer'     => $this->tokenizer,
+            'session'       => $this->session,
+            'usarPuenteCli' => $this->usarPuenteCli,
+            'inputs'        => $this->modelInputNames,
+            'dimension'     => $this->dimension,
         ];
     }
 
@@ -207,6 +236,10 @@ class EmbeddingService {
             throw new InvalidArgumentException("El texto de entrada está vacío después del preprocesamiento.");
         }
 
+        if ($this->usarPuenteCli || $this->session === null) {
+            return $this->generarEmbeddingViaCli($texto);
+        }
+
         $tokens  = $this->tokenizer->encode($texto);
         $feeds   = $this->construirFeeds($tokens);
         $outputs = $this->session->run(null, $feeds);
@@ -220,6 +253,75 @@ class EmbeddingService {
         }
 
         return $this->normalizarL2($embedding);
+    }
+
+    /**
+     * Ejecuta la inferencia ONNX en un subproceso PHP CLI con FFI habilitado cuando Apache aún no ha sido reiniciado.
+     */
+    private function generarEmbeddingViaCli(string $texto): array {
+        $basePath = defined('BASE_PATH') ? rtrim(BASE_PATH, '/\\') : dirname(__DIR__, 3);
+        $phpBin   = $this->resolverPhpCliBinario();
+        $autoload = $basePath . '/vendor/autoload.php';
+        $selfFile = __FILE__;
+
+        $inlineCode = 'require ' . var_export($autoload, true) . '; '
+            . 'require_once ' . var_export($selfFile, true) . '; '
+            . '$input = stream_get_contents(STDIN); '
+            . '$svc = new EmbeddingService(' . var_export($this->modelPath, true) . ', ' . var_export($this->vocabPath, true) . ', ' . (int)$this->maxTokens . '); '
+            . 'echo json_encode($svc->generarEmbedding($input));';
+
+        $cmd = escapeshellarg($phpBin)
+            . ' -d ffi.enable=true -d memory_limit=1G -d display_errors=0 -r '
+            . escapeshellarg($inlineCode);
+
+        $descriptors = [
+            0 => ['pipe', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+        $proc = @proc_open($cmd, $descriptors, $pipes, $basePath);
+        if (!is_resource($proc)) {
+            throw new RuntimeException("No se pudo iniciar PHP CLI para inferencia ONNX.");
+        }
+
+        fwrite($pipes[0], $texto);
+        fclose($pipes[0]);
+        $stdout = (string)stream_get_contents($pipes[1]);
+        fclose($pipes[1]);
+        $stderr = (string)stream_get_contents($pipes[2]);
+        fclose($pipes[2]);
+        $exitCode = proc_close($proc);
+
+        $posBracket = strpos($stdout, '[');
+        if ($posBracket !== false) {
+            $stdout = substr($stdout, $posBracket);
+        }
+        $decoded = @json_decode(trim($stdout), true);
+        if (!is_array($decoded) || empty($decoded)) {
+            throw new RuntimeException("Error en puente CLI ONNX (código {$exitCode}): " . trim($stderr ?: $stdout));
+        }
+        return $decoded;
+    }
+
+    private function resolverPhpCliBinario(): string {
+        if (defined('PHP_BINARY') && PHP_BINARY !== '' && stripos(PHP_BINARY, 'httpd') === false && stripos(PHP_BINARY, 'apache') === false) {
+            if (file_exists(PHP_BINARY)) {
+                return PHP_BINARY;
+            }
+        }
+        if (PHP_OS_FAMILY === 'Windows') {
+            $ver = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION . '.' . PHP_RELEASE_VERSION;
+            $candidato = "C:/wamp64/bin/php/php{$ver}/php.exe";
+            if (file_exists($candidato)) {
+                return $candidato;
+            }
+            $glob = glob('C:/wamp64/bin/php/php*/php.exe');
+            if (!empty($glob)) {
+                rsort($glob);
+                return $glob[0];
+            }
+        }
+        return 'php';
     }
 
     /**
@@ -332,6 +434,7 @@ class EmbeddingService {
             }
             $normaL2   = round(sqrt($sumaCuadrados), 4);
             $operativo = true;
+            $libNativaOk = true;
         } catch (\Throwable $e) {
             $operativo     = false;
             $mensajeEstado = $e->getMessage();

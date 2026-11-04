@@ -208,7 +208,7 @@
     <!-- Columna derecha: Investigaciones -->
     <aside class="li-col-right">
         <div class="cosmos-sidebar-card">
-            <div class="cosmos-sidebar-header">
+            <div class="cosmos-sidebar-header" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(80, 89, 132, 0.95)); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
                 <i class="ph-bold ph-chalkboard-teacher"></i>
                 <h3>Investigaciones Ofertadas</h3>
                 <span style="margin-left:auto;background:rgba(255,255,255,0.18);border-radius:50px;padding:2px 8px;font-size:0.7rem;font-weight:700;"><?= count($investigaciones) ?> Activas</span>
@@ -225,7 +225,7 @@
                         <div class="cosmos-oferta-accent-bar" style="background:<?= $inv['estado'] === 'Abierta' ? 'linear-gradient(180deg,#059669,#34d399)' : 'linear-gradient(180deg,#94a3b8,#cbd5e1)' ?>;"></div>
                         <div class="cosmos-oferta-content">
                             <span class="cosmos-oferta-badge" style="<?= $inv['estado'] === 'Abierta' ? '' : 'background:#f1f5f9;color:#64748b;' ?>">
-                                <?= $inv['estado'] === 'Abierta' ? 'Abierta · '.(int)$inv['cupos_disponibles'].' cupos' : 'Cerrada' ?>
+                                <?= $inv['estado'] === 'Abierta' ? 'Abierta &bull; '.(int)$inv['cupos_disponibles'].' cupos' : 'Cerrada' ?>
                             </span>
                             <h4 class="cosmos-oferta-title"><?= htmlspecialchars($inv['titulo']) ?></h4>
                             <div class="cosmos-oferta-meta">
@@ -244,6 +244,101 @@
                         </div>
                     </div>
                     <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="cosmos-sidebar-card" style="margin-top: 1.5rem;">
+            <div class="cosmos-sidebar-header" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(45, 55, 72, 0.95)); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                <i class="ph-bold ph-users-three"></i>
+                <h3>Investigadores y Docentes</h3>
+                <span style="margin-left:auto;background:rgba(255,255,255,0.18);border-radius:50px;padding:2px 8px;font-size:0.7rem;font-weight:700;"><?= count($profesores ?? []) ?></span>
+            </div>
+            <div class="cosmos-sidebar-body" style="padding: 1rem;">
+                <?php if (empty($profesores)): ?>
+                <div class="cosmos-sidebar-empty">
+                    <i class="ph-bold ph-users-slash"></i>
+                    <p>No hay investigadores ni docentes afiliados a esta línea.</p>
+                </div>
+                <?php else: ?>
+                    <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                        <?php foreach ($profesores as $prof):
+                            $pFotoRaw = trim((string)($prof['foto_perfil'] ?? ''));
+                            $pFotoUrl = '';
+                            if ($pFotoRaw !== '') {
+                                $pFotoUrl = (preg_match('#^https?://#i', $pFotoRaw) || str_starts_with($pFotoRaw, 'data:image/'))
+                                    ? $pFotoRaw
+                                    : ltrim(preg_replace('#^public/#i', '', str_replace('\\', '/', $pFotoRaw)), '/');
+                            }
+                            $pOrcidRaw = trim((string)($prof['orcid'] ?? ''));
+                            $pOrcidId = '';
+                            $pOrcidHref = '';
+                            if ($pOrcidRaw !== '' && preg_match('/(\d{4}-\d{4}-\d{4}-\d{3}[\dX])/i', $pOrcidRaw, $mPO)) {
+                                $pOrcidId = strtoupper($mPO[1]);
+                                $pOrcidHref = 'https://orcid.org/' . $pOrcidId;
+                            }
+                            $pSitioWeb = trim((string)($prof['sitio_web'] ?? ''));
+                        ?>
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.85rem;">
+                            <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.5rem;">
+                                <?php if ($pFotoUrl !== ''): ?>
+                                    <img src="<?= htmlspecialchars($pFotoUrl) ?>" alt="<?= htmlspecialchars($prof['nombre_profesor']) ?>" style="width: 38px; height: 38px; border-radius: 10px; object-fit: cover; flex-shrink: 0; border: 1px solid #cbd5e1;" onerror="this.style.display='none';">
+                                <?php else: ?>
+                                    <i class="ph-fill ph-user-circle" style="font-size: 2rem; color: #505984;"></i>
+                                <?php endif; ?>
+                                <div style="flex: 1; min-width: 0;">
+                                    <a href="?ruta=investigadores&q=<?= urlencode($prof['nombre_profesor']) ?>&ver_perfil=1<?= !empty($prof['id_profesor']) ? '&ver_id=' . (int)$prof['id_profesor'] : '' ?>"
+                                       style="color: #1e293b; font-size: 0.9rem; font-weight: 700; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none;"
+                                       onmouseover="this.style.color='#505984'; this.style.textDecoration='underline';"
+                                       onmouseout="this.style.color='#1e293b'; this.style.textDecoration='none';"
+                                       title="Ver Perfil Público de <?= htmlspecialchars($prof['nombre_profesor']) ?>">
+                                        <?= htmlspecialchars($prof['nombre_profesor']) ?>
+                                    </a>
+                                    <span style="color: #64748b; font-size: 0.75rem;"><i class="ph-bold ph-envelope-simple"></i> <?= htmlspecialchars($prof['email']) ?></span>
+                                </div>
+                                <a href="?ruta=investigadores&q=<?= urlencode($prof['nombre_profesor']) ?>&ver_perfil=1<?= !empty($prof['id_profesor']) ? '&ver_id=' . (int)$prof['id_profesor'] : '' ?>"
+                                   style="background: #ffffff; color: #505984; border: 1px solid rgba(80,89,132,0.25); padding: 0.25rem 0.55rem; border-radius: 6px; font-size: 0.72rem; font-weight: 700; text-decoration: none; white-space: nowrap;">
+                                    Perfil <i class="ph-bold ph-arrow-up-right"></i>
+                                </a>
+                            </div>
+                            <?php if ($pOrcidHref !== '' || $pSitioWeb !== ''): ?>
+                                <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-bottom:0.4rem;">
+                                    <?php if ($pOrcidHref !== ''): ?>
+                                        <a href="<?= htmlspecialchars($pOrcidHref) ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:4px; background:#f8fafc; color:#1e293b; border:1px solid rgba(80,89,132,0.25); padding:2px 7px; border-radius:999px; font-size:0.68rem; font-weight:700; text-decoration:none;">
+                                            <svg width="13" height="13" viewBox="0 0 256 256" aria-hidden="true"><circle cx="128" cy="128" r="128" fill="#A6CE39"/><path fill="#FFF" d="M86.3 186.2H70.9V79.1h15.4v107.1zM78.6 47.2c-5.7 0-10.3 4.6-10.3 10.3 0 5.7 4.6 10.3 10.3 10.3s10.3-4.6 10.3-10.3c0-5.7-4.6-10.3-10.3-10.3zm30.3 31.9h41.6c39.6 0 57 28.3 57 53.6 0 27.5-21.5 53.6-56.8 53.6h-41.8V79.1zm15.4 93.3h24.5c34.9 0 42.9-26.5 42.9-39.7C191.7 111.2 178.9 93 148 93h-23.7v79.4z"/></svg>
+                                            <?= htmlspecialchars($pOrcidId) ?>
+                                        </a>
+                                    <?php endif; ?>
+                                    <?php if ($pSitioWeb !== ''): ?>
+                                        <a href="<?= htmlspecialchars($pSitioWeb) ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:4px; background:rgba(80,89,132,0.08); color:#505984; border:1px solid rgba(80,89,132,0.24); padding:2px 7px; border-radius:999px; font-size:0.68rem; font-weight:700; text-decoration:none;">
+                                            <svg width="13" height="13" viewBox="0 0 256 256" aria-hidden="true"><circle cx="128" cy="128" r="128" fill="#505984"/><circle cx="128" cy="128" r="78" fill="none" stroke="#FFF" stroke-width="14"/><ellipse cx="128" cy="128" rx="38" ry="78" fill="none" stroke="#FFF" stroke-width="13"/><line x1="50" y1="128" x2="206" y2="128" stroke="#FFF" stroke-width="13"/></svg>
+                                            Sitio Personal
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                            <?php if (!empty($prof['dimensiones'])): ?>
+                                <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:0.35rem;">
+                                    <?php foreach ($prof['dimensiones'] as $pDim): ?>
+                                        <span style="background:rgba(80,89,132,0.1); color:#505984; border:1px solid rgba(80,89,132,0.22); border-radius:999px; padding:1px 7px; font-size:0.7rem; font-weight:600;">
+                                            <i class="ph-bold ph-tag" style="font-size:0.62rem;"></i> <?= htmlspecialchars($pDim['nombre']) ?>
+                                        </span>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                            <?php if (!empty($prof['ofertas'])): ?>
+                                <div style="font-size: 0.75rem; color: #475569; margin-top: 0.5rem; border-top: 1px dashed #cbd5e1; padding-top: 0.5rem;">
+                                    <strong style="color: #334155;">Proyectos en línea:</strong>
+                                    <ul style="margin: 0.3rem 0 0 0; padding-left: 1.2rem; list-style-type: disc;">
+                                        <?php foreach ($prof['ofertas'] as $of): ?>
+                                            <li><?= htmlspecialchars($of['titulo']) ?> (<?= $of['estado'] ?>)</li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
                 <?php endif; ?>
             </div>
         </div>

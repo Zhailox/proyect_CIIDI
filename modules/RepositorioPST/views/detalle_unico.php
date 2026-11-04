@@ -25,7 +25,7 @@
                     ?>
                         <span class="pst-badge-soft" style="background-color: rgba(112, 144, 203, 0.15); color: var(--color-secundario); font-weight: 700;"><?= htmlspecialchars($nivLabel) ?></span>
                         <?php if (in_array($nivDoc, $nivelesConTrayecto) && !empty($documento['trayecto'])): ?>
-                            <span class="pst-badge-soft" style="background-color: rgba(0, 123, 255, 0.1); color: var(--color-terciario); font-weight: 700;"><?= htmlspecialchars($documento['trayecto']) ?></span>
+                            <span class="pst-badge-soft pst-badge-trayecto"><?= htmlspecialchars($documento['trayecto']) ?></span>
                         <?php endif; ?>
                     <?php endif; ?>
                     <span class="pst-badge-soft" style="background-color: #f1f5f9; color: var(--texto-silenciado);">AÑO <?= $documento['anio_publicacion'] ?></span>
@@ -121,7 +121,7 @@
                                 <?= htmlspecialchars($documento['comunidad_beneficiada']) ?>
                             </span>
                             <?php if ($conteoComunidad > 0): ?>
-                                <button type="button" onclick="abrirModalComunidad()" style="margin-left: 0.35rem; border: none; background: rgba(0, 123, 255, 0.1); color: var(--color-terciario); font-size: 0.72rem; font-weight: 800; padding: 0.18rem 0.5rem; border-radius: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; transition: background 0.2s;" title="Ver otros proyectos en esta comunidad">
+                                <button type="button" onclick="abrirModalComunidad()" class="pst-btn-comunidad" title="Ver otros proyectos en esta comunidad">
                                     <i class="ph ph-buildings"></i> <?= $conteoComunidad ?> coincidencia<?= $conteoComunidad > 1 ? 's' : '' ?>
                                 </button>
                             <?php endif; ?>
@@ -184,11 +184,11 @@
             <!-- TAB 1: RESUMEN Y PALABRAS CLAVE -->
             <div id="tabResumen" class="tab-content active">
                 <?php if (!empty($documento['obj_general'])): ?>
-                    <div style="margin-bottom: 1.2rem; background-color: #f8fafc; border-left: 4px solid var(--color-terciario, #007bff); padding: 0.85rem 1rem; border-radius: 0 6px 6px 0;">
-                        <h4 style="font-size: 0.88rem; font-weight: 800; color: var(--texto-titulos, #002244); margin: 0 0 0.35rem 0; display: flex; align-items: center; gap: 0.4rem;">
-                            <i class="ph ph-target" style="color: var(--color-terciario, #007bff);"></i> Objetivo General de la Investigación
+                    <div class="pst-obj-box">
+                        <h4>
+                            <i class="ph ph-target"></i> Objetivo General de la Investigación
                         </h4>
-                        <p style="margin: 0; font-size: 0.9rem; line-height: 1.5; color: var(--texto-normal, #333333); font-weight: 500;">
+                        <p>
                             <?= htmlspecialchars($documento['obj_general']) ?>
                         </p>
                     </div>

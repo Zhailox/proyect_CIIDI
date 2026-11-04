@@ -182,7 +182,7 @@
 }
 
 .password-toggle-btn:hover {
-    color: var(--color-secundario, #2563eb);
+    color: var(--color-secundario, #505984);
     transform: translateY(-50%) scale(1.12);
 }
 
@@ -1065,3 +1065,179 @@
 }
 
 
+
+
+/* ==========================================================================
+   RESPONSIVIDAD INTEGRAL AUTENTICACIÓN: LAPTOPS ZOOM ALTO (125%-150%) Y MÓVILES
+   ========================================================================== */
+
+.auth-form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+/* 1. Laptops con Zoom Alto (125%-150% DPI) y Baja Altura Efectiva */
+@media (max-width: 1366px), (max-height: 780px) {
+    .login-split-container,
+    .recovery-split-container {
+        overflow-x: hidden;
+        overflow-y: auto;
+        min-height: calc(100vh - 62px);
+    }
+
+    .login-visual-side,
+    .recovery-visual-side {
+        padding: 2.25rem 2.75rem;
+    }
+
+    .visual-main-title {
+        font-size: clamp(1.75rem, 2.5vw, 2.35rem);
+        margin-bottom: 1rem;
+    }
+
+    .visual-description {
+        font-size: 0.98rem;
+        line-height: 1.5;
+    }
+
+    .login-form-side,
+    .recovery-form-side {
+        padding: 2rem 2.25rem;
+        margin-left: 0;
+        border-radius: 0;
+    }
+
+    .login-form-wrapper,
+    .recovery-form-wrapper {
+        max-width: 440px;
+    }
+
+    .login-form-title,
+    .recovery-form-title {
+        font-size: 1.55rem;
+    }
+
+    .login-form-instruction,
+    .recovery-form-instruction {
+        margin-bottom: 1.35rem;
+        font-size: 0.9rem;
+    }
+
+    .login-flat-form,
+    .recovery-flat-form {
+        gap: 1.25rem;
+    }
+
+    .login-flat-actions,
+    .recovery-flat-actions {
+        margin-top: 0.35rem;
+    }
+}
+
+/* Colapso temprano de grillas dobles dentro del panel lateral de registro */
+@media (max-width: 1200px) {
+    .auth-form-grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 2. Dispositivos Móviles y Tablets Verticales (<= 768px) */
+@media (max-width: 768px) {
+    .login-split-container,
+    .recovery-split-container {
+        flex-direction: column;
+        min-height: auto;
+    }
+
+    .login-visual-side,
+    .recovery-visual-side {
+        min-height: 200px;
+        padding: 1.75rem 1.25rem;
+    }
+
+    .visual-main-title {
+        font-size: 1.6rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .visual-description {
+        font-size: 0.9rem;
+    }
+
+    .login-form-side,
+    .recovery-form-side {
+        padding: 1.75rem 1.25rem;
+        margin-left: 0;
+        border-radius: 0;
+    }
+
+    .auth-form-grid-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-user-container {
+        padding: 0 1rem;
+        margin: 1.25rem auto;
+    }
+
+    .user-welcome-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1.35rem;
+        gap: 1rem;
+    }
+
+    .welcome-text h1 {
+        font-size: 1.35rem;
+    }
+}
+
+/* 3. Celulares Pequeños (<= 480px) */
+@media (max-width: 480px) {
+    .login-visual-side,
+    .recovery-visual-side {
+        min-height: 170px;
+        padding: 1.35rem 1rem;
+    }
+
+    .login-form-side,
+    .recovery-form-side {
+        padding: 1.35rem 1rem;
+    }
+
+    .btn-login-submit,
+    .btn-recovery-submit {
+        width: 100%;
+    }
+}
+
+
+/* Banner institucional de solicitud pendiente en Mi Dashboard */
+.db-pending-banner {
+    background: #eef0f8;
+    border-left: 4px solid #505984;
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
+    color: #1e293b;
+}
+
+.db-pending-banner-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #505984;
+}
+
+.db-pending-banner-title i {
+    font-size: 1.2rem;
+}
+
+.db-pending-banner p {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.4;
+}

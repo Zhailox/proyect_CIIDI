@@ -5,324 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Instalador &bull; Repositorio Institucional CIIDI</title>
     <link rel="stylesheet" href="public/assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <style>
-        /* ==========================================================================
-           Antigravity UI - Installer Wizard Multi-Configuration Theme
-           ========================================================================== */
-        body {
-            background-color: var(--blanco, #f4f7fb);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: var(--font-family, 'Inter', system-ui, -apple-system, sans-serif);
-            margin: 0;
-            padding: 1.5rem;
-            box-sizing: border-box;
-            color: var(--texto-comun, #1a1a1a);
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        .installer-canvas-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .installer-container {
-            position: relative;
-            z-index: 1;
-            max-width: 960px;
-            width: 100%;
-            display: grid;
-            grid-template-columns: 270px 1fr;
-            background: rgba(255, 255, 255, 0.97);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(80, 89, 132, 0.18);
-            border-radius: var(--radius-md, 16px);
-            box-shadow: 0 25px 50px -12px rgba(80, 89, 132, 0.22);
-            overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @media (max-width: 860px) {
-            .installer-container {
-                grid-template-columns: 1fr;
-            }
-            .installer-sidebar {
-                display: none;
-            }
-        }
-
-        .installer-sidebar {
-            background: linear-gradient(145deg, var(--color-secundario, #505984) 0%, #2f3652 100%);
-            color: #ffffff;
-            padding: 2.2rem 1.6rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .sidebar-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.25rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-        }
-
-        .sidebar-illustration {
-            text-align: center;
-            margin: 1.5rem 0;
-        }
-
-        .sidebar-illustration img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
-            border: 2px solid rgba(255, 255, 255, 0.18);
-            transition: transform 0.4s ease;
-        }
-
-        .sidebar-illustration img:hover {
-            transform: scale(1.03);
-        }
-
-        .installer-main {
-            padding: 2rem 2.4rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            min-height: 560px;
-        }
-
-        .installer-header {
-            margin-bottom: 1.1rem;
-        }
-
-        .installer-title {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--texto-titulos, #1e293b);
-            margin: 0.2rem 0 0 0;
-        }
-
-        .stepper-bar {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            margin-bottom: 1.3rem;
-        }
-
-        .step-pill {
-            flex: 1;
-            height: 6px;
-            background: rgba(80, 89, 132, 0.15);
-            border-radius: 10px;
-            transition: all 0.4s ease;
-        }
-
-        .step-pill.active {
-            background: var(--color-secundario, #505984);
-            box-shadow: 0 0 10px rgba(80, 89, 132, 0.4);
-        }
-
-        .step-pill.completed {
-            background: #059669;
-        }
-
-        .step-pane {
-            display: none;
-        }
-
-        .step-pane.active {
-            display: block;
-            animation: agFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes agFadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .ag-card-config {
-            background: rgba(248, 250, 252, 0.85);
-            border: 1px solid rgba(80, 89, 132, 0.14);
-            border-radius: 10px;
-            padding: 1rem 1.15rem;
-            margin-bottom: 0.9rem;
-            transition: all 0.25s ease;
-        }
-
-        .ag-card-config:hover {
-            border-color: rgba(80, 89, 132, 0.28);
-        }
-
-        .ag-card-title {
-            font-size: 0.85rem;
-            font-weight: 800;
-            color: var(--texto-titulos, #1e293b);
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            margin-bottom: 0.65rem;
-        }
-
-        .ag-label {
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: var(--texto-subtitulos, #505984);
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        .input-group {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .ag-input, .ag-select {
-            width: 100%;
-            padding: 8px 12px;
-            border-radius: var(--radius-sm, 8px);
-            border: 1px solid rgba(80, 89, 132, 0.25);
-            background: #ffffff;
-            font-size: 0.85rem;
-            color: var(--texto-titulos, #1e293b);
-            box-sizing: border-box;
-            transition: all 0.25s ease;
-        }
-
-        .ag-input:focus, .ag-select:focus {
-            outline: none;
-            border-color: var(--color-secundario, #505984);
-            background: #ffffff;
-            box-shadow: 0 0 0 3px rgba(80, 89, 132, 0.15);
-        }
-
-        .btn-toggle-eye {
-            position: absolute;
-            right: 8px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: var(--color-secundario, #505984);
-            font-size: 1.15rem;
-            padding: 4px;
-            display: flex;
-            align-items: center;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-        }
-
-        .btn-toggle-eye:hover {
-            opacity: 1;
-        }
-
-        .ag-btn {
-            height: 38px;
-            padding: 0 16px;
-            border-radius: var(--radius-sm, 8px);
-            font-weight: 700;
-            font-size: 0.84rem;
-            border: none;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            text-decoration: none;
-            box-sizing: border-box;
-        }
-
-        .ag-btn:disabled {
-            opacity: 0.55;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
-        .ag-btn-primary {
-            background: var(--color-secundario, #505984) !important;
-            color: #ffffff !important;
-            box-shadow: 0 4px 14px rgba(80, 89, 132, 0.25);
-        }
-
-        .ag-btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(80, 89, 132, 0.35);
-            background: #3C456A !important;
-        }
-
-        .ag-btn-secondary {
-            background: #ffffff !important;
-            color: var(--color-secundario, #505984) !important;
-            border: 1px solid rgba(80, 89, 132, 0.25) !important;
-        }
-
-        .ag-btn-secondary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            background: #f8fafc !important;
-            border-color: var(--color-secundario) !important;
-        }
-
-        .check-badge {
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-size: 0.74rem;
-            font-weight: 800;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .check-ok { background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); }
-        .check-err { background: rgba(239, 68, 68, 0.12); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.25); }
-
-        .telemetry-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 7px 12px;
-            border-radius: 8px;
-            background: rgba(248, 250, 252, 0.8);
-            border: 1px solid rgba(80, 89, 132, 0.1);
-            font-size: 0.83rem;
-            margin-bottom: 5px;
-            transition: all 0.3s ease;
-        }
-
-        .telemetry-item.pending { opacity: 0.45; }
-        .telemetry-item.running {
-            background: rgba(80, 89, 132, 0.08);
-            border-color: var(--color-secundario);
-            font-weight: 700;
-            color: var(--color-secundario);
-        }
-        .telemetry-item.completed {
-            background: rgba(16, 185, 129, 0.08);
-            border-color: rgba(16, 185, 129, 0.3);
-            color: #047857;
-            font-weight: 600;
-        }
-
-        .spin { animation: spin 1s linear infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-    </style>
 </head>
-<body>
+<body class="core-wizard-body">
 
 <div class="installer-canvas-bg">
     <canvas id="installerNodeCanvas"></canvas>
@@ -469,20 +155,20 @@
                     </div>
                 </div>
 
-                <div id="boxExistingTables" style="display: none; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 8px; padding: 0.9rem; margin-bottom: 1.2rem; font-size: 0.83rem;">
-                    <div style="display: flex; gap: 8px; align-items: flex-start; color: #b45309; font-weight: 700; margin-bottom: 0.4rem;">
-                        <i class="ph-bold ph-warning" style="font-size: 1.15rem; margin-top: 1px;"></i>
+                <div id="boxExistingTables" class="wiz-existing-box">
+                    <div class="wiz-existing-title">
+                        <i class="ph-bold ph-warning"></i>
                         <span id="txtExistingTablesTitle">Tablas preexistentes detectadas</span>
                     </div>
-                    <p id="txtExistingTablesDesc" style="margin: 0 0 0.6rem 0; color: #78350f; line-height: 1.4;">
+                    <p id="txtExistingTablesDesc" class="wiz-existing-desc">
                         Esta base de datos ya contiene información. Seleccione cómo desea proceder:
                     </p>
                     <div style="display: flex; flex-direction: column; gap: 0.4rem;">
-                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #78350f;">
+                        <label class="wiz-opt-keep">
                             <input type="radio" name="opt_bd_existente" value="conservar" checked>
                             <strong>Conservar tablas existentes</strong> (Reutilizar estructura y solo sincronizar credenciales)
                         </label>
-                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #b91c1c;">
+                        <label class="wiz-opt-wipe">
                             <input type="radio" name="opt_bd_existente" value="reinstalar" id="chkReinstalarLimpio">
                             <strong>Instalación limpia</strong> (Purgar y vaciar todas las tablas existentes para desplegar de cero)
                         </label>
@@ -550,7 +236,7 @@
                     <!-- TARJETA 3: SEGURIDAD DE SESIÓN Y WAF -->
                     <div class="ag-card-config">
                         <div class="ag-card-title">
-                            <i class="ph-bold ph-shield-check" style="color: #4f46e5;"></i>
+                            <i class="ph-bold ph-shield-check wiz-icon-inst"></i>
                             Seguridad de Sesiones y WAF
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem;">
@@ -585,10 +271,10 @@
                     <div class="ag-card-config">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
                             <div class="ag-card-title" style="margin: 0;">
-                                <i class="ph-bold ph-envelope" style="color: #ea580c;"></i>
+                                <i class="ph-bold ph-envelope wiz-icon-inst"></i>
                                 Notificaciones por Correo (SMTP)
                             </div>
-                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.82rem; font-weight: 700; color: #ea580c;">
+                            <label class="wiz-smtp-toggle">
                                 <input type="checkbox" id="chk_enable_smtp" onchange="toggleSmtpPanel(this.checked)" style="width: 16px; height: 16px;">
                                 Configurar SMTP ahora (Opcional)
                             </label>
@@ -770,7 +456,7 @@
                         <p style="margin: 0 0 0.4rem 0; color: #475569;">
                             Para ejecutar las tareas programadas automáticamente cada minuto, registre esta línea en el servidor:
                         </p>
-                        <div style="background: #1e293b; color: #38bdf8; padding: 6px 10px; border-radius: 6px; font-family: monospace; font-size: 0.74rem; overflow-x: auto; white-space: nowrap;" id="txtCronCommand">
+                        <div class="wiz-cron-cmd" id="txtCronCommand">
                             * * * * * php <?= addslashes(str_replace('\\', '/', dirname(__DIR__, 2) . '/storage/cron_runner.php')) ?> > /dev/null 2>&1
                         </div>
                     </div>
@@ -843,9 +529,9 @@ function mostrarAlerta(msg, tipo = 'error') {
         box.style.color = '#047857';
         box.style.border = '1px solid rgba(16,185,129,0.3)';
     } else if (tipo === 'warning') {
-        box.style.background = 'rgba(245,158,11,0.12)';
-        box.style.color = '#b45309';
-        box.style.border = '1px solid rgba(245,158,11,0.3)';
+        box.style.background = '#eef0f8';
+        box.style.color = '#505984';
+        box.style.border = '1px solid rgba(80, 89, 132, 0.3)';
     } else {
         box.style.background = 'rgba(239,68,68,0.12)';
         box.style.color = '#b91c1c';
@@ -877,7 +563,7 @@ function evaluarFortalezaClave() {
     if (score < 40) {
         bar.style.background = '#ef4444';
     } else if (score < 75) {
-        bar.style.background = '#f59e0b';
+        bar.style.background = '#505984';
     } else {
         bar.style.background = '#10b981';
     }

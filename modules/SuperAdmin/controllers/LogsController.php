@@ -75,8 +75,8 @@ class LogsController {
                     th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; }
                     th { background-color: #f1f5f9; color: #334155; }
                     .badge { font-weight: bold; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
-                    .INFO { color: #0369a1; background: #e0f2fe; }
-                    .WARNING { color: #b45309; background: #fef3c7; }
+                    .INFO { color: #505984; background: #eef0f8; }
+                    .WARNING { color: #3c456a; background: #e2e8f0; }
                     .CRITICAL, .ERROR { color: #b91c1c; background: #fee2e2; }
                 </style>
             </head>

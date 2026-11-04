@@ -4,5 +4,109 @@
     "recepcion_activa": true,
     "cupos_por_defecto": 3,
     "mensaje_marquee": "Plataforma Oficial para la Vinculacin de Estudiantes con Proyectos Reales de la Industria",
-    "duracion_meses": 6
+    "duracion_meses": 6,
+    "campos_formulario": [
+        {
+            "clave": "sec_organizacion",
+            "tipo": "seccion",
+            "etiqueta": "Paso 1: Datos de la Organización",
+            "placeholder": "",
+            "requerido": false,
+            "sistema": false,
+            "ancho": "completo"
+        },
+        {
+            "clave": "nombre_empresa",
+            "tipo": "texto",
+            "etiqueta": "Nombre de la Empresa \/ Comercio \/ Institución",
+            "placeholder": "Ej. Distribuidora Los Andes C.A.",
+            "requerido": true,
+            "sistema": true,
+            "ancho": "medio"
+        },
+        {
+            "clave": "rif_empresa",
+            "tipo": "alfanumerico",
+            "etiqueta": "RIF (Opcional si es comunidad)",
+            "placeholder": "Ej. J-12345678-9",
+            "requerido": false,
+            "sistema": true,
+            "ancho": "medio"
+        },
+        {
+            "clave": "persona_contacto",
+            "tipo": "texto",
+            "etiqueta": "Persona de Contacto",
+            "placeholder": "Nombre y Apellido del responsable",
+            "requerido": true,
+            "sistema": true,
+            "ancho": "medio"
+        },
+        {
+            "clave": "telefono_contacto",
+            "tipo": "telefono",
+            "etiqueta": "Teléfono Móvil o Fijo",
+            "placeholder": "Ej. 0414-0000000",
+            "requerido": true,
+            "sistema": true,
+            "ancho": "medio"
+        },
+        {
+            "clave": "correo_contacto",
+            "tipo": "correo",
+            "etiqueta": "Correo Electrónico (Para recibir estatus del PST)",
+            "placeholder": "contacto@tuempresa.com",
+            "requerido": true,
+            "sistema": true,
+            "ancho": "completo"
+        },
+        {
+            "clave": "sec_diagnostico",
+            "tipo": "seccion",
+            "etiqueta": "Paso 2: Diagnóstico del Problema",
+            "placeholder": "",
+            "requerido": false,
+            "sistema": false,
+            "ancho": "completo"
+        },
+        {
+            "clave": "descripcion_problema",
+            "tipo": "textarea",
+            "etiqueta": "Explica el problema y la solución que buscas de forma detallada:",
+            "placeholder": "Ej. Actualmente llevamos el inventario en un cuaderno y perdemos mucho tiempo cuadrando caja. Necesitamos un sistema de escritorio rápido que nos permita registrar entradas y salidas con reportes en PDF...",
+            "requerido": true,
+            "sistema": true,
+            "ancho": "completo"
+        }
+    ],
+    "catalogo_trayectos_pst": [
+        {
+            "numero": 1,
+            "nombre": "Trayecto I",
+            "descripcion": "Primer año \/ Iniciación sociotecnológica",
+            "codigo_inv": "t1",
+            "sistema": true
+        },
+        {
+            "numero": 2,
+            "nombre": "Trayecto II",
+            "descripcion": "Segundo año \/ Desarrollo y aplicaciones intermedias",
+            "codigo_inv": "t2",
+            "sistema": true
+        },
+        {
+            "numero": 3,
+            "nombre": "Trayecto III",
+            "descripcion": "Tercer año \/ Soluciones avanzadas e interoperabilidad",
+            "codigo_inv": "t3",
+            "sistema": true
+        },
+        {
+            "numero": 4,
+            "nombre": "Trayecto IV",
+            "descripcion": "Cuarto año \/ Proyectos integrales de grado",
+            "codigo_inv": "t4",
+            "sistema": true
+        }
+    ]
 }

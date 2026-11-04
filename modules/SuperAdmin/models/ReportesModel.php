@@ -116,8 +116,13 @@ class ReportesModel {
                     u.nombre_completo AS nombre,
                     '' AS apellido,
                     u.email AS correo,
-                    r.nombre AS rol,
+                    COALESCE(r.nombre, 'Sin Rol (Baja)') AS rol,
                     u.activo,
+                    CASE 
+                        WHEN u.cedula LIKE '%_x%' OR u.email LIKE '%_deleted_%' THEN 'ARCHIVADO'
+                        WHEN u.activo = true THEN 'ACTIVO'
+                        ELSE 'SUSPENDIDO'
+                    END AS estado_cuenta,
                     NOW() AS fecha_registro
                 FROM public.usuarios u
                 LEFT JOIN public.roles r ON u.id_rol = r.id
@@ -126,8 +131,13 @@ class ReportesModel {
         $params = [];
 
         if (isset($filtros['activo']) && $filtros['activo'] !== '') {
-            $sql .= " AND u.activo = :activo";
-            $params[':activo'] = $filtros['activo'] === '1' ? 'true' : 'false';
+            if ($filtros['activo'] === 'archivado') {
+                $sql .= " AND (u.cedula LIKE '%_x%' OR u.email LIKE '%_deleted_%')";
+            } elseif ($filtros['activo'] === '1') {
+                $sql .= " AND u.activo = true AND u.cedula NOT LIKE '%_x%' AND u.email NOT LIKE '%_deleted_%'";
+            } elseif ($filtros['activo'] === '0') {
+                $sql .= " AND u.activo = false AND u.cedula NOT LIKE '%_x%' AND u.email NOT LIKE '%_deleted_%'";
+            }
         }
 
         if (!empty($filtros['id_rol'])) {
@@ -252,7 +262,10 @@ class ReportesModel {
                 }
             } elseif ($dominio === 'usuarios') {
                 $sql = "SELECT COALESCE(r.nombre, 'Sin Rol') as label, COUNT(*) as cantidad 
-                        FROM public.usuarios u LEFT JOIN public.roles r ON u.id_rol = r.id GROUP BY r.nombre ORDER BY cantidad DESC";
+                        FROM public.usuarios u 
+                        LEFT JOIN public.roles r ON u.id_rol = r.id 
+                        WHERE u.cedula NOT LIKE '%_x%' AND u.email NOT LIKE '%_deleted_%'
+                        GROUP BY r.nombre ORDER BY cantidad DESC";
             } else {
                 $sql = "SELECT COALESCE(l.nivel, 'INFO') as label, COUNT(*) as cantidad 
                         FROM public.system_audit_log l GROUP BY l.nivel ORDER BY cantidad DESC";
@@ -276,18 +289,38 @@ class ReportesModel {
         $totalPst = 0;
         $totalEmpresas = 0;
         $totalUsuarios = 0;
+        $usuariosActivos = 0;
+        $usuariosSuspendidos = 0;
+        $usuariosArchivados = 0;
         $totalLogs = 0;
 
         try { $totalPst = (int)($this->db->query("SELECT COUNT(DISTINCT id_recurso) FROM public.detalles_proyectos")->fetchColumn() ?: 0); } catch (Exception $e) {}
         try { $totalEmpresas = (int)($this->db->query("SELECT COUNT(*) FROM public.propuestas_empresa")->fetchColumn() ?: 0); } catch (Exception $e) {}
-        try { $totalUsuarios = (int)($this->db->query("SELECT COUNT(*) FROM public.usuarios")->fetchColumn() ?: 0); } catch (Exception $e) {}
+        try { 
+            $sqlUsers = "SELECT 
+                            COUNT(*) FILTER (WHERE cedula NOT LIKE '%_x%' AND email NOT LIKE '%_deleted_%') AS vigentes,
+                            COUNT(*) FILTER (WHERE activo = true AND cedula NOT LIKE '%_x%' AND email NOT LIKE '%_deleted_%') AS activos,
+                            COUNT(*) FILTER (WHERE activo = false AND cedula NOT LIKE '%_x%' AND email NOT LIKE '%_deleted_%') AS suspendidos,
+                            COUNT(*) FILTER (WHERE cedula LIKE '%_x%' OR email LIKE '%_deleted_%') AS archivados
+                         FROM public.usuarios";
+            $rowU = $this->db->query($sqlUsers)->fetch(PDO::FETCH_ASSOC);
+            if ($rowU) {
+                $totalUsuarios       = (int)$rowU['vigentes'];
+                $usuariosActivos     = (int)$rowU['activos'];
+                $usuariosSuspendidos = (int)$rowU['suspendidos'];
+                $usuariosArchivados  = (int)$rowU['archivados'];
+            }
+        } catch (Exception $e) {}
         try { $totalLogs = (int)($this->db->query("SELECT COUNT(*) FROM public.system_audit_log")->fetchColumn() ?: 0); } catch (Exception $e) {}
 
         return [
-            'pst' => $totalPst,
-            'empresas' => $totalEmpresas,
-            'usuarios' => $totalUsuarios,
-            'logs' => $totalLogs
+            'pst'                  => $totalPst,
+            'empresas'             => $totalEmpresas,
+            'usuarios'             => $totalUsuarios,
+            'usuarios_activos'     => $usuariosActivos,
+            'usuarios_suspendidos' => $usuariosSuspendidos,
+            'usuarios_archivados'  => $usuariosArchivados,
+            'logs'                 => $totalLogs
         ];
     }
 }

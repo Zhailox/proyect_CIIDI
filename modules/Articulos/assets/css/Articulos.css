@@ -1032,6 +1032,9 @@ img.loaded {
     font-size: 1rem;
     transition: all 0.2s ease;
     flex-shrink: 0;
+    box-sizing: border-box;
+    text-decoration: none;
+    user-select: none;
 }
 
 .art-action-icon-btn:hover {
@@ -1040,6 +1043,113 @@ img.loaded {
     border-color: var(--color-secundario, #0b1a30);
     transform: translateY(-2px);
     box-shadow: 0 4px 10px rgba(11, 26, 48, 0.15);
+}
+
+.art-action-icon-btn.is-copied {
+    background: #10b981 !important;
+    color: #ffffff !important;
+    border-color: #10b981 !important;
+    transform: scale(1.06) !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
+}
+
+/* Items de citas en modal */
+.art-modal-cita-item {
+    margin-bottom: 0.85rem;
+    background: #ffffff;
+    border: 1px solid rgba(80, 89, 132, 0.15);
+    border-radius: 8px;
+    padding: 0.75rem 0.9rem;
+    transition: border-color 0.2s ease;
+    text-align: left;
+}
+
+.art-modal-cita-item:hover {
+    border-color: var(--color-terciario, #7090CB);
+}
+
+.art-modal-cita-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.4rem;
+}
+
+.art-modal-cita-tag {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-secundario, #505984);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.art-modal-cita-copy-btn {
+    padding: 0.25rem 0.65rem;
+    font-size: 0.72rem;
+    background: #f1f5f9;
+    color: var(--color-secundario, #505984);
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: all 0.2s ease;
+}
+
+.art-modal-cita-copy-btn:hover {
+    background: var(--color-secundario, #505984);
+    color: #ffffff;
+    border-color: var(--color-secundario, #505984);
+}
+
+.art-modal-cita-copy-btn.is-copied {
+    background: #10b981 !important;
+    color: #ffffff !important;
+    border-color: #10b981 !important;
+}
+
+.art-modal-cita-box {
+    background: #f8fafc;
+    border: 1px solid rgba(80, 89, 132, 0.1);
+    padding: 0.6rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-family: 'Consolas', 'Courier New', monospace;
+    color: #1e293b;
+    line-height: 1.45;
+    word-break: break-word;
+    user-select: all;
+    text-align: left;
+}
+
+/* Toast flotante para feedback de copiado en artículos */
+.art-toast-pill {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: #121a3e;
+    color: #ffffff;
+    padding: 0.7rem 1.4rem;
+    border-radius: 50px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    z-index: 100000;
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+    pointer-events: none;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.art-toast-pill.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
 }
 
 /* =========================================
@@ -1420,6 +1530,336 @@ img.loaded {
     color: var(--color-principal);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* Sombrea la pestaña activa */
 }
+/* Asegura que el contenedor padre no encoja los paneles hijos cuando está en columna */
+.art-catalog-wrapper {
+    align-items: stretch;
+}
+
+/* Evita que el botón de búsqueda robe el ancho de la barra de texto */
+.art-filter-controls-row .art-btn-read,
+.art-btn-search-submit {
+    flex: 0 0 auto;
+    padding: 0.6rem 1.25rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.art-link-reset-inline {
+    margin: 0;
+    align-self: center;
+    white-space: nowrap;
+}
 
 
 
+
+/* ==========================================================================
+   RESPONSIVIDAD INTEGRAL ARTÍCULOS: LAPTOPS ZOOM ALTO (125%-150%) Y MÓVILES
+   ========================================================================== */
+
+#modalCitasContainer,
+.art-modal-overlay,
+#modalVisorImagenStorage {
+    padding: 0.75rem !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
+}
+
+#modalCitasContainer > div,
+.art-modal-overlay > div,
+.art-modal-box {
+    max-height: calc(100vh - 1.5rem) !important;
+    overflow-y: auto !important;
+    margin: auto !important;
+    box-sizing: border-box !important;
+}
+
+/* 1. Laptops con Zoom Alto (125%-150% DPI) y Baja Altura Efectiva */
+@media (max-width: 1366px), (max-height: 780px) {
+    .art-hero-content {
+        padding: 2.25rem;
+    }
+
+    .art-hero-title {
+        font-size: clamp(1.75rem, 2.5vw, 2.15rem);
+    }
+
+    .art-layout {
+        gap: 1.75rem;
+    }
+
+    .art-filters-sidebar {
+        width: 245px;
+        top: 5rem;
+    }
+
+    #listaCitasDinamicas {
+        max-height: min(320px, calc(100vh - 210px)) !important;
+    }
+}
+
+/* 2. Tablets y Laptops Compactas (<= 1024px) */
+@media (max-width: 1024px) {
+    .art-layout {
+        grid-template-columns: 1fr !important;
+        gap: 2rem;
+    }
+
+    .art-catalog-wrapper {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .art-filters-sidebar {
+        width: 100% !important;
+        position: static !important;
+    }
+
+    /* Evita que el menú desplegable lateral se salga por la derecha */
+    .art-filter-dropdown {
+        left: 0 !important;
+        top: calc(100% + 8px) !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        z-index: 200;
+    }
+}
+
+/* 3. Dispositivos Móviles y Pantallas Pequeñas (<= 768px) */
+@media (max-width: 768px) {
+    .art-hero {
+        flex-direction: column;
+    }
+
+    .art-hero-content {
+        padding: 1.6rem 1.25rem;
+    }
+
+    .art-hero-title {
+        font-size: 1.55rem;
+    }
+
+    .art-hero-image {
+        min-height: 200px;
+        width: 100%;
+    }
+
+    .art-rich-section {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 1.35rem;
+        gap: 1.25rem;
+    }
+
+    .art-rich-cover {
+        width: 160px;
+        height: 210px;
+    }
+
+    .art-featured-post {
+        flex-direction: column;
+    }
+
+    .art-featured-img {
+        width: 100%;
+        min-height: 200px;
+    }
+
+    .art-featured-info {
+        padding: 1.35rem;
+    }
+
+    .art-pill-tabs-wrapper {
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding-bottom: 0.35rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .art-pill-tab {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .art-reader-header {
+        padding: 2rem 1.25rem;
+    }
+
+    .art-reader-title {
+        font-size: 1.5rem;
+    }
+
+    .art-reader-body {
+        padding: 1.35rem 1.15rem;
+    }
+
+    .art-post-meta {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+}
+
+/* 4. Celulares Pequeños (<= 480px) */
+@media (max-width: 480px) {
+    .art-hero-title {
+        font-size: 1.35rem;
+    }
+
+    .art-reader-title {
+        font-size: 1.3rem;
+    }
+}
+
+/* Refinamiento Móvil para Selectores Reales de grid_revista.php, leer_articulo.php y showcase_articulos.php */
+.art-layout > *,
+.art-catalog-wrapper > *,
+.art-detail-grid-layout > * {
+    min-width: 0;
+    max-width: 100%;
+}
+
+@media (max-width: 768px) {
+    /* Catálogo de Artículos (grid_revista.php) */
+    .art-hero-canvas-wrapper {
+        height: auto !important;
+        min-height: 180px !important;
+        margin-bottom: 1.15rem !important;
+    }
+
+    .art-hero-canvas-overlay {
+        position: relative !important;
+        padding: 1.5rem 1rem !important;
+    }
+
+    .art-hero-content-inner h1 {
+        font-size: 1.35rem !important;
+        line-height: 1.25 !important;
+    }
+
+    .art-hero-content-inner p {
+        font-size: 0.88rem !important;
+    }
+
+    .art-catalog-wrapper {
+        padding: 0.25rem 0.5rem 2rem 0.5rem !important;
+        gap: 1.15rem !important;
+    }
+
+    .art-pill-tabs-container {
+        margin-bottom: 0.75rem !important;
+    }
+
+    .art-pill-tabs {
+        width: 100% !important;
+        display: flex !important;
+        border-radius: 14px !important;
+    }
+
+    .art-pill-tab {
+        flex: 1 !important;
+        justify-content: center !important;
+        padding: 0.55rem 0.5rem !important;
+        font-size: 0.78rem !important;
+        text-align: center !important;
+        border-radius: 10px !important;
+    }
+
+    .art-top-filter-panel {
+        padding: 0.9rem !important;
+    }
+
+    .art-category-pills-bar {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.45rem !important;
+    }
+
+    .art-pills-scroll-wrapper {
+        width: 100% !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .art-filter-controls-row {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.65rem !important;
+    }
+
+    .art-filter-controls-row > *,
+    .art-search-box,
+    .art-select-box {
+        width: 100% !important;
+        min-width: 0 !important;
+        flex: 1 1 100% !important;
+    }
+
+    .art-masonry-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.15rem !important;
+    }
+
+    /* Detalle de Artículo (leer_articulo.php) */
+    .art-detail-container {
+        padding: 0.25rem 0.4rem 2rem 0.4rem !important;
+    }
+
+    .art-detail-hero-box {
+        padding: 1.35rem 1.1rem !important;
+    }
+
+    .art-detail-title {
+        font-size: 1.35rem !important;
+        line-height: 1.3 !important;
+    }
+
+    .art-detail-actions-bar {
+        justify-content: flex-start !important;
+        flex-wrap: wrap !important;
+    }
+
+    .art-detail-grid-layout {
+        grid-template-columns: 1fr !important;
+        padding: 1.1rem !important;
+        gap: 1.25rem !important;
+    }
+
+    .art-abstract-box {
+        padding: 1.1rem !important;
+        margin-bottom: 1.25rem !important;
+    }
+
+    .art-abstract-box p {
+        font-size: 0.92rem !important;
+        text-align: left !important;
+    }
+
+    /* Showcase en Home (showcase_articulos.php) */
+    .art-main-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.35rem !important;
+    }
+
+    .art-main-header h2 {
+        font-size: 1.35rem !important;
+    }
+
+    .art-tags {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 0.4rem !important;
+    }
+
+    .art-read-link {
+        align-self: center !important;
+    }
+
+    .art-sidebar {
+        position: static !important;
+        padding: 1.25rem !important;
+        width: 100% !important;
+    }
+}

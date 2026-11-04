@@ -15,7 +15,7 @@
             
             <h2 style="color: var(--color-principal); margin-bottom: 0.5rem; font-size: 1.8rem; font-weight: 800;">Crear Cuenta</h2>
             <p class="login-form-instruction" style="margin-bottom: 1.5rem;">
-                Complete sus datos para registrarse como estudiante del PNF en Informática.
+                Complete sus datos para registrarse como estudiante del PNF en Informática o solicitar su cuenta como docente.
             </p>
 
             <?php if (isset($error) && $error !== null): ?>
@@ -33,7 +33,7 @@
                 <!-- SEGURIDAD 1.2: TIMESTAMP DE TIEMPO HUMANO -->
                 <input type="hidden" name="_form_ts" value="<?= $segDataReg['timestamp'] ?>">
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="auth-form-grid-2">
                     <div class="login-flat-group">
                         <label for="cedula_num">Cédula:</label>
                         <div style="display: flex; gap: 0.5rem; align-items: stretch;">
@@ -57,7 +57,34 @@
                     <input type="email" id="email" name="email" class="login-flat-input" required autocomplete="email">
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <!-- TIPO DE CUENTA: ESTUDIANTE O DOCENTE (REGISTRO DE PROFESORES EN LÍNEA) -->
+                <div class="login-flat-group">
+                    <label>Tipo de Cuenta:</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 10px; font-weight: 600; color: #121a3e;">
+                            <input type="radio" name="tipo_cuenta" value="estudiante" checked onchange="toggleTipoCuentaRegistro()" style="accent-color: #505984;">
+                            <i class="ph-bold ph-student"></i> Estudiante
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 10px; font-weight: 600; color: #121a3e;">
+                            <input type="radio" name="tipo_cuenta" value="docente" onchange="toggleTipoCuentaRegistro()" style="accent-color: #505984;">
+                            <i class="ph-bold ph-chalkboard-teacher"></i> Docente / Profesor
+                        </label>
+                    </div>
+                </div>
+
+                <div id="bloqueRegistroDocente" style="display: none;">
+                    <div style="background: rgba(112, 144, 203, 0.12); border-left: 4px solid #7090cb; color: #121a3e; padding: 0.6rem 0.8rem; border-radius: 4px; font-size: 0.8rem; margin-bottom: 0.8rem;">
+                        <i class="ph-bold ph-info"></i> Las cuentas docentes quedan <strong>pendientes de aprobación</strong> por el Comité o la Administración antes de poder iniciar sesión.
+                    </div>
+                    <?php
+                    $pstIdPrefijo = 'regpst';
+                    $pstEsProfesor = false;
+                    $pstSeleccion = [];
+                    include __DIR__ . '/partials/selector_pst.php';
+                    ?>
+                </div>
+
+                <div class="auth-form-grid-2">
                     <div class="login-flat-group">
                         <label for="password">Contraseña:</label>
                         <div class="password-field-wrapper">
@@ -175,14 +202,14 @@ function evaluarFortalezaClave(val) {
         label.style.color = '#ef4444';
     } else if (score === 2) {
         bar.style.width = '50%';
-        bar.style.backgroundColor = '#f59e0b'; // Naranja (Aceptable)
+        bar.style.backgroundColor = '#7090CB'; // Institucional claro (Aceptable)
         label.textContent = 'Aceptable';
-        label.style.color = '#d97706';
+        label.style.color = '#505984';
     } else if (score === 3) {
         bar.style.width = '75%';
-        bar.style.backgroundColor = '#3b82f6'; // Azul (Segura)
+        bar.style.backgroundColor = '#505984'; // Institucional (Segura)
         label.textContent = 'Segura';
-        label.style.color = '#2563eb';
+        label.style.color = '#3C456A';
     } else if (score === 4) {
         bar.style.width = '100%';
         bar.style.backgroundColor = '#10b981'; // Verde (Excelente)
@@ -234,7 +261,23 @@ function actualizarCedulaRegistro() {
     hiddenEl.value = num ? (tipoEl.value + num) : '';
 }
 
-document.querySelector('.login-flat-form')?.addEventListener('submit', function() {
+function toggleTipoCuentaRegistro() {
+    const sel = document.querySelector('input[name="tipo_cuenta"]:checked');
+    const bloque = document.getElementById('bloqueRegistroDocente');
+    const btn = document.getElementById('btnSubmitRegistro');
+    const esDocente = sel && sel.value === 'docente';
+    if (bloque) bloque.style.display = esDocente ? 'block' : 'none';
+    if (btn) btn.textContent = esDocente ? 'Solicitar Registro Docente' : 'Registrar Usuario';
+}
+
+document.querySelector('.login-flat-form')?.addEventListener('submit', function(e) {
     actualizarCedulaRegistro();
+    const sel = document.querySelector('input[name="tipo_cuenta"]:checked');
+    const chkPst = document.getElementById('regpst-check');
+    if (sel && sel.value === 'docente' && chkPst && chkPst.checked
+        && document.querySelectorAll('#regpst-matriz input[name="pst_asignaciones[]"]:checked').length === 0) {
+        e.preventDefault();
+        alert('Indique al menos un trayecto y trimestre en el que dicta PST, o desmarque la opción de profesor PST.');
+    }
 });
 </script>

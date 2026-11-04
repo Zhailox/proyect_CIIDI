@@ -114,7 +114,7 @@
      PESTAÑA 1: GESTIÓN UNIFICADA DE RESPALDOS E IMPORTACIÓN
      ========================================== -->
 <div id="tab-gestion-bd" class="ag-tab-pane active">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1.5rem;">
         
         <!-- COLUMNA IZQUIERDA: EXPORTACIÓN Y ARCHIVO DE IMPORTACIÓN EXTERNO -->
         <div style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -359,7 +359,7 @@
      PESTAÑA 2: CONFIGURACIÓN DE BASE DE DATOS Y CUENTA DE EMERGENCIA
      ========================================== -->
 <div id="tab-config-bd" class="ag-tab-pane">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1.5rem;">
         
         <!-- TARJETA: MODIFICAR PARÁMETROS DE CONEXIÓN BD -->
         <div class="ag-glass-card">
@@ -377,7 +377,7 @@
             </p>
 
             <form action="guardar-configuracion-bd" method="POST" style="display: flex; flex-direction: column; gap: 1rem;">
-                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+                <div class="sa-grid-host-port">
                     <div>
                         <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Host del Servidor</label>
                         <input type="text" name="host" class="ag-input" value="<?= htmlspecialchars($db_creds['host'] ?? 'localhost') ?>" required style="width: 100%;">
@@ -388,7 +388,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="sa-grid-2col" style="gap: 10px;">
                     <div>
                         <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Base de Datos</label>
                         <input type="text" name="db" class="ag-input" value="<?= htmlspecialchars($db_creds['db'] ?? 'ciidi') ?>" required style="width: 100%;">
@@ -406,11 +406,11 @@
 
                 <hr style="border: 0; border-top: 1px solid rgba(80,89,132,0.15); margin: 0.5rem 0;">
 
-                <div style="background: rgba(37,99,235,0.05); border: 1px solid rgba(37,99,235,0.2); padding: 1rem; border-radius: 10px;">
-                    <label style="font-size: 0.82rem; font-weight: 800; color: var(--color-secundario); display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                <div class="sa-reauth-box">
+                    <label class="sa-reauth-label">
                         <i class="ph-bold ph-shield-check"></i> Confirmar con Tu Contraseña de SuperAdmin (Re-Autenticación)
                     </label>
-                    <input type="password" name="admin_confirm_password" class="ag-input" placeholder="Ingresa tu contraseña actual de usuario" required style="width: 100%; border-color: rgba(37,99,235,0.4);">
+                    <input type="password" name="admin_confirm_password" class="ag-input sa-reauth-input" placeholder="Ingresa tu contraseña actual de usuario" required>
                 </div>
 
                 <button type="submit" class="ag-btn-flat" style="justify-content: center; padding: 11px !important;">
@@ -450,7 +450,7 @@
                     <input type="text" name="emergency_user" class="ag-input" value="<?= htmlspecialchars($emergency_data['usuario'] ?? 'admin_emergencia') ?>" required style="width: 100%;">
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="sa-grid-2col" style="gap: 10px;">
                     <div>
                         <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Contraseña de Emergencia</label>
                         <input type="password" name="emergency_pass" class="ag-input" placeholder="Nueva Contraseña" required style="width: 100%;">
@@ -483,7 +483,7 @@
      PESTAÑA 3: VENTANA DE MANTENIMIENTO PROGRAMADO
      ========================================== -->
 <div id="tab-mantenimiento" class="ag-tab-pane">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
         
         <!-- TARJETA 1: ACTIVACIÓN / DESACTIVACIÓN INMEDIATA -->
         <div class="ag-glass-card">
@@ -545,7 +545,7 @@
                     <input type="datetime-local" name="fecha_inicio" class="ag-input" required style="width: 100%; font-weight: 600;">
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="sa-grid-2col" style="gap: 10px;">
                     <div>
                         <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Duración (Min)</label>
                         <input type="number" name="duracion_minutos" min="1" value="30" class="ag-input" required style="width: 100%;">
@@ -555,6 +555,11 @@
                         <input type="text" name="mensaje" class="ag-input" placeholder="Ej: Actualización DDL" style="width: 100%;">
                     </div>
                 </div>
+
+                <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 700; color: var(--texto-titulos, #0f172a); cursor: pointer;">
+                    <input type="checkbox" name="notificar_correo" value="1" checked style="width: 16px; height: 16px;">
+                    Notificar por correo a los usuarios activos (Plantilla de Mantenimiento)
+                </label>
 
                 <button type="submit" class="ag-btn-flat" style="width: 100%; justify-content: center; padding: 11px !important;">
                     <i class="ph-bold ph-calendar-check"></i> Agendar Mantenimiento

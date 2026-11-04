@@ -2,17 +2,22 @@
 
 let todasDimensiones = [];
 let activeDimensionId = '';
+let nivelesConTrayectoList = ['Pregrado'];
 
-// Inicialización de Dimensiones
-function initDimensionSelector(dims, activeDim) {
-    todasDimensiones = dims;
-    activeDimensionId = activeDim;
+// Inicialización de Dimensiones y Filtros Dependientes
+function initDimensionSelector(dims, activeDim, nivelesTrayecto) {
+    todasDimensiones = dims || [];
+    activeDimensionId = activeDim || '';
+    if (Array.isArray(nivelesTrayecto) && nivelesTrayecto.length > 0) {
+        nivelesConTrayectoList = nivelesTrayecto;
+    }
     
     const lineaSelect = document.getElementById('linea_id');
     if (lineaSelect) {
         updateDimensionOptions(lineaSelect.value);
         
         lineaSelect.addEventListener('change', (e) => {
+            activeDimensionId = '';
             updateDimensionOptions(e.target.value);
             submitFilterForm();
         });
@@ -23,6 +28,41 @@ function initDimensionSelector(dims, activeDim) {
         dimSelect.addEventListener('change', () => {
             submitFilterForm();
         });
+    }
+
+    const nivelSelect = document.getElementById('nivel_academico');
+    const trayectoSelect = document.getElementById('trayecto');
+    if (nivelSelect) {
+        updateTrayectoState(nivelSelect.value);
+        nivelSelect.addEventListener('change', (e) => {
+            updateTrayectoState(e.target.value);
+            submitFilterForm();
+        });
+    }
+
+    if (trayectoSelect) {
+        trayectoSelect.addEventListener('change', () => {
+            submitFilterForm();
+        });
+    }
+
+    const ordenSelect = document.getElementById('ordenSelect');
+    if (ordenSelect) {
+        ordenSelect.addEventListener('change', () => {
+            submitFilterForm();
+        });
+    }
+}
+
+// Habilita o deshabilita el selector de trayecto según el nivel académico seleccionado
+function updateTrayectoState(nivelVal) {
+    const trayectoSelect = document.getElementById('trayecto');
+    if (!trayectoSelect) return;
+    if (!nivelVal || nivelesConTrayectoList.includes(nivelVal)) {
+        trayectoSelect.disabled = false;
+    } else {
+        trayectoSelect.value = '';
+        trayectoSelect.disabled = true;
     }
 }
 
@@ -52,16 +92,16 @@ function updateDimensionOptions(selectedLineaId) {
     });
 }
 
-// Selecciona un año del histograma y envía el formulario
+// Selecciona o desactiva un año del histograma y envía el formulario
 function selectYear(year) {
     const yearInput = document.getElementById('searchYearInput');
     if (yearInput) {
-        yearInput.value = year;
+        yearInput.value = (year !== '' && String(yearInput.value) === String(year)) ? '' : year;
         submitFilterForm();
     }
 }
 
-// Maneja el toggle de búsqueda semántica (IA)
+// Maneja el toggle de búsqueda semántica
 function handleSemanticToggle(checkbox) {
     const isChecked = checkbox.checked;
     const hiddenInFilter = document.getElementById('searchUsarIaHidden');
@@ -95,11 +135,11 @@ function updateUIForMode(isIA) {
     
     if (isIA) {
         if (searchBarContainer) searchBarContainer.classList.add('ia-mode-container');
-        if (searchInput) searchInput.placeholder = "Describe tu propuesta o temática de investigación (Búsqueda Semántica con Redes Neuronales)...";
+        if (searchInput) searchInput.placeholder = "Describe tu propuesta o temática de investigación: Búsqueda Semántica con Redes Neuronales...";
         if (iaHint) iaHint.classList.add('visible');
     } else {
         if (searchBarContainer) searchBarContainer.classList.remove('ia-mode-container');
-        if (searchInput) searchInput.placeholder = "Buscar por títulos, palabras clave o resumen abstract...";
+        if (searchInput) searchInput.placeholder = "Buscar por título, autor, comunidad, palabras clave o resumen...";
         if (iaHint) iaHint.classList.remove('visible');
     }
 }

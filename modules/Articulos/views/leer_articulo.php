@@ -53,7 +53,6 @@
                     <!-- TÍTULO PRINCIPAL DEL ARTÍCULO -->
                     <h1 class="art-detail-title"><?= htmlspecialchars($articulo['titulo'] ?? 'Artículo sin título') ?></h1>
 
-                    <!-- AUTORES DE LA PUBLICACIÓN -->
                     <div class="art-detail-authors-box" style="align-items: flex-start;">
                         <i class="ph-bold ph-users" style="font-size: 1.25rem; color: #7090cb; margin-top: 4px;"></i>
                         <div class="art-authors-line" style="margin-bottom: 0; gap: 0.5rem;">
@@ -64,7 +63,6 @@
                                         <a href="perfil-autor?id=<?= (int)$autorData['id'] ?>" style="color:#ffffff; text-decoration:none; font-weight:600;" title="Ver perfil de <?= htmlspecialchars($autorData['nombre']) ?>">
                                             <?= htmlspecialchars($autorData['nombre']) ?>
                                         </a>
-                                        <!-- Enlace al ORCID (Solo si existe) -->
                                         <?php if (!empty($autorData['orcid'])): ?>
                                             <?php $orcidUrl = strpos($autorData['orcid'], 'http') === 0 ? $autorData['orcid'] : 'https://orcid.org/' . $autorData['orcid']; ?>
                                             <a href="<?= htmlspecialchars($orcidUrl) ?>" target="_blank" title="Ver perfil ORCID" style="color:var(--color-terciario); display:flex; align-items:center; margin-left: 2px;">
@@ -82,13 +80,12 @@
                     <!-- BARRA DE ACCIONES PRINCIPALES EN CABECERA -->
                     <div class="art-detail-actions-bar">
                         <a class="art-btn-read" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); padding: 0.65rem 1rem; font-size: 0.88rem;" href="<?= htmlspecialchars($articulo['archivo_pdf'] ?? '#') ?>" target="_blank" rel="noopener noreferrer">
-                            <i class="ph-bold ph-quotes"></i> Leer artículo
+                            <i class="ph-bold ph-book-open"></i> Leer artículo
                         </a>
-                        <button type="button" class="art-action-icon-btn" style="width: 38px; height: 38px; background: rgba(255,255,255,0.15);  color: white; border: 1px solid rgba(255,255,255,0.3); padding: 0.65rem 1rem; font-size: 0.88rem;" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($articulo['titulo'])) ?>, <?= htmlspecialchars(json_encode($articulo['autores_text'])) ?>, <?= $articulo['anio_publicacion'] ?>, <?= htmlspecialchars(json_encode($articulo['editorial'] ?? 'N/A')) ?>, <?= htmlspecialchars(json_encode($articulo['volumen'] ?? '')) ?>, <?= htmlspecialchars(json_encode($articulo['numero'] ?? '')) ?>, <?= htmlspecialchars(json_encode($articulo['issn'] ?? '')) ?>)">
+                        <button type="button" class="art-action-icon-btn" style="width: 38px; height: 38px; background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); font-size: 0.88rem;" title="Generar Cita Académica" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($articulo['titulo'] ?? '')) ?>, <?= htmlspecialchars(json_encode($articulo['autores_text'] ?? 'S/A')) ?>, <?= json_encode($articulo['anio_publicacion'] ?? '') ?>, <?= htmlspecialchars(json_encode($articulo['editorial'] ?? 'S/E')) ?>, <?= htmlspecialchars(json_encode($articulo['volumen'] ?? '')) ?>, <?= htmlspecialchars(json_encode($articulo['numero'] ?? '')) ?>, <?= htmlspecialchars(json_encode($articulo['issn'] ?? '')) ?>)">
                             <i class="ph-bold ph-quotes"></i> 
                         </button>
-
-                        <button type="button" class="art-action-icon-btn" style="width: 38px; height: 38px; background: rgba(255,255,255,0.15); color: white; border-color: rgba(255,255,255,0.3);" title="Copiar Enlace Directo" onclick="compartirEnlace(this, '<?= htmlspecialchars($articulo['archivo_pdf'] ?? '#') ?>')">
+                        <button type="button" class="art-action-icon-btn" style="width: 38px; height: 38px; background: rgba(255,255,255,0.15); color: white; border-color: rgba(255,255,255,0.3);" title="Copiar enlace del artículo" onclick="compartirEnlaceArticulo(<?= (int)$articulo['id'] ?>, this)">
                             <i class="ph-bold ph-share-network"></i>
                         </button>
                     </div>
@@ -236,7 +233,7 @@
                                             <!-- Enlace al ORCID -->
                                             <?php if (!empty($autorData['orcid'])): ?>
                                                 <?php $orcidUrl = strpos($autorData['orcid'], 'http') === 0 ? $autorData['orcid'] : 'https://orcid.org/' . $autorData['orcid']; ?>
-                                                <a href="<?= htmlspecialchars($orcidUrl) ?>" target="_blank" title="Ver perfil ORCID" style="color:#A6CE39; display:flex; align-items:center;">
+                                                <a href="<?= htmlspecialchars($orcidUrl) ?>" target="_blank" title="Ver perfil ORCID" style="color:var(--color-terciario); display:flex; align-items:center;">
                                                     <i class="ph-fill ph-identification-badge" style="font-size:1.1rem;"></i>
                                                 </a>
                                             <?php endif; ?>
@@ -251,8 +248,11 @@
                                     <a href="leer-articulo?id=<?= $sim['id'] ?>" class="art-btn-read">
                                         <i class="ph-bold ph-book-open"></i> Leer
                                     </a>
-                                    <button type="button" class="art-action-icon-btn" title="Generar Cita Académica" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($sim['titulo'])) ?>, <?= htmlspecialchars(json_encode($sim['autores_text'])) ?>, <?= $sim['anio_publicacion'] ?>, <?= htmlspecialchars(json_encode($sim['editorial'] ?? 'N/A')) ?>, <?= htmlspecialchars(json_encode($sim['volumen'] ?? '')) ?>, <?= htmlspecialchars(json_encode($sim['numero'] ?? '')) ?>, <?= htmlspecialchars(json_encode($sim['issn'] ?? '')) ?>)">
+                                    <button type="button" class="art-action-icon-btn" title="Generar Cita Académica" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($sim['titulo'] ?? '')) ?>, <?= htmlspecialchars(json_encode($sim['autores_text'] ?? 'S/A')) ?>, <?= json_encode($sim['anio_publicacion'] ?? '') ?>, <?= htmlspecialchars(json_encode($sim['editorial'] ?? 'S/E')) ?>, <?= htmlspecialchars(json_encode($sim['volumen'] ?? '')) ?>, <?= htmlspecialchars(json_encode($sim['numero'] ?? '')) ?>, <?= htmlspecialchars(json_encode($sim['issn'] ?? '')) ?>)">
                                         <i class="ph-bold ph-quotes"></i>
+                                    </button>
+                                    <button type="button" class="art-action-icon-btn" title="Copiar enlace del artículo" onclick="compartirEnlaceArticulo(<?= (int)$sim['id'] ?>, this)">
+                                        <i class="ph-bold ph-share-network"></i>
                                     </button>
                                 </div>
                             </div>
@@ -276,62 +276,171 @@
 <!-- INYECCIÓN DEL MODAL Y SCRIPTS GLOBALES -->
 <script>
 const configuracionesCitas = <?= json_encode(ConfigService::get('citas.estilos', [])) ?>;
+let toastTimerArt = null;
+
+function mostrarToastArticulos(msg) {
+    const toast = document.getElementById('artToastNotification');
+    const toastTxt = document.getElementById('artToastText');
+    if (!toast) return;
+    if (toastTxt) toastTxt.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimerArt);
+    toastTimerArt = setTimeout(() => {
+        toast.classList.remove('show');
+    }, 2500);
+}
+
+function fallbackCopiarTexto(texto, onSuccess) {
+    const ta = document.createElement('textarea');
+    ta.value = texto;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.top = '-9999px';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+        document.execCommand('copy');
+        if (typeof onSuccess === 'function') onSuccess();
+    } catch (e) {
+        alert('No se pudo copiar automáticamente: ' + texto);
+    }
+    document.body.removeChild(ta);
+}
+
+function compartirEnlaceArticulo(idArticulo, btn) {
+    const url = new URL('leer-articulo?id=' + idArticulo, window.location.href).href;
+    const origHtml = btn.innerHTML;
+    
+    const exito = () => {
+        btn.classList.add('is-copied');
+        btn.innerHTML = '<i class="ph-bold ph-check"></i>';
+        mostrarToastArticulos('¡Enlace del artículo copiado al portapapeles!');
+        setTimeout(() => {
+            btn.innerHTML = origHtml;
+            btn.classList.remove('is-copied');
+        }, 2000);
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url).then(exito).catch(() => {
+            fallbackCopiarTexto(url, exito);
+        });
+    } else {
+        fallbackCopiarTexto(url, exito);
+    }
+}
 
 function abrirModalCita(titulo, autores, anio, editorial, volumen, numero, issn) {
     const listEl = document.getElementById('listaCitasDinamicas');
-    if (!listEl) return;
+    const modal = document.getElementById('modalCitasContainer');
+    if (!listEl || !modal) return;
     listEl.innerHTML = '';
     
     const mockData = {
-        '{autores}': autores || 'S/A', '{anio}': anio || 's.f.', '{titulo}': titulo || 'Sin Título',
-        '{editorial}': editorial || 'S/E', '{volumen}': volumen || '', '{numero}': numero || '', '{issn}': issn || ''
+        '{autores}': autores || 'S/A',
+        '{anio}': anio || 's.f.',
+        '{titulo}': titulo || 'Sin Título',
+        '{editorial}': editorial || 'S/E',
+        '{volumen}': volumen || '',
+        '{numero}': numero || '',
+        '{issn}': issn || ''
     };
     
+    let count = 0;
     for (const [slug, item] of Object.entries(configuracionesCitas)) {
         if (!item.activo) continue;
+        count++;
         let textoCita = item.plantilla || '';
-        for (const [k, v] of Object.entries(mockData)) { textoCita = textoCita.replaceAll(k, v); }
+        for (const [k, v] of Object.entries(mockData)) {
+            textoCita = textoCita.replaceAll(k, String(v));
+        }
         
         const boxId = 'cita_txt_' + slug;
         listEl.insertAdjacentHTML('beforeend', `
-            <div style="margin-bottom: 0.85rem;">
-                <strong style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--color-secundario); text-transform: uppercase; margin-bottom: 0.25rem;">
-                    <span>${item.nombre || slug}</span>
-                    <button type="button" onclick="copiarCitaText('${boxId}', this)" style="padding: 0.2rem 0.5rem; font-size: 0.7rem; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer; font-weight: 700;"><i class="ph ph-copy"></i> Copiar</button>
-                </strong>
-                <div id="${boxId}" style="background: #fafbfe; border: 1px solid rgba(169, 168, 166, 0.15); padding: 0.5rem 0.65rem; border-radius: 4px; font-size: 0.8rem; font-family: monospace;">${textoCita}</div>
+            <div class="art-modal-cita-item">
+                <div class="art-modal-cita-header">
+                    <span class="art-modal-cita-tag">${item.nombre || slug}</span>
+                    <button type="button" class="art-modal-cita-copy-btn" onclick="copiarCitaText('${boxId}', this)">
+                        <i class="ph-bold ph-copy"></i> Copiar
+                    </button>
+                </div>
+                <div id="${boxId}" class="art-modal-cita-box">${textoCita}</div>
             </div>
         `);
     }
-    document.getElementById('modalCitasContainer').style.display = 'flex';
+
+    if (count === 0) {
+        listEl.innerHTML = '<p class="art-empty-state" style="padding: 1rem;">No hay formatos de cita activos configurados en el sistema.</p>';
+    }
+
+    modal.style.display = 'flex';
 }
 
-function cerrarModalCitas() { document.getElementById('modalCitasContainer').style.display = 'none'; }
-
-function compartirEnlace(btn, enlace) {
-    const origHtml = btn.innerHTML;
-    navigator.clipboard.writeText(enlace).then(() => {
-        btn.innerHTML = '<i class="ph ph-check"></i> Copiado';
-        setTimeout(() => { btn.innerHTML = origHtml; }, 2000);
-    });
+function cerrarModalCitas() {
+    const modal = document.getElementById('modalCitasContainer');
+    if (modal) modal.style.display = 'none';
 }
 
 function copiarCitaText(id, btn) {
-    const text = document.getElementById(id).textContent;
+    const el = document.getElementById(id);
+    if (!el) return;
+    const text = el.textContent;
     const origHtml = btn.innerHTML;
-    navigator.clipboard.writeText(text).then(() => {
-        btn.innerHTML = '<i class="ph ph-check"></i> ¡Copiado!';
-        setTimeout(() => { btn.innerHTML = origHtml; }, 2000);
-    });
+    
+    const exito = () => {
+        btn.innerHTML = '<i class="ph-bold ph-check"></i> ¡Copiado!';
+        btn.classList.add('is-copied');
+        mostrarToastArticulos('¡Cita académica copiada al portapapeles!');
+        setTimeout(() => {
+            btn.innerHTML = origHtml;
+            btn.classList.remove('is-copied');
+        }, 2000);
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(exito).catch(() => {
+            fallbackCopiarTexto(text, exito);
+        });
+    } else {
+        fallbackCopiarTexto(text, exito);
+    }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const modalCitas = document.getElementById('modalCitasContainer');
+    if (modalCitas) {
+        modalCitas.addEventListener('click', function(e) {
+            if (e.target === this) cerrarModalCitas();
+        });
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        cerrarModalCitas();
+    }
+});
 </script>
 
-<div id="modalCitasContainer" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 34, 68, 0.7); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center;">
-    <div style="background: white; border-radius: 8px; width: 90%; max-width: 540px; padding: 1.25rem; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 0.5rem; margin-bottom: 1rem;">
-            <h3 style="margin: 0;"><i class="ph ph-quotes"></i> Cita Académica</h3>
-            <button type="button" onclick="cerrarModalCitas()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">&times;</button>
+<!-- MODAL CITAS ACADÉMICAS -->
+<div id="modalCitasContainer" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18, 26, 62, 0.7); backdrop-filter: blur(6px); z-index: 99999; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 12px; width: 90%; max-width: 560px; padding: 1.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.25); border: 1px solid rgba(80,89,132,0.18);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(80,89,132,0.15); padding-bottom: 0.75rem; margin-bottom: 1.25rem;">
+            <h3 style="margin: 0; font-size: 1.15rem; color: var(--texto-titulos); display: flex; align-items: center; gap: 0.5rem;">
+                <i class="ph-bold ph-quotes" style="color: var(--color-secundario);"></i> Cita Académica
+            </h3>
+            <button type="button" onclick="cerrarModalCitas()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--texto-silenciado); padding: 0.2rem;" title="Cerrar modal">&times;</button>
         </div>
         <div id="listaCitasDinamicas" style="max-height: 380px; overflow-y: auto;"></div>
+        <div style="margin-top: 1rem; text-align: right; border-top: 1px solid rgba(80,89,132,0.1); padding-top: 0.75rem;">
+            <button type="button" onclick="cerrarModalCitas()" class="art-btn-read" style="padding: 0.45rem 1.25rem; font-size: 0.85rem; border-radius: 6px;">Cerrar</button>
+        </div>
     </div>
+</div>
+
+<!-- TOAST FLOTANTE INSTITUCIONAL -->
+<div id="artToastNotification" class="art-toast-pill">
+    <i class="ph-bold ph-check-circle" style="color: #10b981; font-size: 1.15rem;"></i>
+    <span id="artToastText">¡Enlace copiado al portapapeles!</span>
 </div>

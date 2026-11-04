@@ -2,6 +2,13 @@
 // modules/Cursos/views/config_cursos.php
 // Estilo similar al módulo SuperAdmin (Antigravity Glassmorphism)
 $c = $config_actual;
+$apiExt = $c['api_externa'] ?? [];
+$ultimoSync = $apiExt['ultimo_sync'] ?? null;
+
+$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$scriptDir = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/proyect_CIIDI/proyect_CIIDI/public/index.php')), '/');
+$endpointRestUrl = $scheme . '://' . $host . $scriptDir . '/?ruta=api-cursos-externo';
 ?>
 <div class="cur-wrapper" style="max-width: 1400px;">
     <div class="cur-header-gestion" style="margin-bottom: 2rem;">
@@ -9,7 +16,7 @@ $c = $config_actual;
             <h1 style="font-size: 2.2rem; font-weight: 800; color: var(--cur-dark); margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.5rem;">
                 <i class="ph-fill ph-gear" style="color:var(--cur-primary);"></i> Configuración del Módulo
             </h1>
-            <p style="color:var(--cur-muted); font-size:1.05rem;">Ajustes globales de paginación, imágenes e integraciones institucionales.</p>
+            <p style="color:var(--cur-muted); font-size:1.05rem;">Ajustes globales de paginación, imágenes, Google Forms y sincronización API REST con servidores externos.</p>
         </div>
         <a href="?ruta=cursos" class="cur-btn-secondary" style="border-radius:12px; padding:0.6rem 1.2rem;"><i class="ph-bold ph-arrow-left"></i> Volver al Catálogo</a>
     </div>
@@ -50,7 +57,7 @@ $c = $config_actual;
             <!-- TARJETA: Integración Moodle -->
             <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04);">
                 <div style="display:flex; align-items:center; gap:0.8rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--cur-border); padding-bottom:1rem;">
-                    <div style="width:40px; height:40px; border-radius:10px; background:#FEF3C7; color:#D97706; display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
+                    <div class="cur-icon-box-inst">
                         <i class="ph-fill ph-graduation-cap"></i>
                     </div>
                     <h3 style="font-weight:700; color:var(--cur-dark); font-size:1.2rem; margin:0;">Integración LMS (Moodle)</h3>
@@ -66,7 +73,7 @@ $c = $config_actual;
                 </div>
             </div>
             
-            <!-- TARJETA: Gestión de Imágenes (ancho completo) -->
+            <!-- TARJETA: Gestión de Imágenes -->
             <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04); display: flex; flex-direction: column; grid-column: 1 / 2;">
                 <div style="display:flex; align-items:center; gap:0.8rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--cur-border); padding-bottom:1rem;">
                     <div style="width:40px; height:40px; border-radius:10px; background:#DCFCE7; color:#166534; display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
@@ -104,7 +111,7 @@ $c = $config_actual;
                 </div>
             </div>
 
-            <!-- TARJETA: Referencia de Roles (columna derecha, misma fila que Imágenes) -->
+            <!-- TARJETA: Referencia de Roles -->
             <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04); display: flex; flex-direction: column; grid-column: 2 / 3;">
                 <div style="display:flex; align-items:center; gap:0.8rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--cur-border); padding-bottom:1rem;">
                     <div style="width:40px; height:40px; border-radius:10px; background:#F1F5F9; color:#475569; display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
@@ -139,8 +146,112 @@ $c = $config_actual;
                     <?php endforeach; ?>
                 </div>
             </div>
-        </div>
 
+            <!-- Nota: Cada curso define su propio enlace de formulario en su ficha de registro/edición -->
+            <input type="hidden" name="google_form_habilitado" value="1">
+            <input type="hidden" name="google_form_url" value="<?= htmlspecialchars($c['formulario_google']['url_default'] ?? '') ?>">
+            <input type="hidden" name="google_form_titulo" value="<?= htmlspecialchars($c['formulario_google']['titulo'] ?? 'Inscripción Oficial de Curso CIIDI') ?>">
+            <input type="hidden" name="google_form_modo" value="embebido">
+
+            <!-- TARJETA: API REST y Sincronización con Servidor Externo (MySQL / Portal Remoto) -->
+            <div style="background: rgba(255, 255, 255, 0.98); border: 1.5px solid rgba(16, 185, 129, 0.3); border-radius: 16px; padding: 2rem; box-shadow: 0 12px 32px rgba(18, 26, 62, 0.06); grid-column: 1 / -1;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 1.5rem; border-bottom: 1px solid var(--cur-border); padding-bottom:1rem; flex-wrap:wrap; gap:1rem;">
+                    <div style="display:flex; align-items:center; gap:0.8rem;">
+                        <div style="width:44px; height:44px; border-radius:12px; background:#D1FAE5; color:#059669; display:flex; align-items:center; justify-content:center; font-size:1.4rem;">
+                            <i class="ph-fill ph-cloud-arrow-up"></i>
+                        </div>
+                        <div>
+                            <h3 style="font-weight:800; color:var(--cur-dark); font-size:1.25rem; margin:0;">API REST y Sincronización Híbrida con Servidor Externo (MySQL)</h3>
+                            <p style="margin:0; font-size:0.88rem; color:var(--cur-muted);">Expone el catálogo de Cursos y el Directorio de Investigadores vía JSON REST y actualiza automáticamente la base de datos MySQL del portal externo.</p>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:0.8rem; flex-wrap:wrap;">
+                        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; background:#ECFDF5; padding:0.5rem 1rem; border-radius:30px; border:1px solid #A7F3D0;">
+                            <input type="checkbox" name="api_externa_habilitada" <?= (!isset($apiExt['habilitada']) || !empty($apiExt['habilitada'])) ? 'checked' : '' ?> style="width:1.15rem; height:1.15rem; accent-color:#059669;">
+                            <span style="font-weight:700; font-size:0.85rem; color:#065F46;">API REST Activa</span>
+                        </label>
+                        <label class="cur-pill-toggle-inst">
+                            <input type="checkbox" name="api_externa_auto_push" <?= (!isset($apiExt['auto_push']) || !empty($apiExt['auto_push'])) ? 'checked' : '' ?>>
+                            <span>Auto-Push al Crear/Editar</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Endpoint de Lectura (Pull) -->
+                <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:1.2rem; margin-bottom:1.5rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.8rem; margin-bottom:0.6rem;">
+                        <strong style="color:#1E293B; font-size:0.92rem; display:flex; align-items:center; gap:0.5rem;">
+                            <i class="ph-bold ph-plugs-connected" style="color:#059669;"></i> Endpoint Público API REST del CIIDI (Consumo GET desde el Servidor Externo):
+                        </strong>
+                        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                            <?php $apiKeyQuery = !empty($apiExt['api_key']) ? '&api_key=' . urlencode((string)$apiExt['api_key']) : ''; ?>
+                            <a href="?ruta=api-cursos-externo&recurso=todo<?= htmlspecialchars($apiKeyQuery) ?>" target="_blank" style="background:#fff; color:#059669; border:1px solid #A7F3D0; padding:0.35rem 0.8rem; border-radius:8px; font-size:0.8rem; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:0.35rem;">
+                                <i class="ph-bold ph-file-code"></i> Ver JSON Completo
+                            </a>
+                            <a href="?ruta=api-cursos-externo&recurso=cursos<?= htmlspecialchars($apiKeyQuery) ?>" target="_blank" class="cur-api-link-inst">
+                                <i class="ph-bold ph-graduation-cap"></i> Solo Cursos
+                            </a>
+                            <a href="?ruta=api-cursos-externo&recurso=investigadores<?= htmlspecialchars($apiKeyQuery) ?>" target="_blank" class="cur-api-link-inst">
+                                <i class="ph-bold ph-users-three"></i> Solo Investigadores
+                            </a>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:0.6rem; align-items:center;">
+                        <input type="text" readonly id="ciidi-api-endpoint-input" value="<?= htmlspecialchars($endpointRestUrl) ?>" style="flex:1; background:#fff; border:1px solid #CBD5E1; border-radius:8px; padding:0.65rem 0.9rem; font-family:monospace; font-size:0.88rem; color:#0F172A;">
+                        <button type="button" onclick="const v=document.getElementById('ciidi-api-endpoint-input').value, b=this, o=b.innerHTML; if(navigator.clipboard && window.isSecureContext){ navigator.clipboard.writeText(v).then(()=>{ b.innerHTML='<i class=\'ph-bold ph-check\'></i> ¡Copiado!'; setTimeout(()=>b.innerHTML=o, 2000); }); } else { const ta=document.createElement('textarea'); ta.value=v; ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); b.innerHTML='<i class=\'ph-bold ph-check\'></i> ¡Copiado!'; setTimeout(()=>b.innerHTML=o, 2000); }" style="background:#1E293B; color:#fff; border:none; border-radius:8px; padding:0.65rem 1.1rem; font-weight:700; font-size:0.85rem; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem;">
+                            <i class="ph-bold ph-copy"></i> Copiar URL
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Configuración de Push hacia el Servidor Externo MySQL -->
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:1.5rem;">
+                    <div class="cur-field-group">
+                        <label for="api_externa_webhook_url" class="cur-field-label">URL del Receptor en el Servidor Externo (`api_sync.php`)</label>
+                        <div class="cur-field-input-wrap">
+                            <i class="ph-bold ph-globe-hemisphere-west cur-field-icon"></i>
+                            <input type="url" id="api_externa_webhook_url" name="api_externa_webhook_url" class="cur-field-input" value="<?= htmlspecialchars($apiExt['webhook_url'] ?? 'https://ciidi.iutetvirtual.org.ve/api_sync.php') ?>" placeholder="https://ciidi.iutetvirtual.org.ve/api_sync.php" style="border-radius:10px; padding:0.8rem 1rem 0.8rem 2.5rem;">
+                        </div>
+                        <small style="color:var(--cur-muted); display:block; margin-top:0.4rem;"><i class="ph-bold ph-info"></i> Dirección a la que el CIIDI enviará automáticamente los cursos e investigadores actualizados para guardarlos en MySQL.</small>
+                    </div>
+
+                    <div class="cur-field-group">
+                        <label for="api_externa_api_key" class="cur-field-label">Clave Secreta de Sincronización (`SYNC_API_KEY`)</label>
+                        <div class="cur-field-input-wrap">
+                            <i class="ph-bold ph-key cur-field-icon"></i>
+                            <input type="text" id="api_externa_api_key" name="api_externa_api_key" class="cur-field-input" value="<?= htmlspecialchars($apiExt['api_key'] ?? 'ciidi_sync_secret_2026') ?>" placeholder="ciidi_sync_secret_2026" style="border-radius:10px; padding:0.8rem 1rem 0.8rem 2.5rem; font-family:monospace;">
+                        </div>
+                        <small style="color:var(--cur-muted); display:block; margin-top:0.4rem;"><i class="ph-bold ph-shield-check"></i> Firma criptográfica HMAC-SHA256 compartida entre el CIIDI y el `config.php` del servidor externo.</small>
+                    </div>
+                </div>
+
+                <!-- Barra de Estado de Sincronización y Botón de Push Inmediato -->
+                <div style="margin-top:1.5rem; background:#F0FDF4; border:1px solid #BBF7D0; border-radius:12px; padding:1.1rem 1.4rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+                    <div style="display:flex; align-items:center; gap:0.8rem;">
+                        <i class="ph-fill <?= (!empty($ultimoSync['ok'])) ? 'ph-check-circle cur-sync-icon-ok' : 'ph-arrows-clockwise cur-sync-icon-pending' ?>"></i>
+                        <div>
+                            <?php if (is_array($ultimoSync)): ?>
+                                <strong style="color:#064E3B; font-size:0.92rem; display:block;">
+                                    Última sincronización: <?= htmlspecialchars($ultimoSync['fecha'] ?? '') ?>
+                                    (<?= !empty($ultimoSync['ok']) ? 'Exitosa' : 'Con aviso' ?> — <?= (int)($ultimoSync['cursos_enviados'] ?? 0) ?> cursos y <?= (int)($ultimoSync['inv_enviados'] ?? 0) ?> investigadores)
+                                </strong>
+                                <span style="color:#047857; font-size:0.82rem;"><?= htmlspecialchars($ultimoSync['mensaje'] ?? '') ?></span>
+                            <?php else: ?>
+                                <strong style="color:#064E3B; font-size:0.92rem; display:block;">Sincronización lista para ejecutarse</strong>
+                                <span style="color:#047857; font-size:0.82rem;">Pulsa el botón para enviar ahora mismo todos los cursos e investigadores al servidor externo MySQL.</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:0.7rem; flex-wrap:wrap;">
+                        <button type="button" id="btn-sync-externo-now" onclick="ejecutarSyncExternoAhora()" style="background:#059669; color:#fff; border:none; padding:0.7rem 1.3rem; border-radius:10px; font-weight:700; font-size:0.9rem; cursor:pointer; display:inline-flex; align-items:center; gap:0.5rem; box-shadow:0 4px 12px rgba(5,150,105,0.25);">
+                            <i class="ph-bold ph-arrows-clockwise"></i> Sincronizar Ahora con Servidor Externo
+                        </button>
+                    </div>
+                </div>
+                <div id="sync-externo-feedback" style="display:none; margin-top:0.8rem; padding:0.85rem 1.1rem; border-radius:10px; font-size:0.9rem; font-weight:600;"></div>
+            </div>
+        </div>
 
         <div style="display:flex; justify-content:flex-end; padding-top:1rem; padding-bottom:3rem;">
             <!-- BOTÓN GUARDAR HERMOSO -->
@@ -164,3 +275,55 @@ $c = $config_actual;
         </div>
     </form>
 </div>
+
+<script>
+function ejecutarSyncExternoAhora() {
+    const btn = document.getElementById('btn-sync-externo-now');
+    const box = document.getElementById('sync-externo-feedback');
+    const urlInput = document.getElementById('api_externa_webhook_url');
+    const keyInput = document.getElementById('api_externa_api_key');
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph-bold ph-spinner ph-spin"></i> Sincronizando con Servidor Externo...';
+    box.style.display = 'block';
+    box.style.background = '#EEF0F8';
+    box.style.color = '#1E293B';
+    box.style.border = '1px solid rgba(80, 89, 132, 0.28)';
+    box.textContent = 'Enviando catálogo de cursos y directorio de investigadores al servidor externo...';
+
+    const fd = new FormData();
+    fd.append('ajax', '1');
+    fd.append('webhook_url', urlInput ? urlInput.value : '');
+    fd.append('api_key', keyInput ? keyInput.value : '');
+
+    fetch('?ruta=cursos-sincronizar-externo', {
+        method: 'POST',
+        body: fd,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ph-bold ph-arrows-clockwise"></i> Sincronizar Ahora con Servidor Externo';
+        if (data && data.ok) {
+            box.style.background = '#DCFCE7';
+            box.style.color = '#166534';
+            box.style.border = '1px solid #86EFAC';
+            box.innerHTML = '<i class="ph-fill ph-check-circle"></i> ¡Sincronización completada! Se enviaron <strong>' + data.cursos_enviados + ' cursos</strong> y <strong>' + data.inv_enviados + ' investigadores</strong> al servidor externo. (' + (data.mensaje || '') + ')';
+        } else {
+            box.style.background = '#FEF2F2';
+            box.style.color = '#991B1B';
+            box.style.border = '1px solid #FECACA';
+            box.innerHTML = '<i class="ph-fill ph-warning-circle"></i> ' + ((data && data.mensaje) ? data.mensaje : 'No se pudo conectar con el servidor externo.');
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ph-bold ph-arrows-clockwise"></i> Sincronizar Ahora con Servidor Externo';
+        box.style.background = '#FEF2F2';
+        box.style.color = '#991B1B';
+        box.style.border = '1px solid #FECACA';
+        box.textContent = 'Error de red al intentar sincronizar: ' + err.message;
+    });
+}
+</script>

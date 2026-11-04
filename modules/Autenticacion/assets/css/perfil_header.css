@@ -34,6 +34,17 @@
     font-size: 1.1rem;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     border: 2px solid var(--bg-sidebar);
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.header-avatar-mini .header-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
 }
 
 .header-user-info {
@@ -158,3 +169,20 @@
     color: var(--color-titulos, #0f172a);
 }
 
+
+
+/* ==========================================================================
+   RESPONSIVIDAD ADICIONAL: LAPTOPS ZOOM ALTO Y MÓVILES (perfil_header.css)
+   ========================================================================== */
+@media (max-width: 768px) {
+    .header-user-info {
+        display: none;
+    }
+    .user-profile-trigger {
+        padding: 0.25rem;
+    }
+    .profile-dropdown-menu {
+        right: 0;
+        width: min(260px, calc(100vw - 2rem));
+    }
+}

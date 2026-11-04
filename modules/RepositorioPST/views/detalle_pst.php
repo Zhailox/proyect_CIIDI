@@ -25,30 +25,6 @@
             </div>
         </section>
 
-        <!-- ESTILOS Y ANIMACIONES OPTIMIZADAS GPU PARA MARQUEE INFINITO -->
-        <style>
-        @keyframes pstMarqueeLoop {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-        .pst-marquee-wrapper {
-            overflow: hidden;
-            width: 100%;
-            position: relative;
-            padding: 0.5rem 0;
-        }
-        .pst-marquee-track {
-            display: flex;
-            gap: 1.25rem;
-            width: max-content;
-            animation: pstMarqueeLoop 35s linear infinite;
-            will-change: transform;
-        }
-        .pst-marquee-track:hover {
-            animation-play-state: paused;
-        }
-        </style>
-
         <!-- MARQUEE ÚNICO GENERAL DE PROYECTOS -->
         <section class="pst-carousels-section" style="margin-top: 1.5rem; margin-bottom: 2rem;">
             <div class="pst-carousel-block">
@@ -68,7 +44,7 @@
                             <?php foreach ($slidesMarquee as $docSlide): ?>
                                 <div class="pst-project-slide" style="flex: 0 0 280px; min-width: 280px;">
                                     <div class="pst-slide-tags">
-                                        <span class="pst-badge-soft" style="background: rgba(0, 123, 255, 0.1); color: var(--color-terciario); font-weight: 700;">
+                                        <span class="pst-badge-soft pst-badge-trayecto">
                                             <?= htmlspecialchars($docSlide['linea_nombre'] ?? 'Línea General') ?>
                                         </span>
                                         <span class="pst-badge-soft" style="background: rgba(112, 144, 203, 0.15); color: var(--color-secundario); font-weight: 700;">
@@ -328,7 +304,7 @@
         draw() {
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(56, 189, 248, 0.85)'; // Nodos azul claro brillante
+            ctx.fillStyle = 'rgba(112, 144, 203, 0.85)'; // Nodos institucionales
             ctx.fill();
         }
     }
@@ -351,7 +327,7 @@
                     ctx.beginPath();
                     ctx.moveTo(particles[i].x, particles[i].y);
                     ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.strokeStyle = `rgba(56, 189, 248, ${0.45 * (1 - dist / 110)})`;
+                    ctx.strokeStyle = `rgba(112, 144, 203, ${0.45 * (1 - dist / 110)})`;
                     ctx.lineWidth = 0.8;
                     ctx.stroke();
                 }

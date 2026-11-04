@@ -79,7 +79,7 @@ if (isset($privilegios)) {
     <div class="glass-panel" style="padding: 1.25rem; border-radius: var(--radius-sm);">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
             <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--texto-titulos); display: flex; align-items: center; gap: 6px;">
-                <i class="ph-bold ph-users-three" style="color: var(--color-principal);"></i> Directorio General de Usuarios Registrados
+                <i class="ph-bold ph-users-three" style="color: var(--texto-titulos);"></i> Directorio General de Usuarios Registrados
             </h4>
 
             <!-- CONTROLES UNIFICADOS DE BÚSQUEDA Y FILTRADO -->
@@ -353,7 +353,7 @@ if (isset($privilegios)) {
                                 <i class="ph-bold ph-check"></i> Actualizar
                             </button>
                             <button type="button" class="rbac-btn rbac-btn-danger-outline"
-                                    onclick="mostrarConfirmacionUsuarios(document.getElementById('form-del-rol-<?= $rItem['id'] ?>'), 'Eliminar Rol', '¿Seguro que desea eliminar el rol <?= htmlspecialchars($rItem['nombre'], ENT_QUOTES) ?>?', 'ph-trash', 'var(--color-principal)')">
+                                    onclick="mostrarConfirmacionUsuarios(document.getElementById('form-del-rol-<?= $rItem['id'] ?>'), 'Eliminar Rol', '¿Seguro que desea eliminar el rol <?= htmlspecialchars($rItem['nombre'], ENT_QUOTES) ?>?', 'ph-trash', 'var(--texto-titulos)')">
                                 <i class="ph-bold ph-trash"></i> Eliminar
                             </button>
                         </div>
@@ -408,7 +408,7 @@ if (isset($privilegios)) {
             <span id="teacherPaginationInfo" style="font-size: 0.82rem; color: #64748b; font-weight: 600;">Mostrando registros</span>
             <div style="display: flex; gap: 0.4rem; align-items: center;">
                 <button id="btnPrevTeacherPage" onclick="changeTeacherPage(-1)" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem; border-color: #cbd5e1; color: #334155;">&lt; Anterior</button>
-                <span id="teacherPageNum" style="font-size: 0.85rem; font-weight: 700; color: var(--color-principal); padding: 0 6px;">1</span>
+                <span id="teacherPageNum" style="font-size: 0.85rem; font-weight: 700; color: var(--texto-titulos); padding: 0 6px;">1</span>
                 <button id="btnNextTeacherPage" onclick="changeTeacherPage(1)" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem; border-color: #cbd5e1; color: #334155;">Siguiente &gt;</button>
             </div>
         </div>
@@ -421,9 +421,9 @@ if (isset($privilegios)) {
     <div style="background: #ffffff; width: 100%; max-width: 480px; border-radius: 12px; padding: 1.75rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(226, 232, 240, 0.8);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
             <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: flex; align-items: center; gap: 8px;">
-                <i class="ph-bold ph-user-plus" style="color: var(--color-secundario, #2563eb);"></i> Registrar Nuevo Usuario
+                <i class="ph-bold ph-user-plus sa-icon-inst"></i> Registrar Nuevo Usuario
             </h3>
-            <button type="button" onclick="toggleModalCrearUsuario(false)" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b;">✕</button>
+            <button type="button" onclick="toggleModalCrearUsuario(false)" class="sa-modal-close" title="Cerrar"><i class="ph-bold ph-x"></i></button>
         </div>
 
         <form action="crear-usuario" method="POST" style="display: flex; flex-direction: column; gap: 0.85rem;" onsubmit="actualizarCedulaCrearUsuario()">
@@ -478,13 +478,13 @@ if (isset($privilegios)) {
     style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center;">
     <div style="background: #ffffff; width: 100%; max-width: 480px; border-radius: var(--radius-md); padding: 1.75rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(80, 89, 132, 0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--color-principal); display: flex; align-items: center; gap: 8px;">
+            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--texto-titulos); display: flex; align-items: center; gap: 8px;">
                 <i class="ph-bold ph-user-plus" style="color: var(--color-secundario);"></i>  Editar Usuario
             </h3>
 
             <button type="button"
                     onclick="toggleModalEditarUsuario(false)"
-                    style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b;">
+                    class="sa-modal-close" title="Cerrar">
                 ✕
             </button>
         </div>
@@ -584,10 +584,10 @@ if (isset($privilegios)) {
 <div id="modalCrearRol" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center;">
     <div style="background: #ffffff; width: 100%; max-width: 400px; border-radius: var(--radius-md); padding: 1.75rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(80, 89, 132, 0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--color-principal); display: flex; align-items: center; gap: 8px;">
+            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--texto-titulos); display: flex; align-items: center; gap: 8px;">
                 <i class="ph-bold ph-shield-plus" style="color: var(--color-secundario);"></i> Crear Nuevo Rol
             </h3>
-            <button type="button" onclick="toggleModalCrearRol(false)" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b;">✕</button>
+            <button type="button" onclick="toggleModalCrearRol(false)" class="sa-modal-close" title="Cerrar"><i class="ph-bold ph-x"></i></button>
         </div>
 
         <form action="crear-rol" method="POST" style="display: flex; flex-direction: column; gap: 0.85rem;">
@@ -648,7 +648,7 @@ function validarEmailEnVivo(inputEl, msgBoxId, excluirId = 0) {
     }
 
     msgBox.style.display = 'block';
-    msgBox.style.color = '#0284c7';
+    msgBox.style.color = '#505984';
     msgBox.innerHTML = '<i class="ph-bold ph-spinner"></i> Comprobando disponibilidad del correo...';
 
     const url = 'verificar-email-usuario?email=' + encodeURIComponent(val) + (excluirId ? '&excluir_id=' + encodeURIComponent(excluirId) : '');
@@ -936,7 +936,7 @@ function mostrarConfirmacionUsuarios(form, titulo, mensaje, icono, color) {
 function confirmarEliminacionNivel(nivel) {
     document.getElementById('inputEliminarNivel').value = nivel;
     const form = document.getElementById('formEliminarNivel');
-    mostrarConfirmacionUsuarios(form, 'Eliminar Nivel', `¿Seguro que deseas eliminar el nivel de privilegio ${nivel}? Esta acción fallará por seguridad si aún existen roles asignados a esta jerarquía.`, 'ph-trash', 'var(--color-principal)');
+    mostrarConfirmacionUsuarios(form, 'Eliminar Nivel', `¿Seguro que deseas eliminar el nivel de privilegio ${nivel}? Esta acción fallará por seguridad si aún existen roles asignados a esta jerarquía.`, 'ph-trash', 'var(--texto-titulos)');
 }
 function toggleModalInvitarProfesor(show) {
     const modal = document.getElementById('modalInvitarProfesor');
@@ -944,6 +944,26 @@ function toggleModalInvitarProfesor(show) {
         modal.style.display = show ? 'flex' : 'none';
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    ['modalEditarUsuario', 'modalCrearUsuario', 'modalCrearRol', 'modalConfirmacionUsuarios', 'modalInvitarProfesor'].forEach(id => {
+        const m = document.getElementById(id);
+        if (m) {
+            m.addEventListener('click', function(e) {
+                if (e.target === this) this.style.display = 'none';
+            });
+        }
+    });
+});
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        ['modalEditarUsuario', 'modalCrearUsuario', 'modalCrearRol', 'modalConfirmacionUsuarios', 'modalInvitarProfesor'].forEach(id => {
+            const m = document.getElementById(id);
+            if (m) m.style.display = 'none';
+        });
+    }
+});
 </script>
 
 <!-- MODAL: INVITAR PROFESOR POR CORREO -->
@@ -953,7 +973,7 @@ function toggleModalInvitarProfesor(show) {
             <h3 style="margin: 0; font-size: 1.1rem; color: #121a3e; font-weight: 800; display: flex; align-items: center; gap: 8px;">
                 <i class="ph-bold ph-envelope-simple-open" style="color: #7090cb;"></i> Invitar Nuevo Docente / Profesor
             </h3>
-            <button type="button" onclick="toggleModalInvitarProfesor(false)" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer;">&times;</button>
+            <button type="button" onclick="toggleModalInvitarProfesor(false)" class="sa-modal-close" title="Cerrar"><i class="ph-bold ph-x"></i></button>
         </div>
         <p style="font-size: 0.85rem; color: #64748b; margin-top: 0; margin-bottom: 1.25rem;">
             Emita un token de invitación firmado enviado al correo institucional del docente para que defina su propia contraseña y active su cuenta.

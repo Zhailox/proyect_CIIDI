@@ -14,7 +14,7 @@
     --text-dark: #1e293b;
     --text-muted: #64748b;
     --success: #10b981;
-    --accent: #3b82f6;
+    --accent: #7090CB;
 
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, var(--color-principal), var(--color-secundario));

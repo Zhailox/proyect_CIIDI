@@ -1,23 +1,3 @@
-<style>
-/* Estilos para el Timeline (Stepper) */
-.ve-stepper { display: flex; justify-content: space-between; position: relative; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px dashed #cbd5e1; }
-.ve-step { flex: 1; text-align: center; position: relative; z-index: 1; }
-.ve-step::before { content: ''; position: absolute; top: 15px; left: -50%; width: 100%; height: 4px; background: #e2e8f0; z-index: -1; }
-.ve-step:first-child::before { display: none; }
-.ve-step-icon { width: 35px; height: 35px; border-radius: 50%; background: #e2e8f0; color: #94a3b8; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem auto; font-size: 1.2rem; border: 4px solid white; transition: 0.3s; }
-.ve-step-text { font-size: 0.85rem; font-weight: 600; color: #64748b; }
-
-/* Estados del Step */
-.ve-step.active .ve-step-icon { background: #121a3e; color: white; }
-.ve-step.active .ve-step-text { color: #121a3e; }
-.ve-step.active ~ .ve-step::before { background: #e2e8f0; } /* La línea anterior a este step */
-.ve-step.active::before { background: #121a3e; }
-
-.ve-step.rejected .ve-step-icon { background: #ef4444; color: white; }
-.ve-step.rejected .ve-step-text { color: #ef4444; }
-.ve-step.rejected::before { background: #ef4444; }
-</style>
-
 <div class="ve-wrapper" style="min-height: 80vh; background: #f4f7fb; padding: 3rem 1rem;">
     <div class="ve-container" style="max-width: 800px; margin: 0 auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
         
@@ -109,12 +89,12 @@ async function buscarPropuesta(tipo) {
         contenedor.style.display = 'block';
         lista.innerHTML = '';
 
-        if (!data.success) {
-            lista.innerHTML = `<div style="padding: 1rem; background: #fee2e2; color: #991b1b; border-radius: 6px;"><i class="ph-bold ph-warning"></i> ${data.message}</div>`;
+        if (!data.exito) {
+            lista.innerHTML = `<div style="padding: 1rem; background: #fee2e2; color: #991b1b; border-radius: 6px;"><i class="ph-bold ph-warning"></i> ${data.error}</div>`;
             return;
         }
 
-        data.data.forEach(prop => {
+        data.datos.forEach(prop => {
             // Lógica del Stepper
             let s1 = 'active', s2 = '', s3 = '', s4 = '';
             let s2_text = 'Aprobación Comité', s2_icon = 'ph-users-three';
@@ -138,7 +118,7 @@ async function buscarPropuesta(tipo) {
             }
 
             // Etiqueta Superior
-            let badgeColor = prop.estado === 'aceptada' ? '#10b981' : (prop.estado === 'rechazada' ? '#ef4444' : '#f59e0b');
+            let badgeColor = prop.estado === 'aceptada' ? '#10b981' : (prop.estado === 'rechazada' ? '#ef4444' : '#505984');
             let txtEstadoGlobal = prop.estado === 'pendiente' ? 'EN REVISIÓN' : (prop.estado === 'rechazada' ? 'RECHAZADA' : 'OFERTA ACTIVA');
             if (prop.estado_oferta === 'En Desarrollo') txtEstadoGlobal = 'EN DESARROLLO';
             if (prop.estado_oferta === 'Finalizada') txtEstadoGlobal = 'FINALIZADO';
@@ -153,6 +133,25 @@ async function buscarPropuesta(tipo) {
                         </p>
                     </div>
                 `;
+            }
+
+            let extrasHtml = '';
+            if (prop.campos_extra) {
+                try {
+                    let extras = typeof prop.campos_extra === 'string' ? JSON.parse(prop.campos_extra) : prop.campos_extra;
+                    if (Array.isArray(extras) && extras.length > 0) {
+                        extrasHtml = '<div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed #cbd5e1; font-size: 0.9rem;"><strong>Información Adicional:</strong><ul style="margin: 0; padding-left: 1.2rem; color: #475569;">';
+                        extras.forEach(e => {
+                            let valor = e.valor;
+                            if (e.tipo === 'fecha') {
+                                const [y, m, d] = valor.split('-');
+                                if (y && m && d) valor = `${d}/${m}/${y}`;
+                            }
+                            extrasHtml += `<li><b>${e.etiqueta}:</b> ${valor}</li>`;
+                        });
+                        extrasHtml += '</ul></div>';
+                    }
+                } catch (e) {}
             }
 
             lista.innerHTML += `
@@ -170,6 +169,7 @@ async function buscarPropuesta(tipo) {
                         </div>
                     </div>
                     
+                    ${extrasHtml}
                     ${alertaRechazo}
 
                     <!-- STEPPER TIMELINE -->

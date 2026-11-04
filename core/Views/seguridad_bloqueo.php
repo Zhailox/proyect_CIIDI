@@ -24,28 +24,8 @@ $fechaHora          = date('d/m/Y H:i:s');
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="stylesheet" href="assets/css/style.css">
-    
-    <style>
-        :root {
-            --color-primario: #002244;
-            --color-secundario: #0284c7;
-            --color-peligro: #dc2626;
-        }
-        body {
-            margin: 0;
-            padding: 2rem 1rem;
-            background-color: #f8fafc;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            color: #1e293b;
-            box-sizing: border-box;
-        }
-    </style>
 </head>
-<body>
+<body class="core-500-body">
 <?php endif; ?>
 
 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 85vh; padding: 1.5rem 0; text-align: center; width: 100%;">
@@ -114,22 +94,19 @@ $fechaHora          = date('d/m/Y H:i:s');
         </div>
 
         <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #64748b; margin-top: 0.5rem;">
-            <i class="ph-bold ph-info" style="color: var(--color-secundario, #0284c7); font-size: 1.1rem; flex-shrink: 0;"></i>
+            <i class="ph-bold ph-info sec-info-icon"></i>
             <span>Este incidente ha sido registrado en la bitácora criptográfica inmutable del sistema (ISO/IEC 27001 Control A.8.15).</span>
         </div>
 
     </div>
 
     <!-- BOTONES FLOTANTES DE ACCIÓN (ESTILO IDÉNTICO A 403 / 404) -->
-    <div style="margin-top: 1.75rem; display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-        <a href="inicio" 
-           style="display: inline-flex; align-items: center; gap: 0.6rem; background: var(--color-secundario, #002244); color: #ffffff; padding: 0.75rem 1.6rem; border-radius: 50px; font-weight: 700; text-decoration: none; font-size: 0.95rem; box-shadow: 0 8px 20px rgba(0, 34, 68, 0.25); transition: all 0.25s ease;">
-            <i class="ph ph-house" style="font-size: 1.25rem;"></i> Regresar al Inicio
+    <div class="core-err-actions">
+        <a href="inicio" class="btn-admin-pill">
+            <i class="ph ph-house core-pill-icon"></i> Regresar al Inicio
         </a>
-        <button type="button" 
-                onclick="history.back()" 
-                style="display: inline-flex; align-items: center; gap: 0.6rem; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(8px); color: #334155; padding: 0.75rem 1.6rem; border-radius: 50px; font-weight: 700; border: 1px solid rgba(80, 89, 132, 0.25); cursor: pointer; font-size: 0.95rem; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05); transition: all 0.25s ease;">
-            <i class="ph ph-arrow-left" style="font-size: 1.25rem;"></i> Volver Atrás
+        <button type="button" onclick="history.back()" class="btn-back-pill">
+            <i class="ph ph-arrow-left core-pill-icon"></i> Volver Atrás
         </button>
     </div>
 

@@ -36,18 +36,22 @@ class BackupService {
         $rutaCompleta = $backupDir . $nombreArchivo;
         $tempSqlPath = $comprimir ? $backupDir . "temp_{$fecha}.sql" : $rutaCompleta;
 
-        $flags = $soloEsquema ? "-F p -s --clean --if-exists" : "-F p --clean --if-exists --inserts";
+        $flags = $soloEsquema
+            ? "-E UTF8 -F p -s --clean --if-exists --no-owner --no-privileges"
+            : "-E UTF8 -F p --clean --if-exists --no-owner --no-privileges --inserts";
         if ($tabla) {
             $flags .= " -t " . escapeshellarg($tabla);
         }
 
         putenv("PGPASSWORD={$creds['pass']}");
+        putenv("PGCLIENTENCODING=UTF8");
         $comando = "{$pgDumpPath} -h {$creds['host']} -p {$creds['port']} -U {$creds['user']} {$flags} -d {$creds['db']} -f \"{$tempSqlPath}\" 2>&1";
 
         $salida = [];
         $codigoRetorno = 0;
         exec($comando, $salida, $codigoRetorno);
         putenv("PGPASSWORD=");
+        putenv("PGCLIENTENCODING=");
 
         if ($codigoRetorno !== 0 || !file_exists($tempSqlPath) || filesize($tempSqlPath) === 0) {
             $errText = implode(' ', $salida);
@@ -58,9 +62,15 @@ class BackupService {
             ];
         }
 
+        // Sanitizar SQL para compatibilidad entre Windows (PG17/18 + pgvector) y Linux Debian (PG13-16)
+        $rawContent = (string)file_get_contents($tempSqlPath);
+        if (method_exists('Connection', 'sanitizarSqlCompatible')) {
+            $rawContent = Connection::sanitizarSqlCompatible($rawContent);
+            file_put_contents($tempSqlPath, $rawContent);
+        }
+
         // Compresión GZIP si se solicitó
         if ($comprimir) {
-            $rawContent = file_get_contents($tempSqlPath);
             $compressedData = gzencode($rawContent, 9);
             file_put_contents($rutaCompleta, $compressedData);
             @unlink($tempSqlPath);

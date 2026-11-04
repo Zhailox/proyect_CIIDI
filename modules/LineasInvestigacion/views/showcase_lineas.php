@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // modules/LineasInvestigacion/views/showcase_lineas.php
 require_once CORE_PATH . 'Security/Auth.php';
 
@@ -227,7 +227,7 @@ $cosmosGradients = [
                         <a href="?ruta=investigaciones" class="cosmos-oferta-item">
                             <div class="cosmos-oferta-accent-bar"></div>
                             <div class="cosmos-oferta-content">
-                                <span class="cosmos-oferta-badge">ACTIVA Â· <?= $oferta['cupos_disponibles'] ?> Cupos</span>
+                                <span class="cosmos-oferta-badge">ACTIVA &bull; <?= (int)$oferta['cupos_disponibles'] ?> Cupos</span>
                                 <h4 class="cosmos-oferta-title"><?= htmlspecialchars($oferta['titulo'] ?? 'Requerimiento PST') ?></h4>
                                 <div class="cosmos-oferta-meta"><i class="ph-bold ph-user"></i> Prof. <?= htmlspecialchars($oferta['profesor']) ?></div>
                                 <div class="cosmos-oferta-linea"><i class="ph-bold ph-flask"></i> <?= htmlspecialchars($oferta['linea_nombre'] ?? 'Línea General') ?></div>

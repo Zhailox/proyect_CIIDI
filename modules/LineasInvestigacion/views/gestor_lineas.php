@@ -10,73 +10,6 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
 
 <div class="li-gestor-wrapper">
 
-<style>
-.ag-gestor-tabs {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-    border-bottom: 2px solid #e2e8f0;
-    padding-bottom: 0;
-    overflow-x: auto;
-}
-.ag-gestor-tabs a {
-    padding: 0.75rem 1.5rem;
-    text-decoration: none;
-    color: #64748b;
-    font-weight: 700;
-    font-size: 0.95rem;
-    border-bottom: 3px solid transparent;
-    transition: all 0.2s;
-    border-radius: 8px 8px 0 0;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.ag-gestor-tabs a:hover {
-    color: #0f172a;
-    background: rgba(241, 245, 249, 0.5);
-}
-.ag-gestor-tabs a.active {
-    color: #2b3453;
-    border-bottom-color: #2b3453;
-    background: #ffffff;
-}
-
-/* Fix for buttons wrapping nicely */
-.ag-header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1.5rem;
-    position: relative;
-    z-index: 1;
-}
-.ag-header-left {
-    flex: 1 1 300px;
-}
-.ag-header-right {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 12px;
-    z-index: 1;
-    flex: 1 1 100%;
-}
-@media (min-width: 900px) {
-    .ag-header-right {
-        flex: 0 0 auto;
-        align-items: flex-end;
-    }
-}
-@media (max-width: 899px) {
-    .ag-header-right {
-        align-items: flex-start;
-    }
-}
-</style>
-
 <div class="ag-gestor-tabs">
     <a href="index.php?ruta=gestionar-carreras" class="<?= ($_GET['ruta']??'') == 'gestionar-carreras' ? 'active' : '' ?>"><i class="ph-bold ph-graduation-cap"></i> PNFs (Carreras)</a>
     <a href="index.php?ruta=gestionar-lineas" class="<?= ($_GET['ruta']??'') == 'gestionar-lineas' ? 'active' : '' ?>"><i class="ph-bold ph-graph"></i> Líneas de Investigación</a>
@@ -189,11 +122,11 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
                     
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
                         <?php if ($li['activo']): ?>
-                            <button type="button" class="ag-btn-edit" style="background:#f59e0b; color:white; border-color:#f59e0b;" title="Ocultar Línea" onclick="ocultarLinea(<?= htmlspecialchars($li['id']) ?>, '<?= htmlspecialchars(addslashes($li['nombre'])) ?>')">
+                            <button type="button" class="ag-btn-hide" title="Ocultar Línea" onclick="ocultarLinea(<?= htmlspecialchars($li['id']) ?>, '<?= htmlspecialchars(addslashes($li['nombre'])) ?>')">
                                 <i class="ph-bold ph-eye-slash"></i> Ocultar
                             </button>
                         <?php else: ?>
-                            <button type="button" class="ag-btn-edit" style="background:#10b981; color:white; border-color:#10b981;" title="Mostrar Línea" onclick="mostrarLinea(<?= htmlspecialchars($li['id']) ?>)">
+                            <button type="button" class="ag-btn-show" title="Mostrar Línea" onclick="mostrarLinea(<?= htmlspecialchars($li['id']) ?>)">
                                 <i class="ph-bold ph-eye"></i> Mostrar
                             </button>
                         <?php endif; ?>
@@ -402,7 +335,7 @@ function ocultarLinea(id, nombre) {
         html: `Estás a punto de ocultar la línea <strong>${nombre}</strong>.<br><br>Dejará de aparecer en las listas públicas, pero los proyectos y datos seguirán intactos.`,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#f59e0b',
+        confirmButtonColor: '#505984',
         cancelButtonColor: '#64748b',
         confirmButtonText: 'Sí, ocultar',
         cancelButtonText: 'Cancelar'
@@ -457,7 +390,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function abrirModalExportarPDF() {
     Swal.fire({
         title: 'Generar Reporte PDF',
-        html: '<div style="margin-top:20px;"><i class="ph-bold ph-spinner ph-spin" style="font-size:2rem;color:#3b82f6;"></i><br><br>Cargando filtros...</div>',
+        html: '<div class="ag-pdf-loading-wrap"><i class="ph-bold ph-spinner ph-spin ag-pdf-spinner"></i><br><br>Cargando filtros...</div>',
         showConfirmButton: false,
         allowOutsideClick: false
     });

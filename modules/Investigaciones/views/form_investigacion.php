@@ -1,38 +1,42 @@
 <?php
 // modules/Investigaciones/views/form_investigacion.php
-// Variables: $investigacion (array), $lineas (array), $dimensiones (array - opcional)
+// Variables: $investigacion (array), $lineas (array), $todasDimensiones (array), $responsablesDisponibles (array), $usuario_actual (array), $from_admin (bool)
 $esEdicion = !empty($investigacion['id']);
+$from_admin = !empty($from_admin) || !empty($_GET['from_admin']);
+$urlRetorno = $from_admin ? '?ruta=panel-investigaciones-admin' : '?ruta=mis-investigaciones';
 ?>
 <div class="inv-wrapper" style="max-width: 1200px; margin: 0 auto;">
 
     <div style="margin-bottom: 2rem;">
-        <a href="?ruta=mis-investigaciones" style="color:var(--inv-muted); text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem; font-weight:600; font-size:0.9rem; margin-bottom:1rem; transition:color 0.2s;" onmouseover="this.style.color='var(--inv-primary)';" onmouseout="this.style.color='var(--inv-muted)';"><i class="ph-bold ph-arrow-left"></i> Volver a Mis Proyectos</a>
+        <a href="<?= $urlRetorno ?>" style="color:var(--inv-muted); text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem; font-weight:600; font-size:0.9rem; margin-bottom:1rem; transition:color 0.2s;" onmouseover="this.style.color='var(--inv-primary)';" onmouseout="this.style.color='var(--inv-muted)';">
+            <i class="ph-bold ph-arrow-left"></i> <?= $from_admin ? 'Volver al Panel Administrativo I+D' : 'Volver a Mis Proyectos' ?>
+        </a>
         
         <h1 style="font-size: 2.5rem; font-weight: 800; color: var(--inv-dark); margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.8rem;">
-            <div style="width:50px; height:50px; border-radius:12px; background: linear-gradient(135deg, var(--color-principal, #121a3e) 0%, var(--color-secundario, #505984) 100%); color:white; display:flex; align-items:center; justify-content:center; font-size:1.6rem; box-shadow:0 10px 20px rgba(80, 89, 132, 0.3);">
+            <div style="width:50px; height:50px; border-radius:12px; background: #505984; color:white; display:flex; align-items:center; justify-content:center; font-size:1.6rem; box-shadow:0 10px 20px rgba(80, 89, 132, 0.3);">
                 <i class="ph-fill <?= $esEdicion ? 'ph-pencil-simple' : 'ph-plus' ?>"></i>
             </div>
             <?= $esEdicion ? 'Editar Investigación' : 'Crear Investigación' ?>
         </h1>
         <p style="color:var(--inv-muted); font-size:1.05rem;">
-            <?= $esEdicion ? 'Actualiza los datos del proyecto y la disponibilidad de cupos.' : 'Registra un nuevo proyecto en el departamento para buscar tesistas.' ?>
+            <?= $esEdicion ? 'Actualiza los datos del proyecto, docente responsable, estado y disponibilidad de cupos.' : 'Registra un nuevo proyecto en el departamento para buscar tesistas.' ?>
         </p>
     </div>
-
-    
 
     <form action="?ruta=<?= $esEdicion ? 'actualizar-investigacion' : 'guardar-investigacion' ?>" method="POST" enctype="multipart/form-data" novalidate style="display:flex; flex-direction:column; gap:2rem;">
         
         <?php if ($esEdicion): ?>
-            <input type="hidden" name="id" value="<?= $investigacion['id'] ?>">
+            <input type="hidden" name="id" value="<?= (int)$investigacion['id'] ?>">
+        <?php endif; ?>
+        <?php if ($from_admin): ?>
+            <input type="hidden" name="from_admin" value="1">
         <?php endif; ?>
 
         <!-- SECCIÓN 1: PRINCIPAL -->
         <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04);">
-            <!-- Sección 1: icono azul #0369A1 -->
             <h3 style="font-weight:800; color:var(--inv-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;">
-                <span style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; background:#E0F2FE;">
-                    <i class="ph-fill ph-info" style="color:#0369A1; font-size:1.2rem;"></i>
+                <span class="inv-section-badge">
+                    <i class="ph-fill ph-info"></i>
                 </span>
                 1. Información Principal
             </h3>
@@ -41,37 +45,67 @@ $esEdicion = !empty($investigacion['id']);
                 <label style="display:block; font-weight:600; color:var(--inv-dark); margin-bottom:0.5rem;">Título del Proyecto <span style="color:var(--inv-danger);">*</span></label>
                 <div style="position:relative;">
                     <i class="ph-bold ph-text-aa" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--inv-muted);"></i>
-                    <input type="text" name="titulo" value="<?= htmlspecialchars($investigacion['titulo'] ?? '') ?>" placeholder="Ej: Sistema de control de inventario basado en RFID" required style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--inv-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(14,165,233,0.15)'; this.style.borderColor='var(--inv-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--inv-border)';">
+                    <input type="text" name="titulo" class="inv-form-input" value="<?= htmlspecialchars($investigacion['titulo'] ?? '') ?>" placeholder="Ej: Sistema de control de inventario basado en RFID" required>
+                </div>
+            </div>
+
+            <!-- Líneas y Dimensiones (Pills) -->
+            <div style="margin-bottom:2rem;">
+
+                <!-- Líneas de Investigación -->
+                <div style="margin-bottom:1.5rem;">
+                    <label style="display:block; font-weight:600; color:var(--inv-dark); margin-bottom:0.8rem;">Líneas de Investigación <span style="color:var(--inv-danger);">*</span></label>
+                    <div style="display:flex; flex-wrap:wrap; gap:0.6rem;">
+                        <?php 
+                        $selectedLineas = $investigacion['lineas_array'] ?? (!empty($investigacion['id_linea']) ? [$investigacion['id_linea']] : []);
+                        foreach ($lineas as $l): ?>
+                            <label class="cb-pill">
+                                <input type="checkbox" name="id_linea[]" value="<?= $l['id'] ?>" class="linea-cb" <?= (in_array($l['id'], $selectedLineas)) ? 'checked' : '' ?>>
+                                <span class="cb-pill-text"><i class="ph-bold ph-git-branch"></i> <?= htmlspecialchars($l['nombre']) ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- Dimensiones Operativas -->
+                <div>
+                    <label style="display:block; font-weight:600; color:var(--inv-dark); margin-bottom:0.8rem;">Dimensiones Operativas</label>
+                    <div id="dimensiones-container" style="display:flex; flex-wrap:wrap; gap:0.6rem; min-height:45px; padding:1.2rem; border:1px dashed var(--inv-border); border-radius:12px; background:#F8FAFC;">
+                        <?php 
+                        $selectedDims = $investigacion['dimensiones_array'] ?? (!empty($investigacion['id_dimension']) ? [$investigacion['id_dimension']] : []);
+                        if (!empty($todasDimensiones)): ?>
+                            <?php foreach ($todasDimensiones as $d): ?>
+                                <label class="cb-pill dim-pill" data-linea="<?= $d['id_linea'] ?>" style="display:none;">
+                                    <input type="checkbox" name="id_dimension[]" value="<?= $d['id'] ?>" <?= (in_array($d['id'], $selectedDims)) ? 'checked' : '' ?>>
+                                    <span class="cb-pill-text"><i class="ph-bold ph-circles-three"></i> <?= htmlspecialchars($d['nombre']) ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                            <span id="no-dims-msg" style="color:var(--inv-muted); font-size:0.9rem;">Seleccione primero una línea de investigación.</span>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
 
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem;">
-                <!-- Línea -->
+                <!-- Responsable del Proyecto -->
                 <div>
-                    <label style="display:block; font-weight:600; color:var(--inv-dark); margin-bottom:0.5rem;">Línea de Investigación <span style="color:var(--inv-danger);">*</span></label>
+                    <label style="display:block; font-weight:600; color:var(--inv-dark); margin-bottom:0.5rem;">
+                        Investigador / Docente Responsable <span style="color:var(--inv-danger);">*</span>
+                    </label>
                     <div style="position:relative;">
-                        <i class="ph-bold ph-git-branch" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--inv-muted);"></i>
-                        <select id="linea-select" name="id_linea" required style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--inv-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--inv-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--inv-border)';">
-                            <option value="">Seleccione una línea</option>
-                            <?php foreach ($lineas as $l): ?>
-                                <option value="<?= $l['id'] ?>" <?= (($investigacion['id_linea']??0) == $l['id']) ? 'selected' : '' ?>><?= htmlspecialchars($l['nombre']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--inv-muted); pointer-events:none;"></i>
-                    </div>
-                </div>
-
-                <!-- Dimensión -->
-                <div>
-                    <label style="display:block; font-weight:600; color:var(--inv-dark); margin-bottom:0.5rem;">Dimensión Operativa</label>
-                    <div style="position:relative;">
-                        <i class="ph-bold ph-circles-three" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--inv-muted);"></i>
-                        <select id="dimension-select" name="id_dimension" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--inv-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--inv-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--inv-border)';">
-                            <option value="">Seleccione primero una línea</option>
-                            <?php if (!empty($dimensiones)): ?>
-                                <?php foreach ($dimensiones as $d): ?>
-                                    <option value="<?= $d['id'] ?>" <?= (($investigacion['id_dimension']??0) == $d['id']) ? 'selected' : '' ?>><?= htmlspecialchars($d['nombre']) ?></option>
-                                <?php endforeach; ?>
+                        <i class="ph-bold ph-user-circle-gear" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--inv-muted); font-size:1.2rem;"></i>
+                        <select name="id_profesor" required style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--inv-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--inv-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--inv-border)';">
+                            <?php 
+                            $respActual = (int)($investigacion['id_profesor'] ?? ($usuario_actual['id'] ?? 0));
+                            $esSuperAdminForm = (int)($usuario_actual['nivel'] ?? 999) === 0;
+                            if (!empty($responsablesDisponibles)):
+                                foreach ($responsablesDisponibles as $resp): ?>
+                                    <option value="<?= $resp['id'] ?>" <?= ($respActual === (int)$resp['id']) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($resp['nombre_completo']) ?><?= $esSuperAdminForm ? ' (' . htmlspecialchars($resp['rol_nombre']) . (!empty($resp['es_investigador']) ? ' · Investigador' : '') . ')' : (!empty($resp['es_investigador']) ? ' (Investigador)' : '') ?>
+                                    </option>
+                                <?php endforeach;
+                            else: ?>
+                                <option value="<?= (int)($usuario_actual['id'] ?? 0) ?>"><?= htmlspecialchars($usuario_actual['nombre_completo'] ?? 'Usuario Actual') ?></option>
                             <?php endif; ?>
                         </select>
                         <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--inv-muted); pointer-events:none;"></i>
@@ -80,13 +114,13 @@ $esEdicion = !empty($investigacion['id']);
 
                 <!-- Estado -->
                 <div>
-                    <label style="display:block; font-weight:600; color:var(--inv-dark); margin-bottom:0.5rem;">Estado Inicial</label>
+                    <label style="display:block; font-weight:600; color:var(--inv-dark); margin-bottom:0.5rem;">Estado del Proyecto</label>
                     <div style="position:relative;">
                         <i class="ph-bold ph-pulse" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--inv-muted);"></i>
                         <select name="estado" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--inv-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--inv-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--inv-border)';">
                             <?php $estados = ['Abierta', 'En Desarrollo', 'Cerrada', 'Finalizada']; ?>
                             <?php foreach ($estados as $est): ?>
-                                <option value="<?= $est ?>" <?= (($investigacion['estado']??'Abierta') == $est) ? 'selected' : '' ?>><?= $est ?></option>
+                                <option value="<?= $est ?>" <?= (($investigacion['estado'] ?? 'Abierta') == $est) ? 'selected' : '' ?>><?= $est ?></option>
                             <?php endforeach; ?>
                         </select>
                         <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--inv-muted); pointer-events:none;"></i>
@@ -189,15 +223,48 @@ $esEdicion = !empty($investigacion['id']);
             
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:1.5rem;">
                 <div>
-                    <label style="display:block; font-weight:600; color:var(--inv-dark); margin-bottom:0.5rem;">Trayecto Académico Objetivo</label>
+                    <label style="display:block; font-weight:600; color:var(--inv-dark); margin-bottom:0.5rem;">Trayecto / Nivel Académico Objetivo</label>
                     <div style="position:relative;">
                         <i class="ph-bold ph-graduation-cap" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--inv-muted);"></i>
+                        <?php
+                        $catTrayectosInv = [];
+                        $perfilPstPath = __DIR__ . '/../../Autenticacion/services/PerfilPSTService.php';
+                        if (file_exists($perfilPstPath)) {
+                            require_once $perfilPstPath;
+                            $catTrayectosInv = PerfilPSTService::catalogoTrayectosDetallado();
+                        }
+                        $valTrayActual = (string)($investigacion['trayecto'] ?? 't4');
+                        ?>
                         <select name="trayecto" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--inv-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--inv-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--inv-border)';">
-                            <option value="t1" <?= (($investigacion['trayecto'] ?? '') == 't1') ? 'selected' : '' ?>>Trayecto I (T1)</option>
-                            <option value="t2" <?= (($investigacion['trayecto'] ?? '') == 't2') ? 'selected' : '' ?>>Trayecto II (T2)</option>
-                            <option value="t3" <?= (($investigacion['trayecto'] ?? '') == 't3') ? 'selected' : '' ?>>Trayecto III (T3)</option>
-                            <option value="t4" <?= (($investigacion['trayecto'] ?? '') == 't4') ? 'selected' : '' ?>>Trayecto IV (T4)</option>
-                            <option value="maestria" <?= (($investigacion['trayecto'] ?? '') == 'maestria') ? 'selected' : '' ?>>Maestría</option>
+                            <?php if (!empty($catTrayectosInv)): ?>
+                                <?php foreach ($catTrayectosInv as $numT => $infoT): 
+                                    $codInv = (string)($infoT['codigo_inv'] ?? ('t' . $numT));
+                                ?>
+                                    <option value="<?= htmlspecialchars($codInv) ?>" <?= ($valTrayActual === $codInv || $valTrayActual === (string)$infoT['nombre']) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($infoT['nombre']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <option value="t1" <?= ($valTrayActual == 't1') ? 'selected' : '' ?>>Trayecto I (T1)</option>
+                                <option value="t2" <?= ($valTrayActual == 't2') ? 'selected' : '' ?>>Trayecto II (T2)</option>
+                                <option value="t3" <?= ($valTrayActual == 't3') ? 'selected' : '' ?>>Trayecto III (T3)</option>
+                                <option value="t4" <?= ($valTrayActual == 't4') ? 'selected' : '' ?>>Trayecto IV (T4)</option>
+                                <option value="maestria" <?= ($valTrayActual == 'maestria') ? 'selected' : '' ?>>Maestría</option>
+                            <?php endif; ?>
+                        </select>
+                        <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--inv-muted); pointer-events:none;"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display:block; font-weight:600; color:var(--inv-dark); margin-bottom:0.5rem;">Modalidad / Categoría</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-tag" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--inv-muted);"></i>
+                        <?php $tagActual = $investigacion['tag_que'] ?? 'Proyecto'; ?>
+                        <select name="tag_que" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--inv-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--inv-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--inv-border)';">
+                            <?php foreach (['Proyecto', 'Tesis', 'Investigación', 'Pasantía', 'Prototipo'] as $tipoTag): ?>
+                                <option value="<?= htmlspecialchars($tipoTag) ?>" <?= ($tagActual === $tipoTag) ? 'selected' : '' ?>><?= htmlspecialchars($tipoTag) ?></option>
+                            <?php endforeach; ?>
                         </select>
                         <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--inv-muted); pointer-events:none;"></i>
                     </div>
@@ -207,17 +274,17 @@ $esEdicion = !empty($investigacion['id']);
                     <label style="display:block; font-weight:600; color:var(--inv-dark); margin-bottom:0.5rem;">Cupos Disponibles</label>
                     <div style="position:relative;">
                         <i class="ph-bold ph-users-three" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--inv-muted);"></i>
-                        <input type="number" name="cupos_disponibles" min="1" max="10" value="<?= $investigacion['cupos_disponibles'] ?? 3 ?>" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--inv-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--inv-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--inv-border)';">
+                        <input type="number" name="cupos_disponibles" min="1" max="10" value="<?= (int)($investigacion['cupos_disponibles'] ?? 3) ?>" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--inv-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--inv-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--inv-border)';">
                     </div>
                 </div>
             </div>
         </div>
 
         <div style="display:flex; justify-content:flex-end; padding-top:1rem; padding-bottom:3rem; gap:1rem;">
-            <a href="?ruta=mis-investigaciones" style="background: white; color: var(--inv-dark); border: 1px solid var(--inv-border); padding: 1rem 2rem; border-radius: 50px; font-weight: 700; font-size: 1.15rem; text-decoration:none; transition: background 0.2s;" onmouseover="this.style.background='#F1F5F9';" onmouseout="this.style.background='white';">Cancelar</a>
+            <a href="<?= $urlRetorno ?>" style="background: white; color: var(--inv-dark); border: 1px solid var(--inv-border); padding: 1rem 2rem; border-radius: 50px; font-weight: 700; font-size: 1.15rem; text-decoration:none; transition: background 0.2s;" onmouseover="this.style.background='#F1F5F9';" onmouseout="this.style.background='white';">Cancelar</a>
             
             <button type="submit" style="
-                background: linear-gradient(135deg, var(--color-principal, #121a3e) 0%, var(--color-secundario, #505984) 100%); 
+                background: #505984; 
                 color: white; 
                 border: none; 
                 padding: 1rem 2.5rem; 
@@ -227,10 +294,11 @@ $esEdicion = !empty($investigacion['id']);
                 display:flex; 
                 align-items:center; 
                 gap: 0.8rem;
-                box-shadow: 0 10px 25px rgba(80, 89, 132, 0.4);
+                box-shadow: 0 4px 15px rgba(80, 89, 132, 0.25);
                 cursor: pointer;
-                transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
-            " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 15px 35px rgba(80, 89, 132, 0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 25px rgba(80, 89, 132, 0.4)';">
+                transition: all 0.2s;"
+                onmouseover="this.style.background='#3C456A'; this.style.transform='translateY(-2px)';"
+                onmouseout="this.style.background='#505984'; this.style.transform='translateY(0)';">
                 <i class="ph-bold ph-floppy-disk" style="font-size: 1.4rem;"></i> <?= $esEdicion ? 'Guardar Cambios' : 'Crear Proyecto' ?>
             </button>
         </div>
@@ -238,49 +306,46 @@ $esEdicion = !empty($investigacion['id']);
 </div>
 
 <script>
-// Lógica para cargar Dimensiones dinámicamente según la Línea
+// Filtrar dimensiones basado en las líneas seleccionadas (UX mejorada con Pills)
 document.addEventListener('DOMContentLoaded', () => {
-    const lineaSelect = document.getElementById('linea-select');
-    const dimensionSelect = document.getElementById('dimension-select');
+    const lineaCbs = document.querySelectorAll('.linea-cb');
+    const dimPills = document.querySelectorAll('.dim-pill');
+    const noDimsMsg = document.getElementById('no-dims-msg');
 
-    if (lineaSelect && dimensionSelect) {
-        lineaSelect.addEventListener('change', async function() {
-            const idLinea = this.value;
-            
-            // Limpiar opciones actuales
-            dimensionSelect.innerHTML = '<option value="">Cargando dimensiones...</option>';
-            dimensionSelect.disabled = true;
+    function updateDimensiones() {
+        const selectedLineas = Array.from(lineaCbs)
+            .filter(cb => cb.checked)
+            .map(cb => cb.value);
 
-            if (!idLinea) {
-                dimensionSelect.innerHTML = '<option value="">Seleccione primero una línea</option>';
-                dimensionSelect.disabled = false;
-                return;
-            }
+        let visibleCount = 0;
 
-            try {
-                const response = await fetch(`?ruta=api-dimensiones-investigacion&id_linea=${idLinea}`);
-                const data = await response.json();
-
-                dimensionSelect.innerHTML = '<option value="">Seleccione una dimensión (opcional)</option>';
-                
-                if (data.ok && data.dimensiones && data.dimensiones.length > 0) {
-                    data.dimensiones.forEach(dim => {
-                        const option = document.createElement('option');
-                        option.value = dim.id;
-                        option.textContent = dim.nombre;
-                        dimensionSelect.appendChild(option);
-                    });
-                } else {
-                    dimensionSelect.innerHTML = '<option value="">No hay dimensiones en esta línea</option>';
-                }
-            } catch (error) {
-                console.error("Error cargando dimensiones:", error);
-                dimensionSelect.innerHTML = '<option value="">Error al cargar dimensiones</option>';
-            } finally {
-                dimensionSelect.disabled = false;
+        dimPills.forEach(pill => {
+            const idLinea = pill.getAttribute('data-linea');
+            if (selectedLineas.includes(idLinea)) {
+                pill.style.display = 'inline-block';
+                visibleCount++;
+            } else {
+                pill.style.display = 'none';
+                pill.querySelector('input').checked = false;
             }
         });
+
+        if (noDimsMsg) {
+            if (selectedLineas.length === 0) {
+                noDimsMsg.textContent = 'Seleccione al menos una línea de investigación.';
+                noDimsMsg.style.display = 'block';
+            } else if (visibleCount === 0) {
+                noDimsMsg.textContent = 'No hay dimensiones configuradas para las líneas seleccionadas.';
+                noDimsMsg.style.display = 'block';
+            } else {
+                noDimsMsg.style.display = 'none';
+            }
+        }
     }
+
+    lineaCbs.forEach(cb => cb.addEventListener('change', updateDimensiones));
+    // Inicializar estado al cargar (importante para edición)
+    updateDimensiones();
 });
 
 function mostrarModalSistema(tipo, titulo, mensaje, isConfirm = false, onConfirm = null) {

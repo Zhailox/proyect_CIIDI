@@ -73,14 +73,14 @@
         </div>
     </div>
 
-    <div style="background: #0f172a; color: #38bdf8; padding: 12px 16px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; overflow-x: auto; display: flex; justify-content: space-between; align-items: center; gap: 1rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);">
+    <div class="sch-cmd-box">
         <span id="codigoComandoCronServidor"><?= htmlspecialchars($diagnostico['es_windows'] ? $diagnostico['comando_sugerido_windows'] : $diagnostico['comando_sugerido_linux']) ?></span>
-        <span style="font-size: 0.75rem; background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 3px 10px; border-radius: 6px; font-weight: 700; white-space: nowrap;"><?= $diagnostico['es_windows'] ? 'Task Scheduler Windows' : 'Sintaxis Linux Crontab' ?></span>
+        <span class="sch-cmd-badge"><?= $diagnostico['es_windows'] ? 'Task Scheduler Windows' : 'Sintaxis Linux Crontab' ?></span>
     </div>
 </div>
 
 <!-- TARJETAS DE TAREAS PROGRAMADAS -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem;" class="mb-2">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 1.5rem;" class="mb-2">
     <?php foreach ($tareas as $id => $tarea): ?>
         <?php 
             $tipoEj = $tarea['tipo_ejecucion'] ?? 'metodo_interno';
@@ -98,7 +98,7 @@
                         <span style="font-family: monospace; font-size: 0.8rem; background: #f8fafc; padding: 4px 10px; border-radius: var(--radius-sm); border: 1px solid #e2e8f0; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.02); display: inline-block;">
                             <?= htmlspecialchars($tarea['expresion_cron']) ?>
                         </span>
-                        <div style="font-size: 0.72rem; color: #0284c7; font-weight: 700; margin-top: 3px; display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
+                        <div class="sch-cron-human-sub">
                             <i class="ph-bold ph-clock"></i> <?= htmlspecialchars(SchedulerService::describirCron($tarea['expresion_cron'])) ?>
                         </div>
                     </div>
@@ -171,7 +171,7 @@
             <h3 id="modalTareaTitulo" style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #121a3e;">
                 Programar Tarea / Editar Horario
             </h3>
-            <button type="button" onclick="cerrarModalTarea()" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer; padding: 4px;">
+            <button type="button" onclick="cerrarModalTarea()" class="sa-modal-close" title="Cerrar">
                 <i class="ph-bold ph-x"></i>
             </button>
         </div>
@@ -187,7 +187,7 @@
             <div style="margin-bottom: 1.25rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
                     <label class="ag-form-label" style="margin-bottom: 0;">Expresión Cron (Frecuencia de Ejecución)</label>
-                    <span style="font-size: 0.72rem; color: #0284c7; font-weight: 700;">
+                    <span class="sch-shortcut-hint">
                         <i class="ph-bold ph-lightning"></i> Atajos rápidos con 1 clic:
                     </span>
                 </div>
@@ -206,19 +206,18 @@
 
                 <!-- INPUT PRINCIPAL DE CRON -->
                 <div style="position: relative;">
-                    <input type="text" name="expresion_cron" id="form_tarea_cron" class="ag-form-input" 
-                           style="font-family: monospace; font-size: 1.05rem; letter-spacing: 1.5px; font-weight: 800; color: #0284c7; padding-left: 2.25rem;" 
+                    <input type="text" name="expresion_cron" id="form_tarea_cron" class="ag-form-input sch-cron-input" 
                            placeholder="Ej: 0 0 * * *" oninput="actualizarExplicacionCron()" required>
-                    <i class="ph-bold ph-clock" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 1.15rem; color: #0284c7;"></i>
+                    <i class="ph-bold ph-clock sch-cron-icon"></i>
                 </div>
 
                 <!-- TARJETA DE EXPLICACIÓN EN VIVO (HUMAN READABLE & FIELD BREAKDOWN) -->
-                <div id="cron_live_card" style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.06), rgba(56, 189, 248, 0.04)); border: 1px solid rgba(2, 132, 199, 0.25); border-radius: 10px; padding: 0.85rem 1rem; margin-top: 0.65rem; transition: all 0.2s ease;">
+                <div id="cron_live_card" class="sch-live-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-                        <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #0284c7; display: flex; align-items: center; gap: 5px;">
+                        <span class="sch-live-kicker">
                             <i class="ph-bold ph-sparkle"></i> ¿Cuándo se ejecutará esta tarea?
                         </span>
-                        <span id="cron_badge_tipo" style="font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; background: #e0f2fe; color: #0369a1;">
+                        <span id="cron_badge_tipo" class="sch-badge-tipo">
                             Diario
                         </span>
                     </div>
@@ -228,30 +227,30 @@
                     </div>
 
                     <!-- DESGLOSE VISUAL DE LOS 5 CAMPOS CRON -->
-                    <div style="margin-top: 0.65rem; padding-top: 0.55rem; border-top: 1px dashed rgba(2, 132, 199, 0.2); display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; text-align: center;">
+                    <div class="sch-fields-grid">
                         <div class="cron-field-chip" style="background: #ffffff; padding: 5px 2px; border-radius: 6px; border: 1px solid #e2e8f0;">
                             <div style="font-size: 0.60rem; color: #64748b; font-weight: 700; text-transform: uppercase;">1. Minuto</div>
-                            <div id="chip_val_minuto" style="font-family: monospace; font-size: 0.88rem; font-weight: 800; color: #0284c7;">0</div>
+                            <div id="chip_val_minuto" class="sch-chip-val">0</div>
                             <div id="chip_desc_minuto" style="font-size: 0.63rem; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">En punto</div>
                         </div>
                         <div class="cron-field-chip" style="background: #ffffff; padding: 5px 2px; border-radius: 6px; border: 1px solid #e2e8f0;">
                             <div style="font-size: 0.60rem; color: #64748b; font-weight: 700; text-transform: uppercase;">2. Hora</div>
-                            <div id="chip_val_hora" style="font-family: monospace; font-size: 0.88rem; font-weight: 800; color: #0284c7;">0</div>
+                            <div id="chip_val_hora" class="sch-chip-val">0</div>
                             <div id="chip_desc_hora" style="font-size: 0.63rem; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">12:00 AM</div>
                         </div>
                         <div class="cron-field-chip" style="background: #ffffff; padding: 5px 2px; border-radius: 6px; border: 1px solid #e2e8f0;">
                             <div style="font-size: 0.60rem; color: #64748b; font-weight: 700; text-transform: uppercase;">3. Día Mes</div>
-                            <div id="chip_val_dia_mes" style="font-family: monospace; font-size: 0.88rem; font-weight: 800; color: #0284c7;">*</div>
+                            <div id="chip_val_dia_mes" class="sch-chip-val">*</div>
                             <div id="chip_desc_dia_mes" style="font-size: 0.63rem; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Todos</div>
                         </div>
                         <div class="cron-field-chip" style="background: #ffffff; padding: 5px 2px; border-radius: 6px; border: 1px solid #e2e8f0;">
                             <div style="font-size: 0.60rem; color: #64748b; font-weight: 700; text-transform: uppercase;">4. Mes</div>
-                            <div id="chip_val_mes" style="font-family: monospace; font-size: 0.88rem; font-weight: 800; color: #0284c7;">*</div>
+                            <div id="chip_val_mes" class="sch-chip-val">*</div>
                             <div id="chip_desc_mes" style="font-size: 0.63rem; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Todos</div>
                         </div>
                         <div class="cron-field-chip" style="background: #ffffff; padding: 5px 2px; border-radius: 6px; border: 1px solid #e2e8f0;">
                             <div style="font-size: 0.60rem; color: #64748b; font-weight: 700; text-transform: uppercase;">5. Día Sem</div>
-                            <div id="chip_val_dia_sem" style="font-family: monospace; font-size: 0.88rem; font-weight: 800; color: #0284c7;">*</div>
+                            <div id="chip_val_dia_sem" class="sch-chip-val">*</div>
                             <div id="chip_desc_dia_sem" style="font-size: 0.63rem; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Cualquiera</div>
                         </div>
                     </div>
@@ -259,7 +258,7 @@
 
                 <!-- GUÍA RÁPIDA COLAPSABLE DE SÍMBOLOS -->
                 <details style="margin-top: 0.45rem; font-size: 0.73rem; color: #64748b;">
-                    <summary style="font-weight: 700; color: #0284c7; cursor: pointer; outline: none; user-select: none; display: inline-flex; align-items: center; gap: 4px;">
+                    <summary class="sch-help-summary">
                         <i class="ph-bold ph-question"></i> ¿Cómo funcionan los símbolos especiales? (Clic para ver)
                     </summary>
                     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; margin-top: 6px; line-height: 1.45; font-size: 0.72rem; color: #334155;">
@@ -294,7 +293,7 @@
             <div id="sec_script_archivo" style="margin-bottom: 1.1rem; display: none; background: rgba(248, 250, 252, 0.9); padding: 1rem; border-radius: 10px; border: 1px dashed rgba(80, 89, 132, 0.3);">
                 <label class="ag-form-label">Cargar Archivo de Script (.sh, .bat, .ps1, .php, .py, .sql)</label>
                 <input type="file" name="archivo_script" id="form_archivo_script" class="ag-form-input" accept=".sh,.bat,.ps1,.php,.py,.sql">
-                <div id="info_script_actual" style="font-size: 0.76rem; color: #0284c7; margin-top: 6px; font-weight: 600;"></div>
+                <div id="info_script_actual" class="sch-script-info"></div>
                 <div style="font-size: 0.74rem; color: #64748b; margin-top: 4px; line-height: 1.3;">
                     El servidor ejecutará automáticamente el binario adecuado según la plataforma (Bash, PowerShell, Cmd, Python3, PHP CLI, psql).
                 </div>
@@ -330,12 +329,12 @@
                 </h3>
                 <span id="logModalNombreTarea" style="font-size: 0.8rem; color: #64748b; font-weight: 600;"></span>
             </div>
-            <button type="button" onclick="cerrarModalLog()" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer; padding: 4px;">
+            <button type="button" onclick="cerrarModalLog()" class="sa-modal-close" title="Cerrar">
                 <i class="ph-bold ph-x"></i>
             </button>
         </div>
         
-        <div id="logContentBox" style="background: #0f172a; color: #38bdf8; padding: 1.25rem; border-radius: 10px; font-family: monospace; font-size: 0.82rem; height: 340px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);">
+        <div id="logContentBox" class="sch-log-box">
             Cargando historial de salida...
         </div>
 
@@ -451,12 +450,10 @@ function actualizarExplicacionCron() {
     if (!liveCard || !badgeTipo || !txtHumano) return;
 
     if (partes.length !== 5) {
-        liveCard.style.borderColor = 'rgba(245, 158, 11, 0.4)';
-        liveCard.style.background = 'linear-gradient(135deg, rgba(254, 243, 199, 0.4), rgba(253, 230, 138, 0.15))';
-        badgeTipo.style.background = '#fef3c7';
-        badgeTipo.style.color = '#92400e';
+        liveCard.classList.add('is-incomplete');
+        badgeTipo.classList.add('is-incomplete');
         badgeTipo.innerText = `Incompleto (${partes.length}/5 campos)`;
-        txtHumano.innerHTML = `<span style="color: #b45309;"><i class="ph-bold ph-warning"></i> Expresión incompleta:</span> se requieren 5 campos separados por espacio (llevas <b>${partes.length}</b> de 5: <code>minuto hora día mes día-sem</code>).`;
+        txtHumano.innerHTML = `<span class="sch-warn-inline"><i class="ph-bold ph-warning"></i> Expresión incompleta:</span> se requieren 5 campos separados por espacio (llevas <b>${partes.length}</b> de 5: <code>minuto hora día mes día-sem</code>).`;
 
         chipValMin.innerText = partes[0] || '-';
         chipDescMin.innerText = partes[0] ? 'Ingresado' : 'Falta';
@@ -471,10 +468,8 @@ function actualizarExplicacionCron() {
         return;
     }
 
-    liveCard.style.borderColor = 'rgba(2, 132, 199, 0.25)';
-    liveCard.style.background = 'linear-gradient(135deg, rgba(2, 132, 199, 0.06), rgba(56, 189, 248, 0.04))';
-    badgeTipo.style.background = '#e0f2fe';
-    badgeTipo.style.color = '#0369a1';
+    liveCard.classList.remove('is-incomplete');
+    badgeTipo.classList.remove('is-incomplete');
 
     const [min, hora, diaM, mes, diaS] = partes;
 

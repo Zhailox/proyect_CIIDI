@@ -498,7 +498,7 @@
                                             </td>
                                             <td style="padding: 0.85rem 0.85rem; text-align: center; vertical-align: middle;">
                                                 <?php if (!empty($nItem['requiere_trayecto'])): ?>
-                                                    <span class="pst-badge-soft" style="background: rgba(0, 123, 255, 0.1); color: var(--color-terciario); padding: 0.25rem 0.55rem; border-radius: 12px; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                                    <span class="pst-badge-soft pst-badge-trayecto-pill">
                                                         <i class="ph ph-check-circle"></i> Sí, Trayecto I - IV
                                                     </span>
                                                 <?php else: ?>
