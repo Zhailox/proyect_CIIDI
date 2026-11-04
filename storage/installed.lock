@@ -1,9 +1,9 @@
 {
-    "installed_at": "2026-10-17 14:03:52",
+    "installed_at": "2026-10-19 23:21:08",
     "system_version": "2.0.0-PROD",
     "installed_by_ip": "::1",
     "php_version": "8.5.0",
     "os": "WINNT",
     "schema_source": "schema.sql",
-    "security_digest": "83314d8cbaec69c0a452c357bb45367e1678e493192f402ba47bd27d2e2a8573"
+    "security_digest": "d69010d2e22a494bac3a9710c1cb76c191efca94d502d80369f3118a309b7e94"
 }

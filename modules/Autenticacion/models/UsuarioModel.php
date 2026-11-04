@@ -22,7 +22,7 @@ class UsuarioModel {
 
         // Quitamos el filtro de 'activo' para poder saber el estado real de la cuenta
         return $this->qb->tabla('usuarios u')
-            ->select('u.id, u.cedula, u.nombre_completo, u.email, u.contrasena, u.activo, r.nombre AS nombre_rol, p.nivel_privilegio')
+            ->select('u.id, u.cedula, u.nombre_completo, u.email, u.contrasena, u.activo, u.estado_registro, u.foto_perfil, r.nombre AS nombre_rol, p.nivel_privilegio')
             ->join('roles r', 'u.id_rol = r.id')
             ->join('privilegios p', 'r.privilegio_id = p.privilegio_id')
             ->whereRaw('(u.cedula = ? OR u.cedula = ? OR u.cedula = ? OR u.cedula = ?)', [$cedulaTrim, $soloDigitos, $conPrefijo, $conPrefijoE]) 
@@ -85,17 +85,37 @@ class UsuarioModel {
         $emailVerificado = ($tokenActivacion === null);
         $sql = "
             INSERT INTO usuarios (cedula, nombre_completo, email, contrasena, id_rol, activo, email_verified, activation_token) 
-            VALUES (?, ?, ?, ?, 3, true, ?, ?) 
-            RETURNING id
+            VALUES (?, ?, ?, ?, 3, 1, ?, ?)
         ";
         $stmt = $db->prepare($sql);
-        $stmt->execute([$cedula, $nombre, $email, $hash, $emailVerificado ? 'true' : 'false', $tokenActivacion]);
-        return $stmt->fetch() !== false;
+        $ok = $stmt->execute([$cedula, $nombre, $email, $hash, $emailVerificado ? 1 : 0, $tokenActivacion]);
+        return $ok && ((int)$db->lastInsertId() > 0);
+    }
+
+    /**
+     * Registro de profesores en línea: crea la cuenta docente INACTIVA con estado_registro = 'pendiente'
+     * a la espera de aprobación del Comité/Administración. Retorna el ID creado o null.
+     */
+    public function registrarDocentePendiente(string $cedula, string $nombre, string $email, string $hash, int $idRolDocente): ?int {
+        $db = Connection::getInstance();
+        $sql = "
+            INSERT INTO usuarios (cedula, nombre_completo, email, contrasena, id_rol, activo, email_verified, activation_token, estado_registro)
+            VALUES (?, ?, ?, ?, ?, 0, 0, NULL, 'pendiente')
+        ";
+        try {
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$cedula, $nombre, $email, $hash, $idRolDocente]);
+            $id = (int)$db->lastInsertId();
+            return $id > 0 ? $id : null;
+        } catch (Throwable $e) {
+            error_log('UsuarioModel::registrarDocentePendiente -> ' . $e->getMessage());
+            return null;
+        }
     }
 
     public function activarCuentaPorToken(string $tokenActivacion): bool {
         $db = Connection::getInstance();
-        $stmt = $db->prepare("UPDATE usuarios SET email_verified = true, activation_token = NULL WHERE activation_token = ?");
+        $stmt = $db->prepare("UPDATE usuarios SET email_verified = 1, activation_token = NULL WHERE activation_token = ?");
         $stmt->execute([$tokenActivacion]);
         return $stmt->rowCount() > 0;
     }
@@ -113,14 +133,14 @@ class UsuarioModel {
         $conPrefijoE = 'E-' . $soloDigitos;
 
         $db = Connection::getInstance();
-        $stmt = $db->prepare("SELECT id, nombre_completo, email, cedula FROM usuarios WHERE (cedula = ? OR cedula = ? OR cedula = ? OR cedula = ?) AND activo = true");
+        $stmt = $db->prepare("SELECT id, nombre_completo, email, cedula FROM usuarios WHERE (cedula = ? OR cedula = ? OR cedula = ? OR cedula = ?) AND activo = 1");
         $stmt->execute([$cedulaTrim, $soloDigitos, $conPrefijo, $conPrefijoE]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
     
     public function findByEmail(string $email) {
         $db = Connection::getInstance();
-        $stmt = $db->prepare("SELECT id, nombre_completo, email FROM usuarios WHERE email = ? AND activo = true");
+        $stmt = $db->prepare("SELECT id, nombre_completo, email FROM usuarios WHERE email = ? AND activo = 1");
         $stmt->execute([$email]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
@@ -131,10 +151,10 @@ class UsuarioModel {
     public function guardarTokenRecuperacionSHA256(string $email, string $tokenHash) {
         $db = Connection::getInstance();
         // Invalida tokens anteriores no utilizados para este email
-        $stmtCancel = $db->prepare("UPDATE password_resets SET utilizado = true WHERE email = ? AND utilizado = false");
+        $stmtCancel = $db->prepare("UPDATE password_resets SET utilizado = 1 WHERE email = ? AND utilizado = 0");
         $stmtCancel->execute([$email]);
 
-        $sql = "INSERT INTO password_resets (email, token_hash, expiracion, utilizado) VALUES (?, ?, CURRENT_TIMESTAMP + INTERVAL '15 minutes', false)";
+        $sql = "INSERT INTO password_resets (email, token_hash, expiracion, utilizado) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 15 MINUTE), 0)";
         $stmt = $db->prepare($sql);
         $stmt->execute([$email, $tokenHash]);
     }
@@ -148,7 +168,7 @@ class UsuarioModel {
             SELECT pr.id, pr.email, u.id AS usuario_id, u.nombre_completo 
             FROM password_resets pr
             JOIN usuarios u ON u.email = pr.email
-            WHERE pr.token_hash = ? AND pr.utilizado = false AND pr.expiracion >= CURRENT_TIMESTAMP AND u.activo = true
+            WHERE pr.token_hash = ? AND pr.utilizado = 0 AND pr.expiracion >= NOW() AND u.activo = 1
         ");
         $stmt->execute([$tokenHash]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -172,26 +192,30 @@ class UsuarioModel {
             $stmtUser->execute([$nuevaPasswordHash, $tokenData['usuario_id']]);
 
             // 2. Marcar token como utilizado
-            $stmtToken = $db->prepare("UPDATE password_resets SET utilizado = true WHERE id = ?");
+            $stmtToken = $db->prepare("UPDATE password_resets SET utilizado = 1 WHERE id = ?");
             $stmtToken->execute([$tokenData['id']]);
 
-            $db->commit();
+            if ($db->inTransaction()) {
+                $db->commit();
+            }
             return true;
         } catch (Exception $e) {
-            $db->rollBack();
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
             return false;
         }
     }
 
     public function guardarTokenRecuperacion(int $id, string $token) {
         $db = Connection::getInstance();
-        $stmt = $db->prepare("UPDATE usuarios SET reset_token = ?, reset_expires = CURRENT_TIMESTAMP + INTERVAL '15 minutes' WHERE id = ?");
+        $stmt = $db->prepare("UPDATE usuarios SET reset_token = ?, reset_expires = DATE_ADD(NOW(), INTERVAL 15 MINUTE) WHERE id = ?");
         $stmt->execute([$token, $id]);
     }
     
     public function verificarToken(int $id, string $token) {
         $db = Connection::getInstance();
-        $stmt = $db->prepare("SELECT id FROM usuarios WHERE id = ? AND reset_token = ? AND reset_expires >= CURRENT_TIMESTAMP AND activo = true");
+        $stmt = $db->prepare("SELECT id FROM usuarios WHERE id = ? AND reset_token = ? AND reset_expires >= NOW() AND activo = 1");
         $stmt->execute([$id, $token]);
         return $stmt->fetch() !== false;
     }
@@ -217,7 +241,14 @@ class UsuarioModel {
                 u.activo, 
                 u.email_verified,
                 u.contrasena,
-                r.nombre AS nombre_rol, 
+                u.foto_perfil,
+                u.orcid,
+                u.sitio_web,
+                u.grado_academico,
+                COALESCE(u.es_investigador, 0) AS es_investigador,
+                COALESCE(u.es_profesor_pst, 0) AS es_profesor_pst,
+                r.nombre AS nombre_rol,
+                r.nombre AS rol_nombre,
                 p.nivel_privilegio,
                 ra.fecha_inicial,
                 ra.ultima_actividad,
@@ -232,6 +263,22 @@ class UsuarioModel {
         $stmt = $db->prepare($sql);
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Actualiza foto de perfil, ORCID, sitio web personal y grado académico del usuario/investigador
+     */
+    public function actualizarPerfilAcademico(int $id, ?string $fotoPerfil, ?string $orcid, ?string $sitioWeb, ?string $gradoAcademico): bool {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("
+            UPDATE usuarios
+            SET foto_perfil = ?,
+                orcid = ?,
+                sitio_web = ?,
+                grado_academico = ?
+            WHERE id = ?
+        ");
+        return $stmt->execute([$fotoPerfil, $orcid, $sitioWeb, $gradoAcademico, $id]);
     }
 
     /**
@@ -258,7 +305,7 @@ class UsuarioModel {
     public function actualizarEmailUsuario(int $id, string $nuevoEmail, bool $reiniciarVerificacion = true): bool {
         $db = Connection::getInstance();
         if ($reiniciarVerificacion) {
-            $stmt = $db->prepare("UPDATE usuarios SET email = ?, email_verified = false, activation_token = NULL WHERE id = ?");
+            $stmt = $db->prepare("UPDATE usuarios SET email = ?, email_verified = 0, activation_token = NULL WHERE id = ?");
         } else {
             $stmt = $db->prepare("UPDATE usuarios SET email = ? WHERE id = ?");
         }

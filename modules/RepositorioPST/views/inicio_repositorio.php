@@ -151,6 +151,11 @@ mark, .highlight-match {
     align-items: start;
 }
 
+.ag-pst-layout-grid > * {
+    min-width: 0;
+    max-width: 100%;
+}
+
 @media (max-width: 992px) {
     .ag-pst-layout-grid {
         grid-template-columns: 1fr;
@@ -515,6 +520,10 @@ mark, .highlight-match {
         padding: 10px;
     }
 
+    .ag-pst-search-box > i.ph-magnifying-glass {
+        display: none;
+    }
+
     .ag-pst-search-box input {
         width: 100%;
     }
@@ -589,17 +598,17 @@ mark, .highlight-match {
                 <input type="hidden" name="ruta" value="buscador">
                 <i class="ph-bold ph-magnifying-glass" style="font-size: 1.25rem; color: #64748b; margin-left: 12px;"></i>
                 <input type="text" name="q" placeholder="Buscar por título, autor, palabras clave o comunidad..." required>
-                <button type="submit" class="ag-pst-search-btn" title="Buscar usando el motor de búsqueda inteligente unificado">
-                    <i class="ph-bold ph-sparkles"></i> Buscar en Motor Inteligente
+                <button type="submit" class="ag-pst-search-btn" title="Buscar documentos en el repositorio">
+                    <i class="ph-bold ph-magnifying-glass"></i> Buscar Documentos
                 </button>
             </form>
             <div style="font-size: 0.78rem; color: rgba(255,255,255,0.75); margin-top: 8px; text-align: center;">
-                <i class="ph-bold ph-info"></i> La búsqueda principal procesará su consulta en el <strong>Buscador Global Inteligente PST</strong>.
+                <i class="ph-bold ph-info"></i> La búsqueda principal procesará su consulta en el <strong>Buscador de Documentos PST</strong>.
             </div>
         </div>
     </div>
 
-    <!-- METRICAS DESTACADAS REEVACUADAS DESDE POSTGRESQL -->
+    <!-- MÉTRICAS DESTACADAS CONSULTADAS DESDE MARIADB -->
     <div class="ag-pst-stats-row">
         <div class="ag-pst-stat-card">
             <div class="ag-pst-stat-icon"><i class="ph-bold ph-files"></i></div>

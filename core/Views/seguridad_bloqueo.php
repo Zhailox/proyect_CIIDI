@@ -27,8 +27,8 @@ $fechaHora          = date('d/m/Y H:i:s');
     
     <style>
         :root {
-            --color-primario: #002244;
-            --color-secundario: #0284c7;
+            --color-primario: #121A3E;
+            --color-secundario: #505984;
             --color-peligro: #dc2626;
         }
         body {
@@ -114,7 +114,7 @@ $fechaHora          = date('d/m/Y H:i:s');
         </div>
 
         <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #64748b; margin-top: 0.5rem;">
-            <i class="ph-bold ph-info" style="color: var(--color-secundario, #0284c7); font-size: 1.1rem; flex-shrink: 0;"></i>
+            <i class="ph-bold ph-info" style="color: var(--color-secundario, #505984); font-size: 1.1rem; flex-shrink: 0;"></i>
             <span>Este incidente ha sido registrado en la bitácora criptográfica inmutable del sistema (ISO/IEC 27001 Control A.8.15).</span>
         </div>
 

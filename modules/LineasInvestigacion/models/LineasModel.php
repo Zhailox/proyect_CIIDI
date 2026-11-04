@@ -31,7 +31,7 @@ class LineasModel extends QueryBuilder {
             LEFT JOIN dimensiones_operativas dim ON dim.id_linea = li.id
             LEFT JOIN recurso_clasificaciones rc  ON rc.id_linea_investigacion = li.id
             LEFT JOIN investigaciones_ofertadas io ON io.id_linea = li.id
-            " . ($soloActivos ? "WHERE li.activo = true" : "") . "
+            " . ($soloActivos ? "WHERE li.activo = 1" : "") . "
             GROUP BY li.id, li.nombre, li.descripcion, li.activo, li.id_carrera, c.nombre
             ORDER BY li.id ASC
         ";
@@ -72,14 +72,14 @@ class LineasModel extends QueryBuilder {
                 dp.palabras_clave,
                 dp.fecha_defensa,
                 dim.nombre AS dimension_nombre,
-                STRING_AGG(DISTINCT a.nombre_completo, ', ') AS autores
+                GROUP_CONCAT(DISTINCT a.nombre_completo SEPARATOR ', ') AS autores
             FROM recurso_clasificaciones rc
             INNER JOIN recursos r          ON r.id   = rc.id_recurso
             LEFT  JOIN detalles_proyectos dp ON dp.id_recurso = r.id
             LEFT  JOIN dimensiones_operativas dim ON dim.id   = rc.id_dimension_operativa
             LEFT  JOIN recurso_autores ra  ON ra.id_recurso   = r.id
             LEFT  JOIN autores a           ON a.id            = ra.id_autor
-            WHERE rc.id_linea_investigacion = ? AND dp.activo = true
+            WHERE rc.id_linea_investigacion = ? AND dp.activo = 1
             GROUP BY r.id, r.titulo, r.anio_publicacion, r.archivo_pdf, dp.resumen,
                      dp.nivel_academico, dp.palabras_clave, dp.fecha_defensa, dim.nombre
             ORDER BY dp.fecha_defensa DESC
@@ -99,7 +99,7 @@ class LineasModel extends QueryBuilder {
                 FROM recurso_clasificaciones rc
                 INNER JOIN recursos r ON r.id = rc.id_recurso
                 LEFT JOIN detalles_proyectos dp ON dp.id_recurso = r.id
-                WHERE rc.id_linea_investigacion = ? AND dp.activo = true";
+                WHERE rc.id_linea_investigacion = ? AND dp.activo = 1";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$id_linea]);
         return (int) $stmt->fetchColumn();
@@ -111,7 +111,7 @@ class LineasModel extends QueryBuilder {
      */
     public function getInvestigacionesPorLinea(int $id_linea): array {
         $sql = "
-            SELECT
+            SELECT DISTINCT
                 io.*,
                 dim.nombre  AS dimension_nombre,
                 u.nombre_completo AS nombre_profesor
@@ -119,11 +119,101 @@ class LineasModel extends QueryBuilder {
             LEFT JOIN dimensiones_operativas dim ON dim.id = io.id_dimension
             LEFT JOIN usuarios              u   ON u.id   = io.id_profesor
             WHERE io.id_linea = ?
+               OR EXISTS (
+                   SELECT 1 FROM investigaciones_lineas il
+                   WHERE il.id_investigacion = io.id AND il.id_linea = ?
+               )
             ORDER BY io.fecha_creacion DESC
         ";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$id_linea]);
+        $stmt->execute([$id_linea, $id_linea]);
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Retorna los profesores afiliados a una línea (por perfil, dimensiones o investigaciones a cargo)
+     * y sus proyectos (investigaciones ofertadas) en dicha línea.
+     */
+    public function getProfesoresAfiliadosPorLinea(int $id_linea): array {
+        $sql = "
+            SELECT DISTINCT
+                u.id,
+                u.id AS id_profesor,
+                u.nombre_completo AS nombre_profesor,
+                u.email,
+                u.foto_perfil,
+                u.orcid,
+                u.sitio_web,
+                u.grado_academico
+            FROM usuarios u
+            WHERE u.activo = 1
+              AND (
+                  EXISTS (
+                      SELECT 1 FROM profesor_linea pl
+                      WHERE pl.id_usuario = u.id AND pl.id_linea = ?
+                  )
+                  OR EXISTS (
+                      SELECT 1 FROM profesor_dimension pd
+                      WHERE pd.id_usuario = u.id AND pd.id_linea = ?
+                  )
+                  OR EXISTS (
+                      SELECT 1 FROM investigaciones_ofertadas io
+                      LEFT JOIN investigaciones_lineas il ON il.id_investigacion = io.id
+                      WHERE io.id_profesor = u.id AND (io.id_linea = ? OR il.id_linea = ?)
+                  )
+              )
+            ORDER BY u.nombre_completo ASC
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id_linea, $id_linea, $id_linea, $id_linea]);
+        $profesores = $stmt->fetchAll();
+
+        $stmtDim = null;
+        try {
+            $stmtDim = $this->db->prepare("
+                SELECT DISTINCT d.id, d.nombre
+                FROM dimensiones_operativas d
+                WHERE d.id_linea = ? AND d.activo = 1
+                  AND (
+                      EXISTS (
+                          SELECT 1 FROM profesor_dimension pd
+                          WHERE pd.id_dimension = d.id AND pd.id_usuario = ? AND pd.id_linea = ?
+                      )
+                      OR EXISTS (
+                          SELECT 1 FROM investigaciones_ofertadas io
+                          LEFT JOIN investigaciones_dimensiones idim ON idim.id_investigacion = io.id
+                          WHERE io.id_profesor = ? AND (io.id_dimension = d.id OR idim.id_dimension = d.id)
+                      )
+                  )
+                ORDER BY d.nombre ASC
+            ");
+        } catch (\Throwable $e) {}
+
+        $stmtIo = $this->db->prepare("
+            SELECT DISTINCT io.id, io.titulo, io.estado, io.cupos_disponibles, io.fecha_creacion
+            FROM investigaciones_ofertadas io
+            LEFT JOIN investigaciones_lineas il ON il.id_investigacion = io.id
+            WHERE io.id_profesor = ? AND (io.id_linea = ? OR il.id_linea = ?)
+            ORDER BY io.fecha_creacion DESC
+        ");
+
+        // Para cada profesor, buscamos sus dimensiones operativas y proyectos en esta línea
+        foreach ($profesores as &$prof) {
+            $profId = (int)$prof['id'];
+            $prof['dimensiones'] = [];
+            if ($stmtDim) {
+                try {
+                    $stmtDim->execute([$id_linea, $profId, $id_linea, $profId]);
+                    $prof['dimensiones'] = $stmtDim->fetchAll();
+                } catch (\Throwable $e) {
+                    $prof['dimensiones'] = [];
+                }
+            }
+
+            $stmtIo->execute([$profId, $id_linea, $id_linea]);
+            $prof['ofertas'] = $stmtIo->fetchAll();
+        }
+        return $profesores;
     }
 
     /**
@@ -227,5 +317,35 @@ class LineasModel extends QueryBuilder {
         $sql = "UPDATE dimensiones_operativas SET activo = ? WHERE id = ?";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([$estado ? 1 : 0, $id]);
+    }
+
+    /**
+     * Desvincula un profesor de una línea de investigación (tabla profesor_linea).
+     */
+    public function desvincularProfesor(int $id_profesor, int $id_linea): bool {
+        $stmt = $this->db->prepare("DELETE FROM profesor_linea WHERE id_usuario = ? AND id_linea = ?");
+        return $stmt->execute([$id_profesor, $id_linea]);
+    }
+
+    /**
+     * Retorna los usuarios activos elegibles para afiliarse a una línea
+     * (docentes, investigadores, comité/admin o profesores PST).
+     */
+    public function getProfesoresElegibles(): array {
+        $stmt = $this->db->prepare("
+            SELECT id, nombre_completo, email, es_investigador
+            FROM usuarios
+            WHERE (id_rol IN (1, 2, 4) OR es_investigador = 1 OR es_profesor_pst = 1 OR estado_registro = 'Profesor') AND activo = 1
+            ORDER BY nombre_completo ASC
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Alias retrocompatible con controladores que invocan getProfesoresDisponibles().
+     */
+    public function getProfesoresDisponibles(): array {
+        return $this->getProfesoresElegibles();
     }
 }

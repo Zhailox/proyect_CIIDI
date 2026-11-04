@@ -52,7 +52,7 @@
 
 <!-- TAB 0: ENVIAR CORREO DIRECTO / COMUNICADO (LAYOUT 2 COLUMNAS CON SIDEBAR DE PLANTILLAS REUTILIZABLES) -->
 <div id="tabCorreoDirecto" class="sa-tab-content active">
-    <div style="display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start;">
+    <div class="sa-mail-compose-grid">
         
         <!-- COLUMNA IZQUIERDA: FORMULARIO PRINCIPAL DE COMPOSICIÓN -->
         <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-sm); background:#ffffff;">
@@ -284,10 +284,10 @@
             </div>
             
             <!-- BUSCADOR CLIENT-SIDE -->
-            <div style="display: flex; gap: 8px; align-items: center;">
+           <div style="display: flex; gap: 8px; align-items: center;">
                 <div style="position: relative; width: 280px;">
-                    <i class="ph-bold ph-magnifying-glass" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
-                    <input type="text" id="input-buscar-log" onkeyup="filtrarLogsHistorial()" placeholder="Buscar por email, asunto..." class="sa-filter-input" style="width: 100%; padding-left: 32px; font-size: 0.85rem;">
+                    <i class="ph-bold ph-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                    <input type="text" id="input-buscar-log" onkeyup="filtrarLogsHistorial()" placeholder="Buscar por email, asunto..." class="sa-filter-input" style="width: 100%; padding-left: 40px !important; font-size: 0.85rem; box-sizing: border-box;">
                 </div>
             </div>
         </div>
@@ -304,9 +304,10 @@
                         <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
                             <th style="padding: 10px 12px; font-weight: 700; color: #475569;">Fecha / Hora</th>
                             <th style="padding: 10px 12px; font-weight: 700; color: #475569;">Destinatario</th>
-                            <th style="padding: 10px 12px; font-weight: 700; color: #475569;">Asunto</th>
+                            <th style="padding: 10px 12px; font-weight: 700; color: #475569;">Asunto / Evento</th>
                             <th style="padding: 10px 12px; font-weight: 700; color: #475569;">Estado</th>
                             <th style="padding: 10px 12px; font-weight: 700; color: #475569;">Detalle</th>
+                            <th style="padding: 10px 12px; font-weight: 700; color: #475569; text-align: center;">Acción</th>
                         </tr>
                     </thead>
                     <tbody id="tbody-logs-correo">
@@ -320,7 +321,10 @@
                                     <span style="color: #64748b; font-size: 0.75rem;"><?= htmlspecialchars($log['destino_email']) ?></span>
                                 </td>
                                 <td style="padding: 10px 12px; font-weight: 600; color: #334155;" class="col-asunto">
-                                    <?= htmlspecialchars($log['asunto']) ?>
+                                    <div><?= htmlspecialchars($log['asunto']) ?></div>
+                                    <?php if (!empty($log['tipo'])): ?>
+                                        <span style="font-size: 0.7rem; color: var(--color-terciario); font-weight: 700;"><?= htmlspecialchars($log['tipo']) ?></span>
+                                    <?php endif; ?>
                                 </td>
                                 <td style="padding: 10px 12px;">
                                     <?php if ($log['exito']): ?>
@@ -333,8 +337,17 @@
                                         </span>
                                     <?php endif; ?>
                                 </td>
-                                <td style="padding: 10px 12px; color: #64748b; font-size: 0.8rem; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                <td style="padding: 10px 12px; color: #64748b; font-size: 0.8rem; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="<?= htmlspecialchars($log['detalle'] ?? '') ?>">
                                     <?= htmlspecialchars($log['detalle'] ?? '') ?>
+                                </td>
+                                <td style="padding: 10px 12px; text-align: center;">
+                                    <?php if (!empty($log['cuerpo_html'])): ?>
+                                        <button type="button" onclick="verCorreoHistorial(<?= (int)$index ?>)" class="btn" style="background: #eff6ff; color: var(--color-secundario) !important; border: 1px solid #bfdbfe; padding: 5px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                                            <i class="ph-bold ph-eye" style="color: var(--color-secundario) !important;"></i> Ver Correo
+                                        </button>
+                                    <?php else: ?>
+                                        <span style="font-size: 0.75rem; color: #94a3b8;">Sin vista</span>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -359,48 +372,75 @@
 <div id="tabConexionSmtp" class="sa-tab-content" style="display:none;">
     <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         
-        <!-- SECCIÓN SUPERIOR: CONFIGURACIÓN DE CREDENCIALES -->
+        <!-- SECCIÓN SUPERIOR: CONFIGURACIÓN DE CREDENCIALES Y MODO DE ENVÍO -->
         <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-sm); background:#ffffff;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
                 <div>
                     <h4 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #121a3e; display: flex; align-items: center; gap: 8px;">
-                        <i class="ph-bold ph-gear" style="color: var(--color-terciario);"></i> Ajustes de Conexión del Servidor SMTP Institucional
+                        <i class="ph-bold ph-gear" style="color: var(--color-terciario);"></i> Motor de Envío y Credenciales SMTP Institucionales
                     </h4>
                     <p style="font-size: 0.85rem; color: #64748b; margin: 4px 0 0 0;">
-                        Credenciales utilizadas para la autenticación y transmisión masiva e individual de notificaciones.
+                        Configure si el sistema operará con <strong>Servidor Local / Bandeja del Sistema</strong> (sin requerir contraseña de aplicación externa) o mediante un <strong>Servidor SMTP</strong>.
                     </p>
                 </div>
             </div>
             
+            <?php $modoEnvioActual = strtolower(trim($config['smtp']['modo_envio'] ?? 'smtp')); ?>
             <form action="guardar-configuracion-sistema" method="POST">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                 <input type="hidden" name="origen" value="gestor-correos">
+
+                <!-- SELECTOR DE MODO DE OPERACIÓN (SERVIDOR LOCAL VS SMTP) -->
+                <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem;">
+                    <label style="font-size: 0.85rem; font-weight: 800; color: #121a3e; display: block; margin-bottom: 8px;">
+                        <i class="ph-bold ph-plugs-connected" style="color: var(--color-secundario);"></i> Modo de Operación del Motor de Correos
+                    </label>
+                    <select name="smtp_modo_envio" id="select_smtp_modo_envio" onchange="actualizarVisibilidadCamposSmtp(this.value)" class="sa-filter-input" style="width: 100%; font-weight: 700; font-size: 0.9rem;">
+                        <option value="local" <?= $modoEnvioActual === 'local' ? 'selected' : '' ?>>
+                            Modo Servidor Local / Bandeja del Sistema (No requiere cuenta externa ni Contraseña de Aplicación)
+                        </option>
+                        <option value="smtp" <?= $modoEnvioActual !== 'local' ? 'selected' : '' ?>>
+                            Modo Servidor SMTP (Gmail, Office365, Servidor Institucional o Demonio Local por Puerto)
+                        </option>
+                    </select>
+                    <p id="hint_modo_envio" style="font-size: 0.8rem; color: #475569; margin: 8px 0 0 0; line-height: 1.45;">
+                        <?php if ($modoEnvioActual === 'local'): ?>
+                            <strong>Modo Servidor Local Activo:</strong> Todos los correos, PINs de registro, enlaces de activación y notificaciones del sistema se procesan con su plantilla HTML institucional y se entregan instantáneamente en la pestaña <em>Historial de Envíos</em> (con vista previa interactiva), sin depender de credenciales externas.
+                        <?php else: ?>
+                            <strong>Modo Servidor SMTP Activo:</strong> Los correos se transmiten por red hacia el servidor y puerto configurados abajo (además de guardar copia auditable en el <em>Historial de Envíos</em>).
+                        <?php endif; ?>
+                    </p>
+                </div>
                 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
+                <div id="grid_campos_smtp" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem; <?= $modoEnvioActual === 'local' ? 'opacity: 0.75;' : '' ?>">
                     <div>
                         <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Servidor Host (SMTP)</label>
-                        <input type="text" name="smtp_host" value="<?= htmlspecialchars($config['smtp']['host'] ?? '') ?>" placeholder="smtp.gmail.com / smtp.office365.com" class="sa-filter-input" style="width: 100%;">
+                        <input type="text" name="smtp_host" value="<?= htmlspecialchars($config['smtp']['host'] ?? '') ?>" placeholder="smtp.gmail.com / localhost" class="sa-filter-input" style="width: 100%;">
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Puerto (TLS / SSL)</label>
+                        <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Puerto (587 TLS / 465 SSL / 1025 Local)</label>
                         <input type="number" name="smtp_port" value="<?= (int)($config['smtp']['port'] ?? 587) ?>" class="sa-filter-input" style="width: 100%;">
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Usuario Authenticated Email</label>
+                        <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Usuario / Correo Autenticado</label>
                         <input type="email" name="smtp_user" value="<?= htmlspecialchars($config['smtp']['user'] ?? '') ?>" placeholder="ciidi@upttmbi.edu.ve" class="sa-filter-input" style="width: 100%;">
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Contraseña de Aplicación</label>
+                        <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Contraseña SMTP / Aplicación</label>
                         <input type="password" name="smtp_pass" placeholder="Dejar vacío para conservar actual" class="sa-filter-input" style="width: 100%;">
                     </div>
-                    <div style="grid-column: 1 / -1;">
+                    <div>
                         <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Email Remitente Público (Header From)</label>
                         <input type="email" name="smtp_from" value="<?= htmlspecialchars($config['smtp']['from_email'] ?? '') ?>" placeholder="no-reply@upttmbi.edu.ve" class="sa-filter-input" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px;">Nombre Público del Remitente</label>
+                        <input type="text" name="smtp_from_name" value="<?= htmlspecialchars($config['smtp']['from_name'] ?? 'Sistema CIIDI - UPTTMBI') ?>" placeholder="Sistema CIIDI - UPTTMBI" class="sa-filter-input" style="width: 100%;">
                     </div>
                 </div>
 
                 <button type="submit" class="btn" style="background-color: var(--color-secundario) !important; color: #ffffff !important; border:none; padding: 10px 22px; border-radius: 6px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
-                    <i class="ph-bold ph-floppy-disk" style="color: #ffffff !important;"></i> <span style="color: #ffffff !important;">Guardar Credenciales SMTP</span>
+                    <i class="ph-bold ph-floppy-disk" style="color: #ffffff !important;"></i> <span style="color: #ffffff !important;">Guardar Configuración de Correo</span>
                 </button>
             </form>
         </div>
@@ -412,11 +452,12 @@
                     <i class="ph-bold ph-paper-plane-right" style="color: var(--color-terciario);"></i> Diagnóstico & Prueba de Conectividad en Tiempo Real
                 </h4>
                 <p style="font-size: 0.85rem; color: #64748b; margin: 4px 0 0 0;">
-                    Envíe un mensaje instantáneo de prueba para comprobar el apretón de manos SMTP, autenticación y la renderización en bandeja.
+                    Envíe un mensaje instantáneo de prueba para comprobar el motor activo (Servidor Local o SMTP) y la renderización de plantillas.
                 </p>
             </div>
 
             <form action="probar-smtp" method="POST" style="max-width: 650px;">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
                     <div>
                         <label style="font-size: 0.8rem; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">Seleccionar Tipo de Mensaje:</label>
@@ -508,6 +549,7 @@
         ?>
 
         <form action="guardar-layout-correo" method="POST" onsubmit="sincronizarLayoutFinal()">
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                 <div>
                     <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
@@ -581,7 +623,7 @@
 
 <!-- TAB 4: CATÁLOGO DE PLANTILLAS DINÁMICAS POR MÓDULO -->
 <div id="tabPlantillas" class="sa-tab-content" style="display:none;">
-    <div style="display: grid; grid-template-columns: 320px 1fr; gap: 1.5rem;">
+    <div class="sa-mail-templates-grid">
         
         <!-- SIDEBAR DE SELECCIÓN DE PLANTILLAS -->
         <div class="glass-panel" style="padding: 1rem; border-radius: var(--radius-sm); background:#ffffff;">
@@ -619,6 +661,7 @@
                 <div id="editor-tpl-<?= str_replace('.', '-', $key) ?>" class="tpl-editor-panel" style="display: none;">
                     
                     <form action="guardar-plantilla-correo" method="POST">
+                        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                         <input type="hidden" name="template_key" value="<?= htmlspecialchars($key) ?>">
 
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
@@ -739,22 +782,27 @@
 </div>
 
 <!-- MODAL VISTA PREVIA VIRTUAL HORMIGÓN/RESPONSIVE -->
-<div id="modalPreviewCorreo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18,26,62,0.6); backdrop-filter: blur(6px); z-index: 9999; justify-content: center; align-items: center;">
+<div id="modalPreviewCorreo" onclick="if(event.target === this) cerrarModalPreview();" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18,26,62,0.6); backdrop-filter: blur(6px); z-index: 9999; justify-content: center; align-items: center;">
     <div style="background: #ffffff; width: 90%; max-width: 700px; max-height: 90vh; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
         <div style="background: var(--color-secundario); color: #ffffff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;">
             <div style="font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
                 <i class="ph-bold ph-eye"></i> Vista Previa de Renderizado Institucional
             </div>
-            <button type="button" onclick="cerrarModalPreview()" style="background: none; border: none; color: #ffffff; font-size: 1.4rem; cursor: pointer;">&times;</button>
+            <button type="button" onclick="cerrarModalPreview()" class="sa-modal-close sa-modal-close-light" title="Cerrar"><i class="ph-bold ph-x"></i></button>
         </div>
         <div style="padding: 20px; overflow-y: auto; flex: 1; background: #f4f7fb;">
             <iframe id="iframePreviewCorreo" style="width: 100%; height: 500px; border: none; background: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"></iframe>
+        </div>
+        <div class="sa-modal-footer" style="padding: 1rem 1.5rem 1.25rem 1.5rem; margin-top: 0; background: #ffffff;">
+            <button type="button" onclick="cerrarModalPreview()" class="sa-btn sa-btn-cancel" style="min-width: 120px;">
+                <i class="ph-bold ph-x-circle"></i> Cerrar Vista Previa
+            </button>
         </div>
     </div>
 </div>
 
 <!-- MODAL GENÉRICO DE AVISO Y NOTIFICACIÓN (REEMPLAZO DE ALERT) -->
-<div id="modalAvisoAlert" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18,26,62,0.6); backdrop-filter: blur(6px); z-index: 10000; justify-content: center; align-items: center;">
+<div id="modalAvisoAlert" onclick="if(event.target === this) cerrarModalAviso();" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18,26,62,0.6); backdrop-filter: blur(6px); z-index: 10000; justify-content: center; align-items: center;">
     <div style="background: #ffffff; width: 90%; max-width: 440px; border-radius: var(--radius-md); padding: 1.75rem; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid rgba(80, 89, 132, 0.2);">
         <div id="modalAvisoIcono" style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--color-terciario);">
             <i class="ph-bold ph-info"></i>
@@ -768,13 +816,13 @@
 </div>
 
 <!-- MODAL PARA INSERTAR BOTÓN CON ENLACE (REEMPLAZO DE PROMPT) -->
-<div id="modalConfigBoton" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18,26,62,0.6); backdrop-filter: blur(6px); z-index: 10000; justify-content: center; align-items: center;">
+<div id="modalConfigBoton" onclick="if(event.target === this) cerrarModalConfigBoton();" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18,26,62,0.6); backdrop-filter: blur(6px); z-index: 10000; justify-content: center; align-items: center;">
     <div style="background: #ffffff; width: 90%; max-width: 480px; border-radius: var(--radius-md); padding: 1.75rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid rgba(80, 89, 132, 0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
             <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--texto-titulos); display: flex; align-items: center; gap: 8px;">
                 <i class="ph-bold ph-cursor-click" style="color: var(--color-terciario);"></i> Configurar Botón de Acción
             </h3>
-            <button type="button" onclick="cerrarModalConfigBoton()" style="background: none; border: none; color: #64748b; font-size: 1.3rem; cursor: pointer;">&times;</button>
+            <button type="button" onclick="cerrarModalConfigBoton()" class="sa-modal-close" title="Cerrar"><i class="ph-bold ph-x"></i></button>
         </div>
         
         <div style="margin-bottom: 1rem;">
@@ -799,7 +847,7 @@
 </div>
 
 <!-- MODAL PARA GUARDAR COMO PLANTILLA PERSONALIZADA REUTILIZABLE -->
-<div id="modalGuardarPlantilla" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18,26,62,0.6); backdrop-filter: blur(6px); z-index: 10000; justify-content: center; align-items: center;">
+<div id="modalGuardarPlantilla" onclick="if(event.target === this) cerrarModalGuardarPlantilla();" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18,26,62,0.6); backdrop-filter: blur(6px); z-index: 10000; justify-content: center; align-items: center;">
     <div style="background: #ffffff; width: 90%; max-width: 480px; border-radius: var(--radius-md); padding: 1.75rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid rgba(80, 89, 132, 0.2);">
         <form action="guardar-plantilla-personalizada" method="POST" id="formGuardarPlantillaCustom">
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
@@ -810,7 +858,7 @@
                 <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--texto-titulos); display: flex; align-items: center; gap: 8px;">
                     <i class="ph-bold ph-floppy-disk" style="color: var(--color-terciario);"></i> Guardar como Plantilla Reusable
                 </h3>
-                <button type="button" onclick="cerrarModalGuardarPlantilla()" style="background: none; border: none; color: #64748b; font-size: 1.3rem; cursor: pointer;">&times;</button>
+                <button type="button" onclick="cerrarModalGuardarPlantilla()" class="sa-modal-close" title="Cerrar"><i class="ph-bold ph-x"></i></button>
             </div>
             
             <div style="margin-bottom: 1.25rem;">
@@ -1218,11 +1266,66 @@ function alternarModoEditorLayout(modo) {
     }
 }
 
+const mailLogsJS = <?= json_encode(array_values($mailLogs ?? [])) ?>;
+
+function verCorreoHistorial(index) {
+    const item = mailLogsJS[index];
+    if (!item || !item.cuerpo_html) {
+        mostrarAvisoModal('Este registro no dispone de vista previa HTML almacenada.', 'Sin Vista Previa', 'info');
+        return;
+    }
+
+    const iframe = document.getElementById('iframePreviewCorreo');
+    const modal = document.getElementById('modalPreviewCorreo');
+    if (!iframe || !modal) return;
+
+    modal.style.display = 'flex';
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(item.cuerpo_html);
+    doc.close();
+
+    // Permitir que los enlaces reales (activación, recuperación, etc.) se abran en nueva pestaña
+    setTimeout(() => {
+        try {
+            const links = iframe.contentWindow.document.querySelectorAll('a');
+            links.forEach(link => {
+                const href = link.getAttribute('href') || '';
+                if (href && href !== '#' && !href.startsWith('javascript:')) {
+                    link.setAttribute('target', '_blank');
+                    link.setAttribute('rel', 'noopener noreferrer');
+                }
+            });
+        } catch(err){}
+    }, 100);
+}
+
+function actualizarVisibilidadCamposSmtp(modo) {
+    const grid = document.getElementById('grid_campos_smtp');
+    const hint = document.getElementById('hint_modo_envio');
+    if (grid) {
+        grid.style.opacity = (modo === 'local') ? '0.75' : '1';
+    }
+    if (hint) {
+        if (modo === 'local') {
+            hint.innerHTML = '<strong>Modo Servidor Local Activo:</strong> Todos los correos, PINs de registro, enlaces de activación y notificaciones del sistema se procesan con su plantilla HTML institucional y se entregan instantáneamente en la pestaña <em>Historial de Envíos</em> (con vista previa interactiva), sin depender de credenciales externas.';
+        } else {
+            hint.innerHTML = '<strong>Modo Servidor SMTP Activo:</strong> Los correos se transmiten por red hacia el servidor y puerto configurados abajo (además de guardar copia auditable en el <em>Historial de Envíos</em>).';
+        }
+    }
+}
+
 function sincronizarCodigoDesdeWysiwygLayout() {
     const wysiwyg = document.getElementById('wysiwyg-layout');
     const area = document.getElementById('area-html-wrapper');
     if (wysiwyg && area) {
-        area.value = wysiwyg.innerHTML;
+        const currentCode = area.value || '';
+        const bodyMatch = currentCode.match(/(<body[^>]*>)([\s\S]*)(<\/body>)/i);
+        if (bodyMatch) {
+            area.value = currentCode.replace(/(<body[^>]*>)[\s\S]*(<\/body>)/i, `$1\n${wysiwyg.innerHTML}\n$2`);
+        } else {
+            area.value = wysiwyg.innerHTML;
+        }
     }
 }
 
@@ -1230,12 +1333,17 @@ function sincronizarWysiwygDesdeCodigoLayout() {
     const wysiwyg = document.getElementById('wysiwyg-layout');
     const area = document.getElementById('area-html-wrapper');
     if (wysiwyg && area) {
-        wysiwyg.innerHTML = area.value;
+        const currentCode = area.value || '';
+        const bodyMatch = currentCode.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+        wysiwyg.innerHTML = bodyMatch ? bodyMatch[1] : currentCode;
     }
 }
 
 function sincronizarLayoutFinal() {
-    sincronizarCodigoDesdeWysiwygLayout();
+    const wrapCode = document.getElementById('wrapper-code-layout');
+    if (wrapCode && wrapCode.style.display === 'none') {
+        sincronizarCodigoDesdeWysiwygLayout();
+    }
 }
 
 function ejecutarComandoEditorLayout(comando, val = null) {
@@ -1447,7 +1555,7 @@ function buscarUsuariosLive(query) {
         html += `
             <div onclick="seleccionarUsuarioAutocomplete(${u.id})" style="padding: 10px 14px; border-bottom: 1px solid #f1f5f9; cursor: ${yaAgregado ? 'default' : 'pointer'}; background: ${yaAgregado ? '#f8fafc' : '#ffffff'}; opacity: ${yaAgregado ? '0.6' : '1'}; transition: background 0.15s;" onmouseover="if(!${yaAgregado}) this.style.background='#eff6ff'" onmouseout="if(!${yaAgregado}) this.style.background='#ffffff'">
                 <div style="font-weight: 700; font-size: 0.85rem; color: #1e293b;">${u.nombre} <span style="font-size:0.75rem; color:#64748b; font-weight:normal;">(C.I: ${u.cedula})</span></div>
-                <div style="font-size: 0.75rem; color: #0284c7; display: flex; justify-content: space-between;">
+                <div style="font-size: 0.75rem; color: #505984; display: flex; justify-content: space-between;">
                     <span>${u.email}</span>
                     <span style="font-weight:700; color:#64748b;">${u.rol}</span>
                 </div>
@@ -1535,7 +1643,7 @@ function renderizarChipsDestinatarios() {
 
             const chip = document.createElement('div');
             chip.style.cssText = 'background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 16px; display: inline-flex; align-items: center; gap: 6px;';
-            chip.innerHTML = `<span><i class="ph-bold ph-user"></i> ${item.nombre} (${item.email})</span><button type="button" onclick="removerDestinatario('${key}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:1rem; line-height:1; font-weight:bold;">&times;</button>`;
+            chip.innerHTML = `<span><i class="ph-bold ph-user"></i> ${item.nombre} (${item.email})</span><button type="button" onclick="removerDestinatario('${key}')" style="background:none; border:none; color:#505984; cursor:pointer; font-size:1rem; line-height:1; font-weight:bold;">&times;</button>`;
             container.appendChild(chip);
         } else if (item.tipo === 'email') {
             emailsLibres.push(item.email);
@@ -1670,6 +1778,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnTab) {
             btnTab.click();
         }
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        cerrarModalPreview();
+        cerrarModalAviso();
+        cerrarModalConfigBoton();
+        cerrarModalGuardarPlantilla();
     }
 });
 </script>

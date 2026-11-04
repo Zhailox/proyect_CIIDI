@@ -17,14 +17,9 @@ class ComposerStaticInit3ffbe28fb745b145fa2fcd19500ebf5e
         ),
         'P' =>
         array (
-            'Phpml\\' => 6,
             'PhpOffice\\PhpWord\\' => 18,
             'PhpOffice\\Math\\' => 15,
             'PHPMailer\\PHPMailer\\' => 20,
-        ),
-        'O' =>
-        array (
-            'OnnxRuntime\\' => 12,
         ),
     );
 
@@ -32,10 +27,6 @@ class ComposerStaticInit3ffbe28fb745b145fa2fcd19500ebf5e
         'Symfony\\Polyfill\\Mbstring\\' =>
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-mbstring',
-        ),
-        'Phpml\\' =>
-        array (
-            0 => __DIR__ . '/..' . '/php-ai/php-ml/src',
         ),
         'PhpOffice\\PhpWord\\' =>
         array (
@@ -48,10 +39,6 @@ class ComposerStaticInit3ffbe28fb745b145fa2fcd19500ebf5e
         'PHPMailer\\PHPMailer\\' =>
         array (
             0 => __DIR__ . '/..' . '/phpmailer/phpmailer/src',
-        ),
-        'OnnxRuntime\\' =>
-        array (
-            0 => __DIR__ . '/..' . '/ankane/onnxruntime/src',
         ),
     );
 

@@ -189,11 +189,11 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
                     
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
                         <?php if ($li['activo']): ?>
-                            <button type="button" class="ag-btn-edit" style="background:#f59e0b; color:white; border-color:#f59e0b;" title="Ocultar Línea" onclick="ocultarLinea(<?= htmlspecialchars($li['id']) ?>, '<?= htmlspecialchars(addslashes($li['nombre'])) ?>')">
+                            <button type="button" class="ag-btn-hide" title="Ocultar Línea" onclick="ocultarLinea(<?= htmlspecialchars($li['id']) ?>, '<?= htmlspecialchars(addslashes($li['nombre'])) ?>')">
                                 <i class="ph-bold ph-eye-slash"></i> Ocultar
                             </button>
                         <?php else: ?>
-                            <button type="button" class="ag-btn-edit" style="background:#10b981; color:white; border-color:#10b981;" title="Mostrar Línea" onclick="mostrarLinea(<?= htmlspecialchars($li['id']) ?>)">
+                            <button type="button" class="ag-btn-show" title="Mostrar Línea" onclick="mostrarLinea(<?= htmlspecialchars($li['id']) ?>)">
                                 <i class="ph-bold ph-eye"></i> Mostrar
                             </button>
                         <?php endif; ?>
@@ -402,7 +402,7 @@ function ocultarLinea(id, nombre) {
         html: `Estás a punto de ocultar la línea <strong>${nombre}</strong>.<br><br>Dejará de aparecer en las listas públicas, pero los proyectos y datos seguirán intactos.`,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#f59e0b',
+        confirmButtonColor: '#505984',
         cancelButtonColor: '#64748b',
         confirmButtonText: 'Sí, ocultar',
         cancelButtonText: 'Cancelar'

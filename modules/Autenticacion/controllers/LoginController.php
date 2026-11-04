@@ -5,6 +5,7 @@ require_once CORE_PATH . 'Security/Auth.php';
 require_once CORE_PATH . 'Security/AuditLogger.php';
 require_once CORE_PATH . 'Security/CaptchaService.php';
 require_once CORE_PATH . 'Services/MailService.php';
+require_once __DIR__ . '/../services/PerfilPSTService.php';
 
 class LoginController {
     
@@ -147,10 +148,13 @@ class LoginController {
         $password = trim($_POST['password'] ?? '');
         $passwordConfirm = trim($_POST['password_confirm'] ?? '');
 
-        if (class_exists('CSRF') && !CSRF::validarToken($_POST['csrf_token'] ?? null)) {
-            $_SESSION['error_restablecer'] = "El token de seguridad CSRF ha caducado. Por favor, intente nuevamente.";
-            header("Location: restablecer-clave?token=" . urlencode($rawToken));
-            exit;
+        if (class_exists('CSRF')) {
+            $tokenCsrf = $_POST['csrf_token'] ?? null;
+            if (!CSRF::validarToken($tokenCsrf)) {
+                $_SESSION['error_restablecer'] = "Fallo de validación de seguridad (Token CSRF inválido o expirado). Intente nuevamente.";
+                header("Location: restablecer-clave?token=" . urlencode($rawToken));
+                exit;
+            }
         }
 
         if (empty($rawToken) || empty($password)) {
@@ -280,11 +284,11 @@ class LoginController {
         // 1. Probar la Base de Datos
         try {
             $usuario = $this->usuarioModel->intentarAutenticacion($cedula);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             AuditLogger::registrar('ERROR', 'Autenticacion', 'Falla Conexión Login', "Error de base de datos al autenticar cédula '{$cedula}': " . $e->getMessage());
             return [
                 'es_error' => true,
-                'mensaje'  => 'Falla de conexión: ' . $e->getMessage(),
+                'mensaje'  => 'Error temporal de conexión con el servidor de datos. Por favor, intente nuevamente en unos momentos.',
                 'destino'  => 'login'
             ];
         }
@@ -300,7 +304,15 @@ class LoginController {
             return ['es_error' => true, 'mensaje' => "No se encontró ninguna cuenta con la cédula {$cedula}.{$aviso}", 'destino' => 'login'];
         }
 
-        if ($usuario['activo'] === false) {
+        if (empty($usuario['activo'])) {
+            // Registro de profesores en línea: la cuenta espera aprobación del Comité/Administración
+            $estadoRegistro = $usuario['estado_registro'] ?? null;
+            if ($estadoRegistro === 'pendiente') {
+                return ['es_error' => true, 'mensaje' => 'Su solicitud de registro como docente aún está pendiente de aprobación por el Comité o la Administración.', 'destino' => 'login'];
+            }
+            if ($estadoRegistro === 'rechazado') {
+                return ['es_error' => true, 'mensaje' => 'Su solicitud de registro como docente no fue aprobada. Contacte a la coordinación para más información.', 'destino' => 'login'];
+            }
             AuditLogger::registrar('WARNING', 'Autenticacion', 'Acceso Bloqueado', "Intento de acceso a cuenta suspendida: '{$usuario['nombre_completo']}' (C.I: {$cedula}).");
             return ['es_error' => true, 'mensaje' => 'Esta cuenta se encuentra actualmente suspendida por administración.', 'destino' => 'login'];
         }
@@ -354,6 +366,7 @@ class LoginController {
         $_SESSION['rol'] = $usuario['nombre_rol'];
         $_SESSION['usuario_rol'] = $usuario['nombre_rol'];
         $_SESSION['nivel_privilegio'] = (int) $usuario['nivel_privilegio'];
+        $_SESSION['foto_perfil'] = trim((string)($usuario['foto_perfil'] ?? ''));
 
         try {
             $this->usuarioModel->registrarAcceso($usuario['id']);
@@ -469,6 +482,50 @@ class LoginController {
             ];
         }
 
+        // 3.1. REGISTRO DE PROFESORES EN LÍNEA
+        // La cuenta docente se crea INACTIVA (estado_registro = 'pendiente') hasta que el Comité o la
+        // Administración la apruebe desde Sector Productivo > Profesores PST. No hay auto-login.
+        if (($_POST['tipo_cuenta'] ?? 'estudiante') === 'docente') {
+            $esPst = !empty($_POST['es_profesor_pst']);
+            $asignacionesPst = PerfilPSTService::parsearAsignaciones($_POST['pst_asignaciones'] ?? []);
+            if ($esPst && empty($asignacionesPst)) {
+                return [
+                    'es_error' => true,
+                    'mensaje'  => 'Indique al menos un trayecto y trimestre en el que dicta PST, o desmarque la opción de profesor PST.',
+                    'destino'  => 'registro'
+                ];
+            }
+
+            $hashSeguro = password_hash($password, PASSWORD_BCRYPT);
+            $idDocente = $this->usuarioModel->registrarDocentePendiente($cedula, $nombre, $email, $hashSeguro, PerfilPSTService::idRolDocente());
+
+            if ($idDocente && PerfilPSTService::guardarPerfil($idDocente, $esPst, $asignacionesPst)) {
+                AuditLogger::registrar('INFO', 'Autenticacion', 'Solicitud Registro Docente', "Nueva solicitud de registro docente en línea: '{$nombre}' (C.I: {$cedula}, Email: {$email}, PST: " . ($esPst ? 'Sí' : 'No') . ").");
+
+                $nombreSeguro = htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8');
+                MailService::enviarAsincrono($email, $nombre, 'Solicitud de registro docente recibida - CIIDI',
+                    "<p>Hola <b>{$nombreSeguro}</b>,</p>
+                     <p>Hemos recibido su solicitud de registro como <b>docente</b> en el Sistema CIIDI - UPTTMBI.</p>
+                     <p>Su cuenta será revisada por el Comité o la Administración. Le notificaremos por este medio cuando sea aprobada y pueda iniciar sesión.</p>
+                     <p>Saludos cordiales,<br><b>Equipo CIIDI</b></p>");
+
+                $_SESSION['exito_registro'] = "Su solicitud de registro docente fue enviada. Podrá iniciar sesión cuando el Comité o la Administración la apruebe.";
+                return [
+                    'es_error'       => false,
+                    'nombre_usuario' => $nombre,
+                    'rol_nombre'     => 'Solicitud Docente Enviada',
+                    'destino'        => 'login'
+                ];
+            }
+
+            AuditLogger::registrar('ERROR', 'Autenticacion', 'Fallo Registro Docente', "Error en el servidor al registrar la solicitud docente de '{$nombre}' (C.I: {$cedula}).");
+            return [
+                'es_error' => true,
+                'mensaje'  => 'Ocurrió un error interno al registrar su solicitud docente.',
+                'destino'  => 'registro'
+            ];
+        }
+
         // 4. Registrar usuario directamente activo y encriptar contraseña
         $hashSeguro = password_hash($password, PASSWORD_BCRYPT);
         $creado = $this->usuarioModel->registrarUsuario($cedula, $nombre, $email, $hashSeguro, null);
@@ -552,7 +609,7 @@ class LoginController {
 
         $tokenHash = hash('sha256', $rawToken);
         $db = Connection::getInstance();
-        $stmt = $db->prepare("SELECT u.id, u.nombre_completo, u.email, u.cedula FROM usuarios u WHERE u.activation_token = ? AND u.activo = false");
+        $stmt = $db->prepare("SELECT u.id, u.nombre_completo, u.email, u.cedula FROM usuarios u WHERE u.activation_token = ? AND u.activo = 0");
         $stmt->execute([$tokenHash]);
         $profesor = $stmt->fetch();
 
@@ -568,7 +625,10 @@ class LoginController {
         return [
             'token'    => $rawToken,
             'profesor' => $profesor,
-            'error'    => $error
+            'error'    => $error,
+            // Perfil PST precargado (si la administración ya lo había definido)
+            'pstEsProfesor' => PerfilPSTService::esProfesorPST((int)$profesor['id']),
+            'pstSeleccion'  => PerfilPSTService::obtenerClavesAsignacion((int)$profesor['id'])
         ];
     }
 
@@ -622,7 +682,7 @@ class LoginController {
 
         $tokenHash = hash('sha256', $rawToken);
         $db = Connection::getInstance();
-        $stmt = $db->prepare("SELECT id, nombre_completo, email, cedula FROM usuarios WHERE activation_token = ? AND activo = false");
+        $stmt = $db->prepare("SELECT id, nombre_completo, email, cedula FROM usuarios WHERE activation_token = ? AND activo = 0");
         $stmt->execute([$tokenHash]);
         $profesor = $stmt->fetch();
 
@@ -632,11 +692,21 @@ class LoginController {
             exit;
         }
 
+        // Declaración de Profesor PST (trayectos/trimestres que dicta)
+        $esPst = !empty($_POST['es_profesor_pst']);
+        $asignacionesPst = PerfilPSTService::parsearAsignaciones($_POST['pst_asignaciones'] ?? []);
+        if ($esPst && empty($asignacionesPst)) {
+            $_SESSION['error_completar_registro'] = "Indique al menos un trayecto y trimestre en el que dicta PST, o desmarque la opción de profesor PST.";
+            header("Location: completar-registro?token=" . urlencode($rawToken));
+            exit;
+        }
+
         $hashSeguro = password_hash($password, PASSWORD_BCRYPT);
-        $stmtUpdate = $db->prepare("UPDATE usuarios SET contrasena = ?, activo = true, email_verified = true, activation_token = NULL WHERE id = ?");
+        $stmtUpdate = $db->prepare("UPDATE usuarios SET contrasena = ?, activo = 1, email_verified = 1, activation_token = NULL WHERE id = ?");
         $exito = $stmtUpdate->execute([$hashSeguro, $profesor['id']]);
 
         if ($exito) {
+            PerfilPSTService::guardarPerfil((int)$profesor['id'], $esPst, $asignacionesPst);
             AuditLogger::registrar('INFO', 'Autenticacion', 'Activación Docente Exitoso', "El profesor {$profesor['nombre_completo']} (C.I: {$profesor['cedula']}) activó su cuenta mediante token.");
 
             // AUTO-LOGIN DIRECTO DEL PROFESOR: Entra directo al sistema sin reingresar credenciales

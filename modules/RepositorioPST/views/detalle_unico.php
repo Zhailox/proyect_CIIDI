@@ -288,13 +288,6 @@
                                 <div>
                                     <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
                                         <span style="font-size: 0.7rem; font-weight: 700; color: var(--color-secundario);">AÑO <?= $sim['anio_publicacion'] ?></span>
-                                        <?php if (isset($sim['distancia'])):
-                                            $afinidadSim = max(10, min(99, round((1.0 - (float)$sim['distancia']) * 100, 1)));
-                                        ?>
-                                            <span style="font-size: 0.68rem; font-weight: 700; color: var(--color-secundario); background: rgba(80, 89, 132, 0.1); padding: 1px 6px; border-radius: 10px;">
-                                                <i class="ph-bold ph-sparkle"></i> <?= $afinidadSim ?>% Afinidad IA
-                                            </span>
-                                        <?php endif; ?>
                                     </div>
                                     <h4 style="font-size: 0.82rem; font-weight: 700; color: var(--texto-titulos); margin: 0.2rem 0 0.35rem 0; line-height: 1.3;">
                                         <a href="?ruta=detalles-pst&id=<?= $sim['id'] ?>" style="color: inherit; text-decoration: none;">

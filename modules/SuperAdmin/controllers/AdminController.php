@@ -49,27 +49,28 @@ class AdminController {
         $pruebas = [];
         $saludGlobal = true;
 
-        // 1. Diagnóstico de la Base de Datos PostgreSQL
+        // 1. Diagnóstico de la Base de Datos MariaDB
         try {
             $tDbInicio = microtime(true);
             if (file_exists(CORE_PATH . 'Database/Connection.php')) {
                 require_once CORE_PATH . 'Database/Connection.php';
             }
             $db = Connection::getInstance();
-            $stmt = $db->query("SELECT version() AS version_db, NOW() AS timestamp_db");
+            $triggersActivos = method_exists('Connection', 'ensureAuditTriggers') ? Connection::ensureAuditTriggers($db) : 0;
+            $stmt = $db->query("SELECT VERSION() AS version_db, NOW() AS timestamp_db");
             $resDb = $stmt->fetch(PDO::FETCH_ASSOC);
             $tDbDuracion = round((microtime(true) - $tDbInicio) * 1000, 2);
 
             $pruebas[] = [
-                'modulo'   => 'Base de Datos PostgreSQL',
+                'modulo'   => 'Base de Datos MariaDB',
                 'estado'   => 'OK',
-                'detalles' => "Conexión estable. Latencia: {$tDbDuracion} ms",
-                'info'     => substr($resDb['version_db'] ?? 'PostgreSQL Active', 0, 45)
+                'detalles' => "Conexión estable. Latencia: {$tDbDuracion} ms | Triggers auditoría: {$triggersActivos}/5 activos",
+                'info'     => substr($resDb['version_db'] ?? 'MariaDB Active', 0, 45)
             ];
         } catch (Throwable $e) {
             $saludGlobal = false;
             $pruebas[] = [
-                'modulo'   => 'Base de Datos PostgreSQL',
+                'modulo'   => 'Base de Datos MariaDB',
                 'estado'   => 'ERROR',
                 'detalles' => 'Fallo de conexión a la BD: ' . $e->getMessage(),
                 'info'     => 'Sin respuesta'
@@ -216,7 +217,7 @@ class AdminController {
             $res = $this->getDashboardModel()->optimizarBaseDatos();
             if (session_status() === PHP_SESSION_NONE) session_start();
             if ($res['exito']) {
-                AuditLogger::registrar('INFO', 'SuperAdmin', 'Optimizar BD', 'VACUUM ANALYZE ejecutado exitosamente.');
+                AuditLogger::registrar('INFO', 'SuperAdmin', 'Optimizar BD', 'OPTIMIZE & ANALYZE TABLE ejecutado exitosamente en MariaDB.');
                 $_SESSION['mensaje_admin_exito'] = $res['mensaje'];
             } else {
                 $_SESSION['mensaje_admin_error'] = $res['mensaje'];
@@ -516,10 +517,39 @@ class AdminController {
                 if ($esParaAhora) {
                     $this->cerrarSesionesNoAdmin();
                 }
-                AuditLogger::registrar('INFO', 'SuperAdmin', 'Programar Mantenimiento', "Ventana agendada para: {$fechaFormateada}");
+
+                // Notificar a los usuarios activos con la plantilla superadmin.mantenimiento_programado si se marcó la opción
+                $notificarCorreo = !empty($_POST['notificar_correo']) && ($_POST['notificar_correo'] === '1' || $_POST['notificar_correo'] === 'on');
+                $notificados = 0;
+                if ($notificarCorreo) {
+                    require_once CORE_PATH . 'Services/MailService.php';
+                    $todosUsuarios = $this->usuarioModel->obtenerTodosLosUsuarios();
+                    $fechaLegible = date('d/m/Y H:i', $timestampInicio);
+                    foreach ($todosUsuarios as $usr) {
+                        if (!empty($usr['activo']) && !empty($usr['email'])) {
+                            $resEnv = MailService::enviarEvento(
+                                'superadmin.mantenimiento_programado',
+                                $usr['email'],
+                                [
+                                    'NOMBRE_USUARIO'    => $usr['nombre_completo'] ?? 'Usuario',
+                                    'FECHA_INICIO'      => $fechaLegible,
+                                    'DURACION_ESTIMADA' => $duracionMinutos . ' minutos',
+                                    'MOTIVO'            => $mensaje
+                                ],
+                                $usr['nombre_completo'] ?? 'Usuario',
+                                false
+                            );
+                            if (!empty($resEnv['exito'])) {
+                                $notificados++;
+                            }
+                        }
+                    }
+                }
+
+                AuditLogger::registrar('INFO', 'SuperAdmin', 'Programar Mantenimiento', "Ventana agendada para: {$fechaFormateada} (Notificados: {$notificados})");
 
                 if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['mensaje_admin_exito'] = "Ventana de Mantenimiento agendada para " . date('H:i - d/m/Y', $timestampInicio);
+                $_SESSION['mensaje_admin_exito'] = "Ventana de Mantenimiento agendada para " . date('H:i - d/m/Y', $timestampInicio) . ($notificados > 0 ? " ({$notificados} usuario(s) notificado(s) por correo)." : ".");
             }
         } catch (Throwable $e) {
             if (session_status() === PHP_SESSION_NONE) session_start();
@@ -602,8 +632,8 @@ class AdminController {
                     $origName = $_FILES['backup_file']['name'];
                     $extension = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
 
-                    if (!in_array($extension, ['sql', 'gz'], true)) {
-                        throw new RuntimeException('Solo se permiten archivos .sql o .sql.gz.');
+                    if (!in_array($extension, ['sql', 'gz', 'txt'], true)) {
+                        throw new RuntimeException('Solo se permiten archivos .sql, .sql.gz o .txt.');
                     }
                 } elseif (!empty($_POST['archivo_guardado'])) {
                     $nombreLimpio = basename($_POST['archivo_guardado']);
@@ -628,62 +658,58 @@ class AdminController {
                     // Auto-Checkpoint Preventivo antes de sobreescribir la BD
                     $checkpoint = BackupService::crearBackup('sql.gz', false, null, 'pre_restore_checkpoint');
 
-                    // Si está comprimido en GZIP, descomprimir temporalmente para psql
-                    $rutaParaPsql = $rutaArchivoRestaurar;
+                    // Extraer contenido SQL (descomprimir si es GZIP)
                     if (!empty($verif['esGzip'])) {
-                        $tempSqlUnzipped = sys_get_temp_dir() . '/restore_temp_' . time() . '.sql';
                         $zp = gzopen($rutaArchivoRestaurar, 'rb');
-                        $fp = fopen($tempSqlUnzipped, 'wb');
+                        $rawSqlRestore = '';
                         while (!gzeof($zp)) {
-                            fwrite($fp, gzread($zp, 8192));
+                            $rawSqlRestore .= gzread($zp, 8192);
                         }
                         gzclose($zp);
-                        fclose($fp);
-                        $rutaParaPsql = $tempSqlUnzipped;
+                    } else {
+                        $rawSqlRestore = (string)file_get_contents($rutaArchivoRestaurar);
                     }
 
-                    $creds = Connection::getCredentials();
-                    $psqlPath = Connection::getPsqlPath();
+                    if (method_exists('Connection', 'sanitizarSqlCompatible')) {
+                        $rawSqlRestore = Connection::sanitizarSqlCompatible($rawSqlRestore);
+                    }
 
-                    putenv("PGPASSWORD={$creds['pass']}");
-                    $comando = "{$psqlPath} -h {$creds['host']} -p {$creds['port']} "
-                    . "-U {$creds['user']} -d {$creds['db']} "
-                    . "-f \"{$rutaParaPsql}\" 2>&1";
+                    $errDetalle = '';
+                    $restauracionExitosa = false;
 
-                    $salida = [];
-                    $codigo_retorno = 0;
-                    exec($comando, $salida, $codigo_retorno);
-                    putenv("PGPASSWORD=");
-
-                    if ($tempSqlUnzipped && file_exists($tempSqlUnzipped)) {
-                        @unlink($tempSqlUnzipped);
+                    try {
+                        $db = Connection::getInstance();
+                        $db->exec("SET FOREIGN_KEY_CHECKS = 0");
+                        Connection::ejecutarScriptSqlMariaDB($db, $rawSqlRestore);
+                        $db->exec("SET FOREIGN_KEY_CHECKS = 1");
+                        $restauracionExitosa = true;
+                    } catch (Throwable $eRestore) {
+                        $errDetalle = $eRestore->getMessage();
+                        try {
+                            $dbFallback = Connection::getInstance(true);
+                            if ($dbFallback) {
+                                $dbFallback->exec("SET FOREIGN_KEY_CHECKS = 1");
+                            }
+                        } catch (Throwable) {}
                     }
 
                     if (session_status() === PHP_SESSION_NONE) session_start();
 
-                    if ($codigo_retorno === 0) {
-                        AuditLogger::registrar('WARNING', 'SuperAdmin', 'Restaurar BD', "Base de datos restaurada exitosamente.");
-                        $_SESSION['mensaje_admin_exito'] = "Base de datos restaurada correctamente. Integridad verificada antes del proceso.";
-                    } else {
-                        // Filtrar la salida ruidosa de psql (SET, ALTER, DROP, CREATE) y extraer solo los mensajes de ERROR reales
-                        $erroresReales = array_filter($salida, function($linea) {
-                            $t = trim($linea);
-                            return preg_match('/^(psql:.*:)?\s*ERROR:/i', $t) || preg_match('/FATAL:|CRITICAL:/i', $t);
-                        });
-
-                        if (!empty($erroresReales)) {
-                            $errDetalle = implode(' | ', array_map('trim', $erroresReales));
-                        } else {
-                            // Si psql falló por ON_ERROR_STOP pero la última línea no contiene 'ERROR:', tomar las últimas líneas relevantes
-                            $lineasRelevantes = array_filter($salida, function($l) {
-                                $t = trim($l);
-                                return !empty($t) && !preg_match('/^(SET|ALTER|DROP|CREATE|TRUNCATE)\b/i', $t);
-                            });
-                            $errDetalle = !empty($lineasRelevantes) ? implode(' | ', array_slice(array_map('trim', $lineasRelevantes), -3)) : implode(' ', array_slice($salida, -5));
+                    // Garantizar que todas las tablas críticas en MariaDB queden íntegras tras restaurar
+                    Connection::resetConnection();
+                    try {
+                        $pdoPostRestore = Connection::getInstance(true);
+                        if ($pdoPostRestore) {
+                            Connection::autoHealSchemaIfNeeded($pdoPostRestore, true);
                         }
+                    } catch (Throwable $eHeal) {}
 
+                    if ($restauracionExitosa) {
+                        AuditLogger::registrar('WARNING', 'SuperAdmin', 'Restaurar BD', "Base de datos MariaDB restaurada exitosamente.");
+                        $_SESSION['mensaje_admin_exito'] = "Base de datos restaurada correctamente en MariaDB. Integridad verificada antes del proceso.";
+                    } else {
                         AuditLogger::registrar('CRITICAL', 'SuperAdmin', 'Fallo Restauración BD', $errDetalle);
-                        $_SESSION['mensaje_admin_error'] = "Error al restaurar la BD: " . ($errDetalle ?: "Código de salida: {$codigo_retorno}");
+                        $_SESSION['mensaje_admin_error'] = "Error al restaurar la BD en MariaDB: " . ($errDetalle ?: "Fallo de ejecución SQL.");
                     }
                 } else {
                     if (session_status() === PHP_SESSION_NONE) session_start();
@@ -710,9 +736,9 @@ class AdminController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $host = trim($_POST['host'] ?? 'localhost');
-                $port = trim($_POST['port'] ?? '5432');
+                $port = trim($_POST['port'] ?? '3306');
                 $db   = trim($_POST['db'] ?? 'ciidi');
-                $user = trim($_POST['user'] ?? 'miki');
+                $user = trim($_POST['user'] ?? 'root');
                 $pass = $_POST['pass'] ?? '';
                 $adminPass = $_POST['admin_confirm_password'] ?? '';
 

@@ -54,7 +54,7 @@
                 <?php endif; ?>
             </h1>
             <p style="margin: 0.3rem 0 0 0; color: var(--texto-silenciado, #64748b); font-size: 0.9rem;">
-                Centro unificado de exportación/importación PostgreSQL, pre-inspección de restauración y control de mantenimiento.
+                Centro unificado de exportación/importación MariaDB, pre-inspección de restauración y control de mantenimiento.
             </p>
         </div>
         <a href="sudoadmin" class="sa-btn sa-btn-outline">
@@ -114,7 +114,7 @@
      PESTAÑA 1: GESTIÓN UNIFICADA DE RESPALDOS E IMPORTACIÓN
      ========================================== -->
 <div id="tab-gestion-bd" class="ag-tab-pane active">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1.5rem;">
         
         <!-- COLUMNA IZQUIERDA: EXPORTACIÓN Y ARCHIVO DE IMPORTACIÓN EXTERNO -->
         <div style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -193,12 +193,12 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; flex-wrap: wrap; gap: 8px;">
                     <div>
                         <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: flex; align-items: center; gap: 8px;">
-                            <i class="ph-bold ph-lightning" style="color: var(--color-secundario);"></i> Optimización PostgreSQL (VACUUM)
+                            <i class="ph-bold ph-lightning" style="color: var(--color-secundario);"></i> Optimización MariaDB (OPTIMIZE TABLE)
                         </h3>
-                        <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: var(--texto-silenciado, #64748b);">Reclama espacio muerto y actualiza estadísticas de consulta</p>
+                        <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: var(--texto-silenciado, #64748b);">Reclama espacio fragmentado y actualiza estadísticas de consulta</p>
                     </div>
                     <form action="optimizar-bd" method="POST" style="margin:0;">
-                        <button type="submit" class="ag-btn-flat" style="background: var(--color-secundario) !important; padding: 7px 14px !important; font-size: 0.82rem !important;" title="Ejecutar VACUUM ANALYZE">
+                        <button type="submit" class="ag-btn-flat" style="background: var(--color-secundario) !important; padding: 7px 14px !important; font-size: 0.82rem !important;" title="Ejecutar OPTIMIZE & ANALYZE TABLE">
                             <i class="ph-bold ph-sparkle"></i> Optimizar BD Ahora
                         </button>
                     </form>
@@ -209,7 +209,7 @@
                         <table class="ag-table">
                             <thead>
                                 <tr>
-                                    <th>Tabla PostgreSQL</th>
+                                    <th>Tabla MariaDB</th>
                                     <th>Filas Est.</th>
                                     <th style="text-align: right;">Espacio Usado</th>
                                 </tr>
@@ -234,7 +234,7 @@
                     <i class="ph-bold ph-upload-simple" style="color: var(--color-secundario);"></i> Importar Script Externe (.sql, .gz, .txt)
                 </h3>
                 <p style="font-size: 0.86rem; color: var(--texto-silenciado, #64748b); margin-bottom: 1.2rem; line-height: 1.45;">
-                    Carga un archivo externo. Se creará un <strong>Auto-Checkpoint de Seguridad</strong> antes de restaurar en PostgreSQL.
+                    Carga un archivo externo. Se creará un <strong>Auto-Checkpoint de Seguridad</strong> antes de restaurar en MariaDB.
                 </p>
 
                 <form id="formRestaurarBackup" action="restaurar-backup" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 1rem;">
@@ -359,12 +359,12 @@
      PESTAÑA 2: CONFIGURACIÓN DE BASE DE DATOS Y CUENTA DE EMERGENCIA
      ========================================== -->
 <div id="tab-config-bd" class="ag-tab-pane">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1.5rem;">
         
         <!-- TARJETA: MODIFICAR PARÁMETROS DE CONEXIÓN BD -->
         <div class="ag-glass-card">
             <h3 style="margin: 0 0 0.4rem 0; font-size: 1.15rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: flex; align-items: center; gap: 8px;">
-                <i class="ph-bold ph-database" style="color: var(--color-secundario);"></i> Conexión PostgreSQL Dinámica (.env Shield)
+                <i class="ph-bold ph-database" style="color: var(--color-secundario);"></i> Conexión MariaDB Dinámica (.env Shield)
             </h3>
             <div class="sa-alert sa-alert-success" style="margin-bottom: 1.2rem; font-size: 0.82rem;">
                 <i class="ph-bold ph-shield-check" style="font-size: 1.1rem;"></i>
@@ -373,34 +373,34 @@
                 </div>
             </div>
             <p style="font-size: 0.86rem; color: var(--texto-silenciado, #64748b); margin-bottom: 1.4rem; line-height: 1.45;">
-                Actualiza el Host, Puerto, Base de Datos, Usuario y Contraseña de PostgreSQL. Requiere confirmar la contraseña de tu cuenta actual de SuperAdmin.
+                Actualiza el Host, Puerto, Base de Datos, Usuario y Contraseña de MariaDB. Requiere confirmar la contraseña de tu cuenta actual de SuperAdmin.
             </p>
 
             <form action="guardar-configuracion-bd" method="POST" style="display: flex; flex-direction: column; gap: 1rem;">
-                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+                <div class="sa-grid-host-port">
                     <div>
                         <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Host del Servidor</label>
                         <input type="text" name="host" class="ag-input" value="<?= htmlspecialchars($db_creds['host'] ?? 'localhost') ?>" required style="width: 100%;">
                     </div>
                     <div>
                         <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Puerto</label>
-                        <input type="text" name="port" class="ag-input" value="<?= htmlspecialchars($db_creds['port'] ?? '5432') ?>" required style="width: 100%;">
+                        <input type="text" name="port" class="ag-input" value="<?= htmlspecialchars($db_creds['port'] ?? '3306') ?>" required style="width: 100%;">
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="sa-grid-2col" style="gap: 10px;">
                     <div>
                         <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Base de Datos</label>
                         <input type="text" name="db" class="ag-input" value="<?= htmlspecialchars($db_creds['db'] ?? 'ciidi') ?>" required style="width: 100%;">
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Usuario PostgreSQL</label>
-                        <input type="text" name="user" class="ag-input" value="<?= htmlspecialchars($db_creds['user'] ?? 'miki') ?>" required style="width: 100%;">
+                        <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Usuario MariaDB</label>
+                        <input type="text" name="user" class="ag-input" value="<?= htmlspecialchars($db_creds['user'] ?? 'root') ?>" required style="width: 100%;">
                     </div>
                 </div>
 
                 <div>
-                    <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Contraseña PostgreSQL</label>
+                    <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Contraseña MariaDB</label>
                     <input type="password" name="pass" class="ag-input" value="<?= htmlspecialchars($db_creds['pass'] ?? '') ?>" placeholder="Contraseña de la BD" style="width: 100%;">
                 </div>
 
@@ -425,7 +425,7 @@
                 <i class="ph-bold ph-user-gear" style="color: var(--color-secundario);"></i> Cuenta de Emergencia Local (Break-Glass)
             </h3>
             <p style="font-size: 0.86rem; color: var(--texto-silenciado, #64748b); margin-bottom: 1.4rem; line-height: 1.45;">
-                Configura una cuenta de súper acceso independiente almacenada localmente en JSON. Se usará como salvavidas si la BD PostgreSQL sufre una caída total.
+                Configura una cuenta de súper acceso independiente almacenada localmente en JSON. Se usará como salvavidas si la BD MariaDB sufre una caída total.
             </p>
 
             <?php if (!empty($emergency_data['usuario'])): ?>
@@ -450,7 +450,7 @@
                     <input type="text" name="emergency_user" class="ag-input" value="<?= htmlspecialchars($emergency_data['usuario'] ?? 'admin_emergencia') ?>" required style="width: 100%;">
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="sa-grid-2col" style="gap: 10px;">
                     <div>
                         <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Contraseña de Emergencia</label>
                         <input type="password" name="emergency_pass" class="ag-input" placeholder="Nueva Contraseña" required style="width: 100%;">
@@ -483,7 +483,7 @@
      PESTAÑA 3: VENTANA DE MANTENIMIENTO PROGRAMADO
      ========================================== -->
 <div id="tab-mantenimiento" class="ag-tab-pane">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
         
         <!-- TARJETA 1: ACTIVACIÓN / DESACTIVACIÓN INMEDIATA -->
         <div class="ag-glass-card">
@@ -545,7 +545,7 @@
                     <input type="datetime-local" name="fecha_inicio" class="ag-input" required style="width: 100%; font-weight: 600;">
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="sa-grid-2col" style="gap: 10px;">
                     <div>
                         <label style="font-size: 0.8rem; font-weight: 800; color: var(--texto-titulos, #0f172a); display: block; margin-bottom: 6px;">Duración (Min)</label>
                         <input type="number" name="duracion_minutos" min="1" value="30" class="ag-input" required style="width: 100%;">
@@ -555,6 +555,11 @@
                         <input type="text" name="mensaje" class="ag-input" placeholder="Ej: Actualización DDL" style="width: 100%;">
                     </div>
                 </div>
+
+                <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 700; color: var(--texto-titulos, #0f172a); cursor: pointer;">
+                    <input type="checkbox" name="notificar_correo" value="1" checked style="width: 16px; height: 16px;">
+                    Notificar por correo a los usuarios activos (Plantilla de Mantenimiento)
+                </label>
 
                 <button type="submit" class="ag-btn-flat" style="width: 100%; justify-content: center; padding: 11px !important;">
                     <i class="ph-bold ph-calendar-check"></i> Agendar Mantenimiento
@@ -779,7 +784,7 @@ function confirmarRestauracionBD() {
     const file = fileInput.files[0];
     openAGModal({
         title: 'ADVERTENCIA: Importar & Restaurar BD',
-        body: `Se verificará la sintaxis del archivo '${file.name}' (${(file.size/1024).toFixed(1)} KB), se generará una copia de seguridad automática 'pre_restore_checkpoint' y se aplicarán los cambios en PostgreSQL. ¿Deseas continuar?`,
+        body: `Se verificará la sintaxis del archivo '${file.name}' (${(file.size/1024).toFixed(1)} KB), se generará una copia de seguridad automática 'pre_restore_checkpoint' y se aplicarán los cambios en MariaDB. ¿Deseas continuar?`,
         iconClass: 'ph-bold ph-warning-circle',
         iconBg: 'rgba(80,89,132,0.15)',
         iconColor: 'var(--color-terciario)',
@@ -792,7 +797,7 @@ function confirmarRestauracionBD() {
 function confirmarRestauracionDirecta(formEl, nombreArchivo) {
     openAGModal({
         title: 'Restaurar Respaldo Local',
-        body: `Se restaurará la base de datos PostgreSQL utilizando el archivo '${nombreArchivo}'. Se generará una copia de respaldo automática 'pre_restore_checkpoint' previa. ¿Deseas proceder?`,
+        body: `Se restaurará la base de datos MariaDB utilizando el archivo '${nombreArchivo}'. Se generará una copia de respaldo automática 'pre_restore_checkpoint' previa. ¿Deseas proceder?`,
         iconClass: 'ph-bold ph-arrows-counter-clockwise',
         iconBg: 'rgba(112,144,203,0.12)',
         iconColor: 'var(--color-terciario)',

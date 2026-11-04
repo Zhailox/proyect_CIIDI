@@ -32,26 +32,50 @@ class ArticuloModel {
 
         if (isset($filtros['activo'])) {
             if ($filtros['activo'] !== 'todos') {
-                $condiciones[] = "COALESCE(d.activo, true) = :activo";
+                $condiciones[] = "COALESCE(d.activo, 1) = :activo";
                 $parametros[':activo'] = $filtros['activo'] ? 1 : 0;
             }
         } else {
             // Por defecto, si no se especifica, solo trae los activos
-            $condiciones[] = "COALESCE(d.activo, true) = true";
+            $condiciones[] = "COALESCE(d.activo, 1) = 1";
         }
 
+        $scoreSql = "0";
         if (!empty($filtros['q'])) {
             $texto = trim($filtros['q']);
+            $scoreSql = "(MATCH(r.titulo) AGAINST(:q_ft_s1 IN NATURAL LANGUAGE MODE) * 2.5 + COALESCE(MATCH(d.resumen) AGAINST(:q_ft_s2 IN NATURAL LANGUAGE MODE), 0))";
+            $parametros[':q_ft_s1'] = $texto;
+            $parametros[':q_ft_s2'] = $texto;
+
             $condiciones[] = "(
-                LOWER(r.titulo) LIKE LOWER(:q) OR
-                LOWER(d.resumen) LIKE LOWER(:q) OR
+                MATCH(r.titulo) AGAINST(:q_ft1 IN NATURAL LANGUAGE MODE) OR
+                MATCH(d.resumen) AGAINST(:q_ft2 IN NATURAL LANGUAGE MODE) OR
+                COALESCE(r.titulo, '') LIKE :q1 OR
+                COALESCE(d.resumen, '') LIKE :q2 OR
                 EXISTS (
                     SELECT 1 FROM recurso_investigadores ri 
                     JOIN investigadores i ON ri.id_investigador = i.id 
-                    WHERE ri.id_recurso = r.id AND LOWER(i.nombre_completo) LIKE LOWER(:q)
+                    WHERE ri.id_recurso = r.id AND (
+                        MATCH(i.nombre_completo, i.biografia) AGAINST(:q_ft3 IN NATURAL LANGUAGE MODE) OR
+                        COALESCE(i.nombre_completo, '') LIKE :q3 OR
+                        COALESCE(i.orcid, '') LIKE :q4
+                    )
+                ) OR
+                EXISTS (
+                    SELECT 1 FROM recurso_categorias rc 
+                    JOIN categorias c ON rc.id_categoria = c.id 
+                    WHERE rc.id_recurso = r.id AND COALESCE(c.nombre, '') LIKE :q5
                 )
             )";
-            $parametros[':q'] = '%' . $texto . '%';
+            $likeQ = '%' . $texto . '%';
+            $parametros[':q_ft1'] = $texto;
+            $parametros[':q_ft2'] = $texto;
+            $parametros[':q_ft3'] = $texto;
+            $parametros[':q1'] = $likeQ;
+            $parametros[':q2'] = $likeQ;
+            $parametros[':q3'] = $likeQ;
+            $parametros[':q4'] = $likeQ;
+            $parametros[':q5'] = $likeQ;
         }
         if (!empty($filtros['id_autor'])) {
             $condiciones[] = "EXISTS (
@@ -66,9 +90,10 @@ class ArticuloModel {
             $condiciones[] = "EXISTS (
                 SELECT 1 FROM recurso_investigadores ri 
                 JOIN investigadores a ON ri.id_investigador = a.id 
-                WHERE ri.id_recurso = r.id AND (LOWER(a.nombre_completo) LIKE LOWER(:q_autor) OR LOWER(COALESCE(a.orcid, '')) LIKE LOWER(:q_autor))
+                WHERE ri.id_recurso = r.id AND (a.nombre_completo LIKE :q_autor1 OR COALESCE(a.orcid, '') LIKE :q_autor2)
             )";
-            $parametros[':q_autor'] = '%' . $textoAutor . '%';
+            $parametros[':q_autor1'] = '%' . $textoAutor . '%';
+            $parametros[':q_autor2'] = '%' . $textoAutor . '%';
         }
 
         if (!empty($filtros['year'])) {
@@ -115,6 +140,8 @@ class ArticuloModel {
         $parametros[':limit'] = $porPagina;
         $parametros[':offset'] = $offset;
 
+        $orderByClause = !empty($filtros['q']) ? "score DESC, r.id DESC" : "r.id DESC";
+
         $sql = "
             SELECT
                 r.id,
@@ -127,15 +154,16 @@ class ArticuloModel {
                 e.nombre AS editorial,
                 d.imagen_portada,
                 d.resumen,
-                COALESCE(d.activo, true) AS activo,
+                COALESCE(d.activo, 1) AS activo,
+                {$scoreSql} AS score,
                 COALESCE((
-                    SELECT STRING_AGG(DISTINCT c2.nombre, ', ' ORDER BY c2.nombre)
+                    SELECT GROUP_CONCAT(DISTINCT c2.nombre ORDER BY c2.nombre ASC SEPARATOR ', ')
                     FROM recurso_categorias rc2
                     LEFT JOIN categorias c2 ON c2.id = rc2.id_categoria
                     WHERE rc2.id_recurso = r.id
                 ), 'Sin categoría') AS categoria,
                COALESCE((
-                    SELECT STRING_AGG(i2.id || '|||' || i2.nombre_completo || '|||' || COALESCE(i2.orcid, ''), ';;;' ORDER BY i2.nombre_completo ASC)
+                    SELECT GROUP_CONCAT(CONCAT(i2.id, '|||', i2.nombre_completo, '|||', COALESCE(i2.orcid, '')) ORDER BY i2.nombre_completo ASC SEPARATOR ';;;')
                     FROM recurso_investigadores ri2
                     JOIN investigadores i2 ON i2.id = ri2.id_investigador
                     WHERE ri2.id_recurso = r.id
@@ -144,7 +172,7 @@ class ArticuloModel {
             INNER JOIN detalles_articulos d ON d.id_recurso = r.id
             LEFT JOIN editoriales e ON d.id_editorial = e.id
             WHERE " . implode(' AND ', $condiciones) . "
-            ORDER BY r.id DESC
+            ORDER BY {$orderByClause}
             LIMIT :limit OFFSET :offset
         ";
 
@@ -180,26 +208,45 @@ public function contarArticulos(array $filtros = []) {
 
         if (isset($filtros['activo'])) {
             if ($filtros['activo'] !== 'todos') {
-                $condiciones[] = "COALESCE(d.activo, true) = :activo";
+                $condiciones[] = "COALESCE(d.activo, 1) = :activo";
                 $parametros[':activo'] = $filtros['activo'] ? 1 : 0;
             }
         } else {
             // Por defecto, si no se especifica, solo trae los activos
-            $condiciones[] = "COALESCE(d.activo, true) = true";
+            $condiciones[] = "COALESCE(d.activo, 1) = 1";
         }
 
-    if (!empty($filtros['q'])) {
+        if (!empty($filtros['q'])) {
             $texto = trim($filtros['q']);
             $condiciones[] = "(
-                LOWER(r.titulo) LIKE LOWER(:q) OR
-                LOWER(d.resumen) LIKE LOWER(:q) OR
+                MATCH(r.titulo) AGAINST(:q_ft1 IN NATURAL LANGUAGE MODE) OR
+                MATCH(d.resumen) AGAINST(:q_ft2 IN NATURAL LANGUAGE MODE) OR
+                COALESCE(r.titulo, '') LIKE :q1 OR
+                COALESCE(d.resumen, '') LIKE :q2 OR
+                EXISTS (
+                    SELECT 1 FROM recurso_investigadores ri 
+                    JOIN investigadores i ON ri.id_investigador = i.id 
+                    WHERE ri.id_recurso = r.id AND (
+                        MATCH(i.nombre_completo, i.biografia) AGAINST(:q_ft3 IN NATURAL LANGUAGE MODE) OR
+                        COALESCE(i.nombre_completo, '') LIKE :q3 OR
+                        COALESCE(i.orcid, '') LIKE :q4
+                    )
+                ) OR
                 EXISTS (
                     SELECT 1 FROM recurso_categorias rc 
                     JOIN categorias c ON rc.id_categoria = c.id 
-                    WHERE rc.id_recurso = r.id AND LOWER(c.nombre) LIKE LOWER(:q)
+                    WHERE rc.id_recurso = r.id AND COALESCE(c.nombre, '') LIKE :q5
                 )
             )";
-            $parametros[':q'] = '%' . $texto . '%';
+            $likeQ = '%' . $texto . '%';
+            $parametros[':q_ft1'] = $texto;
+            $parametros[':q_ft2'] = $texto;
+            $parametros[':q_ft3'] = $texto;
+            $parametros[':q1'] = $likeQ;
+            $parametros[':q2'] = $likeQ;
+            $parametros[':q3'] = $likeQ;
+            $parametros[':q4'] = $likeQ;
+            $parametros[':q5'] = $likeQ;
         }
         if (!empty($filtros['id_autor'])) {
             $condiciones[] = "EXISTS (
@@ -213,9 +260,10 @@ public function contarArticulos(array $filtros = []) {
             $condiciones[] = "EXISTS (
                 SELECT 1 FROM recurso_investigadores ri 
                 JOIN investigadores a ON ri.id_investigador = a.id 
-                WHERE ri.id_recurso = r.id AND (LOWER(a.nombre_completo) LIKE LOWER(:q_autor) OR LOWER(COALESCE(a.orcid, '')) LIKE LOWER(:q_autor))
+                WHERE ri.id_recurso = r.id AND (a.nombre_completo LIKE :q_autor1 OR COALESCE(a.orcid, '') LIKE :q_autor2)
             )";
-            $parametros[':q_autor'] = '%' . $textoAutor . '%';
+            $parametros[':q_autor1'] = '%' . $textoAutor . '%';
+            $parametros[':q_autor2'] = '%' . $textoAutor . '%';
         }
 
     if (!empty($filtros['year'])) {
@@ -386,9 +434,9 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
             }
             
             
-            // Creamos los autores nuevos ingresados al vuelo (Corrección PostgreSQL)
+            // Creamos los autores nuevos ingresados al vuelo
             if (!empty($autores_nuevos)) {
-            $stmtNewAutor = $db->prepare("INSERT INTO investigadores (nombre_completo, orcid, biografia, pagina_web) VALUES (?, ?, ?, ?) RETURNING id");
+            $stmtNewAutor = $db->prepare("INSERT INTO investigadores (nombre_completo, orcid, biografia, pagina_web) VALUES (?, ?, ?, ?)");
             $stmtSimilares = $db->prepare("SELECT id, nombre_completo FROM investigadores WHERE LOWER(nombre_completo) LIKE LOWER(?) LIMIT 50");
 
             foreach ($autores_nuevos as $json_autor) {
@@ -420,7 +468,7 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
                     } else {
                         // B. Si no existe en absoluto, lo insertamos
                         $stmtNewAutor->execute([$nom, $orcid, $biografia, $pagina_web]);
-                        $autorId = $stmtNewAutor->fetchColumn();
+                        $autorId = (int)$db->lastInsertId();
                     }
                     if ($autorId) {
                         $autores_finales[] = (int)$autorId;
@@ -452,12 +500,16 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
             }
 
             // Si todo salió bien, guardamos los cambios físicamente
-            $db->commit();
+            if ($db->inTransaction()) {
+                $db->commit();
+            }
             return $autores_vinculados;
 
         } catch (Exception $e) {
             // Si algo explota, deshacemos todo
-            $db->rollBack();
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
             throw $e; 
         }
     }
@@ -503,7 +555,7 @@ public function obtenerArticuloPorId($id) {
                 d.imagen_portada,
                 d.resumen,
                 COALESCE((
-                    SELECT STRING_AGG(DISTINCT c2.nombre, ', ' ORDER BY c2.nombre)
+                    SELECT GROUP_CONCAT(DISTINCT c2.nombre ORDER BY c2.nombre ASC SEPARATOR ', ')
                     FROM recurso_categorias rc2
                     JOIN categorias c2 ON c2.id = rc2.id_categoria
                     WHERE rc2.id_recurso = r.id
@@ -568,7 +620,7 @@ public function obtenerArticuloPorId($id) {
                        e.nombre AS editorial,
                        COALESCE((SELECT c2.nombre FROM recurso_categorias rc2 JOIN categorias c2 ON c2.id = rc2.id_categoria WHERE rc2.id_recurso = r.id LIMIT 1), 'Artículo') AS categoria,
                        COALESCE((
-                    SELECT STRING_AGG(a2.id || '|||' || a2.nombre_completo || '|||' || COALESCE(a2.orcid, ''), ';;;' ORDER BY a2.nombre_completo ASC)
+                    SELECT GROUP_CONCAT(CONCAT(a2.id, '|||', a2.nombre_completo, '|||', COALESCE(a2.orcid, '')) ORDER BY a2.nombre_completo ASC SEPARATOR ';;;')
                     FROM recurso_investigadores ra2
                     JOIN investigadores a2 ON a2.id = ra2.id_investigador
                     WHERE ra2.id_recurso = r.id
@@ -579,7 +631,7 @@ public function obtenerArticuloPorId($id) {
                 JOIN recurso_categorias rc ON r.id = rc.id_recurso
                 WHERE r.id_tipo_recurso = 3 
                 AND r.id != ?
-                AND COALESCE(d.activo, true) = true
+                AND COALESCE(d.activo, 1) = 1
                 AND rc.id_categoria IN (SELECT id_categoria FROM recurso_categorias WHERE id_recurso = ?)
                 ORDER BY r.id DESC LIMIT ?";
         $stmt = $db->prepare($sql);
@@ -711,7 +763,7 @@ public function actualizarArticulo(
         }
 
         if (!empty($autores_nuevos)) {
-            $stmtNewAutor = $db->prepare("INSERT INTO investigadores (nombre_completo, orcid, biografia, pagina_web) VALUES (?, ?, ?, ?) RETURNING id");
+            $stmtNewAutor = $db->prepare("INSERT INTO investigadores (nombre_completo, orcid, biografia, pagina_web) VALUES (?, ?, ?, ?)");
 
             foreach ($autores_nuevos as $json_autor) {
                 $datos = json_decode($json_autor, true);
@@ -741,7 +793,7 @@ public function actualizarArticulo(
                     } else {
                         // B. Insertar en INVESTIGADORES
                         $stmtNewAutor->execute([$nom, $orcid, $biografia, $pagina_web]);
-                        $autorId = $stmtNewAutor->fetchColumn();
+                        $autorId = (int)$db->lastInsertId();
                     }
 
                     if ($autorId) {
@@ -765,18 +817,18 @@ public function actualizarArticulo(
             }
         }
 
-        $db->commit();
+        if ($db->inTransaction()) {
+            $db->commit();
+        }
         return $autores_vinculados;
     } catch (Exception $e) {
-        $db->rollBack();
+        if ($db->inTransaction()) {
+            $db->rollBack();
+        }
         throw $e;
     }
 }
 public function obtenerCatalogoPaginado($tabla, $buscar = '', $pagina = 1, $porPagina = 5) {
-        $tablasPermitidas = ['categorias', 'etiquetas', 'editoriales'];
-        if (!in_array($tabla, $tablasPermitidas, true)) {
-            throw new InvalidArgumentException("Tabla de catálogo no autorizada.");
-        }
         $db = Connection::getInstance();
         $offset = ($pagina - 1) * $porPagina;
         
@@ -819,11 +871,13 @@ public function obtenerCatalogoPaginado($tabla, $buscar = '', $pagina = 1, $porP
         $where = "";
 
         if (trim($buscar) !== '') {
-            $where = "WHERE LOWER(nombre_completo) LIKE LOWER(:b) OR LOWER(orcid) LIKE LOWER(:b)";
+            $where = "WHERE nombre_completo LIKE :b1 OR COALESCE(orcid, '') LIKE :b2";
         }
         $stmtTotal = $db->prepare("SELECT COUNT(*) FROM investigadores $where");
         if (trim($buscar) !== '') {
-            $stmtTotal->bindValue(':b', "%" . trim($buscar) . "%", PDO::PARAM_STR);
+            $term = "%" . trim($buscar) . "%";
+            $stmtTotal->bindValue(':b1', $term, PDO::PARAM_STR);
+            $stmtTotal->bindValue(':b2', $term, PDO::PARAM_STR);
         }
         $stmtTotal->execute();
         $total = (int)$stmtTotal->fetchColumn();
@@ -831,7 +885,9 @@ public function obtenerCatalogoPaginado($tabla, $buscar = '', $pagina = 1, $porP
         $sql = "SELECT id, nombre_completo, orcid, biografia, pagina_web FROM investigadores $where ORDER BY nombre_completo ASC LIMIT :limit OFFSET :offset";
         $stmt = $db->prepare($sql);
         if (trim($buscar) !== '') {
-            $stmt->bindValue(':b', "%" . trim($buscar) . "%", PDO::PARAM_STR);
+            $term = "%" . trim($buscar) . "%";
+            $stmt->bindValue(':b1', $term, PDO::PARAM_STR);
+            $stmt->bindValue(':b2', $term, PDO::PARAM_STR);
         }
         $stmt->bindValue(':limit', $porPagina, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
@@ -959,7 +1015,7 @@ public function obtenerCategoriasDelArticulo($id_recurso) {
     }
     public function cambiarEstado(int $id_recurso) {
         $db = Connection::getInstance();
-        $stmt = $db->prepare("UPDATE detalles_articulos SET activo = NOT COALESCE(activo, true) WHERE id_recurso = ?");
+        $stmt = $db->prepare("UPDATE detalles_articulos SET activo = CASE WHEN COALESCE(activo, 1) = 1 THEN 0 ELSE 1 END WHERE id_recurso = ?");
         return $stmt->execute([$id_recurso]);
     }
     public function obtenerAutorPorNombreExacto($nombre) {

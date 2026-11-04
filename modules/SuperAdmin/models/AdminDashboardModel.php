@@ -8,10 +8,10 @@ class AdminDashboardModel {
         $db = Connection::getInstance(); // Para consultas nativas
         
         // 1. Usuarios activos (no suspendidos)
-        $activos = $qb->tabla('usuarios')->where('activo', '=', 'true')->count();
+        $activos = $qb->tabla('usuarios')->where('activo', '=', 1)->count();
         
         // 2. Usuarios suspendidos/bloqueados
-        $bloqueados = $qb->tabla('usuarios')->where('activo', '=', 'false')->count();
+        $bloqueados = $qb->tabla('usuarios')->where('activo', '=', 0)->count();
         
         // 3. Cantidad de docentes/profesores (filtrado por nivel de privilegio 1)
         $docentes = $qb->tabla('usuarios u')
@@ -21,11 +21,11 @@ class AdminDashboardModel {
             ->count();
             
         // 4. Usuarios Online (Actividad en los últimos 15 minutos)
-        $sqlOnline = "SELECT COUNT(*) FROM registro_actividad WHERE ultima_actividad >= NOW() - INTERVAL '15 minutes'";
+        $sqlOnline = "SELECT COUNT(*) FROM registro_actividad WHERE ultima_actividad >= DATE_SUB(NOW(), INTERVAL 15 MINUTE)";
         $online = (int) ($db->query($sqlOnline)->fetchColumn() ?: 0);
 
         // 5. Accesos Exitosos Hoy (desde las 00:00:00)
-        $sqlAccesosHoy = "SELECT COUNT(*) FROM registro_actividad WHERE DATE(ultima_actividad) = CURRENT_DATE";
+        $sqlAccesosHoy = "SELECT COUNT(*) FROM registro_actividad WHERE DATE(ultima_actividad) = CURDATE()";
         $accesosHoy = (int) ($db->query($sqlAccesosHoy)->fetchColumn() ?: 0);
 
         // 6. Conteo de Módulos (Detectando carpetas en MODULES_PATH)
@@ -60,23 +60,28 @@ class AdminDashboardModel {
         $db = Connection::getInstance();
         $creds = Connection::getCredentials();
 
-        // 1. Peso de la Base de Datos PostgreSQL
+        // 1. Peso de la Base de Datos MariaDB
         $dbSizeFormatted = "0 MB";
         try {
-            $sqlSize = "SELECT pg_size_pretty(pg_database_size(current_database()))";
-            $dbSizeFormatted = $db->query($sqlSize)->fetchColumn() ?: "0 MB";
+            $sqlSize = "SELECT ROUND(COALESCE(SUM(data_length + index_length), 0) / 1048576, 2) FROM information_schema.tables WHERE table_schema = DATABASE()";
+            $mb = $db->query($sqlSize)->fetchColumn();
+            $dbSizeFormatted = ($mb !== false && $mb !== null) ? number_format((float)$mb, 2, '.', '') . " MB" : "0 MB";
         } catch (Exception $e) {
             $dbSizeFormatted = "N/D";
         }
 
-        // 2. Conexiones Activas a PostgreSQL
+        // 2. Conexiones Activas a MariaDB
         $activeConnections = 0;
         $maxConnections = 100;
         try {
-            $sqlConn = "SELECT count(*) FROM pg_stat_activity WHERE datname = current_database()";
-            $activeConnections = (int) $db->query($sqlConn)->fetchColumn();
-            $sqlMaxConn = "SHOW max_connections";
-            $maxConnections = (int) $db->query($sqlMaxConn)->fetchColumn();
+            $stmtConn = $db->query("SHOW STATUS LIKE 'Threads_connected'");
+            $rowConn = $stmtConn ? $stmtConn->fetch(PDO::FETCH_ASSOC) : null;
+            if ($stmtConn) {
+                $stmtConn->closeCursor();
+            }
+            $activeConnections = isset($rowConn['Value']) ? (int)$rowConn['Value'] : 1;
+            $stmtMaxConn = $db->query("SELECT @@max_connections");
+            $maxConnections = (int) ($stmtMaxConn->fetchColumn() ?: 100);
         } catch (Exception $e) {
             $activeConnections = 1;
         }
@@ -117,8 +122,8 @@ class AdminDashboardModel {
                 'timestamp' => time()
             ]);
             
-            // Upsert nativo para PostgreSQL (Actualiza si existe, inserta si no)
-            $db->prepare("INSERT INTO telemetria_cache (id, datos) VALUES (1, ?) ON CONFLICT (id) DO UPDATE SET datos = EXCLUDED.datos")
+            // Upsert nativo para MariaDB (Actualiza si existe, inserta si no)
+            $db->prepare("INSERT INTO telemetria_cache (id, datos) VALUES (1, ?) ON DUPLICATE KEY UPDATE datos = VALUES(datos)")
                ->execute([$nuevosDatos]);
         }
 
@@ -130,15 +135,15 @@ class AdminDashboardModel {
         $memUsage = round(memory_get_usage(true) / (1024 * 1024), 2);
         $memPeak = round(memory_get_peak_usage(true) / (1024 * 1024), 2);
 
-        // 5. Versión y estado de PostgreSQL
+        // 5. Versión y estado de MariaDB
         $pgVersion = "Desconocida";
         $pgStatus = "Desconectado";
         try {
-            $versionStmt = $db->query("SELECT version()");
+            $versionStmt = $db->query("SELECT VERSION()");
             $rawVer = $versionStmt->fetchColumn();
             if ($rawVer) {
                 $pgStatus = "Online";
-                if (preg_match('/PostgreSQL\s+([\d\.]+)/i', $rawVer, $m)) {
+                if (preg_match('/([\d]+\.[\d]+(?:\.[\d]+)?)/', (string)$rawVer, $m)) {
                     $pgVersion = "v" . $m[1];
                 } else {
                     $pgVersion = "Activo";
@@ -160,20 +165,20 @@ class AdminDashboardModel {
             'pg_status' => $pgStatus,
             'active_connections' => $activeConnections,
             'max_connections' => $maxConnections,
-            'db_name' => $creds['db'] ?? 'PostgreSQL'
+            'db_name' => $creds['db'] ?? 'MariaDB'
         ];
     }
 
     public function obtenerUltimasAccionesAudit(int $limit = 5): array {
         $db = Connection::getInstance();
-        $stmt = $db->prepare("SELECT * FROM system_audit_log ORDER BY fecha_hora DESC LIMIT ?");
-        $stmt->execute([$limit]);
+        $limitSafe = max(1, (int)$limit);
+        $stmt = $db->query("SELECT * FROM system_audit_log ORDER BY fecha_hora DESC, id DESC LIMIT {$limitSafe}");
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
     public function obtenerTablasSistema(): array {
         $db = Connection::getInstance();
-        $sql = "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public' ORDER BY tablename ASC";
+        $sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE' ORDER BY table_name ASC";
         $stmt = $db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
@@ -181,8 +186,25 @@ class AdminDashboardModel {
     public function optimizarBaseDatos(): array {
         $db = Connection::getInstance();
         try {
-            $db->exec("VACUUM ANALYZE");
-            return ['exito' => true, 'mensaje' => 'Optimización de tablas (VACUUM ANALYZE) ejecutada con éxito en PostgreSQL.'];
+            $tablas = $this->obtenerTablasSistema();
+            $optimizadas = 0;
+            foreach ($tablas as $tabla) {
+                if (!preg_match('/^[a-zA-Z0-9_]+$/', (string)$tabla)) {
+                    continue;
+                }
+                $stmtOpt = $db->query("OPTIMIZE TABLE `{$tabla}`");
+                if ($stmtOpt) {
+                    $stmtOpt->fetchAll();
+                    $stmtOpt->closeCursor();
+                }
+                $stmtAna = $db->query("ANALYZE TABLE `{$tabla}`");
+                if ($stmtAna) {
+                    $stmtAna->fetchAll();
+                    $stmtAna->closeCursor();
+                }
+                $optimizadas++;
+            }
+            return ['exito' => true, 'mensaje' => "Optimización de tablas (OPTIMIZE & ANALYZE TABLE) ejecutada con éxito en MariaDB ({$optimizadas} tablas)."];
         } catch (Exception $e) {
             return ['exito' => false, 'mensaje' => 'Error al optimizar BD: ' . $e->getMessage()];
         }
@@ -192,12 +214,13 @@ class AdminDashboardModel {
         $db = Connection::getInstance();
         try {
             $sql = "SELECT 
-                        relname AS tabla,
-                        pg_size_pretty(pg_total_relation_size(relid)) AS tamano,
-                        pg_total_relation_size(relid) AS bytes,
-                        n_live_tup AS total_filas
-                    FROM pg_catalog.pg_stat_user_tables
-                    ORDER BY pg_total_relation_size(relid) DESC
+                        table_name AS `tabla`,
+                        CONCAT(ROUND((COALESCE(data_length, 0) + COALESCE(index_length, 0)) / 1024, 1), ' KB') AS `tamano`,
+                        (COALESCE(data_length, 0) + COALESCE(index_length, 0)) AS `bytes`,
+                        COALESCE(table_rows, 0) AS `total_filas`
+                    FROM information_schema.tables
+                    WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE'
+                    ORDER BY `bytes` DESC
                     LIMIT 8";
             $stmt = $db->query($sql);
             return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
@@ -209,10 +232,10 @@ class AdminDashboardModel {
     public function obtenerConsultasActivas(): array {
         $db = Connection::getInstance();
         try {
-            $sql = "SELECT pid, usename, query, state, NOW() - query_start AS duracion
-                    FROM pg_stat_activity 
-                    WHERE state != 'idle' AND pid != pg_backend_pid()
-                    ORDER BY duracion DESC LIMIT 5";
+            $sql = "SELECT ID AS `pid`, USER AS `usename`, INFO AS `query`, STATE AS `state`, CONCAT(TIME, ' s') AS `duracion`
+                    FROM information_schema.PROCESSLIST 
+                    WHERE COMMAND != 'Sleep' AND ID != CONNECTION_ID()
+                    ORDER BY TIME DESC LIMIT 5";
             $stmt = $db->query($sql);
             return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
         } catch (Exception $e) {

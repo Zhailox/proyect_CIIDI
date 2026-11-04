@@ -417,7 +417,7 @@ $tabActiva = $_GET['tab'] ?? 'cat';
 <div id="modal-edicion-autor" class="art-modal-overlay" style="display: none;">
     <div class="art-modal-box" style="border-radius: 8px; max-width: 440px; padding: 1.5rem;">
         <h3 class="text-secondary mt-0 box-title-border" style="font-size: 1.1rem; margin-bottom: 0.5rem;"><i class="ph-bold ph-user-focus"></i> Editar Datos de Autor</h3>
-        <p class="text-muted mb-2" style="font-size:0.85rem;">Actualice la cédula o el nombre completo del investigador.</p>
+        <p class="text-muted mb-2" style="font-size:0.85rem;">Actualice el ORCID o el nombre completo del investigador.</p>
 
         <form method="POST" action="gestor-catalogos" class="m-0">
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">

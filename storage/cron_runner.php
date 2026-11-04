@@ -1,6 +1,6 @@
 <?php
 // storage/cron_runner.php
-// Micro-Runner CLI para Cron Job de Linux / Task Scheduler de Windows y Auto-Runner Interno
+// Micro-Runner CLI para Cron Job de Linux (cPanel) / Task Scheduler de Windows y Auto-Runner Interno
 
 date_default_timezone_set('America/Caracas');
 
@@ -33,7 +33,7 @@ function logCli($msg, $color = '0') {
     }
 }
 
-logCli("Iniciando Runner de Tareas Programadas CIIDI...", "32");
+logCli("Iniciando Runner de Tareas Programadas CIIDI (MariaDB 10.6)...", "32");
 
 SchedulerService::registrarLatidoRunner('cron_cli');
 
@@ -42,6 +42,18 @@ $ejecutadas = 0;
 
 foreach ($tareas as $id => $t) {
     if (($t['estado'] ?? 'activo') !== 'activo') {
+        continue;
+    }
+
+    // Neutralización de tareas heredadas de vectorización / ONNX
+    $identificadorTarea = strtolower($id . ' ' . ($t['nombre'] ?? '') . ' ' . ($t['archivo_script'] ?? '') . ' ' . ($t['comando_custom'] ?? ''));
+    if (
+        $id === 'tarea_1790301553_528' ||
+        str_contains($identificadorTarea, 'embedding') ||
+        str_contains($identificadorTarea, 'onnx') ||
+        str_contains($identificadorTarea, 'vector')
+    ) {
+        logCli("Omitiendo tarea heredada de vectorización desactivada: {$id}", "36");
         continue;
     }
 
@@ -62,4 +74,4 @@ foreach ($tareas as $id => $t) {
 
 SchedulerService::registrarLatidoRunner('cron_cli', $ejecutadas);
 
-logCli("Proceso finalizado. Total tareas procesadas en este ciclo: {$ejecutadas}", "36");
+logCli("Proceso finalizado. Total tareas de mantenimiento procesadas en este ciclo: {$ejecutadas}", "36");

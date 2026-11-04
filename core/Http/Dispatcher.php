@@ -71,6 +71,13 @@ class Dispatcher {
                 $js_modulo = $assetResolver->resolveRouteJs($ruta, $configRuta, $modulosInstalados);
             } elseif ($type === '404') {
                 http_response_code(404);
+            } elseif ($type === 'guard_block') {
+                // Bloqueo emitido por un guardián de rutas (RouteGuardContract)
+                http_response_code($match['status'] ?? 403);
+                $css_modulo = $match['css'] ?? [];
+                if (!empty($match['datos']) && is_array($match['datos'])) {
+                    extract($match['datos'], EXTR_SKIP);
+                }
             }
 
             $menu_dinamico = $menuGlobal;
@@ -100,7 +107,9 @@ class Dispatcher {
             session_start();
         }
 
+        $rawDetail = $e->getPrevious() ? $e->getPrevious()->getMessage() : $e->getDebugDetails();
         $_SESSION['db_connection_error'] = $e->getDebugDetails();
+        $_SESSION['db_connection_error_raw'] = $rawDetail;
 
         if ($e->isAjax()) {
             http_response_code(500);
@@ -108,13 +117,13 @@ class Dispatcher {
             echo json_encode([
                 'error' => true,
                 'mensaje' => $e->getMessage(),
-                'debug' => $e->getDebugDetails()
+                'debug' => $rawDetail
             ]);
             exit;
         }
 
         http_response_code(500);
-        $dbErrorMsg = $e->getDebugDetails();
+        $dbErrorMsg = $rawDetail;
         $isStandalone = true;
         $standalone = true;
         $vista_modulo_path = defined('CORE_VIEWS') ? CORE_VIEWS . '500.php' : __DIR__ . '/../Views/500.php';
@@ -131,17 +140,43 @@ class Dispatcher {
      * Maneja de forma centralizada cualquier excepción de ejecución no controlada (HTTP 500).
      */
     private function handleGeneralException(Throwable $e): void {
+        // Si es un error de tabla SQL faltante en MariaDB, intentar auto-reparación inmediata
+        if ($e instanceof PDOException && class_exists('Connection')) {
+            $sqlState = (string)$e->getCode();
+            $msg = $e->getMessage();
+            if ($sqlState === '42S02' || $sqlState === '42P01' || stripos($msg, "doesn't exist") !== false || stripos($msg, 'does not exist') !== false || stripos($msg, 'no existe') !== false) {
+                try {
+                    $pdo = Connection::getInstance(true);
+                    if ($pdo) {
+                        $heal = Connection::autoHealSchemaIfNeeded($pdo, true);
+                        if (!empty($heal['exito']) && !empty($heal['acciones']) && $_SERVER['REQUEST_METHOD'] === 'GET' && empty($_GET['_healed'])) {
+                            $sep = str_contains($_SERVER['REQUEST_URI'] ?? '', '?') ? '&' : '?';
+                            header("Location: " . ($_SERVER['REQUEST_URI'] ?? 'inicio') . $sep . "_healed=1");
+                            exit;
+                        }
+                    }
+                } catch (Throwable $healEx) {}
+            }
+        }
+
         if (class_exists('Connection')) {
             Connection::logSystemError($e);
         }
         if (class_exists('AuditLogger')) {
-            AuditLogger::registrar('ERROR', 'Core_Dispatcher', 'Excepción Interna HTTP 500', $e->getMessage() . ' en ' . basename($e->getFile()) . ':' . $e->getLine());
+            try {
+                AuditLogger::registrar('ERROR', 'Core_Dispatcher', 'Excepción Interna HTTP 500', $e->getMessage() . ' en ' . basename($e->getFile()) . ':' . $e->getLine());
+            } catch (Throwable $logEx) {}
         }
 
         $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
             || (!empty($_SERVER['HTTP_ACCEPT']) && str_contains(strtolower($_SERVER['HTTP_ACCEPT']), 'application/json'));
-        $appDebug = class_exists('Env') ? (bool)Env::get('APP_DEBUG', false) : false;
-        $detalleError = $appDebug ? ($e->getMessage() . " (" . basename($e->getFile()) . ":" . $e->getLine() . ")") : "Error interno del servidor al procesar la solicitud.";
+        $detalleTecnico = $e->getMessage() . " (" . basename($e->getFile()) . ":" . $e->getLine() . ")";
+
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $_SESSION['db_connection_error'] = $detalleTecnico;
+        $_SESSION['db_connection_error_raw'] = $detalleTecnico;
 
         if (!headers_sent()) {
             http_response_code(500);
@@ -154,12 +189,12 @@ class Dispatcher {
             echo json_encode([
                 'error' => true,
                 'mensaje' => 'Error interno del servidor (500).',
-                'debug' => $detalleError
+                'debug' => $detalleTecnico
             ]);
             exit;
         }
 
-        $dbErrorMsg = $detalleError;
+        $dbErrorMsg = $detalleTecnico;
         $isStandalone = true;
         $standalone = true;
         $vista_modulo_path = defined('CORE_VIEWS') ? CORE_VIEWS . '500.php' : __DIR__ . '/../Views/500.php';

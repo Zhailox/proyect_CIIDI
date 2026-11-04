@@ -16,24 +16,24 @@ class ReportesModel {
      * Reporte 1: Producción Científica PST (Campos reales comprobados)
      */
     public function obtenerReportePST(array $filtros = []): array {
-        $sql = "SELECT DISTINCT ON (r.id)
+        $sql = "SELECT
                     r.id,
                     r.titulo,
-                    COALESCE(c.nombre, 'Informática') AS carrera,
+                    COALESCE(MAX(c.nombre), 'Informática') AS carrera,
                     COALESCE(dp.nivel_academico, 'Pregrado') AS nivel_academico,
                     COALESCE(t.nombre, 'Sin Trayecto') AS trayecto,
                     r.anio_publicacion,
                     COALESCE(dp.comunidad_beneficiada, 'N/D') AS comunidad_beneficiada,
-                    COALESCE(li.nombre, 'General / No Asignada') AS linea_investigacion,
-                    COALESCE(dp.fecha_defensa::text, 'N/D') AS fecha_defensa,
+                    COALESCE(MIN(li.nombre), 'General / No Asignada') AS linea_investigacion,
+                    COALESCE(CAST(dp.fecha_defensa AS CHAR), 'N/D') AS fecha_defensa,
                     COALESCE(dp.obj_general, 'N/D') AS obj_general,
                     COALESCE(dp.resumen, 'Sin resumen registrado.') AS resumen
-                FROM public.recursos r
-                JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
-                LEFT JOIN public.trayectos t ON dp.id_trayecto = t.id
-                LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
-                LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
-                LEFT JOIN public.carreras c ON COALESCE(dp.id_carrera, li.id_carrera) = c.id
+                FROM recursos r
+                JOIN detalles_proyectos dp ON r.id = dp.id_recurso
+                LEFT JOIN trayectos t ON dp.id_trayecto = t.id
+                LEFT JOIN recurso_clasificaciones rc ON r.id = rc.id_recurso
+                LEFT JOIN lineas_investigacion li ON rc.id_linea_investigacion = li.id
+                LEFT JOIN carreras c ON COALESCE(dp.id_carrera, li.id_carrera) = c.id
                 WHERE r.id_tipo_recurso = 1";
         
         $params = [];
@@ -44,8 +44,10 @@ class ReportesModel {
         }
 
         if (!empty($filtros['trayecto'])) {
-            $sql .= " AND (t.nombre = :trayecto OR t.nombre = 'Trayecto ' || :trayecto OR dp.id_trayecto::text = :trayecto)";
-            $params[':trayecto'] = (string)$filtros['trayecto'];
+            $sql .= " AND (t.nombre = :trayecto1 OR t.nombre = CONCAT('Trayecto ', :trayecto2) OR CAST(dp.id_trayecto AS CHAR) = :trayecto3)";
+            $params[':trayecto1'] = (string)$filtros['trayecto'];
+            $params[':trayecto2'] = (string)$filtros['trayecto'];
+            $params[':trayecto3'] = (string)$filtros['trayecto'];
         }
 
         if (!empty($filtros['nivel_academico'])) {
@@ -58,7 +60,8 @@ class ReportesModel {
             $params[':linea_investigacion'] = (int)$filtros['linea_investigacion'];
         }
 
-        $sql .= " ORDER BY r.id DESC, r.anio_publicacion DESC";
+        $sql .= " GROUP BY r.id, r.titulo, dp.nivel_academico, t.nombre, r.anio_publicacion, dp.comunidad_beneficiada, dp.fecha_defensa, dp.obj_general, dp.resumen
+                  ORDER BY r.id DESC, r.anio_publicacion DESC";
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
@@ -79,7 +82,7 @@ class ReportesModel {
                     p.estado,
                     COALESCE(p.nivel_trayecto, 'N/D') AS nivel_trayecto,
                     p.fecha_creacion
-                FROM public.propuestas_empresa p
+                FROM propuestas_empresa p
                 WHERE 1=1";
         
         $params = [];
@@ -116,18 +119,28 @@ class ReportesModel {
                     u.nombre_completo AS nombre,
                     '' AS apellido,
                     u.email AS correo,
-                    r.nombre AS rol,
+                    COALESCE(r.nombre, 'Sin Rol (Baja)') AS rol,
                     u.activo,
+                    CASE 
+                        WHEN u.cedula LIKE '%_x%' OR u.email LIKE '%_deleted_%' THEN 'ARCHIVADO'
+                        WHEN u.activo = 1 THEN 'ACTIVO'
+                        ELSE 'SUSPENDIDO'
+                    END AS estado_cuenta,
                     NOW() AS fecha_registro
-                FROM public.usuarios u
-                LEFT JOIN public.roles r ON u.id_rol = r.id
+                FROM usuarios u
+                LEFT JOIN roles r ON u.id_rol = r.id
                 WHERE 1=1";
         
         $params = [];
 
         if (isset($filtros['activo']) && $filtros['activo'] !== '') {
-            $sql .= " AND u.activo = :activo";
-            $params[':activo'] = $filtros['activo'] === '1' ? 'true' : 'false';
+            if ($filtros['activo'] === 'archivado') {
+                $sql .= " AND (u.cedula LIKE '%_x%' OR u.email LIKE '%_deleted_%')";
+            } elseif ($filtros['activo'] === '1') {
+                $sql .= " AND u.activo = 1 AND u.cedula NOT LIKE '%_x%' AND u.email NOT LIKE '%_deleted_%'";
+            } elseif ($filtros['activo'] === '0') {
+                $sql .= " AND u.activo = 0 AND u.cedula NOT LIKE '%_x%' AND u.email NOT LIKE '%_deleted_%'";
+            }
         }
 
         if (!empty($filtros['id_rol'])) {
@@ -153,7 +166,7 @@ class ReportesModel {
                     l.accion AS mensaje,
                     COALESCE(l.ip, '127.0.0.1') AS ip,
                     COALESCE(l.responsable, 'Sistema') AS responsable
-                FROM public.system_audit_log l
+                FROM system_audit_log l
                 WHERE 1=1";
         
         $params = [];
@@ -185,7 +198,7 @@ class ReportesModel {
      */
     public function obtenerLineasInvestigacion(): array {
         try {
-            $stmt = $this->db->query("SELECT id, nombre FROM public.lineas_investigacion ORDER BY nombre ASC");
+            $stmt = $this->db->query("SELECT id, nombre FROM lineas_investigacion ORDER BY nombre ASC");
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
             return [];
@@ -202,60 +215,62 @@ class ReportesModel {
         try {
             if ($dominio === 'pst') {
                 if ($agruparPor === 'nivel') {
-                    $sql = "SELECT COALESCE(dp.nivel_academico::text, 'Pregrado') as label, COUNT(DISTINCT r.id) as cantidad 
-                            FROM public.recursos r 
-                            JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso 
+                    $sql = "SELECT COALESCE(dp.nivel_academico, 'Pregrado') AS label, COUNT(DISTINCT r.id) AS cantidad 
+                            FROM recursos r 
+                            JOIN detalles_proyectos dp ON r.id = dp.id_recurso 
                             WHERE r.id_tipo_recurso = 1
-                            GROUP BY dp.nivel_academico::text ORDER BY cantidad DESC";
+                            GROUP BY COALESCE(dp.nivel_academico, 'Pregrado') ORDER BY cantidad DESC";
                 } elseif ($agruparPor === 'linea') {
-                    $sql = "SELECT COALESCE(li.nombre, 'Sin Línea Asignada') as label, COUNT(DISTINCT r.id) as cantidad 
-                            FROM public.recursos r 
-                            JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
-                            LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
-                            LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
+                    $sql = "SELECT COALESCE(li.nombre, 'Sin Línea Asignada') AS label, COUNT(DISTINCT r.id) AS cantidad 
+                            FROM recursos r 
+                            JOIN detalles_proyectos dp ON r.id = dp.id_recurso
+                            LEFT JOIN recurso_clasificaciones rc ON r.id = rc.id_recurso
+                            LEFT JOIN lineas_investigacion li ON rc.id_linea_investigacion = li.id
                             WHERE r.id_tipo_recurso = 1
-                            GROUP BY li.nombre ORDER BY cantidad DESC";
+                            GROUP BY COALESCE(li.nombre, 'Sin Línea Asignada') ORDER BY cantidad DESC";
                 } elseif ($agruparPor === 'carrera') {
-                    $sql = "SELECT COALESCE(c.nombre, 'Informática') as label, COUNT(DISTINCT r.id) as cantidad 
-                            FROM public.recursos r 
-                            JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso
-                            LEFT JOIN public.recurso_clasificaciones rc ON r.id = rc.id_recurso
-                            LEFT JOIN public.lineas_investigacion li ON rc.id_linea_investigacion = li.id
-                            LEFT JOIN public.carreras c ON COALESCE(dp.id_carrera, li.id_carrera) = c.id
+                    $sql = "SELECT COALESCE(c.nombre, 'Informática') AS label, COUNT(DISTINCT r.id) AS cantidad 
+                            FROM recursos r 
+                            JOIN detalles_proyectos dp ON r.id = dp.id_recurso
+                            LEFT JOIN recurso_clasificaciones rc ON r.id = rc.id_recurso
+                            LEFT JOIN lineas_investigacion li ON rc.id_linea_investigacion = li.id
+                            LEFT JOIN carreras c ON COALESCE(dp.id_carrera, li.id_carrera) = c.id
                             WHERE r.id_tipo_recurso = 1
-                            GROUP BY c.nombre ORDER BY cantidad DESC";
+                            GROUP BY COALESCE(c.nombre, 'Informática') ORDER BY cantidad DESC";
                 } elseif ($agruparPor === 'anio') {
-                    $sql = "SELECT r.anio_publicacion::text as label, COUNT(DISTINCT r.id) as cantidad 
-                            FROM public.recursos r 
-                            JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso 
+                    $sql = "SELECT CAST(r.anio_publicacion AS CHAR) AS label, COUNT(DISTINCT r.id) AS cantidad 
+                            FROM recursos r 
+                            JOIN detalles_proyectos dp ON r.id = dp.id_recurso 
                             WHERE r.id_tipo_recurso = 1
                             GROUP BY r.anio_publicacion ORDER BY r.anio_publicacion ASC";
                 } else {
                     // Agrupación por trayecto utilizando la tabla normalizada trayectos
                     $sql = "SELECT 
-                                COALESCE(t.nombre, 'Sin Trayecto Asignado') as label, 
-                                COUNT(DISTINCT r.id) as cantidad 
-                            FROM public.recursos r 
-                            JOIN public.detalles_proyectos dp ON r.id = dp.id_recurso 
-                            LEFT JOIN public.trayectos t ON dp.id_trayecto = t.id
+                                COALESCE(t.nombre, 'Sin Trayecto Asignado') AS label, 
+                                COUNT(DISTINCT r.id) AS cantidad 
+                            FROM recursos r 
+                            JOIN detalles_proyectos dp ON r.id = dp.id_recurso 
+                            LEFT JOIN trayectos t ON dp.id_trayecto = t.id
                             WHERE r.id_tipo_recurso = 1
-                            GROUP BY label ORDER BY label ASC";
+                            GROUP BY COALESCE(t.nombre, 'Sin Trayecto Asignado') ORDER BY label ASC";
                 }
             } elseif ($dominio === 'vinculacion') {
                 if ($agruparPor === 'trayecto') {
-                    $sql = "SELECT COALESCE(NULLIF(TRIM(p.nivel_trayecto), ''), 'Sin Trayecto') as label, COUNT(*) as cantidad 
-                            FROM public.propuestas_empresa p GROUP BY label ORDER BY cantidad DESC";
+                    $sql = "SELECT COALESCE(NULLIF(TRIM(p.nivel_trayecto), ''), 'Sin Trayecto') AS label, COUNT(*) AS cantidad 
+                            FROM propuestas_empresa p GROUP BY COALESCE(NULLIF(TRIM(p.nivel_trayecto), ''), 'Sin Trayecto') ORDER BY cantidad DESC";
                 } else {
-                    // Se agrega el casteo ::text al ENUM para evitar el crash de PostgreSQL
-                    $sql = "SELECT UPPER(p.estado::text) as label, COUNT(*) as cantidad 
-                            FROM public.propuestas_empresa p GROUP BY p.estado ORDER BY cantidad DESC";
+                    $sql = "SELECT UPPER(CAST(p.estado AS CHAR)) AS label, COUNT(*) AS cantidad 
+                            FROM propuestas_empresa p GROUP BY p.estado ORDER BY cantidad DESC";
                 }
             } elseif ($dominio === 'usuarios') {
-                $sql = "SELECT COALESCE(r.nombre, 'Sin Rol') as label, COUNT(*) as cantidad 
-                        FROM public.usuarios u LEFT JOIN public.roles r ON u.id_rol = r.id GROUP BY r.nombre ORDER BY cantidad DESC";
+                $sql = "SELECT COALESCE(r.nombre, 'Sin Rol') AS label, COUNT(*) AS cantidad 
+                        FROM usuarios u 
+                        LEFT JOIN roles r ON u.id_rol = r.id 
+                        WHERE u.cedula NOT LIKE '%_x%' AND u.email NOT LIKE '%_deleted_%'
+                        GROUP BY COALESCE(r.nombre, 'Sin Rol') ORDER BY cantidad DESC";
             } else {
-                $sql = "SELECT COALESCE(l.nivel, 'INFO') as label, COUNT(*) as cantidad 
-                        FROM public.system_audit_log l GROUP BY l.nivel ORDER BY cantidad DESC";
+                $sql = "SELECT COALESCE(l.nivel, 'INFO') AS label, COUNT(*) AS cantidad 
+                        FROM system_audit_log l GROUP BY COALESCE(l.nivel, 'INFO') ORDER BY cantidad DESC";
             }
 
             $stmt = $this->db->query($sql);
@@ -276,18 +291,38 @@ class ReportesModel {
         $totalPst = 0;
         $totalEmpresas = 0;
         $totalUsuarios = 0;
+        $usuariosActivos = 0;
+        $usuariosSuspendidos = 0;
+        $usuariosArchivados = 0;
         $totalLogs = 0;
 
-        try { $totalPst = (int)($this->db->query("SELECT COUNT(DISTINCT id_recurso) FROM public.detalles_proyectos")->fetchColumn() ?: 0); } catch (Exception $e) {}
-        try { $totalEmpresas = (int)($this->db->query("SELECT COUNT(*) FROM public.propuestas_empresa")->fetchColumn() ?: 0); } catch (Exception $e) {}
-        try { $totalUsuarios = (int)($this->db->query("SELECT COUNT(*) FROM public.usuarios")->fetchColumn() ?: 0); } catch (Exception $e) {}
-        try { $totalLogs = (int)($this->db->query("SELECT COUNT(*) FROM public.system_audit_log")->fetchColumn() ?: 0); } catch (Exception $e) {}
+        try { $totalPst = (int)($this->db->query("SELECT COUNT(DISTINCT id_recurso) FROM detalles_proyectos")->fetchColumn() ?: 0); } catch (Exception $e) {}
+        try { $totalEmpresas = (int)($this->db->query("SELECT COUNT(*) FROM propuestas_empresa")->fetchColumn() ?: 0); } catch (Exception $e) {}
+        try { 
+            $sqlUsers = "SELECT 
+                            COALESCE(SUM(CASE WHEN cedula NOT LIKE '%_x%' AND email NOT LIKE '%_deleted_%' THEN 1 ELSE 0 END), 0) AS vigentes,
+                            COALESCE(SUM(CASE WHEN activo = 1 AND cedula NOT LIKE '%_x%' AND email NOT LIKE '%_deleted_%' THEN 1 ELSE 0 END), 0) AS activos,
+                            COALESCE(SUM(CASE WHEN activo = 0 AND cedula NOT LIKE '%_x%' AND email NOT LIKE '%_deleted_%' THEN 1 ELSE 0 END), 0) AS suspendidos,
+                            COALESCE(SUM(CASE WHEN cedula LIKE '%_x%' OR email LIKE '%_deleted_%' THEN 1 ELSE 0 END), 0) AS archivados
+                         FROM usuarios";
+            $rowU = $this->db->query($sqlUsers)->fetch(PDO::FETCH_ASSOC);
+            if ($rowU) {
+                $totalUsuarios       = (int)$rowU['vigentes'];
+                $usuariosActivos     = (int)$rowU['activos'];
+                $usuariosSuspendidos = (int)$rowU['suspendidos'];
+                $usuariosArchivados  = (int)$rowU['archivados'];
+            }
+        } catch (Exception $e) {}
+        try { $totalLogs = (int)($this->db->query("SELECT COUNT(*) FROM system_audit_log")->fetchColumn() ?: 0); } catch (Exception $e) {}
 
         return [
-            'pst' => $totalPst,
-            'empresas' => $totalEmpresas,
-            'usuarios' => $totalUsuarios,
-            'logs' => $totalLogs
+            'pst'                  => $totalPst,
+            'empresas'             => $totalEmpresas,
+            'usuarios'             => $totalUsuarios,
+            'usuarios_activos'     => $usuariosActivos,
+            'usuarios_suspendidos' => $usuariosSuspendidos,
+            'usuarios_archivados'  => $usuariosArchivados,
+            'logs'                 => $totalLogs
         ];
     }
 }

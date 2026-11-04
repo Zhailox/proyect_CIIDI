@@ -21,23 +21,6 @@ class LineasInvestigacionModule implements ModuleContract {
                 'controlador_path' => __DIR__ . '/controllers/ShowcaseController.php',
                 'metodo'           => 'index'
             ],
-            // Analítica Predictiva IA
-            'analitica' => [
-                'vista'            => __DIR__ . '/views/dashboard_analitica.php',
-                'titulo'           => 'Analítica Predictiva IA',
-                'css'              => ['LineasInvestigacion.css?v=' . time()],
-                'js'               => ['analitica_ui.js'],
-                'controlador'      => 'AnaliticaController',
-                'controlador_path' => __DIR__ . '/controllers/AnaliticaController.php',
-                'metodo'           => 'index'
-            ],
-            // Endpoints de IA y Analítica
-            'api-prediccion-tendencias' => [
-                'controlador'      => 'AnaliticaController',
-                'controlador_path' => __DIR__ . '/controllers/AnaliticaController.php',
-                'metodo'           => 'proyectarTendencias',
-                'es_api'           => true 
-            ],
             // Vista pública: Detalle de una línea específica
             'detalle-linea' => [
                 'vista'            => __DIR__ . '/views/detalle_linea.php',
@@ -71,7 +54,7 @@ class LineasInvestigacionModule implements ModuleContract {
                 'metodo' => 'exportarCsv',
                 'oculto' => true
             ],
-                                    'api-filtros-pdf' => [
+            'api-filtros-pdf' => [
                 'controlador' => 'GestorLineasController',
                 'controlador_path' => __DIR__ . '/controllers/GestorController.php',
                 'metodo' => 'apiFiltrosPdf',
@@ -118,12 +101,14 @@ class LineasInvestigacionModule implements ModuleContract {
                 'titulo' => 'Líneas de Investigación',
                 'icono'       => 'ph-fill ph-graph',
                 'orden'       => 40,
+                'grupo'       => 'lineas-investigacion',
+                'titulo_en_grupo' => 'Líneas',
+                'orden_en_grupo'  => 10,
                 'enlace'      => 'lineas-investigacion',
-                'activadores' => ['lineas-investigacion', 'detalle-linea', 'gestionar-lineas', 'detalle-gestion-linea', 'gestionar-dimensiones', 'analitica', 'gestionar-carreras'],
+                'activadores' => ['lineas-investigacion', 'detalle-linea', 'gestionar-lineas', 'detalle-gestion-linea', 'gestionar-dimensiones', 'gestionar-carreras'],
                 'privilegio_minimo' => $nivelPublico,
                 'subitems'    => [
                     ['ruta' => 'lineas-investigacion',  'titulo' => 'Explorar Líneas', 'privilegio_minimo' => $nivelPublico],
-                    ['ruta' => 'analitica',             'titulo' => 'Analítica IA', 'privilegio_minimo' => $nivelAdmin],
                     ['ruta' => 'gestionar-lineas',      'titulo' => 'Gestor Académico', 'privilegio_minimo' => $nivelAdmin]
                 ]
             ]
@@ -143,6 +128,7 @@ class LineasInvestigacionModule implements ModuleContract {
             'icono' => 'ph-fill ph-graph',
             'titulo' => 'Líneas de Investigación',
             'descripcion' => 'Explorar y gestionar líneas de investigación.',
+            'enlace' => 'lineas-investigacion',
             'ruta' => 'lineas-investigacion',
             'orden' => 3,
             'texto_boton' => 'EXPLORAR LÍNEAS',

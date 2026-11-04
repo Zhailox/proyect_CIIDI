@@ -1497,68 +1497,50 @@ class DetallePSTController {
             exit;
         }
 
-        // 0.1f Procesar Acción: EXPORTAR LISTADO ACTUAL A CSV
-        if ($accion === 'exportar_csv') {
+        // 0.1f Procesar Acción: EXPORTAR LISTADO ACTUAL A EXCEL NATIVO (.XLSX) CON GRÁFICOS Y FILTROS
+        if ($accion === 'exportar_csv' || $accion === 'exportar_excel') {
+            require_once __DIR__ . '/../services/PstExcelExportService.php';
             $filtrosExp = [
-                'activo'        => 'todos',
-                'q'             => !empty($_GET['q']) ? trim($_GET['q']) : null,
-                'carrera_id'    => !empty($_GET['carrera_id']) ? (int)$_GET['carrera_id'] : null,
-                'trayecto'      => !empty($_GET['trayecto']) ? trim($_GET['trayecto']) : null,
-                'anio'          => !empty($_GET['anio']) ? (int)$_GET['anio'] : null,
-                'linea_id'      => !empty($_GET['linea_id']) ? (int)$_GET['linea_id'] : null,
-                'estado_filtro' => !empty($_GET['estado_filtro']) ? trim($_GET['estado_filtro']) : null,
-                'orden'         => !empty($_GET['orden']) ? trim($_GET['orden']) : 'recientes'
+                'activo'          => 'todos',
+                'q'               => !empty($_GET['q']) ? trim($_GET['q']) : null,
+                'carrera_id'      => !empty($_GET['carrera_id']) ? (int)$_GET['carrera_id'] : null,
+                'nivel_academico' => !empty($_GET['nivel_academico']) ? trim($_GET['nivel_academico']) : null,
+                'trayecto'        => !empty($_GET['trayecto']) ? trim($_GET['trayecto']) : null,
+                'anio'            => !empty($_GET['anio']) ? (int)$_GET['anio'] : null,
+                'linea_id'        => !empty($_GET['linea_id']) ? (int)$_GET['linea_id'] : null,
+                'dimension_id'    => !empty($_GET['dimension_id']) ? (int)$_GET['dimension_id'] : null,
+                'estado_filtro'   => !empty($_GET['estado_filtro']) ? trim($_GET['estado_filtro']) : null,
+                'orden'           => !empty($_GET['orden']) ? trim($_GET['orden']) : 'recientes'
             ];
             $listaExp = $model->getPSTDocumentos($filtrosExp, 5000, 0);
 
-            while (ob_get_level()) ob_end_clean();
-            $filename = 'catalogo_pst_' . date('Ymd_His') . '.csv';
-            header('Content-Type: text/csv; charset=utf-8');
-            header('Content-Disposition: attachment; filename="' . $filename . '"');
-            $out = fopen('php://output', 'w');
-            // BOM UTF-8 para lectura directa en Excel
-            fwrite($out, "\xEF\xBB\xBF");
-            fputcsv($out, [
-                'ID',
-                'Título del Proyecto',
-                'Año',
-                'Fecha de Defensa',
-                'Carrera',
-                'Nivel Académico',
-                'Trayecto',
-                'Línea de Investigación',
-                'Dimensión Operativa',
-                'Autores',
-                'Tutores',
-                'Comunidad Beneficiada',
-                'Palabras Clave',
-                'Repositorio Git',
-                'Estado',
-                'Vistas'
-            ], ';');
-
-            foreach ($listaExp as $item) {
-                fputcsv($out, [
-                    $item['id'] ?? '',
-                    $item['titulo'] ?? '',
-                    $item['anio_publicacion'] ?? '',
-                    $item['fecha_defensa'] ?? '',
-                    $item['carrera_nombre'] ?? '',
-                    $item['nivel_academico'] ?? 'Pregrado',
-                    $item['trayecto'] ?? '',
-                    $item['linea_nombre'] ?? '',
-                    $item['dimension_nombre'] ?? '',
-                    $item['autores_nombres'] ?? '',
-                    $item['tutores_nombres'] ?? '',
-                    $item['comunidad_beneficiada'] ?? '',
-                    $item['palabras_clave'] ?? '',
-                    $item['url_repositorio'] ?? '',
-                    !empty($item['activo']) ? 'Visible' : 'Oculto',
-                    $item['vistas'] ?? 0
-                ], ';');
+            $catalogosAux = [];
+            if (!empty($filtrosExp['carrera_id'])) {
+                foreach ($model->getCarreras() as $cAux) {
+                    if ((int)$cAux['id'] === (int)$filtrosExp['carrera_id']) {
+                        $catalogosAux['carrera_nombre'] = $cAux['nombre'];
+                        break;
+                    }
+                }
             }
-            fclose($out);
-            exit;
+            if (!empty($filtrosExp['linea_id'])) {
+                foreach ($model->getLineasInvestigacion(null) as $lAux) {
+                    if ((int)$lAux['id'] === (int)$filtrosExp['linea_id']) {
+                        $catalogosAux['linea_nombre'] = $lAux['nombre'];
+                        break;
+                    }
+                }
+            }
+            if (!empty($filtrosExp['dimension_id'])) {
+                foreach ($model->getDimensionesOperativas() as $dAux) {
+                    if ((int)$dAux['id'] === (int)$filtrosExp['dimension_id']) {
+                        $catalogosAux['dimension_nombre'] = $dAux['nombre'];
+                        break;
+                    }
+                }
+            }
+
+            PstExcelExportService::descargarExcelCatalogo($listaExp, $filtrosExp, $catalogosAux);
         }
         
         $error = null;
@@ -1577,6 +1559,14 @@ class DetallePSTController {
             }
         }
 
+        $paramsRetornoFiltro = [];
+        foreach (['q', 'carrera_id', 'nivel_academico', 'trayecto', 'linea_id', 'dimension_id', 'anio', 'estado_filtro', 'orden', 'limit', 'page'] as $kParam) {
+            if (isset($_GET[$kParam]) && $_GET[$kParam] !== '') {
+                $paramsRetornoFiltro[$kParam] = $_GET[$kParam];
+            }
+        }
+        $qsRetornoFiltro = !empty($paramsRetornoFiltro) ? ('&' . http_build_query($paramsRetornoFiltro)) : '';
+
         // 0.3 Procesar Acción: ALTERNAR ESTADO (Activar / Ocultar - Soft Delete)
         if ($accion === 'toggle_estado' && $id) {
             Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'RepositorioPST');
@@ -1589,7 +1579,7 @@ class DetallePSTController {
                     $estTxt = $nuevoEstado ? 'Visible' : 'Oculto';
                     AuditLogger::registrar('INFO', 'RepositorioPST', 'Alternar Visibilidad Proyecto', "Proyecto ID #{$id} cambiado a estado: {$estTxt}.");
 
-                    header("Location: ?ruta=agregar-documento&msg=status_changed");
+                    header("Location: ?ruta=agregar-documento&msg=status_changed" . $qsRetornoFiltro);
                     exit;
                 }
             } catch (Exception $e) {
@@ -1606,7 +1596,7 @@ class DetallePSTController {
                 
                 AuditLogger::registrar('WARNING', 'RepositorioPST', 'Eliminar Proyecto', "Proyecto PST ID #{$id} eliminado del repositorio.");
 
-                header("Location: ?ruta=agregar-documento&msg=deleted");
+                header("Location: ?ruta=agregar-documento&msg=deleted" . $qsRetornoFiltro);
                 exit;
             } catch (Exception $e) {
                 $error = "Error al intentar eliminar el recurso: " . $e->getMessage();
@@ -2009,14 +1999,16 @@ class DetallePSTController {
         $pagination = [];
         $q = !empty($_GET['q']) ? trim($_GET['q']) : '';
         $filtrosAdmin = [
-            'activo'        => 'todos',
-            'q'             => $q !== '' ? $q : null,
-            'carrera_id'    => !empty($_GET['carrera_id']) ? (int)$_GET['carrera_id'] : null,
-            'trayecto'      => !empty($_GET['trayecto']) ? trim($_GET['trayecto']) : null,
-            'anio'          => !empty($_GET['anio']) ? (int)$_GET['anio'] : null,
-            'linea_id'      => !empty($_GET['linea_id']) ? (int)$_GET['linea_id'] : null,
-            'estado_filtro' => !empty($_GET['estado_filtro']) ? trim($_GET['estado_filtro']) : null,
-            'orden'         => !empty($_GET['orden']) ? trim($_GET['orden']) : 'recientes'
+            'activo'          => 'todos',
+            'q'               => $q !== '' ? $q : null,
+            'carrera_id'      => !empty($_GET['carrera_id']) ? (int)$_GET['carrera_id'] : null,
+            'nivel_academico' => !empty($_GET['nivel_academico']) ? trim($_GET['nivel_academico']) : null,
+            'trayecto'        => !empty($_GET['trayecto']) ? trim($_GET['trayecto']) : null,
+            'anio'            => !empty($_GET['anio']) ? (int)$_GET['anio'] : null,
+            'linea_id'        => !empty($_GET['linea_id']) ? (int)$_GET['linea_id'] : null,
+            'dimension_id'    => !empty($_GET['dimension_id']) ? (int)$_GET['dimension_id'] : null,
+            'estado_filtro'   => !empty($_GET['estado_filtro']) ? trim($_GET['estado_filtro']) : null,
+            'orden'           => !empty($_GET['orden']) ? trim($_GET['orden']) : 'recientes'
         ];
         
         if ($accion === 'listar') {

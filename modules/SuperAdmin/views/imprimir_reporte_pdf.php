@@ -202,12 +202,16 @@
     </div>
 
     <!-- METADATOS DEL EMISOR -->
-    <div class="meta-info">
+    <div class="meta-info" style="flex-wrap: wrap; gap: 12px;">
         <div><strong>Fecha y Hora:</strong> <?= date('d/m/Y H:i:s') ?></div>
         <div><strong>Emisor Responsable:</strong> <?= htmlspecialchars(Auth::usuario()['nombre_completo'] ?? Auth::usuario()['nombre'] ?? 'Administrador') ?> (SuperAdmin)</div>
         <div><strong>Total Registros Evaluados:</strong> <?= count($datos) ?></div>
+        <?php if (($dominio ?? '') === 'usuarios' && isset($resumen)): ?>
+            <div><strong>Activos:</strong> <?= (int)($resumen['usuarios_activos'] ?? 0) ?></div>
+            <div><strong>Suspendidos:</strong> <?= (int)($resumen['usuarios_suspendidos'] ?? 0) ?></div>
+            <div><strong>Archivados:</strong> <?= (int)($resumen['usuarios_archivados'] ?? 0) ?></div>
+        <?php endif; ?>
     </div>
-
     <!-- SECCIÓN DE GRÁFICO ESTADÍSTICO CON ETANQUETAS DE TRAYECTO GRANDES Y LEGIBLES -->
     <?php if (($tipoGrafico ?? 'bar') !== 'none' && !empty($estadisticasGrafico['labels'])): ?>
     <div class="chart-box">
@@ -338,6 +342,8 @@
                                 $valRow = $row[$colKey] ?? 'N/D';
                                 if ($colKey === 'titulo' || $colKey === 'nombre_empresa' || $colKey === 'nombre') {
                                     echo '<strong>' . htmlspecialchars($valRow) . '</strong>';
+                                } elseif ($colKey === 'estado_cuenta') {
+                                    echo htmlspecialchars($valRow); // Imprime ACTIVO, SUSPENDIDO o ARCHIVADO
                                 } elseif ($colKey === 'activo') {
                                     echo $valRow ? 'ACTIVO' : 'SUSPENDIDO';
                                 } elseif ($colKey === 'nivel_academico') {

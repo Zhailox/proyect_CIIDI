@@ -155,21 +155,71 @@ class GestorLineasController {
 
     public function detalleGestionLinea() {
         Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'LineasInvestigacion');
-        $id = (int)($_GET['id'] ?? 0);
+        $id = (int)($_GET['id'] ?? ($_POST['id_linea'] ?? 0));
         if (!$id) {
             header("Location: index.php?ruta=gestionar-lineas");
             exit;
         }
 
         $lineasModel = new LineasModel();
+        
+        // POST actions for profesor_linea
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!CSRF::validarToken($_POST['csrf_token'] ?? '')) {
+                $this->redirigir("detalle-gestion-linea&id=$id", 'error', 'Token de seguridad inválido.');
+            }
+            Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'LineasInvestigacion');
+            $accion = trim($_POST['accion'] ?? '');
+
+            if ($accion === 'vincular_profesor') {
+                $id_profesor = (int)($_POST['id_profesor'] ?? 0);
+                if ($id_profesor > 0) {
+                    try {
+                        $lineasModel->tabla('profesor_linea')->insert(['id_usuario' => $id_profesor, 'id_linea' => $id]);
+                        $this->redirigir("detalle-gestion-linea&id=$id", 'exito', 'Profesor vinculado exitosamente.');
+                    } catch (Exception $e) {
+                        $this->redirigir("detalle-gestion-linea&id=$id", 'error', 'Error al vincular: ' . $e->getMessage());
+                    }
+                }
+            } elseif ($accion === 'desvincular_profesor') {
+                $id_profesor = (int)($_POST['id_profesor'] ?? 0);
+                if ($id_profesor > 0) {
+                    $lineasModel->desvincularProfesor($id_profesor, $id);
+                    $this->redirigir("detalle-gestion-linea&id=$id", 'exito', 'Profesor desvinculado exitosamente.');
+                }
+            } elseif ($accion === 'ocultar') {
+                $idDim = (int)($_POST['id'] ?? 0);
+                if ($idDim > 0) {
+                    $lineasModel->toggleActivoDimension($idDim, false);
+                    $this->redirigir("detalle-gestion-linea&id=$id", 'exito', 'Dimensión ocultada correctamente.');
+                }
+            } elseif ($accion === 'mostrar') {
+                $idDim = (int)($_POST['id'] ?? 0);
+                if ($idDim > 0) {
+                    $lineasModel->toggleActivoDimension($idDim, true);
+                    $this->redirigir("detalle-gestion-linea&id=$id", 'exito', 'Dimensión habilitada nuevamente.');
+                }
+            }
+        }
+
         $linea = $lineasModel->getLineaConCarrera($id);
         if (!$linea) {
             header("Location: index.php?ruta=gestionar-lineas");
             exit;
         }
+        $linea['total_proyectos'] = $lineasModel->countProyectosPorLinea($id);
 
         $dimModel = new DimensionesModel();
         $dimensiones = $dimModel->getPorLinea($id);
+        
+        // Cargar profesores afiliados
+        $profesoresAfiliados = $lineasModel->getProfesoresAfiliadosPorLinea($id);
+        // Cargar investigadores y profesores disponibles (activos que sean docentes, investigadores o comite/admin)
+        $todosProfesores = $lineasModel->getProfesoresElegibles();
+        
+        // Filtrar los que ya están
+        $idsAfiliados = array_column($profesoresAfiliados, 'id');
+        $profesoresDisponibles = array_filter($todosProfesores, fn($p) => !in_array($p['id'], $idsAfiliados));
 
         $mensaje = htmlspecialchars($_GET['msg'] ?? '');
         $tipo_mensaje = htmlspecialchars($_GET['tipo'] ?? '');
@@ -177,6 +227,8 @@ class GestorLineasController {
         return [
             'linea'        => $linea,
             'dimensiones'  => $dimensiones,
+            'profesoresAfiliados' => $profesoresAfiliados,
+            'profesoresDisponibles' => $profesoresDisponibles,
             'mensaje'      => $mensaje,
             'tipo_mensaje' => $tipo_mensaje
         ];

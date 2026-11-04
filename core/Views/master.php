@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($titulo_pagina); ?></title>
+    <link rel="icon" type="image/png" href="assets/img/SinFondoCIIDI.png">
+    <link rel="apple-touch-icon" href="assets/img/SinFondoCIIDI.png">
     
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

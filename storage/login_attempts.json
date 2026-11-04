@@ -1,1 +1,12 @@
-[]
+{
+    "198.51.100.42": {
+        "ip": "198.51.100.42",
+        "intentos": 1,
+        "primer_intento": 1793752279,
+        "ultimo_intento": 1793752279,
+        "bloqueado_hasta": 0,
+        "historial_cedulas": [
+            "test_tirada2"
+        ]
+    }
+}

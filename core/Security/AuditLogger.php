@@ -18,9 +18,11 @@ class AuditLogger {
         string $accion, 
         string $detalles = ''
     ): bool {
-        // Intentar sincronizar cola de contingencia si existe y la BD está disponible
+        // Intentar sincronizar cola de contingencia (incluyendo archivos .sync_* huérfanos) si la BD está disponible
         try {
-            if (file_exists(self::FALLBACK_LOG_PATH) && filesize(self::FALLBACK_LOG_PATH) > 0) {
+            $tienePendientes = (file_exists(self::FALLBACK_LOG_PATH) && filesize(self::FALLBACK_LOG_PATH) > 0)
+                || !empty(glob(self::FALLBACK_LOG_PATH . '.sync_*'));
+            if ($tienePendientes) {
                 self::sincronizarFallback();
             }
         } catch (Throwable) {
@@ -68,7 +70,7 @@ class AuditLogger {
             }
 
             // Obtener el hash anterior para la cadena criptográfica
-            $stmtPrev = $db->query("SELECT hash_integridad FROM system_audit_log ORDER BY ctid DESC LIMIT 1");
+            $stmtPrev = $db->query("SELECT hash_integridad FROM system_audit_log ORDER BY fecha_hora DESC, id DESC LIMIT 1");
             $hashAnterior = self::GENESIS_HASH;
             if ($stmtPrev) {
                 $val = $stmtPrev->fetchColumn();
@@ -134,9 +136,23 @@ class AuditLogger {
      * Sincroniza los eventos encolados en fallback a la base de datos enlazándolos a la cadena criptográfica.
      */
     public static function sincronizarFallback(): int {
+        // Recuperar cualquier archivo temporal .sync_* que haya quedado huérfano por fallas previas de BD
+        $huerfanos = glob(self::FALLBACK_LOG_PATH . '.sync_*') ?: [];
+        foreach ($huerfanos as $syncOrphan) {
+            if (is_file($syncOrphan)) {
+                $rawOrphan = @file_get_contents($syncOrphan);
+                if ($rawOrphan !== false && trim($rawOrphan) !== '') {
+                    @file_put_contents(self::FALLBACK_LOG_PATH, rtrim($rawOrphan, "\r\n") . PHP_EOL, FILE_APPEND | LOCK_EX);
+                }
+                @unlink($syncOrphan);
+            }
+        }
+
         if (!file_exists(self::FALLBACK_LOG_PATH) || filesize(self::FALLBACK_LOG_PATH) === 0) {
             return 0;
         }
+
+        $tmpFile = null;
 
         try {
             $db = Connection::getInstance();
@@ -144,24 +160,28 @@ class AuditLogger {
                 return 0;
             }
 
-            $tmpFile = self::FALLBACK_LOG_PATH . '.' . uniqid('sync_', true);
-            if (!@rename(self::FALLBACK_LOG_PATH, $tmpFile)) {
+            // Verificar primero que la tabla system_audit_log responda ANTES de renombrar el archivo de contingencia
+            $stmtPrev = $db->query("SELECT hash_integridad FROM system_audit_log ORDER BY fecha_hora DESC, id DESC LIMIT 1");
+            $hashAnterior = self::GENESIS_HASH;
+            if ($stmtPrev) {
+                $val = $stmtPrev->fetchColumn();
+                $stmtPrev->closeCursor();
+                if (!empty($val) && is_string($val)) {
+                    $hashAnterior = $val;
+                }
+            }
+
+            $tmpCandidate = self::FALLBACK_LOG_PATH . '.' . uniqid('sync_', true);
+            if (!@rename(self::FALLBACK_LOG_PATH, $tmpCandidate)) {
                 return 0;
             }
+            $tmpFile = $tmpCandidate;
 
             $lineas = file($tmpFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             if (empty($lineas)) {
                 @unlink($tmpFile);
+                $tmpFile = null;
                 return 0;
-            }
-
-            $stmtPrev = $db->query("SELECT hash_integridad FROM system_audit_log ORDER BY ctid DESC LIMIT 1");
-            $hashAnterior = self::GENESIS_HASH;
-            if ($stmtPrev) {
-                $val = $stmtPrev->fetchColumn();
-                if (!empty($val) && is_string($val)) {
-                    $hashAnterior = $val;
-                }
             }
 
             $stmt = $db->prepare("
@@ -207,6 +227,7 @@ class AuditLogger {
             }
 
             @unlink($tmpFile);
+            $tmpFile = null;
 
             if (!empty($pendientesReintentar)) {
                 $contenido = implode(PHP_EOL, $pendientesReintentar) . PHP_EOL;
@@ -215,6 +236,13 @@ class AuditLogger {
 
             return $insertados;
         } catch (Throwable $e) {
+            if ($tmpFile !== null && is_file($tmpFile)) {
+                $restaurar = @file_get_contents($tmpFile);
+                if ($restaurar !== false && trim($restaurar) !== '') {
+                    @file_put_contents(self::FALLBACK_LOG_PATH, rtrim($restaurar, "\r\n") . PHP_EOL, FILE_APPEND | LOCK_EX);
+                }
+                @unlink($tmpFile);
+            }
             if (class_exists('Connection')) {
                 Connection::logSystemError($e);
             }
@@ -232,7 +260,7 @@ class AuditLogger {
                 return ['integro' => false, 'mensaje' => 'Sin conexión a base de datos'];
             }
 
-            $stmt = $db->query("SELECT * FROM system_audit_log ORDER BY ctid ASC");
+            $stmt = $db->query("SELECT * FROM system_audit_log ORDER BY fecha_hora ASC, id ASC");
             $logs = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
 
             $hashAnteriorEsperado = null;

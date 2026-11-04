@@ -15,7 +15,7 @@ class AdminUsuarioModel {
         $qb = new QueryBuilder();
         
         return $qb->tabla('usuarios u')
-            ->select('u.id, u.cedula, u.nombre_completo, u.email, u.activo, u.id_rol, r.nombre AS rol_nombre, p.nivel_privilegio')
+            ->select('u.id, u.cedula, u.nombre_completo, u.email, u.activo, u.id_rol, u.foto_perfil, r.nombre AS rol_nombre, p.nivel_privilegio')
             ->join('roles r', 'u.id_rol = r.id')
             ->join('privilegios p', 'r.privilegio_id = p.privilegio_id')
             ->where('u.cedula', '=', $cedula)
@@ -26,7 +26,7 @@ class AdminUsuarioModel {
     public function buscarPorId(int $id) {
         $qb = new QueryBuilder();
         return $qb->tabla('usuarios u')
-            ->select('u.id, u.cedula, u.nombre_completo, u.email, u.activo, u.id_rol, r.nombre AS rol_nombre, p.nivel_privilegio')
+            ->select('u.id, u.cedula, u.nombre_completo, u.email, u.activo, u.id_rol, u.foto_perfil, r.nombre AS rol_nombre, p.nivel_privilegio')
             ->join('roles r', 'u.id_rol = r.id')
             ->join('privilegios p', 'r.privilegio_id = p.privilegio_id')
             ->where('u.id', '=', $id)
@@ -38,7 +38,7 @@ class AdminUsuarioModel {
         $emailNormalizado = strtolower(trim($email));
         $db = Connection::getInstance();
         $sql = "
-            SELECT u.id, u.cedula, u.nombre_completo, u.email, u.activo, u.id_rol, r.nombre AS rol_nombre, p.nivel_privilegio
+            SELECT u.id, u.cedula, u.nombre_completo, u.email, u.activo, u.id_rol, u.foto_perfil, r.nombre AS rol_nombre, p.nivel_privilegio
             FROM usuarios u
             INNER JOIN roles r ON u.id_rol = r.id
             INNER JOIN privilegios p ON r.privilegio_id = p.privilegio_id
@@ -54,7 +54,7 @@ class AdminUsuarioModel {
     public function obtenerProfesores() {
         $db = Connection::getInstance();
         $sql = "
-            SELECT u.id, u.cedula, u.nombre_completo, u.email, u.activo, r.nombre AS rol_nombre
+            SELECT u.id, u.cedula, u.nombre_completo, u.email, u.activo, u.foto_perfil, r.nombre AS rol_nombre
             FROM usuarios u
             INNER JOIN roles r ON u.id_rol = r.id
             INNER JOIN privilegios p ON r.privilegio_id = p.privilegio_id
@@ -64,6 +64,8 @@ class AdminUsuarioModel {
                   OR LOWER(r.nombre) LIKE '%profe%' 
                   OR LOWER(r.nombre) LIKE '%docent%'
                   OR LOWER(r.nombre) LIKE '%tutor%'
+                  OR u.es_profesor_pst = 1
+                  OR u.es_investigador = 1
               )
               AND u.cedula NOT LIKE '%_x%'
             ORDER BY u.nombre_completo ASC
@@ -72,12 +74,12 @@ class AdminUsuarioModel {
         $stmt->execute();
         return $stmt->fetchAll();
     }
-    // Obtiene todos los roles disponibles para el select de edición
+
     // Obtiene todos los roles disponibles para el select de edición
     public function obtenerRoles() {
         $qb = new QueryBuilder();
         return $qb->tabla('roles r')
-            ->select('r.id, r.nombre, r.privilegio_id, p.nivel_privilegio') // <-- Agregados los campos
+            ->select('r.id, r.nombre, r.privilegio_id, p.nivel_privilegio')
             ->join('privilegios p', 'r.privilegio_id = p.privilegio_id')
             ->orderBy('p.nivel_privilegio', 'ASC')
             ->get();
@@ -97,7 +99,7 @@ class AdminUsuarioModel {
                 return $stmt->execute([$cedula, $nombre, $email, $id_rol, $id]);
             }
         } catch (PDOException $e) {
-            if ($e->getCode() == '23505' || str_contains($e->getMessage(), '23505')) {
+            if (in_array((string)$e->getCode(), ['23000', '23505', '1062'], true) || str_contains($e->getMessage(), '1062') || str_contains($e->getMessage(), 'Duplicate entry')) {
                 return false;
             }
             throw $e;
@@ -114,6 +116,7 @@ class AdminUsuarioModel {
                 u.nombre_completo, 
                 u.email, 
                 u.activo, 
+                u.foto_perfil,
                 r.nombre AS rol_nombre, 
                 p.nivel_privilegio,
                 ra.ultima_actividad,
@@ -135,7 +138,7 @@ class AdminUsuarioModel {
         $db = Connection::getInstance();
         $sql = "UPDATE usuarios SET activo = ? WHERE id = ?";
         $stmt = $db->prepare($sql);
-        return $stmt->execute([$nuevoEstado ? 'true' : 'false', $id]);
+        return $stmt->execute([$nuevoEstado ? 1 : 0, $id]);
     }
 
     // Archiva a un usuario liberando sus credenciales (Cédula y Email) manteniendo la integridad histórica
@@ -159,7 +162,7 @@ class AdminUsuarioModel {
         $nombreArchivado = '[Archivado] ' . $usuario['nombre_completo'];
         $hashInvalido    = password_hash('DISABLED_ACCOUNT_' . bin2hex(random_bytes(16)), PASSWORD_BCRYPT);
 
-        $sql = "UPDATE usuarios SET cedula = ?, email = ?, nombre_completo = ?, contrasena = ?, activo = false WHERE id = ?";
+        $sql = "UPDATE usuarios SET cedula = ?, email = ?, nombre_completo = ?, contrasena = ?, id_rol = NULL, activo = 0 WHERE id = ?";
         $stmtUpdate = $db->prepare($sql);
         return $stmtUpdate->execute([$cedulaArchivada, $emailArchivado, $nombreArchivado, $hashInvalido, $id]);
     }
@@ -175,12 +178,12 @@ class AdminUsuarioModel {
     // Registra un nuevo usuario en la base de datos
     public function crearUsuario(string $cedula, string $nombre, string $email, int $id_rol, string $hashClave): bool {
         $db = Connection::getInstance();
-        $sql = "INSERT INTO usuarios (cedula, nombre_completo, email, id_rol, contrasena, activo) VALUES (?, ?, ?, ?, ?, 'true')";
+        $sql = "INSERT INTO usuarios (cedula, nombre_completo, email, id_rol, contrasena, activo) VALUES (?, ?, ?, ?, ?, 1)";
         try {
             $stmt = $db->prepare($sql);
             return $stmt->execute([$cedula, $nombre, $email, $id_rol, $hashClave]);
         } catch (PDOException $e) {
-            if ($e->getCode() == '23505' || str_contains($e->getMessage(), '23505')) {
+            if (in_array((string)$e->getCode(), ['23000', '23505', '1062'], true) || str_contains($e->getMessage(), '1062') || str_contains($e->getMessage(), 'Duplicate entry')) {
                 return false;
             }
             throw $e;
@@ -198,9 +201,10 @@ class AdminUsuarioModel {
     public function obtenerPrivilegios() {
         $db = Connection::getInstance();
         $sql = "
-            SELECT DISTINCT ON (nivel_privilegio) privilegio_id, nivel_privilegio
+            SELECT MIN(privilegio_id) AS privilegio_id, nivel_privilegio
             FROM privilegios
-            ORDER BY nivel_privilegio ASC, privilegio_id ASC
+            GROUP BY nivel_privilegio
+            ORDER BY nivel_privilegio ASC
         ";
         $stmt = $db->prepare($sql);
         $stmt->execute();
@@ -211,11 +215,12 @@ class AdminUsuarioModel {
     public function purgarDuplicadosPrivilegios(): int {
         $db = Connection::getInstance();
         $sql = "
-            DELETE FROM privilegios p1
-            USING privilegios p2
-            WHERE p1.nivel_privilegio = p2.nivel_privilegio
-              AND p1.privilegio_id > p2.privilegio_id
-              AND p1.privilegio_id NOT IN (SELECT DISTINCT privilegio_id FROM roles WHERE privilegio_id IS NOT NULL)
+            DELETE p1 FROM privilegios p1
+            INNER JOIN privilegios p2
+                ON p1.nivel_privilegio = p2.nivel_privilegio
+               AND p1.privilegio_id > p2.privilegio_id
+            LEFT JOIN roles r ON r.privilegio_id = p1.privilegio_id
+            WHERE r.id IS NULL
         ";
         $stmt = $db->prepare($sql);
         $stmt->execute();
@@ -240,31 +245,19 @@ class AdminUsuarioModel {
     }
     // Extiende la jerarquía añadiendo el siguiente número disponible
     public function extenderNivelPrivilegio(): bool {
-    $db = Connection::getInstance();
+        $db = Connection::getInstance();
 
-    // Buscar el primer número faltante entre 1 y el MAX actual
-    $sql = "
-        SELECT n
-        FROM generate_series(
-            1,
-            GREATEST((SELECT COALESCE(MAX(nivel_privilegio), 0) FROM privilegios), 1)
-        ) AS n
-        WHERE n NOT IN (SELECT nivel_privilegio FROM privilegios)
-        ORDER BY n ASC
-        LIMIT 1
-    ";
-    $stmt = $db->query($sql);
-    $nuevoNivel = $stmt->fetchColumn();
+        // Buscar el primer número faltante a partir de 1
+        $stmt = $db->query("SELECT DISTINCT nivel_privilegio FROM privilegios WHERE nivel_privilegio >= 1 ORDER BY nivel_privilegio ASC");
+        $existentes = array_flip(array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN) ?: []));
+        $nuevoNivel = 1;
+        while (isset($existentes[$nuevoNivel])) {
+            $nuevoNivel++;
+        }
 
-    // Si no hay huecos (todo contiguo), continuamos después del máximo
-    if ($nuevoNivel === false) {
-        $stmtMax = $db->query("SELECT COALESCE(MAX(nivel_privilegio), 0) FROM privilegios");
-        $nuevoNivel = (int) $stmtMax->fetchColumn() + 1;
+        $stmtInsert = $db->prepare("INSERT INTO privilegios (nivel_privilegio) VALUES (?)");
+        return $stmtInsert->execute([$nuevoNivel]);
     }
-
-    $stmtInsert = $db->prepare("INSERT INTO privilegios (nivel_privilegio) VALUES (?)");
-    return $stmtInsert->execute([(int) $nuevoNivel]);
-}
 
     // Elimina un rol (fallará intencionalmente por protección de BD si tiene usuarios asignados)
     public function eliminarRol(int $id): bool {

@@ -15,10 +15,10 @@ class InstallerService {
         $phpVersionOk = version_compare(PHP_VERSION, '8.1.0', '>=');
         $phpVersionRecommended = version_compare(PHP_VERSION, '8.2.0', '>=');
 
-        // Extensiones PHP críticas requeridas por CIIDI
+        // Extensiones PHP críticas requeridas por CIIDI (MariaDB 10.6+ / PHP 8.2)
         $requiredExtensions = [
             'pdo'        => 'Controlador de base de datos (PDO)',
-            'pdo_pgsql'  => 'Conector de PostgreSQL',
+            'pdo_mysql'  => 'Conector de MariaDB / MySQL',
             'openssl'    => 'Motor criptográfico (AES-256-CBC, Hashes, Tokens)',
             'mbstring'   => 'Manipulación segura de cadenas UTF-8',
             'fileinfo'   => 'Detección de tipos MIME de archivos subidos',
@@ -33,9 +33,9 @@ class InstallerService {
 
         foreach ($requiredExtensions as $ext => $desc) {
             $loaded = extension_loaded($ext);
-            if (!$loaded && $ext === 'pdo_pgsql') {
+            if (!$loaded && $ext === 'pdo_mysql') {
                 $drivers = class_exists('PDO') ? PDO::getAvailableDrivers() : [];
-                if (in_array('pgsql', $drivers, true)) {
+                if (in_array('mysql', $drivers, true)) {
                     $loaded = true;
                 }
             }
@@ -102,10 +102,10 @@ class InstallerService {
         $postMaxBytes = self::returnBytes($postMax);
         $postOk = ($postMaxBytes >= 10 * 1024 * 1024);
 
-        // Previsor de binarios psql y pg_dump
-        $psqlBin = class_exists('Connection') ? Connection::getPsqlPath() : 'psql';
-        $pgDumpBin = class_exists('Connection') ? Connection::getPgDumpPath() : 'pg_dump';
-        $binariesOk = ($psqlBin !== 'psql' && $pgDumpBin !== 'pg_dump');
+        // Previsor de binarios mysql y mysqldump (opcional en hosting compartido gracias al respaldo PDO nativo)
+        $mysqlBin = class_exists('Connection') ? Connection::getMysqlPath() : 'mysql';
+        $mysqldumpBin = class_exists('Connection') ? Connection::getMysqldumpPath() : 'mysqldump';
+        $binariesOk = ($mysqlBin !== 'mysql' && $mysqldumpBin !== 'mysqldump');
 
         return [
             'php_version'             => PHP_VERSION,
@@ -128,7 +128,7 @@ class InstallerService {
 
     public static function returnBytes(string $val): int {
         $val = trim($val);
-        if ($val === '-1') return -1;
+        if ($val === '-1' || $val === '') return -1;
         $last = strtolower($val[strlen($val) - 1]);
         $valNum = (int)$val;
         switch ($last) {
@@ -140,19 +140,20 @@ class InstallerService {
     }
 
     /**
-     * Prueba exhaustiva de conexión a la base de datos PostgreSQL, detectando tablas preexistentes.
+     * Prueba exhaustiva de conexión a la base de datos MariaDB, detectando tablas preexistentes.
      */
     public static function testDbConnection(string $host, string $port, string $user, string $pass, string $dbName): array {
         try {
-            $dsnTarget = "pgsql:host={$host};port={$port};dbname={$dbName}";
+            $dsnTarget = "mysql:host={$host};port={$port};dbname={$dbName};charset=utf8mb4";
             $options = [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_EMULATE_PREPARES => false,
                 PDO::ATTR_TIMEOUT => 5
             ];
             $pdo = new PDO($dsnTarget, $user, $pass, $options);
 
-            // Verificar conteo de tablas existentes en el esquema public
-            $stmtCount = $pdo->query("SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'");
+            // Verificar conteo de tablas existentes en la base de datos actual
+            $stmtCount = $pdo->query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE'");
             $tableCount = (int) $stmtCount->fetchColumn();
 
             return [
@@ -166,11 +167,12 @@ class InstallerService {
             ];
         } catch (PDOException $e) {
             $errorMsg = $e->getMessage();
+            $errCode = (string)$e->getCode();
 
-            // Si la base de datos no existe (código 3D000 o mensaje 'does not exist')
-            if (strpos($errorMsg, 'does not exist') !== false || strpos($errorMsg, 'no existe') !== false || $e->getCode() == '3D000') {
+            // Si la base de datos no existe (código 1049 o SQLSTATE 42000 Unknown database)
+            if (stripos($errorMsg, 'Unknown database') !== false || stripos($errorMsg, 'desconocida') !== false || stripos($errorMsg, '1049') !== false || $errCode === '1049') {
                 try {
-                    $dsnSystem = "pgsql:host={$host};port={$port};dbname=postgres";
+                    $dsnSystem = "mysql:host={$host};port={$port};charset=utf8mb4";
                     $pdoSys = new PDO($dsnSystem, $user, $pass, [
                         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                         PDO::ATTR_TIMEOUT => 5
@@ -181,7 +183,7 @@ class InstallerService {
                         'ofrecer_crear' => true,
                         'tiene_tablas'  => false,
                         'num_tablas'    => 0,
-                        'mensaje'       => "Las credenciales son válidas. La base de datos '{$dbName}' no existe aún en PostgreSQL pero puede ser creada automáticamente."
+                        'mensaje'       => "Las credenciales son válidas. La base de datos '{$dbName}' no existe aún en MariaDB pero puede ser creada (o asígnela desde cPanel)."
                     ];
                 } catch (PDOException $e2) {
                     return [
@@ -189,7 +191,7 @@ class InstallerService {
                         'bd_existe'     => false,
                         'tiene_tablas'  => false,
                         'num_tablas'    => 0,
-                        'mensaje'       => "Credenciales incorrectas o servidor PostgreSQL inaccesible: " . $e2->getMessage()
+                        'mensaje'       => "Credenciales incorrectas o servidor MariaDB inaccesible: " . $e2->getMessage()
                     ];
                 }
             }
@@ -199,49 +201,69 @@ class InstallerService {
                 'bd_existe'    => false,
                 'tiene_tablas' => false,
                 'num_tablas'   => 0,
-                'mensaje'      => "Fallo al verificar el servidor PostgreSQL: " . $errorMsg
+                'mensaje'      => "Fallo al verificar el servidor MariaDB: " . $errorMsg
             ];
         }
     }
 
     /**
-     * Crea automáticamente la base de datos en PostgreSQL con codificación UTF-8.
+     * Crea automáticamente la base de datos en MariaDB con colación utf8mb4_unicode_ci.
      */
     public static function createDatabase(string $host, string $port, string $user, string $pass, string $dbName): array {
         try {
-            $dsnSystem = "pgsql:host={$host};port={$port};dbname=postgres";
+            $dsnSystem = "mysql:host={$host};port={$port};charset=utf8mb4";
             $pdoSys = new PDO($dsnSystem, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 
             $cleanDb = preg_replace('/[^a-zA-Z0-9_]/', '', $dbName);
-            $cleanUser = preg_replace('/[^a-zA-Z0-9_]/', '', $user);
 
-            $pdoSys->exec("CREATE DATABASE \"{$cleanDb}\" WITH OWNER = \"{$cleanUser}\" ENCODING = 'UTF8'");
+            $pdoSys->exec("CREATE DATABASE IF NOT EXISTS `{$cleanDb}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 
             return [
                 'exito'   => true,
-                'mensaje' => "Base de datos '{$cleanDb}' creada exitosamente en PostgreSQL."
+                'mensaje' => "Base de datos '{$cleanDb}' creada exitosamente en MariaDB (utf8mb4_unicode_ci)."
             ];
         } catch (PDOException $e) {
             return [
                 'exito'   => false,
-                'mensaje' => "No se pudo crear la base de datos. Detalle: " . $e->getMessage()
+                'mensaje' => "No se pudo crear la base de datos (en cPanel créela desde 'MySQL Databases'). Detalle: " . $e->getMessage()
             ];
         }
     }
 
     /**
-     * Limpia completamente el esquema public para una reinstalación limpia.
+     * Limpia completamente todas las tablas, vistas y triggers de la BD actual para una reinstalación limpia
+     * (compatible con cPanel compartido donde DROP DATABASE está restringido).
      */
     public static function cleanDatabaseSchema(string $host, string $port, string $user, string $pass, string $dbName): array {
         try {
-            $dsn = "pgsql:host={$host};port={$port};dbname={$dbName}";
+            $dsn = "mysql:host={$host};port={$port};dbname={$dbName};charset=utf8mb4";
             $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 
-            $pdo->exec("DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO \"{$user}\";");
+            $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
+
+            $stmtTrg = $pdo->query("SELECT trigger_name FROM information_schema.triggers WHERE trigger_schema = DATABASE()");
+            foreach ($stmtTrg->fetchAll(PDO::FETCH_COLUMN) ?: [] as $trg) {
+                $cleanTrg = str_replace('`', '', (string)$trg);
+                $pdo->exec("DROP TRIGGER IF EXISTS `{$cleanTrg}`");
+            }
+
+            $stmtViews = $pdo->query("SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_type = 'VIEW'");
+            foreach ($stmtViews->fetchAll(PDO::FETCH_COLUMN) ?: [] as $vw) {
+                $cleanVw = str_replace('`', '', (string)$vw);
+                $pdo->exec("DROP VIEW IF EXISTS `{$cleanVw}`");
+            }
+
+            $stmtTables = $pdo->query("SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE'");
+            foreach ($stmtTables->fetchAll(PDO::FETCH_COLUMN) ?: [] as $tbl) {
+                $cleanTbl = str_replace('`', '', (string)$tbl);
+                $pdo->exec("DROP TABLE IF EXISTS `{$cleanTbl}`");
+            }
+
+            $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
 
             return [
                 'exito' => true,
-                'mensaje' => "Esquema 'public' limpiado exitosamente para una instalación fresca."
+                'mensaje' => "Esquema MariaDB limpiado exitosamente para una instalación fresca."
             ];
         } catch (PDOException $e) {
             return [
@@ -296,7 +318,7 @@ class InstallerService {
                        . "# Parámetros de Identidad Institucional\n"
                        . "INSTITUTION_NAME=\"{$instName}\"\n"
                        . "INSTITUTION_ACRONYM=\"{$instAcronym}\"\n\n"
-                       . "# Base de Datos PostgreSQL\n"
+                       . "# Base de Datos MariaDB 10.6+\n"
                        . "DB_HOST={$host}\n"
                        . "DB_PORT={$port}\n"
                        . "DB_NAME={$dbName}\n"
@@ -353,8 +375,8 @@ class InstallerService {
             ],
             'backup_automatico_medianoche' => [
                 'id' => 'backup_automatico_medianoche',
-                'nombre' => 'Respaldo Automático de Medianoche (PostgreSQL Dump)',
-                'descripcion' => 'Genera un backup completo comprimido (.sql.gz) de la base de datos y purga respaldos antiguos.',
+                'nombre' => 'Respaldo Automático de Medianoche (MariaDB Dump)',
+                'descripcion' => 'Genera un backup completo comprimido (.sql.gz) de la base de datos MariaDB y purga respaldos antiguos.',
                 'expresion_cron' => '0 0 * * *',
                 'tipo_ejecucion' => 'metodo_interno',
                 'script' => 'ejecutarBackupAutomatico',
@@ -381,13 +403,16 @@ class InstallerService {
             ]
         ];
 
-        // Si ya existía el archivo, preservar tareas adicionales que pudiera tener
+        // Si ya existía el archivo, preservar tareas adicionales excepto tareas obsoletas de vectorización ONNX
         if (file_exists($tasksPath)) {
             $existentes = json_decode(file_get_contents($tasksPath), true);
             if (is_array($existentes)) {
+                unset($existentes['tarea_1790301553_528']);
                 foreach ($tareas as $k => $t) {
                     if (isset($existentes[$k])) {
                         $existentes[$k]['estado'] = $estado;
+                        $existentes[$k]['nombre'] = $t['nombre'];
+                        $existentes[$k]['descripcion'] = $t['descripcion'];
                     } else {
                         $existentes[$k] = $t;
                     }
@@ -433,6 +458,7 @@ class InstallerService {
             $passEnc = !empty($passRaw) ? Crypto::encrypt($passRaw) : '';
 
             $currentConfig['smtp'] = [
+                'modo_envio' => 'smtp',
                 'host'       => trim($smtp['host'] ?? 'localhost'),
                 'port'       => (int)($smtp['port'] ?? 587),
                 'user'       => trim($smtp['user'] ?? ''),
@@ -442,6 +468,7 @@ class InstallerService {
             ];
         } elseif (!isset($currentConfig['smtp'])) {
             $currentConfig['smtp'] = [
+                'modo_envio' => 'local',
                 'host'       => '',
                 'port'       => 587,
                 'user'       => '',
@@ -505,18 +532,23 @@ class InstallerService {
     }
 
     /**
-     * Localiza el archivo de esquema base preferido (dentro de core/Installer o ciidi.sql).
+     * Localiza el archivo de esquema base compatible con MariaDB 10.6+.
      */
     public static function getSchemaFilePath(): ?string {
+        $baseRoot = defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 2);
         $candidatos = [
+            $baseRoot . '/storage/backups/migracion_mariadb_10_6.sql',
             __DIR__ . '/schema.sql',
             __DIR__ . '/sql/schema.sql',
-            (defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 2)) . '/ciidi.sql'
+            $baseRoot . '/ciidi.sql'
         ];
 
         foreach ($candidatos as $path) {
             if (file_exists($path) && filesize($path) > 1000) {
-                return $path;
+                $head = (string)@file_get_contents($path, false, null, 0, 512);
+                if (stripos($head, 'PostgreSQL database dump') === false) {
+                    return $path;
+                }
             }
         }
 
@@ -524,14 +556,14 @@ class InstallerService {
     }
 
     /**
-     * Ejecuta la importación del esquema base dentro de una transacción atómica protegida.
+     * Ejecuta la importación del esquema base en MariaDB 10.6+.
      */
     public static function runSqlSchema(string $host, string $port, string $user, string $pass, string $dbName): array {
         $sqlPath = self::getSchemaFilePath();
         if (!$sqlPath) {
             return [
                 'exito' => false,
-                'mensaje' => "No se encontró el archivo de esquema base ('schema.sql' o 'ciidi.sql') en la carpeta del instalador."
+                'mensaje' => "No se encontró un archivo de esquema base compatible con MariaDB ('migracion_mariadb_10_6.sql' o 'schema.sql')."
             ];
         }
 
@@ -539,37 +571,26 @@ class InstallerService {
         @ini_set('memory_limit', '256M');
 
         try {
-            $dsnTarget = "pgsql:host={$host};port={$port};dbname={$dbName}";
+            $dsnTarget = "mysql:host={$host};port={$port};dbname={$dbName};charset=utf8mb4";
             $pdo = new PDO($dsnTarget, $user, $pass, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false
             ]);
+            $pdo->exec("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
 
-            $sqlContent = file_get_contents($sqlPath);
-
-            $sqlLineas = explode("\n", $sqlContent);
-            $cleanLines = [];
-            foreach ($sqlLineas as $linea) {
-                $trimmed = trim($linea);
-                if (strpos($trimmed, '\\') === 0) {
-                    continue;
-                }
-                $cleanLines[] = $linea;
+            $sqlContent = (string)file_get_contents($sqlPath);
+            if (!class_exists('Connection') && file_exists(__DIR__ . '/../Database/Connection.php')) {
+                require_once __DIR__ . '/../Database/Connection.php';
             }
-            $cleanSql = implode("\n", $cleanLines);
 
-            $pdo->beginTransaction();
-            $pdo->exec($cleanSql);
-            $pdo->commit();
+            Connection::ejecutarScriptSqlMariaDB($pdo, $sqlContent);
 
             return [
                 'exito'   => true,
-                'mensaje' => "Esquema e infraestructura de tablas importados exitosamente desde " . basename($sqlPath) . "."
+                'mensaje' => "Esquema e infraestructura MariaDB importados exitosamente desde " . basename($sqlPath) . "."
             ];
         } catch (PDOException $e) {
-            if (isset($pdo) && $pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
             if (class_exists('Connection')) {
                 Connection::logSystemError($e);
             }
@@ -581,7 +602,7 @@ class InstallerService {
     }
 
     /**
-     * Ejecuta secuencialmente cualquier migración pendiente ubicada en migrations/.
+     * Ejecuta secuencialmente migraciones compatibles con MariaDB ubicadas en migrations/.
      */
     public static function runPendingMigrations(string $host, string $port, string $user, string $pass, string $dbName): array {
         $baseRoot = defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 2);
@@ -591,7 +612,7 @@ class InstallerService {
             return ['exito' => true, 'aplicadas' => 0, 'mensaje' => 'No hay directorio de migraciones.'];
         }
 
-        $files = glob($migrationsDir . '/*.sql');
+        $files = glob($migrationsDir . '/*.sql') ?: [];
         sort($files, SORT_NATURAL);
 
         if (empty($files)) {
@@ -599,21 +620,31 @@ class InstallerService {
         }
 
         try {
-            $dsnTarget = "pgsql:host={$host};port={$port};dbname={$dbName}";
+            $dsnTarget = "mysql:host={$host};port={$port};dbname={$dbName};charset=utf8mb4";
             $pdo = new PDO($dsnTarget, $user, $pass, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_EMULATE_PREPARES => false
             ]);
+
+            if (!class_exists('Connection') && file_exists(__DIR__ . '/../Database/Connection.php')) {
+                require_once __DIR__ . '/../Database/Connection.php';
+            }
 
             $aplicadas = 0;
             foreach ($files as $file) {
-                $sql = file_get_contents($file);
-                if (empty(trim($sql))) continue;
+                $sql = (string)file_get_contents($file);
+                if (trim($sql) === '') continue;
+
+                // Omitir migraciones heredadas exclusivas de PostgreSQL (ya integradas en migracion_mariadb_10_6.sql)
+                if (preg_match('/\b(CREATE\s+EXTENSION|DO\s+\$\$|TIMESTAMPTZ|BIGSERIAL|SERIAL|pgvector|public\.)\b/i', $sql)) {
+                    continue;
+                }
 
                 try {
-                    $pdo->exec($sql);
+                    Connection::ejecutarScriptSqlMariaDB($pdo, $sql);
                     $aplicadas++;
                 } catch (PDOException $migEx) {
-                    if (strpos($migEx->getMessage(), 'already exists') !== false || strpos($migEx->getMessage(), 'ya existe') !== false) {
+                    if (stripos($migEx->getMessage(), 'already exists') !== false || stripos($migEx->getMessage(), 'Duplicate') !== false || stripos($migEx->getMessage(), 'ya existe') !== false) {
                         $aplicadas++;
                         continue;
                     }
@@ -639,8 +670,11 @@ class InstallerService {
      */
     public static function createSuperAdmin(string $host, string $port, string $user, string $pass, string $dbName, array $adminData): array {
         try {
-            $dsnTarget = "pgsql:host={$host};port={$port};dbname={$dbName}";
-            $pdo = new PDO($dsnTarget, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+            $dsnTarget = "mysql:host={$host};port={$port};dbname={$dbName};charset=utf8mb4";
+            $pdo = new PDO($dsnTarget, $user, $pass, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_EMULATE_PREPARES => false
+            ]);
 
             $cedula = (int)($adminData['cedula'] ?? 0);
             $nombre = trim($adminData['nombre'] ?? '');
@@ -666,22 +700,24 @@ class InstallerService {
             $rolId = 1;
 
             $stmtPriv = $pdo->query("SELECT privilegio_id FROM privilegios WHERE nivel_privilegio = 0 LIMIT 1");
-            $resPriv = $stmtPriv->fetch(PDO::FETCH_ASSOC);
+            $resPriv = $stmtPriv ? $stmtPriv->fetch(PDO::FETCH_ASSOC) : false;
             if ($resPriv) {
-                $privilegioId = $resPriv['privilegio_id'];
+                $privilegioId = (int)$resPriv['privilegio_id'];
             }
 
-            $stmtRol = $pdo->query("SELECT id FROM roles WHERE privilegio_id = {$privilegioId} LIMIT 1");
+            $stmtRol = $pdo->prepare("SELECT id FROM roles WHERE privilegio_id = ? LIMIT 1");
+            $stmtRol->execute([$privilegioId]);
             $resRol = $stmtRol->fetch(PDO::FETCH_ASSOC);
             if ($resRol) {
-                $rolId = $resRol['id'];
+                $rolId = (int)$resRol['id'];
             }
 
-            $pdo->exec("DELETE FROM usuarios WHERE cedula = '{$cedula}' OR email = " . $pdo->quote($email));
+            $stmtDel = $pdo->prepare("DELETE FROM usuarios WHERE cedula = ? OR email = ?");
+            $stmtDel->execute([(string)$cedula, $email]);
 
             $stmtIns = $pdo->prepare("
                 INSERT INTO usuarios (cedula, nombre_completo, email, contrasena, id_rol, activo)
-                VALUES (:cedula, :nombre, :email, :clave, :id_rol, true)
+                VALUES (:cedula, :nombre, :email, :clave, :id_rol, 1)
             ");
             $stmtIns->execute([
                 ':cedula' => (string)$cedula,
@@ -717,10 +753,11 @@ class InstallerService {
         $metaData = [
             'installed_at'    => date('Y-m-d H:i:s'),
             'system_version'  => '2.0.0-PROD',
+            'db_engine'       => 'MariaDB 10.6+',
             'installed_by_ip' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
             'php_version'     => PHP_VERSION,
             'os'              => PHP_OS,
-            'schema_source'   => basename(self::getSchemaFilePath() ?? 'schema.sql'),
+            'schema_source'   => basename(self::getSchemaFilePath() ?? 'migracion_mariadb_10_6.sql'),
             'security_digest' => hash('sha256', php_uname() . date('YmdHis'))
         ];
 

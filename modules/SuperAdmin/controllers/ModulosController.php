@@ -69,6 +69,9 @@ class ModulosController {
                     $rutasDetalle = [];
 
                     foreach ($rutasModulo as $claveRuta => $infoRuta) {
+                        if (!empty($infoRuta['oculto'])) {
+                            continue;
+                        }
                         $configRuta = $estadosRutas[$claveRuta] ?? ['estado' => 'online', 'mensaje' => '', 'rol_minimo' => 1, 'accesos' => 0];
                         $rutasDetalle[] = [
                             'clave'       => $claveRuta,
@@ -170,6 +173,10 @@ class ModulosController {
             header("Location: gestor-modulos");
             exit;
         }
+
+        // Acceso directo por GET (sin datos de formulario): volver al gestor en lugar de renderizar la vista vacía
+        header("Location: gestor-modulos");
+        exit;
     }
 
     public function alternarEstadoRuta() {
@@ -255,6 +262,9 @@ class ModulosController {
         $totalAccesosModulo = 0;
 
         foreach ($rutasModulo as $claveRuta => $infoRuta) {
+            if (!empty($infoRuta['oculto'])) {
+                continue;
+            }
             $configRuta = $estadosRutas[$claveRuta] ?? ['estado' => 'online', 'mensaje' => '', 'rol_minimo' => 1, 'accesos' => 0];
             $st = $configRuta['estado'] ?? 'online';
             $accesos = (int)($configRuta['accesos'] ?? 0);
@@ -298,7 +308,7 @@ class ModulosController {
             $configJsonData = json_decode($raw, true);
         }
 
-        // Obtener la lista dinámica de roles registrados en la BD PostgreSQL (Agrupados por nivel de privilegio único)
+        // Obtener la lista dinámica de roles registrados en la BD MariaDB (Agrupados por nivel de privilegio único)
         $rolesDinamicos = [
             ['nivel' => 0, 'nombre' => 'Público / Libres (Sin Autenticación)']
         ];
@@ -308,7 +318,7 @@ class ModulosController {
                 require_once CORE_PATH . 'Database/Connection.php';
                 $db = Connection::getInstance();
                 $stmt = $db->query("
-                    SELECT p.nivel_privilegio, string_agg(r.nombre, ' / ') AS nombres_roles
+                    SELECT p.nivel_privilegio, GROUP_CONCAT(r.nombre SEPARATOR ' / ') AS nombres_roles
                     FROM privilegios p
                     LEFT JOIN roles r ON r.privilegio_id = p.privilegio_id
                     GROUP BY p.nivel_privilegio

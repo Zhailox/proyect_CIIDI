@@ -26,6 +26,72 @@ $rolUsuarioHeader = $usuarioHeader['rol']
     ?? $_SESSION['usuario_rol'] 
     ?? 'Usuario';
 
+// Resolver foto de perfil en formato WebP para el widget del header
+$fotoRawHeader = trim((string)($usuarioHeader['foto_perfil'] ?? ($_SESSION['foto_perfil'] ?? '')));
+if (($fotoRawHeader === '' || !str_ends_with(strtolower($fotoRawHeader), '.webp')) && !empty($_SESSION['usuario_id'])) {
+    try {
+        require_once CORE_PATH . 'Database/Connection.php';
+        $pdoHeader = Connection::getInstance();
+        $stmtFotoHdr = $pdoHeader->prepare("SELECT foto_perfil FROM usuarios WHERE id = ? LIMIT 1");
+        $stmtFotoHdr->execute([(int)$_SESSION['usuario_id']]);
+        $fotoDbHdr = trim((string)($stmtFotoHdr->fetchColumn() ?: ''));
+        if ($fotoDbHdr !== '') {
+            $fotoRawHeader = $fotoDbHdr;
+            $_SESSION['foto_perfil'] = $fotoRawHeader;
+        }
+    } catch (Throwable) {}
+}
+
+if ($fotoRawHeader !== '' && !preg_match('#^https?://#i', $fotoRawHeader) && !str_starts_with($fotoRawHeader, 'data:image/') && !str_ends_with(strtolower($fotoRawHeader), '.webp') && function_exists('imagewebp')) {
+    $rootHdr = defined('BASE_PATH') ? rtrim(BASE_PATH, '/\\') : dirname(__DIR__, 3);
+    $cleanRelHdr = ltrim(str_replace('\\', '/', $fotoRawHeader), '/');
+    $absHdr = $rootHdr . '/' . (str_starts_with($cleanRelHdr, 'public/') ? $cleanRelHdr : 'public/' . $cleanRelHdr);
+    $webpAbsHdr = preg_replace('/\.(jpe?g|png|gif)$/i', '.webp', $absHdr);
+    $webpRelHdr = preg_replace('/\.(jpe?g|png|gif)$/i', '.webp', $cleanRelHdr);
+    if ($webpAbsHdr && $webpRelHdr && is_file($absHdr)) {
+        if (!is_file($webpAbsHdr)) {
+            $mimeHdr = @mime_content_type($absHdr) ?: '';
+            $srcImgHdr = match ($mimeHdr) {
+                'image/jpeg' => @imagecreatefromjpeg($absHdr),
+                'image/png'  => @imagecreatefrompng($absHdr),
+                'image/gif'  => @imagecreatefromgif($absHdr),
+                default      => false,
+            };
+            if ($srcImgHdr) {
+                $wH = imagesx($srcImgHdr);
+                $hH = imagesy($srcImgHdr);
+                $cvH = imagecreatetruecolor($wH, $hH);
+                $bgH = imagecolorallocate($cvH, 255, 255, 255);
+                imagefill($cvH, 0, 0, $bgH);
+                imagecopy($cvH, $srcImgHdr, 0, 0, 0, 0, $wH, $hH);
+                imagedestroy($srcImgHdr);
+                @imagewebp($cvH, $webpAbsHdr, 85);
+                imagedestroy($cvH);
+            }
+        }
+        if (is_file($webpAbsHdr)) {
+            $fotoRawHeader = $webpRelHdr;
+            $_SESSION['foto_perfil'] = $webpRelHdr;
+            if (!empty($_SESSION['usuario_id'])) {
+                try {
+                    require_once CORE_PATH . 'Database/Connection.php';
+                    $stmtUpdWebp = Connection::getInstance()->prepare("UPDATE usuarios SET foto_perfil = ? WHERE id = ?");
+                    $stmtUpdWebp->execute([$webpRelHdr, (int)$_SESSION['usuario_id']]);
+                } catch (Throwable) {}
+            }
+        }
+    }
+}
+
+$fotoSrcHeader = '';
+if ($fotoRawHeader !== '') {
+    if (preg_match('#^https?://#i', $fotoRawHeader) || str_starts_with($fotoRawHeader, 'data:image/')) {
+        $fotoSrcHeader = $fotoRawHeader;
+    } else {
+        $fotoSrcHeader = ltrim(preg_replace('#^public/#i', '', str_replace('\\', '/', $fotoRawHeader)), '/');
+    }
+}
+
 // Rescatar los items del SuperAdmin (Usamos la variable $menu_dinamico del Dispatcher)
 $adminItems = [];
 if ($esAdminTotalHeader && !empty($menu_dinamico)) {
@@ -46,7 +112,12 @@ if ($esAdminTotalHeader && !empty($menu_dinamico)) {
         <!-- GATILLO DEL DESPLEGABLE -->
         <div class="header-profile-widget" onclick="toggleProfileDropdown(event)" style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem;" title="Opciones de sistema">
             <div class="header-avatar-mini">
-                <?= htmlspecialchars($inicialHeader) ?>
+                <?php if ($fotoSrcHeader !== ''): ?>
+                    <img src="<?= htmlspecialchars($fotoSrcHeader) ?>" alt="<?= htmlspecialchars($primerNombreHeader) ?>" class="header-avatar-img" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <span style="display:none; width:100%; height:100%; align-items:center; justify-content:center;"><?= htmlspecialchars($inicialHeader) ?></span>
+                <?php else: ?>
+                    <?= htmlspecialchars($inicialHeader) ?>
+                <?php endif; ?>
             </div>
             <div class="header-user-info">
                 <span class="header-user-name"><?= htmlspecialchars($primerNombreHeader) ?></span>
@@ -129,7 +200,12 @@ if ($esAdminTotalHeader && !empty($menu_dinamico)) {
     <!-- ============================================================== -->
     <a href="perfil" class="header-profile-widget" title="Ir a mi perfil">
         <div class="header-avatar-mini">
-            <?= htmlspecialchars($inicialHeader) ?>
+            <?php if ($fotoSrcHeader !== ''): ?>
+                <img src="<?= htmlspecialchars($fotoSrcHeader) ?>" alt="<?= htmlspecialchars($primerNombreHeader) ?>" class="header-avatar-img" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <span style="display:none; width:100%; height:100%; align-items:center; justify-content:center;"><?= htmlspecialchars($inicialHeader) ?></span>
+            <?php else: ?>
+                <?= htmlspecialchars($inicialHeader) ?>
+            <?php endif; ?>
         </div>
         <div class="header-user-info">
             <span class="header-user-name"><?= htmlspecialchars($primerNombreHeader) ?></span>

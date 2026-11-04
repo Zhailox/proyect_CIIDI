@@ -15,16 +15,16 @@ class InicioRepositorioController {
         
         // Autores únicos reales vinculados a PST (tipo 1)
         $stmtAutores = $db->query("SELECT COUNT(DISTINCT ra.id_autor) AS total 
-                                   FROM public.recurso_autores ra 
-                                   JOIN public.recursos r ON ra.id_recurso = r.id 
+                                   FROM recurso_autores ra 
+                                   JOIN recursos r ON ra.id_recurso = r.id 
                                    WHERE r.id_tipo_recurso = 1");
         $resAutores = $stmtAutores->fetch(PDO::FETCH_ASSOC);
         $cantAutores = $resAutores ? (int)$resAutores['total'] : 0;
 
         // Comunidades únicas reales vinculadas a PST (tipo 1)
         $stmtComunidades = $db->query("SELECT COUNT(DISTINCT LOWER(TRIM(dp.comunidad_beneficiada))) AS total 
-                                       FROM public.detalles_proyectos dp 
-                                       JOIN public.recursos r ON dp.id_recurso = r.id 
+                                       FROM detalles_proyectos dp 
+                                       JOIN recursos r ON dp.id_recurso = r.id 
                                        WHERE r.id_tipo_recurso = 1 
                                          AND dp.comunidad_beneficiada IS NOT NULL 
                                          AND TRIM(dp.comunidad_beneficiada) != ''");

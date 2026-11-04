@@ -41,7 +41,7 @@ class RepositorioPSTModule implements ModuleContract {
                 'controlador' => 'BusquedaGlobalController',
                 'controlador_path' => __DIR__ . '/controllers/BusquedaGlobalController.php',
                 'metodo' => 'index',
-                'titulo' => 'Explorar Buscador',
+                'titulo' => 'Buscador de Documentos',
                 'css'    => ['RepositorioPST.css']
             ],
             'detalles-pst' => [
@@ -69,22 +69,6 @@ class RepositorioPSTModule implements ModuleContract {
                 'metodo' => 'index',
                 'titulo' => 'Configuración de Repositorio',
                 'css'    => ['RepositorioPST.css']
-            ],
-            'gestion-red-onnx' => [
-                'vista'  => __DIR__ . '/views/gestion_red_neuronal.php',
-                'controlador' => 'ConfiguracionController',
-                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
-                'metodo' => 'gestionRedOnnx',
-                'titulo' => 'Gestión del Modelo ONNX IA',
-                'css'    => ['RepositorioPST.css']
-            ],
-            'gestion-red-neuronal' => [
-                'vista'  => __DIR__ . '/views/gestion_red_neuronal.php',
-                'controlador' => 'ConfiguracionController',
-                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
-                'metodo' => 'gestionRedOnnx',
-                'titulo' => 'Gestión del Modelo ONNX IA',
-                'css'    => ['RepositorioPST.css']
             ]
         ];
     }
@@ -101,12 +85,11 @@ class RepositorioPSTModule implements ModuleContract {
                 'orden'       => 10,
                 'privilegio_minimo' => $nivelPublico,
                 'enlace'      => 'repositorio',
-                'activadores' => ['repositorio', 'detalles-pst', 'agregar-documento', 'buscador', 'configuracion-pst', 'gestion-red-onnx', 'gestion-red-neuronal'],
+                'activadores' => ['repositorio', 'detalles-pst', 'agregar-documento', 'buscador', 'configuracion-pst'],
                 'subitems'    => [
                     ['ruta' => 'repositorio', 'titulo' => 'Explorar Proyectos', 'privilegio_minimo' => $nivelPublico],
-                    ['ruta' => 'buscador', 'titulo' => 'Buscador Unificado', 'privilegio_minimo' => $nivelPublico],
+                    ['ruta' => 'buscador', 'titulo' => 'Buscador de Documentos', 'privilegio_minimo' => $nivelPublico],
                     ['ruta' => 'agregar-documento', 'titulo' => 'Gestión Documental', 'privilegio_minimo' => $nivelAdmin],
-                    ['ruta' => 'gestion-red-onnx', 'titulo' => 'Modelo ONNX IA', 'privilegio_minimo' => $nivelAdmin],
                     ['ruta' => 'configuracion-pst', 'titulo' => 'Configuración Repositorio', 'privilegio_minimo' => $nivelAdmin, 'permiso_rbac' => 'auditar', 'modulo_rbac' => 'RepositorioPST']
                 ]
             ]
@@ -130,7 +113,7 @@ class RepositorioPSTModule implements ModuleContract {
     public function getHeaderConfig(): array {
         return [
             'tipo'       => 'search',
-            'placeholder' => 'Buscador Inteligente...',
+            'placeholder' => 'Buscar en el repositorio...',
             'icono'       => 'ph ph-magnifying-glass',
             'accion'      => 'buscador',
             'orden'       => 10

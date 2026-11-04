@@ -26,5 +26,12 @@
         "tag_que": "Proyecto",
         "tag_sobre": "Innovacion",
         "trayecto": "t2"
+    },
+    "5": {
+        "imagen": "https:\/\/images.unsplash.com\/photo-1518770660439-4636190af475?auto=format&fit=crop&w=600&q=80",
+        "tag_quien": "Equipo CIIDI",
+        "tag_que": "Proyecto",
+        "tag_sobre": "Innovacion",
+        "trayecto": "t4"
     }
 }

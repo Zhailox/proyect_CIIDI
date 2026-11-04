@@ -9,7 +9,7 @@ if (empty($mod)) {
 <div class="ag-glass-banner mb-2">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.2rem;">
         <div style="display: flex; align-items: center; gap: 1.2rem;">
-            <div style="width: 56px; height: 56px; border-radius: 14px; background: rgba(80, 89, 132, 0.08); border: 1px solid rgba(80, 89, 132, 0.18); display: flex; align-items: center; justify-content: center; font-size: 1.9rem; color: var(--color-secundario, #2563eb);">
+            <div style="width: 56px; height: 56px; border-radius: 14px; background: rgba(80, 89, 132, 0.08); border: 1px solid rgba(80, 89, 132, 0.18); display: flex; align-items: center; justify-content: center; font-size: 1.9rem; color: var(--color-secundario, #505984);">
                 <i class="<?= htmlspecialchars($mod['icono']) ?>"></i>
             </div>
             <div>
@@ -47,7 +47,7 @@ if (empty($mod)) {
                 <i class="ph-bold ph-broom"></i> Purgar Caché
             </button>
 
-            <a href="gestor-modulos" class="btn btn-outline" style="border-color: var(--color-secundario, #2563eb); color: var(--color-secundario, #2563eb); background: #ffffff; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; transition: all 0.2s ease;">
+            <a href="gestor-modulos" class="sa-btn sa-btn-outline">
                 <i class="ph-bold ph-arrow-left"></i> Volver a Módulos
             </a>
         </div>
@@ -76,7 +76,7 @@ if (empty($mod)) {
 
     <div class="ag-metric-card">
         <div style="font-size: 0.75rem; font-weight: 800; color: var(--texto-silenciado, #64748b); text-transform: uppercase; letter-spacing: 0.5px;">Tráfico Registrado</div>
-        <div style="font-size: 1.85rem; font-weight: 800; color: var(--color-secundario, #2563eb); margin-top: 0.3rem;"><?= number_format($mod['total_accesos'] ?? 0) ?> <span style="font-size: 0.8rem; font-weight: 600; color: #64748b;">clics</span></div>
+        <div style="font-size: 1.85rem; font-weight: 800; color: var(--color-secundario, #505984); margin-top: 0.3rem;"><?= number_format($mod['total_accesos'] ?? 0) ?> <span style="font-size: 0.8rem; font-weight: 600; color: #64748b;">clics</span></div>
     </div>
 
     <div class="ag-metric-card">
@@ -90,7 +90,7 @@ if (empty($mod)) {
 <!-- NAVEGACIÓN DE PESTAÑAS DEDICADAS -->
 <div style="border-bottom: 2px solid rgba(80,89,132,0.12); margin-bottom: 1.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
     <button type="button" onclick="switchModTab('rutas')" id="tab-btn-rutas" class="ag-tab-btn active">
-        <i class="ph-bold ph-tree-structure"></i> Rutas & Feature Flags (RBAC)
+        <i class="ph-bold ph-tree-structure"></i> Rutas & Feature Flags
     </button>
 
     <?php if ($mod['configJsonData'] !== null): ?>
@@ -117,7 +117,7 @@ if (empty($mod)) {
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 1rem;">
             <div>
                 <h3 style="margin: 0; font-weight: 800; color: var(--texto-titulos, #0f172a); font-size: 1.2rem;">
-                    Matriz de Permisos por Ruta (RBAC & Feature Flags)
+                    Integridad y Estado de Rutas Internas del Módulo
                 </h3>
                 <p style="margin: 0.2rem 0 0 0; color: var(--texto-silenciado, #64748b); font-size: 0.88rem;">
                     Configure estados y ejecute pings sintéticos de salud por ruta.
@@ -133,7 +133,7 @@ if (empty($mod)) {
                             <div style="flex: 1; min-width: 260px;">
                                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                     <h4 style="margin: 0; font-size: 0.98rem; font-weight: 800; color: var(--texto-titulos, #0f172a);"><?= htmlspecialchars($r['titulo']) ?></h4>
-                                    <code style="background: rgba(80,89,132,0.1); color: var(--color-secundario, #2563eb); font-size: 0.8rem; padding: 3px 8px; border-radius: 6px; font-weight: 700;">?ruta=<?= htmlspecialchars($r['clave']) ?></code>
+                                    <code style="background: rgba(80,89,132,0.1); color: var(--color-secundario, #505984); font-size: 0.8rem; padding: 3px 8px; border-radius: 6px; font-weight: 700;">?ruta=<?= htmlspecialchars($r['clave']) ?></code>
                                     <span style="background: #e2e8f0; color: #475569; font-size: 0.75rem; padding: 2px 7px; border-radius: 6px; font-weight: 700;">
                                         <?= $r['accesos'] ?> clics
                                     </span>

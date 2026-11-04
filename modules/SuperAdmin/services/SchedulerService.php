@@ -130,30 +130,10 @@ class SchedulerService {
     }
 
     /**
-     * Resuelve la ruta de Python si está disponible en el entorno
+     * Python fue descartado en la arquitectura PHP 8.2 + MariaDB 10.6.
      */
     public static function getPythonPath(): string {
-        $esWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
-        if (!$esWindows) {
-            return 'python3';
-        }
-
-        $candidatosPy = [
-            'C:\\Python312\\python.exe',
-            'C:\\Python311\\python.exe',
-            'C:\\Python310\\python.exe',
-            'C:\\Users\\Chailon\\AppData\\Local\\Programs\\Python\\Python312\\python.exe',
-            'C:\\Users\\Chailon\\AppData\\Local\\Programs\\Python\\Python311\\python.exe',
-            'C:\\Users\\Chailon\\AppData\\Local\\Programs\\Python\\Python310\\python.exe'
-        ];
-
-        foreach ($candidatosPy as $pyPath) {
-            if (file_exists($pyPath)) {
-                return '"' . $pyPath . '"';
-            }
-        }
-
-        return 'python';
+        return '';
     }
 
     private static function getDefaultTasks(): array {
@@ -174,7 +154,7 @@ class SchedulerService {
             ],
             'backup_automatico_medianoche' => [
                 'id' => 'backup_automatico_medianoche',
-                'nombre' => 'Respaldo Automático de Medianoche (PostgreSQL Dump)',
+                'nombre' => 'Respaldo Automático de Medianoche (MariaDB Dump)',
                 'descripcion' => 'Genera un backup completo comprimido (.sql.gz) de la base de datos y purga respaldos antiguos.',
                 'expresion_cron' => '0 0 * * *',
                 'tipo_ejecucion' => 'metodo_interno',
@@ -263,14 +243,14 @@ class SchedulerService {
         $tareas = self::obtenerTareas();
         $archivoScriptNombre = $tareas[$id]['archivo_script'] ?? '';
 
-        // Procesar subida de archivo script (.sh, .bat, .ps1, .php, .py)
+        // Procesar subida de archivo script (.sh, .bat, .ps1, .php, .sql)
         if ($tipoEjecucion === 'script_archivo' && $archivoSubido && $archivoSubido['error'] === UPLOAD_ERR_OK) {
             $origName = basename($archivoSubido['name']);
             $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
-            $permitidas = ['sh', 'bat', 'ps1', 'php', 'py', 'sql'];
+            $permitidas = ['sh', 'bat', 'ps1', 'php', 'sql'];
 
             if (!in_array($ext, $permitidas, true)) {
-                return ['exito' => false, 'mensaje' => "Extensión '.{$ext}' no permitida. Formatos válidos: .sh, .bat, .ps1, .php, .py, .sql"];
+                return ['exito' => false, 'mensaje' => "Extensión '.{$ext}' no permitida. Formatos válidos: .sh, .bat, .ps1, .php, .sql"];
             }
 
             $scriptDir = self::getScriptsDir();
@@ -403,7 +383,7 @@ class SchedulerService {
     }
 
     /**
-     * Ejecución multiplataforma (Windows/Linux) de scripts subidos (.sh, .bat, .ps1, .php, .py)
+     * Ejecución multiplataforma (Windows/Linux) de scripts subidos (.sh, .bat, .ps1, .php, .sql)
      */
     private static function ejecutarArchivoScript(string $rutaCompleta): array {
         $ext = strtolower(pathinfo($rutaCompleta, PATHINFO_EXTENSION));
@@ -416,9 +396,11 @@ class SchedulerService {
                 $cmd = "{$phpBin} \"{$rutaCompleta}\"";
                 break;
             case 'py':
-                $pythonBin = self::getPythonPath();
-                $cmd = "{$pythonBin} \"{$rutaCompleta}\"";
-                break;
+                return [
+                    'exito' => false,
+                    'mensaje' => 'La ejecución de scripts Python (.py) fue deshabilitada en la arquitectura PHP 8.2 + MariaDB.',
+                    'salida' => 'Ejecución bloqueada por política de arquitectura sin Python/ML.'
+                ];
             case 'bat':
             case 'cmd':
                 $cmd = "cmd.exe /c \"{$rutaCompleta}\"";
@@ -435,11 +417,22 @@ class SchedulerService {
                 }
                 break;
             case 'sql':
-                $psqlPath = Connection::getPsqlPath();
-                $creds = Connection::getCredentials();
-                putenv("PGPASSWORD={$creds['pass']}");
-                $cmd = "{$psqlPath} -h {$creds['host']} -p {$creds['port']} -U {$creds['user']} -d {$creds['db']} -f \"{$rutaCompleta}\"";
-                break;
+                try {
+                    $db = Connection::getInstance();
+                    $sqlContent = (string)file_get_contents($rutaCompleta);
+                    $sentencias = Connection::ejecutarScriptSqlMariaDB($db, $sqlContent);
+                    return [
+                        'exito' => true,
+                        'mensaje' => "Script SQL ejecutado con éxito sobre MariaDB ({$sentencias} sentencias).",
+                        'salida' => "Archivo procesado vía PDO MariaDB: " . basename($rutaCompleta)
+                    ];
+                } catch (Throwable $e) {
+                    return [
+                        'exito' => false,
+                        'mensaje' => 'Error al ejecutar script SQL en MariaDB: ' . $e->getMessage(),
+                        'salida' => $e->getMessage()
+                    ];
+                }
             default:
                 $cmd = "\"{$rutaCompleta}\"";
                 break;
@@ -452,13 +445,29 @@ class SchedulerService {
      * Ejecución de comandos CLI con captura de código de salida (exit code) y consola.
      */
     private static function ejecutarComandoCLI(string $comando): array {
+        if (preg_match('/\bpython3?\b/i', $comando)) {
+            return [
+                'exito' => false,
+                'mensaje' => 'Comandos Python deshabilitados en la arquitectura PHP 8.2 + MariaDB.',
+                'salida' => 'Ejecución bloqueada por política de arquitectura.'
+            ];
+        }
+
+        $disabledFns = array_map('trim', explode(',', strtolower((string)ini_get('disable_functions'))));
+        if (!function_exists('exec') || in_array('exec', $disabledFns, true)) {
+            return [
+                'exito' => false,
+                'mensaje' => 'La función exec() está restringida en este servidor de hosting compartido.',
+                'salida' => 'Utilice métodos internos de PHP o scripts SQL nativos.'
+            ];
+        }
+
         $salidaLines = [];
         $codigoRetorno = 0;
 
         $comandoConStderr = $comando . " 2>&1";
         exec($comandoConStderr, $salidaLines, $codigoRetorno);
 
-        putenv("PGPASSWORD="); // Limpiar por seguridad
         $salidaTexto = implode("\n", $salidaLines);
 
         if ($codigoRetorno === 0) {
@@ -751,8 +760,8 @@ class SchedulerService {
             $stmtCount = $db->query("SELECT COUNT(*) FROM system_audit_log");
             $total = (int)$stmtCount->fetchColumn();
             if ($total > 2000) {
-                $exceso = $total - 2000;
-                $db->exec("DELETE FROM system_audit_log WHERE id IN (SELECT id FROM system_audit_log ORDER BY fecha_hora ASC LIMIT {$exceso})");
+                $exceso = (int)($total - 2000);
+                $db->exec("DELETE FROM system_audit_log ORDER BY fecha_hora ASC, id ASC LIMIT {$exceso}");
                 $purgados = $exceso;
             }
         } catch (Throwable $e) {}

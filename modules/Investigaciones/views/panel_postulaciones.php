@@ -89,13 +89,13 @@ $is_logged = Auth::check();
             <?php foreach ($agrupadas[$key] as $inv): ?>
             <?php $yaPostulado = in_array($inv['id'], $postuladas_ids); ?>
             <div style="background: white; border: 1px solid rgba(80,89,132,0.15); border-radius: 12px; padding: 1.2rem; box-shadow: 0 4px 6px rgba(15,23,42,0.02); transition:transform 0.2s; cursor:pointer;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
-                <div style="font-size:0.75rem; font-weight:700; color:var(--inv-primary); margin-bottom:0.5rem; text-transform:uppercase; display:flex; align-items:center; gap:0.3rem;"><i class="ph-bold ph-bookmark-simple"></i> <?= htmlspecialchars($inv['linea_nombre']) ?></div>
-                <h4 style="font-size:1rem; font-weight:700; color:var(--inv-dark); margin-bottom:0.5rem; line-height:1.4;"><?= htmlspecialchars($inv['titulo']) ?></h4>
-                <p style="font-size:0.85rem; color:var(--inv-muted); line-height:1.5; margin-bottom:1.2rem; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;"><?= htmlspecialchars(mb_substr($inv['planteamiento_problema'], 0, 120)) ?>...</p>
+                <div style="font-size:0.75rem; font-weight:700; color:var(--inv-primary); margin-bottom:0.5rem; text-transform:uppercase; display:flex; align-items:center; gap:0.3rem;"><i class="ph-bold ph-bookmark-simple"></i> <?= htmlspecialchars($inv['linea_nombre'] ?? '') ?></div>
+                <h4 style="font-size:1rem; font-weight:700; color:var(--inv-dark); margin-bottom:0.5rem; line-height:1.4;"><?= htmlspecialchars($inv['titulo'] ?? '') ?></h4>
+                <p style="font-size:0.85rem; color:var(--inv-muted); line-height:1.5; margin-bottom:1.2rem; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;"><?= htmlspecialchars(mb_substr($inv['planteamiento_problema'] ?? '', 0, 120)) ?>...</p>
                 <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--inv-border); padding-top:1rem;">
                     <span style="font-size:0.8rem; font-weight:700; color:var(--inv-muted);"><i class="ph-fill ph-users-three"></i> <?= (int)$inv['cupos_disponibles'] ?> Vacantes</span>
                     <?php if ($yaPostulado): ?>
-                        <span style="font-size:0.8rem; font-weight:700; color:#F59E0B; background:#FEF3C7; padding:0.3rem 0.6rem; border-radius:6px; display:flex; align-items:center; gap:0.3rem;"><i class="ph-bold ph-check"></i> Postulado</span>
+                        <span style="font-size:0.8rem; font-weight:700; color:#505984; background:rgba(80,89,132,0.12); border:1px solid rgba(80,89,132,0.25); padding:0.3rem 0.6rem; border-radius:6px; display:flex; align-items:center; gap:0.3rem;"><i class="ph-bold ph-check"></i> Postulado</span>
                     <?php else: ?>
                         <button onclick="abrirModal(<?= $inv['id'] ?>, '<?= htmlspecialchars(addslashes($inv['titulo'])) ?>')" class="inv-btn-primary" style="padding:0.4rem 1rem; font-size:0.85rem;">Aplicar</button>
                     <?php endif; ?>
@@ -133,8 +133,24 @@ $is_logged = Auth::check();
             <p style="font-size:0.95rem; color:var(--inv-muted); margin-bottom:1.5rem; text-align:left;">Estás a punto de postularte como investigador/tesista para:</p>
             <strong id="modal-titulo" style="display:block; font-size:1.1rem; color:var(--inv-primary); font-weight:700; text-align:left; margin-bottom:2rem; padding:1rem; background:var(--inv-primary-light); border-radius:10px;"></strong>
             
-            <form action="?ruta=procesar-aplicacion" method="POST" id="form-aplicar">
+            <form action="?ruta=postulaciones-procesar" method="POST" id="form-aplicar">
                 <input type="hidden" name="id_investigacion" id="modal-id">
+                <div style="margin-bottom: 1rem; text-align: left;">
+                    <label for="modal-motivacion" style="display:block; font-size:0.88rem; font-weight:700; color:var(--inv-dark); margin-bottom:0.4rem;">
+                        Mensaje de motivación <span style="color:#ef4444;">*</span>
+                    </label>
+                    <textarea name="motivacion" id="modal-motivacion" rows="4" required
+                              placeholder="Describe brevemente tu interés, habilidades y disponibilidad para participar en este proyecto..."
+                              style="width:100%; padding:0.75rem; border:1px solid var(--inv-border, #cbd5e1); border-radius:8px; font-family:inherit; font-size:0.92rem; resize:vertical; box-sizing:border-box;"></textarea>
+                </div>
+                <div style="margin-bottom: 1.25rem; text-align: left;">
+                    <label for="modal-portafolio" style="display:block; font-size:0.85rem; font-weight:600; color:var(--inv-muted); margin-bottom:0.4rem;">
+                        Enlace a portafolio o repositorio (opcional)
+                    </label>
+                    <input type="url" name="portafolio" id="modal-portafolio"
+                           placeholder="https://github.com/usuario"
+                           style="width:100%; padding:0.65rem 0.75rem; border:1px solid var(--inv-border, #cbd5e1); border-radius:8px; font-family:inherit; font-size:0.9rem; box-sizing:border-box;">
+                </div>
                 <button type="submit" class="inv-btn-primary" style="width:100%; justify-content:center; font-size:1.1rem; padding:1rem;">Confirmar Postulación</button>
             </form>
         <?php endif; ?>

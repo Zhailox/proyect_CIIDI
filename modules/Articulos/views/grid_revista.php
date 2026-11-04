@@ -275,8 +275,20 @@ $buildUrlRemoveParam = function($param) use ($buildUrl) {
 
                                 <div class="art-card-actions">
                                     <a href="leer-articulo?id=<?= $art['id'] ?>" class="art-btn-read"><i class="ph-bold ph-book-open"></i> Leer</a>
-                                    <button type="button" class="art-action-icon-btn" title="Generar Cita Académica" onclick="abrirModalCita(<?= htmlspecialchars(json_encode($art['titulo'])) ?>, <?= htmlspecialchars(json_encode($art['autores_text'])) ?>, <?= $art['anio_publicacion'] ?>, <?= htmlspecialchars(json_encode($art['editorial'] ?? 'N/A')) ?>, <?= htmlspecialchars(json_encode($art['volumen'] ?? '')) ?>, <?= htmlspecialchars(json_encode($art['numero'] ?? '')) ?>, <?= htmlspecialchars(json_encode($art['issn'] ?? '')) ?>)"><i class="ph-bold ph-quotes"></i></button>
-                                    <button type="button" class="art-action-icon-btn" title="Compartir Enlace" onclick="compartirEnlace('<?= htmlspecialchars($art['archivo_pdf'] ?? '') ?>', this)"><i class="ph-bold ph-share-network"></i></button>
+                                    <button type="button" class="art-action-icon-btn btn-trigger-cita" title="Generar Cita Académica" 
+                                        data-titulo="<?= htmlspecialchars($art['titulo'] ?? 'Sin Título', ENT_QUOTES, 'UTF-8') ?>"
+                                        data-autores="<?= htmlspecialchars($art['autores_text'] ?? 'Autor no registrado', ENT_QUOTES, 'UTF-8') ?>"
+                                        data-anio="<?= htmlspecialchars((string)($art['anio_publicacion'] ?? 's.f.'), ENT_QUOTES, 'UTF-8') ?>"
+                                        data-editorial="<?= htmlspecialchars($art['editorial'] ?? 'S/E', ENT_QUOTES, 'UTF-8') ?>"
+                                        data-volumen="<?= htmlspecialchars((string)($art['volumen'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                                        data-numero="<?= htmlspecialchars((string)($art['numero'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                                        data-issn="<?= htmlspecialchars((string)($art['issn'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                                        onclick="abrirModalCitaDesdeBtn(this)">
+                                        <i class="ph-bold ph-quotes"></i>
+                                    </button>
+                                    <button type="button" class="art-action-icon-btn btn-share-link" title="Copiar enlace al artículo" onclick="compartirEnlaceArticulo(<?= (int)$art['id'] ?>, this)">
+                                        <i class="ph-bold ph-share-network"></i>
+                                    </button>
                                 </div>
                             </div>
                         </article>
@@ -306,28 +318,30 @@ $buildUrlRemoveParam = function($param) use ($buildUrl) {
         <!-- ============================================== -->
         
         <header class="art-top-filter-panel">
-            <form action="articulos" method="GET" class="art-top-filter-form" style="display: flex; gap: 1rem; align-items: center; width: 100%;">
+            <form action="articulos" method="GET" class="art-top-filter-form">
                 <input type="hidden" name="tab" value="autores">
                 
-                <div class="art-search-box" style="flex: 1;">
-                    <i class="ph-bold ph-user-focus art-search-icon"></i>
-                    <input type="text" name="q_autores_tab" class="art-top-search-input" placeholder="Buscar investigador por nombre u ORCID..." value="<?= htmlspecialchars($q_autores_tab ?? '') ?>">
+                <div class="art-filter-controls-row">
+                    <div class="art-search-box">
+                        <i class="ph-bold ph-user-focus art-search-icon"></i>
+                        <input type="text" name="q_autores_tab" class="art-top-search-input" placeholder="Buscar investigador por nombre u ORCID..." value="<?= htmlspecialchars($q_autores_tab ?? '') ?>">
+                    </div>
+                    
+                    <button type="submit" class="art-btn-read art-btn-search-submit">
+                        <i class="ph-bold ph-funnel"></i> Buscar Investigador
+                    </button>
+                    
+                    <?php if (!empty($q_autores_tab)): ?>
+                        <a href="articulos?tab=autores" class="art-link-reset art-link-reset-inline">
+                            <i class="ph-bold ph-arrows-counter-clockwise"></i> Limpiar
+                        </a>
+                    <?php endif; ?>
                 </div>
-                
-                <button type="submit" class="art-btn-read" style="padding: 0.6rem 1.1rem; font-size: 0.85rem;">
-                    <i class="ph-bold ph-funnel"></i> Buscar Investigador
-                </button>
-                
-                <?php if (!empty($q_autores_tab)): ?>
-                    <a href="articulos?tab=autores" class="art-link-reset" style="margin: 0; align-self: center;">
-                        <i class="ph-bold ph-arrows-counter-clockwise"></i> Limpiar
-                    </a>
-                <?php endif; ?>
             </form>
         </header>
 
         <main class="art-catalog-content" style="width: 100%;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 1.5rem;">
                 <?php if (empty($autoresCatalogo['data'])): ?>
                     <p class="art-empty-state" style="grid-column: 1/-1;">No se encontraron autores en el directorio del sistema.</p>
                 <?php else: ?>
@@ -405,65 +419,189 @@ $buildUrlRemoveParam = function($param) use ($buildUrl) {
 <script>
 const configuracionesCitas = <?= json_encode(ConfigService::get('citas.estilos', [])) ?>;
 
+// --- UTILIDADES UNIVERSALES DE PORTAPAPELES Y NOTIFICACIÓN ---
+function copiarAlPortapapeles(texto, onSuccess) {
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(texto).then(() => {
+            if (typeof onSuccess === 'function') onSuccess();
+        }).catch(() => {
+            fallbackCopiarTexto(texto, onSuccess);
+        });
+    } else {
+        fallbackCopiarTexto(texto, onSuccess);
+    }
+}
+
+function fallbackCopiarTexto(texto, onSuccess) {
+    const textArea = document.createElement('textarea');
+    textArea.value = texto;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    textArea.style.opacity = '0';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+        const ok = document.execCommand('copy');
+        if (ok && typeof onSuccess === 'function') {
+            onSuccess();
+        }
+    } catch (err) {
+        console.error('Error al copiar vía fallback:', err);
+    }
+    document.body.removeChild(textArea);
+}
+
+function mostrarToastNotificacion(mensaje) {
+    let toast = document.getElementById('ciidi-toast-notification');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'ciidi-toast-notification';
+        toast.className = 'art-toast-pill';
+        document.body.appendChild(toast);
+    }
+    toast.innerHTML = '<i class="ph-bold ph-check-circle" style="color:#10B981; font-size:1.2rem;"></i> ' + mensaje;
+    toast.classList.add('is-visible');
+    
+    clearTimeout(window._ciidiToastTimer);
+    window._ciidiToastTimer = setTimeout(() => {
+        toast.classList.remove('is-visible');
+    }, 2500);
+}
+
+function compartirEnlaceArticulo(idArticulo, btn) {
+    const urlFinal = new URL('leer-articulo?id=' + idArticulo, window.location.href).href;
+    
+    copiarAlPortapapeles(urlFinal, () => {
+        const origHtml = btn.innerHTML;
+        const origTitle = btn.getAttribute('title') || '';
+        
+        btn.innerHTML = '<i class="ph-bold ph-check"></i>';
+        btn.classList.add('is-copied');
+        btn.setAttribute('title', '¡Enlace copiado!');
+        mostrarToastNotificacion('¡Enlace del artículo copiado al portapapeles!');
+        
+        setTimeout(() => {
+            btn.innerHTML = origHtml;
+            btn.classList.remove('is-copied');
+            btn.setAttribute('title', origTitle);
+        }, 2000);
+    });
+}
+
+function compartirEnlace(rutaArchivo, btn) {
+    let urlFinal = '';
+    if (rutaArchivo && rutaArchivo !== '#' && typeof rutaArchivo === 'string' && rutaArchivo.trim() !== '') {
+        const link = document.createElement('a');
+        link.href = rutaArchivo;
+        urlFinal = link.href;
+    } else {
+        urlFinal = window.location.href;
+    }
+    
+    copiarAlPortapapeles(urlFinal, () => {
+        const origHtml = btn.innerHTML;
+        const origTitle = btn.getAttribute('title') || '';
+        btn.innerHTML = '<i class="ph-bold ph-check"></i>';
+        btn.classList.add('is-copied');
+        btn.setAttribute('title', '¡Enlace copiado!');
+        mostrarToastNotificacion('¡Enlace copiado al portapapeles!');
+        setTimeout(() => {
+            btn.innerHTML = origHtml;
+            btn.classList.remove('is-copied');
+            btn.setAttribute('title', origTitle);
+        }, 2000);
+    });
+}
+
+function abrirModalCitaDesdeBtn(btn) {
+    const ds = btn.dataset;
+    abrirModalCita(ds.titulo, ds.autores, ds.anio, ds.editorial, ds.volumen, ds.numero, ds.issn);
+}
+
 function abrirModalCita(titulo, autores, anio, editorial, volumen, numero, issn) {
     const listEl = document.getElementById('listaCitasDinamicas');
-    if (!listEl) return;
+    const modalEl = document.getElementById('modalCitasContainer');
+    if (!listEl || !modalEl) return;
     listEl.innerHTML = '';
     
     const mockData = {
-        '{autores}': autores || 'S/A', '{anio}': anio || 's.f.', '{titulo}': titulo || 'Sin Título',
-        '{editorial}': editorial || 'S/E', '{volumen}': volumen || '', '{numero}': numero || '', '{issn}': issn || ''
+        '{autores}': autores || 'Autor no registrado', 
+        '{anio}': anio || 's.f.', 
+        '{titulo}': titulo || 'Sin Título',
+        '{editorial}': editorial || 'S/E', 
+        '{volumen}': volumen || '', 
+        '{numero}': numero || '', 
+        '{issn}': issn || ''
     };
     
     let count = 0;
-    for (const [slug, item] of Object.entries(configuracionesCitas)) {
-        if (!item.activo) continue;
-        count++;
-        let textoCita = item.plantilla || '';
-        for (const [k, v] of Object.entries(mockData)) { textoCita = textoCita.replaceAll(k, v); }
-        
-        const boxId = 'cita_txt_' + slug;
-        listEl.insertAdjacentHTML('beforeend', `
-            <div style="margin-bottom: 0.85rem;">
-                <strong style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--color-secundario); text-transform: uppercase; margin-bottom: 0.25rem;">
-                    <span>${item.nombre || slug}</span>
-                    <button type="button" onclick="copiarCitaText('${boxId}', this)" style="padding: 0.2rem 0.5rem; font-size: 0.7rem; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 3px; cursor: pointer; font-weight: 700;"><i class="ph ph-copy"></i> Copiar</button>
-                </strong>
-                <div id="${boxId}" style="background: #fafbfe; border: 1px solid rgba(169, 168, 166, 0.15); padding: 0.5rem 0.65rem; border-radius: 4px; font-size: 0.8rem; font-family: monospace;">${textoCita}</div>
-            </div>
-        `);
+    if (typeof configuracionesCitas === 'object' && configuracionesCitas !== null) {
+        for (const [slug, item] of Object.entries(configuracionesCitas)) {
+            if (!item || !item.activo) continue;
+            count++;
+            let textoCita = item.plantilla || '';
+            for (const [k, v] of Object.entries(mockData)) { 
+                textoCita = textoCita.replaceAll(k, v); 
+            }
+            
+            const boxId = 'cita_txt_' + slug;
+            listEl.insertAdjacentHTML('beforeend', `
+                <div style="margin-bottom: 1rem; background: var(--bg-card, #f8fafc); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 8px; padding: 0.85rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: var(--color-secundario, #505984); text-transform: uppercase; letter-spacing: 0.03em;">
+                            <i class="ph-bold ph-bookmark-simple"></i> ${item.nombre || slug}
+                        </span>
+                        <button type="button" onclick="copiarCitaText('${boxId}', this)" style="padding: 0.3rem 0.65rem; font-size: 0.75rem; background: var(--color-secundario, #505984); color: #ffffff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.2s ease;">
+                            <i class="ph-bold ph-copy"></i> Copiar
+                        </button>
+                    </div>
+                    <div id="${boxId}" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.06); padding: 0.65rem 0.8rem; border-radius: 6px; font-size: 0.84rem; line-height: 1.5; color: var(--texto-comun, #1e293b); word-break: break-word; font-family: inherit;">${textoCita}</div>
+                </div>
+            `);
+        }
     }
-    document.getElementById('modalCitasContainer').style.display = 'flex';
-}
 
-function cerrarModalCitas() { document.getElementById('modalCitasContainer').style.display = 'none'; }
-
-function compartirEnlace(rutaArchivo, btn) {
-    if (!rutaArchivo) {
-        alert('Este artículo no tiene un archivo enlazado.');
-        return;
+    if (count === 0) {
+        listEl.innerHTML = `
+            <div style="text-align: center; padding: 2rem 1rem; color: var(--texto-silenciado, #64748b);">
+                <i class="ph-bold ph-info" style="font-size: 2.2rem; display: block; margin-bottom: 0.5rem; color: var(--color-terciario, #7090cb);"></i>
+                <p style="margin: 0; font-size: 0.9rem;">No hay formatos de cita académica configurados activos.</p>
+            </div>
+        `;
     }
     
-    // Convertir ruta relativa a URL absoluta
-    const linkAbsoluto = document.createElement('a');
-    linkAbsoluto.href = rutaArchivo;
-    const urlFinal = linkAbsoluto.href;
+    modalEl.style.display = 'flex';
+}
 
-    const origHtml = btn.innerHTML;
-    navigator.clipboard.writeText(urlFinal).then(() => {
-        btn.innerHTML = '<i class="ph ph-check"></i> Copiado';
-        setTimeout(() => { btn.innerHTML = origHtml; }, 2000);
-    });
+function cerrarModalCitas() { 
+    const modalEl = document.getElementById('modalCitasContainer');
+    if (modalEl) modalEl.style.display = 'none'; 
 }
 
 function copiarCitaText(id, btn) {
-    const text = document.getElementById(id).textContent;
-    const origHtml = btn.innerHTML;
-    navigator.clipboard.writeText(text).then(() => {
-        btn.innerHTML = '<i class="ph ph-check"></i> ¡Copiado!';
-        setTimeout(() => { btn.innerHTML = origHtml; }, 2000);
+    const el = document.getElementById(id);
+    if (!el) return;
+    const text = el.textContent.trim();
+    
+    copiarAlPortapapeles(text, () => {
+        const origHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="ph-bold ph-check"></i> ¡Copiado!';
+        btn.style.background = '#10b981';
+        mostrarToastNotificacion('¡Cita académica copiada al portapapeles!');
+        setTimeout(() => { 
+            btn.innerHTML = origHtml; 
+            btn.style.background = '';
+        }, 2000);
     });
 }
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        cerrarModalCitas();
+    }
+});
 
 function setArtViewMode(mode) {
     const gridEl = document.querySelector('.art-masonry-grid');
@@ -491,13 +629,15 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <script src="../modules/Articulos/assets/js/hero_typography.js"></script>
 
-<div id="modalCitasContainer" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 34, 68, 0.7); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center;">
-    <div style="background: white; border-radius: 8px; width: 90%; max-width: 540px; padding: 1.25rem; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 0.5rem; margin-bottom: 1rem;">
-            <h3 style="margin: 0;"><i class="ph ph-quotes"></i> Cita Académica</h3>
-            <button type="button" onclick="cerrarModalCitas()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">&times;</button>
+<div id="modalCitasContainer" onclick="if (event.target === this) cerrarModalCitas();" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(6px); z-index: 99999; align-items: center; justify-content: center; padding: 1rem; box-sizing: border-box;">
+    <div style="background: var(--color-principal, #ffffff); color: var(--texto-titulos, #1e293b); border-radius: 14px; width: 100%; max-width: 560px; padding: 1.5rem; box-shadow: 0 20px 45px rgba(0,0,0,0.3); border: 1px solid rgba(80, 89, 132, 0.2); animation: artModalFadeIn 0.2s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 0.85rem; margin-bottom: 1.25rem;">
+            <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--color-secundario, #505984); display: flex; align-items: center; gap: 0.5rem;">
+                <i class="ph-bold ph-quotes" style="font-size: 1.3rem;"></i> Cita Académica
+            </h3>
+            <button type="button" onclick="cerrarModalCitas()" aria-label="Cerrar modal" style="background: rgba(0,0,0,0.05); border: none; width: 32px; height: 32px; border-radius: 8px; font-size: 1.2rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: var(--texto-silenciado, #64748b); transition: all 0.2s;">&times;</button>
         </div>
-        <div id="listaCitasDinamicas" style="max-height: 380px; overflow-y: auto;"></div>
+        <div id="listaCitasDinamicas" style="max-height: 60vh; overflow-y: auto; padding-right: 4px;"></div>
     </div>
 </div>
 

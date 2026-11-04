@@ -17,11 +17,11 @@ $esError = $es_error ?? false;
     <div class="splash-content <?= $esError ? 'error-mode' : 'success-mode' ?>">
         
         <?php if (!$esError): ?>
-            <?php $primerNombre = explode(' ', trim($nombre_usuario))[0]; ?>
+            <?php $primerNombre = explode(' ', trim((string)($nombre_usuario ?? '')))[0]; ?>
             <div class="splash-loader"></div>
             <h1 class="splash-title">¡Hola, <?= htmlspecialchars($primerNombre) ?>!</h1>
             <p class="splash-subtitle">Preparando tu entorno de trabajo en el Ecosistema UPTTMBI...</p>
-            <div class="splash-role-badge"><?= htmlspecialchars($rol_nombre) ?></div>
+            <div class="splash-role-badge"><?= htmlspecialchars((string)($rol_nombre ?? '')) ?></div>
             
             <?php else: ?>
             <div class="splash-icon-error">

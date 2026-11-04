@@ -1,4 +1,4 @@
-﻿@import url("https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css");
+@import url("https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css");
 @import url("https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/bold/style.css");
 @import url("https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css");
 
@@ -14,8 +14,8 @@
     --li-violet:      var(--color-secundario);  /* #505984 */
     --li-cyan:        var(--color-terciario);   /* #7090CB */
 
-    /* Colores de estado (no existen en el core, se mantienen) */
-    --li-amber:       #d97706;
+    /* Colores de estado (normalizados hacia institucional salvo semáforos) */
+    --li-amber:       #505984;
     --li-emerald:     #059669;
     --li-rose:        #e11d48;
 
@@ -1352,9 +1352,9 @@
 }
 
 .ag-btn-edit {
-    color: #d97706;
-    background: rgba(245, 158, 11, 0.1);
-    border: 1px solid rgba(245, 158, 11, 0.2);
+    color: var(--color-secundario, #505984);
+    background: rgba(80, 89, 132, 0.1);
+    border: 1px solid rgba(80, 89, 132, 0.25);
     padding: 8px 16px;
     border-radius: 8px;
     cursor: pointer;
@@ -1365,7 +1365,51 @@
     align-items: center;
     gap: 6px;
 }
-.ag-btn-edit:hover { background: #d97706; color: #fff; }
+.ag-btn-edit:hover { 
+    background: var(--color-secundario, #505984); 
+    color: #fff; 
+    border-color: var(--color-secundario, #505984); 
+}
+
+.ag-btn-hide {
+    color: #ffffff;
+    background: var(--color-secundario, #505984);
+    border: 1px solid var(--color-secundario, #505984);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.85rem;
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.ag-btn-hide:hover {
+    background: #3C456A;
+    border-color: #3C456A;
+    color: #ffffff;
+}
+
+.ag-btn-show {
+    color: #ffffff;
+    background: #10b981;
+    border: 1px solid #10b981;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.85rem;
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.ag-btn-show:hover {
+    background: #059669;
+    border-color: #059669;
+    color: #ffffff;
+}
 
 .ag-btn-delete {
     color: #ef4444;
@@ -1477,10 +1521,10 @@
   --color-borde-suave: #f1f5f9;
   --color-exito: #0d9488;
   --color-exito-fondo: #f0fdfa;
-  --color-alerta: #d97706;
-  --color-alerta-fondo: #fffbeb;
-  --color-info: #0284c7;
-  --color-info-fondo: #f0f9ff;
+  --color-alerta: #505984;
+  --color-alerta-fondo: rgba(80, 89, 132, 0.08);
+  --color-info: #7090cb;
+  --color-info-fondo: rgba(112, 144, 203, 0.08);
   --sombra-sm: 0 1px 2px 0 rgba(18, 26, 62, 0.04);
   --sombra-md: 0 4px 12px -2px rgba(18, 26, 62, 0.06), 0 2px 6px -1px rgba(18, 26, 62, 0.03);
   --sombra-lg: 0 12px 28px -4px rgba(18, 26, 62, 0.08), 0 4px 12px -2px rgba(18, 26, 62, 0.04);
@@ -3435,4 +3479,24 @@
 @media (max-width: 1024px) { .cosmos-main-layout, .cosmos-detail-layout { grid-template-columns: 1fr; } }
 @media (max-width: 700px) { .cosmos-hero, .cosmos-detail-hero { padding: 2rem 1.25rem 1.75rem; } .cosmos-kpi-row { flex-wrap: wrap; } .cosmos-kpi-chip { flex: 0 0 48%; } .cosmos-kpi-sep:nth-child(2n) { display: none; } }
 @media (max-width: 480px) { .cosmos-kpi-chip { flex: 0 0 100%; } .cosmos-kpi-sep { display: none; } }
+
+/* Avatar de profesores afiliados en detalle-gestion-linea */
+.ag-prof-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid #cbd5e1;
+}
+
+.ag-prof-avatar-icon {
+    font-size: 2.5rem;
+    color: #505984;
+    flex-shrink: 0;
+}
+
+.ag-prof-avatar-hidden {
+    display: none !important;
+}
 

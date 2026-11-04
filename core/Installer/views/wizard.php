@@ -438,7 +438,7 @@
             </div>
 
             <!-- ==========================================
-                 PASO 2: CONEXIÓN & POSTGRESQL
+                 PASO 2: CONEXIÓN & MARIADB
                  ========================================== -->
             <div class="step-pane" id="pane-2">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
@@ -447,12 +447,12 @@
                         <input type="text" id="db_host" class="ag-input" value="localhost" placeholder="localhost o 127.0.0.1">
                     </div>
                     <div>
-                        <label class="ag-label">Puerto PostgreSQL</label>
-                        <input type="number" id="db_port" class="ag-input" value="5432" placeholder="5432">
+                        <label class="ag-label">Puerto MariaDB / MySQL</label>
+                        <input type="number" id="db_port" class="ag-input" value="3306" placeholder="3306">
                     </div>
                     <div>
                         <label class="ag-label">Usuario BD</label>
-                        <input type="text" id="db_user" class="ag-input" value="postgres" placeholder="postgres">
+                        <input type="text" id="db_user" class="ag-input" value="root" placeholder="usuario_mariadb">
                     </div>
                     <div>
                         <label class="ag-label">Contraseña BD</label>
@@ -543,7 +543,7 @@
                             </label>
                         </div>
                         <p style="margin: 0; font-size: 0.77rem; color: var(--texto-silenciado, #64748b); line-height: 1.4;">
-                            Gestiona respaldos automáticos diarios de PostgreSQL a medianoche (.sql.gz), purgado de archivos temporales a las 3:00 AM y rotación de logs de auditoría.
+                            Gestiona respaldos automáticos diarios de MariaDB a medianoche (.sql.gz), purgado de archivos temporales a las 3:00 AM y rotación de logs de auditoría.
                         </p>
                     </div>
 
@@ -695,7 +695,7 @@
                     </div>
                     <div id="telStep1" class="telemetry-item pending">
                         <i class="ph-bold ph-circle" id="telIcon1"></i>
-                        <span>1. Conexión y verificación de PostgreSQL</span>
+                        <span>1. Conexión y verificación de MariaDB</span>
                     </div>
                     <div id="telStep2" class="telemetry-item pending">
                         <i class="ph-bold ph-circle" id="telIcon2"></i>
@@ -742,7 +742,7 @@
                     <div style="background: rgba(248, 250, 252, 0.9); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 10px; max-width: 480px; margin: 0 auto 1.2rem auto; padding: 0.9rem 1.1rem; text-align: left; font-size: 0.8rem;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
                             <span style="color: var(--texto-silenciado);">Base de Datos:</span>
-                            <strong id="resSummaryDb">PostgreSQL</strong>
+                            <strong id="resSummaryDb">MariaDB</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
                             <span style="color: var(--texto-silenciado);">SuperAdmin:</span>
@@ -803,7 +803,7 @@ let bdVerificada = false;
 
 const titulosPasos = [
     'Comprobación del Entorno',
-    'Base de Datos PostgreSQL',
+    'Base de Datos MariaDB',
     'Parámetros del Sistema y Servicios',
     'Registro del SuperAdmin',
     'Despliegue Finalizado'

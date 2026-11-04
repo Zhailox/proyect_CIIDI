@@ -109,12 +109,12 @@ async function buscarPropuesta(tipo) {
         contenedor.style.display = 'block';
         lista.innerHTML = '';
 
-        if (!data.success) {
-            lista.innerHTML = `<div style="padding: 1rem; background: #fee2e2; color: #991b1b; border-radius: 6px;"><i class="ph-bold ph-warning"></i> ${data.message}</div>`;
+        if (!data.exito) {
+            lista.innerHTML = `<div style="padding: 1rem; background: #fee2e2; color: #991b1b; border-radius: 6px;"><i class="ph-bold ph-warning"></i> ${data.error}</div>`;
             return;
         }
 
-        data.data.forEach(prop => {
+        data.datos.forEach(prop => {
             // Lógica del Stepper
             let s1 = 'active', s2 = '', s3 = '', s4 = '';
             let s2_text = 'Aprobación Comité', s2_icon = 'ph-users-three';
@@ -138,7 +138,7 @@ async function buscarPropuesta(tipo) {
             }
 
             // Etiqueta Superior
-            let badgeColor = prop.estado === 'aceptada' ? '#10b981' : (prop.estado === 'rechazada' ? '#ef4444' : '#f59e0b');
+            let badgeColor = prop.estado === 'aceptada' ? '#10b981' : (prop.estado === 'rechazada' ? '#ef4444' : '#505984');
             let txtEstadoGlobal = prop.estado === 'pendiente' ? 'EN REVISIÓN' : (prop.estado === 'rechazada' ? 'RECHAZADA' : 'OFERTA ACTIVA');
             if (prop.estado_oferta === 'En Desarrollo') txtEstadoGlobal = 'EN DESARROLLO';
             if (prop.estado_oferta === 'Finalizada') txtEstadoGlobal = 'FINALIZADO';
@@ -153,6 +153,25 @@ async function buscarPropuesta(tipo) {
                         </p>
                     </div>
                 `;
+            }
+
+            let extrasHtml = '';
+            if (prop.campos_extra) {
+                try {
+                    let extras = typeof prop.campos_extra === 'string' ? JSON.parse(prop.campos_extra) : prop.campos_extra;
+                    if (Array.isArray(extras) && extras.length > 0) {
+                        extrasHtml = '<div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed #cbd5e1; font-size: 0.9rem;"><strong>Información Adicional:</strong><ul style="margin: 0; padding-left: 1.2rem; color: #475569;">';
+                        extras.forEach(e => {
+                            let valor = e.valor;
+                            if (e.tipo === 'fecha') {
+                                const [y, m, d] = valor.split('-');
+                                if (y && m && d) valor = `${d}/${m}/${y}`;
+                            }
+                            extrasHtml += `<li><b>${e.etiqueta}:</b> ${valor}</li>`;
+                        });
+                        extrasHtml += '</ul></div>';
+                    }
+                } catch (e) {}
             }
 
             lista.innerHTML += `
@@ -170,6 +189,7 @@ async function buscarPropuesta(tipo) {
                         </div>
                     </div>
                     
+                    ${extrasHtml}
                     ${alertaRechazo}
 
                     <!-- STEPPER TIMELINE -->
@@ -198,4 +218,16 @@ async function buscarPropuesta(tipo) {
         alert("Ocurrió un problema de conexión local. Verifique que la API responda JSON.");
     }
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    const params = new URLSearchParams(window.location.search);
+    const codigoUrl = (params.get('codigo') || '').trim();
+    if (codigoUrl !== '') {
+        const inputCodigo = document.getElementById('input_codigo');
+        if (inputCodigo) {
+            inputCodigo.value = codigoUrl.toUpperCase();
+            buscarPropuesta('codigo');
+        }
+    }
+});
 </script>

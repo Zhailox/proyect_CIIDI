@@ -2,7 +2,8 @@
 require_once __DIR__ . '/../core/Database/Connection.php';
 $pdo = Connection::getInstance();
 function getColumns($pdo, $table) {
-    $stmt = $pdo->query("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '$table'");
+    $stmt = $pdo->prepare("SELECT column_name AS column_name, data_type AS data_type FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ?");
+    $stmt->execute([$table]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 $schema = [

@@ -1,7 +1,7 @@
 <div class="inv-wrapper">
-    <div style="background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); border-radius: var(--inv-radius-xl); padding: 3rem 2rem; color: white; margin-bottom: 2rem; box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);">
+    <div style="background: linear-gradient(135deg, rgba(80,89,132,0.97) 0%, rgba(112,144,203,0.92) 100%); border-radius: var(--inv-radius-xl); padding: 3rem 2rem; color: white; margin-bottom: 2rem; box-shadow: 0 15px 35px rgba(80,89,132,0.22);">
         <h1 style="font-size:2.2rem; font-weight:800; margin-bottom:0.5rem; display:flex; align-items:center; gap:0.5rem;"><i class="ph-fill ph-megaphone"></i> Anuncios y Noticias I+D</h1>
-        <p style="font-size:1.1rem; color:#EDE9FE;">Mantente al día con las últimas convocatorias, eventos y novedades de nuestro departamento de investigación.</p>
+        <p style="font-size:1.1rem; color:rgba(255,255,255,0.9);">Mantente al día con las últimas convocatorias, eventos y novedades de nuestro departamento de investigación.</p>
     </div>
     
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">

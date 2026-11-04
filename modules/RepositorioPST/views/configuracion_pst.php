@@ -9,10 +9,7 @@
                 <h1>Gestión de Parámetros del Repositorio</h1>
                 <p>Configura las reglas de citación, paginación, metadatos visibles y comportamiento general del módulo PST.</p>
             </div>
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <a href="?ruta=gestion-red-onnx" class="btn-cancel-sm" style="background: var(--color-secundario); color: #ffffff; border-color: var(--color-secundario);">
-                    <i class="ph ph-cpu"></i> Panel Modelo ONNX IA
-                </a>
+            <div class="action-links">
                 <a href="?ruta=repositorio" class="btn-cancel-sm">
                     <i class="ph ph-arrow-left"></i> Volver al Catálogo
                 </a>
@@ -198,7 +195,7 @@
 
                     <div class="config-grid-2">
                         <div class="config-field">
-                            <label>Registros por página en Buscador Unificado:</label>
+                            <label>Registros por página en el Buscador de Documentos:</label>
                             <input type="number" name="limite_buscador" value="<?= (int)($config['paginacion']['limite_buscador'] ?? 5) ?>" min="1" max="100" class="config-input">
                             <p class="field-hint">Cantidad de resultados a retornar en las búsquedas.</p>
                         </div>

@@ -46,11 +46,25 @@ class CursoModel {
                 'mime_permitidos'       => ['image/jpeg','image/png','image/gif','image/webp'],
                 'convertir_a_webp'      => true,
                 'lazy_load'             => true,
-                'carpeta_uploads'       => 'storage/uploads/cursos/',
+                'carpeta_uploads'       => 'public/uploads/cursos/',
                 'placeholder_url'       => 'https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=600',
             ],
             'moodle' => [
                 'url_fallback' => 'https://www.youtube.com',
+            ],
+            'formulario_google' => [
+                'url_default' => 'https://docs.google.com/forms/d/e/1FAIpQLSean-NUF1PEU6ci8MiNIQp13OewWCofp7O7V3MV8k_CA1CHNQ/viewform',
+                'modo'        => 'embebido',
+                'habilitado'  => true,
+                'titulo'      => 'Formulario Oficial de Inscripción CIIDI',
+            ],
+            'api_externa' => [
+                'habilitada'               => true,
+                'auto_push'                => true,
+                'requiere_api_key_lectura' => false,
+                'api_key'                  => 'ciidi_sync_secret_2026',
+                'webhook_url'              => 'http://localhost/proyect_CIIDI/3_PORTAL_EXTERNO_MYSQL/api_sync.php',
+                'ultimo_sync'              => null,
             ],
             'seguridad' => [
                 'csrf_activo' => true,
@@ -95,16 +109,32 @@ class CursoModel {
             $parametros[]  = $filtros['nivel'];
         }
 
+        $selectScore = "0 AS score";
+        $paramsScore = [];
+        $orderBy     = "c.fecha_creacion DESC";
+
+        if (!empty($filtros['id_linea'])) {
+            $condiciones[] = "EXISTS (SELECT 1 FROM cursos_lineas cl WHERE cl.id_curso = c.id AND cl.id_linea = ?)";
+            $parametros[]  = (int)$filtros['id_linea'];
+        }
+
         if (!empty($filtros['busqueda'])) {
-            $condiciones[] = "(c.titulo ILIKE ? OR c.descripcion ILIKE ?)";
-            $term          = '%' . $filtros['busqueda'] . '%';
+            $qRaw          = trim((string)$filtros['busqueda']);
+            $condiciones[] = "(MATCH(c.titulo, c.descripcion) AGAINST(? IN NATURAL LANGUAGE MODE) OR c.titulo LIKE ? OR c.descripcion LIKE ? OR u.nombre_completo LIKE ?)";
+            $term          = '%' . $qRaw . '%';
+            $parametros[]  = $qRaw;
             $parametros[]  = $term;
             $parametros[]  = $term;
+            $parametros[]  = $term;
+
+            $selectScore   = "MATCH(c.titulo, c.descripcion) AGAINST(? IN NATURAL LANGUAGE MODE) AS score";
+            $paramsScore[] = $qRaw;
+            $orderBy       = "score DESC, c.fecha_creacion DESC";
         }
 
         $where = !empty($condiciones) ? 'WHERE ' . implode(' AND ', $condiciones) : '';
 
-        $sqlTotal = "SELECT COUNT(*) AS total FROM public.cursos c {$where}";
+        $sqlTotal = "SELECT COUNT(*) AS total FROM cursos c LEFT JOIN usuarios u ON c.id_docente = u.id {$where}";
         $stmtTotal = $this->db->prepare($sqlTotal);
         $stmtTotal->execute($parametros);
         $total = (int)($stmtTotal->fetch()['total'] ?? 0);
@@ -113,17 +143,58 @@ class CursoModel {
         $sql = "
             SELECT
                 c.*,
-                u.nombre_completo AS nombre_docente
-            FROM public.cursos c
-            LEFT JOIN public.usuarios u ON c.id_docente = u.id
+                u.nombre_completo AS nombre_docente,
+                {$selectScore}
+            FROM cursos c
+            LEFT JOIN usuarios u ON c.id_docente = u.id
             {$where}
-            ORDER BY c.fecha_creacion DESC
+            ORDER BY {$orderBy}
             LIMIT ? OFFSET ?
         ";
-        $paramsData   = array_merge($parametros, [$porPagina, $offset]);
+        $paramsData   = array_merge($paramsScore, $parametros, [$porPagina, $offset]);
         $stmt = $this->db->prepare($sql);
         $stmt->execute($paramsData);
-        $cursos = $stmt->fetchAll();
+        $cursos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Hidratar con líneas y dimensiones para optimizar render sin N+1
+        if (!empty($cursos)) {
+            $ids = array_column($cursos, 'id');
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+
+            // Líneas asociadas
+            $stmtL = $this->db->prepare("
+                SELECT cl.id_curso, l.id, l.nombre
+                FROM cursos_lineas cl
+                INNER JOIN lineas_investigacion l ON cl.id_linea = l.id
+                WHERE cl.id_curso IN ($placeholders)
+                ORDER BY l.nombre ASC
+            ");
+            $stmtL->execute($ids);
+            $lineasPorCurso = [];
+            while ($row = $stmtL->fetch(PDO::FETCH_ASSOC)) {
+                $lineasPorCurso[$row['id_curso']][] = $row;
+            }
+
+            // Dimensiones asociadas
+            $stmtD = $this->db->prepare("
+                SELECT cd.id_curso, d.id, d.id_linea, d.nombre
+                FROM cursos_dimensiones cd
+                INNER JOIN dimensiones_operativas d ON cd.id_dimension = d.id
+                WHERE cd.id_curso IN ($placeholders)
+                ORDER BY d.nombre ASC
+            ");
+            $stmtD->execute($ids);
+            $dimsPorCurso = [];
+            while ($row = $stmtD->fetch(PDO::FETCH_ASSOC)) {
+                $dimsPorCurso[$row['id_curso']][] = $row;
+            }
+
+            foreach ($cursos as &$c) {
+                $c['lineas']      = $lineasPorCurso[$c['id']] ?? [];
+                $c['dimensiones'] = $dimsPorCurso[$c['id']]   ?? [];
+            }
+            unset($c);
+        }
 
         return [
             'cursos' => $cursos,
@@ -134,48 +205,74 @@ class CursoModel {
     public function obtenerPorId(int $id): ?array {
         $sql = "
             SELECT c.*, u.nombre_completo AS nombre_docente
-            FROM public.cursos c
-            LEFT JOIN public.usuarios u ON c.id_docente = u.id
+            FROM cursos c
+            LEFT JOIN usuarios u ON c.id_docente = u.id
             WHERE c.id = ?
         ";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$id]);
-        $resultado = $stmt->fetch();
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($resultado) {
+            $resultado['lineas']          = $this->obtenerLineasDeCurso((int)$resultado['id']);
+            $resultado['lineas_ids']      = array_column($resultado['lineas'], 'id');
+            $resultado['dimensiones']     = $this->obtenerDimensionesDeCurso((int)$resultado['id']);
+            $resultado['dimensiones_ids'] = array_column($resultado['dimensiones'], 'id');
+        }
         return $resultado ?: null;
     }
 
     public function obtenerPorSlug(string $slug): ?array {
         $sql = "
             SELECT c.*, u.nombre_completo AS nombre_docente
-            FROM public.cursos c
-            LEFT JOIN public.usuarios u ON c.id_docente = u.id
-            WHERE c.slug = ? OR c.id::varchar = ?
+            FROM cursos c
+            LEFT JOIN usuarios u ON c.id_docente = u.id
+            WHERE c.slug = ? OR CAST(c.id AS CHAR) = ?
         ";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$slug, $slug]);
-        $resultado = $stmt->fetch();
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($resultado) {
+            $resultado['lineas']          = $this->obtenerLineasDeCurso((int)$resultado['id']);
+            $resultado['lineas_ids']      = array_column($resultado['lineas'], 'id');
+            $resultado['dimensiones']     = $this->obtenerDimensionesDeCurso((int)$resultado['id']);
+            $resultado['dimensiones_ids'] = array_column($resultado['dimensiones'], 'id');
+        }
         return $resultado ?: null;
     }
 
-    private function crearSlug(string $titulo): string {
+    private function crearSlug(string $titulo, ?int $excluirId = null): string {
         $slug = mb_strtolower(trim($titulo));
         $slug = preg_replace('/[^a-z0-9-]+/', '-', $slug);
         $slug = trim($slug, '-');
         if (empty($slug)) $slug = 'curso-' . time();
+
+        $baseSlug = $slug;
+        $count = 1;
+        while (true) {
+            $sql = "SELECT id FROM cursos WHERE slug = ?" . ($excluirId ? " AND id != ?" : "");
+            $stmt = $this->db->prepare($sql);
+            $params = $excluirId ? [$slug, $excluirId] : [$slug];
+            $stmt->execute($params);
+            if (!$stmt->fetch()) {
+                break;
+            }
+            $count++;
+            $slug = $baseSlug . '-' . $count;
+        }
+
         return $slug;
     }
 
     public function crearCurso(array $datos) {
         $slug = $this->crearSlug($datos['titulo'] ?? '');
         $sql = "
-            INSERT INTO public.cursos
-                (id_docente, titulo, descripcion, imagen_portada, estado, nota_minima_aprobacion, url_moodle, modalidad, nivel, duracion, cupo_maximo, fecha_inicio, fecha_fin, url_video_preview, slug, estado_inscripcion)
+            INSERT INTO cursos
+                (id_docente, titulo, descripcion, imagen_portada, estado, nota_minima_aprobacion, url_moodle, modalidad, nivel, duracion, cupo_maximo, fecha_inicio, fecha_fin, url_video_preview, slug, estado_inscripcion, url_formulario_google)
             VALUES
-                (?, ?, ?, ?, ?::public.estado_curso_enum, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            RETURNING id
+                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([
+        $ok = $stmt->execute([
             (int)   $datos['id_docente'],
                     trim($datos['titulo']),
                     trim($datos['descripcion'] ?? ''),
@@ -191,22 +288,28 @@ class CursoModel {
                     (empty($datos['fecha_fin']) ? null : $datos['fecha_fin']),
                     $datos['url_video_preview'] ?? '',
                     $slug,
-                    $datos['estado_inscripcion'] ?? 'Abierta'
+                    $datos['estado_inscripcion'] ?? 'Abierta',
+                    trim($datos['url_formulario_google'] ?? '') ?: null
         ]);
-        $resultado = $stmt->fetch();
-        return $resultado ? (int)$resultado['id'] : false;
+        $nuevo_id = $ok ? ((int)$this->db->lastInsertId() ?: false) : false;
+
+        if ($nuevo_id) {
+            $this->guardarLineasYDimensiones($nuevo_id, $datos['id_linea'] ?? [], $datos['id_dimension'] ?? []);
+        }
+
+        return $nuevo_id;
     }
 
     public function editarCurso(int $id, array $datos): bool {
-        $slug = $this->crearSlug($datos['titulo'] ?? '');
+        $slug = $this->crearSlug($datos['titulo'] ?? '', $id);
         
         $sql = "
-            UPDATE public.cursos SET
+            UPDATE cursos SET
                 id_docente             = ?,
                 titulo                 = ?,
                 descripcion            = ?,
                 imagen_portada         = COALESCE(NULLIF(?,''), imagen_portada),
-                estado                 = ?::public.estado_curso_enum,
+                estado                 = ?,
                 nota_minima_aprobacion = ?,
                 url_moodle             = ?,
                 modalidad              = ?,
@@ -218,17 +321,18 @@ class CursoModel {
                 url_video_preview      = ?,
                 slug                   = ?,
                 estado_inscripcion     = ?,
+                url_formulario_google  = ?,
                 fecha_actualizacion    = CURRENT_TIMESTAMP
             WHERE id = ?
         ";
         
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
+        $ok = $stmt->execute([
             (int)   $datos['id_docente'],
                     trim($datos['titulo']),
                     trim($datos['descripcion'] ?? ''),
                     trim($datos['imagen_portada'] ?? '') ?: '',
-                    $datos['estado'] ?? 'borrador',
+            $datos['estado'] ?? 'borrador',
             (float) ($datos['nota_minima_aprobacion'] ?? 70.00),
                     $datos['url_moodle'] ?? '',
                     $datos['modalidad'] ?? 'Virtual',
@@ -240,12 +344,19 @@ class CursoModel {
                     $datos['url_video_preview'] ?? '',
                     $slug,
                     $datos['estado_inscripcion'] ?? 'Abierta',
+                    trim($datos['url_formulario_google'] ?? '') ?: null,
             $id
         ]);
+
+        if ($ok) {
+            $this->guardarLineasYDimensiones($id, $datos['id_linea'] ?? [], $datos['id_dimension'] ?? []);
+        }
+
+        return $ok;
     }
 
     public function eliminarCurso(int $id): bool {
-        $sql  = "DELETE FROM public.cursos WHERE id = ?";
+        $sql  = "DELETE FROM cursos WHERE id = ?";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([$id]);
     }
@@ -253,11 +364,11 @@ class CursoModel {
     public function obtenerEstadisticas(): array {
         $sql = "
             SELECT
-                COUNT(*) FILTER (WHERE estado = 'publicado') AS publicados,
-                COUNT(*) FILTER (WHERE estado = 'borrador')  AS borradores,
-                COUNT(*) FILTER (WHERE estado = 'archivado') AS archivados,
-                COUNT(*)                                      AS total
-            FROM public.cursos
+                COALESCE(SUM(CASE WHEN estado = 'publicado' THEN 1 ELSE 0 END), 0) AS publicados,
+                COALESCE(SUM(CASE WHEN estado = 'borrador'  THEN 1 ELSE 0 END), 0) AS borradores,
+                COALESCE(SUM(CASE WHEN estado = 'archivado' THEN 1 ELSE 0 END), 0) AS archivados,
+                COUNT(*)                                                            AS total
+            FROM cursos
         ";
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
@@ -267,9 +378,98 @@ class CursoModel {
     }
 
     public function listarDocentes(): array {
-        $sql  = "SELECT id, nombre_completo FROM public.usuarios WHERE activo = true ORDER BY nombre_completo ASC";
+        $sql = "
+            SELECT u.id, u.nombre_completo, r.nombre AS rol_nombre
+            FROM usuarios u
+            LEFT JOIN roles r ON u.id_rol = r.id
+            WHERE u.activo = 1 AND (u.id_rol IN (1, 2, 4) OR u.id IN (SELECT DISTINCT id_docente FROM cursos WHERE id_docente IS NOT NULL))
+            ORDER BY CASE WHEN u.id_rol = 4 THEN 0 WHEN u.id_rol = 2 THEN 1 ELSE 2 END, u.nombre_completo ASC
+        ";
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // =========================================================
+    //  LÍNEAS DE INVESTIGACIÓN Y DIMENSIONES
+    // =========================================================
+
+    public function obtenerLineas(): array {
+        $sql = "SELECT id, nombre, descripcion FROM lineas_investigacion WHERE activo = 1 ORDER BY nombre ASC";
+        return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function obtenerTodasDimensiones(): array {
+        $sql = "SELECT id, id_linea, nombre FROM dimensiones_operativas WHERE activo = 1 ORDER BY nombre ASC";
+        return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function obtenerLineasDeCurso(int $id_curso): array {
+        $sql = "
+            SELECT l.id, l.nombre, l.descripcion
+            FROM cursos_lineas cl
+            INNER JOIN lineas_investigacion l ON cl.id_linea = l.id
+            WHERE cl.id_curso = ?
+            ORDER BY l.nombre ASC
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id_curso]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function obtenerDimensionesDeCurso(int $id_curso): array {
+        $sql = "
+            SELECT d.id, d.id_linea, d.nombre, d.descripcion
+            FROM cursos_dimensiones cd
+            INNER JOIN dimensiones_operativas d ON cd.id_dimension = d.id
+            WHERE cd.id_curso = ?
+            ORDER BY d.nombre ASC
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id_curso]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function guardarLineasYDimensiones(int $id_curso, array $lineas_ids, array $dimensiones_ids): void {
+        // Líneas
+        $stmtDelL = $this->db->prepare("DELETE FROM cursos_lineas WHERE id_curso = ?");
+        $stmtDelL->execute([$id_curso]);
+
+        if (!empty($lineas_ids)) {
+            $stmtInsL = $this->db->prepare("INSERT IGNORE INTO cursos_lineas (id_curso, id_linea) VALUES (?, ?)");
+            foreach ($lineas_ids as $lid) {
+                $lid = (int)$lid;
+                if ($lid > 0) $stmtInsL->execute([$id_curso, $lid]);
+            }
+        }
+
+        // Dimensiones
+        $stmtDelD = $this->db->prepare("DELETE FROM cursos_dimensiones WHERE id_curso = ?");
+        $stmtDelD->execute([$id_curso]);
+
+        if (!empty($dimensiones_ids)) {
+            $stmtInsD = $this->db->prepare("INSERT IGNORE INTO cursos_dimensiones (id_curso, id_dimension) VALUES (?, ?)");
+            foreach ($dimensiones_ids as $did) {
+                $did = (int)$did;
+                if ($did > 0) $stmtInsD->execute([$id_curso, $did]);
+            }
+        }
+    }
+
+    public function registrarPreinscripcion(array $datos): bool {
+        $sql = "
+            INSERT INTO cursos_preinscripciones 
+                (id_curso, nombre_completo, correo_electronico, telefono, horario_deseado, mensaje)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            (int)$datos['id_curso'],
+            trim($datos['nombre_completo']),
+            trim($datos['correo_electronico']),
+            trim($datos['telefono'] ?? ''),
+            trim($datos['horario_deseado']),
+            trim($datos['mensaje'] ?? '')
+        ]);
     }
 }

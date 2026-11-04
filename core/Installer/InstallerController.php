@@ -29,8 +29,8 @@ class InstallerController {
         }
 
         $host   = trim($_POST['host'] ?? 'localhost');
-        $port   = trim($_POST['port'] ?? '5432');
-        $user   = trim($_POST['user'] ?? 'postgres');
+        $port   = trim($_POST['port'] ?? '3306');
+        $user   = trim($_POST['user'] ?? 'root');
         $pass   = $_POST['pass'] ?? '';
         $dbName = trim($_POST['db'] ?? 'ciidi');
 
@@ -49,8 +49,8 @@ class InstallerController {
         }
 
         $host   = trim($_POST['host'] ?? 'localhost');
-        $port   = trim($_POST['port'] ?? '5432');
-        $user   = trim($_POST['user'] ?? 'postgres');
+        $port   = trim($_POST['port'] ?? '3306');
+        $user   = trim($_POST['user'] ?? 'root');
         $pass   = $_POST['pass'] ?? '';
         $dbName = trim($_POST['db'] ?? 'ciidi');
 
@@ -69,8 +69,8 @@ class InstallerController {
         }
 
         $host   = trim($_POST['host'] ?? 'localhost');
-        $port   = trim($_POST['port'] ?? '5432');
-        $user   = trim($_POST['user'] ?? 'postgres');
+        $port   = trim($_POST['port'] ?? '3306');
+        $user   = trim($_POST['user'] ?? 'root');
         $pass   = $_POST['pass'] ?? '';
         $dbName = trim($_POST['db'] ?? 'ciidi');
 
@@ -116,8 +116,8 @@ class InstallerController {
 
         // Parámetros de Base de Datos
         $host       = trim($_POST['host'] ?? 'localhost');
-        $port       = trim($_POST['port'] ?? '5432');
-        $user       = trim($_POST['user'] ?? 'postgres');
+        $port       = trim($_POST['port'] ?? '3306');
+        $user       = trim($_POST['user'] ?? 'root');
         $pass       = $_POST['pass'] ?? '';
         $dbName     = trim($_POST['db'] ?? 'ciidi');
         $reinstalar = !empty($_POST['reinstalar']);
@@ -181,7 +181,7 @@ class InstallerController {
             exit;
         }
 
-        // 2. Probar conexión al servidor PostgreSQL
+        // 2. Probar conexión al servidor MariaDB
         $testConn = InstallerService::testDbConnection($host, $port, $user, $pass, $dbName);
         if (!$testConn['exito']) {
             echo json_encode(['exito' => false, 'mensaje' => 'Error de conexión: ' . $testConn['mensaje']]);

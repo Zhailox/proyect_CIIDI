@@ -40,6 +40,7 @@ class QueryBuilder {
      */
     public function tabla(string $nombre_tabla): self {
         $this->reset();
+        $nombre_tabla = preg_replace('/^public\./i', '', trim($nombre_tabla));
         $this->tabla = preg_replace('/[^a-zA-Z0-9_\.\s]/', '', $nombre_tabla);
         return $this;
     }
@@ -61,6 +62,12 @@ class QueryBuilder {
         if (!in_array($opSanitized, $operadoresValidos, true)) {
             $opSanitized = '=';
         }
+        if ($opSanitized === 'ILIKE') {
+            $opSanitized = 'LIKE';
+        }
+        if (is_bool($valor)) {
+            $valor = $valor ? 1 : 0;
+        }
         $colSanitized = preg_replace('/[^a-zA-Z0-9_\.]/', '', $columna);
         $this->condiciones[] = "$colSanitized $opSanitized ?";
         $this->parametros[] = $valor;
@@ -71,9 +78,10 @@ class QueryBuilder {
      * Añade una condición WHERE cruda con bindings.
      */
     public function whereRaw(string $sql, array $bindings = []): self {
+        $sql = preg_replace('/\bILIKE\b/i', 'LIKE', $sql);
         $this->condiciones[] = $sql;
         foreach ($bindings as $binding) {
-            $this->parametros[] = $binding;
+            $this->parametros[] = is_bool($binding) ? ($binding ? 1 : 0) : $binding;
         }
         return $this;
     }
@@ -107,9 +115,10 @@ class QueryBuilder {
 
     public function join(string $tabla_join, string $condicion, string $tipo = 'INNER'): self {
         $tipoSanitized = strtoupper($tipo);
-        if (!in_array($tipoSanitized, ['INNER', 'LEFT', 'RIGHT', 'FULL'], true)) {
+        if (!in_array($tipoSanitized, ['INNER', 'LEFT', 'RIGHT'], true)) {
             $tipoSanitized = 'INNER';
         }
+        $tabla_join = preg_replace('/\bpublic\./i', '', $tabla_join);
         $this->joins[] = "$tipoSanitized JOIN $tabla_join ON $condicion";
         return $this;
     }
@@ -182,14 +191,20 @@ class QueryBuilder {
         $columnas = implode(", ", $columnasLimpias);
         $placeholders = implode(", ", array_fill(0, count($datos), "?"));
         
-        $sql = "INSERT INTO {$this->tabla} ($columnas) VALUES ($placeholders) RETURNING id";
+        $sql = "INSERT INTO {$this->tabla} ($columnas) VALUES ($placeholders)";
         
         $stmt = $this->db->prepare($sql);
-        $valores = array_values($datos);
-        $stmt->execute($valores);
-        
-        $resultado = $stmt->fetch();
-        return $resultado ? $resultado['id'] : false;
+        $valores = array_map(
+            fn($v) => is_bool($v) ? ($v ? 1 : 0) : $v,
+            array_values($datos)
+        );
+        $ok = $stmt->execute($valores);
+        if (!$ok) {
+            return false;
+        }
+
+        $lastId = $this->db->lastInsertId();
+        return ($lastId !== false && $lastId !== '' && $lastId !== '0') ? (int)$lastId : true;
     }
 
     public function update(array $datos): bool {
@@ -205,7 +220,7 @@ class QueryBuilder {
         foreach ($datos as $columna => $valor) {
             $colSanitized = preg_replace('/[^a-zA-Z0-9_]/', '', (string)$columna);
             $set_clause[] = "$colSanitized = ?";
-            $valores_update[] = $valor;
+            $valores_update[] = is_bool($valor) ? ($valor ? 1 : 0) : $valor;
         }
 
         $sql = "UPDATE {$this->tabla} SET " . implode(", ", $set_clause);

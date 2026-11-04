@@ -5,18 +5,18 @@
         "descripcion": "Elimina archivos temporales en storage\/tmp\/, cachés expiradas y residuos de descargas.",
         "expresion_cron": "0 3 * * *",
         "estado": "activo",
-        "ultima_ejecucion": "2026-10-21 19:30:45",
-        "resultado_ultimo": "ÉXITO (13ms): Limpieza completada. Depurados 1 archivos temporales y cachés.",
+        "ultima_ejecucion": "2026-11-04 03:02:42",
+        "resultado_ultimo": "ÉXITO (1.9ms): Limpieza completada. Depurados 1 archivos temporales y cachés.",
         "script": "limpiarTemporales"
     },
     "backup_automatico_medianoche": {
         "id": "backup_automatico_medianoche",
-        "nombre": "Respaldo Automático de Medianoche (PostgreSQL Dump)",
-        "descripcion": "Genera un backup completo comprimido (.sql.gz) de la base de datos y purga respaldos antiguos.",
+        "nombre": "Respaldo Automático de Medianoche (MariaDB Dump)",
+        "descripcion": "Genera un backup completo comprimido (.sql.gz) de la base de datos MariaDB y purga respaldos antiguos.",
         "expresion_cron": "0 0 * * *",
         "estado": "activo",
-        "ultima_ejecucion": "2026-10-21 19:30:49",
-        "resultado_ultimo": "ÉXITO (3215.83ms): Respaldo generado con éxito: auto_cron_backup_2026-10-21_19-30-46.sql.gz",
+        "ultima_ejecucion": "2026-11-04 00:03:30",
+        "resultado_ultimo": "ÉXITO (803.11ms): Respaldo generado con éxito: auto_cron_backup_2026-11-04_00-03-29.sql.gz",
         "script": "ejecutarBackupAutomatico"
     },
     "purga_logs_viejos": {
@@ -28,33 +28,5 @@
         "ultima_ejecucion": "2026-09-19 20:53:35",
         "resultado_ultimo": "ÉXITO (28.69ms): Optimización de logs completada. 0 registros obsoletos purgados.",
         "script": "purgarLogs"
-    },
-    "tarea_1790301553_528": {
-        "id": "tarea_1790301553_528",
-        "nombre": "Generar Embeddings Semánticos",
-        "descripcion": "Procesa proyectos sin vector semántico vía modelo ONNX (máx. 2 por ciclo)",
-        "expresion_cron": "*\/5 * * * *",
-        "tipo_ejecucion": "script_archivo",
-        "script": "limpiarTemporales",
-        "comando_custom": "",
-        "archivo_script": "script_tarea_1790301553_528.php",
-        "timeout_segundos": 60,
-        "estado": "activo",
-        "ultima_ejecucion": "2026-10-21 19:30:49",
-        "resultado_ultimo": "ERROR (0.75ms): El archivo de script 'script_tarea_1790301553_528.php' no existe en storage\/scheduler\/scripts\/."
-    },
-    "tarea_1790660917_352": {
-        "id": "tarea_1790660917_352",
-        "nombre": "hola",
-        "descripcion": "",
-        "expresion_cron": "1 * * * *",
-        "tipo_ejecucion": "script_archivo",
-        "script": "limpiarTemporales",
-        "comando_custom": "",
-        "archivo_script": "script_tarea_1790660917_352.php",
-        "timeout_segundos": 60,
-        "estado": "activo",
-        "ultima_ejecucion": "2026-10-21 19:30:49",
-        "resultado_ultimo": "ERROR (0.12ms): El archivo de script 'script_tarea_1790660917_352.php' no existe en storage\/scheduler\/scripts\/."
     }
 }
