@@ -40,7 +40,7 @@
         "archivo_script": "script_tarea_1790301553_528.php",
         "timeout_segundos": 60,
         "estado": "activo",
-        "ultima_ejecucion": "2026-11-04 02:33:01",
-        "resultado_ultimo": "ÉXITO (358.05ms): Comando ejecutado con éxito (Código 0)."
+        "ultima_ejecucion": "2026-11-04 02:49:51",
+        "resultado_ultimo": "ÉXITO (222.6ms): Comando ejecutado con éxito (Código 0)."
     }
 }
