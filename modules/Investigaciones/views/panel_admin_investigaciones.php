@@ -168,10 +168,24 @@ $trayectoLabels = [
                         </div>
                     </td>
                     <td>
+                        <?php
+                            $invProfFotoRaw = trim((string)($inv['profesor_foto'] ?? ''));
+                            $invProfFotoUrl = '';
+                            if ($invProfFotoRaw !== '') {
+                                $invProfFotoUrl = (preg_match('#^https?://#i', $invProfFotoRaw) || str_starts_with($invProfFotoRaw, 'data:image/'))
+                                    ? $invProfFotoRaw
+                                    : ltrim(preg_replace('#^public/#i', '', str_replace('\\', '/', $invProfFotoRaw)), '/');
+                            }
+                        ?>
                         <form action="?ruta=cambiar-estado-investigacion" method="POST" style="display:flex; flex-direction:column; gap:0.35rem;">
                             <input type="hidden" name="id" value="<?= (int)$inv['id'] ?>">
                             <div style="display:flex; align-items:center; gap:0.4rem;">
-                                <i class="ph-fill ph-chalkboard-teacher" style="color:var(--inv-primary); font-size:1.1rem;"></i>
+                                <?php if ($invProfFotoUrl !== ''): ?>
+                                    <img src="<?= htmlspecialchars($invProfFotoUrl) ?>" alt="<?= htmlspecialchars($inv['profesor'] ?? '') ?>" style="width:24px; height:24px; border-radius:50%; object-fit:cover; flex-shrink:0; border:1px solid var(--inv-border);" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                                    <i class="ph-fill ph-chalkboard-teacher" style="display:none; color:var(--inv-primary); font-size:1.1rem;"></i>
+                                <?php else: ?>
+                                    <i class="ph-fill ph-chalkboard-teacher" style="color:var(--inv-primary); font-size:1.1rem;"></i>
+                                <?php endif; ?>
                                 <select name="id_profesor" onchange="this.form.submit()" title="Cambiar docente responsable de esta investigación"
                                         style="padding:0.38rem 0.65rem; border:1px solid var(--inv-border); border-radius:8px; font-size:0.84rem; font-weight:600; color:var(--inv-dark); background:#F8FAFC; cursor:pointer; max-width:210px; outline:none;">
                                     <?php foreach ($responsablesDisponibles as $resp): ?>
@@ -375,14 +389,47 @@ $trayectoLabels = [
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($postulaciones as $p): ?>
+                <?php foreach ($postulaciones as $p):
+                    $estFotoRaw = trim((string)($p['estudiante_foto'] ?? ''));
+                    $estFotoUrl = '';
+                    if ($estFotoRaw !== '') {
+                        $estFotoUrl = (preg_match('#^https?://#i', $estFotoRaw) || str_starts_with($estFotoRaw, 'data:image/'))
+                            ? $estFotoRaw
+                            : ltrim(preg_replace('#^public/#i', '', str_replace('\\', '/', $estFotoRaw)), '/');
+                    }
+                    $profFotoRaw = trim((string)($p['profesor_foto'] ?? ''));
+                    $profFotoUrl = '';
+                    if ($profFotoRaw !== '') {
+                        $profFotoUrl = (preg_match('#^https?://#i', $profFotoRaw) || str_starts_with($profFotoRaw, 'data:image/'))
+                            ? $profFotoRaw
+                            : ltrim(preg_replace('#^public/#i', '', str_replace('\\', '/', $profFotoRaw)), '/');
+                    }
+                ?>
                 <tr>
                     <td>
-                        <div style="font-weight: 700; color: var(--inv-dark); display:flex; align-items:center; gap:0.5rem;"><i class="ph-fill ph-user-circle" style="font-size:1.5rem; color:var(--inv-muted);"></i> <?= htmlspecialchars($p['estudiante']) ?></div>
+                        <div style="font-weight: 700; color: var(--inv-dark); display:flex; align-items:center; gap:0.65rem;">
+                            <div style="width:36px; height:36px; border-radius:50%; background:#505984; color:white; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; border:2px solid #e2e8f0;">
+                                <?php if ($estFotoUrl !== ''): ?>
+                                    <img src="<?= htmlspecialchars($estFotoUrl) ?>" alt="<?= htmlspecialchars($p['estudiante']) ?>" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                                    <i class="ph-bold ph-user" style="display:none; font-size:1rem; color:white;"></i>
+                                <?php else: ?>
+                                    <i class="ph-bold ph-user" style="font-size:1rem; color:white;"></i>
+                                <?php endif; ?>
+                            </div>
+                            <span><?= htmlspecialchars($p['estudiante']) ?></span>
+                        </div>
                     </td>
                     <td>
                         <strong style="color: var(--inv-dark); font-size: 0.95rem; display:block;"><?= htmlspecialchars($p['investigacion_titulo']) ?></strong>
-                        <div style="font-size: 0.85rem; color: var(--inv-muted); margin-top:0.2rem;"><i class="ph-fill ph-chalkboard-teacher"></i> Prof. <?= htmlspecialchars($p['profesor']) ?></div>
+                        <div style="font-size: 0.85rem; color: var(--inv-muted); margin-top:0.25rem; display:flex; align-items:center; gap:0.35rem;">
+                            <?php if ($profFotoUrl !== ''): ?>
+                                <img src="<?= htmlspecialchars($profFotoUrl) ?>" alt="<?= htmlspecialchars($p['profesor']) ?>" style="width:20px; height:20px; border-radius:50%; object-fit:cover; flex-shrink:0; border:1px solid #cbd5e1;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                                <i class="ph-fill ph-chalkboard-teacher" style="display:none;"></i>
+                            <?php else: ?>
+                                <i class="ph-fill ph-chalkboard-teacher"></i>
+                            <?php endif; ?>
+                            <span>Prof. <?= htmlspecialchars($p['profesor']) ?></span>
+                        </div>
                     </td>
                     <td>
                         <span style="background:#F1F5F9; padding:0.3rem 0.6rem; border-radius:6px; font-size:0.85rem; font-weight:600; color:var(--inv-muted);"><i class="ph-bold ph-calendar-blank"></i> <?= date('d/m/Y', strtotime($p['fecha_postulacion'])) ?></span>

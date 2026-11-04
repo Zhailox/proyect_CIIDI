@@ -3623,7 +3623,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.location.search.includes('msg=')) {
         const cleanUrl = new URL(window.location.href);
         cleanUrl.searchParams.delete('msg');
-        window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search);
+        const safePath = cleanUrl.pathname.replace(/\/{2,}/g, '/');
+        window.history.replaceState({}, document.title, safePath + cleanUrl.search);
     }
 });
 </script>
@@ -4193,7 +4194,8 @@ document.addEventListener('keydown', (e) => {
 function recargarListadoSinMensaje() {
     const cleanUrl = new URL(window.location.href);
     cleanUrl.searchParams.delete('msg');
-    window.location.href = cleanUrl.pathname + cleanUrl.search;
+    const safePath = cleanUrl.pathname.replace(/\/{2,}/g, '/');
+    window.location.href = cleanUrl.origin + safePath + cleanUrl.search;
 }
 
 // 1. INDICADOR EN TIEMPO REAL DE COMPLETITUD DEL FORMULARIO

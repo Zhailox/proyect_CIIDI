@@ -54,7 +54,7 @@ class AdminUsuarioModel {
     public function obtenerProfesores() {
         $db = Connection::getInstance();
         $sql = "
-            SELECT u.id, u.cedula, u.nombre_completo, u.email, u.activo, r.nombre AS rol_nombre
+            SELECT u.id, u.cedula, u.nombre_completo, u.email, u.foto_perfil, u.activo, r.nombre AS rol_nombre
             FROM usuarios u
             INNER JOIN roles r ON u.id_rol = r.id
             INNER JOIN privilegios p ON r.privilegio_id = p.privilegio_id
@@ -113,6 +113,7 @@ class AdminUsuarioModel {
                 u.cedula, 
                 u.nombre_completo, 
                 u.email, 
+                u.foto_perfil,
                 u.activo, 
                 r.nombre AS rol_nombre, 
                 p.nivel_privilegio,

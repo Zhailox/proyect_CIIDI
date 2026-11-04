@@ -128,10 +128,23 @@ $responsablesDisponibles = $responsablesDisponibles ?? [];
                                 <i class="ph-fill ph-users-three"></i> Cupos Totales: <?= (int)$inv['cupos_disponibles'] ?>
                             </div>
                         </td>
-                        <?php if ($esSuperAdmin && $alcance === 'todas'): ?>
+                        <?php if ($esSuperAdmin && $alcance === 'todas'):
+                            $invProfFotoRaw = trim((string)($inv['profesor_foto'] ?? ''));
+                            $invProfFotoUrl = '';
+                            if ($invProfFotoRaw !== '') {
+                                $invProfFotoUrl = (preg_match('#^https?://#i', $invProfFotoRaw) || str_starts_with($invProfFotoRaw, 'data:image/'))
+                                    ? $invProfFotoRaw
+                                    : ltrim(preg_replace('#^public/#i', '', str_replace('\\', '/', $invProfFotoRaw)), '/');
+                            }
+                        ?>
                         <td>
-                            <div style="font-weight:700; color:var(--inv-dark); font-size:0.88rem; display:flex; align-items:center; gap:0.4rem;">
-                                <i class="ph-fill ph-chalkboard-teacher" style="color:#0369A1;"></i>
+                            <div style="font-weight:700; color:var(--inv-dark); font-size:0.88rem; display:flex; align-items:center; gap:0.45rem;">
+                                <?php if ($invProfFotoUrl !== ''): ?>
+                                    <img src="<?= htmlspecialchars($invProfFotoUrl) ?>" alt="<?= htmlspecialchars($inv['profesor'] ?? '') ?>" style="width:26px; height:26px; border-radius:50%; object-fit:cover; flex-shrink:0; border:1px solid var(--inv-border);" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                                    <i class="ph-fill ph-chalkboard-teacher" style="display:none; color:#0369A1;"></i>
+                                <?php else: ?>
+                                    <i class="ph-fill ph-chalkboard-teacher" style="color:#0369A1;"></i>
+                                <?php endif; ?>
                                 <?= htmlspecialchars($inv['profesor'] ?? 'Sin asignar') ?>
                             </div>
                         </td>

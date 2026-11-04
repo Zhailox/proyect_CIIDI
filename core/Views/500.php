@@ -13,7 +13,8 @@ if (!class_exists('InstallerService') && file_exists(__DIR__ . '/../Installer/In
 
 $mensajeError = $dbErrorMsg ?? ($_SESSION['db_connection_error_raw'] ?? ($_SESSION['db_connection_error'] ?? null));
 $standalone = $isStandalone ?? true;
-$cleanUrl = strtok($_SERVER["REQUEST_URI"] ?? 'inicio', '?') ?: 'inicio';
+$rawUri = strtok($_SERVER["REQUEST_URI"] ?? 'inicio', '?') ?: 'inicio';
+$cleanUrl = preg_replace('#^/+#', '/', $rawUri);
 
 // 1. Manejar acción de cerrar sesión limpia
 if (isset($_GET['emerg_action']) && $_GET['emerg_action'] === 'logout') {

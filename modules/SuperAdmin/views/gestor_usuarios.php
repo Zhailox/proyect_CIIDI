@@ -122,8 +122,30 @@ if (isset($privilegios)) {
                         <?php foreach ($usuariosFiltrados as $usr): ?>
                             <tr class="user-row-item" data-role="<?= htmlspecialchars(strtolower($usr['rol_nombre'])) ?>" data-status="<?= $usr['activo'] ? 'activo' : 'suspendido' ?>" style="border-bottom: 1px solid #f1f5f9;">
                                 <td style="padding: 10px 12px;">
-                                    <strong class="user-search-name" style="color: var(--texto-titulos); display: block; font-size: 0.9rem;"><?= htmlspecialchars($usr['nombre_completo']) ?></strong>
-                                    <span class="user-search-email" style="color: #64748b; font-size: 0.78rem;"><?= htmlspecialchars($usr['cedula']) ?> | <?= htmlspecialchars($usr['email']) ?></span>
+                                    <?php
+                                        $usrFotoRaw = trim((string)($usr['foto_perfil'] ?? ''));
+                                        $usrFotoUrl = '';
+                                        if ($usrFotoRaw !== '') {
+                                            $usrFotoUrl = (preg_match('#^https?://#i', $usrFotoRaw) || str_starts_with($usrFotoRaw, 'data:image/'))
+                                                ? $usrFotoRaw
+                                                : ltrim(preg_replace('#^public/#i', '', str_replace('\\', '/', $usrFotoRaw)), '/');
+                                        }
+                                        $usrInicial = strtoupper(mb_substr(trim((string)($usr['nombre_completo'] ?? 'U')), 0, 1, 'UTF-8') ?: 'U');
+                                    ?>
+                                    <div style="display: flex; align-items: center; gap: 0.65rem;">
+                                        <div style="width: 36px; height: 36px; border-radius: 50%; background: #121a3e; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.9rem; flex-shrink: 0; overflow: hidden; border: 1px solid #cbd5e1;">
+                                            <?php if ($usrFotoUrl !== ''): ?>
+                                                <img src="<?= htmlspecialchars($usrFotoUrl) ?>" alt="<?= htmlspecialchars($usr['nombre_completo']) ?>" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <span style="display: none; width: 100%; height: 100%; align-items: center; justify-content: center;"><?= htmlspecialchars($usrInicial) ?></span>
+                                            <?php else: ?>
+                                                <?= htmlspecialchars($usrInicial) ?>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div>
+                                            <strong class="user-search-name" style="color: var(--texto-titulos); display: block; font-size: 0.9rem;"><?= htmlspecialchars($usr['nombre_completo']) ?></strong>
+                                            <span class="user-search-email" style="color: #64748b; font-size: 0.78rem;"><?= htmlspecialchars($usr['cedula']) ?> | <?= htmlspecialchars($usr['email']) ?></span>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td style="padding: 10px 12px;">
                                     <span style="background: rgba(80, 89, 132, 0.12); color: var(--color-secundario); padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 0.78rem;">
@@ -385,7 +407,22 @@ if (isset($privilegios)) {
                 <?php foreach ($profesores as $profe): ?>
                     <div class="gestor-teacher-card teacher-card-item">
                         <div class="gestor-teacher-avatar">
-                            <?= strtoupper(substr($profe['nombre_completo'], 0, 1)) ?>
+                            <?php
+                                $profeFotoRaw = trim((string)($profe['foto_perfil'] ?? ''));
+                                $profeFotoUrl = '';
+                                if ($profeFotoRaw !== '') {
+                                    $profeFotoUrl = (preg_match('#^https?://#i', $profeFotoRaw) || str_starts_with($profeFotoRaw, 'data:image/'))
+                                        ? $profeFotoRaw
+                                        : ltrim(preg_replace('#^public/#i', '', str_replace('\\', '/', $profeFotoRaw)), '/');
+                                }
+                                $profeInicial = strtoupper(mb_substr(trim((string)($profe['nombre_completo'] ?? 'P')), 0, 1, 'UTF-8') ?: 'P');
+                            ?>
+                            <?php if ($profeFotoUrl !== ''): ?>
+                                <img src="<?= htmlspecialchars($profeFotoUrl) ?>" alt="<?= htmlspecialchars($profe['nombre_completo']) ?>" style="width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <span style="display: none; width: 100%; height: 100%; align-items: center; justify-content: center;"><?= htmlspecialchars($profeInicial) ?></span>
+                            <?php else: ?>
+                                <?= htmlspecialchars($profeInicial) ?>
+                            <?php endif; ?>
                         </div>
                         <div class="gestor-teacher-info">
                             <h4 class="gestor-teacher-name"><?= htmlspecialchars($profe['nombre_completo']) ?></h4>

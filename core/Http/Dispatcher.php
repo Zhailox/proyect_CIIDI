@@ -150,8 +150,9 @@ class Dispatcher {
                     if ($pdo) {
                         $heal = Connection::autoHealSchemaIfNeeded($pdo, true);
                         if (!empty($heal['exito']) && !empty($heal['acciones']) && $_SERVER['REQUEST_METHOD'] === 'GET' && empty($_GET['_healed'])) {
-                            $sep = str_contains($_SERVER['REQUEST_URI'] ?? '', '?') ? '&' : '?';
-                            header("Location: " . ($_SERVER['REQUEST_URI'] ?? 'inicio') . $sep . "_healed=1");
+                            $reqUri = preg_replace('#^/+#', '/', $_SERVER['REQUEST_URI'] ?? 'inicio');
+                            $sep = str_contains($reqUri, '?') ? '&' : '?';
+                            header("Location: " . $reqUri . $sep . "_healed=1");
                             exit;
                         }
                     }

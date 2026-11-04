@@ -2578,3 +2578,10 @@ Trace:
 #4 C:\wamp64\www\TwoCIIDIs\proyect_CIIDI\public\index.php(49): Kernel->run()
 #5 {main}
 --------------------------------------------------------------------------------
+[2026-11-03 23:33:08] ERROR: Cannot access protected property LineasModel::$db en C:\wamp64\www\proyect_CIIDI_Merged\modules\LineasInvestigacion\controllers\GestorController.php:205
+Trace:
+#0 C:\wamp64\www\proyect_CIIDI_Merged\core\Http\Dispatcher.php(61): GestorLineasController->detalleGestionLinea()
+#1 C:\wamp64\www\proyect_CIIDI_Merged\core\System\Kernel.php(161): Dispatcher->dispatch('detalle-gestion...', Array, Array, Array, Object(AssetResolver))
+#2 C:\wamp64\www\proyect_CIIDI_Merged\public\index.php(49): Kernel->run()
+#3 {main}
+--------------------------------------------------------------------------------

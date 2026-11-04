@@ -1,10 +1,10 @@
 ========================================================
 REGISTRO DE EJECUCIÓN: Respaldo Automático de Medianoche (PostgreSQL Dump) [backup_automatico_medianoche]
-FECHA/HORA: 2026-11-03 00:05:33
-DURACIÓN: 451.43 ms | ESTADO: OK
+FECHA/HORA: 2026-11-04 00:00:07
+DURACIÓN: 561.99 ms | ESTADO: OK
 ========================================================
 
-MENSAJE: Respaldo generado con éxito: auto_cron_backup_2026-11-03_00-05-32.sql.gz
+MENSAJE: Respaldo generado con éxito: auto_cron_backup_2026-11-04_00-00-06.sql.gz
 
 --- SALIDA ESTÁNDAR / CONSOLA (STDOUT/STDERR) ---
-Backup generado: auto_cron_backup_2026-11-03_00-05-32.sql.gz
+Backup generado: auto_cron_backup_2026-11-04_00-00-06.sql.gz

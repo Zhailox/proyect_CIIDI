@@ -318,4 +318,35 @@ class LineasModel extends QueryBuilder {
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([$estado ? 1 : 0, $id]);
     }
+
+    public function vincularProfesorALinea(int $id_usuario, int $id_linea): bool {
+        $stmt = $this->db->prepare("
+            INSERT INTO public.profesor_linea (id_usuario, id_linea)
+            VALUES (?, ?)
+            ON CONFLICT DO NOTHING
+        ");
+        return $stmt->execute([$id_usuario, $id_linea]);
+    }
+
+    public function desvincularProfesorDeLinea(int $id_usuario, int $id_linea): bool {
+        $stmt = $this->db->prepare("DELETE FROM public.profesor_linea WHERE id_usuario = ? AND id_linea = ?");
+        $res = $stmt->execute([$id_usuario, $id_linea]);
+        try {
+            $stmtDim = $this->db->prepare("DELETE FROM public.profesor_dimension WHERE id_usuario = ? AND id_linea = ?");
+            $stmtDim->execute([$id_usuario, $id_linea]);
+        } catch (\Throwable $e) {}
+        return $res;
+    }
+
+    public function getProfesoresDisponibles(): array {
+        $stmt = $this->db->prepare("
+            SELECT id, nombre_completo, email, foto_perfil, es_investigador
+            FROM public.usuarios
+            WHERE (id_rol IN (1, 2, 4) OR es_investigador = true OR es_profesor_pst = true OR estado_registro = 'Profesor')
+              AND activo = true
+            ORDER BY nombre_completo ASC
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
 }

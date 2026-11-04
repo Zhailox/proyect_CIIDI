@@ -136,10 +136,23 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
 
         <?php if (!empty($profesoresAfiliados)): ?>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
-            <?php foreach($profesoresAfiliados as $prof): ?>
+            <?php foreach($profesoresAfiliados as $prof):
+                $profFotoRaw = trim((string)($prof['foto_perfil'] ?? ''));
+                $profFotoUrl = '';
+                if ($profFotoRaw !== '') {
+                    $profFotoUrl = (preg_match('#^https?://#i', $profFotoRaw) || str_starts_with($profFotoRaw, 'data:image/'))
+                        ? $profFotoRaw
+                        : ltrim(preg_replace('#^public/#i', '', str_replace('\\', '/', $profFotoRaw)), '/');
+                }
+            ?>
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; display: flex; align-items: center; justify-content: space-between;">
                     <div style="display: flex; align-items: center; gap: 0.8rem;">
-                        <i class="ph-fill ph-user-circle" style="font-size: 2.5rem; color: #505984;"></i>
+                        <?php if ($profFotoUrl !== ''): ?>
+                            <img src="<?= htmlspecialchars($profFotoUrl) ?>" alt="<?= htmlspecialchars($prof['nombre_profesor']) ?>" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 2px solid #cbd5e1;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                            <i class="ph-fill ph-user-circle" style="display:none; font-size: 2.5rem; color: #505984;"></i>
+                        <?php else: ?>
+                            <i class="ph-fill ph-user-circle" style="font-size: 2.5rem; color: #505984;"></i>
+                        <?php endif; ?>
                         <div>
                             <div style="font-weight: 700; color: #1e293b;"><?= htmlspecialchars($prof['nombre_profesor']) ?></div>
                             <div style="font-size: 0.8rem; color: #64748b;"><?= htmlspecialchars($prof['email']) ?></div>

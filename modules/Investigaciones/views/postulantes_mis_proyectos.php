@@ -92,13 +92,26 @@ require_once CORE_PATH . 'Security/Auth.php';
                     </td>
                 </tr>
                 <?php else: ?>
-                    <?php foreach ($postulaciones as $p): ?>
+                    <?php foreach ($postulaciones as $p):
+                        $estFotoRaw = trim((string)($p['estudiante_foto'] ?? ''));
+                        $estFotoUrl = '';
+                        if ($estFotoRaw !== '') {
+                            $estFotoUrl = (preg_match('#^https?://#i', $estFotoRaw) || str_starts_with($estFotoRaw, 'data:image/'))
+                                ? $estFotoRaw
+                                : ltrim(preg_replace('#^public/#i', '', str_replace('\\', '/', $estFotoRaw)), '/');
+                        }
+                    ?>
                     <tr>
                         <!-- Columna Estudiante -->
                         <td>
                             <div style="display:flex; align-items:center; gap:0.7rem;">
-                                <div style="width:38px; height:38px; border-radius:50%; background: #505984; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                                    <i class="ph-bold ph-user" style="color:white; font-size:1rem;"></i>
+                                <div style="width:38px; height:38px; border-radius:50%; background: #505984; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; border:2px solid #e2e8f0;">
+                                    <?php if ($estFotoUrl !== ''): ?>
+                                        <img src="<?= htmlspecialchars($estFotoUrl) ?>" alt="<?= htmlspecialchars($p['estudiante']) ?>" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                                        <i class="ph-bold ph-user" style="display:none; color:white; font-size:1rem;"></i>
+                                    <?php else: ?>
+                                        <i class="ph-bold ph-user" style="color:white; font-size:1rem;"></i>
+                                    <?php endif; ?>
                                 </div>
                                 <div>
                                     <div style="font-weight: 700; color: var(--inv-dark); font-size:0.95rem;"><?= htmlspecialchars($p['estudiante']) ?></div>

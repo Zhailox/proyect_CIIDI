@@ -478,6 +478,7 @@ class InvestigacionModel {
                 p.*,
                 u.nombre_completo AS estudiante,
                 u.email,
+                u.foto_perfil AS estudiante_foto,
                 i.titulo AS investigacion_titulo
             " . $fromJoin . $where . "
             ORDER BY p.fecha_postulacion DESC
@@ -501,12 +502,14 @@ class InvestigacionModel {
                 p.*, 
                 u.nombre_completo AS estudiante, 
                 u.email,
+                u.foto_perfil AS estudiante_foto,
                 i.titulo AS investigacion_titulo,
-                prof.nombre_completo AS profesor
+                COALESCE(prof.nombre_completo, 'Sin responsable asignado') AS profesor,
+                prof.foto_perfil AS profesor_foto
             FROM public.postulaciones_estudiantes p
             INNER JOIN public.investigaciones_ofertadas i ON p.id_investigacion = i.id
             INNER JOIN public.usuarios u ON p.id_estudiante = u.id
-            INNER JOIN public.usuarios prof ON i.id_profesor = prof.id
+            LEFT JOIN public.usuarios prof ON i.id_profesor = prof.id
             ORDER BY p.fecha_postulacion DESC
         ";
         return $this->db->query($sql)->fetchAll();

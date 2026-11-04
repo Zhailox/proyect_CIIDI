@@ -175,7 +175,7 @@ class GestorLineasController {
                 $id_profesor = (int)($_POST['id_profesor'] ?? 0);
                 if ($id_profesor > 0) {
                     try {
-                        $lineasModel->tabla('profesor_linea')->insert(['id_usuario' => $id_profesor, 'id_linea' => $id]);
+                        $lineasModel->vincularProfesorALinea($id_profesor, $id);
                         $this->redirigir("detalle-gestion-linea&id=$id", 'exito', 'Profesor vinculado exitosamente.');
                     } catch (Exception $e) {
                         $this->redirigir("detalle-gestion-linea&id=$id", 'error', 'Error al vincular: ' . $e->getMessage());
@@ -184,7 +184,7 @@ class GestorLineasController {
             } elseif ($accion === 'desvincular_profesor') {
                 $id_profesor = (int)($_POST['id_profesor'] ?? 0);
                 if ($id_profesor > 0) {
-                    $lineasModel->db->prepare("DELETE FROM profesor_linea WHERE id_usuario = ? AND id_linea = ?")->execute([$id_profesor, $id]);
+                    $lineasModel->desvincularProfesorDeLinea($id_profesor, $id);
                     $this->redirigir("detalle-gestion-linea&id=$id", 'exito', 'Profesor desvinculado exitosamente.');
                 }
             }
@@ -202,14 +202,7 @@ class GestorLineasController {
         // Cargar profesores afiliados
         $profesoresAfiliados = $lineasModel->getProfesoresAfiliadosPorLinea($id);
         // Cargar investigadores y profesores disponibles (activos que sean docentes, investigadores o comite/admin)
-        $stmtProf = $lineasModel->db->prepare("
-            SELECT id, nombre_completo, email, es_investigador
-            FROM usuarios 
-            WHERE (id_rol IN (1, 2, 4) OR es_investigador = true OR es_profesor_pst = true OR estado_registro = 'Profesor') AND activo = true
-            ORDER BY nombre_completo ASC
-        ");
-        $stmtProf->execute();
-        $todosProfesores = $stmtProf->fetchAll();
+        $todosProfesores = $lineasModel->getProfesoresDisponibles();
         
         // Filtrar los que ya están
         $idsAfiliados = array_column($profesoresAfiliados, 'id');
