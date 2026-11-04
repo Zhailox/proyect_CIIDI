@@ -1,0 +1,360 @@
+.ag-btn-standard {
+    height: 38px !important;
+    padding: 0 16px !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    font-size: 0.85rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    cursor: pointer !important;
+    border: none !important;
+    text-decoration: none !important;
+    box-sizing: border-box !important;
+}
+
+.ag-btn-icon {
+    width: 34px !important;
+    height: 34px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    cursor: pointer !important;
+    border: 1px solid rgba(80, 89, 132, 0.2) !important;
+    background: #ffffff !important;
+    color: #334155 !important;
+}
+
+.ag-btn-icon:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(18, 26, 62, 0.1);
+    background: #f8fafc !important;
+    border-color: var(--color-secundario) !important;
+    color: var(--color-secundario) !important;
+}
+
+.ag-btn-danger-icon {
+    width: 34px !important;
+    height: 34px !important;
+    padding: 0 !important;
+    border-radius: var(--radius-sm) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    cursor: pointer !important;
+    border: 1px solid rgba(80, 89, 132, 0.25) !important;
+    background: rgba(80, 89, 132, 0.08) !important;
+    color: var(--color-secundario) !important;
+}
+
+.ag-btn-danger-icon:hover {
+    transform: translateY(-2px);
+    background: #121a3e !important;
+    color: #ffffff !important;
+    border-color: #121a3e !important;
+    color: var(--color-terciario) !important;
+    box-shadow: 0 4px 12px rgba(18, 26, 62, 0.25);
+}
+
+.ag-btn-primary {
+    background: var(--color-secundario) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(80, 89, 132, 0.22);
+}
+
+.ag-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(80, 89, 132, 0.32);
+    background: var(--color-secundario-dark, rgb(60, 68, 105)) !important;
+}
+
+.ag-btn-secondary {
+    background: #ffffff !important;
+    color: var(--color-secundario) !important;
+    border: 1px solid rgba(80, 89, 132, 0.25) !important;
+}
+
+.ag-btn-secondary:hover {
+    transform: translateY(-2px);
+    background: #f8fafc !important;
+    border-color: var(--color-secundario) !important;
+    box-shadow: 0 4px 12px rgba(18, 26, 62, 0.06);
+}
+
+/* Glassmorphism Floating Cards */
+.ag-scheduler-card {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(80, 89, 132, 0.15) !important;
+    border-radius: 14px !important;
+    padding: 1.5rem !important;
+    box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.ag-scheduler-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(18, 26, 62, 0.08);
+    border-color: rgba(80, 89, 132, 0.28) !important;
+}
+
+/* Estilo de Inputs y Controles Formulario Premium */
+.ag-form-input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(80, 89, 132, 0.2);
+    background: rgba(248, 250, 252, 0.8);
+    font-size: 0.88rem;
+    color: #0f172a;
+    transition: all 0.25s ease-out;
+    box-sizing: border-box;
+}
+
+.ag-form-input:focus {
+    outline: none;
+    border-color: var(--color-secundario);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(80, 89, 132, 0.12);
+}
+
+.ag-form-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #334155;
+    display: block;
+    margin-bottom: 6px;
+    letter-spacing: 0.2px;
+}
+
+/* Estilos de Asistente Visual de Cron */
+.cron-preset-btn {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    user-select: none;
+}
+
+.cron-preset-btn:hover {
+    background: #eef0f8;
+    border-color: #7090cb;
+    color: #505984;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(80, 89, 132, 0.15);
+}
+
+.cron-field-chip {
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.cron-field-chip:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.06);
+}
+
+
+/* ==========================================================================
+   RESPONSIVIDAD ADICIONAL: LAPTOPS ZOOM ALTO Y MÓVILES (scheduler.css)
+   ========================================================================== */
+@media (max-width: 1366px), (max-height: 780px) {
+    .sch-card {
+        padding: 1.25rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .sch-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.85rem;
+    }
+    .sch-card {
+        padding: 1rem;
+        overflow-x: auto;
+    }
+    .sch-table {
+        min-width: 640px;
+    }
+    .cron-builder-grid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .cron-builder-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.sch-cmd-box {
+    background: #0f172a;
+    color: #7090cb;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 0.85rem;
+    overflow-x: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.sch-cmd-badge {
+    font-size: 0.75rem;
+    background: rgba(112, 144, 203, 0.18);
+    color: #7090cb;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.sch-cron-human-sub {
+    font-size: 0.72rem;
+    color: #505984;
+    font-weight: 700;
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+}
+
+.sch-shortcut-hint {
+    font-size: 0.72rem;
+    color: #505984;
+    font-weight: 700;
+}
+
+.sch-cron-input {
+    font-family: monospace;
+    font-size: 1.05rem !important;
+    letter-spacing: 1.5px;
+    font-weight: 800;
+    color: #505984 !important;
+    padding-left: 2.25rem !important;
+}
+
+.sch-cron-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.15rem;
+    color: #505984;
+}
+
+.sch-live-card {
+    background: linear-gradient(135deg, rgba(80, 89, 132, 0.06), rgba(112, 144, 203, 0.05));
+    border: 1px solid rgba(80, 89, 132, 0.25);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    margin-top: 0.65rem;
+    transition: all 0.2s ease;
+}
+
+.sch-live-card.is-incomplete {
+    border-color: rgba(80, 89, 132, 0.42);
+    background: #eef0f8;
+}
+
+.sch-live-kicker {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #505984;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.sch-badge-tipo {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: #eef0f8;
+    color: #505984;
+}
+
+.sch-badge-tipo.is-incomplete {
+    background: #e2e8f0;
+    color: #121a3e;
+}
+
+.sch-warn-inline {
+    color: #505984;
+}
+
+.sch-fields-grid {
+    margin-top: 0.65rem;
+    padding-top: 0.55rem;
+    border-top: 1px dashed rgba(80, 89, 132, 0.22);
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    text-align: center;
+}
+
+.sch-chip-val {
+    font-family: monospace;
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: #505984;
+}
+
+.sch-help-summary {
+    font-weight: 700;
+    color: #505984;
+    cursor: pointer;
+    outline: none;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.sch-script-info {
+    font-size: 0.76rem;
+    color: #505984;
+    margin-top: 6px;
+    font-weight: 600;
+}
+
+.sch-log-box {
+    background: #0f172a;
+    color: #7090cb;
+    padding: 1.25rem;
+    border-radius: 10px;
+    font-family: monospace;
+    font-size: 0.82rem;
+    height: 340px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+}

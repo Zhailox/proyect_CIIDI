@@ -1,0 +1,13 @@
+{
+    "require": {
+        "smalot/pdfparser": "^2.12",
+        "phpoffice/phpword": "*",
+        "php-ai/php-ml": "^0.10.0",
+        "phpmailer/phpmailer": "^7.1",
+        "ankane/onnxruntime": "^0.3.7"
+    }
+	"scripts": {
+        "post-install-cmd": "OnnxRuntime\\Vendor::check",
+        "post-update-cmd": "OnnxRuntime\\Vendor::check"
+    }
+}

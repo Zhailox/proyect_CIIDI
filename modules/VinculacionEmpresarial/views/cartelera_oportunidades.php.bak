@@ -1,0 +1,662 @@
+
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      corePlugins: {
+        preflight: false,
+      },
+      darkMode: "class",
+      theme: {
+        extend: {
+          
+                    colors: {
+            "surface": "#f4f7fb",
+            "surface-dim": "#e2e8f0",
+            "surface-bright": "#ffffff",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#f8fafc",
+            "surface-container": "#f1f5f9",
+            "surface-container-high": "#e2e8f0",
+            "surface-container-highest": "#cbd5e1",
+            "on-surface": "#1e293b",
+            "on-surface-variant": "#64748b",
+            "inverse-surface": "#1e293b",
+            "inverse-on-surface": "#ffffff",
+            "outline": "#94a3b8",
+            "outline-variant": "#cbd5e1",
+            "surface-tint": "#505984",
+            "primary": "#1e293b",
+            "on-primary": "#ffffff",
+            "primary-container": "#2b3453",
+            "on-primary-container": "#ffffff",
+            "inverse-primary": "#cbd5e1",
+            "secondary": "#505984",
+            "on-secondary": "#ffffff",
+            "secondary-container": "#7090cb",
+            "on-secondary-container": "#ffffff",
+            "background": "#f4f7fb",
+            "on-background": "#1e293b",
+            "error": "#ef4444"
+          },
+
+          
+          fontSize: {
+            "kicker-uppercase": ["10px", { "lineHeight": "14px", "letterSpacing": "0.12em", "fontWeight": "700" }],
+            "headline-sm": ["18px", { "lineHeight": "26px", "fontWeight": "600" }],
+            "body-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "body-lg": ["15px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "meta-code": ["11px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+            "headline-hero": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "button-text": ["13px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }]
+          },
+          fontFamily: {
+            'headline-sm': ['Source Serif 4', 'serif'],
+            'headline-hero': ['Source Serif 4', 'serif'],
+            'body-lg': ['Inter', 'sans-serif'],
+            'body-sm': ['Inter', 'sans-serif'],
+            'button-text': ['Inter', 'sans-serif'],
+            'meta-code': ['JetBrains Mono', 'monospace'],
+            'kicker-uppercase': ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+</script>
+
+<style>
+.oportunidades-module * { box-sizing: border-box; }
+.oportunidades-module *, .oportunidades-module ::before, .oportunidades-module ::after { border-width: 0; border-style: solid; border-color: #e2e8f0; }
+:where(.oportunidades-module) input, :where(.oportunidades-module) select { font-family: inherit; font-size: 100%; line-height: 1.15; margin: 0; border: 1px solid var(--color-borde); border-radius: 4px; padding: 0.5rem; }
+:where(.oportunidades-module) button { background-color: transparent; border: none; padding: 0; cursor: pointer; }
+.oportunidades-module h1, .oportunidades-module h2, .oportunidades-module h3 { margin: 0; font-weight: inherit; }
+.oportunidades-module p { margin: 0; }
+</style>
+
+<div class="oportunidades-module" style="background-color: var(--color-fondo);">
+<main class="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
+
+<!-- BOMBTASTIC ACADEMIC HERO -->
+<section class="bg-primary-container rounded-xl p-8 md:p-12 flex flex-col items-center text-center relative overflow-hidden text-white shadow-xl mb-2">
+    <!-- THE AGREED GIF BACKGROUND -->
+    <div class="absolute inset-0 z-0 bg-cover bg-center opacity-30" style="background-image: url('modules/RepositorioPST/assets/img/Rredes+neuronales+grafos.gif');"></div>
+    <div class="absolute inset-0 z-0 bg-gradient-to-t from-primary-container to-transparent opacity-60"></div>
+
+    <div class="relative z-10 flex flex-col items-center w-full">
+        <div class="flex flex-wrap items-center justify-center gap-2 mb-5">
+            <span class="inline-flex items-center gap-1.5 text-white font-kicker-uppercase text-[10px] tracking-widest bg-white/10 px-3 py-1 rounded-full border border-white/20 backdrop-blur-sm shadow-sm">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#7090cb] animate-pulse"></span>
+                CONVOCATORIA ACADÉMICA ACTIVA
+            </span>
+            <span class="text-white/40 font-meta-code text-[11px] px-1">•</span>
+            <span class="font-kicker-uppercase text-[10px] tracking-widest text-white/80">TRAYECTOS I AL IV</span>
+            <span class="text-white/40 font-meta-code text-[11px] px-1">•</span>
+            <span class="font-kicker-uppercase text-[10px] tracking-widest text-white/80">PERÍODO 2025-I</span>
+            <span class="text-white/40 font-meta-code text-[11px] px-1">•</span>
+            <span class="font-meta-code text-[11px] text-white/70">INTEROPERABLE OPENALEX / OAI-PMH</span>
+        </div>
+        
+        <h1 class="text-3xl md:text-5xl font-bold mb-4 font-headline-hero tracking-tight text-white drop-shadow-md">
+            Banco Abierto de Proyectos y Oportunidades PST
+        </h1>
+        
+        <p class="text-white/80 max-w-3xl mb-8 text-sm md:text-base font-body-lg leading-relaxed">
+            Catálogo unificado de proyectos sociotecnológicos disponibles para vinculación estudiantil comunitaria. Encuentra, postula tu equipo de trabajo y desarrolla tu PST según tu trayecto y línea temática de investigación-acción.
+        </p>
+        
+        <div class="w-full max-w-4xl bg-white rounded-full p-2 flex flex-col sm:flex-row items-center shadow-2xl focus-within:ring-4 ring-white/20 transition-all">
+            <div class="w-full sm:w-auto relative border-b sm:border-b-0 sm:border-r border-gray-200 pr-2 pl-3">
+                <select class="w-full sm:w-44 bg-transparent border-none text-body-sm font-button-text text-gray-700 focus:ring-0 py-2 cursor-pointer outline-none text-sm">
+                    <option>Todos los Campos</option>
+                    <option>Línea de Investigación</option>
+                    <option>Código PST / ID</option>
+                    <option>Docente Tutor Asignado</option>
+                </select>
+            </div>
+            <div class="flex-1 flex items-center w-full px-4">
+                <span class="material-symbols-outlined text-gray-400 text-[18px] mr-2">terminal</span>
+                <input class="w-full bg-transparent border-none p-0 text-sm md:text-base text-gray-800 placeholder:text-gray-400 focus:ring-0 outline-none" placeholder="Buscar por palabra clave, comunidad beneficiaria o tecnología..." type="text" id="search-hero">
+            </div>
+            <button class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary-container hover:bg-black text-white px-6 py-2.5 rounded-full transition-all mt-2 sm:mt-0 flex-shrink-0" id="btn-search-hero">
+                <span class="text-sm font-bold font-button-text">Buscar Proyectos</span>
+                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </button>
+        </div>
+
+        <!-- STATS INSIDE HERO -->
+        <div class="w-full max-w-4xl mt-8 pt-6 border-t border-white/20 grid grid-cols-3 gap-4 text-center">
+            <!-- Proyectos -->
+            <div class="flex flex-col items-center gap-1">
+                <span class="material-symbols-outlined text-white/70 text-[22px]">folder_special</span>
+                <span class="font-headline-sm text-white font-bold text-[22px] leading-none" id="stats-total-proyectos"><?= count($oportunidades) ?></span>
+                <span class="text-white/60 text-[10px] uppercase tracking-widest font-bold">Proyectos Disponibles</span>
+            </div>
+            <!-- Líneas -->
+            <div class="flex flex-col items-center gap-1 border-x border-white/20">
+                <span class="material-symbols-outlined text-white/70 text-[22px]">account_tree</span>
+                <span class="font-headline-sm text-white font-bold text-[22px] leading-none"><?= count($lineasUnicas) ?></span>
+                <span class="text-white/60 text-[10px] uppercase tracking-widest font-bold">Líneas Registradas</span>
+            </div>
+              <!-- Cupos -->
+              <?php 
+              $totalCupos = 0;
+              foreach($oportunidades as $op) { $totalCupos += (int)($op['cupos_disponibles'] ?? 3); }
+              ?>
+              <div class="flex flex-col items-center gap-1">
+                <span class="material-symbols-outlined text-white/70 text-[22px]">groups</span>
+                <span class="font-headline-sm text-white font-bold text-[22px] leading-none"><?= $totalCupos ?></span>
+                <span class="text-white/60 text-[10px] uppercase tracking-widest font-bold">Cupos Disponibles</span>
+              </div>
+            </div>
+        </div>
+</section>
+
+<!-- SECTION 2: TRAYECTOS FORMATIVOS QUICK CARDS (Bento Grid 4-Cols) -->
+
+<!-- SECTION 3: 2-COLUMN CATALOG & FACETED SEARCH VIEW -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-4">
+<!-- LEFT RAIL: FACETED FILTERS SIDEBAR (Shared Component: SideNavBar adapted for Postulaciones) -->
+<aside class="lg:col-span-3 bg-white rounded-xl shadow-[0_4px_20px_rgb(0,0,0,0.04)] border border-slate-100 p-6 flex flex-col gap-6 self-start">
+<style>
+.custom-checkbox {
+    border: 1.5px solid #64748b !important;
+    background-color: #ffffff;
+    appearance: none;
+    -webkit-appearance: none;
+}
+.custom-checkbox:checked {
+    background-color: var(--color-secundario, #505984) !important;
+    border-color: var(--color-secundario, #505984) !important;
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e") !important;
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+</style>
+
+  <!-- Filter Header -->
+  <div class="flex items-center gap-2 border-b border-slate-100 pb-4">
+    <span class="material-symbols-outlined text-secondary text-[22px]">filter_alt</span>
+    <h4 class="font-headline-sm text-[16px] text-slate-800 font-bold m-0 leading-none">Filtros de Búsqueda</h4>
+  </div>
+
+  <!-- Filtros Checkboxes (Estilo Tarjeta Blanca) -->
+  <div class="flex flex-col gap-6">
+    <!-- Nivel / Trayecto -->
+    <div class="flex flex-col gap-2">
+      <label class="font-kicker-uppercase text-[11px] font-bold text-slate-800 tracking-wider">TRAYECTO (SOLO PREGRADO)</label>
+      <div class="grid grid-cols-2 gap-2 mt-1">
+        <?php foreach (array_keys($oportunidadesPorTrayecto) as $trayectoName): ?>
+        <label class="flex items-center gap-2 text-[12px] text-slate-600 cursor-pointer p-2 rounded-lg border border-slate-200 bg-slate-50 hover:border-secondary transition-colors">
+          <input class="rounded text-secondary focus:ring-secondary w-3.5 h-3.5 filter-trayecto-checkbox shadow-sm custom-checkbox" type="checkbox" value="<?= htmlspecialchars($trayectoName) ?>">
+          <span class="font-medium"><?= htmlspecialchars($trayectoName) ?></span>
+        </label>
+        <?php endforeach; ?>
+      </div>
+    </div>
+
+    <!-- Línea -->
+    <div class="flex flex-col gap-2">
+      <label class="font-kicker-uppercase text-[11px] font-bold text-slate-800 tracking-wider">LÍNEA DE INVESTIGACIÓN</label>
+      <div class="flex flex-col gap-2.5 mt-1">
+        <?php foreach ($lineasUnicas as $linea): ?>
+        <label class="flex items-start gap-2 text-[12px] text-slate-600 cursor-pointer hover:text-slate-800 transition-colors">
+          <input class="mt-0.5 rounded text-secondary focus:ring-secondary w-4 h-4 filter-linea-checkbox shadow-sm custom-checkbox" type="checkbox" value="<?= htmlspecialchars(ucwords(mb_strtolower($linea))) ?>">
+          <span class="font-medium leading-tight"><?= htmlspecialchars(ucwords(mb_strtolower($linea))) ?></span>
+        </label>
+        <?php endforeach; ?>
+      </div>
+    </div>
+
+    <!-- Cupos -->
+    <div class="flex flex-col gap-2">
+      <label class="font-kicker-uppercase text-[11px] font-bold text-slate-800 tracking-wider">CUPOS DISPONIBLES</label>
+      <div class="flex flex-col gap-2.5 mt-1">
+        <?php foreach ($cuposUnicos as $cuposVal): ?>
+        <label class="flex items-center gap-2 text-[12px] text-slate-600 cursor-pointer hover:text-slate-800 transition-colors">
+          <input class="rounded text-secondary focus:ring-secondary w-4 h-4 filter-cupos-checkbox shadow-sm custom-checkbox" type="checkbox" value="<?= (int)$cuposVal ?>">
+          <span class="font-medium"><?= (int)$cuposVal ?> Cupo<?= $cuposVal > 1 ? 's' : '' ?></span>
+        </label>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  </div>
+
+  <!-- Limpiar Botón -->
+  <button id="btn-limpiar-filtros" class="w-full py-2.5 mt-2 bg-white text-slate-700 font-button-text font-semibold rounded-lg transition-colors hover:bg-slate-50 shadow-sm" style="border: 1px solid #64748b;">
+    Limpiar Filtros
+  </button>
+</aside>
+<!-- RIGHT COLUMN: STREAM OF OPPORTUNITIES & DETAILS -->
+<section class="lg:col-span-9 flex flex-col gap-4">
+<!-- Controls & Scope Header Bar -->
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-surface-container-highest pb-3">
+<div class="flex items-center gap-2">
+<span class="font-body-md font-semibold text-on-surface"><span id="contador-proyectos-sub"><?= count($oportunidades) ?></span> Proyectos Disponibles para Postulación>
+<span class="text-outline-variant font-meta-code">•</span>
+<span class="font-meta-code text-meta-code text-outline">Listado Completo</span>
+</div>
+<div class="flex items-center gap-2 text-[12px] text-on-surface-variant">
+<span class="">Ordenar por:</span>
+<select class="bg-surface-container-lowest border border-surface-container-highest rounded py-1 pl-2.5 pr-8 text-body-sm font-button-text text-on-surface focus:ring-secondary focus:border-secondary">
+<option>Fecha de publicación (Más recientes)</option>
+<option>Mayor cantidad de cupos disponibles</option>
+<option>Trayecto Académico (I al IV)</option>
+<option>Urgencia de Vinculación Comunal</option>
+</select>
+</div>
+</div>
+
+<!-- DYNAMIC CARDS START -->
+<?php 
+$total_cards = 0;
+foreach ($oportunidadesPorTrayecto as $trayecto => $ops): 
+    foreach ($ops as $op): 
+        $total_cards++;
+        $lineaSegura = htmlspecialchars(ucwords(mb_strtolower(trim($op['linea_investigacion'] ?: 'General'))), ENT_QUOTES);
+        $cupos = $op['cupos_disponibles'] ?? 3;
+        $empresaSegura = htmlspecialchars(addslashes($op['nombre_empresa']));
+        $problemaLimpio = htmlspecialchars(addslashes(preg_replace('/\s+/', ' ', trim($op['descripcion_problema']))));
+        $areaLimpia = mb_strtoupper(htmlspecialchars(addslashes($op['area_afectada'])));
+        $fecha = isset($op['fecha_registro']) ? date('d M Y', strtotime($op['fecha_registro'])) : 'Reciente';
+        $estadoPostulacion = $estados_postulaciones[$op['id_investigacion']] ?? '';
+?>
+<article class="border border-slate-200 bg-white p-5 rounded-lg hover:shadow-lg transition-all flex flex-col gap-3 post-card-item shadow-sm border-t-4 border-secondary" data-linea="<?= $lineaSegura ?>" data-trayecto="<?= htmlspecialchars($trayecto) ?>" data-cupos="<?= $cupos ?>">
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="font-meta-code text-[10px] uppercase font-bold text-secondary bg-secondary-fixed/30 border border-secondary-fixed px-2 py-0.5 rounded">
+        <?= htmlspecialchars($trayecto) ?>
+      </span>
+      <span class="font-meta-code text-[11px] text-on-surface-variant">Línea: <?= $lineaSegura ?></span>
+    </div>
+    <span class="inline-flex items-center gap-1 font-meta-code text-[11px] text-secondary bg-secondary-fixed/30 border border-secondary-fixed px-2 py-0.5 rounded font-medium">
+      <span class="material-symbols-outlined text-[13px]">person_add</span> <?= $cupos ?> Cupos Disponibles
+    </span>
+  </div>
+  
+  <h3 class="font-headline-sm text-headline-sm text-primary font-bold hover:text-secondary cursor-pointer transition-colors" onclick="verDetalles(<?= $op['id_investigacion'] ?>, '<?= $empresaSegura ?>', <?= $cupos ?>, '<?= $lineaSegura ?>', '<?= $areaLimpia ?>', '<?= $problemaLimpio ?>', '<?= $estadoPostulacion ?>')">
+    <?= htmlspecialchars($op['nombre_empresa']) ?>
+  </h3>
+  
+  <div class="flex flex-wrap items-center gap-x-4 gap-y-1 font-meta-code text-meta-code text-on-surface-variant">
+    <span class=""><strong class="text-on-surface">PST-ID:</strong> pst.<?= $op['id_investigacion'] ?></span>
+    <span class=""><strong class="text-on-surface">Publicado:</strong> <?= $fecha ?></span>
+    <span class="text-[#0D9488] font-bold">Área: <?= $areaLimpia ?></span>
+  </div>
+  
+  <p class="font-body-md text-body-md text-on-surface-variant line-clamp-3">
+    <?= htmlspecialchars($op['descripcion_problema']) ?>
+  </p>
+  
+  <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-surface-container-highest mt-2">
+    <button class="inline-flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white font-button-text text-button-text px-3 py-1.5 rounded transition-colors" onclick="verDetalles(<?= $op['id_investigacion'] ?>, '<?= $empresaSegura ?>', <?= $cupos ?>, '<?= $lineaSegura ?>', '<?= $areaLimpia ?>', '<?= $problemaLimpio ?>', '<?= $estadoPostulacion ?>')">
+      <span class="material-symbols-outlined text-[14px]">groups</span>
+      <span class="">Postular Equipo</span>
+    </button>
+  </div>
+</article>
+<?php 
+    endforeach; 
+endforeach; 
+?>
+<!-- DYNAMIC CARDS END -->
+<!-- PAGINATION BAR -->
+  <nav id="pagination-container" class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-surface-container-highest font-body-sm text-on-surface-variant">
+  </nav>
+</section>
+</div>
+<!-- TECHNICAL & INTEROPERABILITY ANCHOR (Inspired by OpenAlex / PHP CLI Card in reference) -->
+<section class="border border-surface-container-highest bg-surface-container-lowest rounded p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center mt-6">
+<div class="lg:col-span-7 flex flex-col gap-3">
+<span class="font-kicker-uppercase text-kicker-uppercase text-secondary">POSTULACIÓN Y SISTEMA DE REGISTRO ABIERTO</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">
+          Protocolo Institucional para Equipos de Investigación
+        </h2>
+<p class="font-body-md text-body-md text-on-surface-variant">
+          Los proyectos ofertados en el Banco Abierto cuentan con el aval formal de los Consejos Comunales y las Mesas Técnicas de Telecomunicaciones. Al formalizar la postulación, el sistema genera la providencia administrativa vinculante y asigna automáticamente al docente tutor de acuerdo con el baremo curricular del PNF.
+        </p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3">
+<div class="border-l-2 border-primary pl-3">
+<h4 class="font-button-text text-button-text text-on-surface">Baremo de Asignación Transparente</h4>
+<p class="font-body-sm text-body-sm text-outline">Ponderación académica, índice de trayecto y proximidad territorial de los estudiantes.</p>
+</div>
+<div class="border-l-2 border-secondary pl-3">
+<h4 class="font-button-text text-button-text text-on-surface">Sincronización OAI-PMH &amp; DOI</h4>
+<p class="font-body-sm text-body-sm text-outline">Indexación inmediata de propuestas aprobadas en el grafo global de OpenAlex.</p>
+</div>
+</div>
+</div>
+<!-- Terminal / Script Preview Box -->
+<div class="lg:col-span-5 bg-primary-container rounded border border-outline-variant p-4 font-meta-code text-[11px] text-inverse-on-surface overflow-x-auto shadow-sm">
+<div class="flex items-center justify-between border-b border-surface-container-highest/20 pb-2 mb-3">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-error"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+<span class="text-on-primary-container ml-2">PostulacionPST.php</span>
+</div>
+<span class="text-[10px] text-on-primary-container">PHP 8.2+ SDK</span>
+</div>
+<pre class="leading-relaxed"><code><span class="text-secondary-fixed">&lt;?php</span>
+<span class="text-on-primary-container">// 1. Inicializar cliente con credencial universitaria</span>
+<span class="text-secondary-fixed">$postulacion</span> = <span class="text-secondary-fixed-dim">new</span> \OpenAlexPST\Postulante([
+    <span class="text-green-300">'matricula'</span> =&gt; <span class="text-green-300">'EXP-2023-0194'</span>,
+    <span class="text-green-300">'trayecto'</span>  =&gt; 2
+]);
+
+<span class="text-on-primary-container">// 2. Enviar postulación de equipo al proyecto</span>
+<span class="text-secondary-fixed">$resultado</span> = <span class="text-secondary-fixed">$postulacion</span>-&gt;asociarProyecto([
+    <span class="text-green-300">'pst_id'</span>     =&gt; <span class="text-green-300">'pst.prop/2025.t2.0084'</span>,
+    <span class="text-green-300">'integrantes'</span>=&gt; [<span class="text-green-300">'V-28.411.092'</span>, <span class="text-green-300">'V-29.014.512'</span>],
+    <span class="text-green-300">'comunidad_ok'</span>=&gt; <span class="text-secondary-fixed-dim">true</span>
+]);
+
+<span class="text-secondary-fixed-dim">echo</span> <span class="text-secondary-fixed">$resultado</span>-&gt;acta_compromiso_url;
+<span class="text-secondary-fixed">?&gt;</span></code></pre>
+</div>
+</section>
+</main></div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<?php if (isset($_SESSION['flash_success'])): ?>
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: '¡Éxito!',
+        text: '<?= htmlspecialchars($_SESSION['flash_success'], ENT_QUOTES) ?>',
+        confirmButtonColor: '#121a3e'
+    });
+</script>
+<?php unset($_SESSION['flash_success']); endif; ?>
+
+<?php if (isset($_SESSION['flash_error'])): ?>
+<script>
+    Swal.fire({
+        icon: 'error',
+        title: 'Atención',
+        text: '<?= htmlspecialchars($_SESSION['flash_error'], ENT_QUOTES) ?>',
+        confirmButtonColor: '#121a3e'
+    });
+</script>
+<?php unset($_SESSION['flash_error']); endif; ?>
+
+<script>
+function verDetalles(id, empresa, cupos, linea, area, problema, estadoPrevio = '', skipWarning = false) {
+    if (!skipWarning) {
+        if (estadoPrevio === 'Aceptado' || estadoPrevio === 'Pendiente') {
+            Swal.fire({
+                title: 'Postulación Activa',
+                text: 'Ya tienes una postulación en proceso o aprobada para esta oferta. No puedes volver a postularte.',
+                icon: 'info'
+            });
+            return;
+        }
+        
+        if (estadoPrevio === 'Rechazado') {
+            Swal.fire({
+                title: 'Postulación Rechazada',
+                text: 'Ya te has postulado a esta oferta, pero has sido rechazado. ¿Quieres volver a postularte y enviar una nueva solicitud?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, volver a postularme',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#10b981'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    verDetalles(id, empresa, cupos, linea, area, problema, estadoPrevio, true);
+                }
+            });
+            return;
+        }
+    }
+    let tituloLinea = linea && linea.trim() !== '' ? linea : 'General';
+    Swal.fire({
+        title: `Postularse: ${empresa}`,
+        html: `
+            <div style="text-align: left; font-size: 0.95rem;">
+                <p><strong>Línea de Investigación:</strong> ${tituloLinea}</p>
+                <p><strong>Área:</strong> ${area}</p>
+                <p><strong>Cupos disponibles:</strong> ${cupos}</p>
+                <hr style="margin: 10px 0;">
+                <p><strong>Problema a resolver:</strong></p>
+                <p style="background: #f8fafc; padding: 10px; border-radius: 5px; border-left: 3px solid #1d4ed8;">${problema}</p>
+                
+                <hr style="margin: 15px 0;">
+                <h4 style="margin-bottom: 5px; color:#1d4ed8; font-weight:bold;">Mensaje de Motivación</h4>
+                <textarea id="swal-motivacion" class="swal2-textarea" style="width: 100%; margin: 0; padding: 10px; font-size: 0.9rem;" placeholder="¿Por qué tu equipo es ideal para este proyecto? ¿Qué habilidades tienen?"></textarea>
+                
+                <h4 style="margin-top: 15px; margin-bottom: 5px; color:#1d4ed8; font-weight:bold;">Integrantes del Equipo (Opcional)</h4>
+                <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 10px;">Tú ya estás incluido automáticamente como líder del proyecto. Agrega hasta 2 compañeros adicionales si vas a trabajar en grupo.</p>
+                
+                <div id="team-members-container"></div>
+                <button type="button" id="btn-add-member" style="margin-top: 10px; padding: 6px 12px; background: #e2e8f0; color: #475569; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight:bold;">+ Agregar Compañero</button>
+            </div>
+        `,
+        icon: 'info',
+        width: '650px',
+        showCancelButton: true,
+        confirmButtonColor: '#1d4ed8',
+        cancelButtonColor: '#475569',
+        confirmButtonText: 'Enviar Postulación',
+        cancelButtonText: 'Cancelar',
+        didOpen: () => {
+            let count = 0;
+            const container = document.getElementById('team-members-container');
+            const btnAdd = document.getElementById('btn-add-member');
+            
+            btnAdd.addEventListener('click', () => {
+                if (count >= 2) {
+                    Swal.showValidationMessage('Solo puedes agregar un máximo de 2 compañeros extra.');
+                    return;
+                }
+                count++;
+                const div = document.createElement('div');
+                div.style = "display: flex; gap: 5px; margin-bottom: 8px;";
+                div.innerHTML = `
+                    <input type="text" class="swal2-input team-name" style="margin:0; height:38px; font-size:0.85rem; width: 40%;" placeholder="Nombre completo">
+                    <input type="text" class="swal2-input team-cedula" style="margin:0; height:38px; font-size:0.85rem; width: 25%;" placeholder="Cédula">
+                    <input type="tel" class="swal2-input team-phone" style="margin:0; height:38px; font-size:0.85rem; width: 25%;" placeholder="Teléfono">
+                    <button type="button" style="background: #ef4444; color: white; border: none; border-radius: 4px; width: 10%; cursor: pointer; font-weight:bold;">X</button>
+                `;
+                // Add event listener to the remove button
+                div.querySelector('button').addEventListener('click', function() {
+                    div.remove();
+                    count--;
+                });
+                container.appendChild(div);
+                Swal.resetValidationMessage(); // clear warning if they clicked too many times before
+            });
+        },
+        preConfirm: () => {
+            const motivacion = document.getElementById('swal-motivacion').value.trim();
+            if (!motivacion) {
+                Swal.showValidationMessage('El mensaje de motivación es obligatorio para que la empresa y el comité conozcan tu perfil.');
+                return false;
+            }
+            
+            const members = [];
+            const rows = document.getElementById('team-members-container').children;
+            for(let i=0; i<rows.length; i++) {
+                const name = rows[i].querySelector('.team-name').value.trim();
+                const cedula = rows[i].querySelector('.team-cedula').value.trim();
+                const phone = rows[i].querySelector('.team-phone').value.trim();
+                if (!name || !cedula || !phone) {
+                    Swal.showValidationMessage('Por favor completa todos los datos de los compañeros que agregaste, o elimina los campos vacíos con la X.');
+                    return false;
+                }
+                members.push({ nombre: name, cedula: cedula, telefono: phone });
+            }
+            
+            return {
+                motivacion: motivacion,
+                equipo: members.length > 0 ? JSON.stringify(members) : ''
+            };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '?ruta=postular-oportunidad';
+            
+            const inputId = document.createElement('input');
+            inputId.type = 'hidden';
+            inputId.name = 'id_investigacion';
+            inputId.value = id;
+            form.appendChild(inputId);
+            
+            const inputMot = document.createElement('input');
+            inputMot.type = 'hidden';
+            inputMot.name = 'motivacion';
+            inputMot.value = result.value.motivacion;
+            form.appendChild(inputMot);
+            
+            if (result.value.equipo) {
+                const inputEq = document.createElement('input');
+                inputEq.type = 'hidden';
+                inputEq.name = 'equipo_extra';
+                inputEq.value = result.value.equipo;
+                form.appendChild(inputEq);
+            }
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const lineaCheckboxes = document.querySelectorAll('.filter-linea-checkbox');
+    const trayectoCheckboxes = document.querySelectorAll('.filter-trayecto-checkbox');
+    const cuposCheckboxes = document.querySelectorAll('.filter-cupos-checkbox');
+    const articles = Array.from(document.querySelectorAll('.post-card-item'));
+    const resetBtn = document.getElementById('btn-limpiar-filtros');
+    const searchInput = document.getElementById('search-hero');
+    const contador1 = document.getElementById('stats-total-proyectos'); 
+    const contador2 = document.getElementById('contador-proyectos-sub');
+    const paginationContainer = document.getElementById('pagination-container');
+
+    let filteredArticles = [];
+    let currentPage = 1;
+    const itemsPerPage = 5; // Show 5 per page like typical results
+
+    function applyFilters() {
+        let activeLineas = Array.from(lineaCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
+        let activeTrayectos = Array.from(trayectoCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
+        let activeCupos = Array.from(cuposCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
+        
+        let searchText = searchInput ? searchInput.value.toLowerCase() : '';
+
+        // Ocultar todos por defecto
+        articles.forEach(article => article.style.display = 'none');
+
+        filteredArticles = articles.filter(article => {
+            let itemLinea = article.getAttribute('data-linea');
+            let itemTrayecto = article.getAttribute('data-trayecto');
+            let itemCupos = article.getAttribute('data-cupos');
+            
+            let matchesLinea = activeLineas.length === 0 || activeLineas.includes(itemLinea);
+            let matchesTrayecto = activeTrayectos.length === 0 || activeTrayectos.includes(itemTrayecto);
+            let matchesCupos = activeCupos.length === 0 || activeCupos.includes(itemCupos);
+            
+            let textContent = article.textContent.toLowerCase();
+            let matchesSearch = searchText === '' || textContent.includes(searchText);
+
+            return matchesLinea && matchesTrayecto && matchesCupos && matchesSearch;
+        });
+
+        let visibleCount = filteredArticles.length;
+        if(contador1) contador1.textContent = visibleCount; 
+        if(contador2) contador2.textContent = visibleCount;
+
+        currentPage = 1;
+        renderPagination();
+    }
+
+    function renderPagination() {
+        if (!paginationContainer) return;
+        
+        const totalPages = Math.ceil(filteredArticles.length / itemsPerPage);
+        
+        // Hide all items first
+        filteredArticles.forEach(a => a.style.display = 'none');
+
+        // Show items for current page
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        
+        filteredArticles.slice(startIndex, endIndex).forEach(a => a.style.display = 'flex');
+
+        if (filteredArticles.length === 0) {
+            paginationContainer.innerHTML = '<span class="font-meta-code text-[11px] text-slate-500">No hay resultados que coincidan con los filtros.</span>';
+            return;
+        }
+
+        let html = `<span class="font-meta-code text-[11px] text-slate-500">
+            Página ${currentPage} de ${totalPages} &bull; ${filteredArticles.length} resultados
+        </span>
+        <div class="inline-flex items-center gap-1">
+            <button class="px-2.5 py-1 text-slate-500 hover:text-slate-800 rounded text-body-sm disabled:opacity-40" 
+                    ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">
+                Anterior
+            </button>`;
+
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+                if (i === currentPage) {
+                    html += `<button class="w-8 h-8 flex items-center justify-center rounded bg-[#1e293b] text-white font-meta-code text-meta-code font-bold">${i}</button>`;
+                } else {
+                    html += `<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-slate-100 text-slate-700 font-meta-code text-meta-code" onclick="goToPage(${i})">${i}</button>`;
+                }
+            } else if (Math.abs(i - currentPage) === 2) {
+                // To avoid multiple ellipses
+                if (i > currentPage && i < totalPages) {
+                   html += `<span class="w-8 h-8 flex items-center justify-center text-slate-400">...</span>`;
+                } else if (i < currentPage && i > 1) {
+                   html += `<span class="w-8 h-8 flex items-center justify-center text-slate-400">...</span>`;
+                }
+            }
+        }
+
+        html += `<button class="px-2.5 py-1 text-slate-500 hover:text-slate-800 rounded text-body-sm disabled:opacity-40" 
+                    ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">
+                Siguiente
+            </button>
+        </div>`;
+
+        paginationContainer.innerHTML = html;
+    }
+
+    window.goToPage = function(page) {
+        currentPage = page;
+        renderPagination();
+        // Scroll to top of results smoothly
+        const topOfList = document.getElementById('contador-proyectos-sub');
+        if (topOfList) {
+            topOfList.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    };
+
+    lineaCheckboxes.forEach(cb => cb.addEventListener('change', applyFilters));
+    trayectoCheckboxes.forEach(cb => cb.addEventListener('change', applyFilters));
+    cuposCheckboxes.forEach(cb => cb.addEventListener('change', applyFilters));
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            lineaCheckboxes.forEach(cb => cb.checked = false);
+            trayectoCheckboxes.forEach(cb => cb.checked = false);
+            cuposCheckboxes.forEach(cb => cb.checked = false);
+            if (searchInput) searchInput.value = '';
+            applyFilters();
+        });
+    }
+    
+    // Initialize
+    applyFilters();
+});
+</script>

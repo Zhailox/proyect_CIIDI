@@ -1,0 +1,45 @@
+<?php
+// Se obtienen las configuraciones del header recolectadas por el Kernel
+$elementosCabecera = (isset($this) && method_exists($this, 'getControlesHeader')) ? $this->getControlesHeader() : [];
+?>
+
+<header class="main-header">
+  <div class="logo-container">
+    <button type="button" class="mobile-menu-toggle" id="mobileMenuBtn" onclick="if(typeof toggleMobileSidebar==='function') toggleMobileSidebar();" aria-label="Abrir menú de navegación" title="Menú">
+      <i class="ph-bold ph-list"></i>
+    </button>
+    <a href="inicio">
+      <img src="assets/img/SinfondoCIIDI.webp" alt="CIIDI" style="height: 40px; width: auto; margin-right: 0.1rem;">
+      <span class="logo-text">Repositorio</span> <span class="logo-highlight">CIIDI</span>
+    </a>
+  </div>
+  
+  <div class="header-actions">
+    
+    <?php foreach ($elementosCabecera as $control): ?>
+        
+        <?php if ($control['tipo'] === 'search'): ?>
+            <form action="<?php echo $control['accion']; ?>" method="GET" class="search-container">
+                <i class="<?php echo $control['icono']; ?> search-icon"></i>
+                <input type="text" name="q" class="search-input" placeholder="<?php echo $control['placeholder']; ?>">
+            </form>
+            
+        <?php elseif ($control['tipo'] === 'button'): ?>
+            <a href="<?php echo $control['enlace']; ?>" class="<?php echo $control['clase']; ?>">
+                <i class="<?php echo $control['icono']; ?>"></i> <?php echo $control['texto']; ?>
+            </a>
+            
+        <?php elseif ($control['tipo'] === 'custom_view'): ?>
+            <?php 
+                if (file_exists($control['ruta_vista'])) {
+                    $controlData = $control;
+                    include $control['ruta_vista'];
+                }
+            ?>
+            
+        <?php endif; ?>
+        
+    <?php endforeach; ?>
+
+  </div>
+</header>

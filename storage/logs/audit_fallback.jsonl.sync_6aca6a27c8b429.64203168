@@ -1,0 +1,1 @@
+{"id":"log_6aca69eac7cd33.83127279","fecha_hora":"2026-10-10 12:38:02","nivel":"ERROR","modulo":"Autenticacion","accion":"Falla Conexión Login","detalles":"Error de base de datos al autenticar cédula 'V-32621284': SQLSTATE[42501]: Insufficient privilege: 7 ERROR:  permiso denegado a la tabla usuarios","responsable":"Anónimo \/ Sistema","ip":"::1"}

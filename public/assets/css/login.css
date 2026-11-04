@@ -1,0 +1,5 @@
+.login {
+    color: #ffffff;
+    text-align: center;
+    background-color: var(--color-secundario, #505984);
+}

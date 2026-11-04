@@ -1,0 +1,66 @@
+{
+    "paginacion": {
+        "limite_catalogo": 10,
+        "opciones_selector": [
+            6,
+            9,
+            12,
+            18
+        ]
+    },
+    "imagenes": {
+        "max_size_mb": 5,
+        "extensiones_permitidas": [
+            "jpg",
+            "jpeg",
+            "png",
+            "webp",
+            "gif"
+        ],
+        "mime_permitidos": [
+            "image\/jpeg",
+            "image\/png",
+            "image\/gif",
+            "image\/webp"
+        ],
+        "convertir_a_webp": true,
+        "lazy_load": true,
+        "carpeta_uploads": "public\/uploads\/cursos\/",
+        "placeholder_url": "https:\/\/images.unsplash.com\/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=600"
+    },
+    "moodle": {
+        "url_fallback": "https:\/\/www.youtube.com"
+    },
+    "formulario_google": {
+        "url_default": "https:\/\/docs.google.com\/forms\/d\/e\/1FAIpQLSean-NUF1PEU6ci8MiNIQp13OewWCofp7O7V3MV8k_CA1CHNQ\/viewform",
+        "modo": "embebido",
+        "habilitado": true,
+        "titulo": "Formulario Oficial de Inscripción a Cursos CIIDI"
+    },
+    "api_externa": {
+        "habilitada": true,
+        "auto_push": false,
+        "requiere_api_key_lectura": true,
+        "api_key": "ciidi_sync_secret_2026",
+        "webhook_url": "https:\/\/ciidi.iutetvirtual.org.ve\/api_sync.php",
+        "ultimo_sync": {
+            "fecha": "2026-11-04 06:16:26",
+            "ok": false,
+            "codigo_http": 0,
+            "evento": "perfil_investigador_actualizado",
+            "mensaje": "Error de conexión: SSL certificate problem: unable to get local issuer certificate",
+            "cursos_enviados": 5,
+            "inv_enviados": 10,
+            "version_hash": "4896609ebf2dbcce4b0da83e4cf34e158867b51005fa57725b62e54a16e59352"
+        }
+    },
+    "seguridad": {
+        "csrf_activo": true
+    },
+    "roles": {
+        "nivel_ver_catalogo": -1,
+        "nivel_crear_curso": 1,
+        "nivel_eliminar_curso": 2,
+        "nivel_ver_config": 3
+    }
+}

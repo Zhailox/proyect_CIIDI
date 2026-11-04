@@ -1,0 +1,113 @@
+<?php // Logica movida al Controlador ?>
+
+<?php if (isset($_SESSION['flash_success']) || isset($_SESSION['flash_error'])): ?>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            <?php if (isset($_SESSION['flash_success'])): ?>
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: '<?php echo addslashes($_SESSION['flash_success']); ?>',
+                    confirmButtonColor: '#10b981'
+                });
+                <?php unset($_SESSION['flash_success']); ?>
+            <?php endif; ?>
+            
+            <?php if (isset($_SESSION['flash_error'])): ?>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: '<?php echo addslashes($_SESSION['flash_error']); ?>',
+                    confirmButtonColor: '#e11d48'
+                });
+                <?php unset($_SESSION['flash_error']); ?>
+            <?php endif; ?>
+        });
+    </script>
+<?php endif; ?>
+
+<style>
+.gp-header {
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 1.5rem 2rem 0 2rem;
+    margin-bottom: 2rem;
+}
+.gp-title {
+    color: #121a3e;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.gp-subtitle {
+    color: #64748b;
+    margin: 0 0 1.5rem 0;
+    font-size: 0.95rem;
+}
+.gp-main-tabs {
+    display: flex;
+    gap: 2rem;
+}
+.gp-main-tab {
+    padding: 1rem 0;
+    font-weight: 600;
+    color: #94a3b8;
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.gp-main-tab:hover {
+    color: #505984;
+}
+.gp-main-tab.active {
+    color: #121a3e;
+    border-bottom-color: #121a3e;
+}
+</style>
+
+<div class="gp-header">
+    <h2 class="gp-title"><i class="ph-bold ph-briefcase"></i> Gestión de Solicitudes</h2>
+    <p class="gp-subtitle">Panel unificado para evaluar las propuestas de las empresas y asignar los equipos de estudiantes.</p>
+    
+<?php
+$usuarioActual = Auth::usuario() ?? [];
+$rolActual = $usuarioActual['rol'] ?? '';
+$nivelActual = (int)($usuarioActual['nivel'] ?? 999);
+$esAdminActual = $nivelActual === 0 || str_contains(mb_strtolower($rolActual), 'super admin');
+$esComiteActual = str_contains(mb_strtolower($rolActual), 'comit');
+$puedeAcreditarPst = $esAdminActual || $esComiteActual;
+?>
+    <div class="gp-main-tabs">
+        <a href="?ruta=gestion-proyectos&tab=propuestas" class="gp-main-tab <?= $tab === 'propuestas' ? 'active' : '' ?>">
+            <i class="ph-bold ph-folder-open"></i> Evaluación de Propuestas Empresariales
+        </a>
+        <a href="?ruta=gestion-proyectos&tab=equipos" class="gp-main-tab <?= $tab === 'equipos' ? 'active' : '' ?>">
+            <i class="ph-bold ph-users-three"></i> Asignación de Equipo Estudiantil
+        </a>
+        <?php if ($puedeAcreditarPst): ?>
+        <a href="?ruta=profesores-pst" class="gp-main-tab">
+            <i class="ph-bold ph-chalkboard-teacher"></i> Acreditación Docentes PST
+        </a>
+        <?php endif; ?>
+    </div>
+</div>
+
+<div class="gp-content" style="padding: 0 2rem 2rem 2rem;">
+    <?php
+    if ($tab === 'propuestas') {
+        // Reducimos el padding de ge-wrapper porque ya tenemos padding en gp-content
+        echo '<style>.ge-wrapper { padding: 0 !important; } .ge-header { display: none !important; }</style>';
+        require __DIR__ . '/banco_propuestas.php';
+    } else {
+        echo '<style>.ge-wrapper { padding: 0 !important; } .ge-header { display: none !important; }</style>';
+        require __DIR__ . '/gestion_equipos.php';
+    }
+    ?>
+</div>

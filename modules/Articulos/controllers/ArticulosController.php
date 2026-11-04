@@ -1,0 +1,789 @@
+<?php
+require_once CORE_PATH . 'Security/Auth.php';
+require_once CORE_PATH . 'Security/AuditLogger.php';
+require_once __DIR__ . '/../models/ArticuloModel.php';
+require_once __DIR__ . '/../services/ConfigService.php';
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
+
+
+class ArticulosController {
+    
+    private $articuloModel;
+    private int $nivelAdmin;
+
+    public function __construct() {
+        $this->articuloModel = new ArticuloModel();
+        $this->nivelAdmin   = SystemConfigService::get('accesos_modulos.articulos.admin', 1);
+    }
+
+    public function index() {
+        $tabActiva = $_GET['tab'] ?? 'articulos';
+
+        $filtros = [
+            'q' => trim($_GET['q'] ?? ''),
+            'q_autor' => trim($_GET['q_autor'] ?? ''), 
+            'year' => !empty($_GET['year']) ? (int) $_GET['year'] : '',
+            'categorias' => array_filter(array_map('intval', $_GET['categoria'] ?? [])),
+            'etiquetas' => array_filter(array_map('intval', $_GET['etiqueta'] ?? [])),
+            'activo' => true
+        ];
+
+        $pagina = max(1, (int) ($_GET['page'] ?? 1));
+        $porPagina = ConfigService::get('paginacion.limite_catalogo', 16);
+
+        $paginacion = $this->articuloModel->obtenerArticulosPaginados($filtros, $pagina, $porPagina);
+        $categorias = $this->articuloModel->obtenerCategorias();
+        $etiquetas = $this->articuloModel->obtenerEtiquetas();
+        
+        $autorPerfil = null;
+        if (!empty($filtros['q_autor'])) {
+            $autorPerfil = $this->articuloModel->obtenerAutorPorNombreExacto($filtros['q_autor']);
+        }
+
+        // ==========================================
+        // LÓGICA PARA LA PESTAÑA DE AUTORES (NUEVO)
+        // ==========================================
+        $q_autores_tab = trim($_GET['q_autores_tab'] ?? '');
+        $paginaAutores = max(1, (int) ($_GET['p_aut'] ?? 1));
+        $autoresCatalogo = [];
+        
+        if ($tabActiva === 'autores') {
+            // Reutilizamos el buscador del gestor, trayendo 12 tarjetas de autor por página
+            $autoresCatalogo = $this->articuloModel->buscarAutoresGestor($q_autores_tab, $paginaAutores, 12); 
+        }
+
+        return [
+            'tabActiva' => $tabActiva,
+            'q_autores_tab' => $q_autores_tab,
+            'autoresCatalogo' => $autoresCatalogo,
+
+            'articulos' => $paginacion['articulos'],
+            'categorias' => $categorias,
+            'etiquetas' => $etiquetas,
+            'filtros' => $filtros,
+            'paginacion' => $paginacion,
+            'autorPerfil' => $autorPerfil 
+        ];
+    }
+    public function leer() {
+        $id = (int)($_GET['id'] ?? 0);
+        $maxRecomendados = ConfigService::get('paginacion.max_recomendados', 3);
+        $articulo = $this->articuloModel->obtenerArticuloPorId($id);
+        if (!$articulo && !headers_sent()) {
+            http_response_code(404);
+        }
+
+        return [
+            'articulo' => $articulo,
+            'similares' => $articulo ? $this->articuloModel->getArticulosSimilares($id, $maxRecomendados) : []
+        ];
+    }
+
+    public function gestor() {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin);
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        $filtros = [
+            'q' => trim($_GET['q'] ?? ''),
+            'activo' => 'todos' // 
+        ];
+        $pagina = max(1, (int) ($_GET['page'] ?? 1));
+        $porPagina = ConfigService::get('paginacion.limite_gestor', 15); // Límite dinámico
+
+        $paginacion = $this->articuloModel->obtenerArticulosPaginados($filtros, $pagina, $porPagina);
+
+        return [
+            'articulos' => $paginacion['articulos'],
+            'paginacion' => $paginacion,
+            'filtros' => $filtros
+        ];
+    }
+    public function nuevo() {
+        // Candado: Solo administradores o bibliotecarios con permiso crear
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'Articulos');
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+        $qb = new QueryBuilder();
+        
+        // Obtenemos los catálogos para llenar los <select> del formulario
+        $editoriales = $qb->tabla('editoriales')->orderBy('nombre', 'ASC')->get();
+        $autores = $qb->tabla('investigadores')->orderBy('nombre_completo', 'ASC')->get();
+
+        return [
+            'editoriales' => $editoriales,
+            'autores' => $autores
+        ];
+    }
+    public function procesar() {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'Articulos');
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+            $_SESSION['mensaje_error'] = "Petición rechazada por seguridad (Token CSRF inválido o expirado).";
+            header('Location: gestor-articulos');
+            exit;
+        }
+        // 1. Detección profunda de límite del servidor (post_max_size)
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && isset($_SERVER['CONTENT_LENGTH']) && $_SERVER['CONTENT_LENGTH'] > 0) {
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            $maxServidor = ini_get('post_max_size');
+            $_SESSION['mensaje_error'] = "El archivo enviado es tan masivo que bloqueó el servidor. (Límite estricto en php.ini: {$maxServidor}).";
+            header('Location: gestor-articulos');
+            exit;
+        }
+
+        // Bloqueo de seguridad si intentan acceder por URL directa
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: gestor-articulos');
+            exit;
+        }
+
+        // 1. Recibir datos básicos
+        $titulo = htmlspecialchars(trim($_POST['titulo'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $resumen = htmlspecialchars(trim($_POST['resumen'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $volumen = htmlspecialchars(trim($_POST['volumen'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $numero = htmlspecialchars(trim($_POST['numero'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $issn = htmlspecialchars(trim($_POST['issn'] ?? ''), ENT_QUOTES, 'UTF-8');
+
+        $categorias = array_values(array_filter(array_map('intval', $_POST['categorias'] ?? [])));
+        $id_editorial = !empty($_POST['id_editorial']) ? (int)$_POST['id_editorial'] : null;
+        $anio_publicacion = !empty($_POST['anio_publicacion']) ? (int)$_POST['anio_publicacion'] : (int)date('Y');
+        
+        $archivo_pdf = filter_var(trim($_POST['archivo_pdf'] ?? ''), FILTER_SANITIZE_URL);
+        $url_imagen = filter_var(trim($_POST['url_imagen'] ?? ''), FILTER_SANITIZE_URL);
+
+        // Validar esquema HTTP/HTTPS estricto para evitar SSRF o esquemas peligrosos
+        $esUrlSegura = function($url) {
+            if (empty($url)) return true;
+            $scheme = parse_url($url, PHP_URL_SCHEME);
+            $host = parse_url($url, PHP_URL_HOST);
+            if (!in_array(strtolower((string)$scheme), ['http', 'https'])) return false;
+            if (in_array(strtolower((string)$host), ['localhost', '127.0.0.1', '::1'])) return false;
+            return true;
+        };
+
+        if (!$esUrlSegura($archivo_pdf) || !$esUrlSegura($url_imagen)) {
+            $_SESSION['mensaje_error'] = "URL no válida o esquema no permitido. Asegúrese de usar enlaces web válidos (http:// o https://).";
+            header('Location: nuevo-articulo');
+            exit;
+        }
+
+        $autores = $_POST['autores'] ?? [];
+        $autores_nuevos = $_POST['autores_nuevos'] ?? [];
+        $etiquetas = $_POST['etiquetas'] ?? [];
+
+        // 2. Manejar la imagen de portada
+        $nombreImagen = 'default_article.jpg';
+        $imagenFisicaCreada = null;
+        
+        // A. Si escribieron una URL externa, la tomamos primero
+        if (!empty($url_imagen)) {
+            $nombreImagen = $url_imagen;
+        }
+
+        // B. Si subieron un archivo físico o el servidor detecta un intento de subida
+        if (isset($_FILES['imagen_portada']) && $_FILES['imagen_portada']['error'] !== UPLOAD_ERR_NO_FILE) {
+            
+            if (session_status() === PHP_SESSION_NONE) session_start();
+
+            // Error 1: Bloqueo desde la configuración central de PHP (php.ini)
+            if ($_FILES['imagen_portada']['error'] === UPLOAD_ERR_INI_SIZE) {
+                $_SESSION['mensaje_error'] = "El servidor (php.ini) rechazó la imagen porque excede su límite global de " . ini_get('upload_max_filesize') . "B.";
+                header('Location: ' . (isset($id) ? "editar-articulo?id=$id" : "nuevo-articulo"));
+                exit;
+            }
+
+            // Si llegó bien a PHP, validamos según nuestro JSON y de una le verificamos el MIME
+            if ($_FILES['imagen_portada']['error'] === UPLOAD_ERR_OK) {
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $mimeType = finfo_file($finfo, $_FILES['imagen_portada']['tmp_name']);
+                if (PHP_VERSION_ID < 80500 && is_resource($finfo)) {
+                    finfo_close($finfo);
+                }
+
+                $mimePermitidos = ['image/jpeg', 'image/png', 'image/webp'];
+                if (!in_array($mimeType, $mimePermitidos)) {
+                    $_SESSION['mensaje_error'] = "El contenido del archivo está corrupto o no es una imagen válida (MIME: $mimeType).";
+                    header('Location: ' . (isset($id) ? "editar-articulo?id=$id" : "nuevo-articulo"));
+                    exit;
+                }
+                $ext = strtolower(pathinfo($_FILES['imagen_portada']['name'], PATHINFO_EXTENSION));
+                $extConPunto = '.' . $ext;
+                
+                $extsPermitidas = ConfigService::get('archivos.extensiones_permitidas', ['.jpg', '.jpeg', '.png', '.webp']);
+                $maxMb = (int)ConfigService::get('archivos.max_size_mb', 5);
+                $maxBytes = $maxMb * 1024 * 1024;
+
+                if ($_FILES['imagen_portada']['size'] > $maxBytes) {
+                    $_SESSION['mensaje_error'] = "La imagen de portada excede nuestro peso máximo permitido de {$maxMb}MB.";
+                    header('Location: ' . (isset($id) ? "editar-articulo?id=$id" : "nuevo-articulo"));
+                    exit;
+                }
+
+                $extensionValida = false;
+                foreach ($extsPermitidas as $permitida) {
+                    if ($extConPunto === $permitida || $ext === str_replace('.', '', $permitida)) {
+                        $extensionValida = true;
+                        break;
+                    }
+                }
+
+                if (!$extensionValida) {
+                    $_SESSION['mensaje_error'] = "Formato no admitido. Permitidos: " . implode(', ', $extsPermitidas);
+                    header('Location: ' . (isset($id) ? "editar-articulo?id=$id" : "nuevo-articulo"));
+                    exit;
+                }
+
+                $tmpPath = $_FILES['imagen_portada']['tmp_name'];
+                $nombreImagen = 'art_' . time() . '_' . uniqid() . '.webp';
+                $destino = __DIR__ . '/../../../storage/uploads/articulos/';
+                if (!is_dir($destino)) mkdir($destino, 0777, true);
+                
+                $rutaDestino = $destino . $nombreImagen;
+                $procesadoExitoso = $this->optimizarImagenPortada($tmpPath, $mimeType, $rutaDestino);
+                
+                if ($procesadoExitoso) {
+                    $imagenFisicaCreada = $rutaDestino;
+                } else {
+                    move_uploaded_file($tmpPath, $rutaDestino);
+                    $imagenFisicaCreada = $rutaDestino;
+                }
+            }
+        }
+
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        // 3. Mandar al modelo para insertar
+        try {
+            $autores_vinculados = $this->articuloModel->registrarArticulo(
+                $titulo,
+                $resumen,
+                $categorias,
+                $id_editorial,
+                $archivo_pdf,
+                $anio_publicacion,
+                $volumen,
+                $numero,
+                $issn,
+                $nombreImagen,
+                $autores,
+                $autores_nuevos,
+                $etiquetas
+            );
+
+            AuditLogger::registrar('INFO', 'Articulos', 'Publicar Artículo', "Nuevo artículo publicado: '{$titulo}' ({$anio_publicacion}).");
+
+            $msgExito = "El artículo fue publicado correctamente en la vitrina.";
+            if (!empty($autores_vinculados)) {
+                $msgExito .= " (Nota: Se vincularon automáticamente investigadores ya existentes debido a que su ORCID coincidía: " . implode(', ', array_unique($autores_vinculados)) . ").";
+            }
+
+            $_SESSION['mensaje_exito'] = $msgExito;
+            header('Location: gestor-articulos');
+            exit;
+
+        } catch (Exception $e) {
+            if ($imagenFisicaCreada && file_exists($imagenFisicaCreada)) {
+                @unlink($imagenFisicaCreada);
+            }
+            AuditLogger::registrar('WARNING', 'Articulos', 'Fallo al Publicar Artículo', "Error al registrar artículo '{$titulo}': " . $e->getMessage());
+            $msgOriginal = $e->getMessage();
+            if (strpos($msgOriginal, '23505') !== false || strpos(strtolower($msgOriginal), 'duplicate') !== false || strpos(strtolower($msgOriginal), 'ya existe') !== false) {
+                $_SESSION['mensaje_error'] = "No se pudo registrar el artículo porque la cédula de un autor o un dato único ya existe registrado en el sistema.";
+            } else {
+                $_SESSION['mensaje_error'] = "Ocurrió un problema al procesar la información del artículo. Por favor verifique los campos e intente nuevamente.";
+            }
+            header('Location: nuevo-articulo');
+            exit;
+        }
+    }
+    public function eliminar() {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'Articulos');
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+            $_SESSION['mensaje_error'] = "Petición rechazada por seguridad (Token CSRF inválido o expirado).";
+            header('Location: gestor-articulos');
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id_articulo = (int)$_POST['id_articulo'];
+            
+            try {
+                $this->articuloModel->eliminarArticulo($id_articulo);
+                
+                AuditLogger::registrar('WARNING', 'Articulos', 'Eliminar Artículo', "Artículo ID #{$id_articulo} eliminado del catálogo.");
+
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_exito'] = "El artículo ha sido eliminado del catálogo y sus archivos liberados.";
+                
+            } catch (Exception $e) {
+                AuditLogger::registrar('ERROR', 'Articulos', 'Fallo al Eliminar Artículo', "No se pudo eliminar el artículo #{$id_articulo}: " . $e->getMessage());
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_error'] = "No fue posible eliminar el artículo debido a que está asociado a otros registros activos.";
+            }
+        }
+        
+        // Redirigimos de vuelta a la tabla
+        header('Location: gestor-articulos');
+        exit;
+    }
+    public function editar() {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Articulos');
+        if (session_status() === PHP_SESSION_NONE) session_start();
+            if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+        $id = (int)($_GET['id'] ?? 0);
+
+        $articulo = $this->articuloModel->obtenerArticuloPorId($id);
+        if (!$articulo) {
+            header('Location: gestor-articulos');
+            exit;
+        }
+
+        $qb = new QueryBuilder();
+        $editoriales = $qb->tabla('editoriales')->orderBy('nombre', 'ASC')->get();
+        $autores = $qb->tabla('investigadores')->orderBy('nombre_completo', 'ASC')->get();
+
+        return [
+            'articulo' => $articulo,
+            'editoriales' => $editoriales,
+            'autores' => $autores,
+            'autoresSeleccionados' => $this->articuloModel->obtenerAutoresDelArticulo($id),
+            'etiquetasSeleccionadas' => $this->articuloModel->obtenerEtiquetasDelArticulo($id),
+            'categoriasSeleccionadas' => $this->articuloModel->obtenerCategoriasDelArticulo($id)
+        ];
+    }
+
+    public function actualizar() {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Articulos');
+        if (session_status() === PHP_SESSION_NONE) session_start();
+            if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+                $_SESSION['mensaje_error'] = "Petición rechazada por seguridad (Token CSRF inválido o expirado).";
+                header('Location: gestor-articulos');
+                exit;
+            }
+        // 1. Detección profunda de límite del servidor (post_max_size)
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && isset($_SERVER['CONTENT_LENGTH']) && $_SERVER['CONTENT_LENGTH'] > 0) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $maxServidor = ini_get('post_max_size');
+                $_SESSION['mensaje_error'] = "El archivo enviado es tan masivo que bloqueó el servidor. (Límite estricto en php.ini: {$maxServidor}).";
+                header('Location: gestor-articulos');
+                exit;
+            }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: gestor-articulos');
+            exit;
+        }
+
+        $id = (int)($_POST['id_articulo'] ?? 0);
+        
+        $titulo = htmlspecialchars(trim($_POST['titulo'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $resumen = htmlspecialchars(trim($_POST['resumen'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $volumen = htmlspecialchars(trim($_POST['volumen'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $numero = htmlspecialchars(trim($_POST['numero'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $issn = htmlspecialchars(trim($_POST['issn'] ?? ''), ENT_QUOTES, 'UTF-8');
+        
+        $categorias = array_values(array_filter(array_map('intval', $_POST['categorias'] ?? [])));
+        $id_editorial = !empty($_POST['id_editorial']) ? (int)$_POST['id_editorial'] : null;
+        $anio_publicacion = !empty($_POST['anio_publicacion']) ? (int)$_POST['anio_publicacion'] : (int)date('Y');
+        
+        $archivo_pdf = filter_var(trim($_POST['archivo_pdf'] ?? ''), FILTER_SANITIZE_URL);
+        $url_imagen = filter_var(trim($_POST['url_imagen'] ?? ''), FILTER_SANITIZE_URL);
+
+        $esUrlSegura = function($url) {
+            if (empty($url)) return true;
+            $scheme = parse_url($url, PHP_URL_SCHEME);
+            $host = parse_url($url, PHP_URL_HOST);
+            if (!in_array(strtolower((string)$scheme), ['http', 'https'])) return false;
+            if (in_array(strtolower((string)$host), ['localhost', '127.0.0.1', '::1'])) return false;
+            return true;
+        };
+
+        if (!$esUrlSegura($archivo_pdf) || !$esUrlSegura($url_imagen)) {
+            $_SESSION['mensaje_error'] = "URL no válida o esquema no permitido. Asegúrese de usar enlaces web válidos (http:// o https://).";
+            header('Location: editar-articulo?id=' . $id);
+            exit;
+        }
+
+        $autores = $_POST['autores'] ?? [];
+        $autores_nuevos = $_POST['autores_nuevos'] ?? [];
+        $etiquetas = $_POST['etiquetas'] ?? [];
+
+        $imgActualInput = trim($_POST['imagen_actual'] ?? 'default_article.jpg');
+        $nombreImagen = (strpos($imgActualInput, 'http') === 0 && $esUrlSegura($imgActualInput))
+            ? $imgActualInput
+            : basename($imgActualInput);
+        
+
+        if (!empty($url_imagen)) {
+            $nombreImagen = $url_imagen;
+        }
+        // B. Si subieron un archivo físico o el servidor detecta un intento de subida
+            if (isset($_FILES['imagen_portada']) && $_FILES['imagen_portada']['error'] !== UPLOAD_ERR_NO_FILE) {
+                
+                if (session_status() === PHP_SESSION_NONE) session_start();
+
+                // Error 1: Bloqueo desde la configuración central de PHP (php.ini)
+                if ($_FILES['imagen_portada']['error'] === UPLOAD_ERR_INI_SIZE) {
+                    $_SESSION['mensaje_error'] = "El servidor (php.ini) rechazó la imagen porque excede su límite global de " . ini_get('upload_max_filesize') . "B.";
+                    header('Location: ' . (isset($id) ? "editar-articulo?id=$id" : "nuevo-articulo"));
+                    exit;
+                }
+
+                // Si llegó bien a PHP, validamos según nuestro JSON
+                if ($_FILES['imagen_portada']['error'] === UPLOAD_ERR_OK) {
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    $mimeType = finfo_file($finfo, $_FILES['imagen_portada']['tmp_name']);
+                    if (PHP_VERSION_ID < 80500 && is_resource($finfo)) {
+                        finfo_close($finfo);
+                    }
+
+                    $mimePermitidos = ['image/jpeg', 'image/png', 'image/webp'];
+                    if (!in_array($mimeType, $mimePermitidos)) {
+                        $_SESSION['mensaje_error'] = "El contenido del archivo está corrupto o no es una imagen válida (MIME: $mimeType).";
+                        header('Location: ' . (isset($id) ? "editar-articulo?id=$id" : "nuevo-articulo"));
+                        exit;
+                    }
+                    $ext = strtolower(pathinfo($_FILES['imagen_portada']['name'], PATHINFO_EXTENSION));
+                    $extConPunto = '.' . $ext;
+                    
+                    $extsPermitidas = ConfigService::get('archivos.extensiones_permitidas', ['.jpg', '.jpeg', '.png', '.webp']);
+                    $maxMb = (int)ConfigService::get('archivos.max_size_mb', 5);
+                    $maxBytes = $maxMb * 1024 * 1024;
+
+                    if ($_FILES['imagen_portada']['size'] > $maxBytes) {
+                        $_SESSION['mensaje_error'] = "La imagen de portada excede nuestro peso máximo permitido de {$maxMb}MB.";
+                        header('Location: ' . (isset($id) ? "editar-articulo?id=$id" : "nuevo-articulo"));
+                        exit;
+                    }
+
+                    $extensionValida = false;
+                    foreach ($extsPermitidas as $permitida) {
+                        if ($extConPunto === $permitida || $ext === str_replace('.', '', $permitida)) {
+                            $extensionValida = true;
+                            break;
+                        }
+                    }
+
+                    if (!$extensionValida) {
+                        $_SESSION['mensaje_error'] = "Formato no admitido. Permitidos: " . implode(', ', $extsPermitidas);
+                        header('Location: ' . (isset($id) ? "editar-articulo?id=$id" : "nuevo-articulo"));
+                        exit;
+                    }
+
+                    $nombreImagen = 'art_' . time() . '_' . uniqid() . '.webp';
+                    $destino = __DIR__ . '/../../../storage/uploads/articulos/';
+                    if (!is_dir($destino)) mkdir($destino, 0777, true); 
+                    
+                    $rutaDestino = $destino . $nombreImagen;
+                    $tmpPath = $_FILES['imagen_portada']['tmp_name'];
+                    $procesadoExitoso = $this->optimizarImagenPortada($tmpPath, $mimeType, $rutaDestino);
+                    if (!$procesadoExitoso) {
+                        move_uploaded_file($tmpPath, $rutaDestino);
+                    }
+                }
+            }
+
+        try {
+            $autores_vinculados = $this->articuloModel->actualizarArticulo(
+                $id,
+                $titulo,
+                $resumen,
+                $categorias,
+                $id_editorial,
+                $archivo_pdf,
+                $anio_publicacion,
+                $volumen,
+                $numero,
+                $issn,
+                $nombreImagen,
+                $autores,
+                $autores_nuevos,
+                $etiquetas
+            );
+
+            AuditLogger::registrar('INFO', 'Articulos', 'Actualizar Artículo', "Artículo ID #{$id} actualizado: '{$titulo}'.");
+
+            $msgExito = 'El artículo fue actualizado correctamente.';
+            if (!empty($autores_vinculados)) {
+                $msgExito .= " (Nota: Algunos autores nuevos fueron reemplazados por sus perfiles originales registrados bajo el mismo ORCID: " . implode(', ', array_unique($autores_vinculados)) . ").";
+            }
+
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            $_SESSION['mensaje_exito'] = $msgExito;
+            header('Location: gestor-articulos');
+            exit;
+        } catch (Exception $e) {
+            AuditLogger::registrar('WARNING', 'Articulos', 'Fallo al Actualizar Artículo', "Error al actualizar artículo #{$id}: " . $e->getMessage());
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            $msg = $e->getMessage();
+            if (strpos($msg, '23505') !== false || strpos(strtolower($msg), 'duplicate') !== false) {
+                $_SESSION['mensaje_error'] = 'No se pudo actualizar el artículo porque contiene un dato (como la cédula de un autor) que ya pertenece a otro registro.';
+            } else {
+                $_SESSION['mensaje_error'] = 'No se pudo actualizar la información del artículo. Verifique los datos e intente nuevamente.';
+            }
+            header('Location: editar-articulo?id=' . $id);
+            exit;
+        }
+    }
+    public function gestorCatalogos() {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+                $_SESSION['mensaje_error'] = "Petición rechazada por seguridad (Token CSRF inválido o expirado).";
+                header('Location: gestor-catalogos');
+                exit;
+            }
+
+            $accion = $_POST['accion'] ?? '';
+            $nombre = trim($_POST['nombre'] ?? '');
+
+            if (strpos($accion, 'crear_') === 0) {
+                Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'Articulos');
+            } elseif (strpos($accion, 'actualizar_') === 0) {
+                Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Articulos');
+            } elseif (strpos($accion, 'eliminar_') === 0) {
+                Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'Articulos');
+            }
+
+            try {
+                if ($accion === 'crear_categoria' && $nombre !== '') {
+                    $this->articuloModel->crearCategoria($nombre);
+                    AuditLogger::registrar('INFO', 'Articulos', 'Crear Categoría', "Nueva categoría: '{$nombre}'.");
+                    $_SESSION['mensaje_exito'] = 'Categoría creada correctamente.';
+                } elseif ($accion === 'crear_etiqueta' && $nombre !== '') {
+                    $this->articuloModel->crearEtiqueta($nombre);
+                    AuditLogger::registrar('INFO', 'Articulos', 'Crear Etiqueta', "Nueva etiqueta: '{$nombre}'.");
+                    $_SESSION['mensaje_exito'] = 'Etiqueta creada correctamente.';
+                } elseif ($accion === 'crear_editorial' && $nombre !== '') {
+                    $this->articuloModel->crearEditorial($nombre);
+                    AuditLogger::registrar('INFO', 'Articulos', 'Crear Editorial', "Nueva editorial/repositorio: '{$nombre}'.");
+                    $_SESSION['mensaje_exito'] = 'Editorial/Repositorio creado correctamente.';
+                } elseif ($accion === 'eliminar_categoria') {
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->eliminarCategoria($idItem);
+                    AuditLogger::registrar('WARNING', 'Articulos', 'Eliminar Categoría', "Categoría ID #{$idItem} eliminada.");
+                    $_SESSION['mensaje_exito'] = 'Categoría eliminada.';
+                } elseif ($accion === 'eliminar_etiqueta') {
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->eliminarEtiqueta($idItem);
+                    AuditLogger::registrar('WARNING', 'Articulos', 'Eliminar Etiqueta', "Etiqueta ID #{$idItem} eliminada.");
+                    $_SESSION['mensaje_exito'] = 'Etiqueta eliminada.';
+                } elseif ($accion === 'eliminar_editorial') {
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->eliminarEditorial($idItem);
+                    AuditLogger::registrar('WARNING', 'Articulos', 'Eliminar Editorial', "Editorial ID #{$idItem} eliminada.");
+                    $_SESSION['mensaje_exito'] = 'Editorial/Repositorio eliminado.';
+                    
+                // --- NUEVAS ACCIONES DE EDICIÓN ---
+                } elseif ($accion === 'actualizar_categoria' && $nombre !== '') {
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->actualizarCategoria($idItem, $nombre);
+                    AuditLogger::registrar('INFO', 'Articulos', 'Actualizar Categoría', "Categoría ID #{$idItem} renombrada a '{$nombre}'.");
+                    $_SESSION['mensaje_exito'] = 'Categoría actualizada correctamente.';
+                } elseif ($accion === 'actualizar_etiqueta' && $nombre !== '') {
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->actualizarEtiqueta($idItem, $nombre);
+                    AuditLogger::registrar('INFO', 'Articulos', 'Actualizar Etiqueta', "Etiqueta ID #{$idItem} renombrada a '{$nombre}'.");
+                    $_SESSION['mensaje_exito'] = 'Etiqueta actualizada correctamente.';
+                } elseif ($accion === 'actualizar_editorial' && $nombre !== '') {
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->actualizarEditorial($idItem, $nombre);
+                    AuditLogger::registrar('INFO', 'Articulos', 'Actualizar Editorial', "Editorial ID #{$idItem} renombrada a '{$nombre}'.");
+                    $_SESSION['mensaje_exito'] = 'Editorial/Repositorio actualizado.';
+                } elseif ($accion === 'actualizar_autor') {
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $nombre_autor = trim($_POST['nombre_completo'] ?? '');
+                    $orcid_autor = trim($_POST['orcid'] ?? ''); 
+                    $biografia_autor = trim($_POST['biografia'] ?? ''); 
+                    $pagina_web_autor = trim($_POST['pagina_web'] ?? ''); 
+                    
+                    if ($nombre_autor !== '' && $orcid_autor !== '') {
+                        $this->articuloModel->actualizarAutor($idItem, $nombre_autor, $orcid_autor, $biografia_autor, $pagina_web_autor);
+                        AuditLogger::registrar('INFO', 'Articulos', 'Actualizar Autor', "Autor ID #{$idItem} actualizado: '{$nombre_autor}'.");
+                        $_SESSION['mensaje_exito'] = 'Datos del autor actualizados correctamente.';
+                    } else {
+                        $_SESSION['mensaje_error'] = 'El nombre y el ORCID son obligatorios.';
+                    }
+                } elseif ($accion === 'eliminar_autor') {
+                    $idItem = (int)($_POST['id'] ?? 0);
+                    $this->articuloModel->eliminarAutor($idItem);
+                    AuditLogger::registrar('WARNING', 'Articulos', 'Eliminar Autor', "Autor ID #{$idItem} eliminado.");
+                    $_SESSION['mensaje_exito'] = 'Autor eliminado correctamente.';
+                }
+            } catch (Exception $e) {
+                AuditLogger::registrar('WARNING', 'Articulos', 'Fallo Operación Catálogo', "Error en '{$accion}': " . $e->getMessage());
+                $msg = $e->getMessage();
+                if (strpos($msg, '23505') !== false || strpos(strtolower($msg), 'duplicate') !== false) {
+                    $_SESSION['mensaje_error'] = 'Ya existe un elemento registrado con este mismo nombre o número de ORCID.';
+                } elseif (strpos($msg, '23503') !== false || strpos(strtolower($msg), 'foreign key') !== false) {
+                    $_SESSION['mensaje_error'] = 'No se puede eliminar el registro porque está siendo utilizado por uno o más artículos.';
+                } else {
+                    $_SESSION['mensaje_error'] = 'No se pudo completar la operación en el catálogo. Intente de nuevo.';
+                }
+            }
+
+            $tabRedirect = $_POST['tab'] ?? 'cat';
+            header('Location: gestor-catalogos?tab=' . urlencode($tabRedirect));
+            exit;
+
+        }
+
+        $q_cat = trim($_GET['q_cat'] ?? '');
+            $p_cat = max(1, (int)($_GET['p_cat'] ?? 1));
+
+            $q_tag = trim($_GET['q_tag'] ?? '');
+            $p_tag = max(1, (int)($_GET['p_tag'] ?? 1));
+
+            $q_edit = trim($_GET['q_edit'] ?? '');
+            $p_edit = max(1, (int)($_GET['p_edit'] ?? 1));
+
+            $q_aut = trim($_GET['q_aut'] ?? ''); // Búsqueda de autores
+            $p_aut = max(1, (int)($_GET['p_aut'] ?? 1));
+
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+        // 2. Ejecutamos las consultas paginadas
+            $limiteCatalogos = ConfigService::get('paginacion.limite_gestor_catalogos', 15);
+            $categorias = $this->articuloModel->obtenerCatalogoPaginado('categorias', $q_cat, $p_cat, $limiteCatalogos);
+        $etiquetas = $this->articuloModel->obtenerCatalogoPaginado('etiquetas', $q_tag, $p_tag, $limiteCatalogos);
+        $editoriales = $this->articuloModel->obtenerCatalogoPaginado('editoriales', $q_edit, $p_edit, $limiteCatalogos);
+        $autores = $this->articuloModel->buscarAutoresGestor($q_aut, $p_aut, $limiteCatalogos);
+
+        return [
+            'categorias' => $categorias,
+            'etiquetas' => $etiquetas,
+            'editoriales' => $editoriales,
+            'autores' => $autores,
+            'busquedas' => [
+                'q_cat' => $q_cat, 'q_tag' => $q_tag, 'q_edit' => $q_edit, 'q_aut' => $q_aut
+            ]
+        ];
+    }
+    public function apiCatalogos() {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        header('Content-Type: application/json; charset=utf-8');
+        
+        $qb = new QueryBuilder();
+        echo json_encode([
+            'categorias' => $qb->tabla('categorias')->orderBy('nombre', 'ASC')->get(),
+            'etiquetas' => $qb->tabla('etiquetas')->orderBy('nombre', 'ASC')->get()
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    public function toggleEstado() {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Articulos');
+        $id = (int)($_GET['id'] ?? 0);
+        try {
+            $this->articuloModel->cambiarEstado($id);
+            AuditLogger::registrar('INFO', 'Articulos', 'Cambio Visibilidad', "Se actualizó la visibilidad del artículo ID #{$id}.");
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            $_SESSION['mensaje_exito'] = "El estado de visibilidad del artículo ha sido actualizado.";
+        } catch (Exception $e) {
+            AuditLogger::registrar('WARNING', 'Articulos', 'Fallo Visibilidad', "Error al cambiar visibilidad del artículo ID #{$id}: " . $e->getMessage());
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            $_SESSION['mensaje_error'] = "No se pudo cambiar la visibilidad del artículo seleccionado.";
+        }
+        header('Location: gestor-articulos');
+        exit;
+    }
+
+    /**
+     * Optimiza y comprime la imagen de portada.
+     * Redimensiona (máximo 1200px de ancho) preservando la relación de aspecto y exporta en formato WebP con calidad 80.
+     */
+    private function optimizarImagenPortada($tmpPath, $mimeType, $rutaDestino) {
+        if (!extension_loaded('gd')) {
+            return false;
+        }
+
+        $srcImg = null;
+        switch ($mimeType) {
+            case 'image/jpeg':
+            case 'image/jpg':
+                $srcImg = @imagecreatefromjpeg($tmpPath);
+                break;
+            case 'image/png':
+                $srcImg = @imagecreatefrompng($tmpPath);
+                break;
+            case 'image/webp':
+                $srcImg = @imagecreatefromwebp($tmpPath);
+                break;
+        }
+
+        if (!$srcImg) {
+            return false;
+        }
+
+        $anchoOrig = imagesx($srcImg);
+        $altoOrig = imagesy($srcImg);
+
+        if ($anchoOrig <= 0 || $altoOrig <= 0) {
+            imagedestroy($srcImg);
+            return false;
+        }
+
+        $maxAncho = 1200;
+        if ($anchoOrig > $maxAncho) {
+            $nuevoAncho = $maxAncho;
+            $nuevoAlto = (int)round(($altoOrig * $maxAncho) / $anchoOrig);
+        } else {
+            $nuevoAncho = $anchoOrig;
+            $nuevoAlto = $altoOrig;
+        }
+
+        $destImg = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
+
+        // Preservar transparencia para PNG o WebP transparentes
+        imagealphablending($destImg, false);
+        imagesavealpha($destImg, true);
+
+        imagecopyresampled($destImg, $srcImg, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $anchoOrig, $altoOrig);
+
+        $exito = @imagewebp($destImg, $rutaDestino, 80);
+
+        imagedestroy($srcImg);
+        imagedestroy($destImg);
+
+        return $exito;
+    }
+    public function perfilAutor() {
+        $idAutor = (int)($_GET['id'] ?? 0);
+        $autor = $this->articuloModel->obtenerAutorPorId($idAutor);
+        
+        if (!$autor) {
+            header('Location: articulos?tab=autores');
+            exit;
+        }
+
+        $filtros = [
+            'id_autor' => $idAutor,
+            'q' => trim($_GET['q'] ?? ''),
+            'year' => !empty($_GET['year']) ? (int) $_GET['year'] : '',
+            'categorias' => array_filter(array_map('intval', (array)($_GET['categoria'] ?? []))),
+            'etiquetas' => array_filter(array_map('intval', (array)($_GET['etiqueta'] ?? []))),
+            'activo' => true
+        ];
+
+        $pagina = max(1, (int) ($_GET['page'] ?? 1));
+        $porPagina = ConfigService::get('paginacion.limite_catalogo', 16);
+
+        $paginacion = $this->articuloModel->obtenerArticulosPaginados($filtros, $pagina, $porPagina);
+        $categorias = $this->articuloModel->obtenerCategorias();
+        $etiquetas = $this->articuloModel->obtenerEtiquetas();
+
+        return [
+            'autor' => $autor,
+            'articulos' => $paginacion['articulos'],
+            'categorias' => $categorias,
+            'etiquetas' => $etiquetas,
+            'filtros' => $filtros,
+            'paginacion' => $paginacion
+        ];
+    }
+}

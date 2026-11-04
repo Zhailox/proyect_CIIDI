@@ -1,0 +1,164 @@
+<?php
+// modules/Articulos/index.php
+
+require_once CORE_PATH . 'Interfaces/ModuleContract.php';
+require_once __DIR__ . '/../SuperAdmin/services/SystemConfigService.php';
+
+
+
+class ArticulosModule implements ModuleContract {
+    
+    public function getNombre(): string {
+        return 'Módulo de Revista Digital y Artículos';
+    }
+
+public function getRutas(): array {
+        return [
+            'articulos' => [
+                'controlador_path' => __DIR__ . '/controllers/ArticulosController.php',
+                'controlador'      => 'ArticulosController',
+                'metodo'           => 'index',
+                'vista'            => __DIR__ . '/views/grid_revista.php', 
+                'titulo'           => 'Revista Digital - Portal de Artículos Científicos',
+                'css'              => ['Articulos.css']
+            ],
+            'leer-articulo' => [
+                'controlador_path' => __DIR__ . '/controllers/ArticulosController.php',
+                'controlador'      => 'ArticulosController',
+                'metodo'           => 'leer',
+                'vista'            => __DIR__ . '/views/leer_articulo.php', 
+                'titulo'           => 'Lectura de Artículo - UPTTMBI',
+                'css'              => ['Articulos.css']
+            ],
+            // --- NUEVAS RUTAS ADMINISTRATIVAS ---
+            'gestor-articulos' => [
+                'controlador_path' => __DIR__ . '/controllers/ArticulosController.php',
+                'controlador'      => 'ArticulosController',
+                'metodo'           => 'gestor',
+                'vista'            => __DIR__ . '/views/gestor_articulos.php', 
+                'titulo'           => 'Gestor de Artículos - Administración',
+                'css'              => ['gestor_articulos.css']
+            ],
+            'nuevo-articulo' => [
+                'controlador_path' => __DIR__ . '/controllers/ArticulosController.php',
+                'controlador'      => 'ArticulosController',
+                'metodo'           => 'nuevo',
+                'vista'            => __DIR__ . '/views/nuevo_articulo.php', 
+                'titulo'           => 'Nuevo Artículo - Administración',
+                'css'              => ['gestor_articulos.css']
+            ],
+            'procesar-articulo' => [
+                'controlador_path' => __DIR__ . '/controllers/ArticulosController.php',
+                'controlador'      => 'ArticulosController',
+                'metodo'           => 'procesar'
+
+            ],
+            'editar-articulo' => [
+            'controlador_path' => __DIR__ . '/controllers/ArticulosController.php',
+            'controlador'      => 'ArticulosController',
+            'metodo'           => 'editar',
+            'vista'            => __DIR__ . '/views/editar_articulo.php',
+            'titulo'           => 'Editar Artículo - Administración',
+            'css'              => ['gestor_articulos.css']
+            ],
+            'actualizar-articulo' => [
+                'controlador_path' => __DIR__ . '/controllers/ArticulosController.php',
+                'controlador'      => 'ArticulosController',
+                'metodo'           => 'actualizar'
+            ],
+            'eliminar-articulo' => [
+                'controlador_path' => __DIR__ . '/controllers/ArticulosController.php',
+                'controlador'      => 'ArticulosController',
+                'metodo'           => 'eliminar'
+            ],
+            'gestor-catalogos' => [
+                'controlador_path' => __DIR__ . '/controllers/ArticulosController.php',
+                'controlador' => 'ArticulosController',
+                'metodo' => 'gestorCatalogos',
+                'vista' => __DIR__ . '/views/gestor_catalogos.php',
+                'titulo' => 'Gestor de Catálogos - Administración',
+                'css' => ['gestor_articulos.css']
+            ],
+            'configuracion-articulos' => [
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'controlador'      => 'ConfiguracionController',
+                'metodo'           => 'index',
+                'vista'            => __DIR__ . '/views/configuracion_articulos.php',
+                'titulo'           => 'Ajustes de Revista Digital',
+                'css'              => ['gestor_articulos.css']
+            ],
+            'api-catalogos-art' => [
+                'controlador_path' => __DIR__ . '/controllers/ArticulosController.php',
+                'controlador'      => 'ArticulosController',
+                'metodo'           => 'apiCatalogos',
+            ],
+            'toggle-estado-articulo' => [
+                'controlador_path' => __DIR__ . '/controllers/ArticulosController.php',
+                'controlador'      => 'ArticulosController',
+                'metodo'           => 'toggleEstado',
+            ],
+            'api-eliminar-imagen-articulos' => [
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'controlador'      => 'ConfiguracionController',
+                'metodo'           => 'eliminarImagen',
+            ],
+            'perfil-autor' => [
+                'controlador_path' => __DIR__ . '/controllers/ArticulosController.php',
+                'controlador'      => 'ArticulosController',
+                'metodo'           => 'perfilAutor',
+                'vista'            => __DIR__ . '/views/perfil_autor.php', 
+                'titulo'           => 'Perfil de Autor - UPTTMBI',
+                'css'              => ['Articulos.css']
+            ],
+            
+        ];
+    }
+
+    public function getMenuConfig(): array {
+        $nivelAdmin = SystemConfigService::get('accesos_modulos.articulos.admin', 0);
+        $nivelPublico = SystemConfigService::get('accesos_modulos.articulos.publico', 999);
+        return [
+            [
+                'tipo'        => 'parent',
+                'titulo'      => 'Artículos',
+                'icono'       => 'ph-fill ph-newspaper',
+                'orden'       => 20,
+                'enlace'      => 'articulos',
+                'activadores' => ['articulos', 'leer-articulo', 'gestor-articulos', 'nuevo-articulo', 'procesar-articulo', 'editar-articulo', 'actualizar-articulo', 'eliminar-articulo', 'gestor-catalogos', 'configuracion-articulos'],
+                'privilegio_minimo' => $nivelPublico,
+                'subitems'    => [
+                    ['ruta' => 'articulos', 'titulo' => 'Revista Digital', 'privilegio_minimo' => $nivelPublico],
+                    ['ruta' => 'gestor-articulos', 'titulo' => 'Gestor Interno', 'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'gestor-catalogos', 'titulo' => 'Gestor Catalogos', 'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'configuracion-articulos', 'titulo' => 'Ajustes de Revista', 'privilegio_minimo' => $nivelAdmin, 'permiso_rbac' => 'auditar', 'modulo_rbac' => 'Articulos']
+                ]
+            ]
+        ];
+    }
+
+
+    public function getDescripcion(): string {
+        return 'Vitrina digital universitaria. Promoción de artículos científicos, crónicas y boletines del PNF de Informática.';
+    }
+
+    public function getDependencias(): array {
+        return []; 
+    }
+
+    public function getHomeConfig(): array {
+        return [
+            'tipo'        => 'standard',
+            'icono'       => 'ph-fill ph-newspaper',
+            'titulo'      => 'Revista Científica Universitaria',
+            'descripcion' => 'Explora nuestras últimas publicaciones académicas, crónicas y artículos de investigación redactados por la comunidad.',
+            'enlace'      => 'articulos',
+            'texto_boton' => 'EXPLORAR CATÁLOGO'
+        ];
+    }
+
+    public function getHeaderConfig(): array {
+        return [];
+    }
+}
+
+return new ArticulosModule();

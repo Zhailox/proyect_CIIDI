@@ -1,0 +1,1 @@
+ALTER TABLE public.autores ADD COLUMN orcid VARCHAR(50) DEFAULT NULL;

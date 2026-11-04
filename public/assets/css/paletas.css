@@ -1,0 +1,55 @@
+   /*Paleta de color 1 (La que ya presentamos)*/
+  --color-principal: rgb(18, 26, 62); /* Azul Oscurito */
+  --color-secundario: rgb(80, 89, 132);  /* Azul Gris */
+  --color-terciario: rgb(112, 144, 203); /* Azul Claro */
+  --gris: rgb(169, 168, 166);
+  --blanco: rgb(244, 247, 251);
+  
+  /* Para que sea más tratable al usarse con el canal alfa (transparencia) */
+  --color-principal-rgb: 18, 26, 62; 
+  --color-secundario-rgb: 80, 89, 132;
+  --color-terciario-rgb: 112, 144, 203;
+  --blanco-puro-rgb: 255, 255, 255;
+  --negro-rgb: 0, 0, 0;
+  
+  /*Paleta de color 2 (La que no quedó) */
+  --color-principal: rgb(80, 168, 232); /* Azul Duro */
+  --color-secundario: rgb(62, 59, 112);  /* Azul Claro */
+  --color-terciario: rgb(4, 46, 158); /* Morado? */
+  --gris: rgb(52, 52, 62);
+  --blanco: rgb(255, 255, 255);
+  
+  /* Para que sea más tratable al usarse con el canal alfa (transparencia) */
+  --color-principal-rgb: 80, 168, 232; 
+  --color-secundario-rgb: 62, 59, 112;
+  --color-terciario-rgb: 4, 46, 158;
+  --blanco-puro-rgb: 255, 255, 255;
+  --negro-rgb: 0, 0, 0;
+ 
+    /*Paleta de color 3 (La que no le gusta a Karina por exceso de floripondiura) */
+  --color-principal: rgb(114, 165, 231); /* Azul Duro */
+  --color-secundario: rgb(198, 208, 244);  /* Azul Claro */
+  --color-terciario: rgb(140, 122, 162); /* Morado? */
+  --gris: #34343E;
+  --blanco: #FFFFFF;
+  
+  /* Para que sea más tratable al usarse con el canal alfa (transparencia) */
+  --color-principal-rgb: 114, 165, 231; 
+  --color-secundario-rgb: 198, 208, 244;
+  --color-terciario-rgb: 140, 122, 162;
+  --blanco-puro-rgb: 255, 255, 255;
+  --negro-rgb: 0, 0, 0;
+
+  /*Paleta de color BLANCA (WHITEXICANS)*/
+  --color-principal: rgb(255, 255, 255); /* Azul Oscurito */
+  --color-secundario: rgb(255, 255, 255);  /* Azul Gris */
+  --color-terciario: rgb(255, 255, 255); /* Azul Claro */
+  --gris: rgb(169, 168, 166);
+  --blanco: rgb(244, 247, 251);
+  
+  /* Para que sea más tratable al usarse con el canal alfa (transparencia) */
+  --color-principal-rgb: 255, 255, 255; 
+  --color-secundario-rgb: 255, 255, 255;
+  --color-terciario-rgb: 255, 255, 255;
+  --blanco-puro-rgb: 255, 255, 255;
+  --negro-rgb: 0, 0, 0;

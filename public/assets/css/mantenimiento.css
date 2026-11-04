@@ -1,0 +1,65 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    background-color: #f8fafc; /* Fondo claro del sistema */
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    height: 100%;
+}
+
+.mantenimiento-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+}
+
+.mantenimiento-icon {
+    font-size: 5.5rem;
+    color: var(--texto-subtitulos); /* Tu color principal */
+    margin-bottom: 1rem;
+    animation: pulse 2s infinite; /* Animación sutil de respiración */
+}
+
+.mantenimiento-title {
+    color: var(--texto-subtitulos);
+    margin-bottom: 0.5rem;
+    font-size: 2.2rem;
+    font-weight: 400;
+}
+
+.mantenimiento-text {
+    color: var(--texto-comun);
+    font-size: 1.1rem;
+    max-width: 500px;
+    line-height: 1.6;
+    margin-bottom: 2.5rem;
+}
+
+.mantenimiento-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-secundario);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 700;
+    border: 2px solid var(--color-secundario);
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.mantenimiento-link:hover {
+    background-color: var(--blanco);
+    border-color: var(--color-terciario);
+    color: var(--color-terciario);
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); opacity: 0.8; }
+    100% { transform: scale(1); }
+}

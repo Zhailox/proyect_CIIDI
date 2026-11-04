@@ -1,0 +1,141 @@
+<?php
+// modules/RepositorioPST/index.php
+require_once CORE_PATH . 'Interfaces/ModuleContract.php';
+require_once __DIR__ . '/../SuperAdmin/services/SystemConfigService.php';
+
+class RepositorioPSTModule implements ModuleContract {
+    
+    public function getNombre(): string {
+        return 'Repositorio PST';
+    }
+
+    public function getRutas(): array {
+        return [
+            'inicio-pst' => [
+                'vista'  => __DIR__ . '/views/inicio_repositorio.php',
+                'controlador' => 'InicioRepositorioController',
+                'controlador_path' => __DIR__ . '/controllers/InicioRepositorioController.php',
+                'metodo' => 'index',
+                'titulo' => 'Inicio Repositorio PST',
+                'css'    => ['RepositorioPST.css']
+            ],
+            'repositorio' => [
+                'vista'  => __DIR__ . '/views/inicio_repositorio.php',
+                'controlador' => 'InicioRepositorioController',
+                'controlador_path' => __DIR__ . '/controllers/InicioRepositorioController.php',
+                'metodo' => 'index',
+                'titulo' => 'Explorar Repositorio',
+                'css'    => ['RepositorioPST.css']
+            ],
+
+            'agregar-documento' => [
+                'vista'  => __DIR__ . '/views/admin_subida_pst.php',
+                'controlador' => 'DetallePSTController',
+                'controlador_path' => __DIR__ . '/controllers/DetallePSTController.php',
+                'metodo' => 'crear',
+                'titulo' => 'Gestión Documental',
+                'css'    => ['RepositorioPST.css']
+            ],
+            'buscador' => [
+                'vista'  => __DIR__ . '/views/buscador_unificado.php',
+                'controlador' => 'BusquedaGlobalController',
+                'controlador_path' => __DIR__ . '/controllers/BusquedaGlobalController.php',
+                'metodo' => 'index',
+                'titulo' => 'Explorar Buscador',
+                'css'    => ['RepositorioPST.css']
+            ],
+            'detalles-pst' => [
+                'vista'  => __DIR__ . '/views/detalle_unico.php',
+                'controlador' => 'DetallePSTController',
+                'controlador_path' => __DIR__ . '/controllers/DetallePSTController.php',
+                'metodo' => 'ver',
+                'titulo' => 'Ficha PST',
+                'css'    => ['RepositorioPST.css']
+            ],
+            'ver-pdf-pst' => [
+                'controlador' => 'DetallePSTController',
+                'controlador_path' => __DIR__ . '/controllers/DetallePSTController.php',
+                'metodo' => 'verPdf'
+            ],
+            'obtener-trayectos-carrera' => [
+                'controlador' => 'DetallePSTController',
+                'controlador_path' => __DIR__ . '/controllers/DetallePSTController.php',
+                'metodo' => 'obtenerTrayectosPorCarrera'
+            ],
+            'configuracion-pst' => [
+                'vista'  => __DIR__ . '/views/configuracion_pst.php',
+                'controlador' => 'ConfiguracionController',
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'metodo' => 'index',
+                'titulo' => 'Configuración de Repositorio',
+                'css'    => ['RepositorioPST.css']
+            ],
+            'gestion-red-onnx' => [
+                'vista'  => __DIR__ . '/views/gestion_red_neuronal.php',
+                'controlador' => 'ConfiguracionController',
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'metodo' => 'gestionRedOnnx',
+                'titulo' => 'Gestión del Modelo ONNX IA',
+                'css'    => ['RepositorioPST.css']
+            ],
+            'gestion-red-neuronal' => [
+                'vista'  => __DIR__ . '/views/gestion_red_neuronal.php',
+                'controlador' => 'ConfiguracionController',
+                'controlador_path' => __DIR__ . '/controllers/ConfiguracionController.php',
+                'metodo' => 'gestionRedOnnx',
+                'titulo' => 'Gestión del Modelo ONNX IA',
+                'css'    => ['RepositorioPST.css']
+            ]
+        ];
+    }
+
+    // NUEVO: El plano visual del menú para este módulo
+    public function getMenuConfig(): array {
+        $nivelAdmin = SystemConfigService::get('accesos_modulos.repositorio_pst.admin', 0);
+        $nivelPublico = SystemConfigService::get('accesos_modulos.repositorio_pst.publico', 999);
+        return [
+            [
+                'tipo'        => 'parent',
+                'titulo'      => 'Repositorio',
+                'icono'       => 'ph-fill ph-book-open-text',
+                'orden'       => 10,
+                'privilegio_minimo' => $nivelPublico,
+                'enlace'      => 'repositorio',
+                'activadores' => ['repositorio', 'detalles-pst', 'agregar-documento', 'buscador', 'configuracion-pst', 'gestion-red-onnx', 'gestion-red-neuronal'],
+                'subitems'    => [
+                    ['ruta' => 'repositorio', 'titulo' => 'Explorar Proyectos', 'privilegio_minimo' => $nivelPublico],
+                    ['ruta' => 'buscador', 'titulo' => 'Buscador Unificado', 'privilegio_minimo' => $nivelPublico],
+                    ['ruta' => 'agregar-documento', 'titulo' => 'Gestión Documental', 'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'gestion-red-onnx', 'titulo' => 'Modelo ONNX IA', 'privilegio_minimo' => $nivelAdmin],
+                    ['ruta' => 'configuracion-pst', 'titulo' => 'Configuración Repositorio', 'privilegio_minimo' => $nivelAdmin, 'permiso_rbac' => 'auditar', 'modulo_rbac' => 'RepositorioPST']
+                ]
+            ]
+        ];
+    }
+    public function getDescripcion(): string {
+        return 'Motor de búsqueda y gestión documental de los Proyectos Socio-Tecnológicos.';
+    }
+    public function getDependencias(): array {
+        return ['Autenticacion', 'Investigaciones']; // Requiere que el usuario exista para saber quién sube el PST
+    }
+    // Añadir a modules/RepositorioPST/index.php
+
+    public function getHomeConfig(): array {
+        return [
+            'tipo'       => 'custom_view',
+            'ruta_vista' => __DIR__ . '/views/home_seccion_repo.php',
+            'css'        => 'home_repo.css' // Se inyectará en el <head> automáticamente
+        ];
+    }
+    public function getHeaderConfig(): array {
+        return [
+            'tipo'       => 'search',
+            'placeholder' => 'Buscador Inteligente...',
+            'icono'       => 'ph ph-magnifying-glass',
+            'accion'      => 'buscador',
+            'orden'       => 10
+        ];
+    }
+}
+
+return new RepositorioPSTModule();

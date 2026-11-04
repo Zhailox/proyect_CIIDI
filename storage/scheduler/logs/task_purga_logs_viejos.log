@@ -1,0 +1,10 @@
+========================================================
+REGISTRO DE EJECUCIÓN: Optimización y Rotación de Logs de Auditoría [purga_logs_viejos]
+FECHA/HORA: 2026-09-19 20:53:35
+DURACIÓN: 28.69 ms | ESTADO: OK
+========================================================
+
+MENSAJE: Optimización de logs completada. 0 registros obsoletos purgados.
+
+--- SALIDA ESTÁNDAR / CONSOLA (STDOUT/STDERR) ---
+Registros purgados de system_audit_log en BD: 0

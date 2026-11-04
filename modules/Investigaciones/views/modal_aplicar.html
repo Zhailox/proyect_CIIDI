@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modal Aplicar - UPTTMBI</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+    <div class="container" style="position: relative; height: 100vh;">
+
+        <!-- Botón de prueba para ver el diseño subyacente si se desea -->
+        <div style="padding: 2rem; text-align: center;">
+            <p style="color: var(--text-muted);">El modal se muestra a continuación como overlay interactivo.</p>
+        </div>
+
+        <!-- Este contenido debe inyectarse en un modal, pero se maqueta aislado -->
+        <div class="modal-overlay">
+            <div class="card modal-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(169, 168, 166, 0.2);">
+                    <h2 style="font-size: 1.4rem; color: var(--color-principal); font-weight: 700;">Postulación a Proyecto</h2>
+                    <span class="close-btn" title="Cerrar">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </span>
+                </div>
+                <form>
+                    <div class="form-group">
+                        <label>Motivación Personal</label>
+                        <textarea class="form-control" rows="4" placeholder="¿Por qué deseas unirte a este proyecto? Cuéntanos sobre tus intereses y habilidades relativas a la vacante..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Enlace a Portafolio/GitHub <span style="color: var(--gris); font-weight: 400; font-size: 0.8rem;">(Opcional)</span></label>
+                        <input type="url" class="form-control" placeholder="https://github.com/tu-usuario">
+                    </div>
+                    <div style="margin-top: 2.5rem;">
+                        <button class="btn-primary" style="width: 100%; padding: 0.85rem;" type="button">ENVIAR SOLICITUD DE INGRESO</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+    </div>
+</body>
+</html>

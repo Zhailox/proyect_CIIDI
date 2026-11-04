@@ -1,0 +1,10 @@
+========================================================
+REGISTRO DE EJECUCIÓN: Limpieza de Archivos Temporales & Caché [limpieza_temporales]
+FECHA/HORA: 2026-11-04 05:36:52
+DURACIÓN: 7.45 ms | ESTADO: OK
+========================================================
+
+MENSAJE: Limpieza completada. Depurados 1 archivos temporales y cachés.
+
+--- SALIDA ESTÁNDAR / CONSOLA (STDOUT/STDERR) ---
+Archivos depurados en C:\wamp64\www\proyect_CIIDI-Ale/storage/tmp/: 1

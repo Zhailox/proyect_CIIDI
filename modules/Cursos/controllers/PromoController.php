@@ -1,0 +1,805 @@
+<?php
+// modules/Cursos/controllers/PromoController.php
+require_once __DIR__ . '/../models/CursoModel.php';
+require_once __DIR__ . '/../services/CsrfService.php';
+require_once __DIR__ . '/../services/ImagenService.php';
+require_once __DIR__ . '/../services/ApiExternaCursosService.php';
+require_once CORE_PATH . 'Security/Auth.php';
+require_once __DIR__ . '/../../SuperAdmin/services/SystemConfigService.php';
+
+class PromoController {
+
+    private CursoModel $model;
+    private array $cfg;
+    private int $nivelAdmin;
+
+    public function __construct() {
+        $this->model = new CursoModel();
+        $this->cfg   = $this->model->cargarConfig();
+        $this->nivelAdmin = SystemConfigService::get('accesos_modulos.cursos.admin', 1);
+    }
+
+    /**
+     * Determina si el usuario actual es Super Administrador (nivel 0) o Comité/Admin (nivel 1)
+     * con privilegios para gestionar absolutamente todos los cursos del sistema.
+     */
+    private function esAdminTotalCursos(?array $usuario): bool {
+        if (!$usuario) return false;
+        $nivel = isset($usuario['nivel']) ? (int)$usuario['nivel'] : 999;
+        $rol   = strtolower((string)($usuario['rol'] ?? ''));
+        return ($nivel >= 0 && $nivel <= 1)
+            || str_contains($rol, 'super')
+            || str_contains($rol, 'admin')
+            || str_contains($rol, 'comit');
+    }
+
+    private function limpiarTexto(string $valor, int $maxLen = 5000): string {
+        // Solo limpiamos espacios y truncamos. htmlspecialchars se aplica en la vista.
+        $valor = trim($valor);
+        return mb_substr($valor, 0, $maxLen);
+    }
+
+    private function limpiarUrl(string $valor): string {
+        $valor = trim($valor);
+        if (empty($valor)) return '';
+        $url = filter_var($valor, FILTER_VALIDATE_URL);
+        if ($url === false) return '';
+        $scheme = parse_url($url, PHP_URL_SCHEME);
+        if (!in_array(strtolower($scheme ?? ''), ['http', 'https'])) return '';
+        return $url;
+    }
+
+    public function mostrarCatalogo(): array {
+        $usuario_actual  = Auth::usuario();
+
+        $filtros  = [];
+        $pagina   = max(1, (int)($_GET['pagina'] ?? 1));
+        $porPagina = (int)($_GET['por_pagina'] ?? $this->cfg['paginacion']['limite_catalogo']);
+
+        $opciones  = $this->cfg['paginacion']['opciones_selector'];
+        if (!in_array($porPagina, $opciones)) {
+            $porPagina = $this->cfg['paginacion']['limite_catalogo'];
+        }
+
+        $filtros['estado'] = 'publicado';
+
+        if (!empty($_GET['busqueda'])) {
+            $filtros['busqueda'] = $this->limpiarTexto($_GET['busqueda'], 200);
+        }
+        if (!empty($_GET['modalidad'])) {
+            $filtros['modalidad'] = $this->limpiarTexto($_GET['modalidad'], 50);
+        }
+        if (!empty($_GET['nivel'])) {
+            $filtros['nivel'] = $this->limpiarTexto($_GET['nivel'], 50);
+        }
+        if (!empty($_GET['linea'])) {
+            $filtros['id_linea'] = (int)$_GET['linea'];
+        }
+
+        $lineas       = $this->model->obtenerLineas();
+        $resultado    = $this->model->listarCursos($filtros, $pagina, $porPagina);
+        $cursos       = $resultado['cursos'];
+        $total        = $resultado['total'];
+        $estadisticas = $this->model->obtenerEstadisticas();
+
+        $total_paginas = (int)ceil($total / $porPagina);
+        $paginacion    = [
+            'pagina_actual' => $pagina,
+            'total_paginas' => $total_paginas,
+            'total'         => $total,
+            'por_pagina'    => $porPagina,
+            'opciones'      => $opciones,
+        ];
+
+        $mensaje_exito = $_SESSION['cur_exito'] ?? null;
+        $mensaje_error = $_SESSION['cur_error'] ?? null;
+        unset($_SESSION['cur_exito'], $_SESSION['cur_error']);
+
+        $config_vista    = $this->cfg;
+        $es_admin_cursos = $this->esAdminTotalCursos($usuario_actual);
+
+        return compact(
+            'cursos', 'lineas', 'estadisticas', 'filtros', 'paginacion',
+            'mensaje_exito', 'mensaje_error', 'usuario_actual', 'config_vista', 'es_admin_cursos'
+        );
+    }
+
+    public function mostrarGestion(): array {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'Cursos');
+        
+        $usuario_actual  = Auth::usuario();
+        $id_usuario      = (int)($usuario_actual['id'] ?? 0);
+        $es_admin_cursos = $this->esAdminTotalCursos($usuario_actual);
+        
+        $filtros  = [];
+        $pagina   = max(1, (int)($_GET['pagina'] ?? 1));
+        $porPagina = 10;
+
+        if (!empty($_GET['estado'])) {
+            $estados_validos = ['publicado', 'borrador', 'archivado'];
+            if (in_array($_GET['estado'], $estados_validos)) {
+                $filtros['estado'] = $_GET['estado'];
+            }
+        }
+
+        if (!empty($_GET['busqueda'])) {
+            $filtros['busqueda'] = $this->limpiarTexto($_GET['busqueda'], 200);
+        }
+
+        if ($es_admin_cursos) {
+            if (!empty($_GET['docente']) && (int)$_GET['docente'] > 0) {
+                $filtros['id_docente'] = (int)$_GET['docente'];
+            }
+        } else {
+            $filtros['id_docente'] = $id_usuario;
+        }
+
+        $docentes  = $this->model->listarDocentes();
+        $resultado = $this->model->listarCursos($filtros, $pagina, $porPagina);
+        $cursos    = $resultado['cursos'];
+        $total     = $resultado['total'];
+
+        $total_paginas = (int)ceil($total / $porPagina);
+        $paginacion    = [
+            'pagina_actual' => $pagina,
+            'total_paginas' => $total_paginas,
+            'total'         => $total,
+            'por_pagina'    => $porPagina,
+        ];
+
+        $mensaje_exito = $_SESSION['cur_exito'] ?? null;
+        $mensaje_error = $_SESSION['cur_error'] ?? null;
+        unset($_SESSION['cur_exito'], $_SESSION['cur_error']);
+        
+        $config_vista = $this->cfg;
+
+        return compact(
+            'cursos', 'docentes', 'filtros', 'paginacion', 'mensaje_exito', 'mensaje_error', 
+            'usuario_actual', 'config_vista', 'es_admin_cursos'
+        );
+    }
+
+    public function mostrarFormularioCrear(): array {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'Cursos');
+
+        $docentes         = $this->model->listarDocentes();
+        $lineas           = $this->model->obtenerLineas();
+        $todasDimensiones = $this->model->obtenerTodasDimensiones();
+        $curso            = null;
+        $meta             = [];
+        $modo             = 'crear';
+        $titulo_form      = 'Registrar Nuevo Curso';
+        $error            = $_SESSION['cur_form_error'] ?? null;
+        $csrf_token       = CursosCsrfService::campoHidden();
+        $config_vista     = $this->cfg;
+        $usuario_actual   = Auth::usuario();
+        $es_admin_cursos  = $this->esAdminTotalCursos($usuario_actual);
+        unset($_SESSION['cur_form_error']);
+
+        return compact('docentes', 'lineas', 'todasDimensiones', 'curso', 'meta', 'modo', 'titulo_form', 'error', 'csrf_token', 'config_vista', 'usuario_actual', 'es_admin_cursos');
+    }
+
+    public function procesarCrear(): void {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'crear', 'Cursos');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ?ruta=cursos-gestion'); exit;
+        }
+
+        if ($this->cfg['seguridad']['csrf_activo']) {
+            CursosCsrfService::verificarOFallar('cursos-crear');
+        }
+
+        $titulo      = $this->limpiarTexto($_POST['titulo']      ?? '', 255);
+        $descripcion = $this->limpiarTexto($_POST['descripcion'] ?? '', 5000);
+        $duracion_num = (int)($_POST['duracion_numero'] ?? 0);
+        $duracion_tipo = in_array($_POST['duracion_tipo'] ?? '', ['horas', 'semanas']) ? $_POST['duracion_tipo'] : 'horas';
+        $duracion = $duracion_num > 0 ? $duracion_num . ' ' . $duracion_tipo : '';
+
+        if (empty($titulo)) {
+            $_SESSION['cur_form_error'] = 'El título del curso es obligatorio.';
+            header('Location: ?ruta=cursos-crear'); exit;
+        }
+
+        $usuario_actual  = Auth::usuario();
+        $es_admin_cursos = $this->esAdminTotalCursos($usuario_actual);
+
+        if ($es_admin_cursos) {
+            $id_docente = (int)($_POST['id_docente'] ?? ($usuario_actual['id'] ?? 0));
+            if ($id_docente <= 0) {
+                $_SESSION['cur_form_error'] = 'Debe seleccionar un docente responsable.';
+                header('Location: ?ruta=cursos-crear'); exit;
+            }
+        } else {
+            $id_docente = (int)($usuario_actual['id'] ?? 0);
+        }
+
+        $estados_validos = ['borrador', 'publicado', 'archivado'];
+        $estado = in_array($_POST['estado'] ?? '', $estados_validos) ? $_POST['estado'] : 'borrador';
+
+        $imagen_portada = '';
+        if (isset($_FILES['imagen_portada_file']) && $_FILES['imagen_portada_file']['error'] !== UPLOAD_ERR_NO_FILE) {
+            if ($_FILES['imagen_portada_file']['error'] !== UPLOAD_ERR_OK) {
+                $_SESSION['cur_form_error'] = 'Error al subir la imagen (Código PHP: ' . $_FILES['imagen_portada_file']['error'] . '). Verifica que no exceda el límite del servidor (upload_max_filesize).';
+                header('Location: ?ruta=cursos-crear'); exit;
+            }
+
+            $carpeta = dirname(__DIR__, 3) . '/' . $this->cfg['imagenes']['carpeta_uploads'];
+            $nombre  = CursosImagenService::procesarImagen(
+                $_FILES['imagen_portada_file'],
+                $carpeta,
+                $this->cfg['imagenes']
+            );
+            if ($nombre) {
+                $imagen_portada = $this->cfg['imagenes']['carpeta_uploads'] . $nombre;
+            } else {
+                $_SESSION['cur_form_error'] = 'La imagen no pudo procesarse. Formato no válido o tamaño excedido.';
+                header('Location: ?ruta=cursos-crear'); exit;
+            }
+        } elseif (!empty($_POST['imagen_portada_url'])) {
+            // Alternativa: URL externa de imagen
+            $imagen_portada = $this->limpiarUrl($_POST['imagen_portada_url'] ?? '');
+        }
+
+        $url_moodle = $this->limpiarUrl($_POST['url_moodle'] ?? '');
+        if (empty($url_moodle)) {
+            $url_moodle = $this->cfg['moodle']['url_fallback'];
+        }
+
+        $modalidades_validas = ['Virtual', 'Presencial', 'Híbrido'];
+        $niveles_validos     = ['Básico', 'Intermedio', 'Avanzado', 'Todos los niveles'];
+        $modalidad = in_array($_POST['modalidad'] ?? '', $modalidades_validas) ? $_POST['modalidad'] : 'Virtual';
+        $nivel_c   = in_array($_POST['nivel']     ?? '', $niveles_validos)     ? $_POST['nivel']     : 'Básico';
+        $cupo      = max(0, (int)($_POST['cupo_maximo'] ?? 0));
+        $nota_minima_aprobacion = (float)($_POST['nota_minima_aprobacion'] ?? 70.00);
+        $fecha_inicio = empty($_POST['fecha_inicio']) ? null : $_POST['fecha_inicio'];
+        $fecha_fin = empty($_POST['fecha_fin']) ? null : $_POST['fecha_fin'];
+        $url_video_preview = $this->limpiarUrl($_POST['url_video_preview'] ?? '');
+        $estado_inscripcion = $this->limpiarTexto($_POST['estado_inscripcion'] ?? 'Abierta', 50);
+
+        // Líneas, Dimensiones y Formulario Google
+        $id_linea     = !empty($_POST['id_linea']) && is_array($_POST['id_linea']) ? array_map('intval', $_POST['id_linea']) : [];
+        $id_dimension = !empty($_POST['id_dimension']) && is_array($_POST['id_dimension']) ? array_map('intval', $_POST['id_dimension']) : [];
+        $url_formulario_google = $this->limpiarUrl($_POST['url_formulario_google'] ?? '');
+
+        $datos = [
+            'id_docente'             => $id_docente,
+            'titulo'                 => $titulo,
+            'descripcion'            => $descripcion,
+            'imagen_portada'         => $imagen_portada,
+            'estado'                 => $estado,
+            'nota_minima_aprobacion' => $nota_minima_aprobacion,
+            'url_moodle'             => $url_moodle,
+            'modalidad'              => $modalidad,
+            'nivel'                  => $nivel_c,
+            'duracion'               => $duracion,
+            'cupo_maximo'            => $cupo,
+            'fecha_inicio'           => $fecha_inicio,
+            'fecha_fin'              => $fecha_fin,
+            'url_video_preview'      => $url_video_preview,
+            'estado_inscripcion'     => $estado_inscripcion,
+            'id_linea'               => $id_linea,
+            'id_dimension'           => $id_dimension,
+            'url_formulario_google'  => $url_formulario_google,
+        ];
+
+        try {
+            $nuevo_id = $this->model->crearCurso($datos);
+            if ($nuevo_id) {
+                ApiExternaCursosService::dispararAutoPushSiHabilitado('curso_creado');
+                $_SESSION['cur_exito'] = 'Curso creado exitosamente.';
+            } else {
+                $_SESSION['cur_error'] = 'No se pudo crear el curso. Intente nuevamente.';
+            }
+        } catch (Exception $e) {
+            error_log('Error DB crear curso: ' . $e->getMessage());
+            $_SESSION['cur_error'] = 'Ocurrió un error en la base de datos al procesar la solicitud.';
+        }
+
+        header('Location: ?ruta=cursos-gestion'); exit;
+    }
+
+    public function mostrarFormularioEditar(): array {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Cursos');
+
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id <= 0) { header('Location: ?ruta=cursos-gestion'); exit; }
+
+        $curso = $this->model->obtenerPorId($id);
+        if (!$curso) {
+            $_SESSION['cur_error'] = 'El curso solicitado no fue encontrado.';
+            header('Location: ?ruta=cursos-gestion'); exit;
+        }
+
+        $usuario_actual  = Auth::usuario();
+        $es_admin_cursos = $this->esAdminTotalCursos($usuario_actual);
+        if (!$es_admin_cursos && (int)$curso['id_docente'] !== (int)($usuario_actual['id'] ?? 0)) {
+            $_SESSION['cur_error'] = 'No tienes permiso para editar este curso.';
+            header('Location: ?ruta=cursos-gestion'); exit;
+        }
+
+        $docentes         = $this->model->listarDocentes();
+        $lineas           = $this->model->obtenerLineas();
+        $todasDimensiones = $this->model->obtenerTodasDimensiones();
+        $meta             = $curso;
+        $modo             = 'editar';
+        $titulo_form      = 'Editar Curso';
+        $error            = $_SESSION['cur_form_error'] ?? null;
+        $csrf_token       = CursosCsrfService::campoHidden();
+        $config_vista     = $this->cfg;
+        unset($_SESSION['cur_form_error']);
+
+        return compact('docentes', 'lineas', 'todasDimensiones', 'curso', 'meta', 'modo', 'titulo_form', 'error', 'csrf_token', 'config_vista', 'usuario_actual', 'es_admin_cursos');
+    }
+
+    public function procesarEditar(): void {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Cursos');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ?ruta=cursos-gestion'); exit;
+        }
+
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) { header('Location: ?ruta=cursos-gestion'); exit; }
+
+        if ($this->cfg['seguridad']['csrf_activo']) {
+            CursosCsrfService::verificarOFallar("cursos-editar?id={$id}");
+        }
+
+        $curso_actual = $this->model->obtenerPorId($id);
+        if (!$curso_actual) {
+            $_SESSION['cur_error'] = 'Curso no encontrado.';
+            header('Location: ?ruta=cursos-gestion'); exit;
+        }
+
+        $usuario_actual  = Auth::usuario();
+        $es_admin_cursos = $this->esAdminTotalCursos($usuario_actual);
+        
+        // AUDITORIA: PREVENCIÓN IDOR (SuperAdmin y Comité pueden editar todos los cursos)
+        if (!$es_admin_cursos && (int)$curso_actual['id_docente'] !== (int)($usuario_actual['id'] ?? 0)) {
+            $_SESSION['cur_error'] = 'Acceso denegado: No puedes editar un curso que no te pertenece.';
+            header('Location: ?ruta=cursos-gestion'); exit;
+        }
+
+        $titulo      = $this->limpiarTexto($_POST['titulo']      ?? '', 255);
+        $descripcion = $this->limpiarTexto($_POST['descripcion'] ?? '', 5000);
+        $duracion_num = (int)($_POST['duracion_numero'] ?? 0);
+        $duracion_tipo = in_array($_POST['duracion_tipo'] ?? '', ['horas', 'semanas']) ? $_POST['duracion_tipo'] : 'horas';
+        $duracion = $duracion_num > 0 ? $duracion_num . ' ' . $duracion_tipo : '';
+
+        if (empty($titulo)) {
+            $_SESSION['cur_form_error'] = 'El título del curso es obligatorio.';
+            header("Location: ?ruta=cursos-editar&id={$id}"); exit;
+        }
+
+        if ($es_admin_cursos) {
+            $id_docente = (int)($_POST['id_docente'] ?? ($curso_actual['id_docente'] ?? 0));
+            if ($id_docente <= 0) {
+                $_SESSION['cur_form_error'] = 'Debe seleccionar un docente responsable.';
+                header("Location: ?ruta=cursos-editar&id={$id}"); exit;
+            }
+        } else {
+            $id_docente = (int)($curso_actual['id_docente'] ?? $usuario_actual['id']);
+        }
+
+        $estados_validos = ['borrador', 'publicado', 'archivado'];
+        $estado = in_array($_POST['estado'] ?? '', $estados_validos) ? $_POST['estado'] : 'borrador';
+
+        $imagen_portada = '';
+        if (isset($_FILES['imagen_portada_file']) && $_FILES['imagen_portada_file']['error'] !== UPLOAD_ERR_NO_FILE) {
+            if ($_FILES['imagen_portada_file']['error'] !== UPLOAD_ERR_OK) {
+                $_SESSION['cur_form_error'] = 'Error al subir la nueva imagen (Código PHP: ' . $_FILES['imagen_portada_file']['error'] . '). Verifica que no exceda el límite del servidor.';
+                header("Location: ?ruta=cursos-editar&id={$id}"); exit;
+            }
+
+            $carpeta = dirname(__DIR__, 3) . '/' . $this->cfg['imagenes']['carpeta_uploads'];
+            $nombre  = CursosImagenService::procesarImagen(
+                $_FILES['imagen_portada_file'],
+                $carpeta,
+                $this->cfg['imagenes']
+            );
+            if ($nombre) {
+                $imagen_portada = $this->cfg['imagenes']['carpeta_uploads'] . $nombre;
+                // AUDITORIA: LIMPIAR ARCHIVO HUÉRFANO
+                if (!empty($curso_actual['imagen_portada']) && strpos($curso_actual['imagen_portada'], 'http') === false) {
+                    $old_path = dirname(__DIR__, 3) . '/' . $curso_actual['imagen_portada'];
+                    if (file_exists($old_path) && is_file($old_path)) {
+                        @unlink($old_path);
+                    }
+                }
+            } else {
+                $_SESSION['cur_form_error'] = 'La imagen no pudo procesarse. Verifica el formato y tamaño.';
+                header("Location: ?ruta=cursos-editar&id={$id}"); exit;
+            }
+        } elseif (!empty($_POST['imagen_portada_url'])) {
+            // Alternativa: URL externa de imagen
+            $imagen_portada = $this->limpiarUrl($_POST['imagen_portada_url'] ?? '');
+        }
+
+        $url_moodle = $this->limpiarUrl($_POST['url_moodle'] ?? '');
+        if (empty($url_moodle)) {
+            $url_moodle = $this->cfg['moodle']['url_fallback'];
+        }
+
+        $modalidades_validas = ['Virtual', 'Presencial', 'Híbrido'];
+        $niveles_validos     = ['Básico', 'Intermedio', 'Avanzado', 'Todos los niveles'];
+        $modalidad = in_array($_POST['modalidad'] ?? '', $modalidades_validas) ? $_POST['modalidad'] : 'Virtual';
+        $nivel_c   = in_array($_POST['nivel']     ?? '', $niveles_validos)     ? $_POST['nivel']     : 'Básico';
+        $cupo      = max(0, (int)($_POST['cupo_maximo'] ?? 0));
+        $nota_minima_aprobacion = (float)($_POST['nota_minima_aprobacion'] ?? 70.00);
+        $fecha_inicio = empty($_POST['fecha_inicio']) ? null : $_POST['fecha_inicio'];
+        $fecha_fin = empty($_POST['fecha_fin']) ? null : $_POST['fecha_fin'];
+        $url_video_preview = $this->limpiarUrl($_POST['url_video_preview'] ?? '');
+        $estado_inscripcion = $this->limpiarTexto($_POST['estado_inscripcion'] ?? 'Abierta', 50);
+
+        // Líneas, Dimensiones y Formulario Google
+        $id_linea     = !empty($_POST['id_linea']) && is_array($_POST['id_linea']) ? array_map('intval', $_POST['id_linea']) : [];
+        $id_dimension = !empty($_POST['id_dimension']) && is_array($_POST['id_dimension']) ? array_map('intval', $_POST['id_dimension']) : [];
+        $url_formulario_google = $this->limpiarUrl($_POST['url_formulario_google'] ?? '');
+
+        $datos = [
+            'id_docente'             => $id_docente,
+            'titulo'                 => $titulo,
+            'descripcion'            => $descripcion,
+            'imagen_portada'         => $imagen_portada,
+            'estado'                 => $estado,
+            'nota_minima_aprobacion' => $nota_minima_aprobacion,
+            'url_moodle'             => $url_moodle,
+            'modalidad'              => $modalidad,
+            'nivel'                  => $nivel_c,
+            'duracion'               => $duracion,
+            'cupo_maximo'            => $cupo,
+            'fecha_inicio'           => $fecha_inicio,
+            'fecha_fin'              => $fecha_fin,
+            'url_video_preview'      => $url_video_preview,
+            'estado_inscripcion'     => $estado_inscripcion,
+            'id_linea'               => $id_linea,
+            'id_dimension'           => $id_dimension,
+            'url_formulario_google'  => $url_formulario_google,
+        ];
+
+        try {
+            $ok = $this->model->editarCurso($id, $datos);
+            if ($ok !== false) {
+                ApiExternaCursosService::dispararAutoPushSiHabilitado('curso_editado');
+                $_SESSION['cur_exito'] = 'Curso actualizado correctamente.';
+            } else {
+                $_SESSION['cur_error'] = 'No se encontraron cambios o el curso no existe.';
+            }
+        } catch (Exception $e) {
+            error_log('Error DB editar curso: ' . $e->getMessage());
+            $_SESSION['cur_error'] = 'Ocurrió un error interno al guardar los cambios.';
+        }
+
+        header('Location: ?ruta=cursos-gestion'); exit;
+    }
+
+    public function procesarEliminar(): void {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'eliminar', 'Cursos'); // Permitimos acceso según RBAC, luego validamos propiedad
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ?ruta=cursos-gestion'); exit;
+        }
+
+        if ($this->cfg['seguridad']['csrf_activo']) {
+            CursosCsrfService::verificarOFallar('cursos');
+        }
+
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) {
+            $_SESSION['cur_error'] = 'Solicitud de eliminación inválida.';
+            header('Location: ?ruta=cursos-gestion'); exit;
+        }
+
+        $curso = $this->model->obtenerPorId($id);
+        if (!$curso) {
+            $_SESSION['cur_error'] = 'El curso no existe.';
+            header('Location: ?ruta=cursos-gestion'); exit;
+        }
+
+        // AUDITORIA: PREVENCIÓN IDOR (SuperAdmin y Comité pueden eliminar cualquier curso)
+        $usuario_actual  = Auth::usuario();
+        $es_admin_cursos = $this->esAdminTotalCursos($usuario_actual);
+        if (!$es_admin_cursos && (int)$curso['id_docente'] !== (int)($usuario_actual['id'] ?? 0)) {
+            $_SESSION['cur_error'] = 'Acceso denegado: No puedes eliminar este curso.';
+            header('Location: ?ruta=cursos-gestion'); exit;
+        }
+
+        try {
+            $ok = $this->model->eliminarCurso($id);
+            if ($ok) {
+                // Limpiar archivo huérfano
+                if (!empty($curso['imagen_portada'])) {
+                    $old_path = dirname(__DIR__, 3) . '/' . $curso['imagen_portada'];
+                    if (file_exists($old_path) && is_file($old_path)) {
+                        @unlink($old_path);
+                    }
+                }
+                ApiExternaCursosService::dispararAutoPushSiHabilitado('curso_eliminado');
+                $_SESSION['cur_exito'] = "Curso eliminado del sistema.";
+            } else {
+                $_SESSION['cur_error'] = 'No se pudo eliminar el curso.';
+            }
+        } catch (Exception $e) {
+            error_log('Error DB eliminar curso: ' . $e->getMessage());
+            $_SESSION['cur_error'] = 'Error interno al intentar eliminar el curso.';
+        }
+
+        header('Location: ?ruta=cursos-gestion'); exit;
+    }
+
+    public function verDetalle(): array {
+        $slug = trim($_GET['slug'] ?? '');
+        $id   = (int)($_GET['id'] ?? ($_GET['curso_id'] ?? 0));
+
+        if (empty($slug) && $id <= 0) {
+            header('Location: ?ruta=cursos');
+            exit;
+        }
+
+        $usuario_actual = Auth::usuario();
+        $nivel          = (int)($usuario_actual['nivel'] ?? 999);
+
+        $curso = null;
+        if (!empty($slug)) {
+            $curso = $this->model->obtenerPorSlug($slug);
+        }
+        if (!$curso && $id > 0) {
+            $curso = $this->model->obtenerPorId($id);
+        }
+
+        if (!$curso) {
+            $_SESSION['cur_error'] = 'El curso solicitado no fue encontrado.';
+            header('Location: ?ruta=cursos');
+            exit;
+        }
+
+        $es_admin_cursos = $this->esAdminTotalCursos($usuario_actual);
+        $es_propietario  = !empty($usuario_actual['id']) && (int)$curso['id_docente'] === (int)$usuario_actual['id'];
+        if ($curso['estado'] !== 'publicado' && !$es_admin_cursos && !$es_propietario) {
+            $_SESSION['cur_error'] = 'El curso solicitado no está disponible.';
+            header('Location: ?ruta=cursos');
+            exit;
+        }
+
+        if (empty($curso['url_moodle'])) {
+            $curso['url_moodle'] = $this->cfg['moodle']['url_fallback'];
+        }
+
+        $config_vista = $this->cfg;
+        return compact('curso', 'usuario_actual', 'config_vista', 'es_admin_cursos');
+    }
+
+    public function mostrarConfig(): array {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'auditar', 'Cursos');
+        $config_actual = $this->model->cargarConfig();
+        $csrf_token    = CursosCsrfService::campoHidden();
+        $mensaje_exito = $_SESSION['cur_exito'] ?? null;
+        $mensaje_error = $_SESSION['cur_error'] ?? null;
+        unset($_SESSION['cur_exito'], $_SESSION['cur_error']);
+        return compact('config_actual', 'csrf_token', 'mensaje_exito', 'mensaje_error');
+    }
+
+    public function guardarConfig(): void {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Cursos');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ?ruta=cursos-config'); exit;
+        }
+        if ($this->cfg['seguridad']['csrf_activo']) {
+            CursosCsrfService::verificarOFallar('cursos-config');
+        }
+
+        $cfg = $this->model->cargarConfig();
+        $cfg['paginacion']['limite_catalogo'] = max(1, min(50, (int)($_POST['limite_catalogo'] ?? 9)));
+        $cfg['imagenes']['max_size_mb'] = max(1, min(20, (int)($_POST['max_size_mb'] ?? 5)));
+        $cfg['imagenes']['convertir_a_webp'] = isset($_POST['convertir_a_webp']);
+        $cfg['imagenes']['lazy_load'] = isset($_POST['lazy_load']);
+        $fallback = $this->limpiarUrl($_POST['url_fallback'] ?? '');
+        if (!empty($fallback)) $cfg['moodle']['url_fallback'] = $fallback;
+        $cfg['seguridad']['csrf_activo'] = isset($_POST['csrf_activo']);
+        $placeholder = $this->limpiarUrl($_POST['placeholder_url'] ?? '');
+        if (!empty($placeholder)) $cfg['imagenes']['placeholder_url'] = $placeholder;
+
+        // Configuración Formulario Google
+        if (!isset($cfg['formulario_google'])) $cfg['formulario_google'] = [];
+        $google_url = $this->limpiarUrl($_POST['google_form_url'] ?? '');
+        if (!empty($google_url)) $cfg['formulario_google']['url_default'] = $google_url;
+        $cfg['formulario_google']['modo'] = in_array($_POST['google_form_modo'] ?? '', ['embebido', 'redireccion']) ? $_POST['google_form_modo'] : 'embebido';
+        $cfg['formulario_google']['habilitado'] = isset($_POST['google_form_habilitado']);
+        $cfg['formulario_google']['titulo'] = $this->limpiarTexto($_POST['google_form_titulo'] ?? 'Formulario Oficial de Inscripción CIIDI', 150);
+
+        // Configuración API REST Externa y Sincronización con Servidor Externo (MySQL)
+        if (!isset($cfg['api_externa']) || !is_array($cfg['api_externa'])) {
+            $cfg['api_externa'] = [];
+        }
+        $cfg['api_externa']['habilitada'] = isset($_POST['api_externa_habilitada']);
+        $cfg['api_externa']['auto_push'] = isset($_POST['api_externa_auto_push']);
+        $cfg['api_externa']['requiere_api_key_lectura'] = isset($_POST['api_externa_requiere_key']);
+        $webhookUrl = $this->limpiarUrl($_POST['api_externa_webhook_url'] ?? '');
+        if ($webhookUrl !== '' || isset($_POST['api_externa_webhook_url'])) {
+            $cfg['api_externa']['webhook_url'] = $webhookUrl;
+        }
+        $apiKeyInput = $this->limpiarTexto($_POST['api_externa_api_key'] ?? '', 120);
+        if ($apiKeyInput !== '') {
+            $cfg['api_externa']['api_key'] = $apiKeyInput;
+        }
+
+        try {
+            $this->model->guardarConfig($cfg);
+            ApiExternaCursosService::dispararAutoPushSiHabilitado('config_actualizada');
+            $_SESSION['cur_exito'] = 'Configuración del módulo guardada correctamente.';
+        } catch (Exception $e) {
+            error_log('Error guardar config: ' . $e->getMessage());
+            $_SESSION['cur_error'] = 'Error interno al guardar la configuración.';
+        }
+
+        header('Location: ?ruta=cursos-config'); exit;
+    }
+
+    /**
+     * Endpoint API REST Público/Autenticado para consumo desde el Servidor Externo (MySQL).
+     * Soporta GET ?ruta=api-cursos-externo&recurso=todo|cursos|investigadores|ping|curso
+     */
+    public function apiCatalogoExterno(): void {
+        if (!headers_sent()) {
+            header('Access-Control-Allow-Origin: *');
+            header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+            header('Access-Control-Allow-Headers: Content-Type, Authorization, X-CIIDI-API-Key');
+            header('Content-Type: application/json; charset=utf-8');
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
+            http_response_code(204);
+            exit;
+        }
+
+        $apiCfg = $this->cfg['api_externa'] ?? [];
+        if (isset($apiCfg['habilitada']) && !$apiCfg['habilitada']) {
+            http_response_code(503);
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'La API REST externa de Cursos e Investigadores se encuentra deshabilitada temporalmente en el CIIDI.',
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        $usuarioSesion = Auth::usuario();
+        $esSesionAdmin = !empty($usuarioSesion['id']) && $this->esAdminTotalCursos($usuarioSesion);
+
+        if (!empty($apiCfg['requiere_api_key_lectura']) && !$esSesionAdmin) {
+            $envKey = getenv('CIIDI_SYNC_API_KEY');
+            $expectedKey = ($envKey !== false && trim((string)$envKey) !== '')
+                ? trim((string)$envKey)
+                : (string)($apiCfg['api_key'] ?? '');
+            $providedKey = (string)($_SERVER['HTTP_X_CIIDI_API_KEY'] ?? ($_GET['api_key'] ?? ''));
+            if ($expectedKey !== '' && !hash_equals($expectedKey, $providedKey)) {
+                http_response_code(401);
+                echo json_encode([
+                    'status'  => 'error',
+                    'message' => 'API Key inválida o no suministrada.',
+                ], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+        }
+
+        try {
+            $recurso = strtolower(trim((string)($_GET['recurso'] ?? 'todo')));
+            $incluirBase64 = ($_GET['base64'] ?? '1') !== '0';
+            $service = new ApiExternaCursosService($this->model);
+
+            if ($recurso === 'ping') {
+                $payload = $service->construirPayloadCompleto('todo', false);
+                echo json_encode([
+                    'status'       => 'success',
+                    'version_hash' => $payload['meta']['version_hash'],
+                    'generado_en'  => $payload['meta']['generado_en'],
+                    'estadisticas' => $payload['estadisticas'],
+                ], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+
+            if ($recurso === 'curso') {
+                $id   = (int)($_GET['id'] ?? 0);
+                $slug = trim((string)($_GET['slug'] ?? ''));
+                $payload = $service->construirPayloadCompleto('cursos', $incluirBase64);
+                $encontrado = null;
+                foreach ($payload['cursos'] as $c) {
+                    if (($id > 0 && $c['id'] === $id) || ($slug !== '' && $c['slug'] === $slug)) {
+                        $encontrado = $c;
+                        break;
+                    }
+                }
+                if (!$encontrado) {
+                    http_response_code(404);
+                    echo json_encode(['status' => 'error', 'message' => 'Curso no encontrado.'], JSON_UNESCAPED_UNICODE);
+                    exit;
+                }
+                echo json_encode([
+                    'status' => 'success',
+                    'meta'   => $payload['meta'],
+                    'curso'  => $encontrado,
+                ], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+
+            if (!in_array($recurso, ['todo', 'cursos', 'investigadores'], true)) {
+                $recurso = 'todo';
+            }
+
+            $payload = $service->construirPayloadCompleto($recurso, $incluirBase64);
+            echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        } catch (\Throwable $e) {
+            http_response_code(500);
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'Error interno al generar el catálogo API REST: ' . $e->getMessage(),
+            ], JSON_UNESCAPED_UNICODE);
+        }
+        exit;
+    }
+
+    /**
+     * Sincronización manual inmediata (Push Webhook) desde el CIIDI hacia el Servidor Externo MySQL.
+     */
+    public function sincronizarServidorExterno(): void {
+        Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'Cursos');
+
+        $webhookUrl = !empty($_POST['webhook_url']) ? $this->limpiarUrl($_POST['webhook_url']) : null;
+        $apiKey     = !empty($_POST['api_key']) ? $this->limpiarTexto($_POST['api_key'], 120) : null;
+
+        $service = new ApiExternaCursosService($this->model);
+        $res = $service->empujarAServidorExterno($webhookUrl, $apiKey, 'manual_admin');
+
+        if (!empty($_POST['ajax']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest') {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode($res, JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        if ($res['ok']) {
+            $_SESSION['cur_exito'] = "Sincronización exitosa con el servidor externo: {$res['cursos_enviados']} cursos y {$res['inv_enviados']} investigadores actualizados en MySQL.";
+        } else {
+            $_SESSION['cur_error'] = "No se pudo completar el Push al servidor externo: " . $res['mensaje'];
+        }
+        header('Location: ?ruta=cursos-config');
+        exit;
+    }
+
+    public function mostrarFormularioGoogle(): array {
+        $usuario_actual = Auth::usuario();
+        $id_curso = (int)($_GET['curso_id'] ?? ($_GET['id'] ?? 0));
+        $curso = null;
+        if ($id_curso > 0) {
+            $curso = $this->model->obtenerPorId($id_curso);
+        }
+
+        $resultado = $this->model->listarCursos(['estado' => 'publicado'], 1, 100);
+        $cursos = $resultado['cursos'];
+
+        $cfg_google = $this->cfg['formulario_google'] ?? [];
+        $url_form = !empty($curso['url_formulario_google']) 
+            ? $curso['url_formulario_google'] 
+            : ($cfg_google['url_default'] ?? 'https://docs.google.com/forms');
+
+        $modo = $cfg_google['modo'] ?? 'embebido';
+        $titulo_form = $cfg_google['titulo'] ?? 'Formulario Oficial de Inscripción a Cursos CIIDI';
+        $config_vista = $this->cfg;
+
+        return compact('curso', 'cursos', 'url_form', 'modo', 'titulo_form', 'config_vista', 'usuario_actual', 'id_curso');
+    }
+
+    public function mostrarPreinscripcion(): void {
+        $id_curso = (int)($_GET['curso_id'] ?? ($_GET['id'] ?? 0));
+        $url = '?ruta=cursos-formulario-google' . ($id_curso > 0 ? '&curso_id=' . $id_curso : '');
+        header('Location: ' . $url);
+        exit;
+    }
+
+    public function procesarPreinscripcion(): void {
+        $id_curso = (int)($_POST['id_curso'] ?? ($_GET['curso_id'] ?? ($_GET['id'] ?? 0)));
+        $url = '?ruta=cursos-formulario-google' . ($id_curso > 0 ? '&curso_id=' . $id_curso : '');
+        header('Location: ' . $url);
+        exit;
+    }
+}
