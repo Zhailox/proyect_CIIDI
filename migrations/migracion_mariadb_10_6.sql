@@ -4030,7 +4030,7 @@ VALUES (
     'recursos',
     OLD.`id`,
     'DELETE',
-    CAST(NULLIF(@app_usuario_actual, '') AS SIGNED),
+    NULLIF(CAST(NULLIF(@app_usuario_actual, '') AS UNSIGNED), 0),
     JSON_OBJECT('titulo', OLD.`titulo`, 'id_tipo_recurso', OLD.`id_tipo_recurso`),
     NULL,
     CURRENT_TIMESTAMP
@@ -4045,7 +4045,7 @@ VALUES (
     'recursos',
     NEW.`id`,
     'INSERT',
-    CAST(NULLIF(@app_usuario_actual, '') AS SIGNED),
+    NULLIF(CAST(NULLIF(@app_usuario_actual, '') AS UNSIGNED), 0),
     NULL,
     JSON_OBJECT('titulo', NEW.`titulo`, 'id_tipo_recurso', NEW.`id_tipo_recurso`),
     CURRENT_TIMESTAMP
@@ -4060,7 +4060,7 @@ VALUES (
     'usuarios',
     OLD.`id`,
     'DELETE',
-    CAST(NULLIF(@app_usuario_actual, '') AS SIGNED),
+    NULLIF(CAST(NULLIF(@app_usuario_actual, '') AS UNSIGNED), 0),
     JSON_OBJECT('nombre', OLD.`nombre_completo`, 'email', OLD.`email`, 'id_rol', OLD.`id_rol`),
     NULL,
     CURRENT_TIMESTAMP
@@ -4075,7 +4075,7 @@ VALUES (
     'usuarios',
     NEW.`id`,
     'INSERT',
-    CAST(NULLIF(@app_usuario_actual, '') AS SIGNED),
+    NULLIF(CAST(NULLIF(@app_usuario_actual, '') AS UNSIGNED), 0),
     NULL,
     JSON_OBJECT('nombre', NEW.`nombre_completo`, 'email', NEW.`email`, 'id_rol', NEW.`id_rol`),
     CURRENT_TIMESTAMP
@@ -4090,7 +4090,7 @@ VALUES (
     'usuarios',
     OLD.`id`,
     'UPDATE',
-    CAST(NULLIF(@app_usuario_actual, '') AS SIGNED),
+    NULLIF(CAST(NULLIF(@app_usuario_actual, '') AS UNSIGNED), 0),
     JSON_OBJECT('nombre', OLD.`nombre_completo`, 'id_rol', OLD.`id_rol`, 'activo', OLD.`activo`),
     JSON_OBJECT('nombre', NEW.`nombre_completo`, 'id_rol', NEW.`id_rol`, 'activo', NEW.`activo`),
     CURRENT_TIMESTAMP

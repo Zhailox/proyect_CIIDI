@@ -76,26 +76,35 @@ class GestorUsuariosController {
         Auth::requierePrivilegioMinimo(0);
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $rawMatrix = $_POST['matrix'] ?? [];
+            if (empty($rawMatrix) || !is_array($rawMatrix)) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['mensaje_gestor_exito'] = "No se detectaron cambios en la Matriz RBAC.";
+                header("Location: gestor-usuarios");
+                exit;
+            }
             
             $db = Connection::getInstance();
             $db->beginTransaction();
             try {
-                // Borrar configuración vieja e insertar la nueva de golpe
-                $db->exec("TRUNCATE matriz_rbac");
+                // Borrar configuración vieja e insertar la nueva de golpe (DML transaccional en InnoDB)
+                $db->exec("DELETE FROM matriz_rbac");
                 $stmt = $db->prepare("INSERT INTO matriz_rbac (nivel_privilegio, modulo, permisos) VALUES (?, ?, ?)");
                 
                 foreach ($rawMatrix as $nivel => $modulos) {
                     if (is_array($modulos)) {
                         foreach ($modulos as $nombreModulo => $permisos) {
+                            if (!is_array($permisos)) continue;
                             $permisosProcesados = [];
                             foreach ($permisos as $accion => $val) {
                                 $permisosProcesados[$accion] = ($val === '1' || $val === 1 || $val === true);
                             }
-                            $stmt->execute([$nivel, $nombreModulo, json_encode($permisosProcesados)]);
+                            $stmt->execute([(int)$nivel, $nombreModulo, json_encode($permisosProcesados)]);
                         }
                     }
                 }
-                $db->commit();
+                if ($db->inTransaction()) {
+                    $db->commit();
+                }
 
                 // Revocación masiva por Nivel de Privilegio modificado en la Matriz RBAC
                 try {
@@ -130,14 +139,16 @@ class GestorUsuariosController {
                 AuditLogger::registrar('WARNING', 'SuperAdmin', 'Modificar Matriz RBAC', 'Se actualizaron los permisos granulares por Módulo y Nivel. Sesiones sincronizadas.');
                 if (session_status() === PHP_SESSION_NONE) session_start();
                 $_SESSION['mensaje_gestor_exito'] = "Matriz de permisos segmentada actualizada en BD correctamente y sesiones sincronizadas.";
-            } catch (Exception $e) {
-                $db->rollBack();
+            } catch (Throwable $e) {
+                if ($db->inTransaction()) {
+                    $db->rollBack();
+                }
                 if (session_status() === PHP_SESSION_NONE) session_start();
                 $_SESSION['mensaje_gestor_error'] = "Error al guardar la matriz en la base de datos.";
             }
-            header("Location: gestor-usuarios");
-            exit;
         }
+        header("Location: gestor-usuarios");
+        exit;
     }
     
     public function actualizarRol() {
@@ -324,21 +335,30 @@ class GestorUsuariosController {
     public function procesarEdicion() {
         Auth::requierePrivilegioMinimo(0);
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return false;
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header("Location: gestor-usuarios");
+            exit;
+        }
 
-        $id = (int) $_POST['usuario_id'];
-        $cedula = trim($_POST['cedula']);
-        $nombre = trim($_POST['nombre']);
-        $email = trim($_POST['email']);
-        $id_rol = (int) $_POST['id_rol'];
+        $id = (int)($_POST['usuario_id'] ?? 0);
+        $cedula = trim($_POST['cedula'] ?? '');
+        $cedulaOriginal = trim($_POST['cedula_original'] ?? $cedula);
+        $nombre = trim($_POST['nombre'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $id_rol = (int)($_POST['id_rol'] ?? 0);
         
         // Nuevos campos de contraseña
         $password = trim($_POST['password'] ?? '');
         $password_confirm = trim($_POST['password_confirm'] ?? '');
 
+        if ($id <= 0 && empty($cedulaOriginal)) {
+            header("Location: gestor-usuarios");
+            exit;
+        }
+
         if (empty($cedula) || empty($nombre) || empty($email)) {
             $_SESSION['error_edicion'] = "Todos los datos básicos son obligatorios.";
-            header("Location: editar-usuario?cedula=" . urlencode($_POST['cedula_original']));
+            header("Location: editar-usuario?cedula=" . urlencode($cedulaOriginal));
             exit;
         }
 
@@ -429,9 +449,13 @@ class GestorUsuariosController {
         Auth::requierePrivilegioMinimo(0);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $id = (int) $_POST['usuario_id'];
-            $cedula = $_POST['cedula'];
-            $estadoActual = $_POST['estado_actual'] === '1'; // true si estaba activo
+            $id = (int)($_POST['usuario_id'] ?? 0);
+            $cedula = trim($_POST['cedula'] ?? '');
+            $estadoActual = ($_POST['estado_actual'] ?? '') === '1'; // true si estaba activo
+            if ($id <= 0 || empty($cedula)) {
+                header("Location: gestor-usuarios");
+                exit;
+            }
             
             // Verificación de seguridad
             if ($id === $_SESSION['usuario_id']) {
@@ -634,6 +658,10 @@ class GestorUsuariosController {
         Auth::requierePrivilegioMinimo(0);
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $rolId = (int)($_POST['rol_id'] ?? 0);
+            if ($rolId <= 0) {
+                header("Location: gestor-usuarios");
+                exit;
+            }
             try {
                 $this->adminModel->eliminarRol($rolId);
                 AuditLogger::registrar('WARNING', 'SuperAdmin', 'Eliminar Rol', "Rol ID #{$rolId} eliminado de la base de datos.");
@@ -643,13 +671,16 @@ class GestorUsuariosController {
                 if (session_status() === PHP_SESSION_NONE) session_start();
                 $_SESSION['mensaje_gestor_error'] = "No se puede eliminar un rol que ya tiene usuarios asignados.";
             }
-            header("Location: gestor-usuarios");
-            exit;
         }
+        header("Location: gestor-usuarios");
+        exit;
     }
     public function eliminarNivelPrivilegioAction() {
         Auth::requierePrivilegioMinimo(0);
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header("Location: gestor-usuarios");
+            exit;
+        }
 
         $nivel = (int)($_POST['nivel'] ?? 0);
 

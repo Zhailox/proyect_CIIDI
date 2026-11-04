@@ -348,7 +348,7 @@ class SeguridadController {
             $celdas[] = ['nivel' => $nivel, 'submodulo' => $sub, 'accion' => $acc, 'permitido' => !empty($c['permitido'])];
         }
         if (!$celdas) {
-            return $this->fallo('No se recibieron celdas válidas.');
+            return $this->ok('Sin cambios pendientes por aplicar en la matriz.');
         }
 
         // Anti auto-bloqueo: quien guarda no puede quitarse a sí mismo "configurar" en Seguridad

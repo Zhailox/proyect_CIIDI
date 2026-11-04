@@ -1335,7 +1335,9 @@ class DocumentoModel {
             return (int)$recursoId;
             
         } catch (Exception $e) {
-            $db->rollBack();
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
             error_log("Error al crear PST: " . $e->getMessage());
             throw $e;
         }
@@ -1527,7 +1529,9 @@ class DocumentoModel {
             $db->commit();
             return true;
         } catch (Exception $e) {
-            $db->rollBack();
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
             error_log("Error al editar PST: " . $e->getMessage());
             throw $e;
         }

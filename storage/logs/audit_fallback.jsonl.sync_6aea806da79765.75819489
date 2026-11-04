@@ -1,0 +1,1 @@
+{"id":"log_6aea805c5e3d31.64998255","fecha_hora":"2026-11-03 20:46:20","nivel":"ERROR","modulo":"Core_Dispatcher","accion":"Excepción Interna HTTP 500","detalles":"There is no active transaction en GestorUsuariosController.php:134","responsable":"Miguel González (ID: 7)","ip":"::1"}

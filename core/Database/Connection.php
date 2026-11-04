@@ -256,19 +256,143 @@ class Connection {
             self::$instance = $conexionObjeto->pdo;
             self::$lastSyncedUserId = null;
         }
-        if (self::$instance !== null && isset($_SESSION['usuario_id']) && is_numeric($_SESSION['usuario_id'])) {
-            $uid = (int)$_SESSION['usuario_id'];
-            if ($uid > 0 && self::$lastSyncedUserId !== $uid) {
-                try {
-                    $stmt = self::$instance->prepare("SET @app_usuario_actual = ?");
-                    $stmt->execute([(string)$uid]);
-                    self::$lastSyncedUserId = $uid;
-                } catch (Throwable) {
-                    // Ignorar si la sesión de BD no admite variables en el estado actual
+        if (self::$instance !== null) {
+            $rawUid = $_SESSION['usuario_id'] ?? ($_SESSION['usuario']['id'] ?? null);
+            if ($rawUid !== null && is_numeric($rawUid)) {
+                $uid = (int)$rawUid;
+                if ($uid > 0 && self::$lastSyncedUserId !== $uid) {
+                    try {
+                        $stmt = self::$instance->prepare("SET @app_usuario_actual = ?");
+                        $stmt->execute([(string)$uid]);
+                        self::$lastSyncedUserId = $uid;
+                    } catch (Throwable) {
+                        // Ignorar si la sesión de BD no admite variables en el estado actual
+                    }
                 }
+            }
+            if (!self::$schemaCheckedInProcess && empty($_SESSION['ciidi_triggers_verified'])) {
+                self::$schemaCheckedInProcess = true;
+                self::ensureAuditTriggers(self::$instance);
             }
         }
         return self::$instance;
+    }
+
+    /**
+     * Garantiza que los 5 triggers nativos de auditoría existan y estén operativos en MariaDB 10.6.
+     */
+    public static function ensureAuditTriggers(?PDO $pdo = null, bool $forceRecreate = false): int {
+        $pdo = $pdo ?? self::$instance;
+        if (!$pdo) {
+            return 0;
+        }
+
+        $definiciones = [
+            'tg_auditoria_recursos_delete' => "
+                CREATE TRIGGER `tg_auditoria_recursos_delete`
+                BEFORE DELETE ON `recursos`
+                FOR EACH ROW
+                INSERT INTO `auditoria` (`tabla_afectada`, `id_registro`, `accion`, `usuario_responsable`, `datos_anteriores`, `datos_nuevos`, `fecha_hora`)
+                VALUES (
+                    'recursos',
+                    OLD.`id`,
+                    'DELETE',
+                    NULLIF(CAST(NULLIF(@app_usuario_actual, '') AS UNSIGNED), 0),
+                    JSON_OBJECT('titulo', OLD.`titulo`, 'id_tipo_recurso', OLD.`id_tipo_recurso`),
+                    NULL,
+                    CURRENT_TIMESTAMP
+                )
+            ",
+            'tg_auditoria_recursos_insert' => "
+                CREATE TRIGGER `tg_auditoria_recursos_insert`
+                AFTER INSERT ON `recursos`
+                FOR EACH ROW
+                INSERT INTO `auditoria` (`tabla_afectada`, `id_registro`, `accion`, `usuario_responsable`, `datos_anteriores`, `datos_nuevos`, `fecha_hora`)
+                VALUES (
+                    'recursos',
+                    NEW.`id`,
+                    'INSERT',
+                    NULLIF(CAST(NULLIF(@app_usuario_actual, '') AS UNSIGNED), 0),
+                    NULL,
+                    JSON_OBJECT('titulo', NEW.`titulo`, 'id_tipo_recurso', NEW.`id_tipo_recurso`),
+                    CURRENT_TIMESTAMP
+                )
+            ",
+            'tg_auditoria_usuarios_delete' => "
+                CREATE TRIGGER `tg_auditoria_usuarios_delete`
+                BEFORE DELETE ON `usuarios`
+                FOR EACH ROW
+                INSERT INTO `auditoria` (`tabla_afectada`, `id_registro`, `accion`, `usuario_responsable`, `datos_anteriores`, `datos_nuevos`, `fecha_hora`)
+                VALUES (
+                    'usuarios',
+                    OLD.`id`,
+                    'DELETE',
+                    IF(CAST(NULLIF(@app_usuario_actual, '') AS UNSIGNED) = OLD.`id`, NULL, NULLIF(CAST(NULLIF(@app_usuario_actual, '') AS UNSIGNED), 0)),
+                    JSON_OBJECT('nombre', OLD.`nombre_completo`, 'email', OLD.`email`, 'id_rol', OLD.`id_rol`),
+                    NULL,
+                    CURRENT_TIMESTAMP
+                )
+            ",
+            'tg_auditoria_usuarios_insert' => "
+                CREATE TRIGGER `tg_auditoria_usuarios_insert`
+                AFTER INSERT ON `usuarios`
+                FOR EACH ROW
+                INSERT INTO `auditoria` (`tabla_afectada`, `id_registro`, `accion`, `usuario_responsable`, `datos_anteriores`, `datos_nuevos`, `fecha_hora`)
+                VALUES (
+                    'usuarios',
+                    NEW.`id`,
+                    'INSERT',
+                    NULLIF(CAST(NULLIF(@app_usuario_actual, '') AS UNSIGNED), 0),
+                    NULL,
+                    JSON_OBJECT('nombre', NEW.`nombre_completo`, 'email', NEW.`email`, 'id_rol', NEW.`id_rol`),
+                    CURRENT_TIMESTAMP
+                )
+            ",
+            'tg_auditoria_usuarios_update' => "
+                CREATE TRIGGER `tg_auditoria_usuarios_update`
+                AFTER UPDATE ON `usuarios`
+                FOR EACH ROW
+                INSERT INTO `auditoria` (`tabla_afectada`, `id_registro`, `accion`, `usuario_responsable`, `datos_anteriores`, `datos_nuevos`, `fecha_hora`)
+                VALUES (
+                    'usuarios',
+                    OLD.`id`,
+                    'UPDATE',
+                    NULLIF(CAST(NULLIF(@app_usuario_actual, '') AS UNSIGNED), 0),
+                    JSON_OBJECT('nombre', OLD.`nombre_completo`, 'id_rol', OLD.`id_rol`, 'activo', OLD.`activo`),
+                    JSON_OBJECT('nombre', NEW.`nombre_completo`, 'id_rol', NEW.`id_rol`, 'activo', NEW.`activo`),
+                    CURRENT_TIMESTAMP
+                )
+            "
+        ];
+
+        try {
+            $stmtTrg = $pdo->query("SHOW TRIGGERS");
+            $rowsTrg = $stmtTrg ? $stmtTrg->fetchAll(PDO::FETCH_ASSOC) : [];
+            $existentes = [];
+            foreach ($rowsTrg as $r) {
+                if (!empty($r['Trigger'])) {
+                    $existentes[$r['Trigger']] = true;
+                }
+            }
+
+            $activos = 0;
+            foreach ($definiciones as $nombreTrigger => $sqlCreate) {
+                if ($forceRecreate || !isset($existentes[$nombreTrigger])) {
+                    $pdo->exec("DROP TRIGGER IF EXISTS `{$nombreTrigger}`");
+                    $pdo->exec($sqlCreate);
+                }
+                $activos++;
+            }
+
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                $_SESSION['ciidi_triggers_verified'] = true;
+            }
+
+            return $activos;
+        } catch (Throwable $e) {
+            self::logSystemError($e);
+            return 0;
+        }
     }
 
     /**
@@ -303,6 +427,8 @@ class Connection {
                 }
             }
 
+            self::ensureAuditTriggers($pdo, $force);
+
             if (session_status() === PHP_SESSION_ACTIVE) {
                 $_SESSION['ciidi_schema_verified'] = true;
             }
@@ -310,7 +436,7 @@ class Connection {
             return [
                 'exito' => true,
                 'acciones' => [],
-                'mensaje' => 'Esquema MariaDB 10.6 verificado y 100% operativo.'
+                'mensaje' => 'Esquema MariaDB 10.6 y triggers de auditoría verificados y 100% operativos.'
             ];
         } catch (Throwable $e) {
             self::logSystemError($e);

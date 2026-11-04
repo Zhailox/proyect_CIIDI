@@ -310,7 +310,9 @@ class PropuestaEmpresaModel {
             $pdo->commit();
             return true;
         } catch (\Throwable $e) {
-            $pdo->rollBack();
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             return false;
         }
     }

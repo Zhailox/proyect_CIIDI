@@ -24,13 +24,17 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
             </div>
             <div style="flex: 1;">
                 <div class="ag-header-subtitle">
-                    GESTOR DEDICADO DE LÍNEA • PNF EN <?= htmlspecialchars(mb_convert_case($linea['carrera_nombre'] ?? 'Sin Asignar', MB_CASE_UPPER, 'UTF-8')) ?>
+                    <?php
+                    $carreraUpper = mb_convert_case($linea['carrera_nombre'] ?? 'Sin Asignar', MB_CASE_UPPER, 'UTF-8');
+                    $prefijoPnf = str_starts_with($carreraUpper, 'PNF') ? '' : 'PNF EN ';
+                    ?>
+                    GESTOR DEDICADO DE LÍNEA • <?= $prefijoPnf . htmlspecialchars($carreraUpper) ?>
                 </div>
                 <h1 class="ag-header-title">
                     <?= htmlspecialchars(mb_convert_case($linea['nombre'], MB_CASE_TITLE, 'UTF-8')) ?>
                 </h1>
                 <p class="ag-header-desc">
-                    <?= htmlspecialchars(mb_convert_encoding($linea['descripcion'], 'UTF-8', 'CP850')) ?>
+                    <?= htmlspecialchars($linea['descripcion'] ?? '') ?>
                 </p>
                 
                 <div style="display: flex; align-items: center; gap: 12px; margin-top: 1.5rem;">
@@ -85,7 +89,7 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
                 <div class="ag-dim-item">
                     <div style="flex:1;">
                         <div class="ag-dim-title"><?= htmlspecialchars(mb_convert_case($dim['nombre'], MB_CASE_TITLE, 'UTF-8')) ?></div>
-                        <div class="ag-dim-desc"><?= htmlspecialchars(mb_convert_encoding($dim['descripcion'], 'UTF-8', 'CP850')) ?></div>
+                        <div class="ag-dim-desc"><?= htmlspecialchars($dim['descripcion'] ?? '') ?></div>
                     </div>
                     <div style="display:flex; gap:10px; margin-left:2rem;">
                         <button type="button" class="ag-btn-edit" onclick="abrirModalEditarDimension(<?= htmlspecialchars(json_encode($dim)) ?>)">
@@ -136,10 +140,23 @@ $isSuper = ($_SESSION['nivel_privilegio'] ?? 999) === 0;
 
         <?php if (!empty($profesoresAfiliados)): ?>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
-            <?php foreach($profesoresAfiliados as $prof): ?>
+            <?php foreach($profesoresAfiliados as $prof):
+                $pFotoRaw = trim((string)($prof['foto_perfil'] ?? ''));
+                $pFotoUrl = '';
+                if ($pFotoRaw !== '') {
+                    $pFotoUrl = (preg_match('#^https?://#i', $pFotoRaw) || str_starts_with($pFotoRaw, 'data:image/'))
+                        ? $pFotoRaw
+                        : ltrim(preg_replace('#^public/#i', '', str_replace('\\', '/', $pFotoRaw)), '/');
+                }
+            ?>
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; display: flex; align-items: center; justify-content: space-between;">
                     <div style="display: flex; align-items: center; gap: 0.8rem;">
-                        <i class="ph-fill ph-user-circle" style="font-size: 2.5rem; color: #505984;"></i>
+                        <?php if ($pFotoUrl !== ''): ?>
+                            <img src="<?= htmlspecialchars($pFotoUrl) ?>" alt="<?= htmlspecialchars($prof['nombre_profesor']) ?>" class="ag-prof-avatar" onerror="this.classList.add('ag-prof-avatar-hidden'); if(this.nextElementSibling) this.nextElementSibling.classList.remove('ag-prof-avatar-hidden');">
+                            <i class="ph-fill ph-user-circle ag-prof-avatar-icon ag-prof-avatar-hidden"></i>
+                        <?php else: ?>
+                            <i class="ph-fill ph-user-circle ag-prof-avatar-icon"></i>
+                        <?php endif; ?>
                         <div>
                             <div style="font-weight: 700; color: #1e293b;"><?= htmlspecialchars($prof['nombre_profesor']) ?></div>
                             <div style="font-size: 0.8rem; color: #64748b;"><?= htmlspecialchars($prof['email']) ?></div>

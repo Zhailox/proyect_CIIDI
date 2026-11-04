@@ -1,0 +1,1 @@
+{"id":"log_6aea7d9f9b4681.16234851","fecha_hora":"2026-11-03 20:34:39","nivel":"ERROR","modulo":"Core_Dispatcher","accion":"Excepción Interna HTTP 500","detalles":"Cannot access protected property LineasModel::$db en GestorController.php:205","responsable":"Miguel González (ID: 7)","ip":"::1"}

@@ -184,8 +184,20 @@ class GestorLineasController {
             } elseif ($accion === 'desvincular_profesor') {
                 $id_profesor = (int)($_POST['id_profesor'] ?? 0);
                 if ($id_profesor > 0) {
-                    $lineasModel->db->prepare("DELETE FROM profesor_linea WHERE id_usuario = ? AND id_linea = ?")->execute([$id_profesor, $id]);
+                    $lineasModel->desvincularProfesor($id_profesor, $id);
                     $this->redirigir("detalle-gestion-linea&id=$id", 'exito', 'Profesor desvinculado exitosamente.');
+                }
+            } elseif ($accion === 'ocultar') {
+                $idDim = (int)($_POST['id'] ?? 0);
+                if ($idDim > 0) {
+                    $lineasModel->toggleActivoDimension($idDim, false);
+                    $this->redirigir("detalle-gestion-linea&id=$id", 'exito', 'Dimensión ocultada correctamente.');
+                }
+            } elseif ($accion === 'mostrar') {
+                $idDim = (int)($_POST['id'] ?? 0);
+                if ($idDim > 0) {
+                    $lineasModel->toggleActivoDimension($idDim, true);
+                    $this->redirigir("detalle-gestion-linea&id=$id", 'exito', 'Dimensión habilitada nuevamente.');
                 }
             }
         }
@@ -195,6 +207,7 @@ class GestorLineasController {
             header("Location: index.php?ruta=gestionar-lineas");
             exit;
         }
+        $linea['total_proyectos'] = $lineasModel->countProyectosPorLinea($id);
 
         $dimModel = new DimensionesModel();
         $dimensiones = $dimModel->getPorLinea($id);
@@ -202,14 +215,7 @@ class GestorLineasController {
         // Cargar profesores afiliados
         $profesoresAfiliados = $lineasModel->getProfesoresAfiliadosPorLinea($id);
         // Cargar investigadores y profesores disponibles (activos que sean docentes, investigadores o comite/admin)
-        $stmtProf = $lineasModel->db->prepare("
-            SELECT id, nombre_completo, email, es_investigador
-            FROM usuarios 
-            WHERE (id_rol IN (1, 2, 4) OR es_investigador = true OR es_profesor_pst = true OR estado_registro = 'Profesor') AND activo = true
-            ORDER BY nombre_completo ASC
-        ");
-        $stmtProf->execute();
-        $todosProfesores = $stmtProf->fetchAll();
+        $todosProfesores = $lineasModel->getProfesoresDisponibles();
         
         // Filtrar los que ya están
         $idsAfiliados = array_column($profesoresAfiliados, 'id');

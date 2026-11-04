@@ -1,4 +1,4 @@
-﻿@import url("https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css");
+@import url("https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css");
 @import url("https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/bold/style.css");
 @import url("https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css");
 
@@ -3436,3 +3436,23 @@
 @media (max-width: 700px) { .cosmos-hero, .cosmos-detail-hero { padding: 2rem 1.25rem 1.75rem; } .cosmos-kpi-row { flex-wrap: wrap; } .cosmos-kpi-chip { flex: 0 0 48%; } .cosmos-kpi-sep:nth-child(2n) { display: none; } }
 @media (max-width: 480px) { .cosmos-kpi-chip { flex: 0 0 100%; } .cosmos-kpi-sep { display: none; } }
 
+
+/* Avatar de profesores afiliados en detalle-gestion-linea */
+.ag-prof-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid #cbd5e1;
+}
+
+.ag-prof-avatar-icon {
+    font-size: 2.5rem;
+    color: #505984;
+    flex-shrink: 0;
+}
+
+.ag-prof-avatar-hidden {
+    display: none !important;
+}

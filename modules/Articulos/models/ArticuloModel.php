@@ -484,7 +484,9 @@ public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $por
 
         } catch (Exception $e) {
             // Si algo explota, deshacemos todo
-            $db->rollBack();
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
             throw $e; 
         }
     }
@@ -796,7 +798,9 @@ public function actualizarArticulo(
         $db->commit();
         return $autores_vinculados;
     } catch (Exception $e) {
-        $db->rollBack();
+        if ($db->inTransaction()) {
+            $db->rollBack();
+        }
         throw $e;
     }
 }

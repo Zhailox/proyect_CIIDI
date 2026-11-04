@@ -325,9 +325,13 @@ class SeguridadRepositorio {
                 $stmt->execute([(int) $c['nivel'], $c['submodulo'], $c['accion'], $c['permitido'] ? 1 : 0, $autor, $ahora]);
                 $n++;
             }
-            $this->db->commit();
+            if ($this->db->inTransaction()) {
+                $this->db->commit();
+            }
         } catch (Throwable $e) {
-            $this->db->rollBack();
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
             throw $e;
         }
         return $n;

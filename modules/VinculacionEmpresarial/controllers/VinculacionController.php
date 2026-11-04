@@ -127,8 +127,12 @@ class VinculacionController
                 exit;
             }
 
-            $id = (int) $_POST['id_propuesta'];
-            $accion = trim($_POST['accion']);
+            $id = (int)($_POST['id_propuesta'] ?? 0);
+            $accion = trim($_POST['accion'] ?? '');
+            if ($id <= 0 || $accion === '') {
+                echo "<script>window.location.href='?ruta=gestion-proyectos&tab=propuestas';</script>";
+                exit;
+            }
 
             if ($accion === 'aprobar') {
                 $nivel = $_POST['nivel_trayecto'] ?? 'Trayecto I';
@@ -342,14 +346,14 @@ class VinculacionController
                 exit;
             }
             $user = Auth::usuario();
-            $id_investigacion = (int) $_POST['id_investigacion'];
+            $id_investigacion = (int)($_POST['id_investigacion'] ?? 0);
             $motivacion = trim($_POST['motivacion'] ?? '');
             $equipo_extra = $_POST['equipo_extra'] ?? null;
             $trayecto = !empty($_POST['trayecto']) ? (int) $_POST['trayecto'] : null;
             $trimestre = !empty($_POST['trimestre']) ? (int) $_POST['trimestre'] : 1;
             $id_profesor_pst = !empty($_POST['id_profesor_pst']) ? (int) $_POST['id_profesor_pst'] : null;
 
-            if (!$trayecto || !$id_profesor_pst) {
+            if ($id_investigacion <= 0 || !$trayecto || !$id_profesor_pst) {
                 $_SESSION['flash_error'] = "Debe indicar su trayecto y el profesor PST deseado.";
                 header("Location: ?ruta=cartelera-oportunidades");
                 exit;
@@ -377,9 +381,13 @@ class VinculacionController
     {
         Auth::requierePrivilegioMinimo($this->nivelAdmin, 'editar', 'VinculacionEmpresarial');
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $id_postulacion = (int) $_POST['id_postulacion'];
-            $id_investigacion = (int) $_POST['id_investigacion'];
-            $estado = $_POST['estado'];
+            $id_postulacion = (int)($_POST['id_postulacion'] ?? 0);
+            $id_investigacion = (int)($_POST['id_investigacion'] ?? 0);
+            $estado = trim($_POST['estado'] ?? '');
+            if ($id_postulacion <= 0 || $id_investigacion <= 0 || $estado === '') {
+                echo "<script>window.location.href='?ruta=gestion-proyectos&tab=postulaciones';</script>";
+                exit;
+            }
 
             if ($this->modelo->procesarAsignacion($id_postulacion, $estado, $id_investigacion)) {
                 if ($estado === 'Aceptado') {

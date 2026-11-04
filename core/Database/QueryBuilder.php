@@ -4,7 +4,7 @@ require_once __DIR__ . '/Connection.php';
 
 class QueryBuilder {
     
-    protected $db;
+    public $db;
     protected $tabla = '';
     protected $joins = [];
     protected $condiciones = [];

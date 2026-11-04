@@ -5,11 +5,15 @@ require_once CORE_PATH . 'Database/QueryBuilder.php';
 class LogsModel {
     
     public function obtenerAuditoriaDB() {
+        $db = Connection::getInstance();
+        if ($db && method_exists('Connection', 'ensureAuditTriggers')) {
+            Connection::ensureAuditTriggers($db);
+        }
         $qb = new QueryBuilder();
         return $qb->tabla('auditoria a')
             ->select('a.*, u.nombre_completo AS responsable')
             ->join('usuarios u', 'a.usuario_responsable = u.id', 'LEFT')
-            ->orderBy('a.fecha_hora', 'DESC')
+            ->orderBy('a.id', 'DESC')
             ->limit(50) // Usando "limit" como tú lo definiste
             ->get();
     }
@@ -25,6 +29,14 @@ class LogsModel {
     }
 
     public function obtenerAuditTrailPaginado(?string $nivel = null, ?string $modulo = null, ?string $fechaInicio = null, ?string $fechaFin = null, int $pagina = 1, int $porPagina = 15): array {
+        if (class_exists('AuditLogger')) {
+            try {
+                AuditLogger::sincronizarFallback();
+            } catch (Throwable) {
+                // Continuar lectura normal
+            }
+        }
+
         // Instanciar dos constructores separados para evitar colisión de estados
         $qbCount = new QueryBuilder();
         $qbItems = new QueryBuilder();

@@ -231,7 +231,7 @@ if (isset($privilegios)) {
 
             <div style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 600px; overflow-y: auto; padding-right: 5px;">
 
-                <?php foreach ($privilegios as $priv): $nivel = $priv['nivel_privilegio']; if ($nivel === 0) continue; ?>
+                <?php foreach ($privilegios as $priv): $nivel = (int)$priv['nivel_privilegio']; if ($nivel === 0) continue; ?>
 
                     <details class="rbac-level">
                         <summary class="rbac-level-summary">

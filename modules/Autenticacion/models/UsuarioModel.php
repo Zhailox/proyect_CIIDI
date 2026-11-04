@@ -197,7 +197,9 @@ class UsuarioModel {
             $db->commit();
             return true;
         } catch (Exception $e) {
-            $db->rollBack();
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
             return false;
         }
     }

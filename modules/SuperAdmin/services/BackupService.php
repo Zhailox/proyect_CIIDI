@@ -109,6 +109,34 @@ class BackupService {
                 }
             }
 
+            if ($tabla === null || in_array($tabla, ['recursos', 'usuarios'], true)) {
+                if (method_exists('Connection', 'ensureAuditTriggers')) {
+                    Connection::ensureAuditTriggers($db);
+                }
+                $stmtTrg = $db->query("SHOW TRIGGERS");
+                $triggers = $stmtTrg ? $stmtTrg->fetchAll(PDO::FETCH_ASSOC) : [];
+                if (!empty($triggers)) {
+                    $sqlLines[] = "-- -----------------------------------------------------------------------------";
+                    $sqlLines[] = "-- Disparadores (Triggers) de Auditoría";
+                    $sqlLines[] = "-- -----------------------------------------------------------------------------";
+                    foreach ($triggers as $trg) {
+                        $trgName   = $trg['Trigger'] ?? '';
+                        $trgTiming = $trg['Timing'] ?? '';
+                        $trgEvent  = $trg['Event'] ?? '';
+                        $trgTable  = $trg['Table'] ?? '';
+                        $trgStmt   = rtrim((string)($trg['Statement'] ?? ''), "; \t\n\r\0\x0B");
+                        if ($tabla !== null && $trgTable !== $tabla) {
+                            continue;
+                        }
+                        if ($trgName && $trgTiming && $trgEvent && $trgTable && $trgStmt) {
+                            $sqlLines[] = "DROP TRIGGER IF EXISTS `{$trgName}`;";
+                            $sqlLines[] = "CREATE TRIGGER `{$trgName}` {$trgTiming} {$trgEvent} ON `{$trgTable}` FOR EACH ROW {$trgStmt};";
+                            $sqlLines[] = "";
+                        }
+                    }
+                }
+            }
+
             $sqlLines[] = "SET FOREIGN_KEY_CHECKS = 1;";
             $rawContent = implode("\n", $sqlLines) . "\n";
 

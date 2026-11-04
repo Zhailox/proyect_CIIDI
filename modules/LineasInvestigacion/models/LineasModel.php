@@ -318,4 +318,22 @@ class LineasModel extends QueryBuilder {
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([$estado ? 1 : 0, $id]);
     }
+
+    public function desvincularProfesor(int $id_usuario, int $id_linea): bool {
+        $sql = "DELETE FROM profesor_linea WHERE id_usuario = ? AND id_linea = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$id_usuario, $id_linea]);
+    }
+
+    public function getProfesoresDisponibles(): array {
+        $sql = "
+            SELECT id, nombre_completo, email, es_investigador
+            FROM usuarios
+            WHERE (id_rol IN (1, 2, 4) OR es_investigador = 1 OR es_profesor_pst = 1 OR estado_registro = 'Profesor') AND activo = 1
+            ORDER BY nombre_completo ASC
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

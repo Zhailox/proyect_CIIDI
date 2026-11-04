@@ -68,7 +68,7 @@ class AuditLogger {
             }
 
             // Obtener el hash anterior para la cadena criptográfica
-            $stmtPrev = $db->query("SELECT hash_integridad FROM system_audit_log ORDER BY ctid DESC LIMIT 1");
+            $stmtPrev = $db->query("SELECT hash_integridad FROM system_audit_log ORDER BY fecha_hora DESC, id DESC LIMIT 1");
             $hashAnterior = self::GENESIS_HASH;
             if ($stmtPrev) {
                 $val = $stmtPrev->fetchColumn();
@@ -155,7 +155,7 @@ class AuditLogger {
                 return 0;
             }
 
-            $stmtPrev = $db->query("SELECT hash_integridad FROM system_audit_log ORDER BY ctid DESC LIMIT 1");
+            $stmtPrev = $db->query("SELECT hash_integridad FROM system_audit_log ORDER BY fecha_hora DESC, id DESC LIMIT 1");
             $hashAnterior = self::GENESIS_HASH;
             if ($stmtPrev) {
                 $val = $stmtPrev->fetchColumn();
@@ -232,7 +232,7 @@ class AuditLogger {
                 return ['integro' => false, 'mensaje' => 'Sin conexión a base de datos'];
             }
 
-            $stmt = $db->query("SELECT * FROM system_audit_log ORDER BY ctid ASC");
+            $stmt = $db->query("SELECT * FROM system_audit_log ORDER BY fecha_hora ASC, id ASC");
             $logs = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
 
             $hashAnteriorEsperado = null;

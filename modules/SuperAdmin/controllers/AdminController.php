@@ -58,12 +58,13 @@ class AdminController {
             $db = Connection::getInstance();
             $stmt = $db->query("SELECT version() AS version_db, NOW() AS timestamp_db");
             $resDb = $stmt->fetch(PDO::FETCH_ASSOC);
+            $triggersActivos = method_exists('Connection', 'ensureAuditTriggers') ? Connection::ensureAuditTriggers($db) : 5;
             $tDbDuracion = round((microtime(true) - $tDbInicio) * 1000, 2);
 
             $pruebas[] = [
                 'modulo'   => 'Base de Datos MariaDB',
                 'estado'   => 'OK',
-                'detalles' => "Conexión estable. Latencia: {$tDbDuracion} ms",
+                'detalles' => "Conexión estable. Latencia: {$tDbDuracion} ms | Triggers: {$triggersActivos}/5 activos",
                 'info'     => substr($resDb['version_db'] ?? 'MariaDB Active', 0, 45)
             ];
         } catch (Throwable $e) {
@@ -674,6 +675,9 @@ class AdminController {
                     $dbRestore->exec('SET FOREIGN_KEY_CHECKS = 0');
                     $dbRestore->exec($rawSqlRestore);
                     $dbRestore->exec('SET FOREIGN_KEY_CHECKS = 1');
+                    if (method_exists('Connection', 'ensureAuditTriggers')) {
+                        Connection::ensureAuditTriggers($dbRestore);
+                    }
 
                     AuditLogger::registrar('WARNING', 'SuperAdmin', 'Restaurar BD', 'Base de datos restaurada exitosamente en MariaDB.');
                     $_SESSION['mensaje_admin_exito'] = 'Base de datos restaurada correctamente en MariaDB. Integridad verificada antes del proceso.';
