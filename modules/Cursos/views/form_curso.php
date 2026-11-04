@@ -1,0 +1,592 @@
+<?php
+// modules/Cursos/views/form_curso.php
+// Variables: $curso, $meta, $docentes, $modo, $titulo_form, $error, $csrf_token, $config_vista
+
+$es_editar  = ($modo === 'editar');
+$accion_url = $es_editar ? '?ruta=cursos-procesar-editar' : '?ruta=cursos-procesar-crear';
+$cfg        = $config_vista ?? [];
+$img_max_mb = $cfg['imagenes']['max_size_mb'] ?? 5;
+$lazy_load  = !empty($cfg['imagenes']['lazy_load']) ? 'lazy' : 'eager';
+
+// Campos de la tabla cursos
+$f_id      = $curso['id']       ?? '';
+$f_titulo  = htmlspecialchars($curso['titulo']          ?? '');
+$f_desc    = htmlspecialchars($curso['descripcion']     ?? '');
+$f_img_raw = $curso['imagen_portada'] ?? '';
+// DB stores 'public/uploads/cursos/x.webp' or 'storage/uploads/cursos/x.webp'; resolve relative to public/
+if (!function_exists('curImgUrl')) {
+    function curImgUrl(string $raw): string {
+        $raw = trim(str_replace('\\', '/', $raw));
+        if ($raw === '') return '';
+        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://') || str_starts_with($raw, 'data:image/')) {
+            return $raw;
+        }
+        $clean = ltrim(preg_replace('#^(public|storage)/#', '', $raw), '/');
+        $rootDir = dirname(__DIR__, 3);
+        if (file_exists($rootDir . '/public/' . $clean)) {
+            return $clean;
+        }
+        if (file_exists($rootDir . '/storage/' . $clean)) {
+            return '../storage/' . $clean;
+        }
+        return ltrim(preg_replace('#^public/#', '', $raw), '/');
+    }
+}
+$f_img     = !empty($f_img_raw) ? htmlspecialchars(curImgUrl($f_img_raw)) : '';
+$f_estado  = $curso['estado']                           ?? 'borrador';
+$f_docente = $curso['id_docente']                       ?? '';
+
+// Metadatos y adicionales DB
+$m_moodle   = htmlspecialchars($curso['url_moodle'] ?? '');
+$m_modal    = $curso['modalidad']    ?? 'Virtual';
+$m_nivel    = $curso['nivel']        ?? 'Básico';
+$m_duracion = htmlspecialchars($curso['duracion'] ?? '');
+$m_duracion_num = '';
+$m_duracion_tipo = 'horas';
+if (preg_match('/^(\d+)\s*(.*)$/', $curso['duracion'] ?? '', $matches)) {
+    $m_duracion_num = $matches[1];
+    $m_duracion_tipo = (stripos($matches[2], 'semana') !== false) ? 'semanas' : 'horas';
+}
+$m_cupo     = (int)($curso['cupo_maximo'] ?? 0);
+
+$f_f_inicio = $curso['fecha_inicio'] ?? '';
+$f_f_fin = $curso['fecha_fin'] ?? '';
+$f_vpreview = htmlspecialchars($curso['url_video_preview'] ?? '');
+$f_est_insc = $curso['estado_inscripcion'] ?? 'Abierta';
+$f_gform    = htmlspecialchars($curso['url_formulario_google'] ?? '');
+
+$lineas           = $lineas ?? [];
+$todasDimensiones = $todasDimensiones ?? [];
+$selectedLineas   = $curso['lineas_ids'] ?? [];
+$selectedDims     = $curso['dimensiones_ids'] ?? [];
+?>
+
+<div class="cur-wrapper" style="max-width: 1200px;">
+    
+    <div style="margin-bottom: 2rem;">
+        <a href="?ruta=cursos-gestion" style="color:var(--cur-muted); text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem; font-weight:600; font-size:0.9rem; margin-bottom:1rem; transition:color 0.2s;" onmouseover="this.style.color='var(--cur-primary)';" onmouseout="this.style.color='var(--cur-muted)';"><i class="ph-bold ph-arrow-left"></i> Volver a la Gestión</a>
+        
+        <h1 style="font-size: 2.5rem; font-weight: 800; color: var(--cur-dark); margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.8rem;">
+            <div style="width:50px; height:50px; border-radius:12px; background: linear-gradient(135deg, rgba(80,89,132,0.95) 0%, rgba(112,144,203,0.9) 100%); color:white; display:flex; align-items:center; justify-content:center; font-size:1.6rem; box-shadow:0 10px 20px rgba(80,89,132,0.3);">
+                <i class="ph-fill <?= $es_editar ? 'ph-pencil-simple' : 'ph-plus' ?>"></i>
+            </div>
+            <?= htmlspecialchars($titulo_form) ?>
+        </h1>
+        <p style="color:var(--cur-muted); font-size:1.05rem;">
+            <?= $es_editar ? 'Modifica los datos del curso y guarda los cambios.' : 'Completa todos los campos para registrar un nuevo curso en el ecosistema.' ?>
+        </p>
+    </div>
+
+    <?php if (!empty($error)): ?>
+        <div class="cur-flash cur-flash-error" style="border-radius:12px; margin-bottom:2rem;"><i class="ph-fill ph-warning-circle"></i> <?= htmlspecialchars($error) ?></div>
+    <?php endif; ?>
+
+    <form method="POST" action="<?= $accion_url ?>" id="form-curso" enctype="multipart/form-data"  style="display:flex; flex-direction:column; gap:2rem;">
+        <?= $csrf_token ?? '' ?>
+        <?php if ($es_editar): ?>
+            <input type="hidden" name="id" value="<?= (int)$f_id ?>">
+        <?php endif; ?>
+
+        <!-- SECCIÁN 1: PRINCIPAL -->
+        <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04);">
+            <h3 style="font-weight:800; color:var(--cur-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;"><i class="ph-fill ph-info" style="color:var(--cur-primary);"></i> 1. Información Principal</h3>
+            
+            <div style="margin-bottom:1.5rem;">
+                <label for="titulo" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Título del Curso <span style="color:var(--cur-danger);">*</span></label>
+                <div style="position:relative;">
+                    <i class="ph-bold ph-text-aa" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                    <input type="text" id="titulo" name="titulo" value="<?= $f_titulo ?>" placeholder="Ej: Fundamentos de Inteligencia Artificial" required style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:1.5rem;">
+                <?php
+                    $nivel_usuario = isset($usuario_actual['nivel']) ? (int)$usuario_actual['nivel'] : 999;
+                    $rol_usuario   = strtolower((string)($usuario_actual['rol'] ?? ''));
+                    $puede_asignar_docente = !empty($es_admin_cursos)
+                        || ($nivel_usuario >= 0 && $nivel_usuario <= 1)
+                        || str_contains($rol_usuario, 'super')
+                        || str_contains($rol_usuario, 'admin')
+                        || str_contains($rol_usuario, 'comit');
+                    $docente_seleccionado = $f_docente !== '' ? (int)$f_docente : (int)($usuario_actual['id'] ?? 0);
+                ?>
+                <?php if ($puede_asignar_docente): ?>
+                <div>
+                    <label for="id_docente" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Docente Responsable <span style="color:var(--cur-danger);">*</span></label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-chalkboard-teacher" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <select id="id_docente" name="id_docente" required style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                            <option value="">— Seleccionar docente —</option>
+                            <?php foreach ($docentes as $doc): ?>
+                            <option value="<?= (int)$doc['id'] ?>" <?= ($docente_seleccionado === (int)$doc['id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($doc['nombre_completo']) ?><?= !empty($doc['rol_nombre']) ? ' (' . htmlspecialchars($doc['rol_nombre']) . ')' : '' ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted); pointer-events:none;"></i>
+                    </div>
+                </div>
+                <?php else: ?>
+                <div>
+                    <label style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Docente Responsable</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-chalkboard-teacher" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <?php
+                            $nombre_docente_actual = $usuario_actual['nombre_completo'] ?? trim(($usuario_actual['nombre'] ?? '') . ' ' . ($usuario_actual['apellido'] ?? ''));
+                            if ($es_editar) {
+                                foreach ($docentes as $doc) {
+                                    if ($doc['id'] == $f_docente) {
+                                        $nombre_docente_actual = $doc['nombre_completo'];
+                                        break;
+                                    }
+                                }
+                            }
+                        ?>
+                        <input type="text" value="<?= htmlspecialchars($nombre_docente_actual) ?>" readonly style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; background:#F8FAFC; color:var(--cur-muted); outline:none; cursor:not-allowed;">
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <div>
+                    <label for="estado" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Estado Inicial</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-toggle-right" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <select id="estado" name="estado" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                            <option value="borrador" <?= $f_estado === 'borrador' ? 'selected' : '' ?>>Borrador (Oculto)</option>
+                            <option value="publicado" <?= $f_estado === 'publicado' ? 'selected' : '' ?>>Publicado (Visible en catálogo)</option>
+                            <option value="archivado" <?= $f_estado === 'archivado' ? 'selected' : '' ?>>Archivado</option>
+                        </select>
+                        <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted); pointer-events:none;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Líneas y Dimensiones (Pills interactivas) -->
+            <div style="margin-top:2rem; padding-top:1.5rem; border-top:1px solid #E2E8F0;">
+                <style>
+                .cb-pill input[type="checkbox"] { display: none; }
+                .cb-pill-text {
+                    display: inline-flex; align-items: center; gap: 0.4rem;
+                    padding: 0.6rem 1.2rem; background: #F1F5F9; color: #475569;
+                    border: 1px solid var(--cur-border); border-radius: 50px;
+                    font-size: 0.92rem; font-weight: 600; cursor: pointer;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); user-select: none;
+                }
+                .cb-pill input[type="checkbox"]:checked + .cb-pill-text {
+                    background: var(--cur-primary-light); color: var(--cur-primary);
+                    border-color: var(--cur-primary); box-shadow: 0 4px 12px rgba(80,89,132,0.15);
+                }
+                .cb-pill:hover .cb-pill-text { border-color: var(--cur-primary); transform: translateY(-1px); }
+                </style>
+
+                <!-- Líneas de Investigación -->
+                <div style="margin-bottom:1.5rem;">
+                    <label style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.8rem;">
+                        <i class="ph-bold ph-git-branch" style="color:var(--cur-primary);"></i> Líneas de Investigación a las que tributa el curso (Puede seleccionar varias)
+                    </label>
+                    <div style="display:flex; flex-wrap:wrap; gap:0.6rem;">
+                        <?php if (empty($lineas)): ?>
+                            <span style="color:var(--cur-muted); font-size:0.9rem;">No hay líneas de investigación registradas.</span>
+                        <?php else: ?>
+                            <?php foreach ($lineas as $l): ?>
+                                <label class="cb-pill">
+                                    <input type="checkbox" name="id_linea[]" value="<?= $l['id'] ?>" class="linea-cb" <?= in_array($l['id'], $selectedLineas) ? 'checked' : '' ?>>
+                                    <span class="cb-pill-text"><i class="ph-bold ph-git-branch"></i> <?= htmlspecialchars($l['nombre']) ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Dimensiones Operativas -->
+                <div>
+                    <label style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.8rem;">
+                        <i class="ph-bold ph-circles-three" style="color:var(--cur-primary);"></i> Dimensiones Operativas en las que opera (Puede seleccionar varias)
+                    </label>
+                    <div id="dimensiones-container" style="display:flex; flex-wrap:wrap; gap:0.6rem; min-height:45px; padding:1.2rem; border:1px dashed var(--cur-border); border-radius:12px; background:#F8FAFC;">
+                        <?php if (!empty($todasDimensiones)): ?>
+                            <?php foreach ($todasDimensiones as $d): ?>
+                                <label class="cb-pill dim-pill" data-linea="<?= $d['id_linea'] ?>" style="display:none;">
+                                    <input type="checkbox" name="id_dimension[]" value="<?= $d['id'] ?>" <?= in_array($d['id'], $selectedDims) ? 'checked' : '' ?>>
+                                    <span class="cb-pill-text"><i class="ph-bold ph-circles-three"></i> <?= htmlspecialchars($d['nombre']) ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                            <span id="no-dims-msg" style="color:var(--cur-muted); font-size:0.9rem;">Seleccione primero al menos una línea de investigación arriba.</span>
+                        <?php else: ?>
+                            <span style="color:var(--cur-muted); font-size:0.9rem;">No hay dimensiones operativas registradas.</span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÁN 2: DESCRIPCIÁN Y PORTADA -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap:2rem;">
+            
+            <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04); display:flex; flex-direction:column;">
+                <h3 style="font-weight:800; color:var(--cur-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;"><i class="ph-fill ph-article" style="color:var(--cur-primary);"></i> 2. Descripción General</h3>
+                <label for="descripcion" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Resumen del Curso <span style="color:var(--cur-danger);">*</span></label>
+                <textarea id="descripcion" name="descripcion" required rows="7" placeholder="Escribe un resumen atractivo para los estudiantes..." style="width:100%; padding:1rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1rem; outline:none; font-family:inherit; resize:vertical; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';"><?= $f_desc ?></textarea>
+            </div>
+
+            <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04); display:flex; flex-direction:column;">
+                <h3 style="font-weight:800; color:var(--cur-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;"><i class="ph-fill ph-image" style="color:var(--cur-primary);"></i> 3. Imagen de Portada</h3>
+
+                <?php if ($f_img): ?>
+                <!-- Imagen actual (sólo en edición) -->
+                <div style="margin-bottom:1.5rem; padding:1.2rem; background:#EFF6FF; border-radius:12px; border:1px solid #BFDBFE; display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap;">
+                    <img src="<?= $f_img ?>" alt="Imagen actual" style="width:80px; height:80px; object-fit:cover; border-radius:10px; border:2px solid #BFDBFE; flex-shrink:0;" onerror="this.style.display='none'">
+                    <div>
+                        <div style="font-weight:700; color:#1D4ED8; font-size:0.9rem; margin-bottom:0.3rem;"><i class="ph-fill ph-check-circle"></i> Imagen actual guardada</div>
+                        <div style="font-size:0.82rem; color:#3B82F6;">Sube un nuevo archivo o pega una URL para reemplazarla. Si no cambias nada, se conserva la actual.</div>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <!-- Pestañas: Archivo vs URL -->
+                <div style="display:flex; gap:0.5rem; margin-bottom:1.2rem;">
+                    <button type="button" id="tab-archivo" onclick="cambiarTab('archivo')" style="padding:0.6rem 1.2rem; border-radius:50px; border:2px solid var(--cur-primary); background:var(--cur-primary); color:white; font-weight:600; cursor:pointer; font-size:0.9rem; transition:all 0.2s;">
+                        <i class="ph-bold ph-upload-simple"></i> Subir archivo
+                    </button>
+                    <button type="button" id="tab-url" onclick="cambiarTab('url')" style="padding:0.6rem 1.2rem; border-radius:50px; border:2px solid var(--cur-border); background:white; color:var(--cur-muted); font-weight:600; cursor:pointer; font-size:0.9rem; transition:all 0.2s;">
+                        <i class="ph-bold ph-link"></i> Pegar URL
+                    </button>
+                </div>
+
+                <!-- Panel: Subir archivo -->
+                <div id="panel-archivo" style="margin-bottom:1rem;">
+                    <label id="label-portada" style="display:block; border:2px dashed var(--cur-border); border-radius:12px; padding:2rem; text-align:center; cursor:pointer; background:#F8FAFC; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--cur-primary)';" onmouseout="this.style.borderColor='var(--cur-border)';">
+                        <?php if(!empty($f_img)): ?>
+                            <i class="ph-fill ph-upload-simple" style="font-size:2.5rem; color:var(--cur-muted); margin-bottom:0.8rem; display:none;" id="upload-icon"></i>
+                            <img id="img-preview" src="<?= $f_img ?>" style="display:block; max-width:100%; max-height:200px; border-radius:8px; margin:0 auto 1rem;" />
+                        <?php else: ?>
+                            <i class="ph-fill ph-upload-simple" style="font-size:2.5rem; color:var(--cur-muted); margin-bottom:0.8rem; display:block;" id="upload-icon"></i>
+                            <img id="img-preview" src="" style="display:none; max-width:100%; max-height:200px; border-radius:8px; margin:0 auto 1rem;" />
+                        <?php endif; ?>
+                        <strong style="color:var(--cur-primary);">Seleccionar Imagen</strong>
+                        <div style="font-size:0.85rem; color:var(--cur-muted); margin-top:0.4rem;">Formatos: <strong>.jpg, .png, .webp, .gif</strong> — Máx <?= $img_max_mb ?>MB</div>
+                        <input type="file" name="imagen_portada_file" id="portada" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;" onchange="validarArchivoImagen(this)">
+                        <div id="file-name" style="margin-top:0.8rem; font-weight:600; color:#166534;"></div>
+                    </label>
+                    <div id="file-error" style="display:none; margin-top:0.8rem; padding:0.8rem 1rem; background:#FEE2E2; border-radius:8px; color:#991B1B; font-size:0.9rem; font-weight:500;"></div>
+                </div>
+
+                <!-- Panel: URL de imagen -->
+                <?php $f_img_url_only = (str_starts_with($f_img_raw ?? '', 'http://') || str_starts_with($f_img_raw ?? '', 'https://')) ? $f_img_raw : ''; ?>
+                <div id="panel-url" style="display:none; margin-bottom:1rem;">
+                    <label style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">URL de la imagen <span style="color:var(--cur-muted); font-weight:400; font-size:0.85rem;">(pega el enlace directo a la imagen)</span></label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-link" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <input type="url" name="imagen_portada_url" id="imagen_url" value="<?= htmlspecialchars($f_img_url_only) ?>" placeholder="https://ejemplo.com/imagen.jpg"
+                            style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1rem; outline:none; box-sizing:border-box;"
+                            onfocus="this.style.borderColor='var(--cur-primary)';" onblur="this.style.borderColor='var(--cur-border)';"
+                            oninput="previsualizarUrl(this.value)">
+                    </div>
+                    <div id="url-preview-wrap" style="display:none; margin-top:1rem; text-align:center;">
+                        <img id="url-preview-img" src="" alt="Vista previa" style="max-width:100%; max-height:200px; border-radius:10px; border:2px solid #E5E7EB;">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SECCIÁN 3: METADATOS TÁCNICOS -->
+        <div style="background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(80, 89, 132, 0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(18, 26, 62, 0.04);">
+            <h3 style="font-weight:800; color:var(--cur-dark); font-size:1.3rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:2px solid #F1F5F9; display:flex; align-items:center; gap:0.5rem;"><i class="ph-fill ph-sliders" style="color:var(--cur-primary);"></i> 4. Parámetros Académicos</h3>
+            
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:1.5rem;">
+                
+                <div>
+                    <label for="url_moodle" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">URL de Moodle</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-link" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <input type="url" id="url_moodle" name="url_moodle" value="<?= $m_moodle ?>" placeholder="Enlace al curso virtual..." style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="modalidad" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Modalidad</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-desktop" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <select id="modalidad" name="modalidad" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                            <option value="Virtual" <?= $m_modal === 'Virtual' ? 'selected' : '' ?>>Virtual</option>
+                            <option value="Presencial" <?= $m_modal === 'Presencial' ? 'selected' : '' ?>>Presencial</option>
+                            <option value="Híbrido" <?= $m_modal === 'Híbrido' ? 'selected' : '' ?>>Híbrido / Semipresencial</option>
+                        </select>
+                        <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted); pointer-events:none;"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="nivel" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Nivel de Dificultad</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-stairs" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <select id="nivel" name="nivel" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                            <option value="Básico" <?= $m_nivel === 'Básico' ? 'selected' : '' ?>>Básico</option>
+                            <option value="Intermedio" <?= $m_nivel === 'Intermedio' ? 'selected' : '' ?>>Intermedio</option>
+                            <option value="Avanzado" <?= $m_nivel === 'Avanzado' ? 'selected' : '' ?>>Avanzado</option>
+                        </select>
+                        <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted); pointer-events:none;"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="duracion_numero" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Duración</label>
+                    <div style="display:flex; gap:0.5rem;">
+                        <div style="position:relative; flex:1;">
+                            <i class="ph-bold ph-clock" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                            <input type="number" id="duracion_numero" name="duracion_numero" value="<?= $m_duracion_num ?>" placeholder="Ej: 40" min="1" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s; box-sizing:border-box;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                        </div>
+                        <div style="position:relative; flex:1;">
+                            <select id="duracion_tipo" name="duracion_tipo" style="width:100%; padding:1rem 2.5rem 1rem 1rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer; background:#fff; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                                <option value="horas" <?= $m_duracion_tipo === 'horas' ? 'selected' : '' ?>>Horas</option>
+                                <option value="semanas" <?= $m_duracion_tipo === 'semanas' ? 'selected' : '' ?>>Semanas</option>
+                            </select>
+                            <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted); pointer-events:none;"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="cupo_maximo" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Cupo Máximo</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-users-three" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <input type="number" id="cupo_maximo" name="cupo_maximo" value="<?= $m_cupo ?>" min="0" placeholder="0 = Ilimitado" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                    </div>
+                </div>
+
+                
+
+                <div>
+                    <label for="fecha_inicio" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Fecha de Inicio</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-calendar" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <input type="date" id="fecha_inicio" name="fecha_inicio" value="<?= $f_f_inicio ?>" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="fecha_fin" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Fecha de Fin</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-calendar-check" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <input type="date" id="fecha_fin" name="fecha_fin" value="<?= $f_f_fin ?>" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="estado_inscripcion" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Estado de Inscripción</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-door-open" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <select id="estado_inscripcion" name="estado_inscripcion" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; appearance:none; cursor:pointer;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                            <option value="Próximamente" <?= $f_est_insc === 'Próximamente' ? 'selected' : '' ?>>Próximamente</option>
+                            <option value="Abierta" <?= $f_est_insc === 'Abierta' ? 'selected' : '' ?>>Inscripción Abierta</option>
+                            <option value="Cerrada" <?= $f_est_insc === 'Cerrada' ? 'selected' : '' ?>>Inscripción Cerrada</option>
+                            <option value="En Curso" <?= $f_est_insc === 'En Curso' ? 'selected' : '' ?>>En Curso</option>
+                        </select>
+                        <i class="ph-bold ph-caret-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted); pointer-events:none;"></i>
+                    </div>
+                </div>
+
+                <div style="grid-column: 1 / -1;">
+                    <label for="url_video_preview" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">Video Preview (OPCIONAL)</label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-video" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <input type="url" id="url_video_preview" name="url_video_preview" value="<?= $f_vpreview ?>" placeholder="Ej: https://youtube.com/watch?v=..." style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                    </div>
+                </div>
+
+                <div style="grid-column: 1 / -1;">
+                    <label for="url_formulario_google" style="display:block; font-weight:600; color:var(--cur-dark); margin-bottom:0.5rem;">
+                        <i class="ph-bold ph-google-logo" style="color:#EA4335;"></i> Formulario de Inscripción Propio del Curso (Google Forms)
+                    </label>
+                    <div style="position:relative;">
+                        <i class="ph-bold ph-link" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--cur-muted);"></i>
+                        <input required type="url" id="url_formulario_google" name="url_formulario_google" value="<?= $f_gform ?>" placeholder="Ej: https://docs.google.com/forms/d/e/.../viewform" style="width:100%; padding:1rem 1rem 1rem 2.8rem; border:1px solid var(--cur-border); border-radius:12px; font-size:1.05rem; outline:none; transition:box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 4px rgba(80,89,132,0.15)'; this.style.borderColor='var(--cur-primary)';" onblur="this.style.boxShadow='none'; this.style.borderColor='var(--cur-border)';">
+                    </div>
+                    <small style="color:var(--cur-muted); display:block; margin-top:0.4rem;">Ingresa el enlace del formulario de Google exclusivo para las inscripciones de este curso.</small>
+                </div>
+
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; padding-top:1rem; padding-bottom:3rem; gap:1rem;">
+            <a href="?ruta=cursos-gestion" style="background: white; color: var(--cur-dark); border: 1px solid var(--cur-border); padding: 1rem 2rem; border-radius: 50px; font-weight: 700; font-size: 1.15rem; text-decoration:none; transition: background 0.2s;" onmouseover="this.style.background='#F1F5F9';" onmouseout="this.style.background='white';">Cancelar</a>
+            
+            <button type="submit" id="btn-submit" style="
+                background: linear-gradient(135deg, rgba(80,89,132,0.95) 0%, rgba(112,144,203,0.9) 100%); 
+                color: white; 
+                border: none; 
+                padding: 1rem 2.5rem; 
+                border-radius: 50px; 
+                font-weight: 700; 
+                font-size: 1.15rem; 
+                display:flex; 
+                align-items:center; 
+                gap: 0.8rem;
+                box-shadow: 0 10px 25px rgba(80, 89, 132, 0.35);
+                cursor: pointer;
+                transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
+            " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 15px 35px rgba(80, 89, 132, 0.45)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 25px rgba(80, 89, 132, 0.35)';">
+                <i class="ph-bold ph-floppy-disk" style="font-size: 1.4rem;"></i> <?= $es_editar ? 'Guardar Cambios' : 'Crear Curso' ?>
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+const MAX_MB = <?= $img_max_mb ?>;
+
+// ── Tab switcher: Archivo / URL ──────────────────────────────────────────────
+function cambiarTab(tab) {
+    const panelArchivo = document.getElementById('panel-archivo');
+    const panelUrl     = document.getElementById('panel-url');
+    const tabArchivo   = document.getElementById('tab-archivo');
+    const tabUrl       = document.getElementById('tab-url');
+    const inputFile    = document.getElementById('portada');
+    const inputUrl     = document.getElementById('imagen_url');
+
+    if (tab === 'archivo') {
+        panelArchivo.style.display = 'block';
+        panelUrl.style.display     = 'none';
+        tabArchivo.style.background = 'var(--cur-primary)';
+        tabArchivo.style.color      = 'white';
+        tabArchivo.style.borderColor = 'var(--cur-primary)';
+        tabUrl.style.background = 'white';
+        tabUrl.style.color = 'var(--cur-muted)';
+        tabUrl.style.borderColor = 'var(--cur-border)';
+        // Disable URL input so file takes priority
+        if (inputUrl) inputUrl.disabled = true;
+        if (inputFile) inputFile.disabled = false;
+    } else {
+        panelArchivo.style.display = 'none';
+        panelUrl.style.display     = 'block';
+        tabUrl.style.background = 'var(--cur-primary)';
+        tabUrl.style.color      = 'white';
+        tabUrl.style.borderColor = 'var(--cur-primary)';
+        tabArchivo.style.background = 'white';
+        tabArchivo.style.color = 'var(--cur-muted)';
+        tabArchivo.style.borderColor = 'var(--cur-border)';
+        // Disable file input so URL takes priority
+        if (inputFile) { inputFile.value = ''; inputFile.disabled = true; }
+        if (inputUrl) inputUrl.disabled = false;
+        // Show preview if URL already has value
+        if (inputUrl && inputUrl.value) previsualizarUrl(inputUrl.value);
+    }
+}
+
+// ── URL image preview ─────────────────────────────────────────────────────────
+function previsualizarUrl(url) {
+    const wrap = document.getElementById('url-preview-wrap');
+    const img  = document.getElementById('url-preview-img');
+    if (!url || !url.startsWith('http')) {
+        wrap.style.display = 'none';
+        return;
+    }
+    img.src = url;
+    img.onerror = () => { wrap.style.display = 'none'; };
+    img.onload  = () => { wrap.style.display = 'block'; };
+}
+
+// ── File validation ───────────────────────────────────────────────────────────
+function validarArchivoImagen(input) {
+    const file = input.files[0];
+    const errDiv    = document.getElementById('file-error');
+    const nameDiv   = document.getElementById('file-name');
+    const previewImg = document.getElementById('img-preview');
+    const uploadIcon = document.getElementById('upload-icon');
+
+    errDiv.style.display = 'none';
+    errDiv.textContent = '';
+    nameDiv.textContent = '';
+
+    if (!file) {
+        previewImg.style.display = 'none';
+        uploadIcon.style.display = 'block';
+        return;
+    }
+
+    const allowed = ['image/jpeg','image/png','image/webp','image/gif'];
+    if (!allowed.includes(file.type.toLowerCase())) {
+        errDiv.textContent = '⚠ Solo se permiten archivos de imagen válidos (.jpg, .png, .webp, .gif).';
+        errDiv.style.display = 'block';
+        input.value = '';
+        previewImg.style.display = 'none';
+        uploadIcon.style.display = 'block';
+        return;
+    }
+
+    const sizeMB = file.size / (1024 * 1024);
+    if (sizeMB > MAX_MB) {
+        errDiv.textContent = '⚠ El archivo excede el tamaño máximo permitido de ' + MAX_MB + 'MB (Tamaño actual: ' + sizeMB.toFixed(1) + 'MB).';
+        errDiv.style.display = 'block';
+        input.value = '';
+        previewImg.style.display = 'none';
+        uploadIcon.style.display = 'block';
+        return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    previewImg.src = objectUrl;
+    previewImg.style.display = 'block';
+    uploadIcon.style.display = 'none';
+    nameDiv.textContent = '✓ ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+    nameDiv.style.color = '#166534';
+}
+
+// ── Submit guard ──────────────────────────────────────────────────────────────
+document.getElementById('form-curso').addEventListener('submit', function(e) {
+    const errDiv = document.getElementById('file-error');
+    if (errDiv && errDiv.style.display === 'block' && errDiv.textContent.trim() !== '') {
+        e.preventDefault();
+        errDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+});
+
+// Init: default tab = archivo
+cambiarTab('archivo');
+
+// ── Filtro dinámico de Dimensiones Operativas según Líneas seleccionadas ────
+function actualizarDimensiones() {
+    const lineasSeleccionadas = Array.from(document.querySelectorAll('.linea-cb:checked')).map(cb => cb.value);
+    const dimPills = document.querySelectorAll('.dim-pill');
+    const noDimsMsg = document.getElementById('no-dims-msg');
+    let visibles = 0;
+
+    dimPills.forEach(pill => {
+        const idLinea = pill.getAttribute('data-linea');
+        if (lineasSeleccionadas.includes(idLinea)) {
+            pill.style.display = 'inline-flex';
+            visibles++;
+        } else {
+            pill.style.display = 'none';
+            const cb = pill.querySelector('input[type="checkbox"]');
+            if (cb && !lineasSeleccionadas.includes(idLinea)) {
+                cb.checked = false;
+            }
+        }
+    });
+
+    if (noDimsMsg) {
+        if (lineasSeleccionadas.length === 0) {
+            noDimsMsg.style.display = 'block';
+            noDimsMsg.textContent = 'Seleccione al menos una línea de investigación para ver sus dimensiones.';
+        } else if (visibles === 0) {
+            noDimsMsg.style.display = 'block';
+            noDimsMsg.textContent = 'Las líneas seleccionadas no tienen dimensiones operativas asociadas.';
+        } else {
+            noDimsMsg.style.display = 'none';
+        }
+    }
+}
+
+document.querySelectorAll('.linea-cb').forEach(cb => {
+    cb.addEventListener('change', actualizarDimensiones);
+});
+actualizarDimensiones();
+</script>
+
+
+
+
+
+

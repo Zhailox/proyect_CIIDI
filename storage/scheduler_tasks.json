@@ -1,0 +1,32 @@
+{
+    "limpieza_temporales": {
+        "id": "limpieza_temporales",
+        "nombre": "Limpieza de Archivos Temporales & Caché",
+        "descripcion": "Elimina archivos temporales en storage\/tmp\/, cachés expiradas y residuos de descargas.",
+        "expresion_cron": "0 3 * * *",
+        "estado": "activo",
+        "ultima_ejecucion": "2026-11-04 03:02:42",
+        "resultado_ultimo": "ÉXITO (1.9ms): Limpieza completada. Depurados 1 archivos temporales y cachés.",
+        "script": "limpiarTemporales"
+    },
+    "backup_automatico_medianoche": {
+        "id": "backup_automatico_medianoche",
+        "nombre": "Respaldo Automático de Medianoche (MariaDB Dump)",
+        "descripcion": "Genera un backup completo comprimido (.sql.gz) de la base de datos MariaDB y purga respaldos antiguos.",
+        "expresion_cron": "0 0 * * *",
+        "estado": "activo",
+        "ultima_ejecucion": "2026-11-04 00:03:30",
+        "resultado_ultimo": "ÉXITO (803.11ms): Respaldo generado con éxito: auto_cron_backup_2026-11-04_00-03-29.sql.gz",
+        "script": "ejecutarBackupAutomatico"
+    },
+    "purga_logs_viejos": {
+        "id": "purga_logs_viejos",
+        "nombre": "Optimización y Rotación de Logs de Auditoría",
+        "descripcion": "Mantener los logs de auditoría dentro de un límite saludable de almacenamiento.",
+        "expresion_cron": "0 4 * * 0",
+        "estado": "activo",
+        "ultima_ejecucion": "2026-09-19 20:53:35",
+        "resultado_ultimo": "ÉXITO (28.69ms): Optimización de logs completada. 0 registros obsoletos purgados.",
+        "script": "purgarLogs"
+    }
+}

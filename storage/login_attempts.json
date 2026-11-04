@@ -1,0 +1,12 @@
+{
+    "::1": {
+        "ip": "::1",
+        "intentos": 1,
+        "primer_intento": 1793764349,
+        "ultimo_intento": 1793764349,
+        "bloqueado_hasta": 0,
+        "historial_cedulas": [
+            "V-89"
+        ]
+    }
+}

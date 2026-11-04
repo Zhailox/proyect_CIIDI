@@ -1,0 +1,1034 @@
+<?php
+require_once CORE_PATH . 'Database/QueryBuilder.php';
+
+class ArticuloModel {
+    private static $cacheCategorias = null;
+    private static $cacheEtiquetas = null;
+    private $cacheFileDir;
+
+    public function __construct() {
+        $this->cacheFileDir = __DIR__ . '/../../../storage/cache/';
+        if (!is_dir($this->cacheFileDir)) {
+            @mkdir($this->cacheFileDir, 0777, true);
+        }
+    }
+
+    public function invalidarCacheCatalogos() {
+        self::$cacheCategorias = null;
+        self::$cacheEtiquetas = null;
+        @unlink($this->cacheFileDir . 'categorias.json');
+        @unlink($this->cacheFileDir . 'etiquetas.json');
+    }
+    
+    public function obtenerUltimosArticulos(array $filtros = [], $pagina = 1, $porPagina = 20) {
+        $db = Connection::getInstance();
+
+        $pagina = max(1, (int) $pagina);
+        $porPagina = max(1, (int) $porPagina);
+        $offset = ($pagina - 1) * $porPagina;
+
+        $condiciones = ['r.id_tipo_recurso = :tipo'];
+        $parametros = [':tipo' => 3]; // <-- LO MOVIMOS AQUÍ ARRIBA
+
+        if (isset($filtros['activo'])) {
+            if ($filtros['activo'] !== 'todos') {
+                $condiciones[] = "COALESCE(d.activo, 1) = :activo";
+                $parametros[':activo'] = $filtros['activo'] ? 1 : 0;
+            }
+        } else {
+            // Por defecto, si no se especifica, solo trae los activos
+            $condiciones[] = "COALESCE(d.activo, 1) = 1";
+        }
+
+        $scoreSql = "0";
+        if (!empty($filtros['q'])) {
+            $texto = trim($filtros['q']);
+            $scoreSql = "(MATCH(r.titulo) AGAINST(:q_ft_s1 IN NATURAL LANGUAGE MODE) * 2.5 + COALESCE(MATCH(d.resumen) AGAINST(:q_ft_s2 IN NATURAL LANGUAGE MODE), 0))";
+            $parametros[':q_ft_s1'] = $texto;
+            $parametros[':q_ft_s2'] = $texto;
+
+            $condiciones[] = "(
+                MATCH(r.titulo) AGAINST(:q_ft1 IN NATURAL LANGUAGE MODE) OR
+                MATCH(d.resumen) AGAINST(:q_ft2 IN NATURAL LANGUAGE MODE) OR
+                COALESCE(r.titulo, '') LIKE :q1 OR
+                COALESCE(d.resumen, '') LIKE :q2 OR
+                EXISTS (
+                    SELECT 1 FROM recurso_investigadores ri 
+                    JOIN investigadores i ON ri.id_investigador = i.id 
+                    WHERE ri.id_recurso = r.id AND (
+                        MATCH(i.nombre_completo, i.biografia) AGAINST(:q_ft3 IN NATURAL LANGUAGE MODE) OR
+                        COALESCE(i.nombre_completo, '') LIKE :q3 OR
+                        COALESCE(i.orcid, '') LIKE :q4
+                    )
+                ) OR
+                EXISTS (
+                    SELECT 1 FROM recurso_categorias rc 
+                    JOIN categorias c ON rc.id_categoria = c.id 
+                    WHERE rc.id_recurso = r.id AND COALESCE(c.nombre, '') LIKE :q5
+                )
+            )";
+            $likeQ = '%' . $texto . '%';
+            $parametros[':q_ft1'] = $texto;
+            $parametros[':q_ft2'] = $texto;
+            $parametros[':q_ft3'] = $texto;
+            $parametros[':q1'] = $likeQ;
+            $parametros[':q2'] = $likeQ;
+            $parametros[':q3'] = $likeQ;
+            $parametros[':q4'] = $likeQ;
+            $parametros[':q5'] = $likeQ;
+        }
+        if (!empty($filtros['id_autor'])) {
+            $condiciones[] = "EXISTS (
+                SELECT 1 FROM recurso_investigadores ri 
+                WHERE ri.id_recurso = r.id AND ri.id_investigador = :id_autor
+            )";
+            $parametros[':id_autor'] = (int) $filtros['id_autor'];
+        }
+
+        if (!empty($filtros['q_autor'])) {
+            $textoAutor = trim($filtros['q_autor']);
+            $condiciones[] = "EXISTS (
+                SELECT 1 FROM recurso_investigadores ri 
+                JOIN investigadores a ON ri.id_investigador = a.id 
+                WHERE ri.id_recurso = r.id AND (a.nombre_completo LIKE :q_autor1 OR COALESCE(a.orcid, '') LIKE :q_autor2)
+            )";
+            $parametros[':q_autor1'] = '%' . $textoAutor . '%';
+            $parametros[':q_autor2'] = '%' . $textoAutor . '%';
+        }
+
+        if (!empty($filtros['year'])) {
+            $condiciones[] = 'r.anio_publicacion = :year';
+            $parametros[':year'] = (int) $filtros['year'];
+        }
+
+        if (!empty($filtros['categorias'])) {
+            $categorias = array_map('intval', $filtros['categorias']);
+            $placeholders = [];
+
+            foreach ($categorias as $i => $id) {
+                $key = ':cat' . $i;
+                $placeholders[] = $key;
+                $parametros[$key] = $id;
+            }
+
+            $condiciones[] = "EXISTS (
+                SELECT 1
+                FROM recurso_categorias rc
+                WHERE rc.id_recurso = r.id
+                AND rc.id_categoria IN (" . implode(', ', $placeholders) . ")
+            )";
+        }
+
+        if (!empty($filtros['etiquetas'])) {
+            $etiquetas = array_map('intval', $filtros['etiquetas']);
+            $placeholders = [];
+
+            foreach ($etiquetas as $i => $id) {
+                $key = ':tag' . $i;
+                $placeholders[] = $key;
+                $parametros[$key] = $id;
+            }
+
+            $condiciones[] = "EXISTS (
+                SELECT 1
+                FROM recurso_etiquetas re
+                WHERE re.id_recurso = r.id
+                AND re.id_etiqueta IN (" . implode(', ', $placeholders) . ")
+            )";
+        }
+
+        $parametros[':limit'] = $porPagina;
+        $parametros[':offset'] = $offset;
+
+        $orderByClause = !empty($filtros['q']) ? "score DESC, r.id DESC" : "r.id DESC";
+
+        $sql = "
+            SELECT
+                r.id,
+                r.titulo,
+                r.anio_publicacion,
+                r.archivo_pdf,
+                d.volumen,
+                d.numero,
+                d.issn,
+                e.nombre AS editorial,
+                d.imagen_portada,
+                d.resumen,
+                COALESCE(d.activo, 1) AS activo,
+                {$scoreSql} AS score,
+                COALESCE((
+                    SELECT GROUP_CONCAT(DISTINCT c2.nombre ORDER BY c2.nombre ASC SEPARATOR ', ')
+                    FROM recurso_categorias rc2
+                    LEFT JOIN categorias c2 ON c2.id = rc2.id_categoria
+                    WHERE rc2.id_recurso = r.id
+                ), 'Sin categoría') AS categoria,
+               COALESCE((
+                    SELECT GROUP_CONCAT(CONCAT(i2.id, '|||', i2.nombre_completo, '|||', COALESCE(i2.orcid, '')) ORDER BY i2.nombre_completo ASC SEPARATOR ';;;')
+                    FROM recurso_investigadores ri2
+                    JOIN investigadores i2 ON i2.id = ri2.id_investigador
+                    WHERE ri2.id_recurso = r.id
+                ), 'Autor no registrado') AS autores_text
+            FROM recursos r
+            INNER JOIN detalles_articulos d ON d.id_recurso = r.id
+            LEFT JOIN editoriales e ON d.id_editorial = e.id
+            WHERE " . implode(' AND ', $condiciones) . "
+            ORDER BY {$orderByClause}
+            LIMIT :limit OFFSET :offset
+        ";
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute($parametros);
+        $articulos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($articulos as &$articulo) {
+            $articulo['autores_data'] = [];
+            if ($articulo['autores_text'] !== 'Autor no registrado') {
+                $lista = explode(';;;', $articulo['autores_text']);
+                foreach($lista as $aut) {
+                    $partes = explode('|||', $aut);
+                    $articulo['autores_data'][] = [
+                        'id' => $partes[0] ?? 0,
+                        'nombre' => $partes[1] ?? '', 
+                        'orcid' => $partes[2] ?? ''
+                    ];
+                }
+                // Mantenemos autores_text como un string simple para el resto del sistema (citas, etc)
+                $articulo['autores_text'] = implode(', ', array_column($articulo['autores_data'], 'nombre'));
+            }
+        }
+
+        return $articulos;
+    }
+
+public function contarArticulos(array $filtros = []) {
+    $db = Connection::getInstance();
+
+    $condiciones = ['r.id_tipo_recurso = :tipo'];
+        $parametros = [':tipo' => 3]; // <-- LO MOVIMOS AQUÍ ARRIBA
+
+        if (isset($filtros['activo'])) {
+            if ($filtros['activo'] !== 'todos') {
+                $condiciones[] = "COALESCE(d.activo, 1) = :activo";
+                $parametros[':activo'] = $filtros['activo'] ? 1 : 0;
+            }
+        } else {
+            // Por defecto, si no se especifica, solo trae los activos
+            $condiciones[] = "COALESCE(d.activo, 1) = 1";
+        }
+
+        if (!empty($filtros['q'])) {
+            $texto = trim($filtros['q']);
+            $condiciones[] = "(
+                MATCH(r.titulo) AGAINST(:q_ft1 IN NATURAL LANGUAGE MODE) OR
+                MATCH(d.resumen) AGAINST(:q_ft2 IN NATURAL LANGUAGE MODE) OR
+                COALESCE(r.titulo, '') LIKE :q1 OR
+                COALESCE(d.resumen, '') LIKE :q2 OR
+                EXISTS (
+                    SELECT 1 FROM recurso_investigadores ri 
+                    JOIN investigadores i ON ri.id_investigador = i.id 
+                    WHERE ri.id_recurso = r.id AND (
+                        MATCH(i.nombre_completo, i.biografia) AGAINST(:q_ft3 IN NATURAL LANGUAGE MODE) OR
+                        COALESCE(i.nombre_completo, '') LIKE :q3 OR
+                        COALESCE(i.orcid, '') LIKE :q4
+                    )
+                ) OR
+                EXISTS (
+                    SELECT 1 FROM recurso_categorias rc 
+                    JOIN categorias c ON rc.id_categoria = c.id 
+                    WHERE rc.id_recurso = r.id AND COALESCE(c.nombre, '') LIKE :q5
+                )
+            )";
+            $likeQ = '%' . $texto . '%';
+            $parametros[':q_ft1'] = $texto;
+            $parametros[':q_ft2'] = $texto;
+            $parametros[':q_ft3'] = $texto;
+            $parametros[':q1'] = $likeQ;
+            $parametros[':q2'] = $likeQ;
+            $parametros[':q3'] = $likeQ;
+            $parametros[':q4'] = $likeQ;
+            $parametros[':q5'] = $likeQ;
+        }
+        if (!empty($filtros['id_autor'])) {
+            $condiciones[] = "EXISTS (
+                SELECT 1 FROM recurso_investigadores ri 
+                WHERE ri.id_recurso = r.id AND ri.id_investigador = :id_autor
+            )";
+            $parametros[':id_autor'] = (int) $filtros['id_autor'];
+        }
+        if (!empty($filtros['q_autor'])) {
+            $textoAutor = trim($filtros['q_autor']);
+            $condiciones[] = "EXISTS (
+                SELECT 1 FROM recurso_investigadores ri 
+                JOIN investigadores a ON ri.id_investigador = a.id 
+                WHERE ri.id_recurso = r.id AND (a.nombre_completo LIKE :q_autor1 OR COALESCE(a.orcid, '') LIKE :q_autor2)
+            )";
+            $parametros[':q_autor1'] = '%' . $textoAutor . '%';
+            $parametros[':q_autor2'] = '%' . $textoAutor . '%';
+        }
+
+    if (!empty($filtros['year'])) {
+        $condiciones[] = 'r.anio_publicacion = :year';
+        $parametros[':year'] = (int) $filtros['year'];
+    }
+
+    if (!empty($filtros['categorias'])) {
+        $categorias = array_map('intval', $filtros['categorias']);
+        $placeholders = [];
+
+        foreach ($categorias as $i => $id) {
+            $key = ':cat' . $i;
+            $placeholders[] = $key;
+            $parametros[$key] = $id;
+        }
+
+        $condiciones[] = "EXISTS (
+            SELECT 1
+            FROM recurso_categorias rc
+            WHERE rc.id_recurso = r.id
+            AND rc.id_categoria IN (" . implode(', ', $placeholders) . ")
+        )";
+    }
+
+    if (!empty($filtros['etiquetas'])) {
+        $etiquetas = array_map('intval', $filtros['etiquetas']);
+        $placeholders = [];
+
+        foreach ($etiquetas as $i => $id) {
+            $key = ':tag' . $i;
+            $placeholders[] = $key;
+            $parametros[$key] = $id;
+        }
+
+        $condiciones[] = "EXISTS (
+            SELECT 1
+            FROM recurso_etiquetas re
+            WHERE re.id_recurso = r.id
+            AND re.id_etiqueta IN (" . implode(', ', $placeholders) . ")
+        )";
+    }
+
+    $sql = "
+        SELECT COUNT(*) AS total
+        FROM (
+            SELECT DISTINCT r.id
+            FROM recursos r
+            INNER JOIN detalles_articulos d ON d.id_recurso = r.id
+            LEFT JOIN recurso_investigadores ri ON ri.id_recurso = r.id
+            LEFT JOIN investigadores a ON a.id = ri.id_investigador
+            WHERE " . implode(' AND ', $condiciones) . "
+        ) AS sub
+    ";
+
+    $stmt = $db->prepare($sql);
+    $stmt->execute($parametros);
+    return (int) $stmt->fetchColumn();
+}
+
+public function obtenerArticulosPaginados(array $filtros = [], $pagina = 1, $porPagina = 16) {
+    $pagina = max(1, (int) $pagina);
+    $porPagina = max(1, (int) $porPagina);
+
+    $articulos = $this->obtenerUltimosArticulos($filtros, $pagina, $porPagina);
+    $total = $this->contarArticulos($filtros);
+    $paginas = max(1, (int) ceil($total / $porPagina));
+
+    return [
+        'articulos' => $articulos,
+        'total' => $total,
+        'paginas' => $paginas,
+        'pagina' => $pagina,
+        'porPagina' => $porPagina
+    ];
+}
+
+    public function obtenerCategorias() {
+        if (self::$cacheCategorias !== null) {
+            return self::$cacheCategorias;
+        }
+
+        $cacheFile = $this->cacheFileDir . 'categorias.json';
+        if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < 3600)) {
+            $data = json_decode(file_get_contents($cacheFile), true);
+            if (is_array($data)) {
+                self::$cacheCategorias = $data;
+                return $data;
+            }
+        }
+
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("SELECT id, nombre FROM categorias ORDER BY nombre ASC");
+        $stmt->execute();
+        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        self::$cacheCategorias = $data;
+        @file_put_contents($cacheFile, json_encode($data));
+        return $data;
+    }
+
+    public function obtenerEtiquetas() {
+        if (self::$cacheEtiquetas !== null) {
+            return self::$cacheEtiquetas;
+        }
+
+        $cacheFile = $this->cacheFileDir . 'etiquetas.json';
+        if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < 3600)) {
+            $data = json_decode(file_get_contents($cacheFile), true);
+            if (is_array($data)) {
+                self::$cacheEtiquetas = $data;
+                return $data;
+            }
+        }
+
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("SELECT id, nombre FROM etiquetas ORDER BY nombre ASC");
+        $stmt->execute();
+        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        self::$cacheEtiquetas = $data;
+        @file_put_contents($cacheFile, json_encode($data));
+        return $data;
+    }
+    public function registrarArticulo($titulo, $resumen, $categorias, $id_editorial, $archivo_pdf, $anio_publicacion, $volumen, $numero, $issn, $nombreImagen, $autores, $autores_nuevos, $etiquetas) {
+        $db = Connection::getInstance();
+        
+        try {
+            $db->beginTransaction();
+            $qb = new QueryBuilder();
+
+            $id_recurso = $qb->tabla('recursos')->insert([
+                'titulo' => $titulo,
+                'id_tipo_recurso' => 3, 
+                'anio_publicacion' => $anio_publicacion,
+                'archivo_pdf' => $archivo_pdf
+            ]);
+
+            if (!$id_recurso) throw new Exception("Error al crear el recurso padre.");
+
+            // 2. Insertar Detalles
+            // Usamos PDO directo aquí porque la tabla detalles_articulos no tiene una columna serial llamada "id", 
+            // su llave primaria es id_recurso. Si usamos el QueryBuilder, intentará devolver un "id" y PostgreSQL dará error.
+
+            $stmtDetalle = $db->prepare("INSERT INTO detalles_articulos (
+        id_recurso, id_editorial, volumen, numero, issn, imagen_portada, resumen
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmtDetalle->execute([
+                $id_recurso, 
+                $id_editorial ?: null, 
+                $volumen ?: null, 
+                $numero ?: null, 
+                $issn ?: null, 
+                $nombreImagen,
+                $resumen
+            ]);
+            // 3. Procesar Autores
+            $autores_finales = [];
+            $autores_vinculados = [];
+            
+            // Los que ya existían
+            if (!empty($autores)) {
+                foreach ($autores as $id_autor) {
+                    if (is_numeric($id_autor)) {
+                        $autores_finales[] = (int)$id_autor;
+                    }
+                }
+            }
+            
+            
+            // Creamos los autores nuevos ingresados al vuelo
+            if (!empty($autores_nuevos)) {
+            $stmtNewAutor = $db->prepare("INSERT INTO investigadores (nombre_completo, orcid, biografia, pagina_web) VALUES (?, ?, ?, ?)");
+            $stmtSimilares = $db->prepare("SELECT id, nombre_completo FROM investigadores WHERE LOWER(nombre_completo) LIKE LOWER(?) LIMIT 50");
+
+            foreach ($autores_nuevos as $json_autor) {
+                $datos = json_decode($json_autor, true);
+
+                if ($datos && !empty($datos['nombre']) && !empty($datos['orcid'])) {
+                    $nom = trim($datos['nombre']);
+                    // Extracción inteligente del ORCID (ignora URLs o texto basura alrededor)
+                    $orcidBruto = trim($datos['orcid']);
+                    $orcid = '';
+                    if (preg_match('/(\d{4}-\d{4}-\d{4}-\d{3}[0-9X])/i', $orcidBruto, $coincidencias)) {
+                        $orcid = strtoupper($coincidencias[1]); // Extrae solo el formato XXXX-XXXX-XXXX-XXXX
+                    } else {
+                        $orcid = $orcidBruto; // Fallback por si acaso
+                    }
+                    $biografia = !empty($datos['biografia']) ? trim($datos['biografia']) : null;
+                    $pagina_web = !empty($datos['pagina_web']) ? trim($datos['pagina_web']) : null;
+                    $autorId = null;
+
+                    // A. Búsqueda estricta por ORCID primero
+                    $stmt = $db->prepare("SELECT id, nombre_completo FROM investigadores WHERE orcid = ?");
+                    $stmt->execute([$orcid]);
+                    $autorExistente = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                    if ($autorExistente) {
+                        // Si ya existe, tomamos su ID real e informamos
+                        $autorId = $autorExistente['id'];
+                        $autores_vinculados[] = $autorExistente['nombre_completo'];
+                    } else {
+                        // B. Si no existe en absoluto, lo insertamos
+                        $stmtNewAutor->execute([$nom, $orcid, $biografia, $pagina_web]);
+                        $autorId = (int)$db->lastInsertId();
+                    }
+                    if ($autorId) {
+                        $autores_finales[] = (int)$autorId;
+                    }
+                }
+            }
+        }
+
+            // 4. Insertar Relación Recurso-Autores (Tabla Pivote)
+            if (!empty($autores_finales)) {
+                $stmtAutor = $db->prepare("INSERT INTO recurso_investigadores (id_recurso, id_investigador) VALUES (?, ?)");
+                foreach (array_unique($autores_finales) as $id_a) {
+                    $stmtAutor->execute([$id_recurso, $id_a]);
+                }
+            }
+
+            // 5. Insertar Etiquetas (Tabla Pivote)
+            if (!empty($etiquetas)) {
+                $stmtTag = $db->prepare("INSERT INTO recurso_etiquetas (id_recurso, id_etiqueta) VALUES (?, ?)");
+                foreach ($etiquetas as $id_tag) {
+                    $stmtTag->execute([$id_recurso, (int)$id_tag]);
+                }
+            }
+            if (!empty($categorias)) {
+                $stmtCat = $db->prepare("INSERT INTO recurso_categorias (id_recurso, id_categoria) VALUES (?, ?)");
+                foreach (array_unique(array_map('intval', $categorias)) as $catId) {
+                    $stmtCat->execute([$id_recurso, $catId]);
+                }
+            }
+
+            // Si todo salió bien, guardamos los cambios físicamente
+            if ($db->inTransaction()) {
+                $db->commit();
+            }
+            return $autores_vinculados;
+
+        } catch (Exception $e) {
+            // Si algo explota, deshacemos todo
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw $e; 
+        }
+    }
+    public function eliminarArticulo($id_recurso) {
+        $db = Connection::getInstance();
+        
+        // 1. Buscar si tiene una imagen física para borrarla del disco duro
+        $stmt = $db->prepare("SELECT imagen_portada FROM detalles_articulos WHERE id_recurso = ?");
+        $stmt->execute([$id_recurso]);
+        $portada = $stmt->fetchColumn();
+
+        // Solo borramos si existe, si no es la por defecto, y si NO es una URL externa (http/https)
+        if ($portada && $portada !== 'default_article.jpg' && strpos($portada, 'http') !== 0) {
+            $nombreLimpio = basename($portada); // Previene Directory Traversal en Linux/Windows
+            $dirUploads = realpath(__DIR__ . '/../../../storage/uploads/articulos');
+            
+            if ($dirUploads) {
+                $rutaFisica = $dirUploads . DIRECTORY_SEPARATOR . $nombreLimpio;
+                if (file_exists($rutaFisica) && is_file($rutaFisica)) {
+                    @unlink($rutaFisica);
+                }
+            }
+        }
+
+        // 2. Eliminar de la base de datos (CASCADE en PostgreSQL)
+        $qb = new QueryBuilder();
+        return $qb->tabla('recursos')->where('id', '=', $id_recurso)->delete();
+    }
+public function obtenerArticuloPorId($id) {
+        $db = Connection::getInstance();
+
+        $stmt = $db->prepare("
+            SELECT
+                r.id,
+                r.titulo,
+                r.anio_publicacion,
+                r.archivo_pdf,
+                d.volumen,
+                d.numero,
+                d.issn,
+                d.id_editorial,
+                e.nombre AS editorial,
+                d.imagen_portada,
+                d.resumen,
+                COALESCE((
+                    SELECT GROUP_CONCAT(DISTINCT c2.nombre ORDER BY c2.nombre ASC SEPARATOR ', ')
+                    FROM recurso_categorias rc2
+                    JOIN categorias c2 ON c2.id = rc2.id_categoria
+                    WHERE rc2.id_recurso = r.id
+                ), 'Sin categoría') AS categoria
+            FROM recursos r
+            JOIN detalles_articulos d ON d.id_recurso = r.id
+            LEFT JOIN editoriales e ON d.id_editorial = e.id
+            WHERE r.id = ?
+              AND r.id_tipo_recurso = 3
+            LIMIT 1
+        ");
+
+        $stmt->execute([(int) $id]);
+        $articulo = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$articulo) return null;
+
+        $stmtAutores = $db->prepare("
+            SELECT a.id, a.nombre_completo, a.orcid
+            FROM recurso_investigadores ri
+            JOIN investigadores a ON a.id = ri.id_investigador
+            WHERE ri.id_recurso = ?
+            ORDER BY a.nombre_completo ASC
+        ");
+        $stmtAutores->execute([(int) $id]);
+        $autoresFetch = $stmtAutores->fetchAll(PDO::FETCH_ASSOC);
+
+        $articulo['autores_data'] = [];
+        $nombresA = [];
+        foreach($autoresFetch as $af) {
+            $articulo['autores_data'][] = ['id' => $af['id'], 'nombre' => $af['nombre_completo'], 'orcid' => $af['orcid']];
+            $nombresA[] = $af['nombre_completo'];
+        }
+
+        
+
+        $stmtCategorias = $db->prepare("SELECT id_categoria FROM recurso_categorias WHERE id_recurso = ?");
+        $stmtCategorias->execute([(int) $id]);
+
+        $stmtEtiquetas = $db->prepare("
+            SELECT e.nombre
+            FROM recurso_etiquetas re
+            JOIN etiquetas e ON e.id = re.id_etiqueta
+            WHERE re.id_recurso = ?
+            ORDER BY e.nombre ASC
+        ");
+        $stmtEtiquetas->execute([(int) $id]);
+
+        $articulo['autores'] = $nombresA;
+        $articulo['autores_text'] = !empty($nombresA) ? implode(', ', $nombresA) : 'Autor no registrado';
+        $articulo['categorias'] = array_map('intval', $stmtCategorias->fetchAll(PDO::FETCH_COLUMN));
+        $articulo['etiquetas_nombres'] = $stmtEtiquetas->fetchAll(PDO::FETCH_COLUMN);
+
+        return $articulo;
+    }
+
+    public function getArticulosSimilares(int $idArticulo, int $limit = 3): array {
+        if ($limit <= 0) return [];
+        $db = Connection::getInstance();
+        $sql = "SELECT DISTINCT r.id, r.titulo, r.anio_publicacion, r.archivo_pdf,
+                       d.resumen, d.imagen_portada, d.volumen, d.numero, d.issn,
+                       e.nombre AS editorial,
+                       COALESCE((SELECT c2.nombre FROM recurso_categorias rc2 JOIN categorias c2 ON c2.id = rc2.id_categoria WHERE rc2.id_recurso = r.id LIMIT 1), 'Artículo') AS categoria,
+                       COALESCE((
+                    SELECT GROUP_CONCAT(CONCAT(a2.id, '|||', a2.nombre_completo, '|||', COALESCE(a2.orcid, '')) ORDER BY a2.nombre_completo ASC SEPARATOR ';;;')
+                    FROM recurso_investigadores ra2
+                    JOIN investigadores a2 ON a2.id = ra2.id_investigador
+                    WHERE ra2.id_recurso = r.id
+                ), 'Autor no registrado') AS autores_text
+                FROM recursos r
+                JOIN detalles_articulos d ON r.id = d.id_recurso
+                LEFT JOIN editoriales e ON d.id_editorial = e.id
+                JOIN recurso_categorias rc ON r.id = rc.id_recurso
+                WHERE r.id_tipo_recurso = 3 
+                AND r.id != ?
+                AND COALESCE(d.activo, 1) = 1
+                AND rc.id_categoria IN (SELECT id_categoria FROM recurso_categorias WHERE id_recurso = ?)
+                ORDER BY r.id DESC LIMIT ?";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$idArticulo, $idArticulo, $limit]);
+        $articulos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($articulos as &$articulo) {
+            $articulo['autores_data'] = [];
+            if ($articulo['autores_text'] !== 'Autor no registrado') {
+                $lista = explode(';;;', $articulo['autores_text']);
+                foreach($lista as $aut) {
+                    $partes = explode('|||', $aut);
+                    $articulo['autores_data'][] = [
+                        'id' => $partes[0] ?? 0,
+                        'nombre' => $partes[1] ?? '', 
+                        'orcid' => $partes[2] ?? ''
+                    ];
+                }
+                $articulo['autores_text'] = implode(', ', array_column($articulo['autores_data'], 'nombre'));
+            }
+        }
+        return $articulos;
+    }
+public function obtenerAutoresDelArticulo($id_recurso) {
+    $db = Connection::getInstance();
+    $stmt = $db->prepare("
+        SELECT ri.id_investigador
+        FROM recurso_investigadores ri
+        WHERE ri.id_recurso = ?
+        ORDER BY ri.id_investigador ASC
+    ");
+    $stmt->execute([(int)$id_recurso]);
+    return $stmt->fetchAll(PDO::FETCH_COLUMN);
+}
+
+public function obtenerEtiquetasDelArticulo($id_recurso) {
+    $db = Connection::getInstance();
+    $stmt = $db->prepare("
+        SELECT re.id_etiqueta
+        FROM recurso_etiquetas re
+        WHERE re.id_recurso = ?
+        ORDER BY re.id_etiqueta ASC
+    ");
+    $stmt->execute([(int)$id_recurso]);
+    return $stmt->fetchAll(PDO::FETCH_COLUMN);
+}
+
+public function actualizarArticulo(
+    $id,
+    $titulo,
+    $resumen,
+    $categorias,
+    $id_editorial,
+    $archivo_pdf,
+    $anio_publicacion,
+    $volumen,
+    $numero,
+    $issn,
+    $nombreImagen,
+    $autores,
+    $autores_nuevos,
+    $etiquetas
+) {
+    $db = Connection::getInstance();
+
+    try {
+        $db->beginTransaction();
+
+        $stmtRec = $db->prepare("
+            UPDATE recursos
+            SET titulo = ?, anio_publicacion = ?, archivo_pdf = ?
+            WHERE id = ?
+        ");
+        $stmtRec->execute([$titulo, $anio_publicacion, $archivo_pdf, $id]);
+
+        // Si la portada cambió, borramos el archivo de la portada vieja del servidor
+        $stmtVieja = $db->prepare("SELECT imagen_portada FROM detalles_articulos WHERE id_recurso = ?");
+        $stmtVieja->execute([$id]);
+        $portadaVieja = $stmtVieja->fetchColumn();
+
+        if ($portadaVieja && $portadaVieja !== $nombreImagen && $portadaVieja !== 'default_article.jpg' && strpos($portadaVieja, 'http') !== 0) {
+            $dirUploads = realpath(__DIR__ . '/../../../storage/uploads/articulos');
+            if ($dirUploads) {
+                $rutaVieja = $dirUploads . DIRECTORY_SEPARATOR . basename($portadaVieja);
+                if (file_exists($rutaVieja) && is_file($rutaVieja)) {
+                    @unlink($rutaVieja);
+                }
+            }
+        }
+
+        $stmtDet = $db->prepare("
+            UPDATE detalles_articulos
+            SET id_editorial = ?, volumen = ?, numero = ?, issn = ?, imagen_portada = ?, resumen = ?
+            WHERE id_recurso = ?
+        ");
+        $stmtDet->execute([
+            $id_editorial ?: null,
+            $volumen ?: null,
+            $numero ?: null,
+            $issn ?: null,
+            $nombreImagen,
+            $resumen,
+            $id
+        ]);
+
+        // Limpiar relaciones viejas antes de volver a insertar
+        $db->prepare("DELETE FROM recurso_investigadores WHERE id_recurso = ?")->execute([$id]);
+        $db->prepare("DELETE FROM recurso_etiquetas WHERE id_recurso = ?")->execute([$id]);
+        $db->prepare("DELETE FROM recurso_categorias WHERE id_recurso = ?")->execute([$id]);
+
+        // Insertar categorías nuevas
+        if (!empty($categorias)) {
+            $stmtCat = $db->prepare("INSERT INTO recurso_categorias (id_recurso, id_categoria) VALUES (?, ?)");
+            foreach (array_unique(array_map('intval', $categorias)) as $catId) {
+                $stmtCat->execute([$id, $catId]);
+            }
+        }
+
+        // Insertar autores nuevos
+        $autores_finales = [];
+        $autores_vinculados = [];
+
+        if (!empty($autores)) {
+            foreach ($autores as $id_autor) {
+                if (is_numeric($id_autor)) {
+                    $autores_finales[] = (int)$id_autor;
+                }
+            }
+        }
+
+        if (!empty($autores_nuevos)) {
+            $stmtNewAutor = $db->prepare("INSERT INTO investigadores (nombre_completo, orcid, biografia, pagina_web) VALUES (?, ?, ?, ?)");
+
+            foreach ($autores_nuevos as $json_autor) {
+                $datos = json_decode($json_autor, true);
+
+                if ($datos && !empty($datos['nombre']) && !empty($datos['orcid'])) {
+                    $nom = trim($datos['nombre']);
+                    // Extracción inteligente del ORCID
+                    $orcidBruto = trim($datos['orcid']);
+                    $orcid = '';
+                    if (preg_match('/(\d{4}-\d{4}-\d{4}-\d{3}[0-9X])/i', $orcidBruto, $coincidencias)) {
+                        $orcid = strtoupper($coincidencias[1]);
+                    } else {
+                        $orcid = $orcidBruto;
+                    }
+                    $biografia = !empty($datos['biografia']) ? trim($datos['biografia']) : null;
+                    $pagina_web = !empty($datos['pagina_web']) ? trim($datos['pagina_web']) : null;
+                    $autorId = null;
+
+                    // A. Búsqueda estricta por ORCID en INVESTIGADORES
+                    $stmt = $db->prepare("SELECT id, nombre_completo FROM investigadores WHERE orcid = ?");
+                    $stmt->execute([$orcid]);
+                    $autorExistente = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                    if ($autorExistente) {
+                        $autorId = $autorExistente['id'];
+                        $autores_vinculados[] = $autorExistente['nombre_completo'];
+                    } else {
+                        // B. Insertar en INVESTIGADORES
+                        $stmtNewAutor->execute([$nom, $orcid, $biografia, $pagina_web]);
+                        $autorId = (int)$db->lastInsertId();
+                    }
+
+                    if ($autorId) {
+                        $autores_finales[] = (int)$autorId;
+                    }
+                }
+            }
+        }
+
+        if (!empty($autores_finales)) {
+            $stmtAutor = $db->prepare("INSERT INTO recurso_investigadores (id_recurso, id_investigador) VALUES (?, ?)");
+            foreach (array_unique($autores_finales) as $id_a) {
+                $stmtAutor->execute([$id, $id_a]);
+            }
+        }
+        // Insertar etiquetas nuevas
+        if (!empty($etiquetas)) {
+            $stmtTag = $db->prepare("INSERT INTO recurso_etiquetas (id_recurso, id_etiqueta) VALUES (?, ?)");
+            foreach ($etiquetas as $id_tag) {
+                $stmtTag->execute([$id, (int)$id_tag]);
+            }
+        }
+
+        if ($db->inTransaction()) {
+            $db->commit();
+        }
+        return $autores_vinculados;
+    } catch (Exception $e) {
+        if ($db->inTransaction()) {
+            $db->rollBack();
+        }
+        throw $e;
+    }
+}
+public function obtenerCatalogoPaginado($tabla, $buscar = '', $pagina = 1, $porPagina = 5) {
+        $db = Connection::getInstance();
+        $offset = ($pagina - 1) * $porPagina;
+        
+        $where = "";
+        if ($buscar !== '') {
+            $where = "WHERE LOWER(nombre) LIKE LOWER(:buscar)";
+        }
+
+        // 1. Contar el total ABSOLUTO (sin límite ni offset)
+        $stmtTotal = $db->prepare("SELECT COUNT(*) FROM $tabla $where");
+        if ($buscar !== '') {
+            $stmtTotal->bindValue(':buscar', "%" . trim($buscar) . "%", PDO::PARAM_STR);
+        }
+        $stmtTotal->execute();
+        $total = (int)$stmtTotal->fetchColumn();
+
+        // 2. Extraer los datos limitados para la página actual
+        $sql = "SELECT id, nombre FROM $tabla $where ORDER BY nombre ASC LIMIT :limit OFFSET :offset";
+        $stmt = $db->prepare($sql);
+        
+        if ($buscar !== '') {
+            $stmt->bindValue(':buscar', "%" . trim($buscar) . "%", PDO::PARAM_STR);
+        }
+        $stmt->bindValue(':limit', $porPagina, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return [
+            'data' => $stmt->fetchAll(PDO::FETCH_ASSOC),
+            'total' => $total, 
+            'paginas' => max(1, (int)ceil($total / $porPagina)),
+            'pagina_actual' => $pagina
+        ];
+    }
+
+    public function buscarAutoresGestor($buscar = '', $pagina = 1, $porPagina = 5) {
+        $db = Connection::getInstance();
+        $pagina = max(1, (int)$pagina);
+        $offset = ($pagina - 1) * $porPagina;
+        $where = "";
+
+        if (trim($buscar) !== '') {
+            $where = "WHERE nombre_completo LIKE :b1 OR COALESCE(orcid, '') LIKE :b2";
+        }
+        $stmtTotal = $db->prepare("SELECT COUNT(*) FROM investigadores $where");
+        if (trim($buscar) !== '') {
+            $term = "%" . trim($buscar) . "%";
+            $stmtTotal->bindValue(':b1', $term, PDO::PARAM_STR);
+            $stmtTotal->bindValue(':b2', $term, PDO::PARAM_STR);
+        }
+        $stmtTotal->execute();
+        $total = (int)$stmtTotal->fetchColumn();
+
+        $sql = "SELECT id, nombre_completo, orcid, biografia, pagina_web FROM investigadores $where ORDER BY nombre_completo ASC LIMIT :limit OFFSET :offset";
+        $stmt = $db->prepare($sql);
+        if (trim($buscar) !== '') {
+            $term = "%" . trim($buscar) . "%";
+            $stmt->bindValue(':b1', $term, PDO::PARAM_STR);
+            $stmt->bindValue(':b2', $term, PDO::PARAM_STR);
+        }
+        $stmt->bindValue(':limit', $porPagina, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return [
+            'data' => $stmt->fetchAll(PDO::FETCH_ASSOC),
+            'total' => $total,
+            'paginas' => max(1, (int)ceil($total / $porPagina)),
+            'pagina_actual' => $pagina
+        ];
+    }
+
+public function crearCategoria($nombre) {
+    $db = Connection::getInstance();
+    $stmt = $db->prepare("INSERT INTO categorias (nombre) VALUES (?)");
+    $stmt->execute([trim($nombre)]);
+    $this->invalidarCacheCatalogos();
+    return true;
+}
+
+public function crearEtiqueta($nombre) {
+    $db = Connection::getInstance();
+    $stmt = $db->prepare("INSERT INTO etiquetas (nombre) VALUES (?)");
+    $stmt->execute([trim($nombre)]);
+    $this->invalidarCacheCatalogos();
+    return true;
+}
+
+public function crearEditorial($nombre) {
+    $db = Connection::getInstance();
+    $stmt = $db->prepare("INSERT INTO editoriales (nombre) VALUES (?)");
+    $stmt->execute([trim($nombre)]);
+    return true;
+}
+
+public function eliminarCategoria($id) {
+    $db = Connection::getInstance();
+    $db->prepare("DELETE FROM recurso_categorias WHERE id_categoria = ?")->execute([$id]);
+    $db->prepare("DELETE FROM categorias WHERE id = ?")->execute([$id]);
+    $this->invalidarCacheCatalogos();
+    return true;
+}
+public function obtenerCategoriasDelArticulo($id_recurso) {
+    $db = Connection::getInstance();
+    $stmt = $db->prepare("
+        SELECT rc.id_categoria
+        FROM recurso_categorias rc
+        WHERE rc.id_recurso = ?
+        ORDER BY rc.id_categoria ASC
+    ");
+    $stmt->execute([(int)$id_recurso]);
+    return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+}
+// --- MÉTODOS FALTANTES DE ELIMINACIÓN ---
+    public function eliminarEtiqueta($id) {
+        $db = Connection::getInstance();
+        $db->prepare("DELETE FROM recurso_etiquetas WHERE id_etiqueta = ?")->execute([$id]);
+        $db->prepare("DELETE FROM etiquetas WHERE id = ?")->execute([$id]);
+        $this->invalidarCacheCatalogos();
+        return true;
+    }
+
+    public function eliminarEditorial($id) {
+        $db = Connection::getInstance();
+        // Ponemos el ID en NULL en los artículos para que no se queden sin datos o exploten
+        $db->prepare("UPDATE detalles_articulos SET id_editorial = NULL WHERE id_editorial = ?")->execute([$id]);
+        $db->prepare("DELETE FROM editoriales WHERE id = ?")->execute([$id]);
+        return true;
+    }
+
+    // --- MÉTODOS NUEVOS DE ACTUALIZACIÓN (EDICIÓN) ---
+    public function actualizarCategoria($id, $nombre) {
+        $db = Connection::getInstance();
+        $db->prepare("UPDATE categorias SET nombre = ? WHERE id = ?")->execute([trim($nombre), $id]);
+        $this->invalidarCacheCatalogos();
+        return true;
+    }
+
+    public function actualizarEtiqueta($id, $nombre) {
+        $db = Connection::getInstance();
+        $db->prepare("UPDATE etiquetas SET nombre = ? WHERE id = ?")->execute([trim($nombre), $id]);
+        $this->invalidarCacheCatalogos();
+        return true;
+    }
+
+    public function actualizarEditorial($id, $nombre) {
+        $db = Connection::getInstance();
+        $db->prepare("UPDATE editoriales SET nombre = ? WHERE id = ?")->execute([trim($nombre), $id]);
+        return true;
+    }
+
+    public function actualizarAutor($id, $nombre, $orcid, $biografia = null, $pagina_web = null) {
+        $db = Connection::getInstance();
+        
+        $orcidBruto = trim($orcid);
+        $orcidLimpio = '';
+        if (preg_match('/(\d{4}-\d{4}-\d{4}-\d{3}[0-9X])/i', $orcidBruto, $coincidencias)) {
+            $orcidLimpio = strtoupper($coincidencias[1]);
+        } else {
+            $orcidLimpio = $orcidBruto;
+        }
+
+        $db->prepare("UPDATE investigadores SET nombre_completo = ?, orcid = ?, biografia = ?, pagina_web = ? WHERE id = ?")
+           ->execute([trim($nombre), $orcidLimpio, trim($biografia) ?: null, trim($pagina_web) ?: null, $id]);
+        return true;
+    }
+
+    public function eliminarAutor($id) {
+        $db = Connection::getInstance();
+        $db->prepare("DELETE FROM recurso_investigadores WHERE id_investigador = ?")->execute([$id]);
+        $db->prepare("DELETE FROM investigadores WHERE id = ?")->execute([$id]);
+        return true;
+    }
+
+    
+    private function normalizarString(string $str): string {
+        $str = mb_strtolower(trim($str), 'UTF-8');
+        $unwanted = [
+            'á'=>'a', 'é'=>'e', 'í'=>'i', 'ó'=>'o', 'ú'=>'u', 'ü'=>'u', 'ñ'=>'n',
+            'Á'=>'a', 'É'=>'e', 'Í'=>'i', 'Ó'=>'o', 'Ú'=>'u', 'Ü'=>'u', 'Ñ'=>'n'
+        ];
+        $str = strtr($str, $unwanted);
+        return preg_replace('/[^a-z0-9\s]/', '', $str);
+    }
+    public function cambiarEstado(int $id_recurso) {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("UPDATE detalles_articulos SET activo = CASE WHEN COALESCE(activo, 1) = 1 THEN 0 ELSE 1 END WHERE id_recurso = ?");
+        return $stmt->execute([$id_recurso]);
+    }
+    public function obtenerAutorPorNombreExacto($nombre) {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("SELECT * FROM investigadores WHERE LOWER(TRIM(nombre_completo)) = LOWER(TRIM(?)) LIMIT 1");
+        $stmt->execute([$nombre]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function obtenerAutorPorId($id) {
+        $db = Connection::getInstance();
+        $stmt = $db->prepare("SELECT * FROM investigadores WHERE id = ? LIMIT 1");
+        $stmt->execute([(int)$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+}

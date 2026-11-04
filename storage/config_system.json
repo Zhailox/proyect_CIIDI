@@ -1,0 +1,44 @@
+{
+    "modulos": {
+        "Articulos": {
+            "estado": "online"
+        },
+        "Investigaciones": {
+            "estado": "online"
+        },
+        "ForoChatbot": {
+            "estado": "online"
+        },
+        "Cursos": {
+            "estado": "online"
+        },
+        "VinculacionEmpresarial": {
+            "estado": "online"
+        },
+        "RepositorioPST": {
+            "estado": "online"
+        },
+        "LineasInvestigacion": {
+            "estado": "online"
+        },
+        "SeguridadLineas": {
+            "estado": "online"
+        }
+    },
+    "rutas": {
+        "leer-articulo": {
+            "estado": "online"
+        },
+        "detalles-pst": {
+            "estado": "online"
+        },
+        "articulos": {
+            "estado": "online",
+            "rol_minimo": 1
+        },
+        "inicio-pst": {
+            "estado": "online",
+            "rol_minimo": 1
+        }
+    }
+}

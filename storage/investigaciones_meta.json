@@ -1,0 +1,37 @@
+{
+    "1": {
+        "imagen": "uploads\/investigaciones\/inv_6aa220caa415a_icono.jpg",
+        "tag_quien": "Equipo CIIDI",
+        "tag_que": "Proyecto",
+        "tag_sobre": "Innovacion",
+        "trayecto": "maestria"
+    },
+    "2": {
+        "imagen": "uploads\/investigaciones\/inv_6aa7952766353_nawf99wpispc1.png",
+        "tag_quien": "Equipo CIIDI",
+        "tag_que": "Proyecto",
+        "tag_sobre": "Innovacion",
+        "trayecto": "t4"
+    },
+    "3": {
+        "imagen": "uploads\/investigaciones\/inv_6ab3f7cc122a7.png",
+        "tag_quien": "Equipo CIIDI",
+        "tag_que": "Proyecto",
+        "tag_sobre": "Innovacion",
+        "trayecto": "t4"
+    },
+    "4": {
+        "imagen": "uploads\/investigaciones\/inv_6abb390678a5f6.68814056.jpg",
+        "tag_quien": "Equipo CIIDI",
+        "tag_que": "Proyecto",
+        "tag_sobre": "Innovacion",
+        "trayecto": "t2"
+    },
+    "5": {
+        "imagen": "https:\/\/images.unsplash.com\/photo-1518770660439-4636190af475?auto=format&fit=crop&w=600&q=80",
+        "tag_quien": "Equipo CIIDI",
+        "tag_que": "Proyecto",
+        "tag_sobre": "Innovacion",
+        "trayecto": "t4"
+    }
+}

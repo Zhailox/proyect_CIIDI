@@ -1,0 +1,766 @@
+<?php
+// core/Installer/InstallerService.php
+
+class InstallerService {
+
+    public static function lockFileExists(): bool {
+        $lockPath = defined('STORAGE_PATH') ? STORAGE_PATH . 'installed.lock' : __DIR__ . '/../../storage/installed.lock';
+        return file_exists($lockPath);
+    }
+
+    /**
+     * Diagnóstico de hardware, servidor web, extensiones PHP y permisos.
+     */
+    public static function checkSystemEnvironment(): array {
+        $phpVersionOk = version_compare(PHP_VERSION, '8.1.0', '>=');
+        $phpVersionRecommended = version_compare(PHP_VERSION, '8.2.0', '>=');
+
+        // Extensiones PHP críticas requeridas por CIIDI (MariaDB 10.6+ / PHP 8.2)
+        $requiredExtensions = [
+            'pdo'        => 'Controlador de base de datos (PDO)',
+            'pdo_mysql'  => 'Conector de MariaDB / MySQL',
+            'openssl'    => 'Motor criptográfico (AES-256-CBC, Hashes, Tokens)',
+            'mbstring'   => 'Manipulación segura de cadenas UTF-8',
+            'fileinfo'   => 'Detección de tipos MIME de archivos subidos',
+            'json'       => 'Serialización y transporte de payloads API',
+            'gd'         => 'Optimización de imágenes',
+            'curl'       => 'Peticiones HTTP externas y APIs',
+            'zip'        => 'Compresión y descompresión de respaldos'
+        ];
+
+        $extStatus = [];
+        $allExtOk = true;
+
+        foreach ($requiredExtensions as $ext => $desc) {
+            $loaded = extension_loaded($ext);
+            if (!$loaded && $ext === 'pdo_mysql') {
+                $drivers = class_exists('PDO') ? PDO::getAvailableDrivers() : [];
+                if (in_array('mysql', $drivers, true)) {
+                    $loaded = true;
+                }
+            }
+            $extStatus[$ext] = [
+                'loaded' => $loaded,
+                'description' => $desc
+            ];
+            if (!$loaded) {
+                $allExtOk = false;
+            }
+        }
+
+        // Permisos de escritura en carpetas del sistema
+        $baseStorage = defined('STORAGE_PATH') ? STORAGE_PATH : __DIR__ . '/../../storage/';
+        $baseUploads = defined('BASE_PATH') ? BASE_PATH . '/public/uploads/' : __DIR__ . '/../../public/uploads/';
+        $baseRoot    = defined('BASE_PATH') ? BASE_PATH . '/' : __DIR__ . '/../../';
+
+        $dirsToCheck = [
+            'storage'           => $baseStorage,
+            'storage/backups'   => $baseStorage . 'backups/',
+            'storage/scheduler' => $baseStorage . 'scheduler/',
+            'public/uploads'    => $baseUploads
+        ];
+
+        $dirStatus = [];
+        $allDirsOk = true;
+
+        foreach ($dirsToCheck as $label => $path) {
+            if (!is_dir($path)) {
+                @mkdir($path, 0777, true);
+            }
+            $writable = is_dir($path) && is_writable($path);
+            $dirStatus[$label] = [
+                'path' => $path,
+                'writable' => $writable
+            ];
+            if (!$writable) {
+                $allDirsOk = false;
+            }
+        }
+
+        // Verificar si la raíz o el archivo .env es escribible
+        $envPath = $baseRoot . '.env';
+        $envWritable = file_exists($envPath) ? is_writable($envPath) : is_writable($baseRoot);
+        $dirStatus['.env (Configuración)'] = [
+            'path' => $envPath,
+            'writable' => $envWritable
+        ];
+        if (!$envWritable) {
+            $allDirsOk = false;
+        }
+
+        // Diagnóstico de memoria RAM asignada a PHP
+        $memoryLimit = ini_get('memory_limit');
+        $memoryBytes = self::returnBytes($memoryLimit);
+        $memoryOk = ($memoryBytes === -1 || $memoryBytes >= 128 * 1024 * 1024);
+
+        // Diagnóstico de tamaño máximo de subida
+        $uploadMax = ini_get('upload_max_filesize');
+        $uploadMaxBytes = self::returnBytes($uploadMax);
+        $uploadOk = ($uploadMaxBytes >= 10 * 1024 * 1024);
+
+        $postMax = ini_get('post_max_size');
+        $postMaxBytes = self::returnBytes($postMax);
+        $postOk = ($postMaxBytes >= 10 * 1024 * 1024);
+
+        // Previsor de binarios mysql y mysqldump (opcional en hosting compartido gracias al respaldo PDO nativo)
+        $mysqlBin = class_exists('Connection') ? Connection::getMysqlPath() : 'mysql';
+        $mysqldumpBin = class_exists('Connection') ? Connection::getMysqldumpPath() : 'mysqldump';
+        $binariesOk = ($mysqlBin !== 'mysql' && $mysqldumpBin !== 'mysqldump');
+
+        return [
+            'php_version'             => PHP_VERSION,
+            'php_version_ok'          => $phpVersionOk,
+            'php_version_recommended' => $phpVersionRecommended,
+            'extensions'              => $extStatus,
+            'extensions_ok'           => $allExtOk,
+            'directories'             => $dirStatus,
+            'directories_ok'          => $allDirsOk,
+            'memory_limit'            => $memoryLimit,
+            'memory_ok'               => $memoryOk,
+            'upload_max_filesize'     => $uploadMax,
+            'upload_ok'               => $uploadOk,
+            'post_max_size'           => $postMax,
+            'post_ok'                 => $postOk,
+            'binaries_ok'             => $binariesOk,
+            'ready'                   => ($phpVersionOk && $allExtOk && $allDirsOk)
+        ];
+    }
+
+    public static function returnBytes(string $val): int {
+        $val = trim($val);
+        if ($val === '-1' || $val === '') return -1;
+        $last = strtolower($val[strlen($val) - 1]);
+        $valNum = (int)$val;
+        switch ($last) {
+            case 'g': $valNum *= 1024;
+            case 'm': $valNum *= 1024;
+            case 'k': $valNum *= 1024;
+        }
+        return $valNum;
+    }
+
+    /**
+     * Prueba exhaustiva de conexión a la base de datos MariaDB, detectando tablas preexistentes.
+     */
+    public static function testDbConnection(string $host, string $port, string $user, string $pass, string $dbName): array {
+        try {
+            $dsnTarget = "mysql:host={$host};port={$port};dbname={$dbName};charset=utf8mb4";
+            $options = [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_EMULATE_PREPARES => false,
+                PDO::ATTR_TIMEOUT => 5
+            ];
+            $pdo = new PDO($dsnTarget, $user, $pass, $options);
+
+            // Verificar conteo de tablas existentes en la base de datos actual
+            $stmtCount = $pdo->query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE'");
+            $tableCount = (int) $stmtCount->fetchColumn();
+
+            return [
+                'exito'          => true,
+                'bd_existe'      => true,
+                'tiene_tablas'   => ($tableCount > 0),
+                'num_tablas'     => $tableCount,
+                'mensaje'        => ($tableCount > 0)
+                    ? "Conexión exitosa. La base de datos '{$dbName}' existe y contiene {$tableCount} tabla(s) existente(s)."
+                    : "Conexión exitosa a la base de datos '{$dbName}' (base de datos limpia y lista)."
+            ];
+        } catch (PDOException $e) {
+            $errorMsg = $e->getMessage();
+            $errCode = (string)$e->getCode();
+
+            // Si la base de datos no existe (código 1049 o SQLSTATE 42000 Unknown database)
+            if (stripos($errorMsg, 'Unknown database') !== false || stripos($errorMsg, 'desconocida') !== false || stripos($errorMsg, '1049') !== false || $errCode === '1049') {
+                try {
+                    $dsnSystem = "mysql:host={$host};port={$port};charset=utf8mb4";
+                    $pdoSys = new PDO($dsnSystem, $user, $pass, [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::ATTR_TIMEOUT => 5
+                    ]);
+                    return [
+                        'exito'         => true,
+                        'bd_existe'     => false,
+                        'ofrecer_crear' => true,
+                        'tiene_tablas'  => false,
+                        'num_tablas'    => 0,
+                        'mensaje'       => "Las credenciales son válidas. La base de datos '{$dbName}' no existe aún en MariaDB pero puede ser creada (o asígnela desde cPanel)."
+                    ];
+                } catch (PDOException $e2) {
+                    return [
+                        'exito'         => false,
+                        'bd_existe'     => false,
+                        'tiene_tablas'  => false,
+                        'num_tablas'    => 0,
+                        'mensaje'       => "Credenciales incorrectas o servidor MariaDB inaccesible: " . $e2->getMessage()
+                    ];
+                }
+            }
+
+            return [
+                'exito'        => false,
+                'bd_existe'    => false,
+                'tiene_tablas' => false,
+                'num_tablas'   => 0,
+                'mensaje'      => "Fallo al verificar el servidor MariaDB: " . $errorMsg
+            ];
+        }
+    }
+
+    /**
+     * Crea automáticamente la base de datos en MariaDB con colación utf8mb4_unicode_ci.
+     */
+    public static function createDatabase(string $host, string $port, string $user, string $pass, string $dbName): array {
+        try {
+            $dsnSystem = "mysql:host={$host};port={$port};charset=utf8mb4";
+            $pdoSys = new PDO($dsnSystem, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+
+            $cleanDb = preg_replace('/[^a-zA-Z0-9_]/', '', $dbName);
+
+            $pdoSys->exec("CREATE DATABASE IF NOT EXISTS `{$cleanDb}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+
+            return [
+                'exito'   => true,
+                'mensaje' => "Base de datos '{$cleanDb}' creada exitosamente en MariaDB (utf8mb4_unicode_ci)."
+            ];
+        } catch (PDOException $e) {
+            return [
+                'exito'   => false,
+                'mensaje' => "No se pudo crear la base de datos (en cPanel créela desde 'MySQL Databases'). Detalle: " . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Limpia completamente todas las tablas, vistas y triggers de la BD actual para una reinstalación limpia
+     * (compatible con cPanel compartido donde DROP DATABASE está restringido).
+     */
+    public static function cleanDatabaseSchema(string $host, string $port, string $user, string $pass, string $dbName): array {
+        try {
+            $dsn = "mysql:host={$host};port={$port};dbname={$dbName};charset=utf8mb4";
+            $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+
+            $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
+
+            $stmtTrg = $pdo->query("SELECT trigger_name FROM information_schema.triggers WHERE trigger_schema = DATABASE()");
+            foreach ($stmtTrg->fetchAll(PDO::FETCH_COLUMN) ?: [] as $trg) {
+                $cleanTrg = str_replace('`', '', (string)$trg);
+                $pdo->exec("DROP TRIGGER IF EXISTS `{$cleanTrg}`");
+            }
+
+            $stmtViews = $pdo->query("SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_type = 'VIEW'");
+            foreach ($stmtViews->fetchAll(PDO::FETCH_COLUMN) ?: [] as $vw) {
+                $cleanVw = str_replace('`', '', (string)$vw);
+                $pdo->exec("DROP VIEW IF EXISTS `{$cleanVw}`");
+            }
+
+            $stmtTables = $pdo->query("SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE'");
+            foreach ($stmtTables->fetchAll(PDO::FETCH_COLUMN) ?: [] as $tbl) {
+                $cleanTbl = str_replace('`', '', (string)$tbl);
+                $pdo->exec("DROP TABLE IF EXISTS `{$cleanTbl}`");
+            }
+
+            $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
+
+            return [
+                'exito' => true,
+                'mensaje' => "Esquema MariaDB limpiado exitosamente para una instalación fresca."
+            ];
+        } catch (PDOException $e) {
+            return [
+                'exito' => false,
+                'mensaje' => "Fallo al limpiar el esquema preexistente: " . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Sincroniza las credenciales en .env y storage/db_config.json, y asegura un APP_KEY seguro.
+     */
+    public static function syncEnvAndKey(string $host, string $port, string $user, string $pass, string $dbName, array $extraEnv = []): array {
+        $baseRoot = defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 2);
+        $envPath = $baseRoot . '/.env';
+
+        // 1. Generar APP_KEY criptográficamente segura si no existe
+        $appKey = '';
+        if (file_exists($envPath)) {
+            $currentEnv = file_get_contents($envPath);
+            if (preg_match('/^APP_KEY=(.+)$/m', $currentEnv, $matches)) {
+                $candidate = trim($matches[1]);
+                if (!empty($candidate) && strlen($candidate) > 20) {
+                    $appKey = $candidate;
+                }
+            }
+        }
+
+        if (empty($appKey)) {
+            $appKey = 'base64:' . base64_encode(random_bytes(32));
+        }
+
+        // Parámetros adicionales
+        $appEnv      = $extraEnv['app_env'] ?? 'production';
+        $appDebug    = !empty($extraEnv['app_debug']) ? 'true' : 'false';
+        $appUrl      = $extraEnv['app_url'] ?? 'http://localhost/proyect_CIIDI';
+        $instName    = $extraEnv['inst_nombre'] ?? 'Universidad Politécnica Territorial de Trujillo Mario Briceño Iragorry';
+        $instAcronym = $extraEnv['inst_siglas'] ?? 'UPTTMBI';
+        $timezone    = $extraEnv['timezone'] ?? 'America/Caracas';
+
+        // 2. Construir contenido de .env estructurado
+        $newEnvContent = "# ==========================================================================\n"
+                       . "# Configuración del Entorno Institucional CIIDI\n"
+                       . "# Generado automáticamente por el Asistente de Instalación\n"
+                       . "# Fecha: " . date('Y-m-d H:i:s') . "\n"
+                       . "# ==========================================================================\n\n"
+                       . "APP_ENV={$appEnv}\n"
+                       . "APP_DEBUG={$appDebug}\n"
+                       . "APP_KEY={$appKey}\n"
+                       . "APP_URL={$appUrl}\n"
+                       . "TIMEZONE={$timezone}\n\n"
+                       . "# Parámetros de Identidad Institucional\n"
+                       . "INSTITUTION_NAME=\"{$instName}\"\n"
+                       . "INSTITUTION_ACRONYM=\"{$instAcronym}\"\n\n"
+                       . "# Base de Datos MariaDB 10.6+\n"
+                       . "DB_HOST={$host}\n"
+                       . "DB_PORT={$port}\n"
+                       . "DB_NAME={$dbName}\n"
+                       . "DB_USER={$user}\n"
+                       . "DB_PASS={$pass}\n";
+
+        $envSaved = @file_put_contents($envPath, $newEnvContent) !== false;
+
+        // 3. Sincronizar en paralelo storage/db_config.json
+        $configSaved = true;
+        if (class_exists('Connection')) {
+            $configSaved = Connection::saveCredentials($host, $port, $dbName, $user, $pass);
+        }
+
+        if (!$envSaved && !$configSaved) {
+            return [
+                'exito' => false,
+                'mensaje' => 'No se pudo escribir ni el archivo .env ni storage/db_config.json. Verifique los permisos de escritura.'
+            ];
+        }
+
+        return [
+            'exito' => true,
+            'mensaje' => 'Variables de entorno (.env) y configuración de base de datos sincronizadas con éxito.'
+        ];
+    }
+
+    /**
+     * Configura el estado de las tareas programadas (Scheduler & Cron) en storage/scheduler_tasks.json.
+     */
+    public static function configureSchedulerTasks(bool $habilitar): bool {
+        $storageDir = defined('STORAGE_PATH') ? STORAGE_PATH : __DIR__ . '/../../storage/';
+        if (!is_dir($storageDir)) {
+            @mkdir($storageDir, 0777, true);
+        }
+
+        $tasksPath = $storageDir . 'scheduler_tasks.json';
+        $estado = $habilitar ? 'activo' : 'inactivo';
+
+        $tareas = [
+            'limpieza_temporales' => [
+                'id' => 'limpieza_temporales',
+                'nombre' => 'Limpieza de Archivos Temporales & Caché',
+                'descripcion' => 'Elimina archivos temporales en storage/tmp/, cachés expiradas y residuos de descargas.',
+                'expresion_cron' => '0 3 * * *',
+                'tipo_ejecucion' => 'metodo_interno',
+                'script' => 'limpiarTemporales',
+                'comando_custom' => '',
+                'archivo_script' => '',
+                'timeout_segundos' => 60,
+                'estado' => $estado,
+                'ultima_ejecucion' => null,
+                'resultado_ultimo' => 'Pendiente de primera ejecución'
+            ],
+            'backup_automatico_medianoche' => [
+                'id' => 'backup_automatico_medianoche',
+                'nombre' => 'Respaldo Automático de Medianoche (MariaDB Dump)',
+                'descripcion' => 'Genera un backup completo comprimido (.sql.gz) de la base de datos MariaDB y purga respaldos antiguos.',
+                'expresion_cron' => '0 0 * * *',
+                'tipo_ejecucion' => 'metodo_interno',
+                'script' => 'ejecutarBackupAutomatico',
+                'comando_custom' => '',
+                'archivo_script' => '',
+                'timeout_segundos' => 300,
+                'estado' => $estado,
+                'ultima_ejecucion' => null,
+                'resultado_ultimo' => 'Pendiente de primera ejecución'
+            ],
+            'purga_logs_viejos' => [
+                'id' => 'purga_logs_viejos',
+                'nombre' => 'Optimización y Rotación de Logs de Auditoría',
+                'descripcion' => 'Mantener los logs de auditoría dentro de un límite saludable de almacenamiento.',
+                'expresion_cron' => '0 4 * * 0',
+                'tipo_ejecucion' => 'metodo_interno',
+                'script' => 'purgarLogs',
+                'comando_custom' => '',
+                'archivo_script' => '',
+                'timeout_segundos' => 60,
+                'estado' => $estado,
+                'ultima_ejecucion' => null,
+                'resultado_ultimo' => 'Pendiente de primera ejecución'
+            ]
+        ];
+
+        // Si ya existía el archivo, preservar tareas adicionales excepto tareas obsoletas de vectorización ONNX
+        if (file_exists($tasksPath)) {
+            $existentes = json_decode(file_get_contents($tasksPath), true);
+            if (is_array($existentes)) {
+                unset($existentes['tarea_1790301553_528']);
+                foreach ($tareas as $k => $t) {
+                    if (isset($existentes[$k])) {
+                        $existentes[$k]['estado'] = $estado;
+                        $existentes[$k]['nombre'] = $t['nombre'];
+                        $existentes[$k]['descripcion'] = $t['descripcion'];
+                    } else {
+                        $existentes[$k] = $t;
+                    }
+                }
+                $tareas = $existentes;
+            }
+        }
+
+        return @file_put_contents($tasksPath, json_encode($tareas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) !== false;
+    }
+
+    /**
+     * Guarda la configuración de seguridad y SMTP institucional en storage/system_config.json.
+     */
+    public static function configureSystemSettings(array $seguridad, ?array $smtp = null): bool {
+        $storageDir = defined('STORAGE_PATH') ? STORAGE_PATH : __DIR__ . '/../../storage/';
+        if (!is_dir($storageDir)) {
+            @mkdir($storageDir, 0777, true);
+        }
+
+        $configPath = $storageDir . 'system_config.json';
+        $currentConfig = [];
+
+        if (file_exists($configPath)) {
+            $currentConfig = json_decode(file_get_contents($configPath), true) ?: [];
+        }
+
+        // 1. Configuración de Seguridad
+        $currentConfig['seguridad'] = [
+            'timeout_minutos' => (int)($seguridad['timeout_minutos'] ?? 120),
+            'intentos_login'  => (int)($seguridad['intentos_login'] ?? 5)
+        ];
+
+        if (!isset($currentConfig['paginacion'])) {
+            $currentConfig['paginacion'] = ["logs" => 50, "usuarios" => 15, "docentes" => 15];
+        }
+
+        // 2. Configuración de Correo SMTP
+        if ($smtp && !empty($smtp['habilitado'])) {
+            require_once defined('CORE_PATH') ? CORE_PATH . 'Security/Crypto.php' : __DIR__ . '/../Security/Crypto.php';
+
+            $passRaw = trim($smtp['pass'] ?? '');
+            $passEnc = !empty($passRaw) ? Crypto::encrypt($passRaw) : '';
+
+            $currentConfig['smtp'] = [
+                'modo_envio' => 'smtp',
+                'host'       => trim($smtp['host'] ?? 'localhost'),
+                'port'       => (int)($smtp['port'] ?? 587),
+                'user'       => trim($smtp['user'] ?? ''),
+                'pass'       => $passEnc,
+                'from_email' => trim($smtp['from_email'] ?? $smtp['user'] ?? ''),
+                'from_name'  => trim($smtp['from_name'] ?? 'Sistema CIIDI - UPTTMBI')
+            ];
+        } elseif (!isset($currentConfig['smtp'])) {
+            $currentConfig['smtp'] = [
+                'modo_envio' => 'local',
+                'host'       => '',
+                'port'       => 587,
+                'user'       => '',
+                'pass'       => '',
+                'from_email' => '',
+                'from_name'  => 'Sistema CIIDI - UPTTMBI'
+            ];
+        }
+
+        return @file_put_contents($configPath, json_encode($currentConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) !== false;
+    }
+
+    /**
+     * Prueba en vivo de conexión SMTP enviando un correo de diagnóstico.
+     */
+    public static function testSmtpConnection(string $host, int $port, string $user, string $pass, string $fromEmail, string $testEmail): array {
+        $baseRoot = defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 2);
+        if (file_exists($baseRoot . '/vendor/autoload.php')) {
+            require_once $baseRoot . '/vendor/autoload.php';
+        }
+
+        if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+            return [
+                'exito' => false,
+                'mensaje' => 'La librería PHPMailer no se encuentra disponible en vendor.'
+            ];
+        }
+
+        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+
+        try {
+            $mail->CharSet = 'UTF-8';
+            $mail->isSMTP();
+            $mail->Host       = !empty($host) ? $host : 'localhost';
+            $mail->SMTPAuth   = !empty($user) && !empty($pass);
+            $mail->Username   = $user;
+            $mail->Password   = $pass;
+            $mail->SMTPSecure = ($port === 465) ? \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS : \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = $port;
+            $mail->Timeout    = 10;
+
+            $mail->setFrom(!empty($fromEmail) ? $fromEmail : $user, 'Instalador CIIDI');
+            $mail->addAddress($testEmail, 'Administrador CIIDI');
+
+            $mail->isHTML(true);
+            $mail->Subject = 'Prueba de Conexión SMTP - Instalador CIIDI';
+            $mail->Body    = '<h3>¡Conexión SMTP Exitosa!</h3><p>Este es un correo de prueba generado durante el despliegue del Repositorio Institucional CIIDI.</p><p>Fecha y Hora: ' . date('Y-m-d H:i:s') . '</p>';
+
+            $mail->send();
+
+            return [
+                'exito' => true,
+                'mensaje' => "Conexión SMTP exitosa. Correo de prueba enviado a {$testEmail}."
+            ];
+        } catch (\Exception $e) {
+            return [
+                'exito' => false,
+                'mensaje' => "Error de conexión SMTP: " . $mail->ErrorInfo
+            ];
+        }
+    }
+
+    /**
+     * Localiza el archivo de esquema base compatible con MariaDB 10.6+.
+     */
+    public static function getSchemaFilePath(): ?string {
+        $baseRoot = defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 2);
+        $candidatos = [
+            $baseRoot . '/storage/backups/migracion_mariadb_10_6.sql',
+            __DIR__ . '/schema.sql',
+            __DIR__ . '/sql/schema.sql',
+            $baseRoot . '/ciidi.sql'
+        ];
+
+        foreach ($candidatos as $path) {
+            if (file_exists($path) && filesize($path) > 1000) {
+                $head = (string)@file_get_contents($path, false, null, 0, 512);
+                if (stripos($head, 'PostgreSQL database dump') === false) {
+                    return $path;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Ejecuta la importación del esquema base en MariaDB 10.6+.
+     */
+    public static function runSqlSchema(string $host, string $port, string $user, string $pass, string $dbName): array {
+        $sqlPath = self::getSchemaFilePath();
+        if (!$sqlPath) {
+            return [
+                'exito' => false,
+                'mensaje' => "No se encontró un archivo de esquema base compatible con MariaDB ('migracion_mariadb_10_6.sql' o 'schema.sql')."
+            ];
+        }
+
+        if (function_exists('set_time_limit')) @set_time_limit(300);
+        @ini_set('memory_limit', '256M');
+
+        try {
+            $dsnTarget = "mysql:host={$host};port={$port};dbname={$dbName};charset=utf8mb4";
+            $pdo = new PDO($dsnTarget, $user, $pass, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false
+            ]);
+            $pdo->exec("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
+
+            $sqlContent = (string)file_get_contents($sqlPath);
+            if (!class_exists('Connection') && file_exists(__DIR__ . '/../Database/Connection.php')) {
+                require_once __DIR__ . '/../Database/Connection.php';
+            }
+
+            Connection::ejecutarScriptSqlMariaDB($pdo, $sqlContent);
+
+            return [
+                'exito'   => true,
+                'mensaje' => "Esquema e infraestructura MariaDB importados exitosamente desde " . basename($sqlPath) . "."
+            ];
+        } catch (PDOException $e) {
+            if (class_exists('Connection')) {
+                Connection::logSystemError($e);
+            }
+            return [
+                'exito'   => false,
+                'mensaje' => "Error durante la importación del esquema SQL: " . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Ejecuta secuencialmente migraciones compatibles con MariaDB ubicadas en migrations/.
+     */
+    public static function runPendingMigrations(string $host, string $port, string $user, string $pass, string $dbName): array {
+        $baseRoot = defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 2);
+        $migrationsDir = $baseRoot . '/migrations';
+
+        if (!is_dir($migrationsDir)) {
+            return ['exito' => true, 'aplicadas' => 0, 'mensaje' => 'No hay directorio de migraciones.'];
+        }
+
+        $files = glob($migrationsDir . '/*.sql') ?: [];
+        sort($files, SORT_NATURAL);
+
+        if (empty($files)) {
+            return ['exito' => true, 'aplicadas' => 0, 'mensaje' => 'No hay migraciones pendientes.'];
+        }
+
+        try {
+            $dsnTarget = "mysql:host={$host};port={$port};dbname={$dbName};charset=utf8mb4";
+            $pdo = new PDO($dsnTarget, $user, $pass, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_EMULATE_PREPARES => false
+            ]);
+
+            if (!class_exists('Connection') && file_exists(__DIR__ . '/../Database/Connection.php')) {
+                require_once __DIR__ . '/../Database/Connection.php';
+            }
+
+            $aplicadas = 0;
+            foreach ($files as $file) {
+                $sql = (string)file_get_contents($file);
+                if (trim($sql) === '') continue;
+
+                // Omitir migraciones heredadas exclusivas de PostgreSQL (ya integradas en migracion_mariadb_10_6.sql)
+                if (preg_match('/\b(CREATE\s+EXTENSION|DO\s+\$\$|TIMESTAMPTZ|BIGSERIAL|SERIAL|pgvector|public\.)\b/i', $sql)) {
+                    continue;
+                }
+
+                try {
+                    Connection::ejecutarScriptSqlMariaDB($pdo, $sql);
+                    $aplicadas++;
+                } catch (PDOException $migEx) {
+                    if (stripos($migEx->getMessage(), 'already exists') !== false || stripos($migEx->getMessage(), 'Duplicate') !== false || stripos($migEx->getMessage(), 'ya existe') !== false) {
+                        $aplicadas++;
+                        continue;
+                    }
+                    if (class_exists('Connection')) Connection::logSystemError($migEx);
+                }
+            }
+
+            return [
+                'exito' => true,
+                'aplicadas' => $aplicadas,
+                'mensaje' => "Migraciones incrementales procesadas ({$aplicadas} scripts aplicados)."
+            ];
+        } catch (PDOException $e) {
+            return [
+                'exito' => false,
+                'mensaje' => "Fallo al conectar para aplicar migraciones: " . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Crea o actualiza la cuenta primaria de SuperAdmin (Dios del Sistema).
+     */
+    public static function createSuperAdmin(string $host, string $port, string $user, string $pass, string $dbName, array $adminData): array {
+        try {
+            $dsnTarget = "mysql:host={$host};port={$port};dbname={$dbName};charset=utf8mb4";
+            $pdo = new PDO($dsnTarget, $user, $pass, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_EMULATE_PREPARES => false
+            ]);
+
+            $cedula = (int)($adminData['cedula'] ?? 0);
+            $nombre = trim($adminData['nombre'] ?? '');
+            $email  = trim($adminData['correo'] ?? '');
+            $claveRaw = $adminData['clave'] ?? '';
+
+            if ($cedula <= 0) {
+                return ['exito' => false, 'mensaje' => 'La cédula de identidad debe ser un número entero positivo mayor a cero.'];
+            }
+            if (mb_strlen($nombre) < 3) {
+                return ['exito' => false, 'mensaje' => 'El nombre completo del Administrador debe tener al menos 3 caracteres.'];
+            }
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return ['exito' => false, 'mensaje' => 'El formato del correo electrónico proporcionado no es válido.'];
+            }
+            if (strlen($claveRaw) < 8) {
+                return ['exito' => false, 'mensaje' => 'La contraseña del SuperAdmin debe contener al menos 8 caracteres de seguridad.'];
+            }
+
+            $claveHash = password_hash($claveRaw, PASSWORD_BCRYPT, ['cost' => 12]);
+
+            $privilegioId = 1;
+            $rolId = 1;
+
+            $stmtPriv = $pdo->query("SELECT privilegio_id FROM privilegios WHERE nivel_privilegio = 0 LIMIT 1");
+            $resPriv = $stmtPriv ? $stmtPriv->fetch(PDO::FETCH_ASSOC) : false;
+            if ($resPriv) {
+                $privilegioId = (int)$resPriv['privilegio_id'];
+            }
+
+            $stmtRol = $pdo->prepare("SELECT id FROM roles WHERE privilegio_id = ? LIMIT 1");
+            $stmtRol->execute([$privilegioId]);
+            $resRol = $stmtRol->fetch(PDO::FETCH_ASSOC);
+            if ($resRol) {
+                $rolId = (int)$resRol['id'];
+            }
+
+            $stmtDel = $pdo->prepare("DELETE FROM usuarios WHERE cedula = ? OR email = ?");
+            $stmtDel->execute([(string)$cedula, $email]);
+
+            $stmtIns = $pdo->prepare("
+                INSERT INTO usuarios (cedula, nombre_completo, email, contrasena, id_rol, activo)
+                VALUES (:cedula, :nombre, :email, :clave, :id_rol, 1)
+            ");
+            $stmtIns->execute([
+                ':cedula' => (string)$cedula,
+                ':nombre' => $nombre,
+                ':email'  => $email,
+                ':clave'  => $claveHash,
+                ':id_rol' => $rolId
+            ]);
+
+            return [
+                'exito'   => true,
+                'mensaje' => "SuperAdmin '{$nombre}' creado correctamente con privilegio de acceso absoluto."
+            ];
+        } catch (PDOException $e) {
+            if (class_exists('Connection')) Connection::logSystemError($e);
+            return [
+                'exito'   => false,
+                'mensaje' => "Error al registrar la cuenta de SuperAdmin: " . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Genera el candado de seguridad inmutable storage/installed.lock con metadatos del despliegue.
+     */
+    public static function createLockFile(): bool {
+        $storageDir = defined('STORAGE_PATH') ? STORAGE_PATH : __DIR__ . '/../../storage/';
+        if (!is_dir($storageDir)) {
+            @mkdir($storageDir, 0777, true);
+        }
+
+        $lockPath = $storageDir . 'installed.lock';
+        $metaData = [
+            'installed_at'    => date('Y-m-d H:i:s'),
+            'system_version'  => '2.0.0-PROD',
+            'db_engine'       => 'MariaDB 10.6+',
+            'installed_by_ip' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
+            'php_version'     => PHP_VERSION,
+            'os'              => PHP_OS,
+            'schema_source'   => basename(self::getSchemaFilePath() ?? 'migracion_mariadb_10_6.sql'),
+            'security_digest' => hash('sha256', php_uname() . date('YmdHis'))
+        ];
+
+        return @file_put_contents($lockPath, json_encode($metaData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) !== false;
+    }
+}

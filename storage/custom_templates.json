@@ -1,0 +1,9 @@
+{
+    "custom_1789589198_102": {
+        "key": "custom_1789589198_102",
+        "nombre": "basica para avisos",
+        "asunto": "aviso importante",
+        "cuerpo_html": "<h3 style=\"color: rgb(18, 26, 62); font-size: 1.2rem; margin: 18px 0px 8px;\">TITULO DE SECCIÓN<\/h3><p>Escriba aquí los detalles correspondientes a esta sección...<\/p><div style=\"background-color:#eff6ff; border-left:4px solid #2563eb; padding:14px; border-radius:6px; margin:16px 0; color:#1e40af; font-size:0.9rem;\"><strong>Información Importante:<\/strong> Inserte aquí los aspectos resaltantes o avisos prioritarios para el usuario.<\/div><div style=\"text-align:center; margin:24px 0;\"><a href=\"https:\/\/upttmbi.edu.ve\" target=\"_blank\" style=\"background-color:#2563eb; color:#ffffff !important; padding:12px 26px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:0.9rem; display:inline-block; border:none;\">ACCEDER AL PORTAL<\/a><\/div>",
+        "fecha": "2026-09-16 20:06:38"
+    }
+}

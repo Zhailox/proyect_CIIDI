@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - UPTTMBI</title>
+    <!-- Vinculando la hoja de estilos global -->
+    <link rel="stylesheet" href="../../../public/assets/css/style.css">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            /* Fondo con imagen */
+            background-image: url('../assets/universitariosrandom.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Overlay difuminado al 50% con el color secundario */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--color-secundario);
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        .login-wrapper-new {
+            display: flex;
+            width: 1000px;
+            max-width: 95%;
+            height: 600px;
+            background: var(--bg-card, white);
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+            /* Para que la tarjeta quede por encima del overlay */
+        }
+
+        /* Lado Izquierdo (Panel Azul) */
+        .login-left-panel {
+            flex: 1;
+            /* Utilizando los colores primario y terciario para el gradiente */
+            background: linear-gradient(135deg, var(--color-secundario), var(--color-terciario));
+            color: white;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .login-left-panel svg {
+            width: 250px;
+            height: auto;
+            margin-bottom: 2.5rem;
+        }
+
+        .login-left-panel h2 {
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .login-left-panel p {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            opacity: 0.9;
+            margin-bottom: 3rem;
+            max-width: 80%;
+        }
+
+        .btn-outline {
+            border: 1px solid white;
+            background: transparent;
+            color: white;
+            padding: 0.8rem 4rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s, color 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-outline:hover {
+            background: white;
+            color: var(--color-principal);
+        }
+
+        /* Lado Derecho (Formulario Blanco) */
+        .login-right-panel {
+            flex: 1;
+            padding: 4rem 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--bg-card, white);
+        }
+
+        .login-right-panel h2 {
+            font-size: 1.8rem;
+            color: var(--color-principal);
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .login-right-panel p {
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+            font-size: 0.95rem;
+        }
+
+        .login-form-container-new {
+            width: 100%;
+            max-width: 350px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group svg {
+            position: absolute;
+            left: 1.2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 20px;
+            height: 20px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 1.2rem 1rem 1.2rem 3.5rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            color: var(--color-principal);
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            box-sizing: border-box;
+            background-color: white;
+        }
+
+        .input-group input:focus {
+            border-color: var(--color-secundario);
+            box-shadow: 0 0 0 3px rgba(80, 89, 132, 0.15);
+        }
+
+        .input-group input::placeholder {
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-solid {
+            background-color: var(--color-secundario);
+            color: white;
+            border: none;
+            padding: 1.2rem;
+            width: 100%;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-solid:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            background-color: var(--color-principal);
+        }
+
+        .login-footer-new {
+            margin-top: 2.5rem;
+            text-align: center;
+        }
+
+        .login-footer-new a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .login-footer-new a:hover {
+            color: var(--color-secundario);
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-wrapper-new">
+
+        <!-- Lado Izquierdo: Ilustración y Mensaje de Bienvenida -->
+        <div class="login-left-panel">
+
+            <!-- SVG Ilustración basada en la imagen de referencia (Chico abriendo puerta/interactuando) -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+                <!-- Nubes de fondo -->
+                <path
+                    d="M70 230 C 50 230 40 210 50 190 C 55 180 70 170 90 180 C 100 150 140 140 160 170 C 180 170 180 200 170 220 Z"
+                    fill="rgba(255,255,255,0.8)" />
+                <path
+                    d="M330 230 C 350 230 360 210 350 190 C 345 180 330 170 310 180 C 300 150 260 140 240 170 C 220 170 220 200 230 220 Z"
+                    fill="rgba(255,255,255,0.8)" />
+
+                <!-- Puerta gigante central -->
+                <path d="M150 230 L 150 100 C 150 60 250 60 250 100 L 250 230 Z" fill="#e2e8f0" />
+                <path d="M160 230 L 160 110 C 160 80 240 80 240 110 L 240 230 Z" fill="#cbd5e1" />
+
+                <!-- Ventanas de la puerta -->
+                <rect x="175" y="120" width="20" height="25" fill="white" opacity="0.9" />
+                <rect x="205" y="120" width="20" height="25" fill="white" opacity="0.9" />
+                <rect x="175" y="155" width="20" height="25" fill="white" opacity="0.9" />
+                <rect x="205" y="155" width="20" height="25" fill="white" opacity="0.9" />
+                <rect x="175" y="190" width="20" height="25" fill="white" opacity="0.9" />
+                <rect x="205" y="190" width="20" height="25" fill="white" opacity="0.9" />
+
+                <!-- Pomo de puerta -->
+                <circle cx="235" cy="175" r="4" fill="white" />
+
+                <!-- Figura de persona abstracta -->
+                <!-- Piernas -->
+                <rect x="260" y="180" width="6" height="50" fill="#1e293b" />
+                <rect x="275" y="180" width="6" height="50" fill="#1e293b" />
+                <!-- Torso -->
+                <path d="M255 130 L 285 130 L 285 180 L 255 180 Z" fill="white" />
+                <!-- Cabeza -->
+                <circle cx="270" cy="115" r="10" fill="#fcd34d" />
+                <!-- Pelo -->
+                <path d="M260 115 C 260 100 280 100 280 115 Z" fill="#1e293b" />
+                <!-- Brazo -->
+                <path d="M255 135 L 240 170" stroke="white" stroke-width="4" stroke-linecap="round" />
+
+                <!-- Suelo -->
+                <line x1="40" y1="230" x2="360" y2="230" stroke="#1e293b" stroke-width="2" />
+            </svg>
+
+            <h2>Sistema Repositorio UPTTMBI</h2>
+            <p>Plataforma para la gestión, visibilidad e impacto de la producción científica y tecnológica.</p>
+
+            <button type="button" class="btn-outline">SABER MÁS</button>
+        </div>
+
+        <!-- Lado Derecho: Formulario de Ingreso -->
+        <div class="login-right-panel">
+            <h2>INGRESO AL SISTEMA</h2>
+            <p>Introduzca sus credenciales para acceder</p>
+
+            <form action="mi_dashboard.html" method="POST" class="login-form-container-new">
+
+                <!-- Input Cédula -->
+                <div class="input-group">
+                    <!-- Icono de Usuario/ID -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <input type="text" id="cedula" placeholder="Ej: V-12345678" required>
+                </div>
+
+                <!-- Input Contraseña -->
+                <div class="input-group">
+                    <!-- Icono de Candado -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <input type="password" id="password" placeholder="CONTRASEÑA" required>
+                </div>
+
+                <!-- Botón Principal -->
+                <button type="submit" class="btn-solid">INGRESAR</button>
+
+                <!-- Footer (Olvidó contraseña) -->
+                <div class="login-footer-new">
+                    <a href="recuperar_cuenta.html">¿Olvidó su contraseña?</a>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+</body>
+
+</html>
